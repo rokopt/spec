@@ -1,10 +1,11 @@
 ## Reading List
 
-### Whitepapers / protocol specifications
+### Papers
+
+#### Protocol specifications
 
 - [Bitcoin Whitepaper - Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf)
 - [Ethereum Whitepaper - Gavin Wood](https://gavwood.com/paper.pdf)
-- [Tezos Whitepaper - L.M. Goodman](https://tezos.com/static/white_paper-2dc8c02267a8fb86bd67a108199441bf.pdf)
 - [Tendermint: the latest gossip on BFT consensus - Ethan Buchman](https://arxiv.org/pdf/1807.04938.pdf)
 - [Filecoin Whitepaper - Protocol Labs](https://filecoin.io/filecoin.pdf)
 - [Polkadot Whitepaper - Gavin Wood](https://polkadot.network/PolkaDotPaper.pdf)
@@ -13,18 +14,17 @@
 - [Counterfactual: Generalized State Channels - Jeff Coleman](https://l4.ventures/papers/statechannels.pdf)
 - [The Bitcoin Lightning Network - Joseph Poon](https://lightning.network/lightning-network-paper.pdf)
 - [NuCypher Proxy Re-encryption - Michael Egorov](https://www.nucypher.com/static/whitepapers/english.pdf)
+- [Tezos Whitepaper - L.M. Goodman](https://tezos.com/static/white_paper-2dc8c02267a8fb86bd67a108199441bf.pdf)
 
-### Consensus
-- Tendermint Consensus: https://cdn.relayto.com/media/files/LPgoWO18TCeMIggJVakt_tendermint.pdf
-- Casper the Friendly Finality Gadget Protocol: http://ijsrcseit.com/paper/CSEIT1831475.pdf
-- Polkadot Finality Gadget: https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf
+#### Consensus
 
-### Governance
-- Tezos Whitepaper: http://everipedia-storage.s3.amazonaws.com/NewlinkFiles/16739988/8d4d1f1b-8/white_paper.pdf
-- Amending Tezos: https://medium.com/tezos/amending-tezos-b77949d97e1e 
+- [Tendermint Consensus](https://cdn.relayto.com/media/files/LPgoWO18TCeMIggJVakt_tendermint.pdf)
+- [Casper the Friendly Finality Gadget Protocol](http://ijsrcseit.com/paper/CSEIT1831475.pdf)
+- [Polkadot Finality Gadget](https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf)
 
-### Security
-- Formal Barriers to Longest-Chain Proof-of-Stake Protocols: https://arxiv.org/abs/1809.06528 
+#### Economic Safety
+
+- [Formal Barriers to Longest-Chain Proof-of-Stake Protocols](https://arxiv.org/abs/1809.06528 )
 
 ### Explainers / Tutorials
 
@@ -45,6 +45,10 @@
 
 - [A Deep Look Into Cosmos - Julian Koh](https://medium.com/cornellblockchain/a-deep-look-into-cosmos-the-internet-of-blockchains-af3aa1a97a5b)
 - [A few directions to improve Tezos - Arthur Breitman](https://medium.com/tezos/a-few-directions-to-improve-tezos-15359c79ec0f)
+
+#### Governance
+
+- [Amending Tezos](https://medium.com/tezos/amending-tezos-b77949d97e1e )
 
 ### Podcasts / Video Series / Other Media
 
