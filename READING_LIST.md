@@ -14,6 +14,18 @@
 - [The Bitcoin Lightning Network - Joseph Poon](https://lightning.network/lightning-network-paper.pdf)
 - [NuCypher Proxy Re-encryption - Michael Egorov](https://www.nucypher.com/static/whitepapers/english.pdf)
 
+### Consensus
+- Tendermint Consensus: https://cdn.relayto.com/media/files/LPgoWO18TCeMIggJVakt_tendermint.pdf
+- Casper the Friendly Finality Gadget Protocol: http://ijsrcseit.com/paper/CSEIT1831475.pdf
+- Polkadot Finality Gadget: https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf
+
+### Governance
+- Tezos Whitepaper: http://everipedia-storage.s3.amazonaws.com/NewlinkFiles/16739988/8d4d1f1b-8/white_paper.pdf
+- Amending Tezos: https://medium.com/tezos/amending-tezos-b77949d97e1e 
+
+### Security
+- Formal Barriers to Longest-Chain Proof-of-Stake Protocols: https://arxiv.org/abs/1809.06528 
+
 ### Explainers / Tutorials
 
 #### Smart contracts
