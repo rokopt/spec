@@ -10,6 +10,7 @@
 - [Polkadot Whitepaper - Gavin Wood](https://polkadot.network/PolkaDotPaper.pdf)
 - [Coda Protocol - Izaak Meckler and Evan Shapiro](https://codaprotocol.com/static/coda-whitepaper-05-10-2018-0.pdf)
 - [Zcash Protocol Specification - Daira Hopwood](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf)
+- [Counterfactual: Generalized State Channels - Jeff Coleman](https://l4.ventures/papers/statechannels.pdf)
 
 ### Explainers / Tutorials
 
@@ -18,6 +19,7 @@
 - [How does Ethereum work, anyway? - Preethi Kasireddy](https://medium.com/@preethikasireddy/how-does-ethereum-work-anyway-22d1df506369)
 - [A Tutorial Introduction to Michelson & Tezos Part 1 - John Burnham](https://medium.com/coinmonks/a-tutorial-introduction-to-michelson-tezos-part-i-hello-michelson-6cc6504aae9e)
 - [A Tutorial Intruduction to Michelson & Tezos Part 2 - John Burnham](https://medium.com/coinmonks/a-tutorial-introduction-to-michelson-tezos-part-ii-hello-tezos-e0d247e1131f)
+- [CamlCase Michelson Tutorials](https://gitlab.com/camlcase-dev/michelson-tutorial/)
 - [CryptoZombies: Learn to Code Ethereum Dapps by Building Your Own Game](https://cryptozombies.io/)
 
 #### Scaling
@@ -32,7 +34,7 @@
 
 ### Podcasts / Video Series / Other Media
 
-Most conference talks are recorded, so watching talks from recent conferences (which can be done at 1.5x or 2x speed) can be effective.
+Most conference talks are recorded, so watching talks from recent conferences (at 1.5x or 2x speed) can be effective.
 
 #### Blockchain-specific
 
