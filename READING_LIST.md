@@ -11,6 +11,8 @@
 - [Coda Protocol - Izaak Meckler and Evan Shapiro](https://codaprotocol.com/static/coda-whitepaper-05-10-2018-0.pdf)
 - [Zcash Protocol Specification - Daira Hopwood](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf)
 - [Counterfactual: Generalized State Channels - Jeff Coleman](https://l4.ventures/papers/statechannels.pdf)
+- [The Bitcoin Lightning Network - Joseph Poon](https://lightning.network/lightning-network-paper.pdf)
+- [NuCypher Proxy Re-encryption - Michael Egorov](https://www.nucypher.com/static/whitepapers/english.pdf)
 
 ### Explainers / Tutorials
 
@@ -36,13 +38,16 @@
 
 Most conference talks are recorded, so watching talks from recent conferences (at 1.5x or 2x speed) can be effective.
 
-#### Blockchain-specific
+#### Podcasts
 
 - [Epicenter Blockchain Podcast](https://epicenter.tv/) - general blockchain, interviews with project founders
 - [Zero Knowledge Podcast](https://www.zeroknowledge.fm/) - ZK-focused but has become broader over time
-- [Near Protocol Whiteboard Series](https://www.youtube.com/playlist?list=PL9tzQn_TEuFWweVbfTbaedFdwVrvaYPq4)
-
-#### Other / related fields
-
 - [Type Theory Podcast](http://typetheorypodcast.com/) - type theory research (sadly dormant)
 - [Econtalk](https://www.econtalk.org/) - economic analysis, mechanism design
+
+#### Videos / video series
+
+- [Near Protocol Whiteboard Series](https://www.youtube.com/playlist?list=PL9tzQn_TEuFWweVbfTbaedFdwVrvaYPq4)
+- [A Brief History of Distributed State](https://www.youtube.com/watch?v=e9C1Y89Txdw)
+- [IBC & Public-Private Blockchain Interoperability](https://www.youtube.com/watch?v=cjfYThAk06w)
+- [Technical & Social Attacks against Validators](https://www.youtube.com/watch?v=EOyix4ouKNI)
