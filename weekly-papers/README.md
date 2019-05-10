@@ -4,6 +4,7 @@
 
 - [May 3rd: Ethereum](./2019-05-03-ethereum)
 - [May 10th: Tezos](./2019-05-10-tezos)
+- [May 17th: Ouroboros Genesis](./2019-05-17-ouroboros-genesis)
 
 #### Backlog suggestions
 
