@@ -11,3 +11,4 @@
 - Tendermint whitepaper
 - Polkadot whitepaper
 - Zerocash paper
+- [VDFs from Isogenies](https://eprint.iacr.org/2019/166.pdf)
