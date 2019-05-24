@@ -11,3 +11,4 @@
 - Tendermint whitepaper
 - Polkadot whitepaper
 - Zerocash paper
+- [Idris paper](https://eb.host.cs.st-andrews.ac.uk/drafts/impldtp.pdf)
