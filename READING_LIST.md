@@ -67,3 +67,4 @@ Most conference talks are recorded, so watching talks from recent conferences (a
 - [A Brief History of Distributed State](https://www.youtube.com/watch?v=e9C1Y89Txdw)
 - [IBC & Public-Private Blockchain Interoperability](https://www.youtube.com/watch?v=cjfYThAk06w)
 - [Technical & Social Attacks against Validators](https://www.youtube.com/watch?v=EOyix4ouKNI)
+- [Chiesa on PCPs/IPs (Berkeley course lectures)](https://www.youtube.com/playlist?list=PLkFD6_40KJIyWWtxCPBHwGsrutjvwM5_U)
