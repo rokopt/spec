@@ -68,3 +68,4 @@ Most conference talks are recorded, so watching talks from recent conferences (a
 - [IBC & Public-Private Blockchain Interoperability](https://www.youtube.com/watch?v=cjfYThAk06w)
 - [Technical & Social Attacks against Validators](https://www.youtube.com/watch?v=EOyix4ouKNI)
 - [Chiesa on PCPs/IPs (Berkeley course lectures)](https://www.youtube.com/playlist?list=PLkFD6_40KJIyWWtxCPBHwGsrutjvwM5_U)
+- [Zk Study Club](https://www.youtube.com/watch?v=Q-Vl8pcP1fw&list=PLj80z0cJm8QHm_9BdZ1BqcGbgE-BEn-3Y)
