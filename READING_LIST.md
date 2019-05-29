@@ -9,7 +9,7 @@
 - [Tendermint: the latest gossip on BFT consensus - Ethan Buchman](https://arxiv.org/pdf/1807.04938.pdf)
 - [Filecoin Whitepaper - Protocol Labs](https://filecoin.io/filecoin.pdf)
 - [Polkadot Whitepaper - Gavin Wood](https://polkadot.network/PolkaDotPaper.pdf)
-- [Coda Protocol - Izaak Meckler and Evan Shapiro](https://codaprotocol.com/static/coda-whitepaper-05-10-2018-0.pdf)
+- [Coda Protocol - Izaak Meckler and Evan Shapiro](https://cdn.codaprotocol.com/v2/static/coda-whitepaper-05-10-2018-0.pdf)
 - [Zcash Protocol Specification - Daira Hopwood](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf)
 - [Counterfactual: Generalized State Channels - Jeff Coleman](https://l4.ventures/papers/statechannels.pdf)
 - [The Bitcoin Lightning Network - Joseph Poon](https://lightning.network/lightning-network-paper.pdf)
