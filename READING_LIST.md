@@ -16,6 +16,7 @@
 - [NuCypher Proxy Re-encryption - Michael Egorov](https://www.nucypher.com/static/whitepapers/english.pdf)
 - [Tezos Whitepaper - L.M. Goodman](https://tezos.com/static/white_paper-2dc8c02267a8fb86bd67a108199441bf.pdf)
 - [Arweave Litepaper](https://www.arweave.org/files/arweave-lightpaper.pdf)
+- [ICTP Whitepaper](https://ictp.io/ictp-whitepaper.pdf)
 
 #### Consensus
 

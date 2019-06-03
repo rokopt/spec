@@ -6,6 +6,7 @@
 - [May 10th: Tezos](./2019-05-10-tezos)
 - [May 24th: Ouroboros Genesis](./2019-05-24-ouroboros-genesis)
 - [May 31st: Tendermint](./2019-05-31-tendermint)
+- [June 7th: ICTP](./2019-06-07-ictp)
 
 #### Backlog suggestions
 
