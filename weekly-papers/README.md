@@ -7,6 +7,8 @@
 - [May 24th: Ouroboros Genesis](./2019-05-24-ouroboros-genesis)
 - [May 31st: Tendermint](./2019-05-31-tendermint)
 
+Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
+
 #### Backlog suggestions
 
 - Tendermint whitepaper
