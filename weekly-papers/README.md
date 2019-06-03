@@ -8,6 +8,8 @@
 - [May 31st: Tendermint](./2019-05-31-tendermint)
 - [June 7th: ICTP](./2019-06-07-ictp)
 
+Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
+
 #### Backlog suggestions
 
 - Tendermint whitepaper
