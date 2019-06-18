@@ -1,0 +1,307 @@
+* Day 1
+** Introductions
+- =monero= is attacked a few times
+- hack hack hack
+  + s/hack/dip/g
+** zk-SNARKs Setting the Scene
+@JacobEberhadt
+*** Primers
+- _Ali Baba's Cave_
+  + Alice wants to prove that she knows the password of a locked door
+    without telling Bob
+    * More info :: Bob must come in and explore after she leaves
+  + _How do we do this?_
+    * watch her come through one route and leave through the other
+    * Leave the door open
+      - no ☹
+  + _real solution_
+    * Bob shouts, leave through A or B. This gives you a security
+      parameter of 2
+      - which is 1^{1/2}
+        + Can do this over and over again to get better security
+- _Where's Waldo_
+  + How to prove you know where Waldo is without giving up the
+    position
+  + _How do we do this?_
+    * What is right next to waldo
+      - Gives information up, making the puzzle easier to find
+    * Window that shows waldo and nothing else
+    * Cut out image of Waldo
+- _My Card is red_
+  + Want to show that your card is red without giving out what card
+    you have
+  + _Solutions?_
+    * Give him all the black card, ∴ you must have a red one!
+*** Properties
+- Look at my other notes for a proper definition
+- Completeness :: Given a statement and wittiness, the prove can
+                  convince the versifier P = 1
+- Soundness :: A malicious prover cannot convince the verifier of a
+               false statement.
+- Zero-Knowledge :: The proof reveals only the proof of truth of the secret
+*** Related to Programming?
+**** Meaning
+- Look at my other notes, for a proper meaning
+- Arithmetic circuits, so only =+= and =×=
+- Rank 1 Constraint System
+  + Arithmetic circuits can compile to Rank 1 Constraint system
+**** zk-SNARKs are more than ZKPs
+- zk-SNARKs are two ideas in one
+  1. Zero knowledge proofs
+  2. Computation verifiable without re-executing them
+**** Elements of zk-SNARKs
+Formal definition also gives you this!
+
+1. (prover\under{}key, verifier\under{}key) := setup(circuit)
+2. proof := generateProof(prover\under{}key, inputs, circuit)
+3. verifyProof(verifier\under{}key, proof) : 𝔹
+
+Proving Key is quite big, and should not be on chain (500GB for 10
+thousand transactions)
+**** Using zk-SNARKs - Big Picture
+- Requires Trust
+  ----> verification n times
+  ----> find x,y,z z+proof
+  ----> Verifies Prover knows: x,y, s.t., x^y = z
+  Proving Key ---> Prover ---> Verifier ----> Veriication Key
+
+- =cost(verification) << cost(proof) ≈ cost(execution)=
+
+- Can make a CRS s.t. it reveals 1 bit of information
+
+  + Make sure 1 element is non zero to mitigate this issue
+
+- To solve trusted setup, use a multi user protocol
+  + If at least 1 participant is honest, then it will be proven
+  + In a block-chain setup, have different bakers to distribute the
+    trust
+  + This is the best you can do
+  + JP-Morgan uses Bullet Proofs
+**** Under the Hood
+| Levels              | Level concept is introduced      |
+|---------------------+----------------------------------|
+| Program code        | Tools in this workshop           |
+| R1CS                | Crypto-libs (libsnark)           |
+| QAP                 |                                  |
+| Verification Scheme | new theoretical research (SONIC) |
+- Rank 1 constraint system (R1CS)
+  + Program expressed as a set of constraints. A satisfying variable
+    assignment represents a valid program execution
+- Quadratic Arithmetic Program (QAP)
+  + Re-formulation of the R1CS constraints using polynomials. Allows
+    efficient satisfiability checks by checking polynomial
+    divisibility
+- zk-SNARKs verifiable computation scheme
+**** Waste
+- (pk,vk, Toxic\under{}waste) := setup(c)
+- _How to fix_
+  + Make pk and vk generic for every circuit
+  + This may actually be possible!
+  + Done via multi party computation reference string for any circuit
+**** Swap-able backends
+- can swap out snarks for say bulletproof or zk-STARKs, etc etc!
+**** ZK-SNARKs contenders
+|                     | SNARKs                | STARKs                     | Bulletproofs  |
+|---------------------+-----------------------+----------------------------+---------------|
+| Prover complexity   | O(N × log(N))         | O(N × poly-log(N))         | O(N × log(N)) |
+| Verifier complexity | ~O(1)                 | O(poly-log(N))             | O(N)          |
+| crypto assumptions  | knowledge of exponent | collision resistant hashes | DLP           |
+| proof size          | 200B                  | 45kb                       | hundred kilo  |
+** Snarkonomicon!
+Izaak
+*** snark vs stark vs bulletproofs
+- all snakrs we discuss here are a class of snarks called "pairing
+  based" SNARKs
+- In general SNARK may or may not require a trusted setup
+*** Different from normal programming
+1. Cost model
+   + =+= costs 0~
+   + =×= costs 1~
+     * When both variables are not known
+   + _Reality_
+     - Witness generation
+     - something else
+2. Non-determinism
+3. Can only directly a small amount of data
+
+| Normal Computer | Snarks                 |
+|-----------------+------------------------|
+| +,*, mod 2^64    | +, × mod large prime p |
+| Memory access   |                        |
+| Bit stuff       |                        |
+| Conditionals    |                        |
+*** Goal of this talk
+*** Division
+- Important for implementing lots of stuff
+- y^{p-1} = 1
+- y^-1 = y^{p-2}
+
+- This sucks as this does 256 multiplications
+
+- EGCD algorithm?
+  + Log p multiplications needed for this method
+
+  + Need the prime to do this, can we get this information?
+
+- Can we do this better: O(1)?
+*** Guess and Check power
+- Non determinism, allows us to use a real CPU to do calculation
+- Block of code generates the witness level
+- Prover/witness block creates a path through the relation
+*** Key takeways
+** ZoKrates
+Jacob and schaeff
+*** Scale-ability
+- Normally computation on a blockchain is highly redundant
+  + Every node has to redo the computation
+- Idea :: Instead, precompute the computation, then give a proof about
+          said computation, to propagate throughout the network
+*** On Chain proof verification
+- A high-level language
+- A compiler, which transforms programs to provable constraint systems
+- Tools for
+  + Setup phase
+  + Witness computation
+  + proof generation
+  + generation of verification smart contract
+  + \dots
+
+- _Example_
+  + Zokrates :: generate-proof
+  + proof :: 3 EC Points = 128 byes
+  + public variables :: main function public parameters, and return
+       statement values
+  Generates
+
+  + Verification Contract
+
+    * Verification key :: 4+ #public variablesEC points
+
+    * costs around 600 gas
+*** Beyond the Language
+- _ZoKrates StdLib_
+  + ECC
+  + EdDSA signature verification
+  + SHA256
+  + Pederson hashes
+  + Utilities
+- _ZoKrates pyCrypto Libraray_
+  + Python utilities for easy interaction with ZoKrates programs
+  + we call this "Application Code"
+* Day 2
+** Evolution of pairing-based Zero-knowledge proofs
+*** Recurring motifs
+- _Language_
+  + Type of statements we can prove
+- _Security_
+  + underpinning assumptions
+  + unconditional soundness vs unconditional zero-knowledge
+- _Efficiency_
+  + Prover computation, verifier computation, interaction, setup size,
+    succinctness
+*** Pairings
+**** Abiogensis
+- Goldwasser-micali rackoff 85/89
+  + Defined zk proofs: complete, sound, zero knowledge
+- Constructed interactive zero-knowledge
+**** Cambrian explosion
+- paper was rejected, once it got accepted, there was an explosion of
+  use cases
+- Can prove np complete!
+  + Graphs!, shows generality of zk proof
+- Security was next
+- Succinctness!
+- Witness the statement!
+- CRS
+  + non interactive
+  + Must have a setup or an environment
+**** Biodiversity
+- Came about in the 80's
+**** Devonian Explosion
+- [Sch90/91] Discrete log based signatures
+- [CDS94,Cra96] Σ protocols
+- [CD98] Arithmetic circuit satisfiability
+| proof system | Communication     |
+|--------------+-------------------|
+| [CD98]       | O(N) elements     |
+| [Gro09]      | O(√N) elements    |
+| BCCP16       | O(log N) elements |
+*** Pairing Based NIZK proofs
+**** Groups with pariings
+- Cyclic groups, G_1, G_2, G_T of size n
+  + Let g be generator of G_1 i.e. G_1 = {1,g,\dots,g^{n-1}} and h be generator
+    of G_2
+- Bilinear map (Tweaked pairing) e: G_1 × G_2 → G_T
+  + Linear in G_1 and G_2
+  + Non degenerate
+- Efficiently computable group operations
+  + Mulitiplicaiton of group elements in G_1, G_2, G_T deciding
+    membership, bilinear map
+- Types of bilinear groups
+  + Type 1 :: Symmetric e(u,u) G_1 = G_2
+  + Type 2 :: Asymetric
+  + Type 3 :: Asymetric in a way
+    * Type 3 is much cheaper than type 2
+    * Can always map type 2 to type 3 for cheaper or as cheap
+    * I.E. Never use type 2
+**** Getting used to bilinear map
+- fun exercises
+**** Adaptive radiation
+| ZK proof NP-complete languages | computational knowledge         | unconditional ZK       |
+|--------------------------------+---------------------------------+------------------------|
+| interactive                    | Golderich-widgerson-micali 1986 | bradssard crepeau 1986 |
+| non interactive                | Blum Feldman Micali 1988        | ????                   |
+**** Exogenous genetic matieral
+- Pairing basd dluble homomorphic encryption scheme
+- symmetric composite order groups of order n = pq
+  + Hard to fatcor n
+  + Public key (g,h) where ord(g) = n and ord(h) = q
+- Encrypt small integer m under public key (g,h) as g^{m}h^r
+- additively homo
+- multiplicitly homo
+**** Transformation
+[BGN05] + NIZK ⇒ NIZK with perfect and everlasting ZK
+| ZK proof NP-complete languages | computational knowledge         | unconditional ZK       |
+|--------------------------------+---------------------------------+------------------------|
+| interactive                    | Golderich-widgerson-micali 1986 | bradssard crepeau 1986 |
+| non interactive                | Blum Feldman Micali 1988        | Groth-Ostrovsky 2006   |
+- perfect zero knowledge turn ord(h) = n, people don't know if it's
+  Ord(n) or Ord(p)
+- Based on a trusted setup
+**** Clade
+- [CHK03, GOS06b] NIZK proofs based on prime-order groups with
+  pairings
+  + Latter setup free non-interactive witness-indisguishable proofs
+- [Gro06] NIZK proofs for practical language
+- [GS08] Efficient proofs for practical languages
+**** Fitness
+- Statement: Here is a ciphertext
+- used to be a TB in 1994 with state of the art
+- 2008 it's down to KB
+*** ZK
+**** Succinctness
+- [GW11] SNAG = Succinct non-interactive argument
+  + Need non-falseifiable assumptions to build SNAGs
+- [BCCT12] SNARK = Succinct non-interactive argument of knowledge
+  + ... and zk-SNARK
+  + Added ease of verification requirement - verifier time polynomial
+    in statement size
+- Succinct = Almost zero knowledge
+- Succinct = easy verification
+**** Pairing-based SNARKs
+- [Gro10] short pariing based non-interactive ZK arguments
+  | CRS              | Proof Size       |
+  |------------------+------------------|
+  | O(N^2) elements   | O(1) elements    |
+  | O(N^{2/3}) elements | O(N^{2/3}) elements |
+**** Balacning polynomials in the exponent
+- Core idea
+- Allows paralllel, multiplication gates at once
+**** Intelligent Design
+- Better group choice
+- Then QSP and QAP based SNARKs came around
+**** Arithmetic circuit satisfiability
+- Universal CRS, works for any circut
+- Specialized CRS, tailored for a particular circuit
+*** Past, Present, Future
+** 
