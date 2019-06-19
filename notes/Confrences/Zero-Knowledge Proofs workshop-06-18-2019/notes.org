@@ -304,4 +304,56 @@ Jacob and schaeff
 - Universal CRS, works for any circut
 - Specialized CRS, tailored for a particular circuit
 *** Past, Present, Future
-** 
+** QAPS
+- Poor notes sorry!
+*** GGPR13
+**** Rank 1 Constraint System
+- Describes NP computations
+- using arithemtic fields
+** Pairing-Based zk-SNARKs
+[Groth, Eurocrypt 2016 + GM 17]
+- 
+*** zk-SNARK
+*** The [Groth16] zk-SNARK
+- pairing based zk-SNARK
+- (a_{l+1},\dots,a_m) witness for QAP
+  + Prover has this
+- Prover sends 3 group elements to the verifier, π
+**** Groups with bilinear maps
+- Similar to the first part of they day
+**** Working "in the exponent"
+- If we are working with group elements, say g^x and g^y, then we are
+  really doing addition in the exponenet g^(x+y)
+- similarly, u^c = g^cx
+  + So we can multiply with a known value c "in the exponent"
+**** Quadratic arithmetic program
+- QAP defines an NP-relation with
+  + Constant a_0 = 1
+  + Instances (a_{1},\dots,a_l)
+  + witnesses (a_{l+1},\dots,a_m)
+**** Construction
+- CRS σ = (g^{σ₁},h^{σ₂}) where α, β, y, δ, x ← ℤ^*ₚ and \dots
+***** Proofs of these constructions holding
+****** Perfect Zero Knowledge
+- Simulation knows a trapdoor τ = (α,β,γ,δ,χ)
+- pick random A,B ← ℤ_p
+- This will perfectly simulate a proper proof with the correct CRS
+****** Knowledge Soundness
+*** Signatures of Knowledge
+- common reference string
+- public instance φ
+- message m
+- Prover : (φ,ω) ∈ R
+  + Sends SoK to Verifier
+**** What you Prove
+- for signatures of knowledge, instances of φ may be related in say
+  ω = ω + 1
+- Thus the attack vector is higher due related instances
+*** SE-SNARKS
+- perfect zero knowledge
+- simulation-extract-able
+  + XPKE and poly assumptions
+*** Square arithmetic progrmas
+- same as finite field arithmetic programs, however the u and v
+  polynomials exactly the same!
+  + Note this not directly simpler, the polynomials are larger
