@@ -228,17 +228,17 @@ Jacob and schaeff
 | BCCP16       | O(log N) elements |
 *** Pairing Based NIZK proofs
 **** Groups with pariings
-- Cyclic groups, G_1, G_2, G_T of size n
-  + Let g be generator of G_1 i.e. G_1 = {1,g,\dots,g^{n-1}} and h be generator
-    of G_2
-- Bilinear map (Tweaked pairing) e: G_1 × G_2 → G_T
-  + Linear in G_1 and G_2
+- Cyclic groups, G₁, G₂, G_T of size n
+  + Let g be generator of G₁ i.e. G₁ = {1,g,\dots,g^{n-1}} and h be generator
+    of G₂
+- Bilinear map (Tweaked pairing) e: G₁ × G₂ → G_Τ
+  + Linear in G₁ and G₂
   + Non degenerate
 - Efficiently computable group operations
-  + Mulitiplicaiton of group elements in G_1, G_2, G_T deciding
+  + Mulitiplicaiton of group elements in G₁, G₂, G_T deciding
     membership, bilinear map
 - Types of bilinear groups
-  + Type 1 :: Symmetric e(u,u) G_1 = G_2
+  + Type 1 :: Symmetric e(u,u) G₁ = G₂
   + Type 2 :: Asymetric
   + Type 3 :: Asymetric in a way
     * Type 3 is much cheaper than type 2
@@ -357,3 +357,137 @@ Jacob and schaeff
 - same as finite field arithmetic programs, however the u and v
   polynomials exactly the same!
   + Note this not directly simpler, the polynomials are larger
+* Day 3
+** Sonic
+*** Zero-Knowledge arguments have a trapdoors
+- Proofs are generated and verified using shared reference string.
+- Whoever generated the reference string may keep some trapdoor info
+  that can be used to simulate fake proofs
+- all ZKP's have a trapdoor!
+- We just have good ways of hiding the backdoor
+- In Zcash, we can say, print money
+- In Coda, we could just create a "valid" state and forge the
+  blockchain
+**** Why do we still use them if there are trap doors
+- No one should know the backdoor!
+- SNARK parameters are not chosen randomly
+- the CRS has secrets hidden in them!
+- _CRS generation_
+  + CRS is made by sampling x ← 𝔽
+  + we have g^(u₀(x)),g^(u₁(x)), and thus a correlation between CRS string
+    elements
+*** How can we use zk-SNARKs
+- zk-SNARks require trusted setup where a group of participants
+  jointly
+  generating the parameters
+- Each participants learn a shard of toxic waste
+*** Why Sonic?
+- Mostly zk-SNARKs require a new setup for every application
+- Sonic requires a single trusted setup that can be across any
+  application
+- having a shared CRS costs for prover computations
+- works via piggy backing off older CRS?????
+*** Prior zk-SNARK setups
+x₀ ← 𝔽
+g^(x)^(x₀), g^(x²)^(x₀²), \dots,
+- Can prove you did this
+  + e(g^x, g^(x₀)) = e(g^(x)^(x₀),g)
+- Need to add an alpha to your setup, which is a specialization step,
+  which can not piggy back
+- This removes piggy backing!
+- So Sonic removes this step, and we only have hidden monomials not
+  polynomials in our setup
+- THEOREM :: can update monomials, but polynomials in the CRS
+*** Sonic is also updatable
+- any user, at any time, can update the parameters,including after
+  their system goes live
+- After a single honest user has participated no party can prove
+  fraudulent data
+- A user could update the parameters themselves and trust all proofs
+  after that point
+- updatability proofs are small and stored forever in sequence
+- All users must agree to the new parameters being used!
+- Can't update the number of monomials after starting the sonic, can
+  only make it smaller
+  + Make sure to choose big
+- CRS is going to be MBs or GBs
+  + Linearly sized
+  + Don't need to store them forever
+  + Only the verification key
+- Polynomials are bigger
+  + 3x larger polynomials in R1CS than ZCash
+*** Sonic encodes the application in the parameters
+- Proof sizes are constant, but not particularly small!
+- Guesetimated 1-1.5 Kb
+  + 30x more expensive than state of the art [Groth16]
+**** Sonic is better with Helpers
+- 256 bytes per proof
+- Guestimated 3x more expensive for the prover than the state of the
+  art [Groth16]
+- Helper time is about half the prover time per proof
+- Helpers are not trusted
+- Helpers cannot communicate with original provers.
+- Helpers aggregate proofs to reduce verifier overhead
+- In Block-chains, provers are most likely the miners
+***** KZG Poly commit
+f(x)    g^{f(x)}
+←^α
+f(α) $\frac{f(x) - f(α)}{x-α}$
+$e(g^{\frac{f(x)- f(α)}{x-α}}, h^{x-α}) = e(g^{f(x)}g^{f(α)},h)$
+** GPU zk-SNARKs
+*** What does the SNARK prover do
+1. Elliptic-cruve multi-exponentiation
+2. Fast Fourier transform
+3. Mayyyybe g2
+
+Let's focus on the multi-exponentiation, since it is the slowest part
+of the prover.
+*** Multi-exponentiation (or "multi-scaling")
+- It's an abelian group
+*** Map reduce
+- It's bloody fast, mate
+*** Fast Fourier Transform
+- Two groups G₁ G₂
+  + G₁ :: 𝔽_q
+  + G₂ :: 𝔽_{q²}
+    * Note everything in sonic, everything is in G₁, which is great
+- _Understanding_
+  + let 𝔽ᵣ be a finite field
+  + let f be a polynomial of degree n
+  + let a₀,\dots,aₙ ∈ 𝔽ᵣ
+  + let ω₀,\dots,ωₙ,
+    where f(ω₀) = a₀,
+    and where ...
+    where f(ωₙ) = aₙ
+
+  + c₀ (F(ω₀),\dots,f(ωₙ))
+    c₁
+    \dots
+    cₙ
+
+  + How can we make this take n log n and not n^2
+
+    * These ω's need to be a n^{th} root of unity (1)
+
+    * let be 2^k, thus a millionth root of unity
+
+  + f(x)
+    = ∑_{i=0}^{n-1}aᵢx^i
+    = ∑_{i=0}^{n-1/2}a₂ᵢx^2i + ∑_{i=0}^{n-1/2}a₍₂ᵢ₊₁₎x^(2i + 1)
+    = f₀(x^2) + f₁(x^2)x
+#+BEGIN_EXAMPLE
+  FFT(f,ω):
+    A₀ = FFT(f₀, ω²)
+    A₁ = FFT(f₁,ω²)
+
+
+  V(ω)⁻¹ E = (a₀
+              a₁
+              …
+              aₙ₋₁
+              )
+  =
+  ωV(ω⁻¹)E
+  =
+  ω×A
+#+END_EXAMPLE
