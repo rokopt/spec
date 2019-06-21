@@ -491,3 +491,72 @@ of the prover.
   =
   ω×A
 #+END_EXAMPLE
+* Day 4
+** Components of recent universal SNARKs
+*** 30 seconds of philosphy: SNARks and the meaning of life
+- SNARKs help us keep a grip on reality, by ensuring the data is
+  anchored in reality
+*** Evaluating prover polynomials succinctly
+- started in 1990
+- *Hard working honest way* - low degree testing
+  + PCPP, IOPPs
+*** Notation
+Encoding of χ
+- [χ] ≔ χ • g = g + \dots + g (χ times)
+
+- can imagine it means g^{χ}
+*** Application: Proof of retrievability
+- Server :: Commit to file as coefficients {a₀,\dots,a_{d}} of polynomial f
+- Client :: Time-to-time query f at a random point r.
+- Low degree polynomials disagree on most points
+*** Application: The Sonic helper
+- B-variate S(X,Y) evaluation points
+  {(xⱼ,yⱼ)}_{j ∈ {1…t} }values {z_{j}}
+- Helper H wants to convince verifier V that ∀j ∈ {1…t}, S(xⱼ,yⱼ) = zⱼ
+- V's work: only one evaluation of S!
+
+- _How does this work?_
+
+  1. ∀j, H sends Sⱼ ≔ cm(S(X,yⱼ))
+     + if H would convince V Sⱼ's are correct, he could just opne them
+       at xⱼ
+
+  2. V chooses random u ∈ 𝔽
+
+  3. H sends C ≔ cm(S(u,Y))
+
+  4. ∀j, H opens C at yⱼ and Sⱼ and xⱼ, V checks they open to same value
+
+  5. V chooses random v ∈ 𝔽 and computes s(u,v)
+
+  6. H opens C at v, and V checks it opens to s(u,v)
+*** Application: Sum Checks
+**** The Auroa trick for sumcheck
++ Lemma :: when H ⊂ 𝔽 is a multiplicative subgroup of size n, and
+           deg(g) < n
+           ∑_{x∈H}g(x) = 0
+           iff g has constant coefficient 0
+
++ We can reduce bigger polynomials (say 3n bigger) to less than n
+
++ let Z_{H} ≔ ∏_{x ∈ H} (X - x)
+
++ let deg(g₂) < n - 1 s.t.
+
+  * f(x) ≡ g₁(X) • Z_{H}(X) + X • g₂(X)
+**** AuroraLight
+- Aurora doesn't like trusted setup, so it does it in the hardworking
+  way instead of the right way
+- Check f has this form by sending commitment to g₁,g₂, and openning
+  f,g₁,g₂ at random point
+
+- Corollary :: Universal SRS SNARK with prover almost as fast as
+               [Groth16] (however proofs are longer than Sonic)
+
+  + Need random oracle
+
+  + Sum checks as opposed to QAP
+
+  +
+
+
