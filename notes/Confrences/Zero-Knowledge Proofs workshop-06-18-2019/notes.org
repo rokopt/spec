@@ -60,10 +60,10 @@ Proving Key is quite big, and should not be on chain (500GB for 10
 thousand transactions)
 **** Using zk-SNARKs - Big Picture
 - Requires Trust
-  ----> verification n times
-  ----> find x,y,z z+proof
-  ----> Verifies Prover knows: x,y, s.t., x^y = z
-  Proving Key ---> Prover ---> Verifier ----> Veriication Key
+  + ----> verification n times
+  + ----> find x,y,z z+proof
+  + ----> Verifies Prover knows: x,y, s.t., x^y = z
+  + Proving Key ---> Prover ---> Verifier ----> Veriication Key
 
 - =cost(verification) << cost(proof) ≈ cost(execution)=
 
@@ -110,7 +110,7 @@ thousand transactions)
 ** Snarkonomicon!
 Izaak
 *** snark vs stark vs bulletproofs
-- all snakrs we discuss here are a class of snarks called "pairing
+- all snarks we discuss here are a class of snarks called "pairing
   based" SNARKs
 - In general SNARK may or may not require a trusted setup
 *** Different from normal programming
@@ -235,7 +235,7 @@ Jacob and schaeff
   + Linear in G₁ and G₂
   + Non degenerate
 - Efficiently computable group operations
-  + Mulitiplicaiton of group elements in G₁, G₂, G_T deciding
+  + Multiplication of group elements in G₁, G₂, G_T deciding
     membership, bilinear map
 - Types of bilinear groups
   + Type 1 :: Symmetric e(u,u) G₁ = G₂
@@ -251,7 +251,7 @@ Jacob and schaeff
 |--------------------------------+---------------------------------+------------------------|
 | interactive                    | Golderich-widgerson-micali 1986 | bradssard crepeau 1986 |
 | non interactive                | Blum Feldman Micali 1988        | ????                   |
-**** Exogenous genetic matieral
+**** Exogenous genetic material
 - Pairing basd dluble homomorphic encryption scheme
 - symmetric composite order groups of order n = pq
   + Hard to fatcor n
@@ -294,14 +294,14 @@ Jacob and schaeff
   |------------------+------------------|
   | O(N^2) elements   | O(1) elements    |
   | O(N^{2/3}) elements | O(N^{2/3}) elements |
-**** Balacning polynomials in the exponent
+**** Balancing polynomials in the exponent
 - Core idea
 - Allows paralllel, multiplication gates at once
 **** Intelligent Design
 - Better group choice
 - Then QSP and QAP based SNARKs came around
 **** Arithmetic circuit satisfiability
-- Universal CRS, works for any circut
+- Universal CRS, works for any circuit
 - Specialized CRS, tailored for a particular circuit
 *** Past, Present, Future
 ** QAPS
@@ -312,7 +312,6 @@ Jacob and schaeff
 - using arithemtic fields
 ** Pairing-Based zk-SNARKs
 [Groth, Eurocrypt 2016 + GM 17]
-- 
 *** zk-SNARK
 *** The [Groth16] zk-SNARK
 - pairing based zk-SNARK
@@ -323,7 +322,7 @@ Jacob and schaeff
 - Similar to the first part of they day
 **** Working "in the exponent"
 - If we are working with group elements, say g^x and g^y, then we are
-  really doing addition in the exponenet g^(x+y)
+  really doing addition in the exponent g^(x+y)
 - similarly, u^c = g^cx
   + So we can multiply with a known value c "in the exponent"
 **** Quadratic arithmetic program
@@ -353,7 +352,7 @@ Jacob and schaeff
 - perfect zero knowledge
 - simulation-extract-able
   + XPKE and poly assumptions
-*** Square arithmetic progrmas
+*** Square arithmetic programs
 - same as finite field arithmetic programs, however the u and v
   polynomials exactly the same!
   + Note this not directly simpler, the polynomials are larger
@@ -398,7 +397,7 @@ g^(x)^(x₀), g^(x²)^(x₀²), \dots,
 - So Sonic removes this step, and we only have hidden monomials not
   polynomials in our setup
 - THEOREM :: can update monomials, but polynomials in the CRS
-*** Sonic is also updatable
+*** Sonic is also updateable
 - any user, at any time, can update the parameters,including after
   their system goes live
 - After a single honest user has participated no party can prove
@@ -430,10 +429,10 @@ g^(x)^(x₀), g^(x²)^(x₀²), \dots,
 - Helpers aggregate proofs to reduce verifier overhead
 - In Block-chains, provers are most likely the miners
 ***** KZG Poly commit
-f(x)    g^{f(x)}
-←^α
-f(α) $\frac{f(x) - f(α)}{x-α}$
-$e(g^{\frac{f(x)- f(α)}{x-α}}, h^{x-α}) = e(g^{f(x)}g^{f(α)},h)$
+- f(x), g^{f(x)}
+- ←^α
+- f(α), (f(x) - f(α)) / (x - a)
+- e(g^{(f(x) - f(α))/(x-α)}, h^{x-α}) = e(g^{f(x)}g^{f(α)},h)
 ** GPU zk-SNARKs
 *** What does the SNARK prover do
 1. Elliptic-cruve multi-exponentiation
@@ -456,14 +455,18 @@ of the prover.
   + let f be a polynomial of degree n
   + let a₀,\dots,aₙ ∈ 𝔽ᵣ
   + let ω₀,\dots,ωₙ,
-    where f(ω₀) = a₀,
-    and where ...
-    where f(ωₙ) = aₙ
+    * where f(ω₀) = a₀,
+    * and where ...
+    * where f(ωₙ) = aₙ
 
-  + c₀ (F(ω₀),\dots,f(ωₙ))
-    c₁
-    \dots
-    cₙ
+  +
+    #+BEGIN_EXAMPLE
+      c₀ (F(ω₀),\dots,f(ωₙ))
+      c₁
+      …
+      cₙ
+    #+END_EXAMPLE
+
 
   + How can we make this take n log n and not n^2
 
@@ -472,9 +475,9 @@ of the prover.
     * let be 2^k, thus a millionth root of unity
 
   + f(x)
-    = ∑_{i=0}^{n-1}aᵢx^i
-    = ∑_{i=0}^{n-1/2}a₂ᵢx^2i + ∑_{i=0}^{n-1/2}a₍₂ᵢ₊₁₎x^(2i + 1)
-    = f₀(x^2) + f₁(x^2)x
+    * = ∑_{i=0}^{n-1}aᵢx^i
+    * = ∑_{i=0}^{n-1/2}a₂ᵢx^2i + ∑_{i=0}^{n-1/2}a₍₂ᵢ₊₁₎x^(2i + 1)
+    * = f₀(x^2) + f₁(x^2)x
 #+BEGIN_EXAMPLE
   FFT(f,ω):
     A₀ = FFT(f₀, ω²)
@@ -493,7 +496,7 @@ of the prover.
 #+END_EXAMPLE
 * Day 4
 ** Components of recent universal SNARKs
-*** 30 seconds of philosphy: SNARks and the meaning of life
+*** 30 seconds of philosphy: SNARKs and the meaning of life
 - SNARKs help us keep a grip on reality, by ensuring the data is
   anchored in reality
 *** Evaluating prover polynomials succinctly
@@ -511,14 +514,14 @@ Encoding of χ
 - Low degree polynomials disagree on most points
 *** Application: The Sonic helper
 - B-variate S(X,Y) evaluation points
-  {(xⱼ,yⱼ)}_{j ∈ {1…t} }values {z_{j}}
+  {(xⱼ,yⱼ)}_{j ∈ {1…t}} values {z_{j}}
 - Helper H wants to convince verifier V that ∀j ∈ {1…t}, S(xⱼ,yⱼ) = zⱼ
 - V's work: only one evaluation of S!
 
 - _How does this work?_
 
   1. ∀j, H sends Sⱼ ≔ cm(S(X,yⱼ))
-     + if H would convince V Sⱼ's are correct, he could just opne them
+     + if H would convince V Sⱼ's are correct, he could just open them
        at xⱼ
 
   2. V chooses random u ∈ 𝔽
@@ -532,22 +535,22 @@ Encoding of χ
   6. H opens C at v, and V checks it opens to s(u,v)
 *** Application: Sum Checks
 **** The Auroa trick for sumcheck
-+ Lemma :: when H ⊂ 𝔽 is a multiplicative subgroup of size n, and
+- Lemma :: when H ⊂ 𝔽 is a multiplicative subgroup of size n, and
            deg(g) < n
            ∑_{x∈H}g(x) = 0
            iff g has constant coefficient 0
 
-+ We can reduce bigger polynomials (say 3n bigger) to less than n
+- We can reduce bigger polynomials (say 3n bigger) to less than n
 
-+ let Z_{H} ≔ ∏_{x ∈ H} (X - x)
+- let Z_{H} ≔ ∏_{x ∈ H} (X - x)
 
-+ let deg(g₂) < n - 1 s.t.
+- let deg(g₂) < n - 1 s.t.
 
   * f(x) ≡ g₁(X) • Z_{H}(X) + X • g₂(X)
 **** AuroraLight
 - Aurora doesn't like trusted setup, so it does it in the hardworking
   way instead of the right way
-- Check f has this form by sending commitment to g₁,g₂, and openning
+- Check f has this form by sending commitment to g₁,g₂, and opening
   f,g₁,g₂ at random point
 
 - Corollary :: Universal SRS SNARK with prover almost as fast as
@@ -556,7 +559,4 @@ Encoding of χ
   + Need random oracle
 
   + Sum checks as opposed to QAP
-
-  +
-
 
