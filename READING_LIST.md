@@ -23,6 +23,7 @@
 - [Tendermint Consensus](https://cdn.relayto.com/media/files/LPgoWO18TCeMIggJVakt_tendermint.pdf)
 - [Casper the Friendly Finality Gadget Protocol](http://ijsrcseit.com/paper/CSEIT1831475.pdf)
 - [Polkadot Finality Gadget](https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf)
+- [What is the difference between PBFT, Tendermint, SBFT and HotStuff ?](https://ittaiab.github.io/2019-06-23-what-is-the-difference-between/)
 
 #### Economic Safety
 
