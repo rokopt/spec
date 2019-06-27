@@ -1,0 +1,562 @@
+* Day 1
+** Introductions
+- =monero= is attacked a few times
+- hack hack hack
+  + s/hack/dip/g
+** zk-SNARKs Setting the Scene
+@JacobEberhadt
+*** Primers
+- _Ali Baba's Cave_
+  + Alice wants to prove that she knows the password of a locked door
+    without telling Bob
+    * More info :: Bob must come in and explore after she leaves
+  + _How do we do this?_
+    * watch her come through one route and leave through the other
+    * Leave the door open
+      - no ☹
+  + _real solution_
+    * Bob shouts, leave through A or B. This gives you a security
+      parameter of 2
+      - which is 1^{1/2}
+        + Can do this over and over again to get better security
+- _Where's Waldo_
+  + How to prove you know where Waldo is without giving up the
+    position
+  + _How do we do this?_
+    * What is right next to waldo
+      - Gives information up, making the puzzle easier to find
+    * Window that shows waldo and nothing else
+    * Cut out image of Waldo
+- _My Card is red_
+  + Want to show that your card is red without giving out what card
+    you have
+  + _Solutions?_
+    * Give him all the black card, ∴ you must have a red one!
+*** Properties
+- Look at my other notes for a proper definition
+- Completeness :: Given a statement and wittiness, the prove can
+                  convince the versifier P = 1
+- Soundness :: A malicious prover cannot convince the verifier of a
+               false statement.
+- Zero-Knowledge :: The proof reveals only the proof of truth of the secret
+*** Related to Programming?
+**** Meaning
+- Look at my other notes, for a proper meaning
+- Arithmetic circuits, so only =+= and =×=
+- Rank 1 Constraint System
+  + Arithmetic circuits can compile to Rank 1 Constraint system
+**** zk-SNARKs are more than ZKPs
+- zk-SNARKs are two ideas in one
+  1. Zero knowledge proofs
+  2. Computation verifiable without re-executing them
+**** Elements of zk-SNARKs
+Formal definition also gives you this!
+
+1. (prover\under{}key, verifier\under{}key) := setup(circuit)
+2. proof := generateProof(prover\under{}key, inputs, circuit)
+3. verifyProof(verifier\under{}key, proof) : 𝔹
+
+Proving Key is quite big, and should not be on chain (500GB for 10
+thousand transactions)
+**** Using zk-SNARKs - Big Picture
+- Requires Trust
+  + ----> verification n times
+  + ----> find x,y,z z+proof
+  + ----> Verifies Prover knows: x,y, s.t., x^y = z
+  + Proving Key ---> Prover ---> Verifier ----> Veriication Key
+
+- =cost(verification) << cost(proof) ≈ cost(execution)=
+
+- Can make a CRS s.t. it reveals 1 bit of information
+
+  + Make sure 1 element is non zero to mitigate this issue
+
+- To solve trusted setup, use a multi user protocol
+  + If at least 1 participant is honest, then it will be proven
+  + In a block-chain setup, have different bakers to distribute the
+    trust
+  + This is the best you can do
+  + JP-Morgan uses Bullet Proofs
+**** Under the Hood
+| Levels              | Level concept is introduced      |
+|---------------------+----------------------------------|
+| Program code        | Tools in this workshop           |
+| R1CS                | Crypto-libs (libsnark)           |
+| QAP                 |                                  |
+| Verification Scheme | new theoretical research (SONIC) |
+- Rank 1 constraint system (R1CS)
+  + Program expressed as a set of constraints. A satisfying variable
+    assignment represents a valid program execution
+- Quadratic Arithmetic Program (QAP)
+  + Re-formulation of the R1CS constraints using polynomials. Allows
+    efficient satisfiability checks by checking polynomial
+    divisibility
+- zk-SNARKs verifiable computation scheme
+**** Waste
+- (pk,vk, Toxic\under{}waste) := setup(c)
+- _How to fix_
+  + Make pk and vk generic for every circuit
+  + This may actually be possible!
+  + Done via multi party computation reference string for any circuit
+**** Swap-able backends
+- can swap out snarks for say bulletproof or zk-STARKs, etc etc!
+**** ZK-SNARKs contenders
+|                     | SNARKs                | STARKs                     | Bulletproofs  |
+|---------------------+-----------------------+----------------------------+---------------|
+| Prover complexity   | O(N × log(N))         | O(N × poly-log(N))         | O(N × log(N)) |
+| Verifier complexity | ~O(1)                 | O(poly-log(N))             | O(N)          |
+| crypto assumptions  | knowledge of exponent | collision resistant hashes | DLP           |
+| proof size          | 200B                  | 45kb                       | hundred kilo  |
+** Snarkonomicon!
+Izaak
+*** snark vs stark vs bulletproofs
+- all snarks we discuss here are a class of snarks called "pairing
+  based" SNARKs
+- In general SNARK may or may not require a trusted setup
+*** Different from normal programming
+1. Cost model
+   + =+= costs 0~
+   + =×= costs 1~
+     * When both variables are not known
+   + _Reality_
+     - Witness generation
+     - something else
+2. Non-determinism
+3. Can only directly a small amount of data
+
+| Normal Computer | Snarks                 |
+|-----------------+------------------------|
+| +,*, mod 2^64    | +, × mod large prime p |
+| Memory access   |                        |
+| Bit stuff       |                        |
+| Conditionals    |                        |
+*** Goal of this talk
+*** Division
+- Important for implementing lots of stuff
+- y^{p-1} = 1
+- y^-1 = y^{p-2}
+
+- This sucks as this does 256 multiplications
+
+- EGCD algorithm?
+  + Log p multiplications needed for this method
+
+  + Need the prime to do this, can we get this information?
+
+- Can we do this better: O(1)?
+*** Guess and Check power
+- Non determinism, allows us to use a real CPU to do calculation
+- Block of code generates the witness level
+- Prover/witness block creates a path through the relation
+*** Key takeways
+** ZoKrates
+Jacob and schaeff
+*** Scale-ability
+- Normally computation on a blockchain is highly redundant
+  + Every node has to redo the computation
+- Idea :: Instead, precompute the computation, then give a proof about
+          said computation, to propagate throughout the network
+*** On Chain proof verification
+- A high-level language
+- A compiler, which transforms programs to provable constraint systems
+- Tools for
+  + Setup phase
+  + Witness computation
+  + proof generation
+  + generation of verification smart contract
+  + \dots
+
+- _Example_
+  + Zokrates :: generate-proof
+  + proof :: 3 EC Points = 128 byes
+  + public variables :: main function public parameters, and return
+       statement values
+  Generates
+
+  + Verification Contract
+
+    * Verification key :: 4+ #public variablesEC points
+
+    * costs around 600 gas
+*** Beyond the Language
+- _ZoKrates StdLib_
+  + ECC
+  + EdDSA signature verification
+  + SHA256
+  + Pederson hashes
+  + Utilities
+- _ZoKrates pyCrypto Libraray_
+  + Python utilities for easy interaction with ZoKrates programs
+  + we call this "Application Code"
+* Day 2
+** Evolution of pairing-based Zero-knowledge proofs
+*** Recurring motifs
+- _Language_
+  + Type of statements we can prove
+- _Security_
+  + underpinning assumptions
+  + unconditional soundness vs unconditional zero-knowledge
+- _Efficiency_
+  + Prover computation, verifier computation, interaction, setup size,
+    succinctness
+*** Pairings
+**** Abiogensis
+- Goldwasser-micali rackoff 85/89
+  + Defined zk proofs: complete, sound, zero knowledge
+- Constructed interactive zero-knowledge
+**** Cambrian explosion
+- paper was rejected, once it got accepted, there was an explosion of
+  use cases
+- Can prove np complete!
+  + Graphs!, shows generality of zk proof
+- Security was next
+- Succinctness!
+- Witness the statement!
+- CRS
+  + non interactive
+  + Must have a setup or an environment
+**** Biodiversity
+- Came about in the 80's
+**** Devonian Explosion
+- [Sch90/91] Discrete log based signatures
+- [CDS94,Cra96] Σ protocols
+- [CD98] Arithmetic circuit satisfiability
+| proof system | Communication     |
+|--------------+-------------------|
+| [CD98]       | O(N) elements     |
+| [Gro09]      | O(√N) elements    |
+| BCCP16       | O(log N) elements |
+*** Pairing Based NIZK proofs
+**** Groups with pariings
+- Cyclic groups, G₁, G₂, G_T of size n
+  + Let g be generator of G₁ i.e. G₁ = {1,g,\dots,g^{n-1}} and h be generator
+    of G₂
+- Bilinear map (Tweaked pairing) e: G₁ × G₂ → G_Τ
+  + Linear in G₁ and G₂
+  + Non degenerate
+- Efficiently computable group operations
+  + Multiplication of group elements in G₁, G₂, G_T deciding
+    membership, bilinear map
+- Types of bilinear groups
+  + Type 1 :: Symmetric e(u,u) G₁ = G₂
+  + Type 2 :: Asymetric
+  + Type 3 :: Asymetric in a way
+    * Type 3 is much cheaper than type 2
+    * Can always map type 2 to type 3 for cheaper or as cheap
+    * I.E. Never use type 2
+**** Getting used to bilinear map
+- fun exercises
+**** Adaptive radiation
+| ZK proof NP-complete languages | computational knowledge         | unconditional ZK       |
+|--------------------------------+---------------------------------+------------------------|
+| interactive                    | Golderich-widgerson-micali 1986 | bradssard crepeau 1986 |
+| non interactive                | Blum Feldman Micali 1988        | ????                   |
+**** Exogenous genetic material
+- Pairing basd dluble homomorphic encryption scheme
+- symmetric composite order groups of order n = pq
+  + Hard to fatcor n
+  + Public key (g,h) where ord(g) = n and ord(h) = q
+- Encrypt small integer m under public key (g,h) as g^{m}h^r
+- additively homo
+- multiplicitly homo
+**** Transformation
+[BGN05] + NIZK ⇒ NIZK with perfect and everlasting ZK
+| ZK proof NP-complete languages | computational knowledge         | unconditional ZK       |
+|--------------------------------+---------------------------------+------------------------|
+| interactive                    | Golderich-widgerson-micali 1986 | bradssard crepeau 1986 |
+| non interactive                | Blum Feldman Micali 1988        | Groth-Ostrovsky 2006   |
+- perfect zero knowledge turn ord(h) = n, people don't know if it's
+  Ord(n) or Ord(p)
+- Based on a trusted setup
+**** Clade
+- [CHK03, GOS06b] NIZK proofs based on prime-order groups with
+  pairings
+  + Latter setup free non-interactive witness-indisguishable proofs
+- [Gro06] NIZK proofs for practical language
+- [GS08] Efficient proofs for practical languages
+**** Fitness
+- Statement: Here is a ciphertext
+- used to be a TB in 1994 with state of the art
+- 2008 it's down to KB
+*** ZK
+**** Succinctness
+- [GW11] SNAG = Succinct non-interactive argument
+  + Need non-falseifiable assumptions to build SNAGs
+- [BCCT12] SNARK = Succinct non-interactive argument of knowledge
+  + ... and zk-SNARK
+  + Added ease of verification requirement - verifier time polynomial
+    in statement size
+- Succinct = Almost zero knowledge
+- Succinct = easy verification
+**** Pairing-based SNARKs
+- [Gro10] short pariing based non-interactive ZK arguments
+  | CRS              | Proof Size       |
+  |------------------+------------------|
+  | O(N^2) elements   | O(1) elements    |
+  | O(N^{2/3}) elements | O(N^{2/3}) elements |
+**** Balancing polynomials in the exponent
+- Core idea
+- Allows paralllel, multiplication gates at once
+**** Intelligent Design
+- Better group choice
+- Then QSP and QAP based SNARKs came around
+**** Arithmetic circuit satisfiability
+- Universal CRS, works for any circuit
+- Specialized CRS, tailored for a particular circuit
+*** Past, Present, Future
+** QAPS
+- Poor notes sorry!
+*** GGPR13
+**** Rank 1 Constraint System
+- Describes NP computations
+- using arithemtic fields
+** Pairing-Based zk-SNARKs
+[Groth, Eurocrypt 2016 + GM 17]
+*** zk-SNARK
+*** The [Groth16] zk-SNARK
+- pairing based zk-SNARK
+- (a_{l+1},\dots,a_m) witness for QAP
+  + Prover has this
+- Prover sends 3 group elements to the verifier, π
+**** Groups with bilinear maps
+- Similar to the first part of they day
+**** Working "in the exponent"
+- If we are working with group elements, say g^x and g^y, then we are
+  really doing addition in the exponent g^(x+y)
+- similarly, u^c = g^cx
+  + So we can multiply with a known value c "in the exponent"
+**** Quadratic arithmetic program
+- QAP defines an NP-relation with
+  + Constant a_0 = 1
+  + Instances (a_{1},\dots,a_l)
+  + witnesses (a_{l+1},\dots,a_m)
+**** Construction
+- CRS σ = (g^{σ₁},h^{σ₂}) where α, β, y, δ, x ← ℤ^*ₚ and \dots
+***** Proofs of these constructions holding
+****** Perfect Zero Knowledge
+- Simulation knows a trapdoor τ = (α,β,γ,δ,χ)
+- pick random A,B ← ℤ_p
+- This will perfectly simulate a proper proof with the correct CRS
+****** Knowledge Soundness
+*** Signatures of Knowledge
+- common reference string
+- public instance φ
+- message m
+- Prover : (φ,ω) ∈ R
+  + Sends SoK to Verifier
+**** What you Prove
+- for signatures of knowledge, instances of φ may be related in say
+  ω = ω + 1
+- Thus the attack vector is higher due related instances
+*** SE-SNARKS
+- perfect zero knowledge
+- simulation-extract-able
+  + XPKE and poly assumptions
+*** Square arithmetic programs
+- same as finite field arithmetic programs, however the u and v
+  polynomials exactly the same!
+  + Note this not directly simpler, the polynomials are larger
+* Day 3
+** Sonic
+*** Zero-Knowledge arguments have a trapdoors
+- Proofs are generated and verified using shared reference string.
+- Whoever generated the reference string may keep some trapdoor info
+  that can be used to simulate fake proofs
+- all ZKP's have a trapdoor!
+- We just have good ways of hiding the backdoor
+- In Zcash, we can say, print money
+- In Coda, we could just create a "valid" state and forge the
+  blockchain
+**** Why do we still use them if there are trap doors
+- No one should know the backdoor!
+- SNARK parameters are not chosen randomly
+- the CRS has secrets hidden in them!
+- _CRS generation_
+  + CRS is made by sampling x ← 𝔽
+  + we have g^(u₀(x)),g^(u₁(x)), and thus a correlation between CRS string
+    elements
+*** How can we use zk-SNARKs
+- zk-SNARks require trusted setup where a group of participants
+  jointly
+  generating the parameters
+- Each participants learn a shard of toxic waste
+*** Why Sonic?
+- Mostly zk-SNARKs require a new setup for every application
+- Sonic requires a single trusted setup that can be across any
+  application
+- having a shared CRS costs for prover computations
+- works via piggy backing off older CRS?????
+*** Prior zk-SNARK setups
+x₀ ← 𝔽
+g^(x)^(x₀), g^(x²)^(x₀²), \dots,
+- Can prove you did this
+  + e(g^x, g^(x₀)) = e(g^(x)^(x₀),g)
+- Need to add an alpha to your setup, which is a specialization step,
+  which can not piggy back
+- This removes piggy backing!
+- So Sonic removes this step, and we only have hidden monomials not
+  polynomials in our setup
+- THEOREM :: can update monomials, but polynomials in the CRS
+*** Sonic is also updateable
+- any user, at any time, can update the parameters,including after
+  their system goes live
+- After a single honest user has participated no party can prove
+  fraudulent data
+- A user could update the parameters themselves and trust all proofs
+  after that point
+- updatability proofs are small and stored forever in sequence
+- All users must agree to the new parameters being used!
+- Can't update the number of monomials after starting the sonic, can
+  only make it smaller
+  + Make sure to choose big
+- CRS is going to be MBs or GBs
+  + Linearly sized
+  + Don't need to store them forever
+  + Only the verification key
+- Polynomials are bigger
+  + 3x larger polynomials in R1CS than ZCash
+*** Sonic encodes the application in the parameters
+- Proof sizes are constant, but not particularly small!
+- Guesetimated 1-1.5 Kb
+  + 30x more expensive than state of the art [Groth16]
+**** Sonic is better with Helpers
+- 256 bytes per proof
+- Guestimated 3x more expensive for the prover than the state of the
+  art [Groth16]
+- Helper time is about half the prover time per proof
+- Helpers are not trusted
+- Helpers cannot communicate with original provers.
+- Helpers aggregate proofs to reduce verifier overhead
+- In Block-chains, provers are most likely the miners
+***** KZG Poly commit
+- f(x), g^{f(x)}
+- ←^α
+- f(α), (f(x) - f(α)) / (x - a)
+- e(g^{(f(x) - f(α))/(x-α)}, h^{x-α}) = e(g^{f(x)}g^{f(α)},h)
+** GPU zk-SNARKs
+*** What does the SNARK prover do
+1. Elliptic-cruve multi-exponentiation
+2. Fast Fourier transform
+3. Mayyyybe g2
+
+Let's focus on the multi-exponentiation, since it is the slowest part
+of the prover.
+*** Multi-exponentiation (or "multi-scaling")
+- It's an abelian group
+*** Map reduce
+- It's bloody fast, mate
+*** Fast Fourier Transform
+- Two groups G₁ G₂
+  + G₁ :: 𝔽_q
+  + G₂ :: 𝔽_{q²}
+    * Note everything in sonic, everything is in G₁, which is great
+- _Understanding_
+  + let 𝔽ᵣ be a finite field
+  + let f be a polynomial of degree n
+  + let a₀,\dots,aₙ ∈ 𝔽ᵣ
+  + let ω₀,\dots,ωₙ,
+    * where f(ω₀) = a₀,
+    * and where ...
+    * where f(ωₙ) = aₙ
+
+  +
+    #+BEGIN_EXAMPLE
+      c₀ (F(ω₀),\dots,f(ωₙ))
+      c₁
+      …
+      cₙ
+    #+END_EXAMPLE
+
+
+  + How can we make this take n log n and not n^2
+
+    * These ω's need to be a n^{th} root of unity (1)
+
+    * let be 2^k, thus a millionth root of unity
+
+  + f(x)
+    * = ∑_{i=0}^{n-1}aᵢx^i
+    * = ∑_{i=0}^{n-1/2}a₂ᵢx^2i + ∑_{i=0}^{n-1/2}a₍₂ᵢ₊₁₎x^(2i + 1)
+    * = f₀(x^2) + f₁(x^2)x
+#+BEGIN_EXAMPLE
+  FFT(f,ω):
+    A₀ = FFT(f₀, ω²)
+    A₁ = FFT(f₁,ω²)
+
+
+  V(ω)⁻¹ E = (a₀
+              a₁
+              …
+              aₙ₋₁
+              )
+  =
+  ωV(ω⁻¹)E
+  =
+  ω×A
+#+END_EXAMPLE
+* Day 4
+** Components of recent universal SNARKs
+*** 30 seconds of philosphy: SNARKs and the meaning of life
+- SNARKs help us keep a grip on reality, by ensuring the data is
+  anchored in reality
+*** Evaluating prover polynomials succinctly
+- started in 1990
+- *Hard working honest way* - low degree testing
+  + PCPP, IOPPs
+*** Notation
+Encoding of χ
+- [χ] ≔ χ • g = g + \dots + g (χ times)
+
+- can imagine it means g^{χ}
+*** Application: Proof of retrievability
+- Server :: Commit to file as coefficients {a₀,\dots,a_{d}} of polynomial f
+- Client :: Time-to-time query f at a random point r.
+- Low degree polynomials disagree on most points
+*** Application: The Sonic helper
+- B-variate S(X,Y) evaluation points
+  {(xⱼ,yⱼ)}_{j ∈ {1…t}} values {z_{j}}
+- Helper H wants to convince verifier V that ∀j ∈ {1…t}, S(xⱼ,yⱼ) = zⱼ
+- V's work: only one evaluation of S!
+
+- _How does this work?_
+
+  1. ∀j, H sends Sⱼ ≔ cm(S(X,yⱼ))
+     + if H would convince V Sⱼ's are correct, he could just open them
+       at xⱼ
+
+  2. V chooses random u ∈ 𝔽
+
+  3. H sends C ≔ cm(S(u,Y))
+
+  4. ∀j, H opens C at yⱼ and Sⱼ and xⱼ, V checks they open to same value
+
+  5. V chooses random v ∈ 𝔽 and computes s(u,v)
+
+  6. H opens C at v, and V checks it opens to s(u,v)
+*** Application: Sum Checks
+**** The Auroa trick for sumcheck
+- Lemma :: when H ⊂ 𝔽 is a multiplicative subgroup of size n, and
+           deg(g) < n
+           ∑_{x∈H}g(x) = 0
+           iff g has constant coefficient 0
+
+- We can reduce bigger polynomials (say 3n bigger) to less than n
+
+- let Z_{H} ≔ ∏_{x ∈ H} (X - x)
+
+- let deg(g₂) < n - 1 s.t.
+
+  * f(x) ≡ g₁(X) • Z_{H}(X) + X • g₂(X)
+**** AuroraLight
+- Aurora doesn't like trusted setup, so it does it in the hardworking
+  way instead of the right way
+- Check f has this form by sending commitment to g₁,g₂, and opening
+  f,g₁,g₂ at random point
+
+- Corollary :: Universal SRS SNARK with prover almost as fast as
+               [Groth16] (however proofs are longer than Sonic)
+
+  + Need random oracle
+
+  + Sum checks as opposed to QAP
+
