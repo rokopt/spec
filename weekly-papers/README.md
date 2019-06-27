@@ -7,6 +7,8 @@
 - [May 24th: Ouroboros Genesis](./2019-05-24-ouroboros-genesis)
 - [May 31st: Tendermint](./2019-05-31-tendermint)
 - [June 14th: ICTP](./2019-06-14-ictp)
+- [July 3rd: Zerocash](./2019-07-03-zerocash)
+
 
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
