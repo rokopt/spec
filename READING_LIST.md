@@ -17,13 +17,13 @@
 - [Tezos Whitepaper - L.M. Goodman](https://tezos.com/static/white_paper-2dc8c02267a8fb86bd67a108199441bf.pdf)
 - [Arweave Litepaper](https://www.arweave.org/files/arweave-lightpaper.pdf)
 - [ICTP Whitepaper](https://ictp.io/ictp-whitepaper.pdf)
-
 #### Consensus
 
 - [Tendermint Consensus](https://cdn.relayto.com/media/files/LPgoWO18TCeMIggJVakt_tendermint.pdf)
 - [Casper the Friendly Finality Gadget Protocol](http://ijsrcseit.com/paper/CSEIT1831475.pdf)
 - [Polkadot Finality Gadget](https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf)
-- [What is the difference between PBFT, Tendermint, SBFT and HotStuff ?](https://ittaiab.github.io/2019-06-23-what-is-the-difference-between/)
+- [Avalanche](https://avalabs.org/snow-avalanche.pdf)
+- [What is the difference between PBFT, Tendermint, SBFT and HotStuff?](https://ittaiab.github.io/2019-06-23-what-is-the-difference-between/)
 
 #### Economic Safety
 
