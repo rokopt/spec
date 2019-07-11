@@ -17,6 +17,7 @@
 - [Tezos Whitepaper - L.M. Goodman](https://tezos.com/static/white_paper-2dc8c02267a8fb86bd67a108199441bf.pdf)
 - [Arweave Litepaper](https://www.arweave.org/files/arweave-lightpaper.pdf)
 - [ICTP Whitepaper](https://ictp.io/ictp-whitepaper.pdf)
+
 #### Consensus
 
 - [Tendermint Consensus](https://cdn.relayto.com/media/files/LPgoWO18TCeMIggJVakt_tendermint.pdf)
@@ -30,6 +31,13 @@
 - [Formal Barriers to Longest-Chain Proof-of-Stake Protocols](https://arxiv.org/abs/1809.06528 )
 
 ### Explainers / Tutorials
+
+#### Zero-knowledge proofs
+
+- [Zero Knowledge Proofs: An Illustrated Primer](https://blog.cryptographyengineering.com/2014/11/27/zero-knowledge-proofs-illustrated-primer/)
+- [Zero Knowledge Proofs; An Illustrated Primer (Part 2)](https://blog.cryptographyengineering.com/2017/01/21/zero-knowledge-proofs-an-illustrated-primer-part-2/)
+- [Zcon1 Talks (recorded; video / slides)](https://www.youtube.com/playlist?list=PL40dyJ0UYTLLjPZaKjdhMoCNanb77_Ztj)
+- [zkS{N,T}ARKs Starter Packet - Ethresearch](https://ethresear.ch/t/zero-knowledge-proofs-starter-pack/4519)
 
 #### Smart contracts
 
