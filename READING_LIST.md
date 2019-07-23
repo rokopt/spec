@@ -61,6 +61,10 @@
 
 - [Amending Tezos](https://medium.com/tezos/amending-tezos-b77949d97e1e )
 
+#### Lambda Encodings
+
+- [An introduction to recursive types](https://winterkoninkje.dreamwidth.org/101420.html)
+
 ### Podcasts / Video Series / Other Media
 
 Most conference talks are recorded, so watching talks from recent conferences (at 1.5x or 2x speed) can be effective.
