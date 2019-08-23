@@ -9,6 +9,7 @@
 - [June 14th: ICTP](./2019-06-14-ictp)
 - [July 3rd: Zerocash](./2019-07-03-zerocash)
 - [August 23rd: Idris](./2019-08-23-idris)
+- [August 30th: Learning to Prove Theorems via Interacting with Proof Assistants](./2019-08-30-learning-to-prove)
 
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
