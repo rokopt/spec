@@ -9,3 +9,7 @@ data Vect : Nat -> Type -> Type where
   Nil : Vect Z a
   (::) : a -> Vect k a -> Vect (S k) a
 ```
+
+- Are implicit arguments wise? With QTT would be annotated 0.
+- Note on type theory extension (see page 13)
+- Elaboration: build typed Core terms from high-level language, handle typeclasses, ~reversible
