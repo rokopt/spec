@@ -20,6 +20,11 @@
 - [August 23rd: Idris](./2019-08-23-idris)
 - [August 30th: Learning to Prove Theorems via Interacting with Proof Assistants](./2019-08-30-learning-to-prove)
 
+#### September 2019
+- [September 6th: Avalanche](./2019-09-06-avalanche)
+
+
+
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
 #### Backlog suggestions
@@ -31,7 +36,7 @@ Slots are first-come-first-served - feel free to append papers you'd like to rea
 - [Scalable and Probabilistic Leaderless BFT Consensus through Metastability](https://arxiv.org/pdf/1906.08936.pdf)
 - [HotStuff: BFT Consensus in the Lens of Blockchain](https://arxiv.org/pdf/1803.05069.pdf)
 - [Nightshade: Near Protocol Sharding Design](https://nearprotocol.com/downloads/Nightshade.pdf)
-- [Coda: Decentralized cryptocurrency at scale] (https://cdn.codaprotocol.com/v2/static/coda-whitepaper-05-10-2018-0.pdf)
+- [Coda: Decentralized cryptocurrency at scale](https://cdn.codaprotocol.com/v2/static/coda-whitepaper-05-10-2018-0.pdf)
 
 ##### ZKPs for Private Payments
 - [A multi-party protocol for constructing the public parameters of the Pinocchio zk-SNARK](http://fc18.ifca.ai/bitcoin/papers/bitcoin18-full1.pdf)
@@ -42,7 +47,7 @@ Slots are first-come-first-served - feel free to append papers you'd like to rea
 - [ZoKrates-Scalable Privacy-Preserving Off-Chain Computations](https://pdfs.semanticscholar.org/5deb/712688f1dc0b389caeb3ffbb972333868741.pdf) 
 - [Zexe: Enabling Decentralized Private Computation](https://eprint.iacr.org/2018/962.pdf)
 
-##### Cryotography, MPC Misc.
+##### Cryptography, MPC Misc.
 - [VDFs from Isogenies](https://eprint.iacr.org/2019/166.pdf)
 - [Fast Secure Two-Party ECDSA Signing](https://eprint.iacr.org/2017/552.pdf)
 - [Fast Multiparty Threshold ECDSA with Fast Trustless Setup](https://eprint.iacr.org/2019/114.pdf)
