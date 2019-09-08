@@ -22,8 +22,11 @@
 
 #### September 2019
 - [September 6th: Avalanche](./2019-09-06-avalanche)
+- [September 20th: Plonk](./2019-09-20-plonk)
 
 
+#### October 2019
+- [October 4th: Hashgraph](./2019-10-04-hashgraph)
 
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
@@ -33,6 +36,7 @@ Slots are first-come-first-served - feel free to append papers you'd like to rea
 - Tendermint whitepaper
 - Polkadot whitepaper
 - Zerocash paper
+- [Hashgraph](https://www.swirlds.com/downloads/SWIRLDS-TR-2016-01.pdf)
 - [Scalable and Probabilistic Leaderless BFT Consensus through Metastability](https://arxiv.org/pdf/1906.08936.pdf)
 - [HotStuff: BFT Consensus in the Lens of Blockchain](https://arxiv.org/pdf/1803.05069.pdf)
 - [Nightshade: Near Protocol Sharding Design](https://nearprotocol.com/downloads/Nightshade.pdf)
@@ -51,6 +55,7 @@ Slots are first-come-first-served - feel free to append papers you'd like to rea
 - [VDFs from Isogenies](https://eprint.iacr.org/2019/166.pdf)
 - [Fast Secure Two-Party ECDSA Signing](https://eprint.iacr.org/2017/552.pdf)
 - [Fast Multiparty Threshold ECDSA with Fast Trustless Setup](https://eprint.iacr.org/2019/114.pdf)
+- [PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge](https://eprint.iacr.org/2019/953.pdf)
 
 ##### PLT, Formal Verification
 - [Formal verification of smart contracts: Short paper](https://dl.acm.org/ft_gateway.cfm?id=2993611&type=pdf)
