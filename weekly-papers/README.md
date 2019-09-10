@@ -21,12 +21,14 @@
 - [August 30th: Learning to Prove Theorems via Interacting with Proof Assistants](./2019-08-30-learning-to-prove)
 
 #### September 2019
+
 - [September 6th: Avalanche](./2019-09-06-avalanche)
 - [September 20th: Plonk](./2019-09-20-plonk)
 
-
 #### October 2019
+
 - [October 4th: Hashgraph](./2019-10-04-hashgraph)
+- [October 18th: Halo](./2019-10-18-halo)
 
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
