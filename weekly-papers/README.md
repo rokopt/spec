@@ -30,11 +30,16 @@
 - [October 4th: Hashgraph](./2019-10-04-hashgraph)
 - [October 18th: Halo](./2019-10-18-halo)
 
+#### November 2019
+
+- [November 1st: Async DKG](./2019-11-01-async-dkg)
+
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
 #### Backlog suggestions
 
 ##### Protocols & Consensus
+
 - Tendermint whitepaper
 - Polkadot whitepaper
 - Zerocash paper
@@ -45,20 +50,24 @@ Slots are first-come-first-served - feel free to append papers you'd like to rea
 - [Coda: Decentralized cryptocurrency at scale](https://cdn.codaprotocol.com/v2/static/coda-whitepaper-05-10-2018-0.pdf)
 
 ##### ZKPs for Private Payments
+
 - [A multi-party protocol for constructing the public parameters of the Pinocchio zk-SNARK](http://fc18.ifca.ai/bitcoin/papers/bitcoin18-full1.pdf)
 - [Scalable, transparent, and post-quantum secure computational](https://eprint.iacr.org/2018/046.pdf)
 
 ##### ZKPs for Private Computation
+
 - [Hawk: The blockchain model of cryptography and privacy-preserving smart contracts](https://user.eng.umd.edu/~cpap/published/hawk.pdf)
 - [ZoKrates-Scalable Privacy-Preserving Off-Chain Computations](https://pdfs.semanticscholar.org/5deb/712688f1dc0b389caeb3ffbb972333868741.pdf) 
 - [Zexe: Enabling Decentralized Private Computation](https://eprint.iacr.org/2018/962.pdf)
 
 ##### Cryptography, MPC Misc.
+
 - [VDFs from Isogenies](https://eprint.iacr.org/2019/166.pdf)
 - [Fast Secure Two-Party ECDSA Signing](https://eprint.iacr.org/2017/552.pdf)
 - [Fast Multiparty Threshold ECDSA with Fast Trustless Setup](https://eprint.iacr.org/2019/114.pdf)
 - [PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge](https://eprint.iacr.org/2019/953.pdf)
 
 ##### PLT, Formal Verification
+
 - [Formal verification of smart contracts: Short paper](https://dl.acm.org/ft_gateway.cfm?id=2993611&type=pdf)
 - [ZEUS: Analyzing Safety of Smart Contracts](http://pages.cpsc.ucalgary.ca/~joel.reardon/blockchain/readings/ndss2018_09-1_Kalra_paper.pdf)
