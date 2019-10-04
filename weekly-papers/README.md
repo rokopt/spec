@@ -28,11 +28,12 @@
 #### October 2019
 
 - [October 4th: Hashgraph](./2019-10-04-hashgraph)
-- [October 18th: Halo](./2019-10-18-halo)
+- [October 18th: STARKs](./2019-10-18-starks)
 
 #### November 2019
 
 - [November 1st: Async DKG](./2019-11-01-async-dkg)
+- [November 15th: Halo](./2019-11-15-halo)
 
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
