@@ -34,6 +34,7 @@
 
 - [November 1st: Async DKG](./2019-11-01-async-dkg)
 - [November 15th: Halo](./2019-11-15-halo)
+- [November 29th: Observational Equality, Now!](./2019-11-29-ott)
 
 Slots are first-come-first-served - feel free to append papers you'd like to read & discuss.
 
