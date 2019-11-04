@@ -42,3 +42,5 @@ Cons:
 Probably should use a universal SNARK. Will cost a bit in size / verification time.
 
 In either case, we need a new trusted setup or a transparent SNARK. Options:
+- MPC trusted setup (jointly with Zcash?) for adjusted Sapling circuit
+- In ZEXE case - perhaps PLONK?
