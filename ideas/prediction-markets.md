@@ -1,0 +1,3 @@
+- Writing the protocol and implementing it, make it efficient to use.
+- Operating a prediction market without legal problems.
+- Front-end, UX/UI are the most important tasks and higher points for competitive advantage.
