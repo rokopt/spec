@@ -59,23 +59,27 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
 ** prepare 006 context snapshot
    - get a mainnet context snapshot (005)
    #+begin_src bash
-     mkdir data-dir
+     mkdir ../data-dir
      # import 005 mainnet context
-     ./tezos-node snapshot import 694626-BKrv2G5sRNJW.full --data-dir data-dir
-     ./tezos-node identity generate --data-dir data-dir
-     ./tezos-node run --rpc-addr 127.0.0.1 --data-dir data-dir --connections 0
+     ./tezos-node snapshot import ../694626-BKrv2G5sRNJW.full --data-dir ../data-dir
+     ./tezos-node identity generate --data-dir ../data-dir
+     ./tezos-node run --rpc-addr 127.0.0.1 --data-dir ../data-dir --connections 0
      ./tezos-client rpc get /chains/main/blocks/head/metadata
      # bake after migraiton
      ./tezos-client -d yes-wallet bake for foundation1 --minimal-timestamp
 
      # export 006 context snapshot
-     ./tezos-node snapshot export --block BMAmJ3LW3Z8yjhJU5kFyuGGfaMfTuy5cFJKY28jw7uknRDnjA3o 694531-BMAmJ3LW3Z8y.full --data-dir data-dir
+     ./tezos-node snapshot export --block BMAmJ3LW3Z8yjhJU5kFyuGGfaMfTuy5cFJKY28jw7uknRDnjA3o ../694531-BMAmJ3LW3Z8y.full --data-dir ../data-dir
    #+end_src
 * migration from 006 (carthage) to 007 (dx)
 ** create migration branch
    #+begin_src bash
-     # protocol branch to test with name <branch>
+     # start on the protocol branch to test migration on with name <branch>
      git checkout <branch>
+     # install deps, if you haven't before
+     make build-deps
+     eval $(opam env)
+     # build
      make
      # snapshot protocol from `src/proto_alpha` to `src/proto_007_...`
      ./scripts/snapshot_alpha.sh dx_007 from carthage_006
@@ -96,11 +100,11 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
 ** run migration
   - get a copy of a context snapshot before you begin (from =34.90.96.85:/home/tz/694531-BMAmJ3LW3Z8y.full=
    #+begin_src bash
-     mkdir data-dir
-     ./tezos-node snapshot import 694531-BMAmJ3LW3Z8y.full --data-dir data-dir
-     ./tezos-node identity generate --data-dir data-dir
+     mkdir ../data-dir
+     ./tezos-node snapshot import ../694531-BMAmJ3LW3Z8y.full --data-dir ..data-dir
+     ./tezos-node identity generate --data-dir ../data-dir
      # run node and write log in migration.log
-     ./tezos-node run --rpc-addr 127.0.0.1 --data-dir data-dir --connections 0 |& tee migration.log &
+     ./tezos-node run --rpc-addr 127.0.0.1 --data-dir ../data-dir --connections 0 |& tee migration.log &
      ./tezos-client rpc get /chains/main/blocks/head/metadata
      ./tezos-client -d yes-wallet bake for foundation1 --minimal-timestamp
    #+end_src
