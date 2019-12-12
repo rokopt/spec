@@ -1,0 +1,102 @@
+In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
+- protocol snapshot
+  - create `src/proto_00x_*` from `src/proto_alpha`)
+  - [[http://tezos.gitlab.io/developer/proposal_testing.html][How to test a protocol proposal — Tezos (master branch, 2019/12/11 15:36) doc...]]
+- context snapshot
+  - data dump of node context
+    - export to a file
+    - import from a file to directory (to start node with the imported context, use `--data-dir` with the target directory)
+    - full, rolling or archive mode
+  - [[http://tezos.gitlab.io/user/snapshots.html][Snapshots — Tezos (master branch, 2019/12/11 15:36) documentation]]
+- roll snapshot
+  - copy of the state of rolls (who are the owners of the rolls)
+  - at the end of cycle, a random snapshot is selected and other ones are deleted (`Roll_storage.freeze_rolls_for_cycle`)
+  - [[http://tezos.gitlab.io/whitedoc/proof_of_stake.html#roll-snapshots][Proof-of-stake in Tezos — Tezos (master branch, 2019/12/11 15:36) documentation]]
+
+* pre-requisite
+  - mainnet is still on 005, but we want to migrate from 006, so:
+    - create =possible-future-mainnet= branch, with 006 protocol merged
+    - prepare mainnet context upgraded to 006 and export its context snapshot to be used for migration tests
+  - this only needs to be done once, then we just use the branch as the base for 007 migration with the 006 context snapshot
+** =possible-future-mainnet= branch
+   #+begin_src bash
+     # add upstream and fetch, if not done before
+     git remote add upstream git@gitlab.com:tezos/tezos.git
+     git fetch upstream
+
+     # create the branch from mainnet
+     git checkout -b possible-future-mainnet upstream/mainnet --no-track
+
+     # add carthage protocol
+     git checkout carthagenet -- src/proto_006_*
+     git commit -m "Protocol: add PsCARTHAGaz"
+     # 006 tests updates
+     git cherry-pick 7bdf8ec1 046b325b
+     # cherry pick yes-node patch (lets you bake on real context with fake signatures)
+     git cherry-pick 08b138c4
+     # add yes-node.patch fix TODO update yes-node.patch on master
+     git cherry-pick 92d4c2f2
+     # add hard-coded previous version TODO fix the script on master
+     git cherry-pick 6569bf8b
+     # update opam tests
+     ./scripts/update_opam_test.sh
+     git commit -am "./scripts/update_opam_test.sh"
+     # force activate 006 on 694630
+     ./scripts/activate_protocol.sh src/proto_006_* # answer y, y, 694630
+     make # fix `src/lib_base/block_header.ml` `forced_protocol_upgrades` value
+     git commit -am "./scripts/activate_protocol.sh src/proto_006_*"
+     # revert change to hard-coded previous change TODO fix the script on master
+     git cherry-pick 57181cef
+   #+end_src
+** prepare 006 context snapshot
+   - get a mainnet context snapshot (005)
+   #+begin_src bash
+     mkdir data-dir
+     # import 005 mainnet context
+     ./tezos-node snapshot import 694626-BKrv2G5sRNJW.full --data-dir data-dir
+     ./tezos-node identity generate --data-dir data-dir
+     ./tezos-node run --rpc-addr 127.0.0.1 --data-dir data-dir --connections 0
+     ./tezos-client rpc get /chains/main/blocks/head/metadata
+     # bake after migraiton
+     ./tezos-client -d yes-wallet bake for foundation1 --minimal-timestamp
+
+     # export 006 context snapshot
+     ./tezos-node snapshot export --block BMAmJ3LW3Z8yjhJU5kFyuGGfaMfTuy5cFJKY28jw7uknRDnjA3o 694531-BMAmJ3LW3Z8y.full --data-dir data-dir
+   #+end_src
+* migration from 006 (carthage) to 007 (dx)
+** create migration branch
+   #+begin_src bash
+     # add upstream and fetch, if not done before
+     git remote add upstream git@gitlab.com:tezos/tezos.git
+     git fetch upstream
+
+     # protocol branch to test with name <branch>
+     git checkout <branch>
+     make
+     # snapshot protocol from `src/proto_alpha` to `src/proto_007_...`
+     ./scripts/snapshot_alpha.sh dx_007 from carthage_006
+
+     # new "migration" branch
+     git checkout -b <branch>_activated upstream/mainnet --no-track
+     # add 007 protocol
+     git add src/proto_007_*
+     git commit -m "./scripts/snapshot_alpha.sh dx_007 from carthage_006"
+     # force activate 007 on 694636
+     ./scripts/activate_protocol.sh src/proto_007_* # answer y, y, 694636, n, n
+     make # fix `src/lib_base/block_header.ml` `forced_protocol_upgrades` value again
+     # NOTE merge any new changes from outside of the `src/proto_alpha/lib_protocol` from your source branch
+     git commit -am "./scripts/activate_protocol.sh src/proto_007_*"
+     # update opam tests
+     ./scripts/update_opam_test.sh
+     git commit -am "./scripts/update_opam_test.sh"
+   #+end_src
+** run migration
+  - get a copy of a context snapshot before you begin (from `34.90.96.85:/home/tz/694531-BMAmJ3LW3Z8y.full`
+   #+begin_src bash
+     mkdir data-dir
+     ./tezos-node snapshot import 694531-BMAmJ3LW3Z8y.full --data-dir data-dir
+     ./tezos-node identity generate --data-dir data-dir
+     ./tezos-node run --rpc-addr 127.0.0.1 --data-dir data-dir --connections 0
+     ./tezos-client rpc get /chains/main/blocks/head/metadata
+     ./tezos-client -d yes-wallet bake for foundation1 --minimal-timestamp
+   #+end_src
