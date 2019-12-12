@@ -88,8 +88,10 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      make # fix `src/lib_base/block_header.ml` `forced_protocol_upgrades` value again
      # NOTE Merge any new changes from outside of the `src/proto_alpha/lib_protocol` from your source branch
      git commit -am "./scripts/activate_protocol.sh src/proto_007_*"
-     # NOTE The rest applies only to get passing CI.
-     # If you just want to test migration you can skip to [[run migration]].
+   #+end_src
+   - the rest applies only to get passing CI
+   - if you're only testing migration you can skip to [[run migration]]
+   #+begin_src bash
      # update opam tests
      ./scripts/update_opam_test.sh
      git commit -am "./scripts/update_opam_test.sh"
