@@ -66,10 +66,6 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
 * migration from 006 (carthage) to 007 (dx)
 ** create migration branch
    #+begin_src bash
-     # add upstream and fetch, if not done before
-     git remote add upstream git@gitlab.com:tezos/tezos.git
-     git fetch upstream
-
      # protocol branch to test with name <branch>
      git checkout <branch>
      make
@@ -77,7 +73,7 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      ./scripts/snapshot_alpha.sh dx_007 from carthage_006
 
      # new "migration" branch
-     git checkout -b <branch>_activated upstream/mainnet --no-track
+     git checkout -b <branch>_activated possible-future-mainnet --no-track
      # add 007 protocol
      git add src/proto_007_*
      git commit -m "./scripts/snapshot_alpha.sh dx_007 from carthage_006"
