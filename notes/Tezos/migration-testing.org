@@ -59,6 +59,7 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
 ** prepare 006 context snapshot
    - get a mainnet context snapshot (005)
    #+begin_src bash
+     # inside tezos dir
      mkdir ../data-dir
      # import 005 mainnet context
      ./tezos-node snapshot import ../694626-BKrv2G5sRNJW.full --data-dir ../data-dir
@@ -100,6 +101,7 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
 ** run migration
   - get a copy of a context snapshot before you begin (from =34.90.96.85:/home/tz/694531-BMAmJ3LW3Z8y.full=
    #+begin_src bash
+     # inside tezos dir
      mkdir ../data-dir
      ./tezos-node snapshot import ../694531-BMAmJ3LW3Z8y.full --data-dir ..data-dir
      ./tezos-node identity generate --data-dir ../data-dir
