@@ -33,11 +33,11 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      # 006 tests updates
      git cherry-pick 7bdf8ec1 046b325b
      # cherry pick yes-node patch (lets you bake on real context with fake signatures)
-     git cherry-pick 08b138c4
-     # add yes-node.patch fix TODO update yes-node.patch on master
-     git cherry-pick 92d4c2f2
+     git cherry-pick f59371be
+     # add yes-node.patch fixes TODO update yes-node.patch on master
+     git cherry-pick 93f489e7 a86cd994
      # add hard-coded previous version TODO fix the script on master
-     git cherry-pick 6569bf8b
+     git cherry-pick ee79f352
      # update opam tests
      ./scripts/update_opam_test.sh
      git commit -am "./scripts/update_opam_test.sh"
