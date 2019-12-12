@@ -49,6 +49,10 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      git commit -am "./scripts/activate_protocol.sh src/proto_006_*"
      # revert change to hard-coded previous change TODO fix the script on master
      git cherry-pick 57181cef
+     # link 006 protocol - replace :
+     #  - from "PsBabyM1eUXZseaJdmXFApDSBqj8YBfwELoxZHHW77EMcAbbwAS", "005-PsBabyM1" and "005_PsBabyM1"
+     #  - to   "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", "006-PsCARTHA" and "006_PsCARTHA"
+     git cherry-pick 2d96b2f9
    #+end_src
 ** prepare 006 context snapshot
    - get a mainnet context snapshot (005)
@@ -82,11 +86,17 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      # force activate 007 on 694636
      ./scripts/activate_protocol.sh src/proto_007_* # answer y, y, 694636, n, n
      make # fix `src/lib_base/block_header.ml` `forced_protocol_upgrades` value again
-     # NOTE merge any new changes from outside of the `src/proto_alpha/lib_protocol` from your source branch
+     # NOTE Merge any new changes from outside of the `src/proto_alpha/lib_protocol` from your source branch
      git commit -am "./scripts/activate_protocol.sh src/proto_007_*"
+     # NOTE The rest applies only to get passing CI.
+     # If you just want to test migration you can skip to [[run migration]].
      # update opam tests
      ./scripts/update_opam_test.sh
      git commit -am "./scripts/update_opam_test.sh"
+     # link 007 protocol
+     # NOTE replace "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", "006-PsCARTHA" and "006_PsCARTHA"
+     # with the hash of the new protocol similar to linking 006 commit `2d96b2f9` above
+     git commit -am "Protocol: link with 007"
    #+end_src
 ** run migration
   - get a copy of a context snapshot before you begin (from =34.90.96.85:/home/tz/694531-BMAmJ3LW3Z8y.full=
