@@ -87,7 +87,7 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      git commit -am "./scripts/update_opam_test.sh"
    #+end_src
 ** run migration
-  - get a copy of a context snapshot before you begin (from `34.90.96.85:/home/tz/694531-BMAmJ3LW3Z8y.full`
+  - get a copy of a context snapshot before you begin (from =34.90.96.85:/home/tz/694531-BMAmJ3LW3Z8y.full=
    #+begin_src bash
      mkdir data-dir
      ./tezos-node snapshot import 694531-BMAmJ3LW3Z8y.full --data-dir data-dir
