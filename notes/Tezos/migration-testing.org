@@ -86,10 +86,13 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      ./scripts/snapshot_alpha.sh dx_007 from carthage_006
 
      # new "migration" branch
-     git checkout -b <branch>_activated possible-future-mainnet --no-track
+     git checkout -b <branch>_activated origin/possible-future-mainnet --no-track
      # add 007 protocol
      git add src/proto_007_*
      git commit -m "./scripts/snapshot_alpha.sh dx_007 from carthage_006"
+     # install utop, if it's not installed
+     opam repository add default --rank=-1 > /dev/null 2>&1 || true
+     opam install utop --criteria="-changed,-removed"
      # force activate 007 on 694636
      ./scripts/activate_protocol.sh src/proto_007_* # answer y, y, 694636, n, n
      make # fix `src/lib_base/block_header.ml` `forced_protocol_upgrades` value again
