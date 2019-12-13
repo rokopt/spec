@@ -1,4 +1,4 @@
-* setup testnet running 006 (carthage) to inject 007
+* setup testnet branch running 006 (carthage) to inject 007
   #+begin_src bash
     # add upstream and fetch, if not done before
     git remote add upstream git@gitlab.com:tezos/tezos.git
@@ -23,11 +23,15 @@
     #  - from "PsBabyM1eUXZseaJdmXFApDSBqj8YBfwELoxZHHW77EMcAbbwAS", "005-PsBabyM1" and "005_PsBabyM1"
     #  - to   "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", "006-PsCARTHA" and "006_PsCARTHA"
     git cherry-pick ea9b7a46
-    # Genesis: set protocol hash to PtBMwNZT
-    git cherry-pick 968da307
     # Genesis: set activator signature key
     # NOTE extend it with your own activator key
+    # This will affect the protocol's hash, so we need to find the new one
     git cherry-pick 56e706d5
+    # Find the new genesis protocol hash
+    ./tezos-protocol-compiler -hash-only src/proto_genesis/lib_protocol
+    # Genesis: set protocol hash
+    # Replace genesis hash with the output of the last command
+    git cherry-pick 968da307
     # CI: declare babylonnet
     # NOTE extend with your own branch name
     git cherry-pick 64b33988
@@ -44,9 +48,20 @@
     # (~opam install hacl~ if it fails on it)
     ./scripts/reset_chain.sh
     # add scripts/activate.sh
-    # NOTE update the activate.sh file "bootstrap_accounts" with your bootstraps and update the protocol hash
+    # NOTE Update the activate.sh file "bootstrap_accounts" with your bootstraps 
+    # and update the protocol hash.
+    # If there are any constants changes, update the protocol parameters in the script.
     git cherry-pick 61984d8b
-
+  #+end_src
+* start testnet
+  #+begin_src bash
     # to activate it
     ./scripts/activate.sh
+
+    # start the node (3 connections with 4 peers)
+    ./tezos-node run --rpc-addr=127.0.0.1 --connections 3
+    # start baker, endorser and accuser, e.g.
+    ./tezos-baker-006-PsCARTHA run with local node ~/.tezos-node/ <your-baker-key>
+    ./tezos-endorser-006-PsCARTHA run <your-baker-key>
+    ./tezos-accuser-006-PsCARTHA run
   #+end_src
