@@ -1,23 +1,29 @@
 * setup testnet running 006 (carthage) to inject 007
   #+begin_src bash
+    # add upstream and fetch, if not done before
+    git remote add upstream git@gitlab.com:tezos/tezos.git
+    git fetch upstream
+
     # to snapshot the protocol
-    checkout the protocol branch
+    git checkout nl-proto-proposal
     # build
     make
     # snapshot
     ./scripts/snapshot_alpha.sh carthage_006 from babylon_005
     # create a new branch from master, e.g. carthagenet
+    git checkout -b charlesdegaulle upstream/master --no-track
     git add src/proto_006_* && git commit -m "snapshot 006"
     # activate it
-    ./scripts/activate_protocol.sh src/proto_006_*
+    ./scripts/activate_protocol.sh src/proto_006_* # answer y, n
     git commit -am "activate 006"
 
     # cherry-picking commits from https://gitlab.com/tezos/tezos/commits/carthagenet
-    # remove proto_alpha and replace it with BabyM1:
-    # NOTE: extend it by globally replacing the full protocol hashes in all forms:
-    # "PsBabyM1eUXZseaJdmXFApDSBqj8YBfwELoxZHHW77EMcAbbwAS", "005-PsBabyM1" and "005_PsBabyM1"
-    git cherry-pick ea9b7a46 
-    # Genesis: set protocol hash to PtBMwNZT: 
+    # remove proto_alpha and replace it with BabyM1
+    # NOTE: extend the commit by globally replacing the full protocol hashes in all forms:
+    #  - from "PsBabyM1eUXZseaJdmXFApDSBqj8YBfwELoxZHHW77EMcAbbwAS", "005-PsBabyM1" and "005_PsBabyM1"
+    #  - to   "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", "006-PsCARTHA" and "006_PsCARTHA"
+    git cherry-pick ea9b7a46
+    # Genesis: set protocol hash to PtBMwNZT
     git cherry-pick 968da307
     # Genesis: set activator signature key
     # NOTE extend it with your own activator key
