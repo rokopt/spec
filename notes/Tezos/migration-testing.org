@@ -99,7 +99,7 @@ In protocol, there're 3 concepts called "snapshot" (we'll refer to the first 2):
      # NOTE Merge any new changes from outside of the `src/proto_alpha/lib_protocol` from your source branch
      git commit -am "./scripts/activate_protocol.sh src/proto_007_*"
      # re-enable P256 signatures to be able to bake as foundation bakers
-     git cherry-pick 196d5eb4
+     git cherry-pick 13b7b5d3
    #+end_src
 ** run migration
   - get a copy of a context snapshot before you begin (from =34.90.96.85:/home/tz/694631-BMAmJ3LW3Z8y.full=
