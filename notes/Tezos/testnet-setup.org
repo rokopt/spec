@@ -1,3 +1,68 @@
+* setup testnet starting from 007
+  #+begin_src bash
+    # snapshot protocol from cl-proto-proposal branch
+    git checkout cl-proto-proposal
+    # build
+    make
+    # snapshot
+    ./scripts/snapshot_alpha.sh dnext_007 from carthage_006
+    # copy the protocol hash to be used later (here it's PtJwMVCDnpinH5yNmwRKsyYKc6tZRp1NVGxfWBcf2FfhDaEEViA)
+    cat ./src/proto_007_*/lib_protocol/TEZOS_PROTOCOL
+    # create a new branch from master, e.g. carthagenet
+    git checkout -b charlesdegaulle upstream/master --no-track
+    git add src/proto_007_* && git commit -m "snapshot 007"
+    # activate it
+    ./scripts/activate_protocol.sh src/proto_007_*
+    git commit -am "activate 007"
+
+    # cherry-picking commits from https://gitlab.com/tezos/tezos/commits/carthagenet
+
+    # TODO update activation script so we don't do this manually: https://gitlab.com/cryptiumlabs/tezos/issues/103
+    # remove proto_alpha and replace it with protocol hash
+    # NOTE: extend the commit by globally replacing the full protocol hashes in all forms:
+    #  - from "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", "006-PsCARTHA" and "006_PsCARTHA"
+    #  - to   "PtJwMVCDnpinH5yNmwRKsyYKc6tZRp1NVGxfWBcf2FfhDaEEViA", "007-PtJwMVCD" and "007_PtJwMVCD" (first 8 chars)
+    git cherry-pick ea9b7a46
+
+    # Genesis: set activator signature key
+    # NOTE extend it with your own activator key
+    # This will affect the protocol's hash, so we need to find the new one
+    git cherry-pick 56e706d5
+
+    # Find the new genesis protocol hash
+    ./tezos-protocol-compiler -hash-only src/proto_genesis/lib_protocol
+
+    # Genesis: set protocol hash
+    # Replace genesis hash with the output of the last command
+    git cherry-pick 968da307
+
+    # CI: declare babylonnet
+    # NOTE extend with your own branch name
+    git cherry-pick 64b33988
+
+    # CI: build Docker images for babylonnet
+    # NOTE extend with your own branch name
+    git cherry-pick 30d523ab
+
+    # CI: Update .gitlab-ci.yml
+    # NOTE replace all "005-PsBabyM1"
+    git cherry-pick 62bb40b7
+
+    # Node: add bootstrap peer IPs
+    # NOTE extend it with your networks IPs
+    git cherry-pick d8b0407b
+
+    # Reset the chain
+    ocaml ./scripts/gen_genesis.ml
+    # Follow the instructions and fill in the genesis protocol hash
+
+    # add scripts/activate.sh
+    # NOTE Update the activate.sh file "bootstrap_accounts" with your bootstraps 
+    # and update the protocol hash.
+    # If there are any constants changes, update the protocol parameters in the script.
+    git cherry-pick 61984d8b
+  #+end_src
+  
 * setup testnet branch running 006 (carthage) to inject 007
   #+begin_src bash
     # add upstream and fetch, if not done before
@@ -18,50 +83,65 @@
     git commit -am "activate 006"
 
     # cherry-picking commits from https://gitlab.com/tezos/tezos/commits/carthagenet
+
     # remove proto_alpha and replace it with BabyM1
     # NOTE: extend the commit by globally replacing the full protocol hashes in all forms:
     #  - from "PsBabyM1eUXZseaJdmXFApDSBqj8YBfwELoxZHHW77EMcAbbwAS", "005-PsBabyM1" and "005_PsBabyM1"
     #  - to   "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", "006-PsCARTHA" and "006_PsCARTHA"
     git cherry-pick ea9b7a46
+
     # Genesis: set activator signature key
     # NOTE extend it with your own activator key
     # This will affect the protocol's hash, so we need to find the new one
     git cherry-pick 56e706d5
+
     # Find the new genesis protocol hash
     ./tezos-protocol-compiler -hash-only src/proto_genesis/lib_protocol
     # Genesis: set protocol hash
     # Replace genesis hash with the output of the last command
     git cherry-pick 968da307
+
     # CI: declare babylonnet
     # NOTE extend with your own branch name
     git cherry-pick 64b33988
+
     # CI: build Docker images for babylonnet
     # NOTE extend with your own branch name
     git cherry-pick 30d523ab
+
     # CI: Update .gitlab-ci.yml
     # NOTE replace all "005-PsBabyM1"
     git cherry-pick 62bb40b7
+
     # Node: add bootstrap peer IPs
     # NOTE extend it with your networks IPs
     git cherry-pick d8b0407b
+
     # Reset the chain
     # (~opam install hacl~ if it fails on it)
     ./scripts/reset_chain.sh
+
     # add scripts/activate.sh
     # NOTE Update the activate.sh file "bootstrap_accounts" with your bootstraps 
     # and update the protocol hash.
     # If there are any constants changes, update the protocol parameters in the script.
     git cherry-pick 61984d8b
   #+end_src
+  
 * start testnet
   #+begin_src bash
     # to activate it
     ./scripts/activate.sh
 
-    # start the node (3 connections with 4 peers)
-    ./tezos-node run --rpc-addr=127.0.0.1 --connections 3
+    # start the node (4 connections with 5 peers)
+    ./tezos-node run --rpc-addr=127.0.0.1 --connections 4 --history-mode=archive --network=charlesdegaulle
+
     # start baker, endorser and accuser, e.g.
     ./tezos-baker-006-PsCARTHA run with local node ~/.tezos-node/ <your-baker-key>
     ./tezos-endorser-006-PsCARTHA run <your-baker-key>
     ./tezos-accuser-006-PsCARTHA run
+
+    ./tezos-baker-007-* run with local node ~/.tezos-node/ baker
+    ./tezos-endorser-007-* run baker
+    ./tezos-accuser-007-* run
   #+end_src
