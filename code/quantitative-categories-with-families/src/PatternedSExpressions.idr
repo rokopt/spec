@@ -141,8 +141,8 @@ mutual
     MatchesNil : MatchesList [] []
     MatchesCons :
       {headPat : Pattern} -> {headSExp : SExp} ->
-      MatchesExp headPat headSExp ->
       {tailPat : PatternList} -> {tailSExp : SExpList} ->
+      MatchesExp headPat headSExp ->
       MatchesList tailPat tailSExp ->
       MatchesList (headPat :: tailPat) (headSExp :: tailSExp)
 
@@ -155,3 +155,106 @@ mutual
       {headPat : Pattern} -> {tailPat : PatternList} -> {sexp : SExp} ->
       MatchesSome tailPat sexp ->
       MatchesSome (headPat :: tailPat) sexp
+
+MatchedSExp : Pattern -> Type
+MatchedSExp pattern = DPair SExp (MatchesExp pattern)
+
+mutual
+  matchesExp : (pattern : Pattern) -> (sexp : SExp) ->
+    Dec (MatchesExp pattern sexp)
+  matchesExp pattern sexp = ?matchesExp_hole
+
+  matchesList : (patternList : PatternList) -> (sexpList : SExpList) ->
+    Dec (MatchesList patternList sexpList)
+  matchesList patternList sexpList = ?matchesList_hole
+
+  matchesSome : (patternList : PatternList) -> (sexp : SExp) ->
+    Dec (MatchesSome patternList sexp)
+  matchesSome patternList sexp = ?matchesSome_hole
+
+mutual
+  data IsSubPattern : (sub, super : Pattern) -> Type where
+    SubDefault : (sub : Pattern) -> IsSubPattern sub DefaultPat
+    SubPrimitive : (primType : PrimitiveType) ->
+      IsSubPattern (PrimPat primType) (PrimPat primType)
+    SubProduct : (sub, super : PatternList) ->
+      IsSubPatternList sub super ->
+      IsSubPattern (ProductPat sub) (ProductPat super)
+    SubSum : (sub, super : PatternList) ->
+      IsSubPatternList sub super ->
+      IsSubPattern (SumPat sub) (SumPat super)
+
+  data IsSubPatternList : (sub, super : PatternList) -> Type where
+    SubNil : IsSubPatternList [] []
+    SubCons :
+      {headSub : Pattern} -> {headSuper : Pattern} ->
+      {tailSub : PatternList} -> {tailSuper : PatternList} ->
+      IsSubPattern headSub headSuper ->
+      IsSubPatternList tailSub tailSuper ->
+      IsSubPatternList (headSub :: tailSub) (headSuper :: tailSuper)
+
+mutual
+  isSubPattern :
+    (sub, super : Pattern) -> Dec (IsSubPattern sub super)
+  isSubPattern sub super = ?isSubPattern_hole
+
+  isSubPatternList :
+    (sub, super : PatternList) -> Dec (IsSubPatternList sub super)
+  isSubPatternList sub super = ?isSubPatternList_hole
+
+mutual
+  subPatternReflexive :
+    (pattern : Pattern) -> IsSubPattern pattern pattern
+  subPatternReflexive = ?subPatternReflexive_hole
+
+  subPatternListReflexive :
+    (patternList : PatternList) -> IsSubPatternList patternList patternList
+  subPatternListReflexive = ?subPatternListReflexive_hole
+
+mutual
+  subPatternTransitive :
+    {patternA, patternB, patternC : Pattern} ->
+    IsSubPattern patternA patternB ->
+    IsSubPattern patternB patternC ->
+    IsSubPattern patternA patternC
+  subPatternTransitive subAB subBC = ?subPatternTransitive_hole
+
+  subPatternListTransitive :
+    {patternListA, patternListB, patternListC : PatternList} ->
+    IsSubPatternList patternListA patternListB ->
+    IsSubPatternList patternB patternC ->
+    IsSubPatternList patternListA patternListC
+  subPatternListTransitive subAB subBC = ?subPatternListTransitive_hole
+
+mutual
+  patternMatchTransitive :
+    {sub, super : Pattern} ->
+    IsSubPattern sub super ->
+    {sexp : SExp} ->
+    MatchesExp sub sexp ->
+    MatchesExp super sexp
+  patternMatchTransitive isSub matches = ?patternMatchTransitive_hole
+
+  patternMatchProductTransitive :
+    {sub, super : PatternList} ->
+    IsSubPatternList sub super ->
+    {sexp : SExp} ->
+    MatchesExp (ProductPat sub) sexp ->
+    MatchesExp (ProductPat super) sexp
+  patternMatchProductTransitive isSub matches =
+    ?patternMatchProductTransitive_hole
+
+  patternMatchSumTransitive :
+    {sub, super : PatternList} ->
+    IsSubPatternList sub super ->
+    {sexp : SExp} ->
+    MatchesExp (SumPat sub) sexp ->
+    MatchesExp (SumPat super) sexp
+  patternMatchSumTransitive isSub matches =
+    ?patternMatchSumTransitive_hole
+
+data Transformer : (domain, codomain : Pattern) -> Type where
+
+transform : {domain, codomain : Pattern} -> Transformer domain codomain ->
+  MatchedSExp domain -> MatchedSExp codomain
+transform transformer (sexp ** matchesDomain) = ?transform_hole
