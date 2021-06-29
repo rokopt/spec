@@ -23,6 +23,8 @@ modules = TypesAndFunctions
     , ComputableCategories
     , CWF
     , QCWF
+    , PatternedSExpressions
+    , Test.PatternedSExpressionsTest
 
 depends = contrib
 
