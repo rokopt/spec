@@ -1,0 +1,29 @@
+package qcwf
+
+modules = TypesAndFunctions
+    , FunctionsAndRelations
+    , Semiring
+    , Decidability
+    , Category
+    , List
+    , SimplyTypedLambdaCalculus
+    , FiniteTypes
+    , SExpressions
+    , SExpressionsWithFiniteAtomTypes
+    , Isomorphism
+    , Universality
+    , Naturality
+    , SumsAndProducts
+    , Chapter2
+    , Chapter3
+    , Chapter4
+    , Chapter5
+    , Substitution
+    , Composition
+    , ComputableCategories
+    , CWF
+    , QCWF
+
+depends = contrib
+
+sourcedir = "src"
