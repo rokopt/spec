@@ -13,6 +13,6 @@ whitepaper: src/whitepaper.md
 	pandoc --pdf-engine xelatex --biblio src/whitepaper.bib --csl aux/ieee.csl --template=aux/template.latex --mathjax --toc --number-sections --filter pandoc-include --citeproc -f markdown -o rendered/whitepaper.pdf src/whitepaper.md
 
 spellcheck:
-	find ./src -type f -name "*.md" -exec aspell -p ./misc/aspell_dict -x -d en_US -c {} \;
+	find ./ -type f -name "*.md" -exec aspell -p ./misc/aspell_dict -x -d en_US -c {} \;
 
 .PHONY: all vision-paper cryptoeconomics-paper implementation-overview-paper whitepaper spellcheck
