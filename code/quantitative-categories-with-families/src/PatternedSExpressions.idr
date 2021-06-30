@@ -1,6 +1,7 @@
 module PatternedSExpressions
 
 import Decidable.Equality
+import List
 
 %default total
 
@@ -134,24 +135,11 @@ mutual
       MatchesSome patternList sexp ->
       MatchesExp (ProductPat patternList) sexp
 
-  data MatchesList : PatternList -> SExpList -> Type where
-    MatchesNil : MatchesList [] []
-    MatchesCons :
-      {headPat : Pattern} -> {headSExp : SExp} ->
-      {tailPat : PatternList} -> {tailSExp : SExpList} ->
-      MatchesExp headPat headSExp ->
-      MatchesList tailPat tailSExp ->
-      MatchesList (headPat :: tailPat) (headSExp :: tailSExp)
+  MatchesList : PatternList -> SExpList -> Type
+  MatchesList = ListPairForAll MatchesExp
 
-  data MatchesSome : PatternList -> SExp -> Type where
-    MatchesHead :
-      {headPat : Pattern} -> {tailPat : PatternList} -> {sexp : SExp} ->
-      MatchesExp headPat sexp ->
-      MatchesSome (headPat :: tailPat) sexp
-    MatchesTail :
-      {headPat : Pattern} -> {tailPat : PatternList} -> {sexp : SExp} ->
-      MatchesSome tailPat sexp ->
-      MatchesSome (headPat :: tailPat) sexp
+  MatchesSome : PatternList -> SExp -> Type
+  MatchesSome = flip (ListExists . (flip MatchesExp))
 
 MatchedSExp : Pattern -> Type
 MatchedSExp pattern = DPair SExp (MatchesExp pattern)
@@ -256,6 +244,7 @@ data Consumer : (domain : Pattern) -> (codomain : Type) -> Type where
   ConsumePrimitive : {domain : PrimitiveType} -> {codomain : Type} ->
     (interpretPrimitiveType domain -> codomain) ->
     Consumer (PrimPat domain) codomain
+  -- ConsumeProduct : {patternList : PatternList} -> {codomain : Type} ->
 
 data Producer : (domain : Type) -> (codomain : Pattern) -> Type where
 
