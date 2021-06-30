@@ -340,17 +340,17 @@ FreeCategories
         ValidGeneratorListType generators | No _ =
             ()
 
-    infixr 19 ^<-?
+    infixr 19 ^<-~
     public export
-    (^<-?) : {object : Type} -> DecEq object => {morphism : Morphism object} ->
+    (^<-~) : {object : Type} -> DecEq object => {morphism : Morphism object} ->
         {domain, codomain : object} ->
         (head : morphism (domain, codomain)) ->
         (tail : GeneratorList morphism) ->
         ValidGeneratorListType (((domain, codomain) ** head) :: tail)
-    (^<-?) {domain} {codomain} head tail with
+    (^<-~) {domain} {codomain} head tail with
             (generatorListValidDec decEq (((domain, codomain) ** head) :: tail))
-        (^<-?) {domain} {codomain} head tail | Yes valid = valid
-        (^<-?) {domain} {codomain} head tail | No _ = ()
+        (^<-~) {domain} {codomain} head tail | Yes valid = valid
+        (^<-~) {domain} {codomain} head tail | No _ = ()
 
     public export
     GeneratorListMorphismType : {object : Type} -> DecEq object =>
@@ -367,17 +367,17 @@ FreeCategories
         GeneratorListMorphismType {domain} {codomain} head tail | No _ =
             ()
 
-    infixr 18 ^<~?
+    infixr 18 ^<~~
     public export
-    (^<~?) : {object : Type} -> DecEq object => {morphism : Morphism object} ->
+    (^<~~) : {object : Type} -> DecEq object => {morphism : Morphism object} ->
         {domain, codomain : object} ->
         (head : morphism (domain, codomain)) ->
         (tail : GeneratorList morphism) ->
         GeneratorListMorphismType head tail
-    (^<~?) {domain} {codomain} head tail with
+    (^<~~) {domain} {codomain} head tail with
             (generatorListValidDec decEq (((domain, codomain) ** head) :: tail))
-        (^<~?) {domain} {codomain} head tail | Yes valid = (-~) valid
-        (^<~?) {domain} {codomain} head tail | No _ = ()
+        (^<~~) {domain} {codomain} head tail | Yes valid = (-~) valid
+        (^<~~) {domain} {codomain} head tail | No _ = ()
 
     public export
     record FreeCategory where
