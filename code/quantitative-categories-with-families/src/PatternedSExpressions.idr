@@ -54,6 +54,9 @@ mutual
   SExpList : Type
   SExpList = List SExp
 
+SExpPred : Type -> Type
+SExpPred codomain = SExp -> codomain
+
 mutual
   sexpEq : (sexp, sexp' : SExp) -> Dec (sexp = sexp')
   sexpEq (SAtom exp) (SAtom exp') with (primExpEq exp exp')
@@ -143,6 +146,18 @@ mutual
 
 MatchedSExp : Pattern -> Type
 MatchedSExp pattern = DPair SExp (MatchesExp pattern)
+
+MatchedSExpPred : Type -> Pattern -> Type
+MatchedSExpPred codomain pattern =
+  MatchedSExp pattern -> codomain
+
+MatchedListPred : Type -> PatternList -> Type
+MatchedListPred codomain patternList =
+  (ListForAll MatchedSExp patternList) -> codomain
+
+MatchedSExpPredList : Type -> PatternList -> Type
+MatchedSExpPredList codomain patternList =
+  ListForAll (MatchedSExpPred codomain) patternList
 
 mutual
   matchesExp : (pattern : Pattern) -> (sexp : SExp) ->
@@ -240,11 +255,16 @@ mutual
 
 data Consumer : (domain : Pattern) -> (codomain : Type) -> Type where
   ConsumeDefault :
-    {codomain : Type} -> (SExp -> codomain) -> Consumer DefaultPat codomain
+    {codomain : Type} -> SExpPred codomain -> Consumer DefaultPat codomain
   ConsumePrimitive : {domain : PrimitiveType} -> {codomain : Type} ->
     (interpretPrimitiveType domain -> codomain) ->
     Consumer (PrimPat domain) codomain
-  -- ConsumeProduct : {patternList : PatternList} -> {codomain : Type} ->
+  ConsumeProduct : {patternList : PatternList} -> {codomain : Type} ->
+    ((ListForAll MatchedSExp patternList) -> codomain) ->
+    Consumer (ProductPat patternList) codomain
+  ConsumeSum : {patternList : PatternList} -> {codomain : Type} ->
+    MatchedSExpPredList codomain patternList ->
+    Consumer (SumPat patternList) codomain
 
 data Producer : (domain : Type) -> (codomain : Pattern) -> Type where
 
