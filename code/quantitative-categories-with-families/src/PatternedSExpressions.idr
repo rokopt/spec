@@ -21,32 +21,33 @@ primTypeEq PrimTypeString PrimTypeBool = No (\eq => case eq of Refl impossible)
 primTypeEq PrimTypeString PrimTypeNat = No (\eq => case eq of Refl impossible)
 primTypeEq PrimTypeString PrimTypeString = Yes Refl
 
-data PrimitiveExp : PrimitiveType -> Type where
-  PrimExpBool : Bool -> PrimitiveExp PrimTypeBool
-  PrimExpNat : Nat -> PrimitiveExp PrimTypeNat
-  PrimExpString : String -> PrimitiveExp PrimTypeString
+interpretPrimitiveType : PrimitiveType -> Type
+interpretPrimitiveType PrimTypeBool = Bool
+interpretPrimitiveType PrimTypeNat = Nat
+interpretPrimitiveType PrimTypeString = String
 
-primExpEq : {primType : PrimitiveType} ->
-  (primExp, primExp' : PrimitiveExp primType) -> Dec (primExp = primExp')
-primExpEq (PrimExpBool b) (PrimExpBool b') = case decEq b b' of
-  Yes Refl => Yes Refl
-  No neq => No (\eq => case eq of Refl => neq Refl)
-primExpEq (PrimExpBool b) (PrimExpNat n) impossible
-primExpEq (PrimExpBool b) (PrimExpString s) impossible
-primExpEq (PrimExpNat n) (PrimExpBool b) impossible
-primExpEq (PrimExpNat n) (PrimExpNat n') = case decEq n n' of
-  Yes Refl => Yes Refl
-  No neq => No (\eq => case eq of Refl => neq Refl)
-primExpEq (PrimExpNat n) (PrimExpString s) impossible
-primExpEq (PrimExpString s) (PrimExpBool b) impossible
-primExpEq (PrimExpString s) (PrimExpNat n) impossible
-primExpEq (PrimExpString s) (PrimExpString s') = case decEq s s' of
-  Yes Refl => Yes Refl
-  No neq => No (\eq => case eq of Refl => neq Refl)
+primitiveEq : (primType : PrimitiveType) ->
+  (x, x' : interpretPrimitiveType primType) -> Dec (x = x')
+primitiveEq PrimTypeBool = decEq
+primitiveEq PrimTypeNat = decEq
+primitiveEq PrimTypeString = decEq
+
+PrimitiveExp : Type
+PrimitiveExp = DPair PrimitiveType interpretPrimitiveType
+
+primExpEq : (primExp, primExp' : PrimitiveExp) -> Dec (primExp = primExp')
+primExpEq (primType ** primExp) (primType' ** primExp') with
+  (primTypeEq primType primType')
+    primExpEq (primType ** primExp) (primType ** primExp') | Yes Refl =
+      case primitiveEq primType primExp primExp' of
+        Yes Refl => Yes Refl
+        No neq => No (\eq => case eq of Refl => neq Refl)
+    primExpEq (primType ** primExp) (primType' ** primExp') | No neq =
+      No (\eq => case eq of Refl => neq Refl)
 
 mutual
   data SExp : Type where
-    SAtom : {primType : PrimitiveType} -> PrimitiveExp primType -> SExp
+    SAtom : PrimitiveExp -> SExp
     SList : SExpList -> SExp
 
   SExpList : Type
@@ -54,12 +55,9 @@ mutual
 
 mutual
   sexpEq : (sexp, sexp' : SExp) -> Dec (sexp = sexp')
-  sexpEq (SAtom {primType} exp) (SAtom {primType=primType'} exp') =
-    case primTypeEq primType primType' of
-      Yes Refl => case primExpEq exp exp' of
-        Yes Refl => Yes Refl
-        No neq => No (\eq => case eq of Refl => neq Refl)
-      No neq => No (\eq => case eq of Refl => neq Refl)
+  sexpEq (SAtom exp) (SAtom exp') with (primExpEq exp exp')
+    sexpEq (SAtom exp) (SAtom exp) | Yes Refl = Yes Refl
+    sexpEq (SAtom exp) (SAtom exp') | No neq = No (\eq => case eq of Refl => neq Refl)
   sexpEq (SAtom _) (SList _) = No (\eq => case eq of Refl impossible)
   sexpEq (SList _) (SAtom _) = No (\eq => case eq of Refl impossible)
   sexpEq (SList sexpList) (SList sexpList') =
@@ -127,9 +125,8 @@ mutual
 mutual
   data MatchesExp : Pattern -> SExp -> Type where
     MatchesDefault : (sexp : SExp) -> MatchesExp DefaultPat sexp
-    MatchesPrim :
-      (primType : PrimitiveType) -> (primExp : PrimitiveExp primType) ->
-      MatchesExp (PrimPat primType) (SAtom primExp)
+    MatchesPrim : (primExp : PrimitiveExp) ->
+      MatchesExp (PrimPat (fst primExp)) (SAtom primExp)
     MatchesProduct : {patternList : PatternList} -> {sexpList : SExpList} ->
       MatchesList patternList sexpList ->
       MatchesExp (ProductPat patternList) (SList sexpList)
@@ -252,6 +249,15 @@ mutual
     MatchesExp (SumPat super) sexp
   patternMatchSumTransitive isSub matches =
     ?patternMatchSumTransitive_hole
+
+data Consumer : (domain : Pattern) -> (codomain : Type) -> Type where
+  ConsumeDefault :
+    {codomain : Type} -> (SExp -> codomain) -> Consumer DefaultPat codomain
+  ConsumePrimitive : {domain : PrimitiveType} -> {codomain : Type} ->
+    (interpretPrimitiveType domain -> codomain) ->
+    Consumer (PrimPat domain) codomain
+
+data Producer : (domain : Type) -> (codomain : Pattern) -> Type where
 
 data Transformer : (domain, codomain : Pattern) -> Type where
 
