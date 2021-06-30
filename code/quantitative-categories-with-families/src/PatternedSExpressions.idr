@@ -253,48 +253,29 @@ mutual
   patternMatchSumTransitive isSub matches =
     ?patternMatchSumTransitive_hole
 
-data Consumer : (domain : Pattern) -> (codomain : Type) -> Type where
-  ConsumeDefault :
-    {codomain : Type} -> SExpPred codomain -> Consumer DefaultPat codomain
-  ConsumePrimitive : {domain : PrimitiveType} -> {codomain : Type} ->
+data Case : (domain : Pattern) -> (codomain : Type) -> Type where
+  CaseDefault :
+    {codomain : Type} -> SExpPred codomain -> Case DefaultPat codomain
+  CasePrimitive : {domain : PrimitiveType} -> {codomain : Type} ->
     (interpretPrimitiveType domain -> codomain) ->
-    Consumer (PrimPat domain) codomain
-  ConsumeProduct : {patternList : PatternList} -> {codomain : Type} ->
+    Case (PrimPat domain) codomain
+  CaseProduct : {patternList : PatternList} -> {codomain : Type} ->
     MatchedListPred codomain patternList ->
-    Consumer (ProductPat patternList) codomain
-  ConsumeSum : {patternList : PatternList} -> {codomain : Type} ->
+    Case (ProductPat patternList) codomain
+  CaseSum : {patternList : PatternList} -> {codomain : Type} ->
     MatchedSExpPredList codomain patternList ->
-    Consumer (SumPat patternList) codomain
+    Case (SumPat patternList) codomain
 
-consume :
-  {domain : Pattern} -> {codomain : Type} ->
-  Consumer domain codomain -> MatchedSExp domain -> codomain
-consume {domain} {codomain} consumer domainSExp = ?consume_hole
-
-data Producer : (domain : Type) -> (codomain : Pattern) -> Type where
-  ProduceDefault :
-    {domain : Type} -> (domain -> SExp) -> Producer domain DefaultPat
-  ProducePrimitive :
-    {domain : Type} -> {codomain : PrimitiveType} ->
-    (domain -> interpretPrimitiveType codomain) -> Producer
-    domain (PrimPat codomain)
-
-produce :
-  {domain : Type} -> {codomain : Pattern} ->
-  Producer domain codomain -> domain -> MatchedSExp codomain
-produce {domain} {codomain} producer domainElem = ?produce_hole
+match : {domain : Pattern} -> {codomain : Type} ->
+  Case domain codomain -> MatchedSExp domain -> codomain
+match (CaseDefault pred) domainSExp = pred (fst domainSExp)
+match (CasePrimitive pred) domainSExp = ?consume_hole_primitive
+match (CaseProduct pred) domainSExp = ?consume_hole_product
+match (CaseSum pred) domainSExp = ?consume_hole_sum
 
 Transformer : (domain, codomain : Pattern) -> Type
-Transformer domain codomain =
-  Consumer domain (Producer (MatchedSExp domain) codomain)
+Transformer domain codomain = Case domain (MatchedSExp codomain)
 
-transform : {domain, codomain : Pattern} -> Transformer domain codomain ->
-  MatchedSExp domain -> MatchedSExp codomain
-transform {domain=DefaultPat} {codomain}
-  (ConsumeDefault pred) domainSExp = ?transform_default_hole
-transform {domain=(PrimPat primType)} {codomain}
-  (ConsumePrimitive pred) domainSExp = ?transform_primitive_hole
-transform {domain=(ProductPat patternList)} {codomain}
-  (ConsumeProduct pred) domainSExp = ?transform_product_hole
-transform {domain=(SumPat patternList)} {codomain}
-  (ConsumeSum pred) domainSExp = ?transform_sum_hole
+transform : {domain, codomain : Pattern} ->
+  Transformer domain codomain -> MatchedSExp domain -> MatchedSExp codomain
+transform = match {domain} {codomain=(MatchedSExp codomain)}
