@@ -263,7 +263,7 @@ CaseStatement (PrimPat primitiveType) codomain =
 CaseStatement (ProductPat patternList) codomain =
   MatchedListPred codomain patternList
 CaseStatement (SumPat patternList) codomain =
-  ?CaseStatement_sum_hole
+  MatchedSExpPredList codomain patternList
 
 data Case : (domain : Pattern) -> (codomain : Type) -> Type where
   CaseDefault :
@@ -289,7 +289,8 @@ match caseStatement (_ ** matchesDomain) = case matchesDomain of
   MatchesProduct {sexpList} matchesList =>
     caseStatement (sexpList ** matchesList)
   MatchesSum {sexp} {patternList} matchesList =>
-    ?match_sum_hole
+    let matchedPattern = snd (listExistsGet matchesList caseStatement) in
+    snd matchedPattern (sexp ** fst  matchedPattern)
 
 transform : {domain, codomain : Pattern} ->
   CaseStatement domain (MatchedSExp codomain) ->

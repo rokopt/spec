@@ -137,6 +137,16 @@ listExistsEmptyVoid predicate (ListExistsHead _) impossible
 listExistsEmptyVoid predicate (ListExistsTail _) impossible
 
 public export
+listExistsGet : {a : Type} -> {b, c : a -> Type} -> {l : List a} ->
+  ListExists b l -> ListForAll c l -> (x : a ** (b x, c x))
+listExistsGet (ListExistsHead _) ListForAllEmpty impossible
+listExistsGet (ListExistsHead y) (ListForAllCons z _) =
+  (_ ** (y, z))
+listExistsGet (ListExistsTail _) ListForAllEmpty impossible
+listExistsGet (ListExistsTail existsTail) (ListForAllCons _ forAllTail) =
+  listExistsGet existsTail forAllTail
+
+public export
 listExists : {a : Type} -> {predicate : a -> Type} -> {l : List a} ->
   (exists : (x : a ** (Elem x l, predicate x))) ->
   ListExists predicate l
