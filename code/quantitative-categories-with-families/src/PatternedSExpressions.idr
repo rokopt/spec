@@ -260,16 +260,41 @@ data Consumer : (domain : Pattern) -> (codomain : Type) -> Type where
     (interpretPrimitiveType domain -> codomain) ->
     Consumer (PrimPat domain) codomain
   ConsumeProduct : {patternList : PatternList} -> {codomain : Type} ->
-    ((ListForAll MatchedSExp patternList) -> codomain) ->
+    MatchedListPred codomain patternList ->
     Consumer (ProductPat patternList) codomain
   ConsumeSum : {patternList : PatternList} -> {codomain : Type} ->
     MatchedSExpPredList codomain patternList ->
     Consumer (SumPat patternList) codomain
 
-data Producer : (domain : Type) -> (codomain : Pattern) -> Type where
+consume :
+  {domain : Pattern} -> {codomain : Type} ->
+  Consumer domain codomain -> MatchedSExp domain -> codomain
+consume {domain} {codomain} consumer domainSExp = ?consume_hole
 
-data Transformer : (domain, codomain : Pattern) -> Type where
+data Producer : (domain : Type) -> (codomain : Pattern) -> Type where
+  ProduceDefault :
+    {domain : Type} -> (domain -> SExp) -> Producer domain DefaultPat
+  ProducePrimitive :
+    {domain : Type} -> {codomain : PrimitiveType} ->
+    (domain -> interpretPrimitiveType codomain) -> Producer
+    domain (PrimPat codomain)
+
+produce :
+  {domain : Type} -> {codomain : Pattern} ->
+  Producer domain codomain -> domain -> MatchedSExp codomain
+produce {domain} {codomain} producer domainElem = ?produce_hole
+
+Transformer : (domain, codomain : Pattern) -> Type
+Transformer domain codomain =
+  Consumer domain (Producer (MatchedSExp domain) codomain)
 
 transform : {domain, codomain : Pattern} -> Transformer domain codomain ->
   MatchedSExp domain -> MatchedSExp codomain
-transform transformer (sexp ** matchesDomain) = ?transform_hole
+transform {domain=DefaultPat} {codomain}
+  (ConsumeDefault pred) domainSExp = ?transform_default_hole
+transform {domain=(PrimPat primType)} {codomain}
+  (ConsumePrimitive pred) domainSExp = ?transform_primitive_hole
+transform {domain=(ProductPat patternList)} {codomain}
+  (ConsumeProduct pred) domainSExp = ?transform_product_hole
+transform {domain=(SumPat patternList)} {codomain}
+  (ConsumeSum pred) domainSExp = ?transform_sum_hole
