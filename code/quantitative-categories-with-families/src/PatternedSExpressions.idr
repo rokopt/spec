@@ -1,16 +1,18 @@
 module PatternedSExpressions
 
 import Decidable.Equality
-import List
+import public List
 
 %default total
 
+public export
 data PrimitiveType : Type where
   PrimTypeBool : PrimitiveType
   PrimTypeNat : PrimitiveType
   PrimTypeString : PrimitiveType
 
 -- Haskell can just derive this.
+export
 primTypeEq : (primType, primType' : PrimitiveType) -> Dec (primType = primType')
 primTypeEq PrimTypeBool PrimTypeBool = Yes Refl
 primTypeEq PrimTypeBool PrimTypeNat = No (\eq => case eq of Refl impossible)
@@ -27,12 +29,14 @@ interpretPrimitiveType PrimTypeBool = Bool
 interpretPrimitiveType PrimTypeNat = Nat
 interpretPrimitiveType PrimTypeString = String
 
+public export
 primitiveEq : (primType : PrimitiveType) ->
   (x, x' : interpretPrimitiveType primType) -> Dec (x = x')
 primitiveEq PrimTypeBool = decEq
 primitiveEq PrimTypeNat = decEq
 primitiveEq PrimTypeString = decEq
 
+public export
 PrimitiveExp : Type
 PrimitiveExp = DPair PrimitiveType interpretPrimitiveType
 
@@ -47,13 +51,16 @@ primExpEq (primType ** primExp) (primType' ** primExp') with
       No (\eq => case eq of Refl => neq Refl)
 
 mutual
+  public export
   data SExp : Type where
     SAtom : PrimitiveExp -> SExp
     SList : SExpList -> SExp
 
+  public export
   SExpList : Type
   SExpList = List SExp
 
+public export
 SExpPred : Type -> Type
 SExpPred codomain = SExp -> codomain
 
@@ -79,14 +86,24 @@ mutual
     decEq = sexpListEq
 
 mutual
+  public export
   data Pattern : Type where
     DefaultPat : Pattern
     PrimPat : PrimitiveType -> Pattern
     ProductPat : List Pattern -> Pattern
     SumPat : List Pattern -> Pattern
 
+  public export
   PatternList : Type
   PatternList = List Pattern
+
+public export
+(#*) : List Pattern -> Pattern
+(#*) = ProductPat
+
+public export
+(#|) : List Pattern -> Pattern
+(#|) = SumPat
 
 mutual
   patternEq : (pattern, pattern' : Pattern) -> Dec (pattern = pattern')
@@ -126,7 +143,20 @@ mutual
   [patternListDecEq] DecEq PatternList where
     decEq = patternListEq
 
+public export
+BoolPat : Pattern
+BoolPat = PrimPat PrimTypeBool
+
+public export
+NatPat : Pattern
+NatPat = PrimPat PrimTypeNat
+
+public export
+StringPat : Pattern
+StringPat = PrimPat PrimTypeString
+
 mutual
+  public export
   data MatchesExp : Pattern -> SExp -> Type where
     MatchesDefault : (sexp : SExp) -> MatchesExp DefaultPat sexp
     MatchesPrim : (primExp : PrimitiveExp) ->
@@ -138,25 +168,32 @@ mutual
       MatchesSome patternList sexp ->
       MatchesExp (SumPat patternList) sexp
 
+  public export
   MatchesList : PatternList -> SExpList -> Type
   MatchesList = ListPairForAll MatchesExp
 
+  public export
   MatchesSome : PatternList -> SExp -> Type
   MatchesSome = flip (ListExists . (flip MatchesExp))
 
+public export
 MatchedSExp : Pattern -> Type
 MatchedSExp pattern = DPair SExp (MatchesExp pattern)
 
+public export
 MatchedSExpPred : Type -> Pattern -> Type
 MatchedSExpPred codomain pattern =
   MatchedSExp pattern -> codomain
 
+public export
 MatchedList : PatternList -> Type
 MatchedList patternList = DPair SExpList (MatchesList patternList)
 
+public export
 MatchedListPred : Type -> PatternList -> Type
 MatchedListPred codomain patternList = (MatchedList patternList) -> codomain
 
+public export
 MatchedSExpPredList : Type -> PatternList -> Type
 MatchedSExpPredList codomain patternList =
   ListForAll (MatchedSExpPred codomain) patternList
@@ -255,6 +292,7 @@ mutual
   patternMatchSumTransitive isSub matches =
     ?patternMatchSumTransitive_hole
 
+public export
 CaseStatement : (domain : Pattern) -> (codomain : Type) -> Type
 CaseStatement DefaultPat codomain =
   SExp -> codomain
@@ -265,19 +303,7 @@ CaseStatement (ProductPat patternList) codomain =
 CaseStatement (SumPat patternList) codomain =
   MatchedSExpPredList codomain patternList
 
-data Case : (domain : Pattern) -> (codomain : Type) -> Type where
-  CaseDefault :
-    {codomain : Type} -> SExpPred codomain -> Case DefaultPat codomain
-  CasePrimitive : {domain : PrimitiveType} -> {codomain : Type} ->
-    (interpretPrimitiveType domain -> codomain) ->
-    Case (PrimPat domain) codomain
-  CaseProduct : {patternList : PatternList} -> {codomain : Type} ->
-    MatchedListPred codomain patternList ->
-    Case (ProductPat patternList) codomain
-  CaseSum : {patternList : PatternList} -> {codomain : Type} ->
-    MatchedSExpPredList codomain patternList ->
-    Case (SumPat patternList) codomain
-
+export
 match : {domain : Pattern} -> {codomain : Type} ->
   CaseStatement domain codomain ->
   MatchedSExp domain -> codomain
@@ -292,7 +318,12 @@ match caseStatement (_ ** matchesDomain) = case matchesDomain of
     let matchedPattern = snd (listExistsGet matchesList caseStatement) in
     snd matchedPattern (sexp ** fst  matchedPattern)
 
+public export
+Transformer : (domain, codomain : Pattern) -> Type
+Transformer domain codomain = CaseStatement domain (MatchedSExp codomain)
+
+export
 transform : {domain, codomain : Pattern} ->
-  CaseStatement domain (MatchedSExp codomain) ->
+  Transformer domain codomain ->
   MatchedSExp domain -> MatchedSExp codomain
 transform = match {domain} {codomain=(MatchedSExp codomain)}
