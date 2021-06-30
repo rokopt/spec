@@ -136,7 +136,7 @@ mutual
       MatchesExp (ProductPat patternList) (SList sexpList)
     MatchesSum : {patternList : PatternList} -> {sexp : SExp} ->
       MatchesSome patternList sexp ->
-      MatchesExp (ProductPat patternList) sexp
+      MatchesExp (SumPat patternList) sexp
 
   MatchesList : PatternList -> SExpList -> Type
   MatchesList = ListPairForAll MatchesExp
@@ -151,9 +151,11 @@ MatchedSExpPred : Type -> Pattern -> Type
 MatchedSExpPred codomain pattern =
   MatchedSExp pattern -> codomain
 
+MatchedList : PatternList -> Type
+MatchedList patternList = DPair SExpList (MatchesList patternList)
+
 MatchedListPred : Type -> PatternList -> Type
-MatchedListPred codomain patternList =
-  (ListForAll MatchedSExp patternList) -> codomain
+MatchedListPred codomain patternList = (MatchedList patternList) -> codomain
 
 MatchedSExpPredList : Type -> PatternList -> Type
 MatchedSExpPredList codomain patternList =
@@ -253,6 +255,16 @@ mutual
   patternMatchSumTransitive isSub matches =
     ?patternMatchSumTransitive_hole
 
+CaseStatement : (domain : Pattern) -> (codomain : Type) -> Type
+CaseStatement DefaultPat codomain =
+  SExp -> codomain
+CaseStatement (PrimPat primitiveType) codomain =
+  interpretPrimitiveType primitiveType -> codomain
+CaseStatement (ProductPat patternList) codomain =
+  MatchedListPred codomain patternList
+CaseStatement (SumPat patternList) codomain =
+  ?CaseStatement_sum_hole
+
 data Case : (domain : Pattern) -> (codomain : Type) -> Type where
   CaseDefault :
     {codomain : Type} -> SExpPred codomain -> Case DefaultPat codomain
@@ -267,15 +279,19 @@ data Case : (domain : Pattern) -> (codomain : Type) -> Type where
     Case (SumPat patternList) codomain
 
 match : {domain : Pattern} -> {codomain : Type} ->
-  Case domain codomain -> MatchedSExp domain -> codomain
-match (CaseDefault pred) domainSExp = pred (fst domainSExp)
-match (CasePrimitive pred) domainSExp = ?consume_hole_primitive
-match (CaseProduct pred) domainSExp = ?consume_hole_product
-match (CaseSum pred) domainSExp = ?consume_hole_sum
-
-Transformer : (domain, codomain : Pattern) -> Type
-Transformer domain codomain = Case domain (MatchedSExp codomain)
+  CaseStatement domain codomain ->
+  MatchedSExp domain -> codomain
+match caseStatement (_ ** matchesDomain) = case matchesDomain of
+  MatchesDefault sexp =>
+    caseStatement sexp
+  MatchesPrim (_ ** primExp) =>
+    caseStatement primExp
+  MatchesProduct {sexpList} matchesList =>
+    caseStatement (sexpList ** matchesList)
+  MatchesSum {sexp} {patternList} matchesList =>
+    ?match_sum_hole
 
 transform : {domain, codomain : Pattern} ->
-  Transformer domain codomain -> MatchedSExp domain -> MatchedSExp codomain
+  CaseStatement domain (MatchedSExp codomain) ->
+  MatchedSExp domain -> MatchedSExp codomain
 transform = match {domain} {codomain=(MatchedSExp codomain)}
