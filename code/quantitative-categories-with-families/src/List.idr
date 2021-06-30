@@ -985,3 +985,37 @@ mkListPairForAll mk [] (_ :: _) Refl impossible
 mkListPairForAll mk (_ :: _) [] Refl impossible
 mkListPairForAll mk (x :: xs) (y :: ys) eq =
   ListPairForAllCons (mk x y) (mkListPairForAll mk xs ys (succInjective _ _ eq))
+
+public export
+(~!) : {a : Type} -> {b : a -> Type} ->
+  ListForAll b []
+(~!) = ListForAllEmpty
+
+infixl 30 ~::
+public export
+(~::) : {a : Type} -> {b : a -> Type} -> {x : a} -> {l : List a} ->
+  (y : b x) -> ListForAll b l -> ListForAll b (x :: l)
+(~::) = ListForAllCons
+
+public export
+(~!!) : {a, b : Type} -> {c : a -> b -> Type} ->
+  ListPairForAll c [] []
+(~!!) = ListPairForAllEmpty
+
+infixl 31 ~:::
+public export
+(~:::) : {a, b : Type} -> {c : a -> b -> Type} ->
+  {x : a} -> {x' : b} -> {l : List a} -> {l' : List b} ->
+  (y : c x x') -> ListPairForAll c l l' -> ListPairForAll c (x :: l) (x' :: l')
+(~:::) = ListPairForAllCons
+
+public export
+(~^) : {a : Type} -> {b : a -> Type} -> {x : a} -> {l : List a} ->
+    b x -> ListExists b (x :: l)
+(~^) = ListExistsHead
+
+infixl 30 ~::
+public export
+(~$) : {a : Type} -> {b : a -> Type} -> {x : a} -> {l : List a} ->
+    ListExists b l -> ListExists b (x :: l)
+(~$) = ListExistsTail
