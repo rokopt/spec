@@ -83,8 +83,8 @@ record CwF where
   -- -{f} : Tm(delta', S) -> Tm(delta, S{f})..."
   -- (Implementer's note:  I don't understand why both MapType and MapTerm
   -- (as I'm calling them) are referred to in the paper as "-{f}".  Is that
-  -- a typo, or will they just distinguish between MapType and MapTerm by
-  -- context?)
+  -- a typo, or maybe they will just distinguish between MapType and MapTerm by
+  -- context)
   MapTerm : (obj, obj' : Object ContextCat) ->
             (f : Morphism ContextCat obj obj') ->
             (S : SemanticType obj') ->
