@@ -74,6 +74,11 @@ public export
 ($++) : {atom : Type} -> SExp atom -> SExp atom -> SList atom
 x $++ x' = x $+ $+| x'
 
+infixr 7 $+^
+public export
+($+^) : {atom : Type} -> SExp atom -> atom -> SList atom
+x $+^ a = x $++ $^ a
+
 prefix 11 $^|
 public export
 ($^|) : {atom : Type} -> atom -> SList atom

@@ -73,6 +73,6 @@ bigNotationTest :
   ?hole3 $+
   12 $^+
   ?hole5 $+
-  (16 $^^ 17) $++
-  $^ 18
+  (16 $^^ 17) $+^
+  18
 bigNotationTest = Refl
