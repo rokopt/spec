@@ -53,26 +53,28 @@ bigNotationTest :
     (NSLCons
       (NSCons 6
       (NSLCons (NSAtom 7)
-      (NSLCons (NSAtom 8)
-      NSNil)))
-    (NSLCons (NSAtom 9)
-    (NSLCons (NSAtom 10)
+      (NSLCons
+        (NSCons 8 (NSLCons (NSAtom 9) (NSLCons (NSAtom 10) NSNil)))
+      (NSLCons (NSAtom 11)
+      NSNil))))
+    (NSLCons (NSAtom 12)
+    (NSLCons (NSAtom 13)
     NSNil)))))
   (NSLCons
-    (NSCons 11 NSNil)
-  (NSLCons (NSAtom 12)
+    (NSCons 14 NSNil)
+  (NSLCons (NSAtom 15)
   (NSLCons
-    (NSCons 13
-    (NSLCons (NSAtom 14) (NSLCons (NSAtom 15) (NSNil))))
-  (NSLCons (NSCons 16 (NSLCons (NSAtom 17) NSNil))
-  (NSLCons (NSAtom 18)
+    (NSCons 16
+    (NSLCons (NSAtom 17) (NSLCons (NSAtom 18) (NSNil))))
+  (NSLCons (NSCons 19 (NSLCons (NSAtom 20) NSNil))
+  (NSLCons (NSAtom 21)
   NSNil))))))) =
   0 $:
   (1 $: 2 $:^ 3) $+
-  (4 $: 5 $^+ (?hole2c) $+ 9 $:^ 10) $+
-  ?hole3 $+
-  12 $^+
-  ?hole5 $+
-  (16 $^^ 17) $+^
-  18
+  (4 $: 5 $^+ (6 $: 7 $^+ (8 $: 9 $:^ 10) $+^ 11) $+ 12 $:^ 13) $+
+  14 $^+
+  15 $^+
+  (16 $: 17 $:^ 18) $+
+  (19 $^^ 20) $+^
+  21
 bigNotationTest = Refl

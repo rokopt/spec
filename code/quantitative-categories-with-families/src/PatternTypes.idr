@@ -89,7 +89,7 @@ public export
 ($:|) : {atom : Type} -> atom -> SExp atom -> SExp atom
 a $:| x = a $: $+| x
 
-infixr 8 $^^
+infixr 7 $^^
 public export
 ($^^) : {atom : Type} -> atom -> atom -> SExp atom
 a $^^ a' = a $:| $^ a'
@@ -111,7 +111,7 @@ public export
 a $:+ x = a $+ $^| x
 -}
 
-infixr 8 $:^
+infixr 7 $:^
 public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
 a $:^ a' = a $:+ $^ a'
