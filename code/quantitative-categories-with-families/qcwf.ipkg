@@ -25,6 +25,8 @@ modules = TypesAndFunctions
     , QCWF
     , PatternedSExpressions
     , Test.PatternedSExpressionsTest
+    , PatternTypes
+    , Test.PatternTypeTests
 
 depends = contrib
 
