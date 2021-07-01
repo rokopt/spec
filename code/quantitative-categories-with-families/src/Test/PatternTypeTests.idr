@@ -41,6 +41,14 @@ notationTest : 0 $: $^ 1 $+ ($|) = 0 $^^ 1
 notationTest = Refl
 
 bigNotationTest :
+  0 $:
+  (1 $: 2 $:^ 3) $+
+  (4 $: 5 $^+ (6 $: 7 $^+ (8 $: 9 $:^ 10) $+^ 11) $+ 12 $:^ 13) $+
+  14 $^+
+  15 $^+
+  (16 $: 17 $:^ 18) $+
+  (19 $^^ 20) $+^
+  21 =
   NSCons 0
   (NSLCons
     (NSCons 1
@@ -68,13 +76,5 @@ bigNotationTest :
     (NSLCons (NSAtom 17) (NSLCons (NSAtom 18) (NSNil))))
   (NSLCons (NSCons 19 (NSLCons (NSAtom 20) NSNil))
   (NSLCons (NSAtom 21)
-  NSNil))))))) =
-  0 $:
-  (1 $: 2 $:^ 3) $+
-  (4 $: 5 $^+ (6 $: 7 $^+ (8 $: 9 $:^ 10) $+^ 11) $+ 12 $:^ 13) $+
-  14 $^+
-  15 $^+
-  (16 $: 17 $:^ 18) $+
-  (19 $^^ 20) $+^
-  21
+  NSNil)))))))
 bigNotationTest = Refl
