@@ -68,7 +68,8 @@ mutual
   sexpEq : (sexp, sexp' : SExp) -> Dec (sexp = sexp')
   sexpEq (SAtom exp) (SAtom exp') with (primExpEq exp exp')
     sexpEq (SAtom exp) (SAtom exp) | Yes Refl = Yes Refl
-    sexpEq (SAtom exp) (SAtom exp') | No neq = No (\eq => case eq of Refl => neq Refl)
+    sexpEq (SAtom exp) (SAtom exp') | No neq =
+      No (\eq => case eq of Refl => neq Refl)
   sexpEq (SAtom _) (SList _) = No (\eq => case eq of Refl impossible)
   sexpEq (SList _) (SAtom _) = No (\eq => case eq of Refl impossible)
   sexpEq (SList sexpList) (SList sexpList') =
@@ -90,19 +91,19 @@ mutual
   data Pattern : Type where
     DefaultPat : Pattern
     PrimPat : PrimitiveType -> Pattern
-    ProductPat : List Pattern -> Pattern
-    SumPat : List Pattern -> Pattern
+    ProductPat : PatternList -> Pattern
+    SumPat : PatternList -> Pattern
 
   public export
   PatternList : Type
   PatternList = List Pattern
 
 public export
-(#*) : List Pattern -> Pattern
+(#*) : PatternList -> Pattern
 (#*) = ProductPat
 
 public export
-(#|) : List Pattern -> Pattern
+(#|) : PatternList -> Pattern
 (#|) = SumPat
 
 mutual
@@ -316,7 +317,7 @@ match caseStatement (_ ** matchesDomain) = case matchesDomain of
     caseStatement (sexpList ** matchesList)
   MatchesSum {sexp} {patternList} matchesList =>
     let matchedPattern = snd (listExistsGet matchesList caseStatement) in
-    snd matchedPattern (sexp ** fst  matchedPattern)
+    snd matchedPattern (sexp ** fst matchedPattern)
 
 public export
 Transformer : (domain, codomain : Pattern) -> Type
