@@ -6,7 +6,6 @@ import public List
 
 %default total
 
-
 mutual
   infixr 7 $:
   public export
@@ -108,3 +107,12 @@ infixr 7 $:^
 public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
 a $:^ a' = a $:+ $^ a'
+
+data Keyword : Type where
+  KWFunc : Keyword
+
+interface HasKeywords atom where
+  encode : atom -> Nat
+  encodeInjective : IsInjective encode
+  getKW : Keyword -> atom
+  keywordsDistinct : IsInjective getKW
