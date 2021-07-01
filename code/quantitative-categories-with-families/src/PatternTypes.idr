@@ -104,13 +104,6 @@ public export
 ($:+) : {atom : Type} -> atom -> SExp atom -> SList atom
 a $:+ x = a $^+ $+| x
 
-{-
-infixr 7 $:+
-public export
-($:+) : {atom : Type} -> atom -> SExp atom -> SList atom
-a $:+ x = a $+ $^| x
--}
-
 infixr 7 $:^
 public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
