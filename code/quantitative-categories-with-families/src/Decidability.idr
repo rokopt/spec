@@ -1,9 +1,11 @@
 module Decidability
 
+import IntegerSquareRoot
 import FunctionsAndRelations
 import public Data.Vect
 import public Decidable.Equality
 import public Data.Maybe
+import public Data.Nat
 
 %default total
 
@@ -313,3 +315,24 @@ YesDPairInjective : {a : Type} -> {b : a -> Type} ->
   {d, d' : DPair a (\x => IsYes (dec x))} -> fst d = fst d' -> d = d'
 YesDPairInjective =
   UniqueHeterogeneousDPairInjective (\_, yes, yes' => IsYesUnique yes yes')
+
+public export
+square : Nat -> Nat
+square x = x * x
+
+public export
+elegantPairing : (Nat, Nat) -> Nat
+elegantPairing (x, y) =
+  if x < y then
+    square y + x
+  else
+    square x + x + y
+
+public export
+elegantPairingInverse : Nat -> (Nat, Nat)
+elegantPairingInverse z =
+  let
+    sqrtz = intSqrt z
+    w = minus z (square sqrtz)
+  in
+  if w < sqrtz then (w, sqrtz) else (sqrtz, minus w sqrtz)

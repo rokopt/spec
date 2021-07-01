@@ -3,6 +3,7 @@ package qcwf
 modules = TypesAndFunctions
     , FunctionsAndRelations
     , Semiring
+    , IntegerSquareRoot
     , Decidability
     , Category
     , List
