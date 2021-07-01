@@ -8,24 +8,28 @@ import public List
 
 
 mutual
-  infixl 2 $:
+  infixr 2 $:
   public export
   data SExp : Type -> Type where
     ($:) : {atom : Type} -> atom -> SList atom -> SExp atom
 
-  infixl 3 $+
+  infixr 3 $+
   public export
   data SList : Type -> Type where
     ($|) : {atom : Type} -> SList atom
     ($+) : {atom : Type} -> SExp atom -> SList atom -> SList atom
 
 public export
+SCons : {atom : Type} -> atom -> SList atom -> SExp atom
+SCons = ($:)
+
+public export
 SNil : {atom : Type} -> SList atom
 SNil = ($|)
 
 public export
-SCons : {atom : Type} -> SExp atom -> SList atom -> SList atom
-SCons = ($+)
+SLCons : {atom : Type} -> SExp atom -> SList atom -> SList atom
+SLCons = ($+)
 
 public export
 ($^) : {atom : Type} -> atom -> SExp atom
@@ -61,31 +65,36 @@ public export
 ($+|) : {atom : Type} -> SExp atom -> SList atom
 ($+|) x = x $+ ($|)
 
+infixr 10 $++
+public export
+($++) : {atom : Type} -> SExp atom -> SExp atom -> SList atom
+x $++ x' = x $+ ($+|) x'
+
 public export
 ($^|) : {atom : Type} -> atom -> SList atom
 ($^|) a = ($+|) (($^) a)
 
-infixl 9 $:|
+infixr 9 $:|
 public export
 ($:|) : {atom : Type} -> atom -> SExp atom -> SExp atom
 a $:| x = a $: ($+|) x
 
-infixl 8 $^^
+infixr 8 $^^
 public export
 ($^^) : {atom : Type} -> atom -> atom -> SExp atom
 a $^^ a' = a $:| ($^) a'
 
-infixl 7 $^+
+infixr 2 $^+
 public export
 ($^+) : {atom : Type} -> atom -> SList atom -> SList atom
 a $^+ l = ($^) a $+ l
 
-infixl 6 $:+
+infixr 6 $:+
 public export
 ($:+) : {atom : Type} -> atom -> SExp atom -> SList atom
 a $:+ x = a $^+ ($+|) x
 
-infixl 6 $:^
+infixr 6 $:^
 public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
 a $:^ a' = a $:+ ($^) a'
