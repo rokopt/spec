@@ -5,18 +5,23 @@ import Decidability
 import FunctionsAndRelations
 import SExpressions
 
+public export
 IsInjective : {a, b : Type} -> (f : a -> b) -> Type
 IsInjective {a} f = (x, x': a) -> f x = f x' -> x = x'
 
+public export
 Injection : Type -> Type -> Type
 Injection a b = DPair (a -> b) IsInjective
 
+public export
 IsEnumeration : {type : Type} -> (enumeration : type -> Nat) -> Type
 IsEnumeration = IsInjective
 
+public export
 Enumeration : (type : Type) -> Type
 Enumeration a = Injection a Nat
 
+public export
 Countable : Type
 Countable = DPair Type Enumeration
 
