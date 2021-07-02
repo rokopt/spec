@@ -1,3 +1,5 @@
+-- Taken from a later version of the Idris STL than I'm building with.
+
 module IdrisSTL.Semiring
 
 %default total
