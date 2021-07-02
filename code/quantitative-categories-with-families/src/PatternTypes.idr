@@ -108,11 +108,92 @@ public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
 a $:^ a' = a $:+ $^ a'
 
-data Keyword : Type where
-  KWFunc : Keyword
+prefix 11 $$
+data WithKeywords : Type -> Type where
+  ($$) : {symbol : Type} -> symbol -> WithKeywords symbol
+  WKADT : {symbol : Type} -> WithKeywords symbol
+  WKFunc : {symbol : Type} -> WithKeywords symbol
 
-interface HasKeywords atom where
-  encode : atom -> Nat
-  encodeInjective : IsInjective encode
-  getKW : Keyword -> atom
-  keywordsDistinct : IsInjective getKW
+SPredicate : (atom : Type) -> Type
+SPredicate atom = SExp atom -> Type
+
+SLPredicate : (atom : Type) -> Type
+SLPredicate atom = SList atom -> Type
+
+SDecisionP : {atom : Type} -> (predicate : SPredicate atom) -> Type
+SDecisionP predicate = (x : SExp atom) -> Dec (predicate x)
+
+SLDecisionP : {atom : Type} -> (predicate : SLPredicate atom) -> Type
+SLDecisionP predicate = (l : SList atom) -> Dec (predicate l)
+
+prefix 11 $?
+($?) : {atom : Type} -> (predicate : SPredicate atom) -> Type
+($?) = SDecisionP
+
+prefix 11 $:?
+($:?) : {atom : Type} -> (predicate : SLPredicate atom) -> Type
+($:?) = SLDecisionP
+
+SatisfiesSPred : {atom : Type} -> {predicate : SPredicate atom} ->
+  (decide : $? predicate) -> SExp atom -> Type
+SatisfiesSPred decide x = IsYes (decide x)
+
+prefix 11 $&
+($&) : {atom : Type} -> {predicate : SPredicate atom} ->
+  (decide : $? predicate) -> SExp atom -> Type
+($&) = SatisfiesSPred
+
+SatisfiesSLPred : {atom : Type} -> {predicate : SLPredicate atom} ->
+  (decide : $:? predicate) -> SList atom -> Type
+SatisfiesSLPred decide l = IsYes (decide l)
+
+prefix 11 $:&
+($:&) : {atom : Type} -> {predicate : SLPredicate atom} ->
+  (decide : $:? predicate) -> SList atom -> Type
+($:&) = SatisfiesSLPred
+
+prefix 11 $~
+($~) : {atom : Type} -> {predicate : SPredicate atom} ->
+  (decide : $? predicate) -> Type
+($~) decide = DPair (SExp atom) (SatisfiesSPred decide)
+
+prefix 11 $:~
+($:~) : {atom : Type} -> {predicate : SLPredicate atom} ->
+  (decide : $:? predicate) -> Type
+($:~) decide = DPair (SList atom) (SatisfiesSLPred decide)
+
+mutual
+  public export
+  sExpInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
+    (nilElim : lp ($|)) ->
+    (consElim :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
+    (x : SExp atom) -> sp x
+  sExpInd expElim nilElim consElim (a $: l) =
+    expElim a l (sListInd expElim nilElim consElim l)
+
+  public export
+  sListInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
+    (nilElim : lp ($|)) ->
+    (consElim :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
+    (l : SList atom) -> lp l
+  sListInd expElim nilElim consElim ($|) = nilElim
+  sListInd expElim nilElim consElim (x $+ l) =
+    consElim x l
+      (sExpInd expElim nilElim consElim x) (sListInd expElim nilElim consElim l)
+
+public export
+sInd :
+  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+  (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
+  (nilElim : lp ($|)) ->
+  (consElim :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
+  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
+sInd expElim nilElim consElim =
+  (sExpInd expElim nilElim consElim, sListInd expElim nilElim consElim)
