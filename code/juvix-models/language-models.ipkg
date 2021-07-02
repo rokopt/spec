@@ -28,6 +28,12 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.PatternedSExpressionsTest
     , RefinedSExp.SExp
     , RefinedSExp.Test.SExpTest
+    , RefinedSExp.RefinedSExp
+    , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.DependentADT
+    , RefinedSExp.Test.DependentADTTest
+    , RefinedSExp.DependentMorphism
+    , RefinedSExp.Test.DependentMorphismTest
     , Executable.Test.Main
 
 depends = contrib, network
