@@ -28,7 +28,11 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.PatternedSExpressionsTest
     , RefinedSExp.SExp
     , RefinedSExp.Test.SExpTest
+    , Executable.Test.Main
 
-depends = contrib
+depends = contrib, network
 
 sourcedir = "src"
+
+main = Executable.Test.Main
+executable = language-models-test

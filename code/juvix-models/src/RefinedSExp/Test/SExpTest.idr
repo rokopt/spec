@@ -1,6 +1,6 @@
 module RefinedSExp.Test.SExpTest
 
-import RefinedSExp.SExp
+import public RefinedSExp.SExp
 
 %default total
 
