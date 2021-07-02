@@ -1,4 +1,4 @@
-package qcwf
+package language-models
 
 modules = TypesAndFunctions
     , FunctionsAndRelations

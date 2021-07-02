@@ -5,10 +5,10 @@
 default: all
 
 idris2:
-	idris2 --build qcwf.ipkg
+	idris2 --build language-models.ipkg
 
 idris2-clean:
-	idris2 --clean qcwf.ipkg
+	idris2 --clean language-models.ipkg
 
 idris2-clobber:
 	rm -rf build
