@@ -108,59 +108,13 @@ public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
 a $:^ a' = a $:+ $^ a'
 
-prefix 11 $$
-data WithKeywords : Type -> Type where
-  ($$) : {symbol : Type} -> symbol -> WithKeywords symbol
-  WKADT : {symbol : Type} -> WithKeywords symbol
-  WKFunc : {symbol : Type} -> WithKeywords symbol
-
+public export
 SPredicate : (atom : Type) -> Type
 SPredicate atom = SExp atom -> Type
 
+public export
 SLPredicate : (atom : Type) -> Type
 SLPredicate atom = SList atom -> Type
-
-SDecisionP : {atom : Type} -> (predicate : SPredicate atom) -> Type
-SDecisionP predicate = (x : SExp atom) -> Dec (predicate x)
-
-SLDecisionP : {atom : Type} -> (predicate : SLPredicate atom) -> Type
-SLDecisionP predicate = (l : SList atom) -> Dec (predicate l)
-
-prefix 11 $?
-($?) : {atom : Type} -> (predicate : SPredicate atom) -> Type
-($?) = SDecisionP
-
-prefix 11 $:?
-($:?) : {atom : Type} -> (predicate : SLPredicate atom) -> Type
-($:?) = SLDecisionP
-
-SatisfiesSPred : {atom : Type} -> {predicate : SPredicate atom} ->
-  (decide : $? predicate) -> SExp atom -> Type
-SatisfiesSPred decide x = IsYes (decide x)
-
-prefix 11 $&
-($&) : {atom : Type} -> {predicate : SPredicate atom} ->
-  (decide : $? predicate) -> SExp atom -> Type
-($&) = SatisfiesSPred
-
-SatisfiesSLPred : {atom : Type} -> {predicate : SLPredicate atom} ->
-  (decide : $:? predicate) -> SList atom -> Type
-SatisfiesSLPred decide l = IsYes (decide l)
-
-prefix 11 $:&
-($:&) : {atom : Type} -> {predicate : SLPredicate atom} ->
-  (decide : $:? predicate) -> SList atom -> Type
-($:&) = SatisfiesSLPred
-
-prefix 11 $~
-($~) : {atom : Type} -> {predicate : SPredicate atom} ->
-  (decide : $? predicate) -> Type
-($~) decide = DPair (SExp atom) (SatisfiesSPred decide)
-
-prefix 11 $:~
-($:~) : {atom : Type} -> {predicate : SLPredicate atom} ->
-  (decide : $:? predicate) -> Type
-($:~) decide = DPair (SList atom) (SatisfiesSLPred decide)
 
 mutual
   public export
