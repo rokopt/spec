@@ -116,6 +116,14 @@ public export
 SLPredicate : (atom : Type) -> Type
 SLPredicate atom = SList atom -> Type
 
+public export
+data SLForAll : {atom : Type} -> SPredicate atom -> SLPredicate atom where
+  SLForAllEmpty : {atom : Type} -> {predicate : SPredicate atom} ->
+    SLForAll predicate ($|)
+  SLForAllCons : {atom : Type} -> {predicate : SPredicate atom} ->
+    {x : SExp atom} -> {l : SList atom} ->
+    predicate x -> SLForAll predicate l -> SLForAll predicate (x $+ l)
+
 mutual
   public export
   sExpInd :
@@ -151,3 +159,12 @@ sInd :
   ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
 sInd expElim nilElim consElim =
   (sExpInd expElim nilElim consElim, sListInd expElim nilElim consElim)
+
+public export
+sIndForAll :
+  {atom : Type} -> {sp : SPredicate atom} ->
+  (forAllElim :
+    (a : atom) -> (l : SList atom) ->
+    SLForAll sp l -> sp (a $: l)) ->
+  ((x : SExp atom) -> sp x, (l : SList atom) -> SLForAll sp l)
+sIndForAll forAllElim = sInd forAllElim SLForAllEmpty (\_, _ => SLForAllCons)
