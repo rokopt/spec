@@ -224,8 +224,8 @@ sDepInd {expElim} {nilElim} {consElim} depExpElim depNilElim depConsElim =
     (depNilElim Refl)
     (\x, l =>
       depConsElim x l
-        (sExpInd {sp} {lp} _ _ _ x)
-        (sListInd {sp} {lp} _ _ _ l)
+        (sExpInd {sp} {lp} expElim nilElim consElim x)
+        (sListInd {sp} {lp} expElim nilElim consElim l)
         Refl Refl)
 
 public export
