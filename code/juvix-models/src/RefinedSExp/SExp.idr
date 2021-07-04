@@ -2,7 +2,6 @@ module RefinedSExp.SExp
 
 import Category.ComputableCategories
 import Decidable.Equality
-import public Library.List
 
 %default total
 
