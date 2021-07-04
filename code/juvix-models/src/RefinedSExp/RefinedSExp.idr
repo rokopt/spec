@@ -55,3 +55,20 @@ public export
 ($:~) : {atom : Type} -> {predicate : SLPredicate atom} ->
   (decide : $:? predicate) -> Type
 ($:~) decide = DPair (SList atom) (SatisfiesSLPred decide)
+
+-- Refined S-expression.
+public export
+RExp : {atom : Type} -> {predicate : SPredicate atom} ->
+  (decide : $? predicate) -> Type
+RExp decide = DPair (SExp atom) ($& decide)
+
+-- Refined S-list.
+public export
+RList : {atom : Type} -> {predicate : SLPredicate atom} ->
+  (decide : $:? predicate) -> Type
+RList decide = DPair (SList atom) ($:& decide)
+
+RExpProofInsensitive : {atom : Type} -> {predicate : SPredicate atom} ->
+  {decide : $? predicate} -> {rx, rx' : RExp decide} -> (fst rx = fst rx') ->
+  rx = rx'
+RExpProofInsensitive {decide} eq = YesDPairInjective {dec=decide} eq
