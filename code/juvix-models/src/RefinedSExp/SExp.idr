@@ -167,3 +167,53 @@ sIndForAll :
     SLForAll sp l -> sp (a $: l)) ->
   ((x : SExp atom) -> sp x, (l : SList atom) -> SLForAll sp l)
 sIndForAll forAllElim = sInd forAllElim SLForAllEmpty (\_, _ => SLForAllCons)
+
+public export
+SDepPred : {atom : Type} -> SPredicate atom -> Type
+SDepPred {atom} pred = (x : SExp atom) -> pred x -> Type
+
+public export
+SLDepPred : {atom : Type} -> SLPredicate atom -> Type
+SLDepPred {atom} pred = (l : SList atom) -> pred l -> Type
+
+public export
+sDepInd :
+  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+  {sdp : SDepPred sp} -> {ldp : SLDepPred lp} ->
+  {expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)} ->
+  {nilElim : lp ($|)} ->
+  {consElim :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)} ->
+  (depExpElim : (a : atom) -> (l : SList atom) ->
+    (lpl : lp l) -> (spal : sp (a $: l)) ->
+    (lpl = sListInd expElim nilElim consElim l) ->
+    (spal = sExpInd expElim nilElim consElim (a $: l)) ->
+    ldp l lpl ->
+    sdp (a $:l) spal) ->
+  (depNilElim : (lpl : lp ($|)) ->
+    (lpl = sListInd expElim nilElim consElim ($|)) ->
+    ldp ($|) lpl) ->
+  (depConsElim : (x : SExp atom) -> (l: SList atom) ->
+    (spx : sp x) -> (lpl : lp l) -> (lpxl : lp (x $+ l)) ->
+    (spx = sExpInd expElim nilElim consElim x) ->
+    (lpl = sListInd expElim nilElim consElim l) ->
+    (lpxl = sListInd expElim nilElim consElim (x $+ l)) ->
+    sdp x spx ->
+    ldp l lpl ->
+    ldp (x $+ l) lpxl) ->
+  ((x : SExp atom) -> sdp x (sExpInd expElim nilElim consElim x),
+   (l : SList atom) -> ldp l (sListInd expElim nilElim consElim l))
+sDepInd {expElim} {nilElim} {consElim} depExpElim depNilElim depConsElim =
+  sInd
+    (\a, l, ldpl =>
+      depExpElim a l
+        (sListInd {sp} expElim _ _ l)
+        (sExpInd {sp} expElim _ _ (a $: l))
+        Refl Refl ldpl)
+    (depNilElim (sListInd {sp} {lp} expElim nilElim consElim ($|)) Refl)
+    (\x, l, sdpx, ldpl =>
+      depConsElim x l
+        (sExpInd {sp} {lp} _ _ _ x)
+        (sListInd {sp} {lp} _ _ _ l)
+        (sListInd {lp} _ _ consElim (x $+ l))
+        Refl Refl Refl sdpx ldpl)
