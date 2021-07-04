@@ -220,14 +220,13 @@ sDepInd :
    (l : SList atom) -> ldp l (sListInd expElim nilElim consElim l))
 sDepInd {expElim} {nilElim} {consElim} depExpElim depNilElim depConsElim =
   sInd
-    (\a, l, ldpl =>
-      depExpElim a l (sListInd {sp} expElim nilElim consElim l) Refl ldpl)
+    (\a, l => depExpElim a l (sListInd {sp} expElim nilElim consElim l) Refl)
     (depNilElim Refl)
-    (\x, l, sdpx, ldpl =>
+    (\x, l =>
       depConsElim x l
         (sExpInd {sp} {lp} _ _ _ x)
         (sListInd {sp} {lp} _ _ _ l)
-        Refl Refl sdpx ldpl)
+        Refl Refl)
 
 public export
 data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->
@@ -262,7 +261,7 @@ sDepIndForAll {forAllElim} depForAllElim =
     {consElim=(\_, _ => SLForAllCons)}
     depForAllElim
     (\_ => SLForAllDepEmpty)
-    (\_, _, _, _, _, _, sdpx, sdplForAll => SLForAllDepCons sdpx sdplForAll)
+    (\_, _, _, _, _, _ => SLForAllDepCons)
 
 public export
 sTransform :
