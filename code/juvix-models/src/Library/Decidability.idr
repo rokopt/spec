@@ -311,7 +311,7 @@ IsYesUnique yes yes' = uip yes yes'
 
 public export
 YesDPairInjective : {a : Type} -> {b : a -> Type} ->
-  {dec : (x : a) -> Dec (b x)} -> {x : a} ->
+  {dec : (x : a) -> Dec (b x)} ->
   {d, d' : DPair a (\x => IsYes (dec x))} -> fst d = fst d' -> d = d'
 YesDPairInjective =
   UniqueHeterogeneousDPairInjective (\_, yes, yes' => IsYesUnique yes yes')
