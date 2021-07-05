@@ -214,6 +214,11 @@ isJustIsTrueDec : {a : Type} -> (m : Maybe a) ->
 isJustIsTrueDec (Just _) = Yes Refl
 isJustIsTrueDec Nothing = No (\eq => case eq of Refl impossible)
 
+public export
+IsJustDec : {a : Type} -> (m : Maybe a) -> Dec (IsJust m)
+IsJustDec (Just _) = Yes ItIsJust
+IsJustDec Nothing = No (\eq => case eq of ItIsJust impossible)
+
 public export IsJustToTrue : {a : Type} -> {m : Maybe a} -> IsJust m ->
                              IsJustIsTrue m
 IsJustToTrue ItIsJust = Refl
@@ -232,6 +237,12 @@ public export isJustElim : {a : Type} -> {m : Maybe a} ->
                            IsJustIsTrue m -> a
 isJustElim {m=(Just x)} Refl = x
 isJustElim {m=(Nothing)} Refl impossible
+
+public export isJustElimElim :
+  {a : Type} -> {m : Maybe a} -> (just : IsJustIsTrue m) ->
+  m = Just (isJustElim {m} just)
+isJustElimElim {m=(Just x)} Refl = Refl
+isJustElimElim {m=(Nothing)} Refl impossible
 
 public export IsJustElim : {a : Type} -> {m : Maybe a} ->
                            IsJust m -> a
@@ -308,6 +319,11 @@ public export
 IsYesUnique : {type : Type} -> {dec : Dec type} -> (yes, yes' : IsYes dec) ->
   yes = yes'
 IsYesUnique yes yes' = uip yes yes'
+
+public export
+IsJustUnique : {type : Type} -> {m : Maybe type} -> (just, just' : IsJust m) ->
+  just = just'
+IsJustUnique ItIsJust ItIsJust = Refl
 
 public export
 YesDPairInjective : {a : Type} -> {b : a -> Type} ->

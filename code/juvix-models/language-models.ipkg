@@ -28,6 +28,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.PatternedSExpressionsTest
     , RefinedSExp.SExp
     , RefinedSExp.Test.SExpTest
+    , RefinedSExp.InductiveSExp
+    , RefinedSExp.Test.InductiveSExpTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
     , RefinedSExp.DependentADT

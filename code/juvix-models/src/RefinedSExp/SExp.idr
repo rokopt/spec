@@ -123,6 +123,22 @@ data SLForAll : {atom : Type} -> SPredicate atom -> SLPredicate atom where
     {x : SExp atom} -> {l : SList atom} ->
     predicate x -> SLForAll predicate l -> SLForAll predicate (x $+ l)
 
+public export
+mapSLForAll : {atom : Type} ->
+  {sp, sp' : SPredicate atom} -> {l : SList atom} ->
+  (f : (x : SExp atom) -> sp x -> sp' x) ->
+  SLForAll sp l -> SLForAll sp' l
+mapSLForAll f SLForAllEmpty = SLForAllEmpty
+mapSLForAll f (SLForAllCons head forAllTail) =
+  SLForAllCons (f _ head) (mapSLForAll f forAllTail)
+
+export
+SLForAllUnique : {atom : Type} -> {sp : SPredicate atom} -> {l : SList atom} ->
+  (forAll, forAll' : SLForAll sp l) ->
+  ((x : SExp atom) -> (spx, spx' : sp x) -> spx = spx') ->
+  forAll = forAll'
+SLForAllUnique forAll forAll' spUnique = ?SLForAllUnique_hole
+
 mutual
   public export
   sExpInd :
@@ -188,12 +204,46 @@ sListIndForAll :
 sListIndForAll forAllElim = snd (sIndForAll forAllElim)
 
 public export
+sTransform :
+  {atom, atom' : Type} ->
+  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
+    SExp atom') ->
+  (SExp atom -> SExp atom', (l : SList atom) -> SLForAll (\_ => SExp atom') l)
+sTransform {atom} {atom'} = sIndForAll {atom} {sp=(\_ => SExp atom')}
+
+public export
+sExpTransform :
+  {atom, atom' : Type} ->
+  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
+    SExp atom') ->
+  SExp atom -> SExp atom'
+sExpTransform = fst . sTransform
+
+public export
+sListTransform :
+  {atom, atom' : Type} ->
+  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
+    SExp atom') ->
+  (l : SList atom) -> SLForAll (\_ => SExp atom') l
+sListTransform = snd . sTransform
+
+public export
 SDepPred : {atom : Type} -> SPredicate atom -> Type
 SDepPred {atom} pred = (x : SExp atom) -> pred x -> Type
 
 public export
+SDepPredPair : {atom : Type} -> {sp : SPredicate atom} ->
+  SDepPred sp -> SPredicate atom
+SDepPredPair {sp} sdp = \x => (spx : sp x ** sdp x spx)
+
+public export
 SLDepPred : {atom : Type} -> SLPredicate atom -> Type
 SLDepPred {atom} pred = (l : SList atom) -> pred l -> Type
+
+public export
+SLDepPredPair : {atom : Type} -> {lp : SLPredicate atom} ->
+  SLDepPred lp -> SLPredicate atom
+SLDepPredPair {lp} ldp = \l => (lpl : lp l ** ldp l lpl)
 
 public export
 sDepInd :
@@ -241,6 +291,41 @@ data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->
     SLForAllDep sdp (x $+ l) (SLForAllCons spx splForAll)
 
 public export
+SLPairsFst : {atom : Type} -> {sp : SPredicate atom} ->
+  {sdp : SDepPred sp} -> {l : SList atom} ->
+  (forAll : SLForAll (SDepPredPair sdp) l) ->
+  SLForAll sp l
+SLPairsFst SLForAllEmpty = SLForAllEmpty
+SLPairsFst (SLForAllCons sdpx sdpl) = SLForAllCons (fst sdpx) (SLPairsFst sdpl)
+
+public export
+SLPairsSnd : {atom : Type} -> {sp : SPredicate atom} ->
+  {sdp : SDepPred sp} -> {l : SList atom} ->
+  (forAll : SLForAll (SDepPredPair sdp) l) ->
+  SLForAllDep sdp l (SLPairsFst forAll)
+SLPairsSnd SLForAllEmpty = SLForAllDepEmpty
+SLPairsSnd {sdp} (SLForAllCons sdpx sdpl) =
+  SLForAllDepCons {sdp} (snd sdpx) (SLPairsSnd {sdp} sdpl)
+
+public export
+SLPairsToForAllDep : {atom : Type} -> {sp : SPredicate atom} ->
+  {sdp : SDepPred sp} -> {l : SList atom} ->
+  (forAll : SLForAll (SDepPredPair sdp) l) ->
+  SLForAllDep sdp l (SLPairsFst forAll)
+SLPairsToForAllDep SLForAllEmpty = SLForAllDepEmpty
+SLPairsToForAllDep {sdp} (SLForAllCons (_ ** head) forAllTail) =
+  SLForAllDepCons head (SLPairsToForAllDep {sdp} forAllTail)
+
+public export
+SLForAllDepToPairs : {atom : Type} -> {sp : SPredicate atom} ->
+  {sdp : SDepPred sp} -> {l : SList atom} ->
+  {forAll : SLForAll sp l} -> SLForAllDep sdp l forAll ->
+  SLForAll (SDepPredPair sdp) l
+SLForAllDepToPairs SLForAllDepEmpty = SLForAllEmpty
+SLForAllDepToPairs (SLForAllDepCons head forAllTail) =
+  SLForAllCons (_ ** head) (SLForAllDepToPairs forAllTail)
+
+public export
 sDepIndForAll :
   {atom : Type} -> {sp : SPredicate atom} -> {sdp : SDepPred sp} ->
   {forAllElim :
@@ -262,11 +347,3 @@ sDepIndForAll {forAllElim} depForAllElim =
     depForAllElim
     (\_ => SLForAllDepEmpty)
     (\_, _, _, _, _, _ => SLForAllDepCons)
-
-public export
-sTransform :
-  {atom, atom' : Type} ->
-  (expElim : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
-    SExp atom') ->
-  (SExp atom -> SExp atom', SList (SExp atom) -> SList (SExp atom'))
-sTransform {atom} {atom'} expElim = ?sTransform_hole
