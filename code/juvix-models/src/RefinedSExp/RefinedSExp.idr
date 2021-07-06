@@ -5,6 +5,22 @@ import public Library.Decidability
 
 %default total
 
+mutual
+  sExpEq : {atom : Type} -> DecEqPred atom -> DecEqPred (SExp atom)
+  sExpEq deq (a $: l) (a' $: l') = case (deq a a', sListEq deq l l') of
+    (Yes Refl, Yes Refl) => Yes Refl
+    (No neq, _) => No (\eq => case eq of Refl => neq Refl)
+    (_ , No neq) => No (\eq => case eq of Refl => neq Refl)
+
+  sListEq : {atom : Type} -> DecEqPred atom -> DecEqPred (SList atom)
+  sListEq deq ($|) ($|) = Yes Refl
+  sListEq deq (x $+ l) ($|) = No (\eq => ?h1)
+  sListEq deq ($|) (x $+ l) = No (\eq => ?h2)
+  sListEq deq (x $+ l) (x' $+ l') = case (sExpEq deq x x', sListEq deq l l') of
+    (Yes Refl, Yes Refl) => Yes Refl
+    (No neq, _) => No (\eq => case eq of Refl => neq Refl)
+    (_ , No neq) => No (\eq => case eq of Refl => neq Refl)
+
 public export
 SDecisionP : {atom : Type} -> (predicate : SPredicate atom) -> Type
 SDecisionP predicate = (x : SExp atom) -> Dec (predicate x)
