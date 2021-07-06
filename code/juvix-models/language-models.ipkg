@@ -32,6 +32,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.InductiveSExpTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.AlgebraicPattern
+    , RefinedSExp.Test.AlgebraicPatternTest
     , RefinedSExp.DependentADT
     , RefinedSExp.Test.DependentADTTest
     , RefinedSExp.DependentMorphism
