@@ -137,7 +137,12 @@ SLForAllUnique : {atom : Type} -> {sp : SPredicate atom} -> {l : SList atom} ->
   (forAll, forAll' : SLForAll sp l) ->
   ((x : SExp atom) -> (spx, spx' : sp x) -> spx = spx') ->
   forAll = forAll'
-SLForAllUnique forAll forAll' spUnique = ?SLForAllUnique_hole
+SLForAllUnique SLForAllEmpty SLForAllEmpty spUnique = Refl
+SLForAllUnique SLForAllEmpty (SLForAllCons _ _) _ impossible
+SLForAllUnique (SLForAllCons _ _) SLForAllEmpty _ impossible
+SLForAllUnique (SLForAllCons head tail) (SLForAllCons head' tail') spUnique =
+  case spUnique _ head head' of
+    Refl => cong (SLForAllCons head) (SLForAllUnique tail tail' spUnique)
 
 mutual
   public export
