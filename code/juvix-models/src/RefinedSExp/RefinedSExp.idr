@@ -125,6 +125,14 @@ isSuccess (TypecheckSuccess success) = Yes (Successful success)
 isSuccess (TypecheckFailure _) =
   No (\success => case success of Successful _ impossible)
 
+export
+NotSuccessExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {x : SExp atom} -> {result : TypecheckResult predicate x} ->
+  Not (IsSuccess result) -> FailureType predicate x
+NotSuccessExtract {result=(TypecheckSuccess success)} notSuccess =
+  void (notSuccess (Successful success))
+NotSuccessExtract {result=(TypecheckFailure failure)} _ = failure
+
 public export
 data IsFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {x : SExp atom} -> TypecheckResult predicate x -> Type where
@@ -153,16 +161,23 @@ isFailure (TypecheckSuccess _) =
   No (\failed => case failed of Failed _ impossible)
 isFailure (TypecheckFailure failed) = Yes (Failed failed)
 
+export
+NotFailureExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {x : SExp atom} -> {result : TypecheckResult predicate x} ->
+  Not (IsFailure result) -> SuccessType predicate x
+NotFailureExtract {result=(TypecheckSuccess success)} _ = success
+NotFailureExtract {result=(TypecheckFailure failure)} notFailure =
+  void (notFailure (Failed failure))
+
 public export
 record InductiveTypecheck {atom : Type}
     (predicate : TypecheckPredicate atom) where
   constructor MkInductiveTypecheck
   typecheckOne : (a : atom) -> (l : SList atom) ->
     SLForAll (SuccessType predicate) l -> TypecheckResult predicate (a $: l)
-  AllFailures : Type
-  firstFailure : (x : SExp atom) -> FailureType predicate x -> AllFailures
-  laterFailure : (x : SExp atom) -> FailureType predicate x -> AllFailures ->
-    AllFailures
+  MergedFailures : Type
+  firstFailure : (x : SExp atom) -> FailureType predicate x -> MergedFailures
+  mergeFailures : MergedFailures -> MergedFailures -> MergedFailures
 
 public export
 data TypechecksAs : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
@@ -270,14 +285,54 @@ mutual
             Refl
 
 public export
-CheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
-  (check : InductiveTypecheck predicate) -> (x : SExp atom) -> Type
-CheckResult check = Dec . (Typechecks check)
+data CheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    (check : InductiveTypecheck predicate) -> (x : SExp atom) -> Type where
+  CheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
+    Typechecks check x -> CheckResult check x
+  CheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
+    Not (Typechecks check x) -> MergedFailures check -> CheckResult check x
 
 public export
-ListCheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
-  (check : InductiveTypecheck predicate) -> (l : SList atom) -> Type
-ListCheckResult check = Dec . (SLForAll (Typechecks check))
+data ListCheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    (check : InductiveTypecheck predicate) -> (l : SList atom) -> Type where
+  ListCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    {check : InductiveTypecheck predicate} -> {l : SList atom} ->
+    SLForAll (Typechecks check) l ->
+    ListCheckResult check l
+  ListCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    {check : InductiveTypecheck predicate} -> {l : SList atom} ->
+    Not (SLForAll (Typechecks check) l) -> MergedFailures check ->
+    ListCheckResult check l
+
+export
+CheckResultCons : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {check : InductiveTypecheck predicate} ->
+  {x : SExp atom} -> {l : SList atom} ->
+  CheckResult check x -> ListCheckResult check l ->
+  ListCheckResult check (x $+ l)
+CheckResultCons (CheckSuccess head) (ListCheckSuccess tail) =
+  ListCheckSuccess (SLForAllCons head tail)
+CheckResultCons (CheckFailure head headFailure) (ListCheckSuccess tail) =
+  ListCheckFailure
+    (\success => case success of
+      SLForAllEmpty impossible
+      SLForAllCons headSuccess tailSuccess => head headSuccess)
+    headFailure
+CheckResultCons (CheckSuccess head) (ListCheckFailure tail tailFailure) =
+  ListCheckFailure
+    (\success => case success of
+      SLForAllEmpty impossible
+      SLForAllCons headSuccess tailSuccess => tail tailSuccess)
+    tailFailure
+CheckResultCons
+  (CheckFailure head headFailure) (ListCheckFailure tail tailFailure) =
+    ListCheckFailure
+      (\success => case success of
+        SLForAllEmpty impossible
+        SLForAllCons headSuccess tailSuccess => head headSuccess)
+      (mergeFailures check headFailure tailFailure)
 
 public export
 SLForAllConsDec : {atom : Type} -> {sp : SPredicate atom} ->
@@ -301,17 +356,17 @@ typecheck : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
 typecheck check =
   sInd {lp=(ListCheckResult check)}
     (\a, l, lCheck => case lCheck of
-      Yes lChecks =>
+      ListCheckSuccess lChecks =>
         case isSuccess
           (typecheckOne check a l (SLPairsFst lChecks)) of
             Yes termChecks =>
-              Yes (IsSuccessExtract termChecks **
+              CheckSuccess (IsSuccessExtract termChecks **
                    AllSubtermsTypecheckAs
                      lChecks
                      (IsSuccessExtract termChecks)
                      (IsSuccessExtractElim termChecks))
             No termFails =>
-              No (\termChecks => case termChecks of
+              CheckFailure (\termChecks => case termChecks of
                 (_ ** typechecks) => case typechecks of
                   AllSubtermsTypecheckAs subtermsCheck checkedType termChecks =>
                     termFails
@@ -322,12 +377,15 @@ typecheck check =
                               {sdp=(TypechecksAs check)} subtermsCheck')))}
                         (ListTypechecksUnique subtermsCheck lChecks)
                          (SuccessIsSuccessful termChecks)))
-      No lFails => No (\typedTerm => case typedTerm of
-        (_ ** typechecks) => case typechecks of
-          AllSubtermsTypecheckAs subtermsCheck _ _ =>
-            lFails subtermsCheck))
-    (Yes SLForAllEmpty)
-    (\_, _ => SLForAllConsDec)
+               (firstFailure check (a $: l) (NotSuccessExtract termFails))
+      ListCheckFailure lFails mergedFailure =>
+        CheckFailure (\typedTerm => case typedTerm of
+          (_ ** typechecks) => case typechecks of
+            AllSubtermsTypecheckAs subtermsCheck _ _ =>
+              lFails subtermsCheck)
+          mergedFailure)
+    (ListCheckSuccess SLForAllEmpty)
+    (\_, _ => CheckResultCons)
 
 -- Refined S-expression.
 public export
