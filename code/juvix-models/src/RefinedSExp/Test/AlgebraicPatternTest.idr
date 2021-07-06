@@ -80,6 +80,26 @@ Bt' = |* [ Uc, Uc ]
 Bt'' : DTP
 Bt'' = |: Bt'
 
+-- Primitive natural number
+Nt : DTP
+Nt = |. PrimTypeNat
+
+-- Primitive string
+St : DTP
+St = |. PrimTypeString
+
+-- Constructor containing two natural numbers
+N2c : TCP
+N2c = |- [ |-> Nt , |-> Nt ]
+
+-- Constructor containing one string
+Sc : TCP
+Sc = |- [ |-> St ]
+
+-- ADT comprising either two natural numbers or one string
+N2St : DTP
+N2St = |:* [ N2c , Sc ]
+
 -- Test some notation
 
 typeNotationTest : |:* [ Uc, Uc ] = |: (|* [ Uc, Uc ])
@@ -90,7 +110,3 @@ getConstructorTest_Bt'_0 = Refl
 
 getConstructorTest_Bt'_1 : Bt' |*< 1 = Uc
 getConstructorTest_Bt'_1 = Refl
-
--- Successor
-Sc : TCP
-Sc = ?Sc_hole

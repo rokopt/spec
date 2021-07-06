@@ -7,9 +7,10 @@ import public Library.List
 %default total
 
 mutual
+  prefix 11 |->
   public export
   data ConstructorParam : (primitive : Type) -> Type where
-    TypeParam : DataType primitive -> ConstructorParam primitive
+    (|->) : DataType primitive -> ConstructorParam primitive
 
   prefix 11 |-
   public export
