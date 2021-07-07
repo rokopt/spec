@@ -2,54 +2,11 @@ module RefinedSExp.PatternedSExpressions
 
 import Decidable.Equality
 import public Library.List
+import public RefinedSExp.AlgebraicPattern
 
 %default total
 
-public export
-data PrimitiveType : Type where
-  PrimTypeBool : PrimitiveType
-  PrimTypeNat : PrimitiveType
-  PrimTypeString : PrimitiveType
-
--- Haskell can just derive this.
-export
-primTypeEq : (primType, primType' : PrimitiveType) -> Dec (primType = primType')
-primTypeEq PrimTypeBool PrimTypeBool = Yes Refl
-primTypeEq PrimTypeBool PrimTypeNat = No (\eq => case eq of Refl impossible)
-primTypeEq PrimTypeBool PrimTypeString = No (\eq => case eq of Refl impossible)
-primTypeEq PrimTypeNat PrimTypeBool = No (\eq => case eq of Refl impossible)
-primTypeEq PrimTypeNat PrimTypeNat = Yes Refl
-primTypeEq PrimTypeNat PrimTypeString = No (\eq => case eq of Refl impossible)
-primTypeEq PrimTypeString PrimTypeBool = No (\eq => case eq of Refl impossible)
-primTypeEq PrimTypeString PrimTypeNat = No (\eq => case eq of Refl impossible)
-primTypeEq PrimTypeString PrimTypeString = Yes Refl
-
-interpretPrimitiveType : PrimitiveType -> Type
-interpretPrimitiveType PrimTypeBool = Bool
-interpretPrimitiveType PrimTypeNat = Nat
-interpretPrimitiveType PrimTypeString = String
-
-public export
-primitiveEq : (primType : PrimitiveType) ->
-  (x, x' : interpretPrimitiveType primType) -> Dec (x = x')
-primitiveEq PrimTypeBool = decEq
-primitiveEq PrimTypeNat = decEq
-primitiveEq PrimTypeString = decEq
-
-public export
-PrimitiveExp : Type
-PrimitiveExp = DPair PrimitiveType interpretPrimitiveType
-
-primExpEq : (primExp, primExp' : PrimitiveExp) -> Dec (primExp = primExp')
-primExpEq (primType ** primExp) (primType' ** primExp') with
-  (primTypeEq primType primType')
-    primExpEq (primType ** primExp) (primType ** primExp') | Yes Refl =
-      case primitiveEq primType primExp primExp' of
-        Yes Refl => Yes Refl
-        No neq => No (\eq => case eq of Refl => neq Refl)
-    primExpEq (primType ** primExp) (primType' ** primExp') | No neq =
-      No (\eq => case eq of Refl => neq Refl)
-
+{- XXX
 mutual
   public export
   data SExp : Type where
@@ -85,81 +42,72 @@ mutual
 
   [sexpListDecEq] DecEq SExpList where
     decEq = sexpListEq
+-}
 
 mutual
   public export
-  data Pattern : Type where
-    DefaultPat : Pattern
-    PrimPat : PrimitiveType -> Pattern
-    ProductPat : PatternList -> Pattern
-    SumPat : PatternList -> Pattern
+  data Pattern : (primType : Type) -> Type where
+    CarrierPat : Nat -> Pattern primType
+    PrimPat : primType -> Pattern primType
+    ProductPat : PatternList primType -> Pattern primType
+    SumPat : PatternList primType -> Pattern primType
 
   public export
-  PatternList : Type
-  PatternList = List Pattern
+  PatternList : (primType : Type) -> Type
+  PatternList = List . Pattern
 
 public export
-(#*) : PatternList -> Pattern
-(#*) = ProductPat
+(#*) : {primType : Type} -> PatternList primType -> Pattern primType
+(#*) {primType} = ProductPat
 
 public export
-(#|) : PatternList -> Pattern
+(#|) : {primType : Type} -> PatternList primType -> Pattern primType
 (#|) = SumPat
 
 mutual
-  patternEq : (pattern, pattern' : Pattern) -> Dec (pattern = pattern')
-  patternEq DefaultPat DefaultPat = Yes Refl
-  patternEq DefaultPat (PrimPat _) = No (\eq => case eq of Refl impossible)
-  patternEq DefaultPat (ProductPat _) = No (\eq => case eq of Refl impossible)
-  patternEq DefaultPat (SumPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (PrimPat _) DefaultPat = No (\eq => case eq of Refl impossible)
-  patternEq (PrimPat primType) (PrimPat primType') =
-    case primTypeEq primType primType' of
+  patternEq : {primType : Type} -> DecEqPred primType ->
+    (pattern, pattern' : Pattern primType) -> Dec (pattern = pattern')
+  patternEq primEq (CarrierPat n) (CarrierPat n') =
+    case decEq n n' of
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
-  patternEq (PrimPat _) (ProductPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (PrimPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (ProductPat _) DefaultPat = No (\eq => case eq of Refl impossible)
-  patternEq (ProductPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (ProductPat patternList) (ProductPat patternList') =
-    case patternListEq patternList patternList' of
+  patternEq primEq (CarrierPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (CarrierPat _) (ProductPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (CarrierPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (PrimPat _) (CarrierPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (PrimPat type) (PrimPat type') =
+    case primEq type type' of
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
-  patternEq (ProductPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (SumPat _) DefaultPat = No (\eq => case eq of Refl impossible)
-  patternEq (SumPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (SumPat _) (ProductPat _) = No (\eq => case eq of Refl impossible)
-  patternEq (SumPat patternList) (SumPat patternList') =
-    case patternListEq patternList patternList' of
+  patternEq primEq (PrimPat _) (ProductPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (PrimPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (ProductPat _) (CarrierPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (ProductPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (ProductPat patternList) (ProductPat patternList') =
+    case patternListEq primEq patternList patternList' of
+      Yes Refl => Yes Refl
+      No neq => No (\eq => case eq of Refl => neq Refl)
+  patternEq primEq (ProductPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat _) (CarrierPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat _) (ProductPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat patternList) (SumPat patternList') =
+    case patternListEq primEq patternList patternList' of
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
 
-  patternListEq :(patternList, patternList' : PatternList) ->
+  patternListEq : {primType : Type} -> DecEqPred primType ->
+    (patternList, patternList' : PatternList primType) ->
     Dec (patternList = patternList')
-  patternListEq = let _ = patternListDecEq in decEq
+  patternListEq primEq = listDecEq (patternEq primEq)
 
-  [patternDecEq] DecEq Pattern where
-    decEq = patternEq
-
-  [patternListDecEq] DecEq PatternList where
-    decEq = patternListEq
-
-public export
-BoolPat : Pattern
-BoolPat = PrimPat PrimTypeBool
-
-public export
-NatPat : Pattern
-NatPat = PrimPat PrimTypeNat
-
-public export
-StringPat : Pattern
-StringPat = PrimPat PrimTypeString
-
+{-
 mutual
   public export
   data MatchesExp : Pattern -> SExp -> Type where
-    MatchesDefault : (sexp : SExp) -> MatchesExp DefaultPat sexp
+    MatchesDefault : (sexp : SExp) -> MatchesExp CarrierPat sexp
     MatchesPrim : (primExp : PrimitiveExp) ->
       MatchesExp (PrimPat (fst primExp)) (SAtom primExp)
     MatchesProduct : {patternList : PatternList} -> {sexpList : SExpList} ->
@@ -214,7 +162,7 @@ mutual
 
 mutual
   data IsSubPattern : (sub, super : Pattern) -> Type where
-    SubDefault : (sub : Pattern) -> IsSubPattern sub DefaultPat
+    SubDefault : (sub : Pattern) -> IsSubPattern sub CarrierPat
     SubPrimitive : (primType : PrimitiveType) ->
       IsSubPattern (PrimPat primType) (PrimPat primType)
     SubProduct : (sub, super : PatternList) ->
@@ -295,7 +243,7 @@ mutual
 
 public export
 CaseStatement : (domain : Pattern) -> (codomain : Type) -> Type
-CaseStatement DefaultPat codomain =
+CaseStatement CarrierPat codomain =
   SExp -> codomain
 CaseStatement (PrimPat primitiveType) codomain =
   interpretPrimitiveType primitiveType -> codomain
@@ -328,3 +276,63 @@ transform : {domain, codomain : Pattern} ->
   Transformer domain codomain ->
   MatchedSExp domain -> MatchedSExp codomain
 transform = match {domain} {codomain=(MatchedSExp codomain)}
+-}
+
+-- A default primitive type.
+
+public export
+data PrimitiveType : Type where
+  PrimTypeBool : PrimitiveType
+  PrimTypeNat : PrimitiveType
+  PrimTypeString : PrimitiveType
+
+-- Haskell can just derive this.
+export
+primTypeEq : (primType, primType' : PrimitiveType) -> Dec (primType = primType')
+primTypeEq PrimTypeBool PrimTypeBool = Yes Refl
+primTypeEq PrimTypeBool PrimTypeNat = No (\eq => case eq of Refl impossible)
+primTypeEq PrimTypeBool PrimTypeString = No (\eq => case eq of Refl impossible)
+primTypeEq PrimTypeNat PrimTypeBool = No (\eq => case eq of Refl impossible)
+primTypeEq PrimTypeNat PrimTypeNat = Yes Refl
+primTypeEq PrimTypeNat PrimTypeString = No (\eq => case eq of Refl impossible)
+primTypeEq PrimTypeString PrimTypeBool = No (\eq => case eq of Refl impossible)
+primTypeEq PrimTypeString PrimTypeNat = No (\eq => case eq of Refl impossible)
+primTypeEq PrimTypeString PrimTypeString = Yes Refl
+
+interpretPrimitiveType : PrimitiveType -> Type
+interpretPrimitiveType PrimTypeBool = Bool
+interpretPrimitiveType PrimTypeNat = Nat
+interpretPrimitiveType PrimTypeString = String
+
+public export
+primitiveEq : (primType : PrimitiveType) ->
+  (x, x' : interpretPrimitiveType primType) -> Dec (x = x')
+primitiveEq PrimTypeBool = decEq
+primitiveEq PrimTypeNat = decEq
+primitiveEq PrimTypeString = decEq
+
+public export
+PrimitiveExp : Type
+PrimitiveExp = DPair PrimitiveType interpretPrimitiveType
+
+primExpEq : (primExp, primExp' : PrimitiveExp) -> Dec (primExp = primExp')
+primExpEq (primType ** primExp) (primType' ** primExp') with
+  (primTypeEq primType primType')
+    primExpEq (primType ** primExp) (primType ** primExp') | Yes Refl =
+      case primitiveEq primType primExp primExp' of
+        Yes Refl => Yes Refl
+        No neq => No (\eq => case eq of Refl => neq Refl)
+    primExpEq (primType ** primExp) (primType' ** primExp') | No neq =
+      No (\eq => case eq of Refl => neq Refl)
+
+public export
+BoolPat : Pattern PrimitiveType
+BoolPat = PrimPat PrimTypeBool
+
+public export
+NatPat : Pattern PrimitiveType
+NatPat = PrimPat PrimTypeNat
+
+public export
+StringPat : Pattern PrimitiveType
+StringPat = PrimPat PrimTypeString
