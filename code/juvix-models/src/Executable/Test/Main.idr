@@ -9,7 +9,4 @@ import RefinedSExp.Test.MatchTest
 %default total
 
 main : IO ()
-main = do
-  algebraicPatternTests
-  ADTTests
-  matchTests
+main = putStrLn "No runtime tests yet"

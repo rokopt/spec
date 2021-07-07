@@ -152,13 +152,18 @@ N2Sta = |* [ N2c , Sc ]
 N2Std : DTP
 N2Std = |: N2Sta
 
-public export
 adtChecks : Bool
 adtChecks =
   isCheckFailure (testMatch ($^ (MAbst N2Sta 0)))
 
 adtChecksCorrect : Assertion
 adtChecksCorrect = Assert adtChecks
+
+boolChecksCorrect : Assertion
+boolChecksCorrect = Assert boolChecks
+
+primChecksCorrect : Assertion
+primChecksCorrect = Assert primChecks
 
 -- Test some notation
 
@@ -170,10 +175,3 @@ getConstructorTest_Bta_0 = Refl
 
 getConstructorTest_Bta_1 : Bta |*< 1 = Uc
 getConstructorTest_Bta_1 = Refl
-
-public export
-algebraicPatternTests : IO ()
-algebraicPatternTests = do
-  putStrLn ("primChecksResult: " ++ show primChecks)
-  putStrLn ("boolChecksResult: " ++ show boolChecks)
-  putStrLn ("adtChecksResult: " ++ show adtChecks)
