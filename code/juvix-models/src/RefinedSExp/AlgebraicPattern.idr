@@ -125,6 +125,7 @@ public export
   {auto ok : InBounds n (familyTypes family)} -> ADT primitive
 family |**< n = index n (familyTypes family)
 
+public export
 decEqFamily : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
   DecEqPred (TypeFamily primitive)
 decEqFamily decEqPrim (|** l) (|** l') =
@@ -134,17 +135,20 @@ decEqFamily decEqPrim (|** l) (|** l') =
 
 mutual
   -- Atoms of matchable S-expressions.
+  public export
   data MAtom : {primType : Type} -> (primExp : primType -> Type) -> Type where
     MPrim : {primType : Type} -> {primExp : primType -> Type} ->
       {type : primType} -> primExp type -> MAtom primExp
     MAbst : {primType : Type} -> {primExp : primType -> Type} ->
       (adt : ADT primType) -> (constructorIndex : Nat) -> MAtom primExp
 
+  public export
   MAtomType : {primType : Type} -> {primExp : primType -> Type} ->
     MAtom primExp -> DataType primType
   MAtomType (MPrim {type} _) = |. type
   MAtomType (MAbst adt _) = |: adt
 
+  public export
   data MatchesType : {primType : Type} -> {primExp : primType -> Type} ->
       DataType primType -> SExp (MAtom primExp) -> Type where
     MatchesPrimType : {primType : Type} -> {primExp : primType -> Type} ->
@@ -158,6 +162,7 @@ mutual
         adt (typeParams (adt |*< constructorIndex)) constructorParams ->
       MatchesType (|: adt) (MAbst adt constructorIndex $: constructorParams)
 
+  public export
   data MatchesParams : {primType : Type} -> {primExp : primType -> Type} ->
       ADT primType -> List (ConstructorParam primType) ->
       SList (MAtom primExp) -> Type where
@@ -173,6 +178,7 @@ mutual
       MatchesParams adt params l ->
       MatchesParams {primType} {primExp} adt (param :: params) (x $+ l)
 
+  public export
   data MatchesParam : {primType : Type} -> {primExp : primType -> Type} ->
       ADT primType -> ConstructorParam primType ->
       SExp (MAtom primExp) -> Type where
@@ -181,10 +187,12 @@ mutual
       {type : DataType primType} -> {x : SExp (MAtom primExp)} ->
       MatchesType type x -> MatchesParam adt (|-> type) x
 
+  public export
   MatchesSignature : {primType : Type} -> {primExp : primType -> Type} ->
     SExp (MAtom primExp) -> Type
   MatchesSignature (a $: l) = MatchesType (MAtomType a) (a $: l)
 
+  public export
   data MatchFailure : {primType : Type} -> {primExp : primType -> Type} ->
       SExp (MAtom primExp) -> Type where
     PrimitiveWithArgument : {primType : Type} ->
@@ -211,6 +219,7 @@ mutual
       (type, type' : DataType primType) ->
       MatchFailure {primExp} x
 
+  public export
   MatchesTypePred : {primType : Type} -> (primExp : primType -> Type) ->
     TypecheckPredicate (MAtom primExp)
   MatchesTypePred {primType} primExp =
@@ -273,6 +282,7 @@ mutual
                 No _ => Right (TypeMismatch {x=originalSExp} type (MAtomType a))
           Right tailFails => Right tailFails
 
+  public export
   MatchesTypeInduction : {primType : Type} ->
     (decEqPrim : DecEqPred primType) ->
     (primExp : primType -> Type) ->
@@ -283,3 +293,26 @@ mutual
       (List (DPair (SExp (MAtom primExp)) MatchFailure))
       (\x, fail => [ (x ** fail) ])
       (++)
+
+public export
+match : {primType : Type} -> (decEqPrim : DecEqPred primType) ->
+  (primExp : primType -> Type) ->
+  ((x : SExp (MAtom primExp)) ->
+    CheckResult (MatchesTypeInduction decEqPrim primExp) x,
+   (l : SList (MAtom primExp)) ->
+    ListCheckResult (MatchesTypeInduction decEqPrim primExp) l)
+match decEqPrim primExp = typecheck (MatchesTypeInduction decEqPrim primExp)
+
+public export
+matchSExp : {primType : Type} -> (decEqPrim : DecEqPred primType) ->
+  (primExp : primType -> Type) ->
+  (x : SExp (MAtom primExp)) ->
+  CheckResult (MatchesTypeInduction decEqPrim primExp) x
+matchSExp decEqPrim primExp = fst (match decEqPrim primExp)
+
+public export
+matchSList : {primType : Type} -> (decEqPrim : DecEqPred primType) ->
+  (primExp : primType -> Type) ->
+  (l : SList (MAtom primExp)) ->
+  ListCheckResult (MatchesTypeInduction decEqPrim primExp) l
+matchSList decEqPrim primExp = snd (match decEqPrim primExp)

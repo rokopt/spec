@@ -61,6 +61,38 @@ DTP = DataType PrimitiveType
 TFP : Type
 TFP = TypeFamily PrimitiveType
 
+TAtom : Type
+TAtom = MAtom interpretPrimitiveType
+
+TBool : Bool -> TAtom
+TBool = MPrim {type=PrimTypeBool}
+
+TNat : Nat -> TAtom
+TNat = MPrim {type=PrimTypeNat}
+
+TString : String -> TAtom
+TString = MPrim {type=PrimTypeString}
+
+TExp : Type
+TExp = SExp TAtom
+
+TList : Type
+TList = SList TAtom
+
+TCheckResult : TExp -> Type
+TCheckResult =
+  CheckResult (MatchesTypeInduction primTypeEq interpretPrimitiveType)
+
+TListCheckResult : TList -> Type
+TListCheckResult =
+  ListCheckResult (MatchesTypeInduction primTypeEq interpretPrimitiveType)
+
+testMatch : (x : TExp) -> TCheckResult x
+testMatch = matchSExp primTypeEq interpretPrimitiveType
+
+testListMatch : (x : TList) -> TListCheckResult x
+testListMatch = matchSList primTypeEq interpretPrimitiveType
+
 -- Empty constructor
 Uc : TCP
 Uc = |- []
@@ -73,12 +105,27 @@ Ut = |* [ Uc ]
 Bt : DTP
 Bt = |. PrimTypeBool
 
--- Boolean equivalents without using primitive types
-Bt' : ADTP
-Bt' = |* [ Uc, Uc ]
+public export
+primChecks : Bool
+primChecks =
+  isCheckSuccess (testMatch ($^ (TBool True))) &&
+  isCheckSuccess (testMatch ($^ (TBool False))) &&
+  isCheckSuccess (testMatch ($^ (TNat 0)))
 
-Bt'' : DTP
-Bt'' = |: Bt'
+-- Boolean equivalents without using primitive types
+Bta : ADTP
+Bta = |* [ Uc, Uc ]
+
+Btd : DTP
+Btd = |: Bta
+
+public export
+boolChecks : Bool
+boolChecks =
+  isCheckSuccess (testMatch ($^ (MAbst Bta 0))) &&
+  isCheckSuccess (testMatch ($^ (MAbst Bta 1))) &&
+  isCheckFailure (testMatch ($^ (MAbst Bta 2))) && -- out-of-bounds constructor
+  isCheckFailure (testMatch (MAbst Bta 0 $^^ MAbst Bta 0)) -- extra parameter
 
 -- Primitive natural number
 Nt : DTP
@@ -105,8 +152,14 @@ N2St = |:* [ N2c , Sc ]
 typeNotationTest : |:* [ Uc, Uc ] = |: (|* [ Uc, Uc ])
 typeNotationTest = Refl
 
-getConstructorTest_Bt'_0 : Bt' |*< 0 = Uc
-getConstructorTest_Bt'_0 = Refl
+getConstructorTest_Bta_0 : Bta |*< 0 = Uc
+getConstructorTest_Bta_0 = Refl
 
-getConstructorTest_Bt'_1 : Bt' |*< 1 = Uc
-getConstructorTest_Bt'_1 = Refl
+getConstructorTest_Bta_1 : Bta |*< 1 = Uc
+getConstructorTest_Bta_1 = Refl
+
+public export
+algebraicPatternTests : IO ()
+algebraicPatternTests = do
+  putStrLn ("primChecksResult: " ++ show primChecks)
+  putStrLn ("boolChecksResult: " ++ show boolChecks)

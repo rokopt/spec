@@ -311,6 +311,19 @@ data CheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     Not (Typechecks check x) -> MergedFailures check -> CheckResult check x
 
 public export
+isCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
+  CheckResult check x -> Bool
+isCheckSuccess (CheckSuccess _) = True
+isCheckSuccess (CheckFailure _ _) = False
+
+public export
+isCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
+  CheckResult check x -> Bool
+isCheckFailure = not . isCheckSuccess
+
+public export
 data ListCheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     (check : InductiveTypecheck predicate) -> (l : SList atom) -> Type where
   ListCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
@@ -321,6 +334,19 @@ data ListCheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {check : InductiveTypecheck predicate} -> {l : SList atom} ->
     Not (SLForAll (Typechecks check) l) -> MergedFailures check ->
     ListCheckResult check l
+
+public export
+isListCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {check : InductiveTypecheck predicate} -> {l : SList atom} ->
+  ListCheckResult check l -> Bool
+isListCheckSuccess (ListCheckSuccess _) = True
+isListCheckSuccess (ListCheckFailure _ _) = False
+
+public export
+isListCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  {check : InductiveTypecheck predicate} -> {l : SList atom} ->
+  ListCheckResult check l -> Bool
+isListCheckFailure = not . isListCheckSuccess
 
 export
 CheckResultCons : {atom : Type} -> {predicate : TypecheckPredicate atom} ->

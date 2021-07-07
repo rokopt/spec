@@ -7,4 +7,5 @@ import RefinedSExp.Test.AlgebraicPatternTest
 %default total
 
 main : IO ()
-main = putStrLn "No tests run"
+main = do
+  algebraicPatternTests
