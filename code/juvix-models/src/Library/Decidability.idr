@@ -81,12 +81,12 @@ public export
 BoolCaseDec : Bool -> Type
 BoolCaseDec b = Either (b = True) (b = False)
 
-export
+public export
 caseDecFromBool : (b: Bool) -> BoolCaseDec b
 caseDecFromBool True = Left Refl
 caseDecFromBool False = Right Refl
 
-export
+public export
 boolFromCaseDec : {b: Bool} -> BoolCaseDec b -> Bool
 boolFromCaseDec bcd = case bcd of
                            Left Refl => True
@@ -121,7 +121,7 @@ boolCaseDecEither b trueCase falseCase = case caseDecFromBool b of
   Left Refl => Left (Refl ** trueCase Refl)
   Right Refl => Right (Refl ** falseCase Refl)
 
-export
+public export
 orElimination : {b, b': Bool} -> IsTrue (b || b') ->
                 Either (IsTrue b) (IsTrue b')
 orElimination {b=True} {b'=True} Refl = Left Refl
@@ -129,17 +129,17 @@ orElimination {b=True} {b'=False} Refl = Left Refl
 orElimination {b=False} {b'=True} Refl = Right Refl
 orElimination {b=False} {b'=False} Refl impossible
 
-export
+public export
 orIntroductionLeft : (b: Bool) -> {b': Bool} -> IsTrue b' -> IsTrue (b || b')
 orIntroductionLeft True Refl = Refl
 orIntroductionLeft False Refl = Refl
 
-export
+public export
 orIntroductionRight : {b: Bool} -> (b': Bool) -> IsTrue b -> IsTrue (b || b')
 orIntroductionRight True Refl = Refl
 orIntroductionRight False Refl = Refl
 
-export
+public export
 andElimination : {b, b': Bool} -> IsTrue (b && b') ->
                  ((IsTrue b), (IsTrue b'))
 andElimination {b=True} {b'=True} Refl = (Refl, Refl)
@@ -147,7 +147,7 @@ andElimination {b=True} {b'=False} Refl impossible
 andElimination {b=False} {b'=True} Refl impossible
 andElimination {b=False} {b'=False} Refl impossible
 
-export
+public export
 andIntroduction : {b, b': Bool} -> (IsTrue b, IsTrue b') -> IsTrue (b && b')
 andIntroduction (bTrue, bTrue') = case (bTrue, bTrue') of (Refl, Refl) => Refl
 
@@ -352,3 +352,12 @@ elegantPairingInverse z =
     w = minus z (square sqrtz)
   in
   if w < sqrtz then (w, sqrtz) else (sqrtz, minus w sqrtz)
+
+public export
+Assertion : Type
+Assertion = ()
+
+public export
+Assert : (b : Bool) -> if b then () else List ()
+Assert True = ()
+Assert False = []
