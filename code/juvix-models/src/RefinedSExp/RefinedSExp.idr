@@ -402,25 +402,3 @@ typecheck check =
           mergedFailure)
     (ListCheckSuccess SLForAllEmpty)
     (\_, _ => CheckResultCons)
-
--- Refined S-expression.
-public export
-RExp : {atom : Type} -> {predicate : SPredicate atom} ->
-  (decide : $# predicate) -> Type
-RExp decide = DPair (SExp atom) ($& decide)
-
--- Refined S-list.
-public export
-RList : {atom : Type} -> {predicate : SLPredicate atom} ->
-  (decide : $:# predicate) -> Type
-RList decide = DPair (SList atom) ($:& decide)
-
-RExpProofInsensitive : {atom : Type} -> {predicate : SPredicate atom} ->
-  {decide : $# predicate} -> {rx, rx' : RExp decide} -> (fst rx = fst rx') ->
-  rx = rx'
-RExpProofInsensitive {decide} = YesDPairInjective {dec=decide}
-
-RListProofInsensitive : {atom : Type} -> {predicate : SLPredicate atom} ->
-  {decide : $:# predicate} -> {rl, rl' : RList decide} -> (fst rl = fst rl') ->
-  rl = rl'
-RListProofInsensitive {decide} = YesDPairInjective {dec=decide}
