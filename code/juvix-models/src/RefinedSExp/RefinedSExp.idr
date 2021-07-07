@@ -226,6 +226,11 @@ Typechecks : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   InductiveTypecheck predicate -> (x : SExp atom) -> Type
 Typechecks check x = DPair (SuccessType predicate x) (TypechecksAs check x)
 
+public export
+TypecheckedTerm : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  InductiveTypecheck predicate -> Type
+TypecheckedTerm check = DPair (SExp atom) (Typechecks check)
+
 mutual
   public export
   CheckedTypesUnique : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
@@ -430,3 +435,175 @@ typecheck check =
           mergedFailure)
     (ListCheckSuccess SLForAllEmpty)
     (\_, _ => CheckResultCons)
+
+public export
+data FAtom : (domainAtom, codomainAtom : Type) -> Type where
+  FDA : domainAtom -> FAtom domainAtom codomainAtom
+  CDA : codomainAtom -> FAtom domainAtom codomainAtom
+
+public export
+FExp : (domainAtom, codomainAtom : Type) -> Type
+FExp domainAtom codomainAtom = SExp (FAtom domainAtom codomainAtom)
+
+public export
+FList : (domainAtom, codomainAtom : Type) -> Type
+FList domainAtom codomainAtom = SList (FAtom domainAtom codomainAtom)
+
+public export
+record TypecheckFunctionPredicate {atom, atom' : Type}
+    (domain : TypecheckPredicate atom)
+    (codomain : TypecheckPredicate atom') where
+  constructor MkTypecheckFunctionPredicate
+  DomainCheck : InductiveTypecheck domain
+  CodomainCheck : InductiveTypecheck codomain
+
+public export
+FunctionSuccessType : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  TypecheckFunctionPredicate domain codomain ->
+  SPredicate (FAtom atom atom')
+FunctionSuccessType predicate x = ?FunctionSuccessType_hole
+
+public export
+FunctionFailureType : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  TypecheckFunctionPredicate domain codomain ->
+  SPredicate (FAtom atom atom')
+FunctionFailureType predicate x = ?FunctionFailureType_hole
+
+public export
+FunctionTypecheckPredicate : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  TypecheckFunctionPredicate domain codomain ->
+  TypecheckPredicate (FAtom atom atom')
+FunctionTypecheckPredicate predicate =
+  MkTypecheckPredicate
+    (FunctionSuccessType predicate)
+    (FunctionFailureType predicate)
+
+public export
+FunctionTypecheckOne : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  (a : FAtom atom atom') ->
+  (l : FList atom atom') ->
+  SLForAll (FunctionSuccessType predicate) l ->
+  TypecheckResult (FunctionTypecheckPredicate predicate) (a $: l)
+FunctionTypecheckOne predicate a l subtermsCheck = ?FunctionTypecheckOne_hole
+
+public export
+data FunctionMergedFailures : {atom, atom' : Type} ->
+    {domain : TypecheckPredicate atom} ->
+    {codomain : TypecheckPredicate atom'} ->
+    (predicate : TypecheckFunctionPredicate domain codomain) -> Type where
+  DomainFailure :
+    {domain : TypecheckPredicate atom} ->
+    {codomain : TypecheckPredicate atom'} ->
+    (predicate : TypecheckFunctionPredicate domain codomain) ->
+    MergedFailures (DomainCheck predicate) ->
+    FunctionMergedFailures {domain} {codomain} predicate
+  CodomainFailure :
+    {domain : TypecheckPredicate atom} ->
+    {codomain : TypecheckPredicate atom'} ->
+    (predicate : TypecheckFunctionPredicate domain codomain) ->
+    MergedFailures (CodomainCheck predicate) ->
+    FunctionMergedFailures {domain} {codomain} predicate
+
+public export
+FunctionFirstFailure : {atom, atom' : Type} ->
+    {domain : TypecheckPredicate atom} ->
+    {codomain : TypecheckPredicate atom'} ->
+    {predicate : TypecheckFunctionPredicate domain codomain} ->
+    (x : FExp atom atom') -> FunctionFailureType predicate x ->
+    FunctionMergedFailures predicate
+FunctionFirstFailure x failure = ?FunctionFirstFailure_hole
+
+public export
+FunctionMergeFailures : {atom, atom' : Type} ->
+    {domain : TypecheckPredicate atom} ->
+    {codomain : TypecheckPredicate atom'} ->
+    {predicate : TypecheckFunctionPredicate domain codomain} ->
+    FunctionMergedFailures predicate ->
+    FunctionMergedFailures predicate ->
+    FunctionMergedFailures predicate
+FunctionMergeFailures x failure = ?FunctionMergeFailures_hole
+
+public export
+FunctionTypecheckInductive : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  InductiveTypecheck (FunctionTypecheckPredicate predicate)
+FunctionTypecheckInductive predicate =
+  MkInductiveTypecheck
+    (FunctionTypecheckOne predicate)
+    (FunctionMergedFailures predicate)
+    (FunctionFirstFailure {predicate})
+    (FunctionMergeFailures {predicate})
+
+public export
+CheckFunctionResult : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  FExp atom atom' -> Type
+CheckFunctionResult predicate =
+  CheckResult (FunctionTypecheckInductive predicate)
+
+public export
+ListCheckFunctionResult : {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  FList atom atom' -> Type
+ListCheckFunctionResult predicate =
+  ListCheckResult (FunctionTypecheckInductive predicate)
+
+public export
+typecheckFunction :
+  {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  ((x : FExp atom atom') -> CheckFunctionResult predicate x,
+   (l : FList atom atom') -> ListCheckFunctionResult predicate l)
+typecheckFunction predicate = typecheck (FunctionTypecheckInductive predicate)
+
+{-
+public export
+typecheckFunction :
+  {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  ((x : FExp atom atom') -> CheckFunctionResult predicate x,
+   (l : FList atom atom') -> ListCheckFunctionResult predicate l)
+typecheckFunction predicate = typecheck (FunctionTypecheckInductive predicate)
+-}
+
+public export
+FTypechecks :
+  {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  (predicate : TypecheckFunctionPredicate domain codomain) ->
+  (x : FExp atom atom') -> Type
+FTypechecks check = Typechecks (FunctionTypecheckInductive check)
+
+public export
+generatedFunction :
+  {atom, atom' : Type} ->
+  {domain : TypecheckPredicate atom} ->
+  {codomain : TypecheckPredicate atom'} ->
+  {predicate : TypecheckFunctionPredicate domain codomain} ->
+  TypecheckedTerm (FunctionTypecheckInductive predicate) ->
+  TypecheckedTerm (DomainCheck predicate) ->
+  TypecheckedTerm (CodomainCheck predicate)
+generatedFunction (fx ** (ftype ** fchecks)) (dx ** (dtype ** dchecks)) =
+  (?generatedFunction_hole_cx **
+  (?generatedFunction_hole_ctype **
+   ?generatedFunction_hole_cchecks))
