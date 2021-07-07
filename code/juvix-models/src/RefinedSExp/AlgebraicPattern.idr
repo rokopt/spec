@@ -98,18 +98,18 @@ mutual
     MAbst : {primType : Type} -> {primExp : primType -> Type} ->
       (adt : ADT primType) -> (constructorIndex : Nat) -> MAtom primExp
 
-  data HasType : {primType : Type} -> {primExp : primType -> Type} ->
+  data MatchesType : {primType : Type} -> {primExp : primType -> Type} ->
       DataType primType -> SExp (MAtom primExp) -> Type where
-    HasPrimType : {primType : Type} -> {primExp : primType -> Type} ->
+    MatchesPrimType : {primType : Type} -> {primExp : primType -> Type} ->
       {type : primType} ->
-      (p : primExp type) -> HasType (|. type) ($^ (MPrim {type} {primExp} p))
-    HasAbstractType : {primType : Type} -> {primExp : primType -> Type} ->
+      (p : primExp type) -> MatchesType (|. type) ($^ (MPrim {type} {primExp} p))
+    MatchesAbstractType : {primType : Type} -> {primExp : primType -> Type} ->
       (adt : ADT primType) -> (constructorIndex : Nat) ->
       (constructorParams : SList (MAtom primExp)) ->
       {auto ok : InBounds constructorIndex (constructors adt)} ->
       MatchesParams
         adt (typeParams (adt |*< constructorIndex)) constructorParams ->
-      HasType (|: adt) (MAbst adt constructorIndex $: constructorParams)
+      MatchesType (|: adt) (MAbst adt constructorIndex $: constructorParams)
 
   data MatchesParams : {primType : Type} -> {primExp : primType -> Type} ->
       ADT primType -> List (ConstructorParam primType) ->
@@ -132,4 +132,4 @@ mutual
     MatchesDataType : {primType : Type} -> {primExp : primType -> Type} ->
       {adt : ADT primType} ->
       {type : DataType primType} -> {x : SExp (MAtom primExp)} ->
-      HasType type x -> MatchesParam adt (|-> type) x
+      MatchesType type x -> MatchesParam adt (|-> type) x
