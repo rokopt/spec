@@ -144,8 +144,15 @@ Sc : TCP
 Sc = |- [ |-> St ]
 
 -- ADT comprising either two natural numbers or one string
-N2St : DTP
-N2St = |:* [ N2c , Sc ]
+N2Sta : ADTP
+N2Sta = |* [ N2c , Sc ]
+
+N2Std : DTP
+N2Std = |: N2Sta
+
+adtChecks : Bool
+adtChecks =
+  isCheckFailure (testMatch ($^ (MAbst N2Sta 0)))
 
 -- Test some notation
 
@@ -163,3 +170,4 @@ algebraicPatternTests : IO ()
 algebraicPatternTests = do
   putStrLn ("primChecksResult: " ++ show primChecks)
   putStrLn ("boolChecksResult: " ++ show boolChecks)
+  putStrLn ("adtChecksResult: " ++ show adtChecks)
