@@ -101,8 +101,8 @@ mutual
   data MatchesType : {primType : Type} -> {primExp : primType -> Type} ->
       DataType primType -> SExp (MAtom primExp) -> Type where
     MatchesPrimType : {primType : Type} -> {primExp : primType -> Type} ->
-      {type : primType} ->
-      (p : primExp type) -> MatchesType (|. type) ($^ (MPrim {type} {primExp} p))
+      {type : primType} -> (p : primExp type) ->
+      MatchesType (|. type) ($^ (MPrim {type} {primExp} p))
     MatchesAbstractType : {primType : Type} -> {primExp : primType -> Type} ->
       (adt : ADT primType) -> (constructorIndex : Nat) ->
       (constructorParams : SList (MAtom primExp)) ->
