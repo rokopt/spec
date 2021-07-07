@@ -69,6 +69,23 @@ mutual
     {auto ok : InBounds n (constructors adt)} -> TypeConstructor primitive
   adt |*< n = index n (constructors adt)
 
+mutual
+  decEqParam : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
+    DecEqPred (ConstructorParam primitive)
+  decEqParam decEqPrim c c' = ?decEqParam_hole
+
+  decEqConstructor : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
+    DecEqPred (TypeConstructor primitive)
+  decEqConstructor decEqPrim c c' = ?decEqConstructor_hole
+
+  decEqADT : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
+    DecEqPred (ADT primitive)
+  decEqADT decEqPrim c c' = ?decEqADT_hole
+
+  decEqDataType : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
+    DecEqPred (DataType primitive)
+  decEqDataType decEqPrim c c' = ?decEqDataType_hole
+
 prefix 11 |**
 public export
 data TypeFamily : (primitive : Type) -> Type where
@@ -154,6 +171,20 @@ mutual
     InvalidConstructorIndex : {primType : Type} ->
       {primExp : primType -> Type} -> {x : SExp (MAtom primExp)} ->
       (adt : ADT primType) -> Nat -> MatchFailure {primExp} x
+    ExtraConstructorParameters : {primType : Type} ->
+      {primExp : primType -> Type} -> {x : SExp (MAtom primExp)} ->
+      (adt : ADT primType) -> (constructorIndex : Nat) ->
+      (extraParameters : SList (MAtom primExp)) ->
+      MatchFailure {primExp} x
+    MissingConstructorParameters : {primType : Type} ->
+      {primExp : primType -> Type} -> {x : SExp (MAtom primExp)} ->
+      (adt : ADT primType) -> (constructorIndex : Nat) ->
+      (missingParameters : List (ConstructorParam primType)) ->
+      MatchFailure {primExp} x
+    TypeMismatch : {primType : Type} ->
+      {primExp : primType -> Type} -> {x : SExp (MAtom primExp)} ->
+      (type, type' : DataType primType) ->
+      MatchFailure {primExp} x
 
   MatchesTypePred : {primType : Type} -> (primExp : primType -> Type) ->
     TypecheckPredicate (MAtom primExp)
@@ -161,7 +192,9 @@ mutual
     MkTypecheckPredicate (MatchesSignature {primExp}) (MatchFailure {primExp})
 
 mutual
-  CheckOneMatch : {primType : Type} -> {primExp : primType -> Type} ->
+  CheckOneMatch : {primType : Type} ->
+    {decEqPrim : DecEqPred primType} ->
+    {primExp : primType -> Type} ->
     (a : MAtom primExp) -> (l : SList (MAtom primExp)) ->
     SLForAll (MatchesSignature {primExp}) l ->
     TypecheckResult (MatchesTypePred primExp) (a $: l)
@@ -172,7 +205,8 @@ mutual
   CheckOneMatch (MAbst adt constructorIndex) l forAll =
     case inBounds constructorIndex (constructors adt) of
       Yes ok =>
-        case CheckOneParameterList adt constructorIndex
+        case CheckOneParameterList {decEqPrim} adt constructorIndex
+          (MAbst adt constructorIndex $: l)
           (typeParams (adt |*< constructorIndex)) l forAll of
             Left matchesParams =>
               TypecheckSuccess
@@ -181,22 +215,46 @@ mutual
       No outOfBounds =>
         TypecheckFailure (InvalidConstructorIndex adt constructorIndex)
 
-  CheckOneParameterList : {primType : Type} -> {primExp : primType -> Type} ->
+  CheckOneParameterList : {primType : Type} ->
+    {decEqPrim : DecEqPred primType} ->
+    {primExp : primType -> Type} ->
     (adt : ADT primType) ->
     (constructorIndex : Nat) ->
+    (originalSExp : SExp (MAtom primExp)) ->
     (params : List (ConstructorParam primType)) ->
     (l : SList (MAtom primExp)) ->
     SLForAll (MatchesSignature {primExp}) l ->
     Either
       (MatchesParams adt params l)
-      (MatchFailure (MAbst adt constructorIndex $: l))
-  CheckOneParameterList adt params l forAll = ?CheckOneParameterList_hole
+      (MatchFailure originalSExp)
+  CheckOneParameterList adt constructorIndex originalSExp [] ($|) forAll =
+    Left MatchesParamsEmpty
+  CheckOneParameterList adt constructorIndex originalSExp [] (x $+ l) forAll =
+    Right (ExtraConstructorParameters adt constructorIndex (x $+ l))
+  CheckOneParameterList adt constructorIndex originalSExp
+    (p :: ps) ($|) forAll =
+      Right (MissingConstructorParameters adt constructorIndex (p :: ps))
+  CheckOneParameterList adt constructorIndex originalSExp (p :: ps) (x $+ l)
+    SLForAllEmpty impossible
+  CheckOneParameterList {decEqPrim} adt constructorIndex originalSExp
+    (p :: ps) (x $+ l) (SLForAllCons head forAllTail) =
+      case CheckOneParameterList {decEqPrim} adt constructorIndex originalSExp
+        ps l forAllTail of
+          Left tailChecks => case p of
+            (|->) type => case x of
+              (a $: l) => case decEqDataType decEqPrim type (MAtomType a) of
+                Yes Refl =>
+                  Left (MatchesParamsCons (MatchesDataType head) tailChecks)
+                No _ => Right (TypeMismatch {x=originalSExp} type (MAtomType a))
+          Right tailFails => Right tailFails
 
-  MatchesTypeInduction : {primType : Type} -> (primExp : primType -> Type) ->
+  MatchesTypeInduction : {primType : Type} ->
+    (decEqPrim : DecEqPred primType) ->
+    (primExp : primType -> Type) ->
     InductiveTypecheck (MatchesTypePred primExp)
-  MatchesTypeInduction primExp =
+  MatchesTypeInduction decEqPrim primExp =
     MkInductiveTypecheck
-      (CheckOneMatch {primExp})
+      (CheckOneMatch {decEqPrim} {primExp})
       (List (DPair (SExp (MAtom primExp)) MatchFailure))
       (\x, fail => [ (x ** fail) ])
       (++)
