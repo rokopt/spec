@@ -72,19 +72,37 @@ mutual
 mutual
   decEqParam : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (ConstructorParam primitive)
-  decEqParam decEqPrim c c' = ?decEqParam_hole
+  decEqParam decEqPrim (|-> d) (|-> d') = case decEqDataType decEqPrim d d' of
+    Yes Refl => Yes Refl
+    No neq => No (\eq => case eq of Refl => neq Refl)
 
   decEqConstructor : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (TypeConstructor primitive)
-  decEqConstructor decEqPrim c c' = ?decEqConstructor_hole
+  decEqConstructor decEqPrim (|- l) (|- l') =
+    case listDecEq (decEqParam decEqPrim) l l' of
+      Yes Refl => Yes Refl
+      No neq => No (\eq => case eq of Refl => neq Refl)
 
   decEqADT : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (ADT primitive)
-  decEqADT decEqPrim c c' = ?decEqADT_hole
+  decEqADT decEqPrim (|* l) (|* l') =
+    case listDecEq (decEqConstructor decEqPrim) l l' of
+      Yes Refl => Yes Refl
+      No neq => No (\eq => case eq of Refl => neq Refl)
 
   decEqDataType : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (DataType primitive)
-  decEqDataType decEqPrim c c' = ?decEqDataType_hole
+  decEqDataType decEqPrim (|. p) (|. p') = case decEqPrim p p' of
+    Yes Refl => Yes Refl
+    No neq => No (\eq => case eq of Refl => neq Refl)
+  decEqDataType decEqPrim (|. p) (|: adt) =
+    No (\eq => case eq of Refl impossible)
+  decEqDataType decEqPrim (|: adt) (|. p) =
+    No (\eq => case eq of Refl impossible)
+  decEqDataType decEqPrim (|: adt) (|: adt') =
+    case decEqADT decEqPrim adt adt' of
+      Yes Refl => Yes Refl
+      No neq => No (\eq => case eq of Refl => neq Refl)
 
 prefix 11 |**
 public export
@@ -106,6 +124,13 @@ public export
 (|**<) : {primitive : Type} -> (family : TypeFamily primitive) -> (n : Nat) ->
   {auto ok : InBounds n (familyTypes family)} -> ADT primitive
 family |**< n = index n (familyTypes family)
+
+decEqFamily : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
+  DecEqPred (TypeFamily primitive)
+decEqFamily decEqPrim (|** l) (|** l') =
+  case listDecEq (decEqADT decEqPrim) l l' of
+    Yes Refl => Yes Refl
+    No neq => No (\eq => case eq of Refl => neq Refl)
 
 mutual
   -- Atoms of matchable S-expressions.
