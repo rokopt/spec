@@ -89,3 +89,47 @@ public export
 (|**<) : {primitive : Type} -> (family : TypeFamily primitive) -> (n : Nat) ->
   {auto ok : InBounds n (familyTypes family)} -> ADT primitive
 family |**< n = index n (familyTypes family)
+
+mutual
+  -- Atoms of matchable S-expressions.
+  data MAtom : {primType : Type} -> (primExp : primType -> Type) -> Type where
+    MPrim : {primType : Type} -> {primExp : primType -> Type} ->
+      {type : primType} -> primExp type -> MAtom primExp
+    MAbst : {primType : Type} -> {primExp : primType -> Type} ->
+      (adt : ADT primType) -> (constructorIndex : Nat) -> MAtom primExp
+
+  data HasType : {primType : Type} -> {primExp : primType -> Type} ->
+      DataType primType -> SExp (MAtom primExp) -> Type where
+    HasPrimType : {primType : Type} -> {primExp : primType -> Type} ->
+      {type : primType} ->
+      (p : primExp type) -> HasType (|. type) ($^ (MPrim {type} {primExp} p))
+    HasAbstractType : {primType : Type} -> {primExp : primType -> Type} ->
+      (adt : ADT primType) -> (constructorIndex : Nat) ->
+      (constructorParams : SList (MAtom primExp)) ->
+      {auto ok : InBounds constructorIndex (constructors adt)} ->
+      MatchesParams
+        adt (typeParams (adt |*< constructorIndex)) constructorParams ->
+      HasType (|: adt) (MAbst adt constructorIndex $: constructorParams)
+
+  data MatchesParams : {primType : Type} -> {primExp : primType -> Type} ->
+      ADT primType -> List (ConstructorParam primType) ->
+      SList (MAtom primExp) -> Type where
+    MatchesParamsEmpty : {primType : Type} -> {primExp : primType -> Type} ->
+      {adt : ADT primType} ->
+      MatchesParams {primType} {primExp} adt [] ($|)
+    MatchesParamsCons : {primType : Type} -> {primExp : primType -> Type} ->
+      {adt : ADT primType} ->
+      {param : ConstructorParam primType} ->
+      {params : List (ConstructorParam primType)} ->
+      {x : SExp (MAtom primExp)} -> {l : SList (MAtom primExp)} ->
+      MatchesParam adt param x ->
+      MatchesParams adt params l ->
+      MatchesParams {primType} {primExp} adt (param :: params) (x $+ l)
+
+  data MatchesParam : {primType : Type} -> {primExp : primType -> Type} ->
+      ADT primType -> ConstructorParam primType ->
+      SExp (MAtom primExp) -> Type where
+    MatchesDataType : {primType : Type} -> {primExp : primType -> Type} ->
+      {adt : ADT primType} ->
+      {type : DataType primType} -> {x : SExp (MAtom primExp)} ->
+      HasType type x -> MatchesParam adt (|-> type) x
