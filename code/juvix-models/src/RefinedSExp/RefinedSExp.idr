@@ -1,17 +1,19 @@
 module RefinedSExp.RefinedSExp
 
-import public RefinedSExp.InductiveSExp
+import public RefinedSExp.SExp
 import public Library.Decidability
 
 %default total
 
 mutual
+  public export
   sExpEq : {atom : Type} -> DecEqPred atom -> DecEqPred (SExp atom)
   sExpEq deq (a $: l) (a' $: l') = case (deq a a', sListEq deq l l') of
     (Yes Refl, Yes Refl) => Yes Refl
     (No neq, _) => No (\eq => case eq of Refl => neq Refl)
     (_ , No neq) => No (\eq => case eq of Refl => neq Refl)
 
+  public export
   sListEq : {atom : Type} -> DecEqPred atom -> DecEqPred (SList atom)
   sListEq deq ($|) ($|) = Yes Refl
   sListEq deq (x $+ l) ($|) = No (\eq => case eq of Refl impossible)
@@ -87,7 +89,7 @@ data TypecheckResult : {atom : Type} -> (predicate : TypecheckPredicate atom) ->
   TypecheckFailure : {predicate : TypecheckPredicate atom} -> {x : SExp atom} ->
     FailureType predicate x -> TypecheckResult predicate x
 
-export
+public export
 TypecheckSuccessInjective : {atom : Type} ->
   {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result, result' : SuccessType predicate x} ->
@@ -96,7 +98,7 @@ TypecheckSuccessInjective : {atom : Type} ->
   result = result'
 TypecheckSuccessInjective Refl = Refl
 
-export
+public export
 TypecheckFailureInjective : {atom : Type} ->
   {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result, result' : FailureType predicate x} ->
@@ -112,20 +114,20 @@ data IsSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {x : SExp atom} -> (result : SuccessType predicate x) ->
     IsSuccess {x} {predicate} (TypecheckSuccess result)
 
-export
+public export
 IsSuccessExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   IsSuccess result -> SuccessType predicate x
 IsSuccessExtract (Successful success) = success
 
-export
+public export
 IsSuccessExtractElim : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   (succeeded : IsSuccess result) ->
   result = TypecheckSuccess (IsSuccessExtract succeeded)
 IsSuccessExtractElim (Successful _) = Refl
 
-export
+public export
 SuccessIsSuccessful : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {success : SuccessType predicate x} ->
   {result : TypecheckResult predicate x} ->
@@ -141,7 +143,7 @@ isSuccess (TypecheckSuccess success) = Yes (Successful success)
 isSuccess (TypecheckFailure _) =
   No (\success => case success of Successful _ impossible)
 
-export
+public export
 NotSuccessExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   Not (IsSuccess result) -> FailureType predicate x
@@ -156,13 +158,13 @@ data IsFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {x : SExp atom} -> (result : FailureType predicate x) ->
     IsFailure {x} {predicate} (TypecheckFailure result)
 
-export
+public export
 IsFailureExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   IsFailure result -> FailureType predicate x
 IsFailureExtract (Failed failure) = failure
 
-export
+public export
 IsFailureExtractElim : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   (succeeded : IsFailure result) ->
@@ -177,7 +179,7 @@ isFailure (TypecheckSuccess _) =
   No (\failed => case failed of Failed _ impossible)
 isFailure (TypecheckFailure failed) = Yes (Failed failed)
 
-export
+public export
 NotFailureExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   Not (IsFailure result) -> SuccessType predicate x
@@ -225,7 +227,7 @@ Typechecks : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
 Typechecks check x = DPair (SuccessType predicate x) (TypechecksAs check x)
 
 mutual
-  export
+  public export
   CheckedTypesUnique : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {x : SExp atom} -> {type, type' : SuccessType predicate x} ->
@@ -238,7 +240,7 @@ mutual
       case ListTypechecksUnique {check} subtermsCheck subtermsCheck' of
         Refl => TypecheckSuccessInjective (trans (sym termChecks) termChecks')
 
-  export
+  public export
   TypechecksAsUnique :
     {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {check : InductiveTypecheck predicate} ->
@@ -255,7 +257,7 @@ mutual
           (a $: l) => TypechecksUnique typechecks typechecks') of
         Refl => case uip termChecks termChecks' of Refl => Refl
 
-  export
+  public export
   HeterogeneousTypechecksAsUnique :
     {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {check : InductiveTypecheck predicate} ->
@@ -268,7 +270,7 @@ mutual
     case CheckedTypesUnique typechecksAs typechecksAs' of
       Refl => TypechecksAsUnique {type} {type'=type} typechecksAs typechecksAs'
 
-  export
+  public export
   TypechecksUnique : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {a : atom} -> {l : SList atom} ->
@@ -281,7 +283,7 @@ mutual
           (MkDPair type)
           (TypechecksAsUnique {type} {type'=type} typechecksAs typechecksAs')
 
-  export
+  public export
   ListTypechecksUnique : {atom : Type} ->
     {predicate : TypecheckPredicate atom} ->
     {check : InductiveTypecheck predicate} -> {l : SList atom} ->
@@ -348,7 +350,7 @@ isListCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   ListCheckResult check l -> Bool
 isListCheckFailure = not . isListCheckSuccess
 
-export
+public export
 CheckResultCons : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   {check : InductiveTypecheck predicate} ->
   {x : SExp atom} -> {l : SList atom} ->

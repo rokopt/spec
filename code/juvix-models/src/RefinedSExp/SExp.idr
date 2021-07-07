@@ -50,13 +50,13 @@ public export
 ($>*) ($|) = []
 ($>*) (x $+ l) = x :: $>* l
 
-export
+public export
 ListToSListToListEq : {atom : Type} -> (l : List (SExp atom)) ->
   ($>*) ($<* l) = l
 ListToSListToListEq [] = Refl
 ListToSListToListEq (x :: l) = cong ((::) x) (ListToSListToListEq l)
 
-export
+public export
 SListToListToSListEq : {atom : Type} -> (l : SList atom) ->
   ($<*) ($>* l) = l
 SListToListToSListEq ($|) = Refl
@@ -132,7 +132,7 @@ mapSLForAll f SLForAllEmpty = SLForAllEmpty
 mapSLForAll f (SLForAllCons head forAllTail) =
   SLForAllCons (f _ head) (mapSLForAll f forAllTail)
 
-export
+public export
 SLForAllUnique : {atom : Type} -> {sp : SPredicate atom} -> {l : SList atom} ->
   (forAll, forAll' : SLForAll sp l) ->
   ((x : SExp atom) -> (spx, spx' : sp x) -> spx = spx') ->

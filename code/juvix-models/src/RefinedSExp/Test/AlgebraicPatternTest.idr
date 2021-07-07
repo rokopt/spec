@@ -1,6 +1,7 @@
 module RefinedSExp.Test.AlgebraicPatternTest
 
 import public RefinedSExp.AlgebraicPattern
+import Library.Decidability
 
 %default total
 
@@ -87,6 +88,7 @@ TListCheckResult : TList -> Type
 TListCheckResult =
   ListCheckResult (MatchesTypeInduction primTypeEq interpretPrimitiveType)
 
+public export
 testMatch : (x : TExp) -> TCheckResult x
 testMatch = matchSExp primTypeEq interpretPrimitiveType
 
@@ -150,9 +152,13 @@ N2Sta = |* [ N2c , Sc ]
 N2Std : DTP
 N2Std = |: N2Sta
 
+public export
 adtChecks : Bool
 adtChecks =
   isCheckFailure (testMatch ($^ (MAbst N2Sta 0)))
+
+adtChecksCorrect : Assertion
+adtChecksCorrect = Assert adtChecks
 
 -- Test some notation
 

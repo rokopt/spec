@@ -70,12 +70,14 @@ mutual
   adt |*< n = index n (constructors adt)
 
 mutual
+  public export
   decEqParam : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (ConstructorParam primitive)
   decEqParam decEqPrim (|-> d) (|-> d') = case decEqDataType decEqPrim d d' of
     Yes Refl => Yes Refl
     No neq => No (\eq => case eq of Refl => neq Refl)
 
+  public export
   decEqConstructor : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (TypeConstructor primitive)
   decEqConstructor decEqPrim (|- l) (|- l') =
@@ -83,6 +85,7 @@ mutual
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
 
+  public export
   decEqADT : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (ADT primitive)
   decEqADT decEqPrim (|* l) (|* l') =
@@ -90,6 +93,7 @@ mutual
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
 
+  public export
   decEqDataType : {primitive : Type} -> (decEqPrim : DecEqPred primitive) ->
     DecEqPred (DataType primitive)
   decEqDataType decEqPrim (|. p) (|. p') = case decEqPrim p p' of
@@ -226,6 +230,7 @@ mutual
     MkTypecheckPredicate (MatchesSignature {primExp}) (MatchFailure {primExp})
 
 mutual
+  public export
   CheckOneMatch : {primType : Type} ->
     {decEqPrim : DecEqPred primType} ->
     {primExp : primType -> Type} ->
@@ -249,6 +254,7 @@ mutual
       No outOfBounds =>
         TypecheckFailure (InvalidConstructorIndex adt constructorIndex)
 
+  public export
   CheckOneParameterList : {primType : Type} ->
     {decEqPrim : DecEqPred primType} ->
     {primExp : primType -> Type} ->
