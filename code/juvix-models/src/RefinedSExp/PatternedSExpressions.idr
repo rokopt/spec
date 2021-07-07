@@ -6,44 +6,6 @@ import public RefinedSExp.AlgebraicPattern
 
 %default total
 
-{- XXX
-mutual
-  public export
-  data SExp : Type where
-    SAtom : PrimitiveExp -> SExp
-    SList : SExpList -> SExp
-
-  public export
-  SExpList : Type
-  SExpList = List SExp
-
-public export
-SExpPred : Type -> Type
-SExpPred codomain = SExp -> codomain
-
-mutual
-  sexpEq : (sexp, sexp' : SExp) -> Dec (sexp = sexp')
-  sexpEq (SAtom exp) (SAtom exp') with (primExpEq exp exp')
-    sexpEq (SAtom exp) (SAtom exp) | Yes Refl = Yes Refl
-    sexpEq (SAtom exp) (SAtom exp') | No neq =
-      No (\eq => case eq of Refl => neq Refl)
-  sexpEq (SAtom _) (SList _) = No (\eq => case eq of Refl impossible)
-  sexpEq (SList _) (SAtom _) = No (\eq => case eq of Refl impossible)
-  sexpEq (SList sexpList) (SList sexpList') =
-    case sexpListEq sexpList sexpList' of
-      Yes Refl => Yes Refl
-      No neq => No (\eq => case eq of Refl => neq Refl)
-
-  sexpListEq : (sexpList, sexpList' : SExpList) -> Dec (sexpList = sexpList')
-  sexpListEq = let _ = sexpListDecEq in decEq
-
-  [sexpDecEq] DecEq SExp where
-    decEq = sexpEq
-
-  [sexpListDecEq] DecEq SExpList where
-    decEq = sexpListEq
--}
-
 mutual
   public export
   data Pattern : (primType : Type) -> Type where
@@ -71,28 +33,38 @@ mutual
     case decEq n n' of
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
-  patternEq primEq (CarrierPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (CarrierPat _) (PrimPat _) =
+    No (\eq => case eq of Refl impossible)
   patternEq primEq (CarrierPat _) (ProductPat _) =
     No (\eq => case eq of Refl impossible)
-  patternEq primEq (CarrierPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
-  patternEq primEq (PrimPat _) (CarrierPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (CarrierPat _) (SumPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (PrimPat _) (CarrierPat _) =
+    No (\eq => case eq of Refl impossible)
   patternEq primEq (PrimPat type) (PrimPat type') =
     case primEq type type' of
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
-  patternEq primEq (PrimPat _) (ProductPat _) = No (\eq => case eq of Refl impossible)
-  patternEq primEq (PrimPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (PrimPat _) (ProductPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (PrimPat _) (SumPat _) =
+    No (\eq => case eq of Refl impossible)
   patternEq primEq (ProductPat _) (CarrierPat _) =
     No (\eq => case eq of Refl impossible)
-  patternEq primEq (ProductPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (ProductPat _) (PrimPat _) =
+    No (\eq => case eq of Refl impossible)
   patternEq primEq (ProductPat patternList) (ProductPat patternList') =
     case patternListEq primEq patternList patternList' of
       Yes Refl => Yes Refl
       No neq => No (\eq => case eq of Refl => neq Refl)
-  patternEq primEq (ProductPat _) (SumPat _) = No (\eq => case eq of Refl impossible)
-  patternEq primEq (SumPat _) (CarrierPat _) = No (\eq => case eq of Refl impossible)
-  patternEq primEq (SumPat _) (PrimPat _) = No (\eq => case eq of Refl impossible)
-  patternEq primEq (SumPat _) (ProductPat _) = No (\eq => case eq of Refl impossible)
+  patternEq primEq (ProductPat _) (SumPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat _) (CarrierPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat _) (PrimPat _) =
+    No (\eq => case eq of Refl impossible)
+  patternEq primEq (SumPat _) (ProductPat _) =
+    No (\eq => case eq of Refl impossible)
   patternEq primEq (SumPat patternList) (SumPat patternList') =
     case patternListEq primEq patternList patternList' of
       Yes Refl => Yes Refl
@@ -102,6 +74,80 @@ mutual
     (patternList, patternList' : PatternList primType) ->
     Dec (patternList = patternList')
   patternListEq primEq = listDecEq (patternEq primEq)
+
+public export
+Signature : (primType : Type) -> Type
+Signature primType = (Pattern primType, Pattern primType)
+
+mutual
+  public export
+  data Transform : (primType : Type) -> Type where
+    IdTransform : Transform primType
+    ConstructorTransform : TransformList primType -> Transform primType
+    MatchTransform : TransformList primType -> Transform primType
+    ComposeTransforms : TransformList primType -> Transform primType
+
+  public export
+  TransformList : (primType : Type) -> Type
+  TransformList = List . Transform
+
+  public export
+  sigDomain : {primType : Type} ->
+    (signature : Signature primType) -> Pattern primType
+  sigDomain = fst
+
+  public export
+  sigCodomain : {primType : Type} ->
+    (signature : Signature primType) -> Pattern primType
+  sigCodomain = snd
+
+  public export
+  SignatureList : (primType : Type) -> Type
+  SignatureList = List . Signature
+
+  public export
+  sigDomains : {primType : Type} ->
+    SignatureList primType -> PatternList primType
+  sigDomains l = map sigDomain l
+
+  public export
+  sigCodomains : {primType : Type} ->
+    SignatureList primType -> PatternList primType
+  sigCodomains l = map sigCodomain l
+
+mutual
+  public export
+  data Transforms : {primType : Type} ->
+      (domain, codomain : Pattern primType) -> Transform primType -> Type where
+    IdTransforms : {pattern : Pattern primType} ->
+      Transforms pattern pattern IdTransform
+    ConstructorTransforms : {domain, codomain : Pattern primType} ->
+      {transforms : TransformList primType} ->
+      ListPairForAll (Transforms domain) codomains transforms ->
+      Transforms domain (ProductPat codomains) (ConstructorTransform transforms)
+    MatchTransforms : {domain : Pattern primType} ->
+      {domains : PatternList primType} ->
+      {transforms : TransformList primType} ->
+      ListPairForAll (flip Transforms codomain) domains transforms ->
+      Transforms (SumPat domains) codomain (MatchTransform transforms)
+    ComposeTransformsEmptyId : {type : Pattern primType} ->
+      Transforms type type (ComposeTransforms [])
+    ComposeTransformsSingleton : {domain, codomain : Pattern primType} ->
+      {transform : Transform primType} ->
+      Transforms domain codomain transform ->
+      Transforms domain codomain (ComposeTransforms [transform])
+    ComposeTransformsMultiple :
+      {domain, intermediate, codomain : Pattern primType} ->
+      {transform : Transform primType} ->
+      {transforms : TransformList primType} ->
+      Transforms intermediate codomain transform ->
+      Transforms domain intermediate (ComposeTransforms transforms) ->
+      Transforms domain codomain (ComposeTransforms (transform :: transforms))
+
+  public export
+  HasSignature : {primType : Type} -> (signature : Signature primType) ->
+    (transform : Transform primType) -> Type
+  HasSignature (domain, codomain) = Transforms domain codomain
 
 {-
 mutual
@@ -278,7 +324,7 @@ transform : {domain, codomain : Pattern} ->
 transform = match {domain} {codomain=(MatchedSExp codomain)}
 -}
 
--- A default primitive type.
+-- Provide a "default" primitive type.
 
 public export
 data PrimitiveType : Type where
