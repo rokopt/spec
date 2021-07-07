@@ -14,8 +14,8 @@ mutual
 
   sListEq : {atom : Type} -> DecEqPred atom -> DecEqPred (SList atom)
   sListEq deq ($|) ($|) = Yes Refl
-  sListEq deq (x $+ l) ($|) = No (\eq => ?h1)
-  sListEq deq ($|) (x $+ l) = No (\eq => ?h2)
+  sListEq deq (x $+ l) ($|) = No (\eq => case eq of Refl impossible)
+  sListEq deq ($|) (x $+ l) = No (\eq => case eq of Refl impossible)
   sListEq deq (x $+ l) (x' $+ l') = case (sExpEq deq x x', sListEq deq l l') of
     (Yes Refl, Yes Refl) => Yes Refl
     (No neq, _) => No (\eq => case eq of Refl => neq Refl)
