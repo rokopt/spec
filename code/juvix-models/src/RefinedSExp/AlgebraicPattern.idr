@@ -149,4 +149,19 @@ mutual
   MatchesTypePred : {primType : Type} -> (primExp : primType -> Type) ->
     TypecheckPredicate (MAtom primExp)
   MatchesTypePred {primType} primExp =
-    MkTypecheckPredicate MatchesSignature MatchFailure
+    MkTypecheckPredicate (MatchesSignature {primExp}) (MatchFailure {primExp})
+
+  CheckOneMatch : {primType : Type} -> {primExp : primType -> Type} ->
+    (a : MAtom primExp) -> (l : SList (MAtom primExp)) ->
+    SLForAll (MatchesSignature {primExp}) l ->
+    TypecheckResult (MatchesTypePred primExp) (a $: l)
+  CheckOneMatch a l forAll = ?CheckOneMatch_hole
+
+  MatchesTypeInduction : {primType : Type} -> (primExp : primType -> Type) ->
+    InductiveTypecheck (MatchesTypePred primExp)
+  MatchesTypeInduction primExp =
+    MkInductiveTypecheck
+      (CheckOneMatch {primExp})
+      (List (DPair (SExp (MAtom primExp)) MatchFailure))
+      (\x, fail => [ (x ** fail) ])
+      (++)
