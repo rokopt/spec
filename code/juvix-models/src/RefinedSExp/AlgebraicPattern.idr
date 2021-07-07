@@ -98,6 +98,11 @@ mutual
     MAbst : {primType : Type} -> {primExp : primType -> Type} ->
       (adt : ADT primType) -> (constructorIndex : Nat) -> MAtom primExp
 
+  MAtomType : {primType : Type} -> {primExp : primType -> Type} ->
+    MAtom primExp -> DataType primType
+  MAtomType (MPrim {type} _) = |. type
+  MAtomType (MAbst adt _) = |: adt
+
   data MatchesType : {primType : Type} -> {primExp : primType -> Type} ->
       DataType primType -> SExp (MAtom primExp) -> Type where
     MatchesPrimType : {primType : Type} -> {primExp : primType -> Type} ->
@@ -133,3 +138,15 @@ mutual
       {adt : ADT primType} ->
       {type : DataType primType} -> {x : SExp (MAtom primExp)} ->
       MatchesType type x -> MatchesParam adt (|-> type) x
+
+  MatchesSignature : {primType : Type} -> {primExp : primType -> Type} ->
+    SExp (MAtom primExp) -> Type
+  MatchesSignature (a $: l) = MatchesType (MAtomType a) (a $: l)
+
+  data MatchFailure : {primType : Type} -> {primExp : primType -> Type} ->
+      SExp (MAtom primExp) -> Type where
+
+  MatchesTypePred : {primType : Type} -> (primExp : primType -> Type) ->
+    TypecheckPredicate (MAtom primExp)
+  MatchesTypePred {primType} primExp =
+    MkTypecheckPredicate MatchesSignature MatchFailure
