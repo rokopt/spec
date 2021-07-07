@@ -145,17 +145,52 @@ mutual
 
   data MatchFailure : {primType : Type} -> {primExp : primType -> Type} ->
       SExp (MAtom primExp) -> Type where
+    PrimitiveWithArgument : {primType : Type} ->
+      {primExp : primType -> Type} ->
+      {x : SExp (MAtom primExp)} ->
+      (firstArg : SExp (MAtom primExp)) ->
+      (anyOtherArgs : SList (MAtom primExp)) ->
+      MatchFailure {primExp} x
+    InvalidConstructorIndex : {primType : Type} ->
+      {primExp : primType -> Type} -> {x : SExp (MAtom primExp)} ->
+      (adt : ADT primType) -> Nat -> MatchFailure {primExp} x
 
   MatchesTypePred : {primType : Type} -> (primExp : primType -> Type) ->
     TypecheckPredicate (MAtom primExp)
   MatchesTypePred {primType} primExp =
     MkTypecheckPredicate (MatchesSignature {primExp}) (MatchFailure {primExp})
 
+mutual
   CheckOneMatch : {primType : Type} -> {primExp : primType -> Type} ->
     (a : MAtom primExp) -> (l : SList (MAtom primExp)) ->
     SLForAll (MatchesSignature {primExp}) l ->
     TypecheckResult (MatchesTypePred primExp) (a $: l)
-  CheckOneMatch a l forAll = ?CheckOneMatch_hole
+  CheckOneMatch (MPrim p) ($|) _ =
+    TypecheckSuccess (MatchesPrimType p)
+  CheckOneMatch (MPrim p) (x $+ l) _ =
+    TypecheckFailure (PrimitiveWithArgument x l)
+  CheckOneMatch (MAbst adt constructorIndex) l forAll =
+    case inBounds constructorIndex (constructors adt) of
+      Yes ok =>
+        case CheckOneParameterList adt constructorIndex
+          (typeParams (adt |*< constructorIndex)) l forAll of
+            Left matchesParams =>
+              TypecheckSuccess
+                (MatchesAbstractType adt constructorIndex l matchesParams)
+            Right failure => TypecheckFailure failure
+      No outOfBounds =>
+        TypecheckFailure (InvalidConstructorIndex adt constructorIndex)
+
+  CheckOneParameterList : {primType : Type} -> {primExp : primType -> Type} ->
+    (adt : ADT primType) ->
+    (constructorIndex : Nat) ->
+    (params : List (ConstructorParam primType)) ->
+    (l : SList (MAtom primExp)) ->
+    SLForAll (MatchesSignature {primExp}) l ->
+    Either
+      (MatchesParams adt params l)
+      (MatchFailure (MAbst adt constructorIndex $: l))
+  CheckOneParameterList adt params l forAll = ?CheckOneParameterList_hole
 
   MatchesTypeInduction : {primType : Type} -> (primExp : primType -> Type) ->
     InductiveTypecheck (MatchesTypePred primExp)
