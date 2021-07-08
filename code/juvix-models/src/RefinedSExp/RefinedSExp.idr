@@ -72,6 +72,97 @@ sEitherInd
         (Right spxR, Left lplL) => consElimRL x l spxR lplL
         (Right spxR, Right lplR) => consElimRR x l spxR lplR)
 
+mutual
+  public export
+  sLeftExpInd : {atom : Type} ->
+    {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
+    (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
+      Either (sp (a $: l)) (sp' (a $: l))) ->
+    (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
+      sp' (a $: l)) ->
+    (nilElim : lp ($|)) ->
+    (consElimLL :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))) ->
+    (consElimLR :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
+        lp' (x $+ l)) ->
+    (consElimRL :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
+        lp' (x $+ l)) ->
+    (consElimRR :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
+        (lp' (x $+ l))) ->
+    (x : SExp atom) -> DepEither sp sp' x
+  sLeftExpInd
+    expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR
+      (a $: l) =
+        case sLeftListInd expElimL expElimR nilElim consElimLL
+                          consElimLR consElimRL consElimRR l of
+          Left lplL => expElimL a l lplL
+          Right lplR => Right (expElimR a l lplR)
+
+  public export
+  sLeftListInd : {atom : Type} ->
+    {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
+    (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
+      Either (sp (a $: l)) (sp' (a $: l))) ->
+    (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
+      sp' (a $: l)) ->
+    (nilElim : lp ($|)) ->
+    (consElimLL :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))) ->
+    (consElimLR :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
+        lp' (x $+ l)) ->
+    (consElimRL :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
+        lp' (x $+ l)) ->
+    (consElimRR :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
+        lp' (x $+ l)) ->
+    (l : SList atom) -> DepEither lp lp' l
+  sLeftListInd expElimL expElimR nilElim
+    consElimLL consElimLR consElimRL consElimRR ($|) =
+      Left nilElim
+  sLeftListInd expElimL expElimR nilElim
+    consElimLL consElimLR consElimRL consElimRR (x $+ l) =
+      case (sLeftExpInd
+        expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR x,
+       sLeftListInd
+        expElimL expElimR nilElim
+        consElimLL consElimLR consElimRL consElimRR l) of
+          (Left spxL, Left lplL) => consElimLL x l spxL lplL
+          (Left spxL, Right lplR) => Right (consElimLR x l spxL lplR)
+          (Right spxR, Left lplL) => Right (consElimRL x l spxR lplL)
+          (Right spxR, Right lplR) => Right (consElimRR x l spxR lplR)
+
+public export
+sLeftInd : {atom : Type} ->
+  {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
+  (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
+    Either (sp (a $: l)) (sp' (a $: l))) ->
+  (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
+    sp' (a $: l)) ->
+  (nilElim : lp ($|)) ->
+  (consElimLL :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+      Either (lp (x $+ l)) (lp' (x $+ l))) ->
+  (consElimLR :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l -> (lp' (x $+ l))) ->
+  (consElimRL :
+    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l -> (lp' (x $+ l))) ->
+  (consElimRR :
+    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l -> (lp' (x $+ l))) ->
+  ((x : SExp atom) -> DepEither sp sp' x,
+   (l : SList atom) -> DepEither lp lp' l)
+sLeftInd expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR =
+  (sLeftExpInd expElimL expElimR nilElim
+               consElimLL consElimLR consElimRL consElimRR,
+   sLeftListInd expElimL expElimR nilElim
+               consElimLL consElimLR consElimRL consElimRR)
+
 infixr 4 **<
 (**<) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> b x ->
   DPairEither b c
