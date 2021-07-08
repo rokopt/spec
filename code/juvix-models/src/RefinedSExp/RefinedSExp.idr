@@ -163,6 +163,28 @@ sLeftInd expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR =
    sLeftListInd expElimL expElimR nilElim
                consElimLL consElimLR consElimRL consElimRR)
 
+public export
+sLeftIndForAll : {atom : Type} ->
+  {sp, sp' : SPredicate atom} ->
+  (expElimL : (a : atom) -> (l : SList atom) -> SLForAll sp l ->
+    DepEither sp sp' (a $: l)) ->
+  (newFailure : (x : SExp atom) -> ()) ->
+  ((x : SExp atom) -> Either (sp x) (List (DPair (SExp atom) sp')),
+   (l : SList atom) -> Either (SLForAll sp l) (List (DPair (SExp atom) sp')))
+sLeftIndForAll {sp} {sp'} expElimL newFailure =
+  sLeftInd
+    {sp} {sp'=(\_ => List (DPair (SExp atom) sp'))}
+    {lp=(SLForAll sp)} {lp'=(\_ => List (DPair (SExp atom) sp'))}
+      (\a, l, lpl => case expElimL a l lpl of
+        Left spal => Left spal
+        Right failure => Right [ (a $: l ** failure) ])
+      (\a, l, failures => failures)
+      SLForAllEmpty
+      (\_, _, spx, lpl => Left (SLForAllCons spx lpl))
+      (\_, _, _, failures => failures)
+      (\_, _, failures, _ => failures)
+      (\_, _, failuresL, failuresR => failuresL ++ failuresR)
+
 infixr 4 **<
 (**<) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> b x ->
   DPairEither b c
