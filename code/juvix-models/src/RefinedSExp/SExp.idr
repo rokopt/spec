@@ -50,6 +50,16 @@ public export
 ($>*) ($|) = []
 ($>*) (x $+ l) = x :: $>* l
 
+prefix 11 <$
+public export
+(<$) : {atom : Type} -> SExp atom -> atom
+(<$) (a $: _) = a
+
+prefix 11 >$
+public export
+(>$) : {atom : Type} -> SExp atom -> SList atom
+(>$) (_ $: l) = l
+
 public export
 ListToSListToListEq : {atom : Type} -> (l : List (SExp atom)) ->
   ($>*) ($<* l) = l
@@ -352,3 +362,68 @@ sDepIndForAll {forAllElim} depForAllElim =
     depForAllElim
     (\_ => SLForAllDepEmpty)
     (\_, _, _, _, _, _ => SLForAllDepCons)
+
+public export
+SDPair : {atom : Type} -> SPredicate atom -> Type
+SDPair {atom} pred = DPair (SExp atom) pred
+
+prefix 11 <:$
+public export
+(<:$) : {atom : Type} -> {pred : SPredicate atom} -> SDPair pred -> SExp atom
+(<:$) (x ** _) = x
+
+prefix 11 >:$
+public export
+(>:$) : {atom : Type} -> {pred : SPredicate atom} -> (dx : SDPair pred) ->
+  pred (<:$ dx)
+(>:$) (_ ** spx) = spx
+
+public export
+SLDPair : {atom : Type} -> SLPredicate atom -> Type
+SLDPair {atom} pred = DPair (SList atom) pred
+
+prefix 11 <+$
+public export
+(<+$) : {atom : Type} -> {pred : SLPredicate atom} -> SLDPair pred -> SList atom
+(<+$) (l ** _) = l
+
+prefix 11 >+$
+public export
+(>+$) : {atom : Type} -> {pred : SLPredicate atom} -> (dl : SLDPair pred) ->
+  pred (<+$ dl)
+(>+$) (_ ** lpl) = lpl
+
+public export
+SDPairPred : {atom : Type} -> SPredicate atom -> Type
+SDPairPred pred = SDPair pred -> Type
+
+public export
+SLDPairPred : {atom : Type} -> SLPredicate atom -> Type
+SLDPairPred pred = SLDPair pred -> Type
+
+-- Construct a dependent function on dependent pairs.
+public export
+sdpairInd :
+  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+  {sdp : SDPairPred sp} -> {ldp : SLDPairPred lp} ->
+  {expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)} ->
+  {nilElim : lp ($|)} ->
+  {consElim :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)} ->
+  (depExpElim : (a : atom) -> (l : SList atom) ->
+    (lpl : lp l) -> (lpl = sListInd expElim nilElim consElim l) ->
+    ldp (l ** lpl) ->
+    sdp (a $: l ** expElim a l lpl)) ->
+  (depNilElim : nilElim = sListInd expElim nilElim consElim ($|) ->
+    ldp (($|) ** nilElim)) ->
+  (depConsElim : (x : SExp atom) -> (l: SList atom) ->
+    (spx : sp x) -> (lpl : lp l) ->
+    (spx = sExpInd expElim nilElim consElim x) ->
+    (lpl = sListInd expElim nilElim consElim l) ->
+    sdp (x ** spx) ->
+    ldp (l ** lpl) ->
+    ldp (x $+ l ** consElim x l spx lpl)) ->
+  ((x : SExp atom) -> sdp (x ** sExpInd expElim nilElim consElim x),
+   (l : SList atom) -> ldp (l ** sListInd expElim nilElim consElim l))
+sdpairInd {sdp} {ldp} =
+  sDepInd {sdp=(\x, spx => sdp (x ** spx))} {ldp=(\l, lpl => ldp (l ** lpl))}
