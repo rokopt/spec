@@ -177,7 +177,7 @@ sLeftIndForAll {sp} {sp'} expElimL =
       (\a, l, lpl => case expElimL a l lpl of
         Left spal => Left spal
         Right failure => Right [ (a $: l ** failure) ])
-      (\a, l, failures => failures)
+      (\_, _, failures => failures)
       SLForAllEmpty
       (\_, _, spx, lpl => Left (SLForAllCons spx lpl))
       (\_, _, _, failures => failures)
