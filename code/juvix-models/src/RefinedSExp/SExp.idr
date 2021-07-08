@@ -161,11 +161,11 @@ mutual
     {atom : Type} ->
     {sp : contextType -> SPredicate atom} ->
     {lp : contextType -> SLPredicate atom} ->
-    (introAtom : atom -> contextType -> contextType) ->
+    (newExp : atom -> contextType -> contextType) ->
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
-      lp (introAtom a contextUponEntry) l ->
+      lp (newExp a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -179,11 +179,11 @@ mutual
       (contextType, lp contextUponEntry (x $+ l))) ->
     (context : contextType) ->
     (x : SExp atom) -> (contextType, sp context x)
-  sExpIndContext {sp} {lp} introAtom expElim nilElim consElim context (a $: l) =
+  sExpIndContext {sp} {lp} newExp expElim nilElim consElim context (a $: l) =
     let
       (contextAfterListInduction, listInductionOut) =
-        sListIndContext {sp} {lp} introAtom expElim nilElim consElim
-          (introAtom a context) l
+        sListIndContext {sp} {lp} newExp expElim nilElim consElim
+          (newExp a context) l
     in
     expElim context a l listInductionOut contextAfterListInduction
 
@@ -193,11 +193,11 @@ mutual
     {atom : Type} ->
     {sp : contextType -> SPredicate atom} ->
     {lp : contextType -> SLPredicate atom} ->
-    (introAtom : atom -> contextType -> contextType) ->
+    (newExp : atom -> contextType -> contextType) ->
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
-      lp (introAtom a contextUponEntry) l ->
+      lp (newExp a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -211,16 +211,16 @@ mutual
       (contextType, lp contextUponEntry (x $+ l))) ->
     (context : contextType) ->
     (l : SList atom) -> (contextType, lp context l)
-  sListIndContext introAtom expElim nilElim consElim
+  sListIndContext newExp expElim nilElim consElim
     context ($|) =
       nilElim context
-  sListIndContext {sp} {lp} introAtom expElim nilElim consElim
+  sListIndContext {sp} {lp} newExp expElim nilElim consElim
     context (x $+ l) =
       let
         (contextAfterExpInduction, expInductionOut) =
-          sExpIndContext {sp} {lp} introAtom expElim nilElim consElim context x
+          sExpIndContext {sp} {lp} newExp expElim nilElim consElim context x
         (contextAfterListInduction, listInductionOut) =
-          sListIndContext {sp} {lp} introAtom expElim nilElim consElim
+          sListIndContext {sp} {lp} newExp expElim nilElim consElim
             contextAfterExpInduction l
       in
       consElim
@@ -237,11 +237,11 @@ sIndContext :
   {atom : Type} ->
   {sp : contextType -> SPredicate atom} ->
   {lp : contextType -> SLPredicate atom} ->
-  (introAtom : atom -> contextType -> contextType) ->
+  (newExp : atom -> contextType -> contextType) ->
   (expElim :
     (contextUponEntry : contextType) ->
     (a : atom) -> (l : SList atom) ->
-    lp (introAtom a contextUponEntry) l ->
+    lp (newExp a contextUponEntry) l ->
     (contextAfterInduction : contextType) ->
     (contextType, sp contextUponEntry (a $: l))) ->
   (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -256,9 +256,9 @@ sIndContext :
   (context : contextType) ->
   ((x : SExp atom) -> (contextType, sp context x),
    (l : SList atom) -> (contextType, lp context l))
-sIndContext {sp} {lp} introAtom expElim nilElim consElim context =
-  (sExpIndContext {sp} {lp} introAtom expElim nilElim consElim context,
-   sListIndContext {sp} {lp} introAtom expElim nilElim consElim context)
+sIndContext {sp} {lp} newExp expElim nilElim consElim context =
+  (sExpIndContext {sp} {lp} newExp expElim nilElim consElim context,
+   sListIndContext {sp} {lp} newExp expElim nilElim consElim context)
 
 mutual
   public export
