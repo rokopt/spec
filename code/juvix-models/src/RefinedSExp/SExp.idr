@@ -156,6 +156,94 @@ SLForAllUnique (SLForAllCons head tail) (SLForAllCons head' tail') spUnique =
 
 mutual
   public export
+  sExpInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
+    (nilElim : lp ($|)) ->
+    (consElim :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
+    (x : SExp atom) -> sp x
+  sExpInd expElim nilElim consElim (a $: l) =
+    expElim a l (sListInd expElim nilElim consElim l)
+
+  public export
+  sListInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
+    (nilElim : lp ($|)) ->
+    (consElim :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
+    (l : SList atom) -> lp l
+  sListInd expElim nilElim consElim ($|) = nilElim
+  sListInd expElim nilElim consElim (x $+ l) =
+    consElim x l
+      (sExpInd expElim nilElim consElim x) (sListInd expElim nilElim consElim l)
+
+public export
+sInd :
+  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+  (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
+  (nilElim : lp ($|)) ->
+  (consElim :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
+  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
+sInd expElim nilElim consElim =
+  (sExpInd expElim nilElim consElim, sListInd expElim nilElim consElim)
+
+public export
+sIndForAll :
+  {atom : Type} -> {sp : SPredicate atom} ->
+  (forAllElim :
+    (a : atom) -> (l : SList atom) ->
+    SLForAll sp l -> sp (a $: l)) ->
+  ((x : SExp atom) -> sp x, (l : SList atom) -> SLForAll sp l)
+sIndForAll forAllElim =
+  sInd {sp} {lp=(SLForAll sp)} forAllElim SLForAllEmpty (\_, _ => SLForAllCons)
+
+public export
+sExpIndForAll :
+  {atom : Type} -> {sp : SPredicate atom} ->
+  (forAllElim :
+    (a : atom) -> (l : SList atom) ->
+    SLForAll sp l -> sp (a $: l)) ->
+  (x : SExp atom) -> sp x
+sExpIndForAll forAllElim = fst (sIndForAll forAllElim)
+
+public export
+sListIndForAll :
+  {atom : Type} -> {sp : SPredicate atom} ->
+  (forAllElim :
+    (a : atom) -> (l : SList atom) ->
+    SLForAll sp l -> sp (a $: l)) ->
+  (l : SList atom) -> SLForAll sp l
+sListIndForAll forAllElim = snd (sIndForAll forAllElim)
+
+public export
+sTransform :
+  {atom, atom' : Type} ->
+  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
+    SExp atom') ->
+  (SExp atom -> SExp atom', (l : SList atom) -> SLForAll (\_ => SExp atom') l)
+sTransform {atom} {atom'} = sIndForAll {atom} {sp=(\_ => SExp atom')}
+
+public export
+sExpTransform :
+  {atom, atom' : Type} ->
+  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
+    SExp atom') ->
+  SExp atom -> SExp atom'
+sExpTransform = fst . sTransform
+
+public export
+sListTransform :
+  {atom, atom' : Type} ->
+  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
+    SExp atom') ->
+  (l : SList atom) -> SLForAll (\_ => SExp atom') l
+sListTransform = snd . sTransform
+
+mutual
+  public export
   sExpIndContext :
     {contextType : Type} ->
     {atom : Type} ->
@@ -259,94 +347,6 @@ sIndContext :
 sIndContext {sp} {lp} newExp expElim nilElim consElim context =
   (sExpIndContext {sp} {lp} newExp expElim nilElim consElim context,
    sListIndContext {sp} {lp} newExp expElim nilElim consElim context)
-
-mutual
-  public export
-  sExpInd :
-    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
-    (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
-    (nilElim : lp ($|)) ->
-    (consElim :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
-    (x : SExp atom) -> sp x
-  sExpInd expElim nilElim consElim (a $: l) =
-    expElim a l (sListInd expElim nilElim consElim l)
-
-  public export
-  sListInd :
-    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
-    (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
-    (nilElim : lp ($|)) ->
-    (consElim :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
-    (l : SList atom) -> lp l
-  sListInd expElim nilElim consElim ($|) = nilElim
-  sListInd expElim nilElim consElim (x $+ l) =
-    consElim x l
-      (sExpInd expElim nilElim consElim x) (sListInd expElim nilElim consElim l)
-
-public export
-sInd :
-  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
-  (expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)) ->
-  (nilElim : lp ($|)) ->
-  (consElim :
-    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)) ->
-  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
-sInd expElim nilElim consElim =
-  (sExpInd expElim nilElim consElim, sListInd expElim nilElim consElim)
-
-public export
-sIndForAll :
-  {atom : Type} -> {sp : SPredicate atom} ->
-  (forAllElim :
-    (a : atom) -> (l : SList atom) ->
-    SLForAll sp l -> sp (a $: l)) ->
-  ((x : SExp atom) -> sp x, (l : SList atom) -> SLForAll sp l)
-sIndForAll forAllElim =
-  sInd {sp} {lp=(SLForAll sp)} forAllElim SLForAllEmpty (\_, _ => SLForAllCons)
-
-public export
-sExpIndForAll :
-  {atom : Type} -> {sp : SPredicate atom} ->
-  (forAllElim :
-    (a : atom) -> (l : SList atom) ->
-    SLForAll sp l -> sp (a $: l)) ->
-  (x : SExp atom) -> sp x
-sExpIndForAll forAllElim = fst (sIndForAll forAllElim)
-
-public export
-sListIndForAll :
-  {atom : Type} -> {sp : SPredicate atom} ->
-  (forAllElim :
-    (a : atom) -> (l : SList atom) ->
-    SLForAll sp l -> sp (a $: l)) ->
-  (l : SList atom) -> SLForAll sp l
-sListIndForAll forAllElim = snd (sIndForAll forAllElim)
-
-public export
-sTransform :
-  {atom, atom' : Type} ->
-  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
-    SExp atom') ->
-  (SExp atom -> SExp atom', (l : SList atom) -> SLForAll (\_ => SExp atom') l)
-sTransform {atom} {atom'} = sIndForAll {atom} {sp=(\_ => SExp atom')}
-
-public export
-sExpTransform :
-  {atom, atom' : Type} ->
-  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
-    SExp atom') ->
-  SExp atom -> SExp atom'
-sExpTransform = fst . sTransform
-
-public export
-sListTransform :
-  {atom, atom' : Type} ->
-  (expTransform : atom -> (l : SList atom) -> SLForAll (\_ => SExp atom') l ->
-    SExp atom') ->
-  (l : SList atom) -> SLForAll (\_ => SExp atom') l
-sListTransform = snd . sTransform
 
 public export
 SDepPred : {atom : Type} -> SPredicate atom -> Type
