@@ -164,8 +164,8 @@ mutual
     (accumAtom : atom -> contextType -> contextType) ->
     (expElim :
       (contextUponEntry : contextType) ->
-      (a : atom) ->
-      (l : SList atom) -> lp (accumAtom a contextUponEntry) l ->
+      (a : atom) -> (l : SList atom) ->
+      lp (accumAtom a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -181,10 +181,9 @@ mutual
     (x : SExp atom) -> (contextType, sp context x)
   sExpIndContext {sp} {lp} accumAtom expElim nilElim consElim context (a $: l) =
     let
-      listInductionOutPair =
+      (contextAfterListInduction, listInductionOut) =
         sListIndContext {sp} {lp} accumAtom expElim nilElim consElim
           (accumAtom a context) l
-      (contextAfterListInduction, listInductionOut) = listInductionOutPair
     in
     expElim context a l listInductionOut contextAfterListInduction
 
@@ -197,8 +196,8 @@ mutual
     (accumAtom : atom -> contextType -> contextType) ->
     (expElim :
       (contextUponEntry : contextType) ->
-      (a : atom) ->
-      (l : SList atom) -> lp (accumAtom a contextUponEntry) l ->
+      (a : atom) -> (l : SList atom) ->
+      lp (accumAtom a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -218,18 +217,15 @@ mutual
   sListIndContext {sp} {lp} accumAtom expElim nilElim consElim
     context (x $+ l) =
       let
-        expInductionOutPair =
+        (contextAfterExpInduction, expInductionOut) =
           sExpIndContext {sp} {lp} accumAtom expElim nilElim consElim context x
-        (contextAfterExpInduction, expInductionOut) = expInductionOutPair
-        listInductionOutPair =
+        (contextAfterListInduction, listInductionOut) =
           sListIndContext {sp} {lp} accumAtom expElim nilElim consElim
             contextAfterExpInduction l
-        (contextAfterListInduction, listInductionOut) = listInductionOutPair
       in
       consElim
         context
-        x
-        l
+        x l
         expInductionOut
         contextAfterExpInduction
         listInductionOut
@@ -244,8 +240,8 @@ sIndContext :
   (accumAtom : atom -> contextType -> contextType) ->
   (expElim :
     (contextUponEntry : contextType) ->
-    (a : atom) ->
-    (l : SList atom) -> lp (accumAtom a contextUponEntry) l ->
+    (a : atom) -> (l : SList atom) ->
+    lp (accumAtom a contextUponEntry) l ->
     (contextAfterInduction : contextType) ->
     (contextType, sp contextUponEntry (a $: l))) ->
   (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
