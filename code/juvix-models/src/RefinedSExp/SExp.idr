@@ -161,11 +161,11 @@ mutual
     {atom : Type} ->
     {sp : contextType -> SPredicate atom} ->
     {lp : contextType -> SLPredicate atom} ->
-    (accumAtom : atom -> contextType -> contextType) ->
+    (introAtom : atom -> contextType -> contextType) ->
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
-      lp (accumAtom a contextUponEntry) l ->
+      lp (introAtom a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -179,11 +179,11 @@ mutual
       (contextType, lp contextUponEntry (x $+ l))) ->
     (context : contextType) ->
     (x : SExp atom) -> (contextType, sp context x)
-  sExpIndContext {sp} {lp} accumAtom expElim nilElim consElim context (a $: l) =
+  sExpIndContext {sp} {lp} introAtom expElim nilElim consElim context (a $: l) =
     let
       (contextAfterListInduction, listInductionOut) =
-        sListIndContext {sp} {lp} accumAtom expElim nilElim consElim
-          (accumAtom a context) l
+        sListIndContext {sp} {lp} introAtom expElim nilElim consElim
+          (introAtom a context) l
     in
     expElim context a l listInductionOut contextAfterListInduction
 
@@ -193,11 +193,11 @@ mutual
     {atom : Type} ->
     {sp : contextType -> SPredicate atom} ->
     {lp : contextType -> SLPredicate atom} ->
-    (accumAtom : atom -> contextType -> contextType) ->
+    (introAtom : atom -> contextType -> contextType) ->
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
-      lp (accumAtom a contextUponEntry) l ->
+      lp (introAtom a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -211,16 +211,16 @@ mutual
       (contextType, lp contextUponEntry (x $+ l))) ->
     (context : contextType) ->
     (l : SList atom) -> (contextType, lp context l)
-  sListIndContext accumAtom expElim nilElim consElim
+  sListIndContext introAtom expElim nilElim consElim
     context ($|) =
       nilElim context
-  sListIndContext {sp} {lp} accumAtom expElim nilElim consElim
+  sListIndContext {sp} {lp} introAtom expElim nilElim consElim
     context (x $+ l) =
       let
         (contextAfterExpInduction, expInductionOut) =
-          sExpIndContext {sp} {lp} accumAtom expElim nilElim consElim context x
+          sExpIndContext {sp} {lp} introAtom expElim nilElim consElim context x
         (contextAfterListInduction, listInductionOut) =
-          sListIndContext {sp} {lp} accumAtom expElim nilElim consElim
+          sListIndContext {sp} {lp} introAtom expElim nilElim consElim
             contextAfterExpInduction l
       in
       consElim
@@ -237,11 +237,11 @@ sIndContext :
   {atom : Type} ->
   {sp : contextType -> SPredicate atom} ->
   {lp : contextType -> SLPredicate atom} ->
-  (accumAtom : atom -> contextType -> contextType) ->
+  (introAtom : atom -> contextType -> contextType) ->
   (expElim :
     (contextUponEntry : contextType) ->
     (a : atom) -> (l : SList atom) ->
-    lp (accumAtom a contextUponEntry) l ->
+    lp (introAtom a contextUponEntry) l ->
     (contextAfterInduction : contextType) ->
     (contextType, sp contextUponEntry (a $: l))) ->
   (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
@@ -256,9 +256,9 @@ sIndContext :
   (context : contextType) ->
   ((x : SExp atom) -> (contextType, sp context x),
    (l : SList atom) -> (contextType, lp context l))
-sIndContext {sp} {lp} accumAtom expElim nilElim consElim context =
-  (sExpIndContext {sp} {lp} accumAtom expElim nilElim consElim context,
-   sListIndContext {sp} {lp} accumAtom expElim nilElim consElim context)
+sIndContext {sp} {lp} introAtom expElim nilElim consElim context =
+  (sExpIndContext {sp} {lp} introAtom expElim nilElim consElim context,
+   sListIndContext {sp} {lp} introAtom expElim nilElim consElim context)
 
 mutual
   public export
