@@ -23,6 +23,65 @@ mutual
     (No neq, _) => No (\eq => case eq of Refl => neq Refl)
     (_ , No neq) => No (\eq => case eq of Refl => neq Refl)
 
+DepEither : {a : Type} -> (b, c : a -> Type) -> a -> Type
+DepEither {a} b c = \x : a => Either (b x) (c x)
+
+DepLeft : {a : Type} -> {b, c : a -> Type} -> {x : a} -> b x -> DepEither b c x
+DepLeft bx = Left bx
+
+DepRight : {a : Type} -> {b, c : a -> Type} -> {x : a} -> c x -> DepEither b c x
+DepRight cx = Right cx
+
+DPairEither : {a : Type} -> (b, c : a -> Type) -> Type
+DPairEither {a} b c = Either (DPair a b) (DPair a c)
+
+public export
+sEitherInd : {atom : Type} ->
+  {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
+  (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
+    Either (sp (a $: l)) (sp' (a $: l))) ->
+  (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
+    Either (sp (a $: l)) (sp' (a $: l))) ->
+  (nilElim : Either (lp ($|)) (lp' ($|))) ->
+  (consElimLL :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+      Either (lp (x $+ l)) (lp' (x $+ l))) ->
+  (consElimLR :
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
+      Either (lp (x $+ l)) (lp' (x $+ l))) ->
+  (consElimRL :
+    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
+      Either (lp (x $+ l)) (lp' (x $+ l))) ->
+  (consElimRR :
+    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
+      Either (lp (x $+ l)) (lp' (x $+ l))) ->
+  ((x : SExp atom) -> DepEither sp sp' x,
+   (l : SList atom) -> DepEither lp lp' l)
+sEitherInd
+  expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR =
+    sInd
+      {sp=(DepEither sp sp')}
+      {lp=(DepEither lp lp')}
+      (\a, l, lpl => case lpl of
+        Left lplL => expElimL a l lplL
+        Right lplR => expElimR a l lplR)
+      nilElim
+      (\x, l, spx, lpl => case (spx, lpl) of
+        (Left spxL, Left lplL) => consElimLL x l spxL lplL
+        (Left spxL, Right lplR) => consElimLR x l spxL lplR
+        (Right spxR, Left lplL) => consElimRL x l spxR lplL
+        (Right spxR, Right lplR) => consElimRR x l spxR lplR)
+
+infixr 4 **<
+(**<) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> b x ->
+  DPairEither b c
+x **< bx = Left (x ** bx)
+
+infixr 4 **>
+(**>) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> c x ->
+  DPairEither b c
+x **> cx = Right (x ** cx)
+
 public export
 SDecisionP : {atom : Type} -> (predicate : SPredicate atom) -> Type
 SDecisionP predicate = (x : SExp atom) -> Dec (predicate x)
@@ -572,18 +631,6 @@ typecheckFunction :
   ((x : FExp atom atom') -> CheckFunctionResult predicate x,
    (l : FList atom atom') -> ListCheckFunctionResult predicate l)
 typecheckFunction predicate = typecheck (FunctionTypecheckInductive predicate)
-
-{-
-public export
-typecheckFunction :
-  {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
-  (predicate : TypecheckFunctionPredicate domain codomain) ->
-  ((x : FExp atom atom') -> CheckFunctionResult predicate x,
-   (l : FList atom atom') -> ListCheckFunctionResult predicate l)
-typecheckFunction predicate = typecheck (FunctionTypecheckInductive predicate)
--}
 
 public export
 FTypechecks :
