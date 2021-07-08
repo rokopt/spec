@@ -168,10 +168,9 @@ sLeftIndForAll : {atom : Type} ->
   {sp, sp' : SPredicate atom} ->
   (expElimL : (a : atom) -> (l : SList atom) -> SLForAll sp l ->
     DepEither sp sp' (a $: l)) ->
-  (newFailure : (x : SExp atom) -> ()) ->
   ((x : SExp atom) -> Either (sp x) (List (DPair (SExp atom) sp')),
    (l : SList atom) -> Either (SLForAll sp l) (List (DPair (SExp atom) sp')))
-sLeftIndForAll {sp} {sp'} expElimL newFailure =
+sLeftIndForAll {sp} {sp'} expElimL =
   sLeftInd
     {sp} {sp'=(\_ => List (DPair (SExp atom) sp'))}
     {lp=(SLForAll sp)} {lp'=(\_ => List (DPair (SExp atom) sp'))}
