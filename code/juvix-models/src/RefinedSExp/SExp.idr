@@ -165,7 +165,6 @@ mutual
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) ->
-      (contextBeforeInduction : contextType) ->
       (l : SList atom) -> lp (accumAtom a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
@@ -187,8 +186,7 @@ mutual
           (accumAtom a context) l
       (contextAfterListInduction, listInductionOut) = listInductionOutPair
     in
-    expElim context a (accumAtom a context) l
-      listInductionOut contextAfterListInduction
+    expElim context a l listInductionOut contextAfterListInduction
 
   public export
   sListIndContext :
@@ -200,7 +198,6 @@ mutual
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) ->
-      (contextBeforeInduction : contextType) ->
       (l : SList atom) -> lp (accumAtom a contextUponEntry) l ->
       (contextAfterInduction : contextType) ->
       (contextType, sp contextUponEntry (a $: l))) ->
@@ -248,7 +245,6 @@ sIndContext :
   (expElim :
     (contextUponEntry : contextType) ->
     (a : atom) ->
-    (contextBeforeInduction : contextType) ->
     (l : SList atom) -> lp (accumAtom a contextUponEntry) l ->
     (contextAfterInduction : contextType) ->
     (contextType, sp contextUponEntry (a $: l))) ->
