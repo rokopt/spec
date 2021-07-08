@@ -198,14 +198,35 @@ mutual
   sListIndContext accumAtom accumExp expElim nilElim consElim context (x $+ l) =
     let
       contextBeforeExpInduction = accumExp x context
-      (contextAfterExpInduction, expInductionOut) =
+      expInductionOutPair =
         sExpIndContext accumAtom accumExp expElim nilElim consElim
           contextBeforeExpInduction x
-      (contextAfterListInduction, listInductionOut) =
+      (contextAfterExpInduction, expInductionOut) = expInductionOutPair
+      listInductionOutPair =
         sListIndContext accumAtom accumExp expElim nilElim consElim
           contextAfterExpInduction l
+      (contextAfterListInduction, listInductionOut) = listInductionOutPair
     in
     consElim contextAfterListInduction x l expInductionOut listInductionOut
+
+public export
+sIndContext :
+  {contextType : Type} ->
+  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+  (accumAtom : atom -> contextType -> contextType) ->
+  (accumExp : SExp atom -> contextType -> contextType) ->
+  (expElim : (context : contextType) -> (a : atom) -> (l : SList atom) ->
+    lp l -> (contextType, sp (a $: l))) ->
+  (nilElim : contextType -> (contextType, lp ($|))) ->
+  (consElim : (context : contextType) ->
+    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+    (contextType, lp (x $+ l))) ->
+  (context : contextType) ->
+  ((x : SExp atom) -> (contextType, sp x),
+   (l : SList atom) -> (contextType, lp l))
+sIndContext accumAtom accumExp expElim nilElim consElim context =
+  (sExpIndContext accumAtom accumExp expElim nilElim consElim context,
+   sListIndContext accumAtom accumExp expElim nilElim consElim context)
 
 mutual
   public export
