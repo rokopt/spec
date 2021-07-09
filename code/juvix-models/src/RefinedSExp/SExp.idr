@@ -439,21 +439,17 @@ sDepIndContext :
      ldp context l
        (snd (sListIndContext {sp} {lp} expElim nilElim consElim l context))))
 sDepIndContext
-  {sp} {lp} {sdp} {ldp} {expElim} {nilElim} {consElim}
-    depExpElim depNilElim depConsElim =
-      sDepInd {atom}
-        {sp=(\x => (context : contextType) -> (contextType, sp context x))}
-        {lp=(\l => (context : contextType) -> (contextType, lp context l))}
-        {sdp=(\x, spInd => (context : contextType) ->
-          (contextType, sdp context x (snd (spInd context))))}
-        {ldp=(\l, lpInd => (context : contextType) ->
-          (contextType, ldp context l (snd (lpInd context))))}
-        {expElim}
-        {nilElim}
-        {consElim}
-        depExpElim
-        depNilElim
-        depConsElim
+  {sp} {lp} {sdp} {ldp} {expElim} {nilElim} {consElim} =
+    sDepInd {atom}
+      {sp=(\x => (context : contextType) -> (contextType, sp context x))}
+      {lp=(\l => (context : contextType) -> (contextType, lp context l))}
+      {sdp=(\x, spInd => (context : contextType) ->
+        (contextType, sdp context x (snd (spInd context))))}
+      {ldp=(\l, lpInd => (context : contextType) ->
+        (contextType, ldp context l (snd (lpInd context))))}
+      {expElim}
+      {nilElim}
+      {consElim}
 
 public export
 data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->
