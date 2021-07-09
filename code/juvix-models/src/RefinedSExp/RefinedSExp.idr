@@ -36,41 +36,48 @@ DPairEither : {a : Type} -> (b, c : a -> Type) -> Type
 DPairEither {a} b c = Either (DPair a b) (DPair a c)
 
 public export
+record SEitherIndSig {atom : Type}
+  (sp, sp' : SPredicate atom)
+  (lp, lp' : SLPredicate atom) where
+    constructor SEitherIndArgs
+    expElimL : (a : atom) -> (l : SList atom) -> lp l ->
+      Either (sp (a $: l)) (sp' (a $: l))
+    expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
+      Either (sp (a $: l)) (sp' (a $: l))
+    nilElim : Either (lp ($|)) (lp' ($|))
+    consElimLL :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))
+    consElimLR :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))
+    consElimRL :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))
+    consElimRR :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))
+
+public export
 sEitherInd : {atom : Type} ->
   {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
-  (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
-    Either (sp (a $: l)) (sp' (a $: l))) ->
-  (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
-    Either (sp (a $: l)) (sp' (a $: l))) ->
-  (nilElim : Either (lp ($|)) (lp' ($|))) ->
-  (consElimLL :
-    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
-      Either (lp (x $+ l)) (lp' (x $+ l))) ->
-  (consElimLR :
-    (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
-      Either (lp (x $+ l)) (lp' (x $+ l))) ->
-  (consElimRL :
-    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
-      Either (lp (x $+ l)) (lp' (x $+ l))) ->
-  (consElimRR :
-    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
-      Either (lp (x $+ l)) (lp' (x $+ l))) ->
+  SEitherIndSig sp sp' lp lp' ->
   ((x : SExp atom) -> DepEither sp sp' x,
    (l : SList atom) -> DepEither lp lp' l)
-sEitherInd
-  expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR =
-    sInd
-      {sp=(DepEither sp sp')}
-      {lp=(DepEither lp lp')}
+sEitherInd signature =
+  sInd
+    {sp=(DepEither sp sp')}
+    {lp=(DepEither lp lp')}
+    (SIndArgs
       (\a, l, lpl => case lpl of
-        Left lplL => expElimL a l lplL
-        Right lplR => expElimR a l lplR)
-      nilElim
+        Left lplL => expElimL signature a l lplL
+        Right lplR => expElimR signature a l lplR)
+      (nilElim signature)
       (\x, l, spx, lpl => case (spx, lpl) of
-        (Left spxL, Left lplL) => consElimLL x l spxL lplL
-        (Left spxL, Right lplR) => consElimLR x l spxL lplR
-        (Right spxR, Left lplL) => consElimRL x l spxR lplL
-        (Right spxR, Right lplR) => consElimRR x l spxR lplR)
+        (Left spxL, Left lplL) => consElimLL signature x l spxL lplL
+        (Left spxL, Right lplR) => consElimLR signature x l spxL lplR
+        (Right spxR, Left lplL) => consElimRL signature x l spxR lplL
+        (Right spxR, Right lplR) => consElimRR signature x l spxR lplR))
 
 mutual
   public export
@@ -574,7 +581,7 @@ typecheck : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
   ((x : SExp atom) -> CheckResult check x,
    (l : SList atom) -> ListCheckResult check l)
 typecheck check =
-  sInd {lp=(ListCheckResult check)}
+  sInd {lp=(ListCheckResult check)} (SIndArgs
     (\a, l, lCheck => case lCheck of
       ListCheckSuccess lChecks =>
         case isSuccess
@@ -605,7 +612,7 @@ typecheck check =
               lFails subtermsCheck)
           mergedFailure)
     (ListCheckSuccess SLForAllEmpty)
-    (\_, _ => CheckResultCons)
+    (\_, _ => CheckResultCons))
 
 public export
 data FAtom : (domainAtom, codomainAtom : Type) -> Type where
