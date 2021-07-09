@@ -358,29 +358,23 @@ sDepInd :
   {consElim :
     (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)} ->
   (depExpElim : (a : atom) -> (l : SList atom) ->
-    (lpl : lp l) -> (lpl = sListInd expElim nilElim consElim l) ->
-    ldp l lpl ->
-    sdp (a $:l) (expElim a l lpl)) ->
-  (depNilElim : nilElim = sListInd expElim nilElim consElim ($|) ->
-    ldp ($|) nilElim) ->
+    ldp l (sListInd expElim nilElim consElim l) ->
+    sdp (a $:l) (expElim a l (sListInd expElim nilElim consElim l))) ->
+  (depNilElim : ldp ($|) nilElim) ->
   (depConsElim : (x : SExp atom) -> (l: SList atom) ->
-    (spx : sp x) -> (lpl : lp l) ->
-    (spx = sExpInd expElim nilElim consElim x) ->
-    (lpl = sListInd expElim nilElim consElim l) ->
-    sdp x spx ->
-    ldp l lpl ->
-    ldp (x $+ l) (consElim x l spx lpl)) ->
+    sdp x (sExpInd expElim nilElim consElim x) ->
+    ldp l (sListInd expElim nilElim consElim l) ->
+    ldp (x $+ l)
+      (consElim x l
+        (sExpInd expElim nilElim consElim x)
+        (sListInd expElim nilElim consElim l))) ->
   ((x : SExp atom) -> sdp x (sExpInd expElim nilElim consElim x),
    (l : SList atom) -> ldp l (sListInd expElim nilElim consElim l))
 sDepInd {expElim} {nilElim} {consElim} depExpElim depNilElim depConsElim =
   sInd
-    (\a, l => depExpElim a l (sListInd {sp} expElim nilElim consElim l) Refl)
-    (depNilElim Refl)
-    (\x, l =>
-      depConsElim x l
-        (sExpInd {sp} {lp} expElim nilElim consElim x)
-        (sListInd {sp} {lp} expElim nilElim consElim l)
-        Refl Refl)
+    depExpElim
+    depNilElim
+    depConsElim
 
 public export
 sDepIndContext :
@@ -401,6 +395,41 @@ sDepIndContext :
     (listInduction : (context : contextType) -> (contextType, lp context l)) ->
     (contextUponEntry : contextType) ->
     (contextType, lp contextUponEntry (x $+ l))} ->
+  (depExpElim : (a : atom) -> (l : SList atom) ->
+    (listDepInduction : (context : contextType) ->
+      (contextType,
+        ldp context l
+          (snd
+            (sListIndContext {sp} {lp} expElim nilElim consElim l context)))) ->
+    (contextUponEntry : contextType) ->
+    (contextType,
+      sdp contextUponEntry (a $:l)
+        (snd
+          (expElim a l
+            (sListIndContext {sp} {lp} expElim nilElim consElim l)
+            contextUponEntry)))) ->
+  (depNilElim :
+    (context : contextType) ->
+      (contextType, ldp context ($|) (snd (nilElim context)))) ->
+  (depConsElim : (x : SExp atom) -> (l: SList atom) ->
+    (expDepInduction : (context : contextType) ->
+      (contextType,
+       sdp context x
+        (snd
+          (sExpIndContext {sp} {lp} expElim nilElim consElim x context)))) ->
+    (listDepInduction : (context : contextType) ->
+      (contextType,
+        ldp context l
+          (snd
+            (sListIndContext {sp} {lp} expElim nilElim consElim l context)))) ->
+    (contextUponEntry : contextType) ->
+    (contextType,
+      ldp contextUponEntry (x $+ l)
+        (snd
+          (consElim x l
+            (sExpIndContext {sp} {lp} expElim nilElim consElim x)
+            (sListIndContext {sp} {lp} expElim nilElim consElim l)
+            contextUponEntry)))) ->
   ((x : SExp atom) -> (context : contextType) ->
     (contextType,
      sdp context x
@@ -410,10 +439,21 @@ sDepIndContext :
      ldp context l
        (snd (sListIndContext {sp} {lp} expElim nilElim consElim l context))))
 sDepIndContext
-  {sp} {lp} {sdp} {ldp} {expElim} {nilElim} {consElim} =
-    -- Implement in terms of sDepInd using context technique
-    -- from sIndContext
-    ?sDepIndContext_hole
+  {sp} {lp} {sdp} {ldp} {expElim} {nilElim} {consElim}
+    depExpElim depNilElim depConsElim =
+      sDepInd {atom}
+        {sp=(\x => (context : contextType) -> (contextType, sp context x))}
+        {lp=(\l => (context : contextType) -> (contextType, lp context l))}
+        {sdp=(\x, spInd => (context : contextType) ->
+          (contextType, sdp context x (snd (spInd context))))}
+        {ldp=(\l, lpInd => (context : contextType) ->
+          (contextType, ldp context l (snd (lpInd context))))}
+        {expElim}
+        {nilElim}
+        {consElim}
+        depExpElim
+        depNilElim
+        depConsElim
 
 public export
 data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->
@@ -469,9 +509,8 @@ sDepIndForAll :
     (a : atom) -> (l : SList atom) ->
     SLForAll sp l -> sp (a $: l)} ->
   (depForAllElim : (a : atom) -> (l : SList atom) ->
-    (lpl : SLForAll sp l) -> lpl = sListIndForAll forAllElim l ->
-    SLForAllDep sdp l lpl ->
-    sdp (a $: l) (forAllElim a l lpl)) ->
+    SLForAllDep sdp l (sListIndForAll forAllElim l) ->
+    sdp (a $: l) (forAllElim a l (sListIndForAll forAllElim l))) ->
   ((x : SExp atom) -> sdp x (sExpIndForAll forAllElim x),
    (l : SList atom) -> SLForAllDep sdp l (sListIndForAll forAllElim l))
 sDepIndForAll {forAllElim} depForAllElim =
@@ -482,8 +521,8 @@ sDepIndForAll {forAllElim} depForAllElim =
     {nilElim=SLForAllEmpty}
     {consElim=(\_, _ => SLForAllCons)}
     depForAllElim
-    (\_ => SLForAllDepEmpty)
-    (\_, _, _, _, _, _ => SLForAllDepCons)
+    SLForAllDepEmpty
+    (\_, _ => SLForAllDepCons)
 
 public export
 SDPair : {atom : Type} -> SPredicate atom -> Type
@@ -533,18 +572,17 @@ sdpairInd :
   {consElim :
     (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)} ->
   (depExpElim : (a : atom) -> (l : SList atom) ->
-    (lpl : lp l) -> (lpl = sListInd expElim nilElim consElim l) ->
-    ldp (l ** lpl) ->
-    sdp (a $: l ** expElim a l lpl)) ->
-  (depNilElim : nilElim = sListInd expElim nilElim consElim ($|) ->
-    ldp (($|) ** nilElim)) ->
+    ldp (l ** (sListInd expElim nilElim consElim l)) ->
+    sdp (a $: l ** expElim a l (sListInd expElim nilElim consElim l))) ->
+  (depNilElim : ldp (($|) ** nilElim)) ->
   (depConsElim : (x : SExp atom) -> (l: SList atom) ->
-    (spx : sp x) -> (lpl : lp l) ->
-    (spx = sExpInd expElim nilElim consElim x) ->
-    (lpl = sListInd expElim nilElim consElim l) ->
-    sdp (x ** spx) ->
-    ldp (l ** lpl) ->
-    ldp (x $+ l ** consElim x l spx lpl)) ->
+    sdp (x ** (sExpInd expElim nilElim consElim x)) ->
+    ldp (l ** (sListInd expElim nilElim consElim l)) ->
+    ldp
+      (x $+ l **
+       consElim x l
+        (sExpInd expElim nilElim consElim x)
+        (sListInd expElim nilElim consElim l))) ->
   ((x : SExp atom) -> sdp (x ** sExpInd expElim nilElim consElim x),
    (l : SList atom) -> ldp (l ** sListInd expElim nilElim consElim l))
 sdpairInd {sdp} {ldp} =
