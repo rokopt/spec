@@ -154,6 +154,17 @@ SLForAllUnique (SLForAllCons head tail) (SLForAllCons head' tail') spUnique =
   case spUnique _ head head' of
     Refl => cong (SLForAllCons head) (SLForAllUnique tail tail' spUnique)
 
+public export
+data SForAllSub : {atom : Type} -> SPredicate atom -> SPredicate atom where
+  SExpAll : {atom : Type} -> {predicate : SPredicate atom} ->
+    {a : atom} -> {l : SList atom} ->
+    predicate (a $: l) -> SLForAll (SForAllSub predicate) l ->
+    SForAllSub predicate (a $: l)
+
+public export
+SLForAllSub : {atom : Type} -> SPredicate atom -> SLPredicate atom
+SLForAllSub predicate = SLForAll (SForAllSub predicate)
+
 mutual
   public export
   sExpInd :
@@ -217,6 +228,18 @@ sListIndForAll :
     SLForAll sp l -> sp (a $: l)) ->
   (l : SList atom) -> SLForAll sp l
 sListIndForAll forAllElim = snd (sIndForAll forAllElim)
+
+public export
+sIndGen :
+  {atom : Type} -> {sp : SPredicate atom} ->
+  (expElim : (a : atom) -> (l : SList atom) ->
+    SLForAllSub sp l -> sp (a $: l)) ->
+  ((x : SExp atom) -> SForAllSub sp x, (l : SList atom) -> SLForAllSub sp l)
+sIndGen expElim =
+  sInd {atom} {sp=(SForAllSub sp)} {lp=(SLForAllSub sp)}
+    (\a, l, spl => SExpAll (expElim a l spl) spl)
+    SLForAllEmpty
+    (\_, _ => SLForAllCons)
 
 public export
 sTransform :
