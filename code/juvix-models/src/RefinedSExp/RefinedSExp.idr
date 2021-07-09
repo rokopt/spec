@@ -79,109 +79,77 @@ sEitherInd signature =
         (Right spxR, Left lplL) => consElimRL signature x l spxR lplL
         (Right spxR, Right lplR) => consElimRR signature x l spxR lplR))
 
+public export
+record SLeftIndSig {atom : Type}
+  (sp, sp' : SPredicate atom)
+  (lp, lp' : SLPredicate atom) where
+    constructor SLeftIndArgs
+    expElimL : (a : atom) -> (l : SList atom) -> lp l ->
+      Either (sp (a $: l)) (sp' (a $: l))
+    expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
+      sp' (a $: l)
+    nilElim : lp ($|)
+    consElimLL :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
+        Either (lp (x $+ l)) (lp' (x $+ l))
+    consElimLR :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l -> (lp' (x $+ l))
+    consElimRL :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l -> (lp' (x $+ l))
+    consElimRR :
+      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l -> (lp' (x $+ l))
+
 mutual
   public export
   sLeftExpInd : {atom : Type} ->
     {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
-    (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
-      Either (sp (a $: l)) (sp' (a $: l))) ->
-    (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
-      sp' (a $: l)) ->
-    (nilElim : lp ($|)) ->
-    (consElimLL :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
-        Either (lp (x $+ l)) (lp' (x $+ l))) ->
-    (consElimLR :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
-        lp' (x $+ l)) ->
-    (consElimRL :
-      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
-        lp' (x $+ l)) ->
-    (consElimRR :
-      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
-        (lp' (x $+ l))) ->
+    SLeftIndSig sp sp' lp lp' ->
     (x : SExp atom) -> DepEither sp sp' x
-  sLeftExpInd
-    expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR
-      (a $: l) =
-        case sLeftListInd expElimL expElimR nilElim consElimLL
-                          consElimLR consElimRL consElimRR l of
-          Left lplL => expElimL a l lplL
-          Right lplR => Right (expElimR a l lplR)
+  sLeftExpInd signature (a $: l) =
+    case sLeftListInd signature l of
+      Left lplL => expElimL signature a l lplL
+      Right lplR => Right (expElimR signature a l lplR)
 
   public export
   sLeftListInd : {atom : Type} ->
     {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
-    (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
-      Either (sp (a $: l)) (sp' (a $: l))) ->
-    (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
-      sp' (a $: l)) ->
-    (nilElim : lp ($|)) ->
-    (consElimLL :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
-        Either (lp (x $+ l)) (lp' (x $+ l))) ->
-    (consElimLR :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l ->
-        lp' (x $+ l)) ->
-    (consElimRL :
-      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l ->
-        lp' (x $+ l)) ->
-    (consElimRR :
-      (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l ->
-        lp' (x $+ l)) ->
+    SLeftIndSig sp sp' lp lp' ->
     (l : SList atom) -> DepEither lp lp' l
-  sLeftListInd expElimL expElimR nilElim
-    consElimLL consElimLR consElimRL consElimRR ($|) =
-      Left nilElim
-  sLeftListInd expElimL expElimR nilElim
-    consElimLL consElimLR consElimRL consElimRR (x $+ l) =
-      case (sLeftExpInd
-        expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR x,
-       sLeftListInd
-        expElimL expElimR nilElim
-        consElimLL consElimLR consElimRL consElimRR l) of
-          (Left spxL, Left lplL) => consElimLL x l spxL lplL
-          (Left spxL, Right lplR) => Right (consElimLR x l spxL lplR)
-          (Right spxR, Left lplL) => Right (consElimRL x l spxR lplL)
-          (Right spxR, Right lplR) => Right (consElimRR x l spxR lplR)
+  sLeftListInd signature ($|) = Left (nilElim signature)
+  sLeftListInd signature (x $+ l) =
+    case (sLeftExpInd signature x,
+          sLeftListInd signature l) of
+       (Left spxL, Left lplL) => consElimLL signature x l spxL lplL
+       (Left spxL, Right lplR) => Right (consElimLR signature x l spxL lplR)
+       (Right spxR, Left lplL) => Right (consElimRL signature x l spxR lplL)
+       (Right spxR, Right lplR) => Right (consElimRR signature x l spxR lplR)
 
 public export
 sLeftInd : {atom : Type} ->
   {sp, sp' : SPredicate atom} -> {lp, lp' : SLPredicate atom} ->
-  (expElimL : (a : atom) -> (l : SList atom) -> lp l ->
-    Either (sp (a $: l)) (sp' (a $: l))) ->
-  (expElimR : (a : atom) -> (l : SList atom) -> lp' l ->
-    sp' (a $: l)) ->
-  (nilElim : lp ($|)) ->
-  (consElimLL :
-    (x : SExp atom) -> (l : SList atom) -> sp x -> lp l ->
-      Either (lp (x $+ l)) (lp' (x $+ l))) ->
-  (consElimLR :
-    (x : SExp atom) -> (l : SList atom) -> sp x -> lp' l -> (lp' (x $+ l))) ->
-  (consElimRL :
-    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp l -> (lp' (x $+ l))) ->
-  (consElimRR :
-    (x : SExp atom) -> (l : SList atom) -> sp' x -> lp' l -> (lp' (x $+ l))) ->
+  SLeftIndSig sp sp' lp lp' ->
   ((x : SExp atom) -> DepEither sp sp' x,
    (l : SList atom) -> DepEither lp lp' l)
-sLeftInd expElimL expElimR nilElim consElimLL consElimLR consElimRL consElimRR =
-  (sLeftExpInd expElimL expElimR nilElim
-               consElimLL consElimLR consElimRL consElimRR,
-   sLeftListInd expElimL expElimR nilElim
-               consElimLL consElimLR consElimRL consElimRR)
+sLeftInd signature = (sLeftExpInd signature, sLeftListInd signature)
+
+public export
+record SLeftIndForAllSig {atom : Type} (sp, sp' : SPredicate atom) where
+  constructor SLeftIndForAllArgs
+  expElimL : (a : atom) -> (l : SList atom) -> SLForAll sp l ->
+    DepEither sp sp' (a $: l)
 
 public export
 sLeftIndForAll : {atom : Type} ->
   {sp, sp' : SPredicate atom} ->
-  (expElimL : (a : atom) -> (l : SList atom) -> SLForAll sp l ->
-    DepEither sp sp' (a $: l)) ->
+  SLeftIndForAllSig sp sp' ->
   ((x : SExp atom) -> Either (sp x) (List (DPair (SExp atom) sp')),
    (l : SList atom) -> Either (SLForAll sp l) (List (DPair (SExp atom) sp')))
-sLeftIndForAll {sp} {sp'} expElimL =
+sLeftIndForAll {sp} {sp'} signature =
   sLeftInd
     {sp} {sp'=(\_ => List (DPair (SExp atom) sp'))}
     {lp=(SLForAll sp)} {lp'=(\_ => List (DPair (SExp atom) sp'))}
-      (\a, l, lpl => case expElimL a l lpl of
+    (SLeftIndArgs
+      (\a, l, lpl => case expElimL signature a l lpl of
         Left spal => Left spal
         Right failure => Right [ (a $: l ** failure) ])
       (\_, _, failures => failures)
@@ -189,7 +157,7 @@ sLeftIndForAll {sp} {sp'} expElimL =
       (\_, _, spx, lpl => Left (SLForAllCons spx lpl))
       (\_, _, _, failures => failures)
       (\_, _, failures, _ => failures)
-      (\_, _, failuresL, failuresR => failuresL ++ failuresR)
+      (\_, _, failuresL, failuresR => failuresL ++ failuresR))
 
 infixr 4 **<
 (**<) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> b x ->
