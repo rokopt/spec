@@ -283,8 +283,7 @@ record
 SIndContextSig {contextType : Type} {atom : Type}
   (sp : SContextPred contextType atom)
   (lp : SLContextPred contextType atom) where
-    constructor
-    SIndContextArgs
+    constructor SIndContextArgs
     expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
@@ -377,6 +376,38 @@ sListIndContext :
   (context : contextType) -> (l : SList atom) -> (contextType, lp context l)
 sListIndContext {sp} {lp} signature =
   snd (sIndContext {sp} {lp} signature)
+
+public export
+record
+SIndForAllContextSig {contextType : Type} {atom : Type}
+  (sp : contextType -> SPredicate atom) where
+    constructor SIndForAllContextArgs
+    expElim :
+      (contextUponEntry : contextType) ->
+      (a : atom) -> (l : SList atom) ->
+      (listInduction :
+        (context : contextType) -> (contextType, SLForAll (sp context) l)) ->
+      (contextType, sp contextUponEntry (a $: l))
+
+public export
+sIndContextForAll :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  SIndForAllContextSig sp ->
+  ((context : contextType) -> (x : SExp atom) -> (contextType, sp context x),
+   (context : contextType) -> (l : SList atom) ->
+    (contextType, SLForAll (sp context) l))
+sIndContextForAll {sp} signature =
+  sIndContext {sp} {lp=(SLForAll . sp)}
+    (SIndContextArgs
+      (expElim signature)
+      (\context => (context, SLForAllEmpty))
+      (\contextUponEntry, x, l, expInd, listInd =>
+        (contextUponEntry,
+         SLForAllCons
+          (snd (expInd contextUponEntry))
+          (snd (listInd contextUponEntry)))))
 
 public export
 SDepPred : {atom : Type} -> SPredicate atom -> Type
