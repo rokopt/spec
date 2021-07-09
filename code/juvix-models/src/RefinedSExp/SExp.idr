@@ -302,7 +302,7 @@ SIndContextSig {contextType : Type} {atom : Type}
       (contextType, lp contextUponEntry (x $+ l))
 
 public export
-sIndContext :
+sIndContextFlip :
   {contextType : Type} ->
   {atom : Type} ->
   {sp : contextType -> SPredicate atom} ->
@@ -310,7 +310,7 @@ sIndContext :
   SIndContextSig sp lp ->
   ((x : SExp atom) -> (context : contextType) -> (contextType, sp context x),
    (l : SList atom) -> (context : contextType) -> (contextType, lp context l))
-sIndContext {sp} {lp} signature =
+sIndContextFlip {sp} {lp} signature =
   sInd {atom}
     {sp=(\x => (context : contextType) -> (contextType, sp context x))}
     {lp=(\l => (context : contextType) -> (contextType, lp context l))}
@@ -322,15 +322,50 @@ sIndContext {sp} {lp} signature =
         consElim signature contextUponEntry x l expInd listInd))
 
 public export
-sExpIndContext :
+sIndContext :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  {lp : contextType -> SLPredicate atom} ->
+  SIndContextSig sp lp ->
+  ((context : contextType) -> (x : SExp atom) -> (contextType, sp context x),
+   (context : contextType) -> (l : SList atom) -> (contextType, lp context l))
+sIndContext {sp} {lp} signature =
+  let flipped = sIndContextFlip signature in
+  (\context, x => fst flipped x context, \context, l => snd flipped l context)
+
+public export
+sExpIndContextFlip :
   {contextType : Type} ->
   {atom : Type} ->
   {sp : contextType -> SPredicate atom} ->
   {lp : contextType -> SLPredicate atom} ->
   SIndContextSig sp lp ->
   (x : SExp atom) -> (context : contextType) -> (contextType, sp context x)
-sExpIndContext {sp} {lp} signature  =
+sExpIndContextFlip {sp} {lp} signature =
+  fst (sIndContextFlip {sp} {lp} signature)
+
+public export
+sExpIndContext :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  {lp : contextType -> SLPredicate atom} ->
+  SIndContextSig sp lp ->
+  (context : contextType) -> (x : SExp atom) -> (contextType, sp context x)
+sExpIndContext {sp} {lp} signature =
   fst (sIndContext {sp} {lp} signature)
+
+public export
+sListIndContextFlip :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  {lp : contextType -> SLPredicate atom} ->
+  SIndContextSig sp lp ->
+  (l : SList atom) -> (context : contextType) -> (contextType, lp context l)
+sListIndContextFlip {sp} {lp} signature =
+  snd (sIndContextFlip {sp} {lp} signature)
 
 public export
 sListIndContext :
@@ -339,7 +374,7 @@ sListIndContext :
   {sp : contextType -> SPredicate atom} ->
   {lp : contextType -> SLPredicate atom} ->
   SIndContextSig sp lp ->
-  (l : SList atom) -> (context : contextType) -> (contextType, lp context l)
+  (context : contextType) -> (l : SList atom) -> (contextType, lp context l)
 sListIndContext {sp} {lp} signature =
   snd (sIndContext {sp} {lp} signature)
 
@@ -419,12 +454,12 @@ record SDepIndContextSig {contextType : Type} {atom : Type}
       (listDepInduction : (context : contextType) ->
         (contextType,
           ldp context l
-            (snd (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
+            (snd (sListIndContextFlip {sp} {lp} sIndContextSig l context)))) ->
       (contextType,
         sdp contextUponEntry (a $:l)
           (snd
             (expElim sIndContextSig contextUponEntry a l
-              (sListIndContext {sp} {lp} sIndContextSig l))))
+              (sListIndContextFlip {sp} {lp} sIndContextSig l))))
     depNilElim :
       (context : contextType) ->
         (contextType, ldp context ($|) (snd (nilElim sIndContextSig context)))
@@ -435,20 +470,20 @@ record SDepIndContextSig {contextType : Type} {atom : Type}
         (contextType,
           sdp context x
           (snd
-            (sExpIndContext {sp} {lp} sIndContextSig x context)))) ->
+            (sExpIndContextFlip {sp} {lp} sIndContextSig x context)))) ->
       (listDepInduction : (context : contextType) ->
         (contextType,
           ldp context l
-            (snd (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
+            (snd (sListIndContextFlip {sp} {lp} sIndContextSig l context)))) ->
       (contextType,
         ldp contextUponEntry (x $+ l)
           (snd
             (consElim sIndContextSig contextUponEntry x l
-              (sExpIndContext {sp} {lp} sIndContextSig x)
-              (sListIndContext {sp} {lp} sIndContextSig l))))
+              (sExpIndContextFlip {sp} {lp} sIndContextSig x)
+              (sListIndContextFlip {sp} {lp} sIndContextSig l))))
 
 public export
-sDepIndContext :
+sDepIndContextFlip :
   {contextType : Type} ->
   {atom : Type} ->
   {sp : contextType -> SPredicate atom} ->
@@ -460,12 +495,12 @@ sDepIndContext :
   ((x : SExp atom) -> (context : contextType) ->
     (contextType,
      sdp context x
-       (snd (sExpIndContext {sp} {lp} sIndContextSig x context))),
+       (snd (sExpIndContextFlip {sp} {lp} sIndContextSig x context))),
    (l : SList atom) -> (context : contextType) ->
     (contextType,
      ldp context l
-       (snd (sListIndContext {sp} {lp} sIndContextSig l context))))
-sDepIndContext
+       (snd (sListIndContextFlip {sp} {lp} sIndContextSig l context))))
+sDepIndContextFlip
   {sp} {lp} {sdp} {ldp} {sIndContextSig} signature =
     sDepInd {atom}
       {sp=(\x => (context : contextType) -> (contextType, sp context x))}
@@ -480,6 +515,28 @@ sDepIndContext
         (depNilElim signature)
         (\x, l, expDepInd, listDepInd, contextUponEntry =>
           depConsElim signature contextUponEntry x l expDepInd listDepInd))
+
+public export
+sDepIndContext :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  {lp : contextType -> SLPredicate atom} ->
+  {sdp : (context : contextType) -> (x : SExp atom) -> sp context x -> Type} ->
+  {ldp : (context : contextType) -> (l : SList atom) -> lp context l -> Type} ->
+  {sIndContextSig : SIndContextSig sp lp} ->
+  SDepIndContextSig {sp} {lp} sdp ldp sIndContextSig ->
+  ((context : contextType) -> (x : SExp atom) ->
+    (contextType,
+     sdp context x
+       (snd (sExpIndContext {sp} {lp} sIndContextSig context x))),
+   (context : contextType) -> (l : SList atom) ->
+    (contextType,
+     ldp context l
+       (snd (sListIndContext {sp} {lp} sIndContextSig context l))))
+sDepIndContext signature =
+  let flipped = sDepIndContextFlip signature in
+  (\context, x => fst flipped x context, \context, l => snd flipped l context)
 
 public export
 data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->

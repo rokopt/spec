@@ -183,7 +183,7 @@ inductiveDecide : {contextType : Type} -> {atom : Type} ->
   (context : contextType) ->
   (x : SExp atom) ->
   (contextType, DecisionResult (predicate context) x)
-inductiveDecide signature inputContext inputExpr =
+inductiveDecide signature =
   sExpIndContext
     {sp=(DecisionResult . predicate)}
     {lp=(\_ => ListDecisionResult predicate)}
@@ -199,8 +199,6 @@ inductiveDecide signature inputContext inputExpr =
       (\context => (context, Just SLForAllEmpty))
       (\contextUponEntry, x, l, expInd, listInd =>
         ?inductiveDecide_hole_consElim))
-    inputExpr
-    inputContext
 
 public export
 InductiveType : {contextType : Type} -> {atom : Type} ->
