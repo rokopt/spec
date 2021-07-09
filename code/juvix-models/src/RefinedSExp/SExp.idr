@@ -285,19 +285,20 @@ SIndContextSig {contextType : Type} {atom : Type}
   (lp : SLContextPred contextType atom) where
     constructor
     SIndContextArgs
-    expElim : (a : atom) -> (l : SList atom) ->
+    expElim :
+      (contextUponEntry : contextType) ->
+      (a : atom) -> (l : SList atom) ->
       (listInduction :
         (context : contextType) -> (contextType, lp context l)) ->
-      (contextUponEntry : contextType) ->
       (contextType, sp contextUponEntry (a $: l))
     nilElim : (context : contextType) -> (contextType, lp context ($|))
     consElim :
+      (contextUponEntry : contextType) ->
       (x : SExp atom) -> (l : SList atom) ->
       (expInduction : (context : contextType) ->
         (contextType, sp context x)) ->
       (listInduction : (context : contextType) ->
         (contextType, lp context l)) ->
-      (contextUponEntry : contextType) ->
       (contextType, lp contextUponEntry (x $+ l))
 
 public export
@@ -313,7 +314,12 @@ sIndContext {sp} {lp} signature =
   sInd {atom}
     {sp=(\x => (context : contextType) -> (contextType, sp context x))}
     {lp=(\l => (context : contextType) -> (contextType, lp context l))}
-    (SIndArgs (expElim signature) (nilElim signature) (consElim signature))
+    (SIndArgs
+      (\a, l, listInd, contextUponEntry =>
+        expElim signature contextUponEntry a l listInd)
+      (nilElim signature)
+      (\x, l, expInd, listInd, contextUponEntry =>
+        consElim signature contextUponEntry x l expInd listInd))
 
 public export
 sExpIndContext :
@@ -407,22 +413,24 @@ record SDepIndContextSig {contextType : Type} {atom : Type}
   (ldp : SLDepContextPred lp)
   (sIndContextSig : SIndContextSig sp lp) where
     constructor SDepIndContextArgs
-    depExpElim : (a : atom) -> (l : SList atom) ->
+    depExpElim :
+      (contextUponEntry : contextType) ->
+      (a : atom) -> (l : SList atom) ->
       (listDepInduction : (context : contextType) ->
         (contextType,
           ldp context l
             (snd (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
-      (contextUponEntry : contextType) ->
       (contextType,
         sdp contextUponEntry (a $:l)
           (snd
-            (expElim sIndContextSig a l
-              (sListIndContext {sp} {lp} sIndContextSig l)
-              contextUponEntry)))
+            (expElim sIndContextSig contextUponEntry a l
+              (sListIndContext {sp} {lp} sIndContextSig l))))
     depNilElim :
       (context : contextType) ->
         (contextType, ldp context ($|) (snd (nilElim sIndContextSig context)))
-    depConsElim : (x : SExp atom) -> (l: SList atom) ->
+    depConsElim :
+      (contextUponEntry : contextType) ->
+      (x : SExp atom) -> (l: SList atom) ->
       (expDepInduction : (context : contextType) ->
         (contextType,
           sdp context x
@@ -432,14 +440,12 @@ record SDepIndContextSig {contextType : Type} {atom : Type}
         (contextType,
           ldp context l
             (snd (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
-      (contextUponEntry : contextType) ->
       (contextType,
         ldp contextUponEntry (x $+ l)
           (snd
-            (consElim sIndContextSig x l
+            (consElim sIndContextSig contextUponEntry x l
               (sExpIndContext {sp} {lp} sIndContextSig x)
-              (sListIndContext {sp} {lp} sIndContextSig l)
-              contextUponEntry)))
+              (sListIndContext {sp} {lp} sIndContextSig l))))
 
 public export
 sDepIndContext :
@@ -469,9 +475,11 @@ sDepIndContext
       {ldp=(\l, lpInd => (context : contextType) ->
         (contextType, ldp context l (snd (lpInd context))))}
       (SDepIndArgs
-        (depExpElim signature)
+        (\a, l, listDepInd, contextUponEntry =>
+          depExpElim signature contextUponEntry a l listDepInd)
         (depNilElim signature)
-        (depConsElim signature))
+        (\x, l, expDepInd, listDepInd, contextUponEntry =>
+          depConsElim signature contextUponEntry x l expDepInd listDepInd))
 
 public export
 data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->

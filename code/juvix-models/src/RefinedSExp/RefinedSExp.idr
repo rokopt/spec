@@ -158,6 +158,100 @@ NotFailureExtract {result=(DecisionFailure failure)} notFailure =
   void (notFailure (Failed failure))
 
 public export
+DecidableContextPred : (contextType, atom : Type) -> Type
+DecidableContextPred contextType atom = contextType -> DecidablePredicate atom
+
+public export
+ListDecisionResult : {contextType : Type} -> {atom : Type} ->
+  (predicate : DecidableContextPred contextType atom) ->
+  SLPredicate atom
+ListDecisionResult {contextType} predicate =
+  Maybe .
+    SLForAll
+      (\x => (context : contextType ** SuccessPredicate (predicate context) x))
+
+public export
+record InductiveDecisionSig {contextType : Type} {atom : Type}
+  (predicate : DecidableContextPred contextType atom) where
+    constructor InductiveDecisionArgs
+    pushAtom : atom -> contextType -> contextType
+
+public export
+inductiveDecide : {contextType : Type} -> {atom : Type} ->
+  {predicate : DecidableContextPred contextType atom} ->
+  InductiveDecisionSig predicate ->
+  (context : contextType) ->
+  (x : SExp atom) ->
+  (contextType, DecisionResult (predicate context) x)
+inductiveDecide signature inputContext inputExpr =
+  sExpIndContext
+    {sp=(DecisionResult . predicate)}
+    {lp=(\_ => ListDecisionResult predicate)}
+    (SIndContextArgs
+      (\contextUponEntry, a, l, listInd =>
+        let
+          (contextAfterInduction, maybeSuccessList) =
+            listInd (pushAtom signature a contextUponEntry)
+        in
+        case maybeSuccessList of
+          Just successList => ?inductiveDecide_hole_expElim_success
+          Nothing => ?inductiveDecide_hole_expElim_failure)
+      (\context => (context, Just SLForAllEmpty))
+      (\contextUponEntry, x, l, expInd, listInd =>
+        ?inductiveDecide_hole_consElim))
+    inputExpr
+    inputContext
+
+public export
+InductiveType : {contextType : Type} -> {atom : Type} ->
+  {predicate : DecidableContextPred contextType atom} ->
+  InductiveDecisionSig predicate ->
+  (context : contextType) ->
+  Type
+InductiveType signature context =
+  (x : SExp atom ** IsSuccess (snd (inductiveDecide signature context x)))
+
+public export
+record InductiveLambdaSig {contextType : Type} {domAtom : Type} {codAtom : Type}
+  {domPred : DecidableContextPred contextType domAtom}
+  {codPred : DecidableContextPred contextType codAtom}
+  (domain : InductiveDecisionSig domPred)
+  (codomain : InductiveDecisionSig codPred)
+  where
+    constructor InductiveLambda
+
+public export
+inductiveFunction : {contextType : Type} -> {domAtom, codAtom : Type} ->
+  {domPred : DecidableContextPred contextType domAtom} ->
+  {codPred : DecidableContextPred contextType codAtom} ->
+  {domain : InductiveDecisionSig domPred} ->
+  {codomain : InductiveDecisionSig codPred} ->
+  InductiveLambdaSig domain codomain ->
+  (context : contextType) ->
+  (InductiveType domain context -> InductiveType codomain context)
+inductiveFunction signature context = ?InductiveFunction_hole
+
+public export
+record InductivePiSig {contextType : Type} {domAtom : Type} {codAtom : Type}
+  {domPred : DecidableContextPred contextType domAtom}
+  {codPred : DecidableContextPred contextType codAtom}
+  (domain : InductiveDecisionSig domPred)
+  (codomain : InductiveDecisionSig codPred)
+  where
+    constructor InductivePi
+
+public export
+inductiveDependentFunction : {contextType : Type} -> {domAtom, codAtom : Type} ->
+  {domPred : DecidableContextPred contextType domAtom} ->
+  {codPred : DecidableContextPred contextType codAtom} ->
+  {domain : InductiveDecisionSig domPred} ->
+  {codomain : InductiveDecisionSig codPred} ->
+  InductivePiSig domain codomain ->
+  (context : contextType) ->
+  (InductiveType domain context -> InductiveType codomain context)
+inductiveDependentFunction signature context = ?InductiveDependent_Function_hole
+
+public export
 record InductiveTypecheck {atom : Type}
     (predicate : DecidablePredicate atom) where
   constructor MkInductiveTypecheck
@@ -428,13 +522,14 @@ record TypecheckFunctionPredicate {atom, atom' : Type}
   DomainCheck : InductiveTypecheck domain
   CodomainCheck : InductiveTypecheck codomain
 
+{- XXX
 public export
 FunctionSuccessPredicate : {atom, atom' : Type} ->
   {domain : DecidablePredicate atom} ->
   {codomain : DecidablePredicate atom'} ->
   TypecheckFunctionPredicate domain codomain ->
   SPredicate (FAtom atom atom')
-FunctionSuccessPredicate predicate x = ?FunctionSuccessPredicate_hole
+FunctionSuccessPredicate predicate x = FunctionSuccessPredicate_hole
 
 public export
 FunctionFaiurePredicate : {atom, atom' : Type} ->
@@ -442,7 +537,7 @@ FunctionFaiurePredicate : {atom, atom' : Type} ->
   {codomain : DecidablePredicate atom'} ->
   TypecheckFunctionPredicate domain codomain ->
   SPredicate (FAtom atom atom')
-FunctionFaiurePredicate predicate x = ?FunctionFaiurePredicate_hole
+FunctionFaiurePredicate predicate x = FunctionFaiurePredicate_hole
 
 public export
 FunctionDecidablePredicate : {atom, atom' : Type} ->
@@ -464,7 +559,7 @@ FunctionTypecheckOne : {atom, atom' : Type} ->
   (l : FList atom atom') ->
   SLForAll (FunctionSuccessPredicate predicate) l ->
   DecisionResult (FunctionDecidablePredicate predicate) (a $: l)
-FunctionTypecheckOne predicate a l subtermsCheck = ?FunctionTypecheckOne_hole
+FunctionTypecheckOne predicate a l subtermsCheck = FunctionTypecheckOne_hole
 
 public export
 data FunctionMergedFailures : {atom, atom' : Type} ->
@@ -491,7 +586,7 @@ FunctionFirstFailure : {atom, atom' : Type} ->
     {predicate : TypecheckFunctionPredicate domain codomain} ->
     (x : FExp atom atom') -> FunctionFaiurePredicate predicate x ->
     FunctionMergedFailures predicate
-FunctionFirstFailure x failure = ?FunctionFirstFailure_hole
+FunctionFirstFailure x failure = FunctionFirstFailure_hole
 
 public export
 FunctionMergeFailures : {atom, atom' : Type} ->
@@ -501,7 +596,7 @@ FunctionMergeFailures : {atom, atom' : Type} ->
     FunctionMergedFailures predicate ->
     FunctionMergedFailures predicate ->
     FunctionMergedFailures predicate
-FunctionMergeFailures x failure = ?FunctionMergeFailures_hole
+FunctionMergeFailures x failure = FunctionMergeFailures_hole
 
 public export
 FunctionTypecheckInductive : {atom, atom' : Type} ->
@@ -563,6 +658,7 @@ generatedFunction :
   TypecheckedTerm (DomainCheck predicate) ->
   TypecheckedTerm (CodomainCheck predicate)
 generatedFunction (fx ** (ftype ** fchecks)) (dx ** (dtype ** dchecks)) =
-  (?generatedFunction_hole_cx **
-  (?generatedFunction_hole_ctype **
-   ?generatedFunction_hole_cchecks))
+  (generatedFunction_hole_cx **
+  (generatedFunction_hole_ctype **
+   generatedFunction_hole_cchecks))
+   -}
