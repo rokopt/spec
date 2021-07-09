@@ -276,27 +276,21 @@ mutual
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
-      lp (newExp a contextUponEntry) l ->
-      (contextAfterInduction : contextType) ->
+      (contextType, lp (newExp a contextUponEntry) l) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
     (consElim :
       (contextUponEntry : contextType) ->
       (x : SExp atom) -> (l : SList atom) ->
-      sp contextUponEntry x ->
-      (contextAfterExpInduction : contextType) ->
-      lp contextAfterExpInduction l ->
-      (contextAfterListInduction : contextType) ->
+      (contextAndExpInductionOut : (contextType, sp contextUponEntry x)) ->
+      (contextType, lp (fst contextAndExpInductionOut) l) ->
       (contextType, lp contextUponEntry (x $+ l))) ->
     (context : contextType) ->
     (x : SExp atom) -> (contextType, sp context x)
   sExpIndContext {sp} {lp} newExp expElim nilElim consElim context (a $: l) =
-    let
-      (contextAfterListInduction, listInductionOut) =
-        sListIndContext {sp} {lp} newExp expElim nilElim consElim
-          (newExp a context) l
-    in
-    expElim context a l listInductionOut contextAfterListInduction
+    expElim context a l
+      (sListIndContext {sp} {lp} newExp expElim nilElim consElim
+        (newExp a context) l)
 
   public export
   sListIndContext :
@@ -308,17 +302,14 @@ mutual
     (expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
-      lp (newExp a contextUponEntry) l ->
-      (contextAfterInduction : contextType) ->
+      (contextType, lp (newExp a contextUponEntry) l) ->
       (contextType, sp contextUponEntry (a $: l))) ->
     (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
     (consElim :
       (contextUponEntry : contextType) ->
       (x : SExp atom) -> (l : SList atom) ->
-      sp contextUponEntry x ->
-      (contextAfterExpInduction : contextType) ->
-      lp contextAfterExpInduction l ->
-      (contextAfterListInduction : contextType) ->
+      (contextAndExpInductionOut : (contextType, sp contextUponEntry x)) ->
+      (contextType, lp (fst contextAndExpInductionOut) l) ->
       (contextType, lp contextUponEntry (x $+ l))) ->
     (context : contextType) ->
     (l : SList atom) -> (contextType, lp context l)
@@ -328,19 +319,17 @@ mutual
   sListIndContext {sp} {lp} newExp expElim nilElim consElim
     context (x $+ l) =
       let
-        (contextAfterExpInduction, expInductionOut) =
+        contextAndExpInductionOut =
           sExpIndContext {sp} {lp} newExp expElim nilElim consElim context x
-        (contextAfterListInduction, listInductionOut) =
+        contextAndListInductionOut =
           sListIndContext {sp} {lp} newExp expElim nilElim consElim
-            contextAfterExpInduction l
+            (fst contextAndExpInductionOut) l
       in
       consElim
         context
         x l
-        expInductionOut
-        contextAfterExpInduction
-        listInductionOut
-        contextAfterListInduction
+        contextAndExpInductionOut
+        contextAndListInductionOut
 
 public export
 sIndContext :
@@ -352,17 +341,14 @@ sIndContext :
   (expElim :
     (contextUponEntry : contextType) ->
     (a : atom) -> (l : SList atom) ->
-    lp (newExp a contextUponEntry) l ->
-    (contextAfterInduction : contextType) ->
+    (contextType, lp (newExp a contextUponEntry) l) ->
     (contextType, sp contextUponEntry (a $: l))) ->
   (nilElim : (context : contextType) -> (contextType, lp context ($|))) ->
   (consElim :
     (contextUponEntry : contextType) ->
     (x : SExp atom) -> (l : SList atom) ->
-    sp contextUponEntry x ->
-    (contextAfterExpInduction : contextType) ->
-    lp contextAfterExpInduction l ->
-    (contextAfterListInduction : contextType) ->
+    (contextAndExpInductionOut : (contextType, sp contextUponEntry x)) ->
+    (contextType, lp (fst contextAndExpInductionOut) l) ->
     (contextType, lp contextUponEntry (x $+ l))) ->
   (context : contextType) ->
   ((x : SExp atom) -> (contextType, sp context x),
@@ -421,6 +407,72 @@ sDepInd {expElim} {nilElim} {consElim} depExpElim depNilElim depConsElim =
         (sExpInd {sp} {lp} expElim nilElim consElim x)
         (sListInd {sp} {lp} expElim nilElim consElim l)
         Refl Refl)
+
+public export
+sDepIndContext :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  {lp : contextType -> SLPredicate atom} ->
+  {sdp : (context : contextType) -> (x : SExp atom) -> sp context x -> Type} ->
+  {ldp : (context : contextType) -> (l : SList atom) -> lp context l -> Type} ->
+  (newExp : atom -> contextType -> contextType) ->
+  {expElim :
+    (contextUponEntry : contextType) ->
+    (a : atom) -> (l : SList atom) ->
+    (contextType, lp (newExp a contextUponEntry) l) ->
+    (contextType, sp contextUponEntry (a $: l))} ->
+  {nilElim : (context : contextType) -> (contextType, lp context ($|))} ->
+  {consElim :
+    (contextUponEntry : contextType) ->
+    (x : SExp atom) -> (l : SList atom) ->
+    (contextAndExpInductionOut : (contextType, sp contextUponEntry x)) ->
+    (contextType, lp (fst contextAndExpInductionOut) l) ->
+    (contextType, lp contextUponEntry (x $+ l))} ->
+    {-
+  (depExpElim : (a : atom) -> (l : SList atom) ->
+    (lpl : lp l) -> (lpl = sListInd expElim nilElim consElim l) ->
+    ldp l lpl ->
+    sdp (a $:l) (expElim a l lpl)) ->
+  (depNilElim : nilElim = sListInd expElim nilElim consElim ($|) ->
+    ldp ($|) nilElim) ->
+  (depConsElim : (x : SExp atom) -> (l: SList atom) ->
+    (spx : sp x) -> (lpl : lp l) ->
+    (spx = sExpInd expElim nilElim consElim x) ->
+    (lpl = sListInd expElim nilElim consElim l) ->
+    sdp x spx ->
+    ldp l lpl ->
+    ldp (x $+ l) (consElim x l spx lpl)) ->
+    -}
+  (context : contextType) ->
+  ((x : SExp atom) ->
+    (contextType,
+     sdp context x
+       (snd
+        (sExpIndContext {sp} {lp} newExp expElim nilElim consElim context x))),
+   (l : SList atom) ->
+    (contextType,
+     ldp context l
+       (snd
+        (sListIndContext {sp} {lp} newExp expElim nilElim consElim context l))))
+sDepIndContext
+  {sp} {lp} {sdp} {ldp} newExp {expElim} {nilElim} {consElim} context =
+    sIndContext
+      {sp=(\ctx, x =>
+            sdp ctx x
+              (snd (sExpIndContext {sp} {lp}
+               newExp expElim nilElim consElim ctx x)))}
+      {lp=(\ctx, l =>
+            ldp ctx l
+              (snd (sListIndContext {sp} {lp}
+                newExp expElim nilElim consElim ctx l)))}
+      newExp
+      (\contextUponEntry, a, l, contextAndLdpl => ?sDepIndContext_hole_depElim)
+      (\context => ?sDepIndContext_hole_nilElim)
+      (\contextUponEntry, x, l,
+        contextAndExpInductionOut, contextAndListInductionOut =>
+          ?sDepIndContext_hole_consElim)
+      context
 
 public export
 data SLForAllDep : {atom : Type} -> {sp : SPredicate atom} ->
