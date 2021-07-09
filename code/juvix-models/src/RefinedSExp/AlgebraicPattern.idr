@@ -225,9 +225,9 @@ mutual
 
   public export
   MatchesTypePred : {primType : Type} -> (primExp : primType -> Type) ->
-    TypecheckPredicate (MAtom primExp)
+    DecidablePredicate (MAtom primExp)
   MatchesTypePred {primType} primExp =
-    MkTypecheckPredicate (MatchesSignature {primExp}) (MatchFailure {primExp})
+    ResultPredicates (MatchesSignature {primExp}) (MatchFailure {primExp})
 
 mutual
   public export

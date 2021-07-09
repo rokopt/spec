@@ -222,22 +222,22 @@ public export
 ($:~) decide = DPair (SList atom) (SatisfiesSLPred decide)
 
 public export
-record TypecheckPredicate (atom : Type) where
-  constructor MkTypecheckPredicate
+record DecidablePredicate (atom : Type) where
+  constructor ResultPredicates
   SuccessType : SPredicate atom
   FailureType : SPredicate atom
 
 public export
-data TypecheckResult : {atom : Type} -> (predicate : TypecheckPredicate atom) ->
+data TypecheckResult : {atom : Type} -> (predicate : DecidablePredicate atom) ->
     SExp atom -> Type where
-  TypecheckSuccess : {predicate : TypecheckPredicate atom} -> {x : SExp atom} ->
+  TypecheckSuccess : {predicate : DecidablePredicate atom} -> {x : SExp atom} ->
     SuccessType predicate x -> TypecheckResult predicate x
-  TypecheckFailure : {predicate : TypecheckPredicate atom} -> {x : SExp atom} ->
+  TypecheckFailure : {predicate : DecidablePredicate atom} -> {x : SExp atom} ->
     FailureType predicate x -> TypecheckResult predicate x
 
 public export
 TypecheckSuccessInjective : {atom : Type} ->
-  {predicate : TypecheckPredicate atom} ->
+  {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result, result' : SuccessType predicate x} ->
   TypecheckSuccess {x} {predicate} result =
     TypecheckSuccess {x} {predicate} result' ->
@@ -246,7 +246,7 @@ TypecheckSuccessInjective Refl = Refl
 
 public export
 TypecheckFailureInjective : {atom : Type} ->
-  {predicate : TypecheckPredicate atom} ->
+  {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result, result' : FailureType predicate x} ->
   TypecheckFailure {x} {predicate} result =
     TypecheckFailure {x} {predicate} result' ->
@@ -254,27 +254,27 @@ TypecheckFailureInjective : {atom : Type} ->
 TypecheckFailureInjective Refl = Refl
 
 public export
-data IsSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+data IsSuccess : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {x : SExp atom} -> TypecheckResult predicate x -> Type where
-  Successful : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  Successful : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {x : SExp atom} -> (result : SuccessType predicate x) ->
     IsSuccess {x} {predicate} (TypecheckSuccess result)
 
 public export
-IsSuccessExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+IsSuccessExtract : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   IsSuccess result -> SuccessType predicate x
 IsSuccessExtract (Successful success) = success
 
 public export
-IsSuccessExtractElim : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+IsSuccessExtractElim : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   (succeeded : IsSuccess result) ->
   result = TypecheckSuccess (IsSuccessExtract succeeded)
 IsSuccessExtractElim (Successful _) = Refl
 
 public export
-SuccessIsSuccessful : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+SuccessIsSuccessful : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {success : SuccessType predicate x} ->
   {result : TypecheckResult predicate x} ->
   result = TypecheckSuccess {x} {predicate} success ->
@@ -282,7 +282,7 @@ SuccessIsSuccessful : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
 SuccessIsSuccessful {x} {success} Refl = Successful success
 
 public export
-isSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+isSuccess : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> (result : TypecheckResult predicate x) ->
   Dec (IsSuccess result)
 isSuccess (TypecheckSuccess success) = Yes (Successful success)
@@ -290,7 +290,7 @@ isSuccess (TypecheckFailure _) =
   No (\success => case success of Successful _ impossible)
 
 public export
-NotSuccessExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+NotSuccessExtract : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   Not (IsSuccess result) -> FailureType predicate x
 NotSuccessExtract {result=(TypecheckSuccess success)} notSuccess =
@@ -298,27 +298,27 @@ NotSuccessExtract {result=(TypecheckSuccess success)} notSuccess =
 NotSuccessExtract {result=(TypecheckFailure failure)} _ = failure
 
 public export
-data IsFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+data IsFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {x : SExp atom} -> TypecheckResult predicate x -> Type where
-  Failed : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  Failed : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {x : SExp atom} -> (result : FailureType predicate x) ->
     IsFailure {x} {predicate} (TypecheckFailure result)
 
 public export
-IsFailureExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+IsFailureExtract : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   IsFailure result -> FailureType predicate x
 IsFailureExtract (Failed failure) = failure
 
 public export
-IsFailureExtractElim : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+IsFailureExtractElim : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   (succeeded : IsFailure result) ->
   result = TypecheckFailure (IsFailureExtract succeeded)
 IsFailureExtractElim (Failed _) = Refl
 
 public export
-isFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+isFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> (result : TypecheckResult predicate x) ->
   Dec (IsFailure result)
 isFailure (TypecheckSuccess _) =
@@ -326,7 +326,7 @@ isFailure (TypecheckSuccess _) =
 isFailure (TypecheckFailure failed) = Yes (Failed failed)
 
 public export
-NotFailureExtract : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+NotFailureExtract : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : TypecheckResult predicate x} ->
   Not (IsFailure result) -> SuccessType predicate x
 NotFailureExtract {result=(TypecheckSuccess success)} _ = success
@@ -335,7 +335,7 @@ NotFailureExtract {result=(TypecheckFailure failure)} notFailure =
 
 public export
 record InductiveTypecheck {atom : Type}
-    (predicate : TypecheckPredicate atom) where
+    (predicate : DecidablePredicate atom) where
   constructor MkInductiveTypecheck
   typecheckOne : (a : atom) -> (l : SList atom) ->
     SLForAll (SuccessType predicate) l -> TypecheckResult predicate (a $: l)
@@ -344,11 +344,11 @@ record InductiveTypecheck {atom : Type}
   mergeFailures : MergedFailures -> MergedFailures -> MergedFailures
 
 public export
-data TypechecksAs : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+data TypechecksAs : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     InductiveTypecheck predicate ->
     (x : SExp atom) -> SuccessType predicate x -> Type where
   AllSubtermsTypecheckAs : {atom : Type} ->
-    {predicate : TypecheckPredicate atom} ->
+    {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {a : atom} -> {l : SList atom} ->
     (subtermsCheck : SLForAll (SDepPredPair (TypechecksAs check)) l) ->
@@ -359,7 +359,7 @@ data TypechecksAs : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
     TypechecksAs check (a $: l) checkedType
 
 public export
-TypechecksAsSubterms : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+TypechecksAsSubterms : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {a : atom} -> {l : SList atom} ->
     {checkedType : SuccessType predicate (a $: l)} ->
@@ -368,18 +368,18 @@ TypechecksAsSubterms : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
 TypechecksAsSubterms (AllSubtermsTypecheckAs subtermsCheck _ _) = subtermsCheck
 
 public export
-Typechecks : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+Typechecks : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   InductiveTypecheck predicate -> (x : SExp atom) -> Type
 Typechecks check x = DPair (SuccessType predicate x) (TypechecksAs check x)
 
 public export
-TypecheckedTerm : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+TypecheckedTerm : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   InductiveTypecheck predicate -> Type
 TypecheckedTerm check = DPair (SExp atom) (Typechecks check)
 
 mutual
   public export
-  CheckedTypesUnique : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  CheckedTypesUnique : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {x : SExp atom} -> {type, type' : SuccessType predicate x} ->
     (typechecksAs : TypechecksAs check x type) ->
@@ -393,7 +393,7 @@ mutual
 
   public export
   TypechecksAsUnique :
-    {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {a : atom} -> {l : SList atom} ->
     {type, type' : SuccessType predicate (a $: l)} ->
@@ -410,7 +410,7 @@ mutual
 
   public export
   HeterogeneousTypechecksAsUnique :
-    {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+    {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {a : atom} -> {l : SList atom} ->
     {type, type' : SuccessType predicate (a $: l)} ->
@@ -422,7 +422,7 @@ mutual
       Refl => TypechecksAsUnique {type} {type'=type} typechecksAs typechecksAs'
 
   public export
-  TypechecksUnique : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  TypechecksUnique : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} ->
     {a : atom} -> {l : SList atom} ->
     (typechecks, typechecks' : Typechecks check (a $: l)) ->
@@ -436,7 +436,7 @@ mutual
 
   public export
   ListTypechecksUnique : {atom : Type} ->
-    {predicate : TypecheckPredicate atom} ->
+    {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} -> {l : SList atom} ->
     (typecheckList, typecheckList' : SLForAll (Typechecks check) l) ->
     typecheckList = typecheckList'
@@ -454,55 +454,55 @@ mutual
             Refl
 
 public export
-data CheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+data CheckResult : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     (check : InductiveTypecheck predicate) -> (x : SExp atom) -> Type where
-  CheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  CheckSuccess : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
     Typechecks check x -> CheckResult check x
-  CheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  CheckFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
     Not (Typechecks check x) -> MergedFailures check -> CheckResult check x
 
 public export
-isCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+isCheckSuccess : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
   CheckResult check x -> Bool
 isCheckSuccess (CheckSuccess _) = True
 isCheckSuccess (CheckFailure _ _) = False
 
 public export
-isCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+isCheckFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {check : InductiveTypecheck predicate} -> {x : SExp atom} ->
   CheckResult check x -> Bool
 isCheckFailure = not . isCheckSuccess
 
 public export
-data ListCheckResult : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+data ListCheckResult : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     (check : InductiveTypecheck predicate) -> (l : SList atom) -> Type where
-  ListCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  ListCheckSuccess : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} -> {l : SList atom} ->
     SLForAll (Typechecks check) l ->
     ListCheckResult check l
-  ListCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+  ListCheckFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {check : InductiveTypecheck predicate} -> {l : SList atom} ->
     Not (SLForAll (Typechecks check) l) -> MergedFailures check ->
     ListCheckResult check l
 
 public export
-isListCheckSuccess : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+isListCheckSuccess : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {check : InductiveTypecheck predicate} -> {l : SList atom} ->
   ListCheckResult check l -> Bool
 isListCheckSuccess (ListCheckSuccess _) = True
 isListCheckSuccess (ListCheckFailure _ _) = False
 
 public export
-isListCheckFailure : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+isListCheckFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {check : InductiveTypecheck predicate} -> {l : SList atom} ->
   ListCheckResult check l -> Bool
 isListCheckFailure = not . isListCheckSuccess
 
 public export
-CheckResultCons : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+CheckResultCons : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {check : InductiveTypecheck predicate} ->
   {x : SExp atom} -> {l : SList atom} ->
   CheckResult check x -> ListCheckResult check l ->
@@ -544,7 +544,7 @@ SLForAllConsDec _ (No forAllFails) =
     SLForAllCons _ forAll => forAllFails forAll)
 
 public export
-typecheck : {atom : Type} -> {predicate : TypecheckPredicate atom} ->
+typecheck : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   (check : InductiveTypecheck predicate) ->
   ((x : SExp atom) -> CheckResult check x,
    (l : SList atom) -> ListCheckResult check l)
@@ -597,72 +597,72 @@ FList domainAtom codomainAtom = SList (FAtom domainAtom codomainAtom)
 
 public export
 record TypecheckFunctionPredicate {atom, atom' : Type}
-    (domain : TypecheckPredicate atom)
-    (codomain : TypecheckPredicate atom') where
+    (domain : DecidablePredicate atom)
+    (codomain : DecidablePredicate atom') where
   constructor MkTypecheckFunctionPredicate
   DomainCheck : InductiveTypecheck domain
   CodomainCheck : InductiveTypecheck codomain
 
 public export
 FunctionSuccessType : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   TypecheckFunctionPredicate domain codomain ->
   SPredicate (FAtom atom atom')
 FunctionSuccessType predicate x = ?FunctionSuccessType_hole
 
 public export
 FunctionFailureType : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   TypecheckFunctionPredicate domain codomain ->
   SPredicate (FAtom atom atom')
 FunctionFailureType predicate x = ?FunctionFailureType_hole
 
 public export
-FunctionTypecheckPredicate : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+FunctionDecidablePredicate : {atom, atom' : Type} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   TypecheckFunctionPredicate domain codomain ->
-  TypecheckPredicate (FAtom atom atom')
-FunctionTypecheckPredicate predicate =
-  MkTypecheckPredicate
+  DecidablePredicate (FAtom atom atom')
+FunctionDecidablePredicate predicate =
+  ResultPredicates
     (FunctionSuccessType predicate)
     (FunctionFailureType predicate)
 
 public export
 FunctionTypecheckOne : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   (predicate : TypecheckFunctionPredicate domain codomain) ->
   (a : FAtom atom atom') ->
   (l : FList atom atom') ->
   SLForAll (FunctionSuccessType predicate) l ->
-  TypecheckResult (FunctionTypecheckPredicate predicate) (a $: l)
+  TypecheckResult (FunctionDecidablePredicate predicate) (a $: l)
 FunctionTypecheckOne predicate a l subtermsCheck = ?FunctionTypecheckOne_hole
 
 public export
 data FunctionMergedFailures : {atom, atom' : Type} ->
-    {domain : TypecheckPredicate atom} ->
-    {codomain : TypecheckPredicate atom'} ->
+    {domain : DecidablePredicate atom} ->
+    {codomain : DecidablePredicate atom'} ->
     (predicate : TypecheckFunctionPredicate domain codomain) -> Type where
   DomainFailure :
-    {domain : TypecheckPredicate atom} ->
-    {codomain : TypecheckPredicate atom'} ->
+    {domain : DecidablePredicate atom} ->
+    {codomain : DecidablePredicate atom'} ->
     (predicate : TypecheckFunctionPredicate domain codomain) ->
     MergedFailures (DomainCheck predicate) ->
     FunctionMergedFailures {domain} {codomain} predicate
   CodomainFailure :
-    {domain : TypecheckPredicate atom} ->
-    {codomain : TypecheckPredicate atom'} ->
+    {domain : DecidablePredicate atom} ->
+    {codomain : DecidablePredicate atom'} ->
     (predicate : TypecheckFunctionPredicate domain codomain) ->
     MergedFailures (CodomainCheck predicate) ->
     FunctionMergedFailures {domain} {codomain} predicate
 
 public export
 FunctionFirstFailure : {atom, atom' : Type} ->
-    {domain : TypecheckPredicate atom} ->
-    {codomain : TypecheckPredicate atom'} ->
+    {domain : DecidablePredicate atom} ->
+    {codomain : DecidablePredicate atom'} ->
     {predicate : TypecheckFunctionPredicate domain codomain} ->
     (x : FExp atom atom') -> FunctionFailureType predicate x ->
     FunctionMergedFailures predicate
@@ -670,8 +670,8 @@ FunctionFirstFailure x failure = ?FunctionFirstFailure_hole
 
 public export
 FunctionMergeFailures : {atom, atom' : Type} ->
-    {domain : TypecheckPredicate atom} ->
-    {codomain : TypecheckPredicate atom'} ->
+    {domain : DecidablePredicate atom} ->
+    {codomain : DecidablePredicate atom'} ->
     {predicate : TypecheckFunctionPredicate domain codomain} ->
     FunctionMergedFailures predicate ->
     FunctionMergedFailures predicate ->
@@ -680,10 +680,10 @@ FunctionMergeFailures x failure = ?FunctionMergeFailures_hole
 
 public export
 FunctionTypecheckInductive : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   (predicate : TypecheckFunctionPredicate domain codomain) ->
-  InductiveTypecheck (FunctionTypecheckPredicate predicate)
+  InductiveTypecheck (FunctionDecidablePredicate predicate)
 FunctionTypecheckInductive predicate =
   MkInductiveTypecheck
     (FunctionTypecheckOne predicate)
@@ -693,8 +693,8 @@ FunctionTypecheckInductive predicate =
 
 public export
 CheckFunctionResult : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   (predicate : TypecheckFunctionPredicate domain codomain) ->
   FExp atom atom' -> Type
 CheckFunctionResult predicate =
@@ -702,8 +702,8 @@ CheckFunctionResult predicate =
 
 public export
 ListCheckFunctionResult : {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   (predicate : TypecheckFunctionPredicate domain codomain) ->
   FList atom atom' -> Type
 ListCheckFunctionResult predicate =
@@ -712,8 +712,8 @@ ListCheckFunctionResult predicate =
 public export
 typecheckFunction :
   {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   (predicate : TypecheckFunctionPredicate domain codomain) ->
   ((x : FExp atom atom') -> CheckFunctionResult predicate x,
    (l : FList atom atom') -> ListCheckFunctionResult predicate l)
@@ -722,8 +722,8 @@ typecheckFunction predicate = typecheck (FunctionTypecheckInductive predicate)
 public export
 FTypechecks :
   {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   (predicate : TypecheckFunctionPredicate domain codomain) ->
   (x : FExp atom atom') -> Type
 FTypechecks check = Typechecks (FunctionTypecheckInductive check)
@@ -731,8 +731,8 @@ FTypechecks check = Typechecks (FunctionTypecheckInductive check)
 public export
 generatedFunction :
   {atom, atom' : Type} ->
-  {domain : TypecheckPredicate atom} ->
-  {codomain : TypecheckPredicate atom'} ->
+  {domain : DecidablePredicate atom} ->
+  {codomain : DecidablePredicate atom'} ->
   {predicate : TypecheckFunctionPredicate domain codomain} ->
   TypecheckedTerm (FunctionTypecheckInductive predicate) ->
   TypecheckedTerm (DomainCheck predicate) ->
