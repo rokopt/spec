@@ -379,9 +379,9 @@ sListIndContext {sp} {lp} signature =
 
 public export
 record
-SIndForAllContextSig {contextType : Type} {atom : Type}
+SIndContextForAllSig {contextType : Type} {atom : Type}
   (sp : contextType -> SPredicate atom) where
-    constructor SIndForAllContextArgs
+    constructor SIndContextForAllArgs
     expElim :
       (contextUponEntry : contextType) ->
       (a : atom) -> (l : SList atom) ->
@@ -394,7 +394,7 @@ sIndContextForAll :
   {contextType : Type} ->
   {atom : Type} ->
   {sp : contextType -> SPredicate atom} ->
-  SIndForAllContextSig sp ->
+  SIndContextForAllSig sp ->
   ((context : contextType) -> (x : SExp atom) -> (contextType, sp context x),
    (context : contextType) -> (l : SList atom) ->
     (contextType, SLForAll (sp context) l))
@@ -408,6 +408,36 @@ sIndContextForAll {sp} signature =
          SLForAllCons
           (snd (expInd contextUponEntry))
           (snd (listInd contextUponEntry)))))
+
+public export
+sExpIndContextForAll :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  SIndContextForAllSig sp ->
+  (context : contextType) -> (x : SExp atom) -> (contextType, sp context x)
+sExpIndContextForAll signature = fst (sIndContextForAll signature)
+
+public export
+sListIndContextForAll :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  SIndContextForAllSig sp ->
+  (context : contextType) -> (l : SList atom) ->
+  (contextType, SLForAll (sp context) l)
+sListIndContextForAll signature = snd (sIndContextForAll signature)
+
+public export
+sListIndContextForAllFlip :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  SIndContextForAllSig sp ->
+  (l : SList atom) -> (context : contextType) ->
+  (contextType, SLForAll (sp context) l)
+sListIndContextForAllFlip signature l context =
+  sListIndContextForAll signature context l
 
 public export
 SDepPred : {atom : Type} -> SPredicate atom -> Type
@@ -641,6 +671,45 @@ sDepIndForAll {sIndForAllSig} signature =
       (depForAllElim signature)
       SLForAllDepEmpty
       (\_, _ => SLForAllDepCons))
+
+public export
+record SDepIndContextForAllSig {contextType : Type} {atom : Type}
+  {sp : SContextPred contextType atom}
+  (sdp : SDepContextPred sp)
+  (sIndContextForAllSig : SIndContextForAllSig sp) where
+    constructor SDepIndContextForAllArgs
+    depExpElim :
+      (contextUponEntry : contextType) ->
+      (a : atom) -> (l : SList atom) ->
+      (listDepInduction : (context : contextType) ->
+        (contextType,
+          SLForAllDep (sdp context) l
+            (snd
+              (sListIndContextForAll {sp} sIndContextForAllSig context l)))) ->
+      (contextType,
+        sdp contextUponEntry (a $:l)
+          (snd
+            (expElim sIndContextForAllSig contextUponEntry a l
+              (sListIndContextForAllFlip {sp} sIndContextForAllSig l))))
+
+public export
+sDepIndContextForAll :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  {sdp : (context : contextType) -> (x : SExp atom) -> sp context x -> Type} ->
+  {sIndContextForAllSig : SIndContextForAllSig sp} ->
+  SDepIndContextForAllSig {sp} sdp sIndContextForAllSig ->
+  ((context : contextType) -> (x : SExp atom) ->
+    (contextType,
+     sdp context x
+       (snd (sExpIndContextForAll {sp} sIndContextForAllSig context x))),
+   (context : contextType) -> (l : SList atom) ->
+    (contextType,
+     SLForAllDep (sdp context) l
+       (snd (sListIndContextForAll {sp} sIndContextForAllSig context l))))
+sDepIndContextForAll {sp} {sdp} {sIndContextForAllSig} signature =
+  ?sDepIndContextForAll_hole
 
 public export
 SDPair : {atom : Type} -> SPredicate atom -> Type
