@@ -391,8 +391,7 @@ record SDepIndContextSig {contextType : Type} {atom : Type}
       (listDepInduction : (context : contextType) ->
         (contextType,
           ldp context l
-            (snd
-              (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
+            (snd (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
       (contextUponEntry : contextType) ->
       (contextType,
         sdp contextUponEntry (a $:l)
@@ -412,8 +411,7 @@ record SDepIndContextSig {contextType : Type} {atom : Type}
       (listDepInduction : (context : contextType) ->
         (contextType,
           ldp context l
-            (snd
-              (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
+            (snd (sListIndContext {sp} {lp} sIndContextSig l context)))) ->
       (contextUponEntry : contextType) ->
       (contextType,
         ldp contextUponEntry (x $+ l)
