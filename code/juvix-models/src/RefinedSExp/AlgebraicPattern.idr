@@ -236,11 +236,11 @@ mutual
     {primExp : primType -> Type} ->
     (a : MAtom primExp) -> (l : SList (MAtom primExp)) ->
     SLForAll (MatchesSignature {primExp}) l ->
-    TypecheckResult (MatchesTypePred primExp) (a $: l)
+    DecisionResult (MatchesTypePred primExp) (a $: l)
   CheckOneMatch (MPrim p) ($|) _ =
-    TypecheckSuccess (MatchesPrimType p)
+    DecisionSuccess (MatchesPrimType p)
   CheckOneMatch (MPrim p) (x $+ l) _ =
-    TypecheckFailure (PrimitiveWithArgument x l)
+    DecisionFailure (PrimitiveWithArgument x l)
   CheckOneMatch (MAbst adt constructorIndex) l forAll =
     case inBounds constructorIndex (constructors adt) of
       Yes ok =>
@@ -248,11 +248,11 @@ mutual
           (MAbst adt constructorIndex $: l)
           (typeParams (adt |*< constructorIndex)) l forAll of
             Left matchesParams =>
-              TypecheckSuccess
+              DecisionSuccess
                 (MatchesAbstractType adt constructorIndex l matchesParams)
-            Right failure => TypecheckFailure failure
+            Right failure => DecisionFailure failure
       No outOfBounds =>
-        TypecheckFailure (InvalidConstructorIndex adt constructorIndex)
+        DecisionFailure (InvalidConstructorIndex adt constructorIndex)
 
   public export
   CheckOneParameterList : {primType : Type} ->
