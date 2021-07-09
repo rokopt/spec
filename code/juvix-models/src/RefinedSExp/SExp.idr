@@ -50,16 +50,6 @@ public export
 ($>*) ($|) = []
 ($>*) (x $+ l) = x :: $>* l
 
-prefix 11 <$
-public export
-(<$) : {atom : Type} -> SExp atom -> atom
-(<$) (a $: _) = a
-
-prefix 11 >$
-public export
-(>$) : {atom : Type} -> SExp atom -> SList atom
-(>$) (_ $: l) = l
-
 public export
 ListToSListToListEq : {atom : Type} -> (l : List (SExp atom)) ->
   ($>*) ($<* l) = l
@@ -71,6 +61,16 @@ SListToListToSListEq : {atom : Type} -> (l : SList atom) ->
   ($<*) ($>* l) = l
 SListToListToSListEq ($|) = Refl
 SListToListToSListEq (x $+ l) = cong (($+) x) (SListToListToSListEq l)
+
+prefix 11 <$
+public export
+(<$) : {atom : Type} -> SExp atom -> atom
+(<$) (a $: _) = a
+
+prefix 11 >$
+public export
+(>$) : {atom : Type} -> SExp atom -> SList atom
+(>$) (_ $: l) = l
 
 prefix 11 $+|
 public export
@@ -126,6 +126,38 @@ SLPredicate : (atom : Type) -> Type
 SLPredicate atom = SList atom -> Type
 
 public export
+record
+SIndSig {atom : Type} (sp : SPredicate atom) (lp : SLPredicate atom) where
+  constructor SIndArgs
+  expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)
+  nilElim : lp ($|)
+  consElim : (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)
+
+mutual
+  public export
+  sExpInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    SIndSig sp lp ->
+    (x : SExp atom) -> sp x
+  sExpInd signature (a $: l) = expElim signature a l (sListInd signature l)
+
+  public export
+  sListInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    SIndSig sp lp ->
+    (l : SList atom) -> lp l
+  sListInd signature ($|) = nilElim signature
+  sListInd signature (x $+ l) =
+    consElim signature x l (sExpInd signature x) (sListInd signature l)
+
+public export
+sInd :
+  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+  SIndSig sp lp ->
+  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
+sInd signature = (sExpInd signature, sListInd signature)
+
+public export
 data SLForAll : {atom : Type} -> SPredicate atom -> SLPredicate atom where
   SLForAllEmpty : {atom : Type} -> {predicate : SPredicate atom} ->
     SLForAll predicate ($|)
@@ -164,38 +196,6 @@ data SForAllSub : {atom : Type} -> SPredicate atom -> SPredicate atom where
 public export
 SLForAllSub : {atom : Type} -> SPredicate atom -> SLPredicate atom
 SLForAllSub predicate = SLForAll (SForAllSub predicate)
-
-public export
-record
-SIndSig {atom : Type} (sp : SPredicate atom) (lp : SLPredicate atom) where
-  constructor SIndArgs
-  expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)
-  nilElim : lp ($|)
-  consElim : (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)
-
-mutual
-  public export
-  sExpInd :
-    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
-    SIndSig sp lp ->
-    (x : SExp atom) -> sp x
-  sExpInd signature (a $: l) = expElim signature a l (sListInd signature l)
-
-  public export
-  sListInd :
-    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
-    SIndSig sp lp ->
-    (l : SList atom) -> lp l
-  sListInd signature ($|) = nilElim signature
-  sListInd signature (x $+ l) =
-    consElim signature x l (sExpInd signature x) (sListInd signature l)
-
-public export
-sInd :
-  {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
-  SIndSig sp lp ->
-  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
-sInd signature = (sExpInd signature, sListInd signature)
 
 public export
 record SIndForAllSig {atom : Type} (sp : SPredicate atom) where
@@ -271,10 +271,18 @@ sListTransform :
 sListTransform = snd . sTransform
 
 public export
+SContextPred : (contextType : Type) -> (atom : Type) -> Type
+SContextPred contextType atom = contextType -> SPredicate atom
+
+public export
+SLContextPred : (contextType : Type) -> (atom : Type) -> Type
+SLContextPred contextType atom = contextType -> SLPredicate atom
+
+public export
 record
 SIndContextSig {contextType : Type} {atom : Type}
-  (sp : contextType -> SPredicate atom)
-  (lp : contextType -> SLPredicate atom) where
+  (sp : SContextPred contextType atom)
+  (lp : SLContextPred contextType atom) where
     constructor
     SIndContextArgs
     expElim : (a : atom) -> (l : SList atom) ->
@@ -380,11 +388,23 @@ sDepInd {sIndSig} signature =
       (depConsElim signature))
 
 public export
+SDepContextPred : {contextType : Type} -> {atom : Type} ->
+  (sp : SContextPred contextType atom) -> Type
+SDepContextPred {contextType} {atom} sp =
+  (context : contextType) -> (x : SExp atom) -> sp context x -> Type
+
+public export
+SLDepContextPred : {contextType : Type} -> {atom : Type} ->
+  (lp : SLContextPred contextType atom) -> Type
+SLDepContextPred {contextType} {atom} lp =
+  (context : contextType) -> (l : SList atom) -> lp context l -> Type
+
+public export
 record SDepIndContextSig {contextType : Type} {atom : Type}
-  {sp : contextType -> SPredicate atom}
-  {lp : contextType -> SLPredicate atom}
-  (sdp : (context : contextType) -> (x : SExp atom) -> sp context x -> Type)
-  (ldp : (context : contextType) -> (l : SList atom) -> lp context l -> Type)
+  {sp : SContextPred contextType atom}
+  {lp : SLContextPred contextType atom}
+  (sdp : SDepContextPred sp)
+  (ldp : SLDepContextPred lp)
   (sIndContextSig : SIndContextSig sp lp) where
     constructor SDepIndContextArgs
     depExpElim : (a : atom) -> (l : SList atom) ->
@@ -598,3 +618,23 @@ sdpairInd {sdp} {ldp} signature =
       (depExpElim signature)
       (depNilElim signature)
       (depConsElim signature))
+
+public export
+DSExp : {atom : Type} -> SPredicate atom -> Type
+DSExp {atom} pred = DPair (SExp atom) pred
+
+public export
+DSList : {atom : Type} -> SLPredicate atom -> Type
+DSList {atom} pred = DPair (SList atom) pred
+
+public export
+SDPairContextPred : {contextType : Type} -> {atom : Type} ->
+  (sp : SContextPred contextType atom) -> Type
+SDPairContextPred {contextType} {atom} sp =
+  (context : contextType) -> DSExp (sp context) -> Type
+
+public export
+SLDPairContextPred : {contextType : Type} -> {atom : Type} ->
+  (lp : SLContextPred contextType atom) -> Type
+SLDPairContextPred {contextType} {atom} lp =
+  (context : contextType) -> DSList (lp context) -> Type
