@@ -115,7 +115,7 @@ ListFoldNonDepSigToDepSig : {atom, contextType, listPredicate : Type} ->
 ListFoldNonDepSigToDepSig signature =
   ListDepFoldArgs (\_ => nilElim signature) (\_ => consElim signature)
 
-export
+public export
 listDepFoldFlipCorrect : {atom, contextType, listPredicate : Type} ->
   (signature : ListFoldSig atom contextType listPredicate) ->
   {predecessors : List atom} ->
@@ -131,10 +131,9 @@ listDepFoldFlipCorrect : {atom, contextType, listPredicate : Type} ->
 listDepFoldFlipCorrect signature [] =
   Refl
 listDepFoldFlipCorrect signature (a :: l) =
-  cong (consElim signature a l)
-    (listDepFoldFlipCorrect signature l)
+  cong (consElim signature a l) (listDepFoldFlipCorrect signature l)
 
-export
+public export
 listDepFoldCorrect : {atom, contextType, listPredicate : Type} ->
   (signature : ListFoldSig atom contextType listPredicate) ->
   {predecessors : List atom} ->

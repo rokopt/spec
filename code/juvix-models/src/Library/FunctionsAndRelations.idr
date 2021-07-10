@@ -96,6 +96,11 @@ applyEq : {a, b : Type} -> {f, f' : a -> b} -> f = f' -> {x : a} -> f x = f' x
 applyEq Refl = Refl
 
 public export
+consEq : {a : Type} -> {x, x' : a} -> {l, l' : List a} ->
+  (x = x') -> (l = l') -> (x :: l) = (x' :: l')
+consEq Refl Refl = Refl
+
+public export
 mapPair : {a, a', b, b': Type} -> (f: a -> b) -> (f': a' -> b') ->
           (a, a') -> (b, b')
 mapPair f f' (x, x') = (f x, f' x')
