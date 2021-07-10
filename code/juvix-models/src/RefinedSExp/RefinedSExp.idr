@@ -49,7 +49,7 @@ public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates
   SuccessPredicate : SPredicate atom
-  FaiurePredicate : SPredicate atom
+  FailurePredicate : SPredicate atom
 
 public export
 data DecisionResult : {atom : Type} ->
@@ -57,7 +57,7 @@ data DecisionResult : {atom : Type} ->
   DecisionSuccess : {predicate : DecidablePredicate atom} -> {x : SExp atom} ->
     SuccessPredicate predicate x -> DecisionResult predicate x
   DecisionFailure : {predicate : DecidablePredicate atom} -> {x : SExp atom} ->
-    FaiurePredicate predicate x -> DecisionResult predicate x
+    FailurePredicate predicate x -> DecisionResult predicate x
 
 public export
 DecisionSuccessInjective : {atom : Type} ->
@@ -71,7 +71,7 @@ DecisionSuccessInjective Refl = Refl
 public export
 DecisionFailureInjective : {atom : Type} ->
   {predicate : DecidablePredicate atom} ->
-  {x : SExp atom} -> {result, result' : FaiurePredicate predicate x} ->
+  {x : SExp atom} -> {result, result' : FailurePredicate predicate x} ->
   DecisionFailure {x} {predicate} result =
     DecisionFailure {x} {predicate} result' ->
   result = result'
@@ -116,7 +116,7 @@ isSuccess (DecisionFailure _) =
 public export
 NotSuccessExtract : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : DecisionResult predicate x} ->
-  Not (IsSuccess result) -> FaiurePredicate predicate x
+  Not (IsSuccess result) -> FailurePredicate predicate x
 NotSuccessExtract {result=(DecisionSuccess success)} notSuccess =
   void (notSuccess (Successful success))
 NotSuccessExtract {result=(DecisionFailure failure)} _ = failure
@@ -125,13 +125,13 @@ public export
 data IsFailure : {atom : Type} -> {predicate : DecidablePredicate atom} ->
     {x : SExp atom} -> DecisionResult predicate x -> Type where
   Failed : {atom : Type} -> {predicate : DecidablePredicate atom} ->
-    {x : SExp atom} -> (result : FaiurePredicate predicate x) ->
+    {x : SExp atom} -> (result : FailurePredicate predicate x) ->
     IsFailure {x} {predicate} (DecisionFailure result)
 
 public export
 IsFailureExtract : {atom : Type} -> {predicate : DecidablePredicate atom} ->
   {x : SExp atom} -> {result : DecisionResult predicate x} ->
-  IsFailure result -> FaiurePredicate predicate x
+  IsFailure result -> FailurePredicate predicate x
 IsFailureExtract (Failed failure) = failure
 
 public export
@@ -162,19 +162,24 @@ DecidableContextPred : (contextType, atom : Type) -> Type
 DecidableContextPred contextType atom = contextType -> DecidablePredicate atom
 
 public export
-ListDecisionResult : {contextType : Type} -> {atom : Type} ->
-  (predicate : DecidableContextPred contextType atom) ->
-  SLPredicate atom
-ListDecisionResult {contextType} predicate =
-  Maybe .
-    SLForAll
-      (\x => (context : contextType ** SuccessPredicate (predicate context) x))
-
-public export
 record InductiveDecisionSig {contextType : Type} {atom : Type}
   (predicate : DecidableContextPred contextType atom) where
     constructor InductiveDecisionArgs
-    pushAtom : atom -> contextType -> contextType
+    pushExp : contextType -> SExp atom -> contextType
+    pushFailure : Void
+    expElim :
+      (contextUponEntry : contextType) ->
+      (a : atom) -> (l : SList atom) ->
+      SLForAll
+        (SuccessPredicate (predicate (pushExp contextUponEntry (a $: l)))) l ->
+      (contextType, DecisionResult (predicate contextUponEntry) (a $: l))
+
+public export
+ListDecisionResult : {contextType : Type} -> {atom : Type} ->
+  (predicate : DecidableContextPred contextType atom) ->
+  contextType -> SLPredicate atom
+ListDecisionResult predicate context l =
+  Maybe (SLForAll (SuccessPredicate (predicate context)) l)
 
 public export
 inductiveDecide : {contextType : Type} -> {atom : Type} ->
@@ -186,19 +191,15 @@ inductiveDecide : {contextType : Type} -> {atom : Type} ->
 inductiveDecide signature =
   sExpIndContext
     {sp=(DecisionResult . predicate)}
-    {lp=(\_ => ListDecisionResult predicate)}
+    {lp=(ListDecisionResult predicate)}
     (SIndContextArgs
       (\contextUponEntry, a, l, listInd =>
-        let
-          (contextAfterInduction, maybeSuccessList) =
-            listInd (pushAtom signature a contextUponEntry)
-        in
-        case maybeSuccessList of
-          Just successList => ?inductiveDecide_hole_expElim_success
+        let indOut = listInd (pushExp signature contextUponEntry (a $: l)) in
+        case (snd indOut) of
+          Just allSucceed => ?inductiveDecide_hole_expElim_success
           Nothing => ?inductiveDecide_hole_expElim_failure)
-      (\context => (context, Just SLForAllEmpty))
-      (\contextUponEntry, x, l, expInd, listInd =>
-        ?inductiveDecide_hole_consElim))
+      (?inductiveDecide_hole_nilElim)
+      (?inductiveDecide_hole_consElim))
 
 public export
 InductiveType : {contextType : Type} -> {atom : Type} ->
@@ -256,7 +257,7 @@ record InductiveTypecheck {atom : Type}
   typecheckOne : (a : atom) -> (l : SList atom) ->
     SLForAll (SuccessPredicate predicate) l -> DecisionResult predicate (a $: l)
   MergedFailures : Type
-  firstFailure : (x : SExp atom) -> FaiurePredicate predicate x ->
+  firstFailure : (x : SExp atom) -> FailurePredicate predicate x ->
     MergedFailures
   mergeFailures : MergedFailures -> MergedFailures -> MergedFailures
 
@@ -530,12 +531,12 @@ FunctionSuccessPredicate : {atom, atom' : Type} ->
 FunctionSuccessPredicate predicate x = FunctionSuccessPredicate_hole
 
 public export
-FunctionFaiurePredicate : {atom, atom' : Type} ->
+FunctionFailurePredicate : {atom, atom' : Type} ->
   {domain : DecidablePredicate atom} ->
   {codomain : DecidablePredicate atom'} ->
   TypecheckFunctionPredicate domain codomain ->
   SPredicate (FAtom atom atom')
-FunctionFaiurePredicate predicate x = FunctionFaiurePredicate_hole
+FunctionFailurePredicate predicate x = FunctionFailurePredicate_hole
 
 public export
 FunctionDecidablePredicate : {atom, atom' : Type} ->
@@ -546,7 +547,7 @@ FunctionDecidablePredicate : {atom, atom' : Type} ->
 FunctionDecidablePredicate predicate =
   ResultPredicates
     (FunctionSuccessPredicate predicate)
-    (FunctionFaiurePredicate predicate)
+    (FunctionFailurePredicate predicate)
 
 public export
 FunctionTypecheckOne : {atom, atom' : Type} ->
@@ -582,7 +583,7 @@ FunctionFirstFailure : {atom, atom' : Type} ->
     {domain : DecidablePredicate atom} ->
     {codomain : DecidablePredicate atom'} ->
     {predicate : TypecheckFunctionPredicate domain codomain} ->
-    (x : FExp atom atom') -> FunctionFaiurePredicate predicate x ->
+    (x : FExp atom atom') -> FunctionFailurePredicate predicate x ->
     FunctionMergedFailures predicate
 FunctionFirstFailure x failure = FunctionFirstFailure_hole
 
