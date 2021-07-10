@@ -24,16 +24,20 @@ modules = Library.TypesAndFunctions
     , Category.ComputableCategories
     , QCWF.CWF
     , QCWF.QCWF
-    , RefinedSExp.PatternedSExpressions
-    , RefinedSExp.Test.PatternedSExpressionsTest
+    , RefinedSExp.List
+    , RefinedSExp.Test.ListTest
+    , RefinedSExp.DepList
+    , RefinedSExp.Test.DepListTest
     , RefinedSExp.SExp
     , RefinedSExp.Test.SExpTest
-    , RefinedSExp.InductiveSExp
-    , RefinedSExp.Test.InductiveSExpTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.PatternedSExpressions
+    , RefinedSExp.Test.PatternedSExpressionsTest
     , RefinedSExp.Match
     , RefinedSExp.Test.MatchTest
+    , RefinedSExp.InductiveSExp
+    , RefinedSExp.Test.InductiveSExpTest
     , RefinedSExp.ADT
     , RefinedSExp.Test.ADTTest
     , RefinedSExp.AlgebraicPattern

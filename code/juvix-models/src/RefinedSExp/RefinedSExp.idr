@@ -201,6 +201,23 @@ inductiveDecide signature =
       (?inductiveDecide_hole_nilElim)
       (?inductiveDecide_hole_consElim))
 
+mutual
+  public export
+  sDecideInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    SIndSig sp lp ->
+    (x : SExp atom) -> sp x
+  sDecideInd signature (a $: l) = expElim signature a l (sListInd signature l)
+
+  public export
+  sListDecideInd :
+    {atom : Type} -> {sp : SPredicate atom} -> {lp : SLPredicate atom} ->
+    SIndSig sp lp ->
+    (l : SList atom) -> lp l
+  sListDecideInd signature ($|) = nilElim signature
+  sListDecideInd signature (x $+ l) =
+    consElim signature x l (sExpInd signature x) (sListInd signature l)
+
 public export
 InductiveType : {contextType : Type} -> {atom : Type} ->
   {predicate : DecidableContextPred contextType atom} ->
