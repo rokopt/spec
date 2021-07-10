@@ -390,6 +390,23 @@ SIndContextForAllSig {contextType : Type} {atom : Type}
       (contextType, sp contextUponEntry (a $: l))
 
 public export
+sIndContextForAllSigToIndContextSig :
+  {contextType : Type} ->
+  {atom : Type} ->
+  {sp : contextType -> SPredicate atom} ->
+  SIndContextForAllSig sp ->
+  SIndContextSig sp (SLForAll . sp)
+sIndContextForAllSigToIndContextSig signature =
+  (SIndContextArgs
+    (expElim signature)
+    (\context => (context, SLForAllEmpty))
+    (\contextUponEntry, x, l, expInd, listInd =>
+      (contextUponEntry,
+       SLForAllCons
+        (snd (expInd contextUponEntry))
+        (snd (listInd contextUponEntry)))))
+
+public export
 sIndContextForAll :
   {contextType : Type} ->
   {atom : Type} ->
@@ -400,14 +417,7 @@ sIndContextForAll :
     (contextType, SLForAll (sp context) l))
 sIndContextForAll {sp} signature =
   sIndContext {sp} {lp=(SLForAll . sp)}
-    (SIndContextArgs
-      (expElim signature)
-      (\context => (context, SLForAllEmpty))
-      (\contextUponEntry, x, l, expInd, listInd =>
-        (contextUponEntry,
-         SLForAllCons
-          (snd (expInd contextUponEntry))
-          (snd (listInd contextUponEntry)))))
+    (sIndContextForAllSigToIndContextSig signature)
 
 public export
 sExpIndContextForAll :
@@ -709,7 +719,21 @@ sDepIndContextForAll :
      SLForAllDep (sdp context) l
        (snd (sListIndContextForAll {sp} sIndContextForAllSig context l))))
 sDepIndContextForAll {sp} {sdp} {sIndContextForAllSig} signature =
-  ?sDepIndContextForAll_hole
+  let
+    indContext =
+      sIndContext
+        {sp=(\context, x =>
+          sdp context x
+            (snd (sExpIndContextForAll {sp} sIndContextForAllSig context x)))}
+        {lp=(\context, l =>
+          SLForAllDep (sdp context) l
+            (snd (sListIndContextForAll {sp} sIndContextForAllSig context l)))}
+        (SIndContextArgs
+          (?sDepIndContextForAll_hole_expElim)
+          (?sDepIndContextForAll_hole_nilElim)
+          (?sDepIndContextForAll_hole_consElim))
+  in
+  indContext
 
 public export
 SDPair : {atom : Type} -> SPredicate atom -> Type
