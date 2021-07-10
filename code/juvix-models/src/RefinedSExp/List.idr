@@ -10,52 +10,52 @@ import public Data.List
 -- tail-recursive (if `consElim` is) in an eagerly-evaluated language.
 nonTailRecursiveListInd :
   {atom : Type} ->
-  {listPredicate : List atom -> Type} ->
-  (nilElim : listPredicate []) ->
+  {lp : List atom -> Type} ->
+  (nilElim : lp []) ->
   (consElim :
     (a : atom) -> (l : List atom) ->
-    listPredicate l -> listPredicate (a :: l)) ->
-  (l : List atom) -> listPredicate l
+    lp l -> lp (a :: l)) ->
+  (l : List atom) -> lp l
 nonTailRecursiveListInd nilElim consElim [] =
   nilElim
 nonTailRecursiveListInd nilElim consElim (a :: l) =
   consElim a l (nonTailRecursiveListInd nilElim consElim l)
 
 public export
-record ListFoldSig (atom, contextType, listPredicate : Type) where
+record ListFoldSig (atom, contextType, lp : Type) where
   constructor ListFoldArgs
   nilElim :
-    (context : contextType) -> (contextType, listPredicate)
+    (context : contextType) -> (contextType, lp)
   consElim :
     (a : atom) -> (l : List atom) ->
     (recursiveCall :
-      (calledContext : contextType) -> (contextType, listPredicate)) ->
+      (calledContext : contextType) -> (contextType, lp)) ->
     (contextUponEntry : contextType) ->
-    (contextType, listPredicate)
+    (contextType, lp)
 
 public export
-listFoldFlip : {atom, contextType, listPredicate : Type} ->
-  (signature : ListFoldSig atom contextType listPredicate) ->
+listFoldFlip : {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig atom contextType lp) ->
   (l : List atom) ->
   (context : contextType) ->
-  (contextType, listPredicate)
+  (contextType, lp)
 listFoldFlip signature [] =
   nilElim signature
 listFoldFlip signature (a :: l) =
   consElim signature a l (listFoldFlip signature l)
 
 public export
-listFold : {atom, contextType, listPredicate : Type} ->
-  (signature : ListFoldSig atom contextType listPredicate) ->
+listFold : {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig atom contextType lp) ->
   (context : contextType) ->
   (l : List atom) ->
-  (contextType, listPredicate)
+  (contextType, lp)
 listFold signature = flip (listFoldFlip signature)
 
 public export
 record
 ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
-  (listPredicate :
+  (lp :
     -- The most recent predecessor is the head of `predecessors`.
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
@@ -64,30 +64,30 @@ ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
       constructor ListDepFoldArgs
       nilElim :
         (predecessors : List atom) -> (context : contextType predecessors) ->
-        (contextType predecessors, listPredicate predecessors context [])
+        (contextType predecessors, lp predecessors context [])
       consElim :
         (predecessors : List atom) ->
         (a : atom) -> (l : List atom) ->
         (recursiveCall :
           (calledContext : contextType (a :: predecessors)) ->
           (contextType (a :: predecessors),
-           listPredicate (a :: predecessors) calledContext l)) ->
+           lp (a :: predecessors) calledContext l)) ->
         (contextUponEntry : contextType predecessors) ->
         (contextType predecessors,
-         listPredicate predecessors contextUponEntry (a :: l))
+         lp predecessors contextUponEntry (a :: l))
 
 public export
 listDepFoldFlip : {atom : Type} -> {contextType : List atom -> Type} ->
-  {listPredicate :
+  {lp :
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
     List atom ->
     Type} ->
-  (signature : ListDepFoldSig listPredicate) ->
+  (signature : ListDepFoldSig lp) ->
   {predecessors : List atom} ->
   (l : List atom) ->
   (context : contextType predecessors) ->
-  (contextType predecessors, listPredicate predecessors context l)
+  (contextType predecessors, lp predecessors context l)
 listDepFoldFlip signature {predecessors} [] =
   nilElim signature predecessors
 listDepFoldFlip signature {predecessors} (a :: l) =
@@ -96,35 +96,35 @@ listDepFoldFlip signature {predecessors} (a :: l) =
 
 public export
 listDepFold : {atom : Type} -> {contextType : List atom -> Type} ->
-  {listPredicate :
+  {lp :
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
     List atom ->
     Type} ->
-  (signature : ListDepFoldSig listPredicate) ->
+  (signature : ListDepFoldSig lp) ->
   {predecessors : List atom} ->
   (context : contextType predecessors) -> (l : List atom) ->
-  (contextType predecessors, listPredicate predecessors context l)
+  (contextType predecessors, lp predecessors context l)
 listDepFold signature context l = listDepFoldFlip signature l context
 
 public export
-ListFoldNonDepSigToDepSig : {atom, contextType, listPredicate : Type} ->
-  (signature : ListFoldSig atom contextType listPredicate) ->
+ListFoldNonDepSigToDepSig : {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig atom contextType lp) ->
   ListDepFoldSig
-    {atom} {contextType=(\_ => contextType)} (\_, _, _ => listPredicate)
+    {atom} {contextType=(\_ => contextType)} (\_, _, _ => lp)
 ListFoldNonDepSigToDepSig signature =
   ListDepFoldArgs (\_ => nilElim signature) (\_ => consElim signature)
 
 public export
-listDepFoldFlipCorrect : {atom, contextType, listPredicate : Type} ->
-  (signature : ListFoldSig atom contextType listPredicate) ->
+listDepFoldFlipCorrect : {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig atom contextType lp) ->
   {predecessors : List atom} ->
   (l : List atom) ->
   listFoldFlip signature l =
     listDepFoldFlip
       {atom}
       {contextType=(\_ => contextType)}
-      {listPredicate=(\_, _, _ => listPredicate)}
+      {lp=(\_, _, _ => lp)}
       (ListFoldNonDepSigToDepSig signature)
       {predecessors}
       l
@@ -134,8 +134,8 @@ listDepFoldFlipCorrect signature (a :: l) =
   cong (consElim signature a l) (listDepFoldFlipCorrect signature l)
 
 public export
-listDepFoldCorrect : {atom, contextType, listPredicate : Type} ->
-  (signature : ListFoldSig atom contextType listPredicate) ->
+listDepFoldCorrect : {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig atom contextType lp) ->
   {predecessors : List atom} ->
   (context : contextType) ->
   (l : List atom) ->
@@ -143,7 +143,7 @@ listDepFoldCorrect : {atom, contextType, listPredicate : Type} ->
     listDepFold
       {atom}
       {contextType=(\_ => contextType)}
-      {listPredicate=(\_, _, _ => listPredicate)}
+      {lp=(\_, _, _ => lp)}
       (ListFoldNonDepSigToDepSig signature)
       {predecessors}
       context
@@ -215,8 +215,10 @@ listMetaFold :
 listMetaFold {signature} {ldp} metaSig context' l' =
   snd
     (listDepFold
-      {listPredicate=(\predecessors, context, l =>
-        ldp predecessors context l (snd (listDepFold signature {predecessors} context l)))}
+      {lp=
+        (\predecessors, context, l =>
+          ldp predecessors context l
+            (snd (listDepFold signature {predecessors} context l)))}
       (ListDepFoldArgs
         (?listMetaFold_hole_nilElim)
         (?listMetaFold_hole_consElim))
