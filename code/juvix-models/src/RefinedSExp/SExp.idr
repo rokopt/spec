@@ -683,59 +683,6 @@ sDepIndForAll {sIndForAllSig} signature =
       (\_, _ => SLForAllDepCons))
 
 public export
-record SDepIndContextForAllSig {contextType : Type} {atom : Type}
-  {sp : SContextPred contextType atom}
-  (sdp : SDepContextPred sp)
-  (sIndContextForAllSig : SIndContextForAllSig sp) where
-    constructor SDepIndContextForAllArgs
-    depExpElim :
-      (contextUponEntry : contextType) ->
-      (a : atom) -> (l : SList atom) ->
-      (listDepInduction : (context : contextType) ->
-        (contextType,
-          SLForAllDep (sdp context) l
-            (snd
-              (sListIndContextForAll {sp} sIndContextForAllSig context l)))) ->
-      (contextType,
-        sdp contextUponEntry (a $:l)
-          (snd
-            (expElim sIndContextForAllSig contextUponEntry a l
-              (sListIndContextForAllFlip {sp} sIndContextForAllSig l))))
-
-public export
-sDepIndContextForAll :
-  {contextType : Type} ->
-  {atom : Type} ->
-  {sp : contextType -> SPredicate atom} ->
-  {sdp : (context : contextType) -> (x : SExp atom) -> sp context x -> Type} ->
-  {sIndContextForAllSig : SIndContextForAllSig sp} ->
-  SDepIndContextForAllSig {sp} sdp sIndContextForAllSig ->
-  ((context : contextType) -> (x : SExp atom) ->
-    (contextType,
-     sdp context x
-       (snd (sExpIndContextForAll {sp} sIndContextForAllSig context x))),
-   (context : contextType) -> (l : SList atom) ->
-    (contextType,
-     SLForAllDep (sdp context) l
-       (snd (sListIndContextForAll {sp} sIndContextForAllSig context l))))
-sDepIndContextForAll {sp} {sdp} {sIndContextForAllSig} signature =
-  let
-    indContext =
-      sIndContext
-        {sp=(\context, x =>
-          sdp context x
-            (snd (sExpIndContextForAll {sp} sIndContextForAllSig context x)))}
-        {lp=(\context, l =>
-          SLForAllDep (sdp context) l
-            (snd (sListIndContextForAll {sp} sIndContextForAllSig context l)))}
-        (SIndContextArgs
-          (?sDepIndContextForAll_hole_expElim)
-          (?sDepIndContextForAll_hole_nilElim)
-          (?sDepIndContextForAll_hole_consElim))
-  in
-  indContext
-
-public export
 SDPair : {atom : Type} -> SPredicate atom -> Type
 SDPair {atom} pred = DPair (SExp atom) pred
 
