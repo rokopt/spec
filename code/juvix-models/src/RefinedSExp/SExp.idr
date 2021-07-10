@@ -248,15 +248,6 @@ sdepConsElim : {atom : Type} -> {contextType : SList atom -> Type} ->
     lp predecessors contextUponEntry (x :: l)))
 sdepConsElim = consElim . slistElim
 
-public export
-SExpDepFoldToListSig :
-  {atom : Type} -> {contextType : SList atom -> Type} ->
-  {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
-  SExpDepFoldSig sp lp ->
-  ListDepFoldSig {atom=(SExp atom)} {contextType} lp
-SExpDepFoldToListSig expSig =
-  ListDepFoldArgs (sdepNilElim expSig) (sdepConsElim expSig)
-
 mutual
   public export
   sexpDepFoldFlip :
@@ -281,7 +272,7 @@ mutual
     (context : contextType predecessors) ->
     (contextType predecessors, lp predecessors context l)
   slistDepFoldFlip signature {predecessors} l =
-    listDepFoldFlip (SExpDepFoldToListSig signature) {predecessors} l
+    listDepFoldFlip (slistElim signature) {predecessors} l
 
 public export
 sexpDepFold :
@@ -335,7 +326,7 @@ slistDepFoldFlipDef :
   {predecessors : SList atom} ->
   (l : SList atom) ->
   slistDepFoldFlip signature {predecessors} l =
-    listDepFoldFlip (SExpDepFoldToListSig signature) {predecessors} l
+    listDepFoldFlip (slistElim signature) {predecessors} l
 slistDepFoldFlipDef signature {predecessors} l = Refl
 
 mutual
@@ -506,7 +497,7 @@ sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
               (snd (slistDepFold signature {predecessors} context l)))}
         (SExpDepFoldArgs
           (?sexpMetaFolds_hole_expElim)
-          (?sexpMetaFolds_hole_slistElim))
+          (listMetaFoldArgs (listElim metaSig)))
         context'
   in
   (\x => snd (fst depFold x), \l => snd (snd depFold l))

@@ -210,6 +210,35 @@ record ListMetaFoldSig
             (listDepFoldFlip signature l) contextUponEntry))
 
 public export
+listMetaFoldArgs :
+  {atom : Type} -> {contextType : List atom -> Type} ->
+  {lp :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    List atom ->
+    Type} ->
+  {signature : ListDepFoldSig lp} ->
+  {ldp :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    (l : List atom) ->
+    lp predecessors context l ->
+    Type} ->
+  (metaSig : ListMetaFoldSig signature ldp) ->
+  ListDepFoldSig
+    (\predecessors, context, l =>
+      ldp predecessors context l
+        (snd (listDepFold signature {predecessors} context l)))
+listMetaFoldArgs metaSig =
+  (ListDepFoldArgs
+    (\predecessors, context =>
+      (fst (nilElim signature predecessors context),
+        metaNilElim metaSig predecessors context))
+    (\predecessors, a, l, recursiveCall, contextUponEntry =>
+      (fst (listDepFoldFlip signature l contextUponEntry),
+       metaConsElim metaSig predecessors a l recursiveCall contextUponEntry)))
+
+public export
 listMetaFold :
   {atom : Type} -> {contextType : List atom -> Type} ->
   {lp :
@@ -236,13 +265,6 @@ listMetaFold {signature} {ldp} metaSig context' l' =
         (\predecessors, context, l =>
           ldp predecessors context l
             (snd (listDepFold signature {predecessors} context l)))}
-      (ListDepFoldArgs
-        (\predecessors, context =>
-          (fst (nilElim signature predecessors context),
-           metaNilElim metaSig predecessors context))
-        (\predecessors, a, l, recursiveCall, contextUponEntry =>
-          (fst (listDepFoldFlip signature l contextUponEntry),
-           metaConsElim
-            metaSig predecessors a l recursiveCall contextUponEntry)))
+      (listMetaFoldArgs metaSig)
      context'
      l')
