@@ -1,7 +1,6 @@
 module Executable.Test.Main
 
 import RefinedSExp.Test.ListTest
-import RefinedSExp.Test.DepListTest
 import RefinedSExp.Test.RefinedListTest
 import RefinedSExp.Test.SExpTest
 import RefinedSExp.Test.RefinedSExpTest

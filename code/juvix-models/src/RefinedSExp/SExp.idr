@@ -98,10 +98,17 @@ public export
 ($:^) : {atom : Type} -> atom -> atom -> SList atom
 a $:^ a' = a $:+ $^ a'
 
+{-
 public export
-SPredicate : (atom : Type) -> Type
-SPredicate atom = SExp atom -> Type
-
-public export
-SLPredicate : (atom : Type) -> Type
-SLPredicate atom = SList atom -> Type
+sexpFoldFlip : {atom, contextType, sexpPredicate : Type} ->
+  (signature : SExpFoldSig atom contextType sexpPredicate) ->
+  (predecessors : List atom) ->
+  (x : SExp atom) ->
+  (context : contextType) ->
+  (contextType, sexpPredicate)
+sexpFoldFlip signature predecessors [] =
+  nilElim signature predecessors
+sexpFoldFlip signature predecessors (a :: l) =
+  consElim signature predecessors a l
+    (sexpFoldFlip signature (a :: predecessors) l)
+    -}
