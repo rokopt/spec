@@ -25,10 +25,11 @@ public export
 record ListFoldSig (atom, contextType, listPredicate : Type) where
   constructor ListFoldArgs
   nilElim :
-    -- The most recent predecessor is the head of `predecessors`.
+    -- XXX get rid of predecessors from non-dep one
     (predecessors : List atom) -> (context : contextType) ->
     (contextType, listPredicate)
   consElim :
+    -- XXX get rid of predecessors from non-dep one
     (predecessors : List atom) ->
     (a : atom) -> (l : List atom) ->
     (recursiveCall :
@@ -62,6 +63,7 @@ public export
 record
 ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
   (listPredicate :
+    -- The most recent predecessor is the head of `predecessors`.
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
     List atom ->
