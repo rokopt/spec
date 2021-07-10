@@ -104,20 +104,14 @@ record SExpFoldSig
   where
     constructor SExpFoldArgs
     expElim :
-      -- XXX get rid of predecessors from non-dep one after dep one is done
-      (predecessors : SList atom) ->
       atom -> SList atom ->
       (contextType -> (contextType, slistPredicate)) ->
       contextType ->
       (contextType, sexpPredicate)
     nilElim :
-      -- XXX get rid of predecessors from non-dep one after dep one is done
-      (predecessors : SList atom) ->
       contextType ->
       (contextType, slistPredicate)
     consElim :
-      -- XXX get rid of predecessors from non-dep one after dep one is done
-      (predecessors : SList atom) ->
       SExp atom -> SList atom ->
       (contextType -> (contextType, slistPredicate)) ->
       contextType ->
@@ -139,13 +133,13 @@ mutual
     (signature :
       SExpFoldSig
         atom contextType sexpPredicate slistPredicate) ->
-    (predecessors : SList atom) ->
+    -- XXX (predecessors : SList atom) ->
     (x : SExp atom) ->
     (context : contextType) ->
     (contextType, sexpPredicate)
-  sexpFoldFlip signature predecessors (a $: l) =
-    expElim signature predecessors a l
-      (slistFoldFlip signature ((a $: l) :: predecessors) l)
+  sexpFoldFlip signature {- XXX predecessors -} (a $: l) =
+    expElim signature {- XXX predecessors -} a l
+      (slistFoldFlip signature {- XXX ((a $: l) :: predecessors) -} l)
 
   public export
   slistFoldFlip :
@@ -153,31 +147,31 @@ mutual
     (signature :
       SExpFoldSig
         atom contextType sexpPredicate slistPredicate) ->
-    (predecessors : SList atom) ->
+    -- XXX (predecessors : SList atom) ->
     (l : SList atom) ->
     (context : contextType) ->
     (contextType, slistPredicate)
-  slistFoldFlip signature predecessors l =
-    listFoldFlip {atom=(SExp atom)} (SExpFoldToListSig signature) predecessors l
+  slistFoldFlip signature {- XXX predecessors -} l =
+    listFoldFlip {atom=(SExp atom)} (SExpFoldToListSig signature) {- XXX predecessors -} l
 
 public export
 sexpFold : {atom, contextType, sexpPredicate, slistPredicate : Type} ->
   (signature : SExpFoldSig atom contextType sexpPredicate slistPredicate) ->
-  (predecessors : SList atom) ->
+  -- XXX (predecessors : SList atom) ->
   (context : contextType) ->
   (x : SExp atom) ->
   (contextType, sexpPredicate)
-sexpFold signature predecessors = flip (sexpFoldFlip signature predecessors)
+sexpFold signature {- XXX predecessors -} = flip (sexpFoldFlip signature {- XXX predecessors -} )
 
 public export
 slistFold :
   {atom, contextType, sexpPredicate, slistPredicate : Type} ->
   (signature : SExpFoldSig atom contextType sexpPredicate slistPredicate) ->
-  (predecessors : SList atom) ->
+  -- XXX (predecessors : SList atom) ->
   (context : contextType) ->
   (l : SList atom) ->
   (contextType, slistPredicate)
-slistFold signature predecessors = flip (slistFoldFlip signature predecessors)
+slistFold signature {- XXX predecessors -} = flip (slistFoldFlip signature {- XXX predecessors -} )
 
 infixr 7 :$:
 public export
@@ -199,3 +193,100 @@ data SExpExists :
             {a : atom} -> {l : SList atom} ->
             ListExists depType l ->
             SExpExists depType (a $: l)
+
+SExpPredicate : {atom : Type} -> (contextType : SList atom -> Type) -> Type
+SExpPredicate {atom} contextType =
+  (predecessors : SList atom) -> (context : contextType predecessors) ->
+  SExp atom -> Type
+
+SListPredicate : {atom : Type} -> (contextType : SList atom -> Type) -> Type
+SListPredicate {atom} contextType =
+  (predecessors : SList atom) -> (context : contextType predecessors) ->
+  SList atom -> Type
+
+public export
+record SExpDepFoldSig
+  {atom : Type} {contextType : SList atom -> Type}
+  (sp : SExpPredicate contextType) (lp : SListPredicate contextType)
+  where
+    constructor SExpDepFoldArgs
+    expElim :
+      (predecessors : SList atom) ->
+      (a : atom) -> (l : SList atom) ->
+      (recursiveCall :
+        (calledContext : contextType ((a $: l) :: predecessors)) ->
+         (contextType ((a $: l) :: predecessors),
+          lp ((a $: l) :: predecessors) calledContext l)) ->
+      (context : contextType predecessors) ->
+      (contextType predecessors, sp predecessors context (a $: l))
+    nilElim :
+      (predecessors : SList atom) -> (context : contextType predecessors) ->
+      (contextType predecessors, lp predecessors context [])
+    consElim :
+      (predecessors : SList atom) ->
+      (x : SExp atom) -> (l : SList atom) ->
+      (recursiveCall :
+        (calledContext : contextType (x :: predecessors)) ->
+        (contextType (x :: predecessors),
+         lp (x :: predecessors) calledContext l)) ->
+      (contextUponEntry : contextType predecessors) ->
+      (contextType predecessors,
+       lp predecessors contextUponEntry (x :: l))
+
+public export
+SExpDepFoldToListSig :
+  {atom : Type} -> {contextType : SList atom -> Type} ->
+  {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
+  SExpDepFoldSig sp lp ->
+  ListDepFoldSig {atom=(SExp atom)} {contextType} lp
+SExpDepFoldToListSig expSig = ListDepFoldArgs (nilElim expSig) (consElim expSig)
+
+mutual
+  public export
+  sexpDepFoldFlip :
+    {atom : Type} -> {contextType : SList atom -> Type} ->
+    {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
+    (signature : SExpDepFoldSig sp lp) ->
+    {predecessors : SList atom} ->
+    (x : SExp atom) ->
+    (context : contextType predecessors) ->
+    (contextType predecessors, sp predecessors context x)
+  sexpDepFoldFlip signature {predecessors} (a $: l) =
+    SExpDepFoldSig.expElim signature predecessors a l
+      (slistDepFoldFlip signature {predecessors=((a $: l) :: predecessors)} l)
+
+  public export
+  slistDepFoldFlip :
+    {atom : Type} -> {contextType : SList atom -> Type} ->
+    {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
+    (signature : SExpDepFoldSig sp lp) ->
+    {predecessors : SList atom} ->
+    (l : SList atom) ->
+    (context : contextType predecessors) ->
+    (contextType predecessors, lp predecessors context l)
+  slistDepFoldFlip signature predecessors l =
+    listDepFoldFlip (SExpDepFoldToListSig signature) predecessors l
+
+public export
+sexpDepFold :
+  {atom : Type} -> {contextType : SList atom -> Type} ->
+  {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
+  (signature : SExpDepFoldSig sp lp) ->
+  {predecessors : SList atom} ->
+  (context : contextType predecessors) ->
+  (x : SExp atom) ->
+  (contextType predecessors, sp predecessors context x)
+sexpDepFold signature context x = sexpDepFoldFlip signature x context
+
+public export
+slistDepFold :
+  {atom : Type} -> {contextType : SList atom -> Type} ->
+  {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
+  (signature : SExpDepFoldSig sp lp) ->
+  {predecessors : SList atom} ->
+  (context : contextType predecessors) ->
+  (l : SList atom) ->
+  (contextType predecessors, lp predecessors context l)
+slistDepFold signature context l = slistDepFoldFlip signature l context
+
+{- XXX correctfoldassertions -}
