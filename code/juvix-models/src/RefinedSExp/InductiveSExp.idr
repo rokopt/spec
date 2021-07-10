@@ -1,6 +1,6 @@
 module RefinedSExp.InductiveSExp
 
-import public RefinedSExp.SExp
+import public RefinedSExp.OldSExp
 
 %default total
 

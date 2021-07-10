@@ -1,6 +1,6 @@
 module RefinedSExp.Match
 
-import public RefinedSExp.RefinedSExp
+import public RefinedSExp.OldRefinedSExp
 import public Library.Decidability
 
 %default total

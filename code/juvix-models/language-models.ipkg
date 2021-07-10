@@ -34,6 +34,10 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.SExpTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.OldSExp
+    , RefinedSExp.Test.OldSExpTest
+    , RefinedSExp.OldRefinedSExp
+    , RefinedSExp.Test.OldRefinedSExpTest
     , RefinedSExp.PatternedSExpressions
     , RefinedSExp.Test.PatternedSExpressionsTest
     , RefinedSExp.Match
