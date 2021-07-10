@@ -28,6 +28,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.ListTest
     , RefinedSExp.DepList
     , RefinedSExp.Test.DepListTest
+    , RefinedSExp.RefinedList
+    , RefinedSExp.Test.RefinedListTest
     , RefinedSExp.SExp
     , RefinedSExp.Test.SExpTest
     , RefinedSExp.RefinedSExp
