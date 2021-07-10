@@ -288,13 +288,12 @@ sexpDepFolds :
   {atom : Type} -> {contextType : SList atom -> Type} ->
   {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
   (signature : SExpDepFoldSig sp lp) ->
-  ({predecessors : SList atom} ->
-    (context : contextType predecessors) ->
-    (x : SExp atom) -> (contextType predecessors, sp predecessors context x),
-   {predecessors : SList atom} ->
-    (context : contextType predecessors) ->
-    (l : SList atom) -> (contextType predecessors, lp predecessors context l))
-sexpDepFolds signature = (sexpDepFold signature, slistDepFold signature)
+  {predecessors : SList atom} ->
+  (context : contextType predecessors) ->
+  ((x : SExp atom) -> (contextType predecessors, sp predecessors context x),
+   (l : SList atom) -> (contextType predecessors, lp predecessors context l))
+sexpDepFolds signature context =
+  (sexpDepFold signature context, slistDepFold signature context)
 
 public export
 SExpFoldNonDepSigToDepSig :
@@ -432,12 +431,28 @@ sexpMetaFolds :
   {sdp : SExpMetaPred sp} ->
   {ldp : SListMetaPred lp} ->
   (metaSig : SExpMetaFoldSig signature sdp ldp) ->
-  ({predecessors : SList atom} ->
-    (context : contextType predecessors) ->
-    (x : SExp atom) ->
+  {predecessors : SList atom} ->
+  (context : contextType predecessors) ->
+  ((x : SExp atom) ->
     sdp predecessors context x (snd (sexpDepFold signature context x)),
-   {predecessors : SList atom} ->
-    (context : contextType predecessors) ->
-    (l : SList atom) ->
-    ldp predecessors context l (snd (slistDepFold signature context l)))
-sexpMetaFolds {signature} {sdp} {ldp} metaSig = ?sexpMetaFolds_hole
+   (l : SList atom) ->
+   ldp predecessors context l (snd (slistDepFold signature context l)))
+sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
+  let
+    depFold =
+      sexpDepFolds
+        {sp=
+          (\predecessors, context, x =>
+            sdp predecessors context x
+              (snd (sexpDepFold signature {predecessors} context x)))}
+        {lp=
+          (\predecessors, context, l =>
+            ldp predecessors context l
+              (snd (slistDepFold signature {predecessors} context l)))}
+        (SExpDepFoldArgs
+          (?sexpMetaFolds_hole_expElim)
+          (?sexpMetaFolds_hole_nilElim)
+          (?sexpMetaFolds_hole_consElim))
+        context'
+  in
+  (\x => snd (fst depFold x), \l => snd (snd depFold l))
