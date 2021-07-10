@@ -14,22 +14,37 @@ ListFoldSig {atom : Type} {contextType : List atom -> Type}
     List atom ->
     Type) where
       constructor ListFoldArgs
-      pushAtom :
-        (a : atom) -> (l : List atom) -> contextType l -> contextType (a :: l)
-      {- XXX
-    nilElim :
-      (contextUponEntry : contextType) ->
-      (contextType, pred contextUponEntry [])
-    consElim :
-      (contextUponEntry : contextType) ->
-      (a : atom) ->
-      (processed : List atom) ->
-      (accum : pred contextUponEntry processed) ->
-      (remaining : List atom) ->
-      (recursiveCall :
-        ((context : contextType) -> (contextType, pred context remaining))) ->
-      Void
-      -}
+      nilElim :
+        (predecessors : List atom) -> (context : contextType predecessors) ->
+        (contextType predecessors, listPredicate predecessors context [])
+      consElim :
+        (predecessors : List atom) ->
+        (a : atom) -> (l : List atom) ->
+        (recursiveCall :
+          (calledContext : contextType (a :: predecessors)) ->
+          (contextType (a :: predecessors),
+           listPredicate (a :: predecessors) calledContext l)) ->
+        (contextUponEntry : contextType predecessors) ->
+        (contextType predecessors,
+         listPredicate predecessors contextUponEntry (a :: l))
+
+public export
+listFoldFlip : {atom : Type} -> {contextType : List atom -> Type} ->
+  {listPredicate :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    List atom ->
+    Type} ->
+  (signature : ListFoldSig listPredicate) ->
+  {predecessors : List atom} ->
+  (l : List atom) ->
+  (context : contextType predecessors) ->
+  (contextType predecessors, listPredicate predecessors context l)
+listFoldFlip signature {predecessors} [] =
+  nilElim signature predecessors
+listFoldFlip signature {predecessors} (a :: l) =
+  consElim signature predecessors a l
+    (listFoldFlip signature {predecessors=(a :: predecessors)} l)
 
 public export
 listFold : {atom : Type} -> {contextType : List atom -> Type} ->
@@ -41,9 +56,5 @@ listFold : {atom : Type} -> {contextType : List atom -> Type} ->
   (signature : ListFoldSig listPredicate) ->
   {predecessors : List atom} ->
   (context : contextType predecessors) -> (l : List atom) ->
-  (contextType l, listPredicate predecessors context l)
-listFold signature context [] =
-  ?listFold_hole_nil
-listFold signature {predecessors} context (a :: l) =
-  let recCall = listFold signature {predecessors=(a :: predecessors)} (pushAtom signature a predecessors context) l in
-  ?listFold_hole_cons
+  (contextType predecessors, listPredicate predecessors context l)
+listFold signature context l = listFoldFlip signature l context
