@@ -112,3 +112,24 @@ sexpFoldFlip signature predecessors (a :: l) =
   consElim signature predecessors a l
     (sexpFoldFlip signature (a :: predecessors) l)
     -}
+
+infixr 7 :$:
+public export
+data SExpForAll :
+  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
+    (:$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
+            {a : atom} -> {l : SList atom} ->
+            depType (a $: l) -> ListForAll depType l ->
+            SExpForAll depType (a $: l)
+
+public export
+data SExpExists :
+  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
+    (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
+            {a : atom} -> {l : SList atom} ->
+            depType (a $: l) ->
+            SExpExists depType (a $: l)
+    (>$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
+            {a : atom} -> {l : SList atom} ->
+            ListExists depType l ->
+            SExpExists depType (a $: l)
