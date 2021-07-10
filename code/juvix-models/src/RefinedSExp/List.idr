@@ -23,6 +23,7 @@ nonTailRecursiveListInd nilElim consElim (a :: l) =
 
 public export
 record ListFoldSig (atom, contextType, listPredicate : Type) where
+  constructor ListFoldArgs
   nilElim :
     -- The most recent predecessor is the head of `predecessors`.
     (predecessors : List atom) -> (context : contextType) ->
@@ -135,8 +136,8 @@ listDepFoldFlipCorrect : {atom, contextType, listPredicate : Type} ->
 listDepFoldFlipCorrect signature predecessors [] =
   Refl
 listDepFoldFlipCorrect signature predecessors (a :: l) =
-  let recCallEq = listDepFoldFlipCorrect signature (a :: predecessors) l in
-  cong (consElim signature predecessors a l) recCallEq
+  cong (consElim signature predecessors a l)
+    (listDepFoldFlipCorrect signature (a :: predecessors) l)
 
 export
 listDepFoldCorrect : {atom, contextType, listPredicate : Type} ->
