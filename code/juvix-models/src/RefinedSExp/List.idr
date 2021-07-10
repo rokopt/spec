@@ -212,4 +212,13 @@ listMetaFold :
   (context : contextType predecessors) -> (l : List atom) ->
   ldp predecessors context l
     (snd (listDepFold signature {predecessors} context l))
-listMetaFold {signature} {ldp} metaSig = ?listMetaFold_hole
+listMetaFold {signature} {ldp} metaSig context' l' =
+  snd
+    (listDepFold
+      {listPredicate=(\predecessors, context, l =>
+        ldp predecessors context l (snd (listDepFold signature {predecessors} context l)))}
+      (ListDepFoldArgs
+        (?listMetaFold_hole_nilElim)
+        (?listMetaFold_hole_consElim))
+     context'
+     l')
