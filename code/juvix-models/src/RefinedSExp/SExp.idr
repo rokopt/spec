@@ -393,3 +393,51 @@ slistDepFoldCorrect :
       l
 slistDepFoldCorrect signature context l =
   applyEq (slistDepFoldFlipCorrect signature l)
+
+SExpMetaPred :
+  {atom : Type} -> {contextType : SList atom -> Type} ->
+  SExpPredicate contextType ->
+  Type
+SExpMetaPred {atom} {contextType} sp =
+  (predecessors : SList atom) ->
+  (context : contextType predecessors) ->
+  (x : SExp atom) ->
+  sp predecessors context x -> Type
+
+SListMetaPred :
+  {atom : Type} -> {contextType : SList atom -> Type} ->
+  SListPredicate contextType ->
+  Type
+SListMetaPred {atom} {contextType} lp =
+  (predecessors : SList atom) ->
+  (context : contextType predecessors) ->
+  (l : SList atom) ->
+  lp predecessors context l -> Type
+
+public export
+record SExpMetaFoldSig
+  {atom : Type} {contextType : SList atom -> Type}
+  {sp : SExpPredicate contextType} {lp : SListPredicate contextType}
+  (signature : SExpDepFoldSig sp lp)
+  (sdp : SExpMetaPred sp)
+  (ldp : SListMetaPred lp)
+  where
+    constructor SExpMetaFoldArgs
+
+public export
+sexpMetaFolds :
+  {atom : Type} -> {contextType : SList atom -> Type} ->
+  {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
+  {signature : SExpDepFoldSig sp lp} ->
+  {sdp : SExpMetaPred sp} ->
+  {ldp : SListMetaPred lp} ->
+  (metaSig : SExpMetaFoldSig signature sdp ldp) ->
+  ({predecessors : SList atom} ->
+    (context : contextType predecessors) ->
+    (x : SExp atom) ->
+    sdp predecessors context x (snd (sexpDepFold signature context x)),
+   {predecessors : SList atom} ->
+    (context : contextType predecessors) ->
+    (l : SList atom) ->
+    ldp predecessors context l (snd (slistDepFold signature context l)))
+sexpMetaFolds {signature} {sdp} {ldp} metaSig = ?sexpMetaFolds_hole

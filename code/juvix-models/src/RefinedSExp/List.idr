@@ -173,3 +173,43 @@ data ListExists :
             {a : atom} -> {l : List atom} ->
             ListExists depType l ->
             ListExists depType (a :: l)
+
+public export
+record ListMetaFoldSig
+  {atom : Type} {contextType : List atom -> Type}
+  {lp :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    List atom ->
+    Type}
+  (signature : ListDepFoldSig lp)
+  (ldp :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    (l : List atom) ->
+    lp predecessors context l ->
+    Type)
+  where
+  constructor ListMetaFoldArgs
+
+public export
+listMetaFold :
+  {atom : Type} -> {contextType : List atom -> Type} ->
+  {lp :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    List atom ->
+    Type} ->
+  {signature : ListDepFoldSig lp} ->
+  {ldp :
+    (predecessors : List atom) ->
+    (context : contextType predecessors) ->
+    (l : List atom) ->
+    lp predecessors context l ->
+    Type} ->
+  (metaSig : ListMetaFoldSig signature ldp) ->
+  {predecessors : List atom} ->
+  (context : contextType predecessors) -> (l : List atom) ->
+  ldp predecessors context l
+    (snd (listDepFold signature {predecessors} context l))
+listMetaFold {signature} {ldp} metaSig = ?listMetaFold_hole
