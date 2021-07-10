@@ -5,9 +5,26 @@ import public Data.List
 
 %default total
 
+-- This is not the induction principle that we'll use; it's here to help
+-- picture why we need a context to write a _generic_ function which can be
+-- tail-recursive (if `consElim` is) in an eagerly-evaluated language.
+nonTailRecursiveListInd :
+  {atom : Type} ->
+  {listPredicate : List atom -> Type} ->
+  (nilElim : listPredicate []) ->
+  (consElim :
+    (a : atom) -> (l : List atom) ->
+    listPredicate l -> listPredicate (a :: l)) ->
+  (l : List atom) -> listPredicate l
+nonTailRecursiveListInd nilElim consElim [] =
+  nilElim
+nonTailRecursiveListInd nilElim consElim (a :: l) =
+  consElim a l (nonTailRecursiveListInd nilElim consElim l)
+
 public export
 record ListFoldSig (atom, contextType, listPredicate : Type) where
   nilElim :
+    -- The most recent predecessor is the head of `predecessors`.
     (predecessors : List atom) -> (context : contextType) ->
     (contextType, listPredicate)
   consElim :
@@ -44,7 +61,6 @@ public export
 record
 ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
   (listPredicate :
-    -- The most recent predecessor is the head of `predecessors`.
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
     List atom ->
