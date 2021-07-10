@@ -190,7 +190,24 @@ record ListMetaFoldSig
     lp predecessors context l ->
     Type)
   where
-  constructor ListMetaFoldArgs
+    constructor ListMetaFoldArgs
+    metaNilElim :
+      (predecessors : List atom) -> (context : contextType predecessors) ->
+      ldp predecessors context []
+        (snd (nilElim signature predecessors context))
+    metaConsElim :
+      (predecessors : List atom) ->
+      (a : atom) -> (l : List atom) ->
+      (recursiveCall :
+        (calledContext : contextType (a :: predecessors)) ->
+        (contextType (a :: predecessors),
+         ldp (a :: predecessors) calledContext l
+         (snd (listDepFoldFlip signature l calledContext)))) ->
+      (contextUponEntry : contextType predecessors) ->
+      ldp predecessors contextUponEntry (a :: l)
+        (snd
+          (consElim signature predecessors a l
+            (listDepFoldFlip signature l) contextUponEntry))
 
 public export
 listMetaFold :
@@ -220,7 +237,12 @@ listMetaFold {signature} {ldp} metaSig context' l' =
           ldp predecessors context l
             (snd (listDepFold signature {predecessors} context l)))}
       (ListDepFoldArgs
-        (?listMetaFold_hole_nilElim)
-        (?listMetaFold_hole_consElim))
+        (\predecessors, context =>
+          (fst (nilElim signature predecessors context),
+           metaNilElim metaSig predecessors context))
+        (\predecessors, a, l, recursiveCall, contextUponEntry =>
+          (fst (listDepFoldFlip signature l contextUponEntry),
+           metaConsElim
+            metaSig predecessors a l recursiveCall contextUponEntry)))
      context'
      l')
