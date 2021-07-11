@@ -52,60 +52,6 @@ listFold : {atom, contextType, lp : Type} ->
   (contextType, lp)
 listFold signature = flip (listFoldFlip signature)
 
-infixr 7 :::
-public export
-data ListForAll :
-  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
-    (|:|) : {atom : Type} -> {depType : atom -> Type} ->
-            ListForAll depType []
-    (:::) : {atom : Type} -> {depType : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            depType a -> ListForAll depType l ->
-            ListForAll depType (a :: l)
-
-public export
-data ListExists :
-  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
-    (<::) : {atom : Type} -> {depType : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            depType a ->
-            ListExists depType (a :: l)
-    (>::) : {atom : Type} -> {depType : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            ListExists depType l ->
-            ListExists depType (a :: l)
-
-public export
-record ListForAllFoldSig (atom, contextType, ap : Type)
-  where
-    constructor ListForAllFoldArgs
-    nilElim : contextType -> contextType
-    pushAtom : atom -> contextType -> contextType
-    consElim :
-      (a : atom) -> (l : List atom) ->
-      (contextType, List ap) ->
-      (contextType, ap)
-
-public export
-ListForAllFoldSigToFoldSig : {atom, contextType, ap : Type} ->
-  ListForAllFoldSig atom contextType ap ->
-  ListFoldSig atom contextType (List ap)
-ListForAllFoldSigToFoldSig signature =
-  ListFoldArgs {lp=(List ap)}
-    (\context => (nilElim signature context, []))
-    (\a, l, recursiveCall, contextUponEntry =>
-      let argumentsToInduction = pushAtom signature a contextUponEntry in
-      let inductionOut = recursiveCall argumentsToInduction in
-      let elimOut = consElim signature a l inductionOut in
-      (fst elimOut, snd elimOut :: snd inductionOut))
-
-public export
-listForAllFold : {atom, contextType, ap : Type} ->
-  (signature : ListForAllFoldSig atom contextType ap) ->
-  (context : contextType) ->
-  (l : List atom) -> (contextType, List ap)
-listForAllFold signature = listFold (ListForAllFoldSigToFoldSig signature)
-
 public export
 record
 ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
@@ -204,6 +150,29 @@ listDepFoldCorrect : {atom, contextType, lp : Type} ->
       l
 listDepFoldCorrect signature context l =
   applyEq (listDepFoldFlipCorrect signature l)
+
+infixr 7 :::
+public export
+data ListForAll :
+  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
+    (|:|) : {atom : Type} -> {depType : atom -> Type} ->
+            ListForAll depType []
+    (:::) : {atom : Type} -> {depType : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            depType a -> ListForAll depType l ->
+            ListForAll depType (a :: l)
+
+public export
+data ListExists :
+  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
+    (<::) : {atom : Type} -> {depType : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            depType a ->
+            ListExists depType (a :: l)
+    (>::) : {atom : Type} -> {depType : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            ListExists depType l ->
+            ListExists depType (a :: l)
 
 public export
 record ListMetaFoldSig
