@@ -23,28 +23,6 @@ mutual
     (No neq, _) => No (\eq => case eq of Refl => neq Refl)
     (_ , No neq) => No (\eq => case eq of Refl => neq Refl)
 
-DepEither : {a : Type} -> (b, c : a -> Type) -> a -> Type
-DepEither {a} b c = \x : a => Either (b x) (c x)
-
-DepLeft : {a : Type} -> {b, c : a -> Type} -> {x : a} -> b x -> DepEither b c x
-DepLeft bx = Left bx
-
-DepRight : {a : Type} -> {b, c : a -> Type} -> {x : a} -> c x -> DepEither b c x
-DepRight cx = Right cx
-
-DPairEither : {a : Type} -> (b, c : a -> Type) -> Type
-DPairEither {a} b c = Either (DPair a b) (DPair a c)
-
-infixr 4 **<
-(**<) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> b x ->
-  DPairEither b c
-x **< bx = Left (x ** bx)
-
-infixr 4 **>
-(**>) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> c x ->
-  DPairEither b c
-x **> cx = Right (x ** cx)
-
 public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates
