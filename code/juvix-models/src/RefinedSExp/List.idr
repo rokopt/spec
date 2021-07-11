@@ -187,14 +187,13 @@ record ListMetaFoldSig
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
     (l : List atom) ->
-    lp predecessors context l ->
+    (contextType predecessors, lp predecessors context l) ->
     Type)
   where
     constructor ListMetaFoldArgs
     metaNilElim :
       (predecessors : List atom) -> (context : contextType predecessors) ->
-      ldp predecessors context []
-        (snd (nilElim signature predecessors context))
+      ldp predecessors context [] (nilElim signature predecessors context)
     metaConsElim :
       (predecessors : List atom) ->
       (a : atom) -> (l : List atom) ->
@@ -202,12 +201,11 @@ record ListMetaFoldSig
         (calledContext : contextType (a :: predecessors)) ->
         (contextType (a :: predecessors),
          ldp (a :: predecessors) calledContext l
-         (snd (listDepFoldFlip signature l calledContext)))) ->
+          (listDepFoldFlip signature l calledContext))) ->
       (contextUponEntry : contextType predecessors) ->
       ldp predecessors contextUponEntry (a :: l)
-        (snd
-          (consElim signature predecessors a l
-            (listDepFoldFlip signature l) contextUponEntry))
+        (consElim signature predecessors a l
+          (listDepFoldFlip signature l) contextUponEntry)
 
 public export
 listMetaFoldArgs :
@@ -222,13 +220,13 @@ listMetaFoldArgs :
     (predecessors : List atom) ->
     (context : contextType predecessors) ->
     (l : List atom) ->
-    lp predecessors context l ->
+    (contextType predecessors, lp predecessors context l) ->
     Type} ->
   (metaSig : ListMetaFoldSig signature ldp) ->
   ListDepFoldSig
     (\predecessors, context, l =>
       ldp predecessors context l
-        (snd (listDepFold signature {predecessors} context l)))
+        (listDepFold signature {predecessors} context l))
 listMetaFoldArgs metaSig =
   (ListDepFoldArgs
     (\predecessors, context =>
@@ -249,22 +247,21 @@ listMetaFold :
   {signature : ListDepFoldSig lp} ->
   {ldp :
     (predecessors : List atom) ->
-    (context : contextType predecessors) ->
+    (contextUponEntry : contextType predecessors) ->
     (l : List atom) ->
-    lp predecessors context l ->
+    (contextType predecessors, lp predecessors contextUponEntry l) ->
     Type} ->
   (metaSig : ListMetaFoldSig signature ldp) ->
   {predecessors : List atom} ->
   (context : contextType predecessors) -> (l : List atom) ->
-  ldp predecessors context l
-    (snd (listDepFold signature {predecessors} context l))
+  ldp predecessors context l (listDepFold signature {predecessors} context l)
 listMetaFold {signature} {ldp} metaSig context' l' =
   snd
     (listDepFold
       {lp=
         (\predecessors, context, l =>
           ldp predecessors context l
-            (snd (listDepFold signature {predecessors} context l)))}
+            (listDepFold signature {predecessors} context l))}
       (listMetaFoldArgs metaSig)
      context'
      l')
