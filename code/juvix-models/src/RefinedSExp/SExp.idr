@@ -498,19 +498,19 @@ sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
   let
     depFold =
       sexpDepFolds
-        {sp=
-          (\predecessors, context, x =>
+        {contextType=(\_ => ())}
+        {sp=(\predecessors, _, x =>
+          (context : contextType predecessors) ->
             sdp predecessors context x
               (sexpDepFold signature {predecessors} context x))}
-        {lp=
-          (\predecessors, context, l =>
-            ldp predecessors context l
-              (slistDepFold signature {predecessors} context l))}
         (SExpDepFoldArgs
-          (\predecessors, a, l, recursiveCall, contextUponEntry =>
-            (fst (slistDepFoldFlip signature l contextUponEntry),
-             expElim metaSig predecessors a l recursiveCall contextUponEntry))
+          (\predecessors, a, l, recursiveCall, _ =>
+            ((),
+             \contextUponEntry =>
+              expElim metaSig predecessors a l
+                (\context => (context, snd (recursiveCall ()) context))
+                contextUponEntry))
           (listMetaFoldArgs (listElim metaSig)))
-        context'
+        ()
   in
-  (\x => snd (fst depFold x), \l => snd (snd depFold l))
+  (\x => snd (fst depFold x) context', \l => snd (snd depFold l) context')
