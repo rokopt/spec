@@ -52,6 +52,50 @@ listFold : {atom, contextType, lp : Type} ->
   (contextType, lp)
 listFold signature = flip (listFoldFlip signature)
 
+infixr 7 :::
+public export
+data ListForAll :
+  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
+    (|:|) : {atom : Type} -> {depType : atom -> Type} ->
+            ListForAll depType []
+    (:::) : {atom : Type} -> {depType : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            depType a -> ListForAll depType l ->
+            ListForAll depType (a :: l)
+
+public export
+data ListExists :
+  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
+    (<::) : {atom : Type} -> {depType : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            depType a ->
+            ListExists depType (a :: l)
+    (>::) : {atom : Type} -> {depType : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            ListExists depType l ->
+            ListExists depType (a :: l)
+
+public export
+record ListForAllFoldSig (atom, contextType, lp : Type) where
+  constructor ListForAllFoldArgs
+
+public export
+ListForAllFoldSigToFoldSig : {atom, contextType, lp : Type} ->
+  ListForAllFoldSig atom contextType lp ->
+  ListFoldSig atom contextType lp
+ListForAllFoldSigToFoldSig signature =
+  ListFoldArgs
+    (?ListForAllToldSigToFoldSig_hole_nilElim)
+    (?ListForAllToldSigToFoldSig_hole_consElim)
+
+public export
+listForAllFold : {atom, contextType, lp : Type} ->
+  (signature : ListForAllFoldSig atom contextType lp) ->
+  (context : contextType) ->
+  (l : List atom) ->
+  (contextType, lp)
+listForAllFold signature = listFold (ListForAllFoldSigToFoldSig signature)
+
 public export
 record
 ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
@@ -150,29 +194,6 @@ listDepFoldCorrect : {atom, contextType, lp : Type} ->
       l
 listDepFoldCorrect signature context l =
   applyEq (listDepFoldFlipCorrect signature l)
-
-infixr 7 :::
-public export
-data ListForAll :
-  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
-    (|:|) : {atom : Type} -> {depType : atom -> Type} ->
-            ListForAll depType []
-    (:::) : {atom : Type} -> {depType : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            depType a -> ListForAll depType l ->
-            ListForAll depType (a :: l)
-
-public export
-data ListExists :
-  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
-    (<::) : {atom : Type} -> {depType : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            depType a ->
-            ListExists depType (a :: l)
-    (>::) : {atom : Type} -> {depType : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            ListExists depType l ->
-            ListExists depType (a :: l)
 
 public export
 record ListMetaFoldSig
