@@ -151,28 +151,120 @@ listDepFoldCorrect : {atom, contextType, lp : Type} ->
 listDepFoldCorrect signature context l =
   applyEq (listDepFoldFlipCorrect signature l)
 
+public export
+record
+ListDepContextFreeFoldSig {atom : Type}
+  (lp : List atom -> Type) where
+    constructor ListDepContextFreeFoldArgs
+    nilElim : lp []
+    consElim :
+      (a : atom) -> (l : List atom) -> (recursiveResult : lp l) -> lp (a :: l)
+
+public export
+ListDepContextFreeFoldSigToDepFoldSig :
+  {atom : Type} -> {lp : List atom -> Type} ->
+  ListDepContextFreeFoldSig lp ->
+  ListDepFoldSig {atom} {contextType=(\_ => ())} (\_, _ => lp)
+ListDepContextFreeFoldSigToDepFoldSig signature =
+  ListDepFoldArgs
+    (\_, _ => ((), nilElim signature))
+    (\_, a, l, recursiveCall, _ =>
+      ((), consElim signature a l (snd (recursiveCall ()))))
+
+public export
+listDepContextFreeFold : {atom : Type} ->
+  {lp : List atom -> Type} ->
+  (signature : ListDepContextFreeFoldSig lp) ->
+  (l : List atom) -> lp l
+listDepContextFreeFold signature l =
+  snd
+    (listDepFold
+      (ListDepContextFreeFoldSigToDepFoldSig signature) {predecessors=[]} () l)
+
 infixr 7 :::
 public export
 data ListForAll :
-  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
-    (|:|) : {atom : Type} -> {depType : atom -> Type} ->
-            ListForAll depType []
-    (:::) : {atom : Type} -> {depType : atom -> Type} ->
+  {atom : Type} -> (lp : atom -> Type) -> List atom -> Type where
+    (|:|) : {atom : Type} -> {lp : atom -> Type} ->
+            ListForAll lp []
+    (:::) : {atom : Type} -> {lp : atom -> Type} ->
             {a : atom} -> {l : List atom} ->
-            depType a -> ListForAll depType l ->
-            ListForAll depType (a :: l)
+            lp a -> ListForAll lp l ->
+            ListForAll lp (a :: l)
 
+prefix 11 <::
+prefix 11 >::
 public export
 data ListExists :
-  {atom : Type} -> (depType : atom -> type) -> List atom -> Type where
-    (<::) : {atom : Type} -> {depType : atom -> Type} ->
+  {atom : Type} -> (lp : atom -> Type) -> List atom -> Type where
+    (<::) : {atom : Type} -> {lp : atom -> Type} ->
             {a : atom} -> {l : List atom} ->
-            depType a ->
-            ListExists depType (a :: l)
-    (>::) : {atom : Type} -> {depType : atom -> Type} ->
+            lp a ->
+            ListExists lp (a :: l)
+    (>::) : {atom : Type} -> {lp : atom -> Type} ->
             {a : atom} -> {l : List atom} ->
-            ListExists depType l ->
-            ListExists depType (a :: l)
+            ListExists lp l ->
+            ListExists lp (a :: l)
+
+NoExistsNil : {atom : Type} -> {lp : atom -> Type} -> Not (ListExists lp [])
+NoExistsNil ((<::) _) impossible
+NoExistsNil ((>::) _) impossible
+
+NoExistsNeither : {atom : Type} -> {lp : atom -> Type} ->
+  {a : atom} -> {l : List atom} ->
+  Not (lp a) -> Not (ListExists lp l) ->
+  Not (ListExists lp (a :: l))
+NoExistsNeither noA _ ((<::) existsA) = noA existsA
+NoExistsNeither _ noList ((>::) existsList) = noList existsList
+
+public export
+ListForAllConstruct : {atom : Type} ->
+  {lp : atom -> Type} ->
+  (f : (a : atom) -> lp a) -> (l : List atom) ->
+  ListForAll lp l
+ListForAllConstruct f =
+  listDepContextFreeFold
+    (ListDepContextFreeFoldArgs
+      (|:|)
+      (\a, _, lpl => f a ::: lpl))
+
+public export
+DecListForAll : {atom : Type} ->
+  {lp : atom -> Type} ->
+  (dec : (a : atom) -> Dec (lp a)) -> (l : List atom) ->
+  Dec (ListForAll lp l)
+DecListForAll dec =
+  listDepContextFreeFold
+    (ListDepContextFreeFoldArgs {lp=(Dec . ListForAll lp)}
+      (Yes (|:|))
+      (\a, _, decList =>
+        case (dec a, decList) of
+          (Yes yesA, Yes yesList) => Yes (yesA ::: yesList)
+          (No noA, _) =>
+            No (\yesList =>
+              noA (case yesList of
+                (|:|) impossible
+                (yesA ::: _) => yesA))
+          (_, No noList) =>
+            No (\yesA =>
+              noList (case yesA of
+                (|:|) impossible
+                (_ ::: yesList) => yesList))))
+
+public export
+DecListExists : {atom : Type} ->
+  {lp : atom -> Type} ->
+  (dec : (a : atom) -> Dec (lp a)) -> (l : List atom) ->
+  Dec (ListExists lp l)
+DecListExists dec =
+  listDepContextFreeFold
+    (ListDepContextFreeFoldArgs {lp=(Dec . ListExists lp)}
+      (No NoExistsNil)
+      (\a, _, decList =>
+        case (dec a, decList) of
+          (Yes yesA, _) => Yes (<:: yesA)
+          (_, Yes existsList) => Yes (>:: existsList)
+          (No noA, No noList) => No (NoExistsNeither noA noList)))
 
 public export
 record ListMetaFoldSig
