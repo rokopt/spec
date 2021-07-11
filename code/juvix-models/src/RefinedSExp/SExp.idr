@@ -226,9 +226,9 @@ record SExpDepFoldSig
       (predecessors : SList atom) ->
       (a : atom) -> (l : SList atom) ->
       (recursiveCall :
-        (calledContext : contextType ((a $: l) :: predecessors)) ->
-         (contextType ((a $: l) :: predecessors),
-          lp ((a $: l) :: predecessors) calledContext l)) ->
+        (calledContext : contextType predecessors) ->
+         (contextType predecessors,
+          lp predecessors calledContext l)) ->
       (context : contextType predecessors) ->
       (contextType predecessors, sp predecessors context (a $: l))
     slistElim : ListDepFoldSig {atom=(SExp atom)} lp
@@ -268,7 +268,7 @@ mutual
     (contextType predecessors, sp predecessors context x)
   sexpDepFoldFlip signature {predecessors} (a $: l) =
     SExpDepFoldSig.expElim signature predecessors a l
-      (slistDepFoldFlip signature {predecessors=((a $: l) :: predecessors)} l)
+      (slistDepFoldFlip signature {predecessors} l)
 
   public export
   slistDepFoldFlip :
@@ -444,9 +444,9 @@ record SExpMetaFoldSig
       (predecessors : SList atom) ->
       (a : atom) -> (l : SList atom) ->
       (recursiveCall :
-        (calledContext : contextType ((a $: l) :: predecessors)) ->
-        (contextType ((a $: l) :: predecessors),
-        ldp ((a $: l) :: predecessors) calledContext l
+        (calledContext : contextType predecessors) ->
+        (contextType predecessors,
+        ldp predecessors calledContext l
           (slistDepFoldFlip signature l calledContext))) ->
       (contextUponEntry : contextType predecessors) ->
       sdp predecessors contextUponEntry (a $: l)
@@ -496,29 +496,33 @@ sexpMetaFolds :
   {sdp : SExpMetaPred sp} ->
   {ldp : SListMetaPred lp} ->
   (metaSig : SExpMetaFoldSig signature sdp ldp) ->
-  {predecessors : SList atom} ->
-  (context : contextType predecessors) ->
-  ((x : SExp atom) ->
+  ((predecessors : SList atom) -> (context : contextType predecessors) ->
+    (x : SExp atom) ->
     sdp predecessors context x (sexpDepFold signature context x),
-   (l : SList atom) ->
-   ldp predecessors context l (slistDepFold signature context l))
-sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
+   (predecessors : SList atom) -> (context : contextType predecessors) ->
+    (l : SList atom) ->
+    ldp predecessors context l (slistDepFold signature context l))
+sexpMetaFolds {signature} {sdp} {ldp} metaSig =
   let
     depFold =
       sexpDepFolds
         {contextType=(\_ => ())}
-        {sp=(\predecessors, _, x =>
+        {sp=(\_, _, x =>
+          (predecessors : SList atom) ->
           (context : contextType predecessors) ->
             sdp predecessors context x
               (sexpDepFold signature {predecessors} context x))}
+        {lp=(\_, _, l =>
+          (predecessors: SList atom) ->
+          (context : contextType predecessors) ->
+            ldp predecessors context l
+              (slistDepFold signature {predecessors} context l))}
         (SExpDepFoldArgs
-          (\predecessors, a, l, recursiveCall, _ =>
-            ((),
-             \contextUponEntry =>
-              expElim metaSig predecessors a l
-                (\context => (context, snd (recursiveCall ()) context))
-                contextUponEntry))
-          (listMetaFoldArgs (listElim metaSig)))
+          (?sexpMetaFold_hole_expElim)
+          (ListDepFoldArgs
+            (?sexpMetaFold_hole_nilElim)
+            (?sexpMetaFold_hole_consElim)))
         ()
   in
-  (\x => snd (fst depFold x) context', \l => snd (snd depFold l) context')
+  (\predecessors, context, x => snd (fst depFold x) predecessors context,
+   \predecessors, context, l => snd (snd depFold l) predecessors context)
