@@ -173,9 +173,17 @@ slistFold :
   {atom, contextType, sp, lp : Type} ->
   (signature : SExpFoldSig atom contextType sp lp) ->
   (context : contextType) ->
-  (l : SList atom) ->
-  (contextType, lp)
+  (l : SList atom) -> (contextType, lp)
 slistFold signature = flip (slistFoldFlip signature)
+
+public export
+sexpFolds : {atom, contextType, sp, lp : Type} ->
+  (signature : SExpFoldSig atom contextType sp lp) ->
+  (context : contextType) ->
+  ((x : SExp atom) -> (contextType, sp),
+   (l : SList atom) -> (contextType, lp))
+sexpFolds signature context =
+  (sexpFold signature context, slistFold signature context)
 
 infixr 7 :$:
 public export
