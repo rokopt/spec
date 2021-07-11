@@ -422,6 +422,32 @@ record SExpDepContextFreeFoldSig
       sp (a $: l)
     slistElim : ListDepContextFreeFoldSig {atom=(SExp atom)} lp
 
+public export
+SExpDepContextFreeFoldSigToDepFoldSig :
+  {atom : Type} -> {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
+  SExpDepContextFreeFoldSig {atom} sp lp ->
+  SExpDepFoldSig
+    {atom} {contextType=(\_ => ())} (\_, _ => sp) (\_, _ => lp)
+SExpDepContextFreeFoldSigToDepFoldSig signature =
+  SExpDepFoldArgs
+    (\_, a, l, recursiveCall, _ =>
+      ((), expElim signature a l (snd (recursiveCall ()))))
+    (ListDepContextFreeFoldSigToDepFoldSig (slistElim signature))
+
+public export
+sexpDepContextFreeFolds : {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  {lp : SList atom -> Type} ->
+  (signature : SExpDepContextFreeFoldSig sp lp) ->
+  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
+sexpDepContextFreeFolds signature =
+  let
+    folds =
+      sexpDepFolds (SExpDepContextFreeFoldSigToDepFoldSig signature) ()
+        {predecessors=[]}
+  in
+  (\x => snd (fst folds x), \l => snd (snd folds l))
+
 SExpMetaPred :
   {atom : Type} -> {contextType : SList atom -> Type} ->
   SExpPredicate contextType ->
