@@ -541,29 +541,15 @@ sexpMetaFolds :
     ldp predecessors context l (slistDepFold signature context l))
 sexpMetaFolds {signature} {sdp} {ldp} metaSig =
   let
-    depFold =
-      sexpDepFolds
-        {contextType=(\_ => ())}
-        {sp=(\_, _, x =>
+    folds =
+      sexpDepContextFreeFolds
+        {sp=(\x =>
           (predecessors : SList atom) ->
           (context : contextType predecessors) ->
-            sdp predecessors context x
-              (sexpDepFold signature {predecessors} context x))}
-        {lp=(\_, _, l =>
-          (predecessors: SList atom) ->
-          (context : contextType predecessors) ->
-            ldp predecessors context l
-              (slistDepFold signature {predecessors} context l))}
-        (SExpDepFoldArgs
-          (?sexpMetaFold_hole_expElim)
-          (ListDepFoldArgs
-            (\_, _ => ((), \predecessors, context =>
-              sMetaNilElim metaSig predecessors context))
-            (\_, a, l, recursiveCall, _ =>
-              ((),
-                \predecessors, context =>
-                  ?sexpMetaFold_hole_consElim))))
-        ()
+          sdp predecessors context x (sexpDepFold signature context x))}
+        (SExpDepContextFreeFoldArgs
+          (metaExpElim metaSig)
+          (listMetaFoldArgs (metaListElim metaSig)))
   in
-  (\predecessors, context, x => snd (fst depFold x) predecessors context,
-   \predecessors, context, l => snd (snd depFold l) predecessors context)
+  (\predecessors, context, x => fst folds x predecessors context,
+   \predecessors, context, l => snd folds l predecessors context)
