@@ -267,6 +267,32 @@ DecListExists dec =
           (No noA, No noList) => No (NoExistsNeither noA noList)))
 
 public export
+record
+ListForAllFoldSig {atom : Type}
+  (ap : atom -> Type) where
+    constructor ListForAllFoldArgs
+    consElim :
+      (a : atom) -> (l : List atom) ->
+      (recursiveResult : ListForAll ap l) ->
+      ListForAll ap (a :: l)
+
+public export
+ListForAllFoldSigToDepContextFreeFoldSig:
+  {atom : Type} -> {ap : atom -> Type} ->
+  ListForAllFoldSig {atom} ap ->
+  ListDepContextFreeFoldSig (ListForAll ap)
+ListForAllFoldSigToDepContextFreeFoldSig signature =
+  ListDepContextFreeFoldArgs (|:|) (consElim signature)
+
+public export
+listForAllFold : {atom : Type} ->
+  {ap : atom -> Type} ->
+  (signature : ListForAllFoldSig ap) ->
+  (l : List atom) -> ListForAll ap l
+listForAllFold {atom} signature =
+  listDepContextFreeFold (ListForAllFoldSigToDepContextFreeFoldSig signature)
+
+public export
 record ListMetaFoldSig
   {atom : Type} {contextType : List atom -> Type}
   {lp :
