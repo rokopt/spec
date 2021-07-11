@@ -114,7 +114,7 @@ record SExpFoldSig
 public export
 snilElim : {atom, contextType, sp, lp : Type} ->
   SExpFoldSig atom contextType sp lp ->
-  (contextType -> lp)
+  (contextType -> (contextType, lp))
 snilElim = nilElim . slistElim
 
 public export
@@ -230,7 +230,7 @@ sdepNilElim : {atom : Type} -> {contextType : SList atom -> Type} ->
   {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
   SExpDepFoldSig sp lp ->
   ((predecessors : SList atom) -> (context : contextType predecessors) ->
-   lp predecessors context [])
+   (contextType predecessors, lp predecessors context []))
 sdepNilElim = nilElim . slistElim
 
 public export
@@ -456,7 +456,8 @@ sMetaNilElim :
   {ldp : SListMetaPred lp} ->
   SExpMetaFoldSig signature sdp ldp ->
   ((predecessors : SList atom) -> (context : contextType predecessors) ->
-   ldp predecessors context [] (sdepNilElim signature predecessors context))
+   ldp predecessors context []
+    (snd (sdepNilElim signature predecessors context)))
 sMetaNilElim = metaNilElim . listElim
 
 public export

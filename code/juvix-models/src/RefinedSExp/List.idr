@@ -25,7 +25,7 @@ public export
 record ListFoldSig (atom, contextType, lp : Type) where
   constructor ListFoldArgs
   nilElim :
-    (context : contextType) -> lp
+    (context : contextType) -> (contextType, lp)
   consElim :
     (a : atom) -> (l : List atom) ->
     (recursiveCall :
@@ -40,7 +40,7 @@ listFoldFlip : {atom, contextType, lp : Type} ->
   (context : contextType) ->
   (contextType, lp)
 listFoldFlip signature [] =
-  (\context => (context, nilElim signature context))
+  nilElim signature
 listFoldFlip signature (a :: l) =
   consElim signature a l (listFoldFlip signature l)
 
@@ -64,7 +64,7 @@ ListDepFoldSig {atom : Type} {contextType : List atom -> Type}
       constructor ListDepFoldArgs
       nilElim :
         (predecessors : List atom) -> (context : contextType predecessors) ->
-        lp predecessors context []
+        (contextType predecessors, lp predecessors context [])
       consElim :
         (predecessors : List atom) ->
         (a : atom) -> (l : List atom) ->
@@ -89,7 +89,7 @@ listDepFoldFlip : {atom : Type} -> {contextType : List atom -> Type} ->
   (context : contextType predecessors) ->
   (contextType predecessors, lp predecessors context l)
 listDepFoldFlip signature {predecessors} [] =
-  (\context => (context, nilElim signature predecessors context))
+  nilElim signature predecessors
 listDepFoldFlip signature {predecessors} (a :: l) =
   consElim signature predecessors a l
     (listDepFoldFlip signature {predecessors=(a :: predecessors)} l)
@@ -193,7 +193,8 @@ record ListMetaFoldSig
     constructor ListMetaFoldArgs
     metaNilElim :
       (predecessors : List atom) -> (context : contextType predecessors) ->
-      ldp predecessors context [] (nilElim signature predecessors context)
+      ldp predecessors context []
+        (snd (nilElim signature predecessors context))
     metaConsElim :
       (predecessors : List atom) ->
       (a : atom) -> (l : List atom) ->
@@ -230,7 +231,9 @@ listMetaFoldArgs :
         (snd (listDepFold signature {predecessors} context l)))
 listMetaFoldArgs metaSig =
   (ListDepFoldArgs
-    (metaNilElim metaSig)
+    (\predecessors, context =>
+      (fst (nilElim signature predecessors context),
+        metaNilElim metaSig predecessors context))
     (\predecessors, a, l, recursiveCall, contextUponEntry =>
       (fst (listDepFoldFlip signature l contextUponEntry),
        metaConsElim metaSig predecessors a l recursiveCall contextUponEntry)))
