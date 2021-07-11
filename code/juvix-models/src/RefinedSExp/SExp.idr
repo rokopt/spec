@@ -411,7 +411,7 @@ SExpMetaPred {atom} {contextType} sp =
   (predecessors : SList atom) ->
   (context : contextType predecessors) ->
   (x : SExp atom) ->
-  sp predecessors context x -> Type
+  (contextType predecessors, sp predecessors context x) -> Type
 
 SListMetaPred :
   {atom : Type} -> {contextType : SList atom -> Type} ->
@@ -442,9 +442,8 @@ record SExpMetaFoldSig
           (slistDepFoldFlip signature l calledContext))) ->
       (contextUponEntry : contextType predecessors) ->
       sdp predecessors contextUponEntry (a $: l)
-        (snd
-          (expElim signature predecessors a l
-            (listDepFoldFlip (slistElim signature) l) contextUponEntry))
+        (expElim signature predecessors a l
+          (listDepFoldFlip (slistElim signature) l) contextUponEntry)
     listElim : ListMetaFoldSig {atom=(SExp atom)} (slistElim signature) ldp
 
 public export
@@ -492,7 +491,7 @@ sexpMetaFolds :
   {predecessors : SList atom} ->
   (context : contextType predecessors) ->
   ((x : SExp atom) ->
-    sdp predecessors context x (snd (sexpDepFold signature context x)),
+    sdp predecessors context x (sexpDepFold signature context x),
    (l : SList atom) ->
    ldp predecessors context l (slistDepFold signature context l))
 sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
@@ -502,7 +501,7 @@ sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
         {sp=
           (\predecessors, context, x =>
             sdp predecessors context x
-              (snd (sexpDepFold signature {predecessors} context x)))}
+              (sexpDepFold signature {predecessors} context x))}
         {lp=
           (\predecessors, context, l =>
             ldp predecessors context l
