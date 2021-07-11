@@ -230,7 +230,7 @@ listMetaFoldArgs :
 listMetaFoldArgs metaSig =
   (ListDepFoldArgs
     (\predecessors, context =>
-      (fst (nilElim signature predecessors context),
+      (fst (listDepFoldFlip signature [] context),
         metaNilElim metaSig predecessors context))
     (\predecessors, a, l, recursiveCall, contextUponEntry =>
       (fst (listDepFoldFlip signature l contextUponEntry),
