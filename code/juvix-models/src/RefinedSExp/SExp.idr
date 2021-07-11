@@ -432,6 +432,19 @@ record SExpMetaFoldSig
   (ldp : SListMetaPred lp)
   where
     constructor SExpMetaFoldArgs
+    expElim :
+      (predecessors : SList atom) ->
+      (a : atom) -> (l : SList atom) ->
+      (recursiveCall :
+        (calledContext : contextType ((a $: l) :: predecessors)) ->
+        (contextType ((a $: l) :: predecessors),
+        ldp ((a $: l) :: predecessors) calledContext l
+          (snd (slistDepFoldFlip signature l calledContext)))) ->
+      (contextUponEntry : contextType predecessors) ->
+      sdp predecessors contextUponEntry (a $: l)
+        (snd
+          (expElim signature predecessors a l
+            (listDepFoldFlip (slistElim signature) l) contextUponEntry))
     listElim : ListMetaFoldSig {atom=(SExp atom)} (slistElim signature) ldp
 
 public export
@@ -496,7 +509,9 @@ sexpMetaFolds {signature} {sdp} {ldp} metaSig context' =
             ldp predecessors context l
               (snd (slistDepFold signature {predecessors} context l)))}
         (SExpDepFoldArgs
-          (?sexpMetaFolds_hole_expElim)
+          (\predecessors, a, l, recursiveCall, contextUponEntry =>
+            (fst (slistDepFoldFlip signature l contextUponEntry),
+             expElim metaSig predecessors a l recursiveCall contextUponEntry))
           (listMetaFoldArgs (listElim metaSig)))
         context'
   in
