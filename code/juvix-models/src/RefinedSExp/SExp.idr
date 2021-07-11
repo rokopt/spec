@@ -185,27 +185,6 @@ sexpFolds : {atom, contextType, sp, lp : Type} ->
 sexpFolds signature context =
   (sexpFold signature context, slistFold signature context)
 
-infixr 7 :$:
-public export
-data SExpForAll :
-  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
-    (:$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
-            {a : atom} -> {l : SList atom} ->
-            depType (a $: l) -> ListForAll depType l ->
-            SExpForAll depType (a $: l)
-
-public export
-data SExpExists :
-  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
-    (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
-            {a : atom} -> {l : SList atom} ->
-            depType (a $: l) ->
-            SExpExists depType (a $: l)
-    (>$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
-            {a : atom} -> {l : SList atom} ->
-            ListExists depType l ->
-            SExpExists depType (a $: l)
-
 SExpPredicate : {atom : Type} -> (contextType : SList atom -> Type) -> Type
 SExpPredicate {atom} contextType =
   (predecessors : SList atom) -> (context : contextType predecessors) ->
@@ -447,6 +426,27 @@ sexpDepContextFreeFolds signature =
         {predecessors=[]}
   in
   (\x => snd (fst folds x), \l => snd (snd folds l))
+
+infixr 7 :$:
+public export
+data SExpForAll :
+  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
+    (:$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
+            {a : atom} -> {l : SList atom} ->
+            depType (a $: l) -> ListForAll depType l ->
+            SExpForAll depType (a $: l)
+
+public export
+data SExpExists :
+  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
+    (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
+            {a : atom} -> {l : SList atom} ->
+            depType (a $: l) ->
+            SExpExists depType (a $: l)
+    (>$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
+            {a : atom} -> {l : SList atom} ->
+            ListExists depType l ->
+            SExpExists depType (a $: l)
 
 SExpMetaPred :
   {atom : Type} -> {contextType : SList atom -> Type} ->
