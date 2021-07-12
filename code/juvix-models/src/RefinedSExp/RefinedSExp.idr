@@ -119,18 +119,15 @@ NotFailureExtract {result=(DecisionFailure failure)} notFailure =
   void (notFailure (Failed failure))
 
 public export
-DecidableContextPred : (contextType, atom : Type) -> Type
-DecidableContextPred contextType atom = contextType -> DecidablePredicate atom
-
-public export
-record InductiveDecisionSig {contextType : Type} {atom : Type}
-  (predicate : DecidableContextPred contextType atom) where
+record InductiveDecisionSig
+  {atom : Type}
+  (predicate : DecidablePredicate atom)
+  (contextType : Type) where
     constructor InductiveDecisionArgs
-    pushExp : contextType -> SExp atom -> contextType
-    pushFailure : Void
-    expElim :
-      (contextUponEntry : contextType) ->
+    decideOne :
       (a : atom) -> (l : SList atom) ->
-      SListForAll
-        (SuccessPredicate (predicate (pushExp contextUponEntry (a $: l)))) l ->
-      (contextType, DecisionResult (predicate contextUponEntry) (a $: l))
+      (contextType, SListForAll (SuccessPredicate predicate) l) ->
+      (contextType, DecisionResult predicate (a $: l))
+    failOne :
+      (contextType, DPair (SExp atom) (FailurePredicate predicate)) ->
+      contextType
