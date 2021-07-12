@@ -127,11 +127,11 @@ record InductiveDecisionSig
     initialContext : contextType
     decideOne :
       (a : atom) -> (l : SList atom) ->
-      (contextType, SListForAll (SuccessPredicate predicate) l) ->
-      (contextType, DecisionResult predicate (a $: l))
+      SListForAll (SuccessPredicate predicate) l ->
+      (contextType -> (contextType, DecisionResult predicate (a $: l)))
     failOne :
-      (contextType, DPair (SExp atom) (FailurePredicate predicate)) ->
-      contextType
+      DPair (SExp atom) (FailurePredicate predicate) ->
+      contextType -> contextType
 
 public export
 inductiveDecide : {atom : Type} ->
@@ -144,9 +144,32 @@ inductiveDecide decisionSig x' =
       {sp=(\x => Maybe (SExpForAll (SuccessPredicate predicate) x))}
       {lp=(\x => Maybe (SListForAll (SuccessPredicate predicate) x))}
       (SExpDepFoldContextIndependentArgs
-        (?inductiveDecide_hole_expElim)
-        (?inductiveDecide_hole_nilElim)
-        (?inductiveDecide_hole_consElim))
+        (\a, l, tail, context =>
+          let
+            (tailContext, tailDecision) = tail context
+          in
+          case tailDecision of
+            Just tailSuccess =>
+              case decideOne decisionSig a l tailSuccess tailContext of
+                (returnContext, DecisionSuccess headSuccess) =>
+                  (returnContext, Just (headSuccess :$: tailSuccess))
+                (failureContext, DecisionFailure headFailure) =>
+                  (failOne decisionSig ((a $: l) ** headFailure) failureContext,
+                   Nothing)
+            Nothing => (context, Nothing))
+        (\context => (context, Just (|:|)))
+        (\x, l, head, tail, context =>
+          let
+            (headContext, headForAll) = head context
+          in
+          case headForAll of
+            Just headSuccess =>
+              let (tailContext, tailForAll) = tail headContext in
+              case tailForAll of
+                Just tailSuccess =>
+                  (tailContext, Just (headSuccess ::: tailSuccess))
+                Nothing => (tailContext, Nothing)
+            Nothing => (headContext, Nothing)))
       (initialContext decisionSig)
     )
   x')
