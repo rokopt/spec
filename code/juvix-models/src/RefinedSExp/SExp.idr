@@ -448,39 +448,18 @@ SExpForAllFoldSig {atom : Type}
     expElim :
       (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $: l)
 
--- XXX Remove when sexpForAllFolds can be completed
-mutual
-  public export
-  sexpForAllFold : {atom : Type} ->
-    {sp : SExp atom -> Type} ->
-    (signature : SExpForAllFoldSig sp) ->
-    (x : SExp atom) -> SExpForAll sp x
-  sexpForAllFold {atom} signature (a $: l) =
-    expElim signature a l (slistForAllFold signature l) :$:
-      (slistForAllFold signature l)
-
-  public export
-  slistForAllFold : {atom : Type} ->
-    {sp : SExp atom -> Type} ->
-    (signature : SExpForAllFoldSig sp) ->
-    (l : SList atom) -> SListForAll sp l
-  slistForAllFold signature [] = (|:|)
-  slistForAllFold signature (x :: l) =
-    sexpForAllFold signature x ::: slistForAllFold signature l
-
 public export
 sexpForAllFolds : {atom : Type} ->
   {sp : SExp atom -> Type} ->
   (signature : SExpForAllFoldSig sp) ->
-  ((x : SExp atom) -> SExpForAll sp x,
-   (l : SList atom) -> SListForAll sp l)
+  ((x : SExp atom) -> SExpForAll sp x, (l : SList atom) -> SListForAll sp l)
 sexpForAllFolds signature =
   sexpDepContextFreeFolds
     {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
     (SExpDepContextFreeFoldArgs
-      ?sexpForAllFolds_hole_expElim
-      ?sexpForAllFolds_hole_nilElim
-      ?sexpForAllFolds_hole_consElim)
+      (\a, l, slForAll => expElim signature a l slForAll :$: slForAll)
+      (|:|)
+      (\_, _, head, tail => head ::: tail))
 
 SExpMetaPred :
   {atom : Type} -> {contextType : SList atom -> Type} ->
