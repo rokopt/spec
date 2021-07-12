@@ -5,6 +5,23 @@ import public RefinedSExp.Test.TestLibrary
 
 %default total
 
+public export
+sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
+  (SExp atom -> String, SList atom -> List String)
+sexpShows showAtom =
+  sexpNonDepContextFreeListFolds
+    (SExpNonDepContextFreeFoldListArgs
+      (\a, l, s => case l of
+        [] => "$(" ++ showAtom a ++ ")"
+        _ => "$(" ++ showAtom a ++ ":" ++
+          (foldl Prelude.Strings.(++) "" s) ++ ")\n"))
+
+public export
+Show atom => Show (SExp atom) where
+  show x = show' x where
+    show' : SExp atom -> String
+    show' x = case x of (a $: _) => fst (sexpShows show) x
+
 NSExp : Type
 NSExp = SExp Nat
 
@@ -96,21 +113,6 @@ TestSExp = SExp PrimitiveExp
 
 TestSList : Type
 TestSList = SList PrimitiveExp
-
-sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
-  (SExp atom -> String, SList atom -> List String)
-sexpShows showAtom =
-  sexpNonDepContextFreeListFolds
-    (SExpNonDepContextFreeFoldListArgs
-      (\a, l, s => case l of
-        [] => "$(" ++ showAtom a ++ ")"
-        _ => "$(" ++ showAtom a ++ ":" ++
-          (foldl Prelude.Strings.(++) "" s) ++ ")\n"))
-
-Show atom => Show (SExp atom) where
-  show x = show' x where
-    show' : SExp atom -> String
-    show' x = case x of (a $: _) => fst (sexpShows show) x
 
 nilNotationTest : SList Nat
 nilNotationTest = ($|)
