@@ -447,53 +447,80 @@ sexpForAllFolds signature =
       (|:|)
       (\_, _, head, tail => head ::: tail))
 
+-- A fold which uses a context, but which produces a predicate
+-- independent of the context (i.e. dependent only on the s-expression itself).
+public export
+record SExpDepFoldContextIndependentSig
+  {atom : Type}
+  (contextType : Type)
+  (sp : SExp atom -> Type)
+  (lp : SList atom -> Type)
+  where
+    constructor SExpDepFoldContextIndependentArgs
+    expElim :
+      (a : atom) -> (l : SList atom) ->
+      (contextType -> (contextType, lp l)) ->
+      (contextType -> (contextType, sp (a $: l)))
+    nilElim : contextType -> (contextType, lp [])
+    consElim :
+      (x : SExp atom) -> (l : SList atom) ->
+      (headCall : contextType -> (contextType, sp x)) ->
+      (tailCall : contextType -> (contextType, lp l)) ->
+      (contextType -> (contextType, lp (x :: l)))
+
+public export
+sexpDepFoldsContextIndependent : {atom : Type} ->
+  {contextType : Type} ->
+  {sp : SExp atom -> Type} ->
+  {lp : SList atom -> Type} ->
+  (signature : SExpDepFoldContextIndependentSig contextType sp lp) ->
+  contextType ->
+  ((x : SExp atom) -> (contextType, sp x),
+   (l : SList atom) -> (contextType, lp l))
+sexpDepFoldsContextIndependent {contextType} {sp} signature =
+  sexpDepFolds
+    (SExpDepFoldArgs
+      (expElim signature)
+      (nilElim signature)
+      (consElim signature))
+
 -- A for-all fold which uses a context, but which produces a predicate
 -- independent of the context (i.e. dependent only on the s-expression itself).
--- In the for-all fold, all elements of a single list have the same context,
--- so they're non-dependent argument lists.  Telescopes which produce results
--- independent of the context require a fold with both s-expression and list
--- predicates (not a for-all fold).
 public export
-record SExpForAllFoldContextSig
+record SExpForAllFoldContextIndependentSig
   {atom : Type}
   (contextType : Type)
   (sp : SExp atom -> Type)
   where
-    constructor SExpForAllFoldContextArgs
+    constructor SExpForAllFoldContextIndependentArgs
     expElim :
       (a : atom) -> (l : SList atom) ->
       (contextType, SListForAll sp l) ->
       (contextType, sp (a $: l))
 
 public export
-sexpForAllFoldsContext : {atom : Type} ->
+sexpForAllFoldsContextIndependent : {atom : Type} ->
   {contextType : Type} ->
   {sp : SExp atom -> Type} ->
-  (signature : SExpForAllFoldContextSig contextType sp) ->
-  ((context : contextType) ->
-    (x : SExp atom) -> SExpForAll sp x,
-   (context : contextType) ->
-    (l : SList atom) -> SListForAll sp l)
-sexpForAllFoldsContext {contextType} {sp} signature =
-  let
-    folds =
-      sexpDepFolds
-        {contextType}
-        {sp=(\_ => SExpForAll sp)}
-        {lp=(\_ => SListForAll sp)}
-        (SExpDepFoldArgs
-          (\a, l, tailCall, context =>
-            let slForAll = tailCall context in
-            let sp = expElim signature a l slForAll in
-            (fst sp, snd sp :$: snd slForAll))
-          (\context => (context, (|:|)))
-          (\x, l, headCall, tailCall, context =>
-            let head = headCall context in
-            let tail = tailCall (fst head) in
-            (fst tail, snd head ::: snd tail)))
-  in
-  (\context, x => snd (fst (folds context) x),
-   \context, l => snd (snd (folds context) l))
+  (signature : SExpForAllFoldContextIndependentSig contextType sp) ->
+  contextType ->
+  ((x : SExp atom) -> (contextType, SExpForAll sp x),
+   (l : SList atom) -> (contextType, SListForAll sp l))
+sexpForAllFoldsContextIndependent {contextType} {sp} signature =
+  sexpDepFoldsContextIndependent
+    {contextType}
+    {sp=(SExpForAll sp)}
+    {lp=(SListForAll sp)}
+    (SExpDepFoldContextIndependentArgs
+      (\a, l, tailCall, context =>
+        let slForAll = tailCall context in
+        let sp = expElim signature a l slForAll in
+        (fst sp, snd sp :$: snd slForAll))
+      (\context => (context, (|:|)))
+      (\x, l, headCall, tailCall, context =>
+        let head = headCall context in
+        let tail = tailCall (fst head) in
+        (fst tail, snd head ::: snd tail)))
 
 SExpMetaPred :
   {atom : Type} -> {contextType : Type} ->
