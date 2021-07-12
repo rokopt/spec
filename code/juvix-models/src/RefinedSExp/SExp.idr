@@ -551,8 +551,7 @@ sexpMetaFolds {signature} {sdp} {ldp} metaSig =
         (SExpDepContextFreeFoldArgs
           (metaExpElim metaSig)
           (metaNilElim metaSig)
-          ?sexpMetaFolds_hole_consElim -- XXX (metaConsElim metaSig)
-           )
+          (metaConsElim metaSig))
   in
   (\predecessors, context, x => fst folds x predecessors context,
    \predecessors, context, l => snd folds l predecessors context)
