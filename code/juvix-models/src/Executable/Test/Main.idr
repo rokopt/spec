@@ -13,4 +13,5 @@ import RefinedSExp.Test.MatchTest
 %default total
 
 main : IO ()
-main = putStrLn "No runtime tests yet"
+main = do
+  RefinedSExpTest.refinedSExpTests
