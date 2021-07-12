@@ -156,7 +156,7 @@ inductiveDecide decisionSig x' =
                 (failureContext, DecisionFailure headFailure) =>
                   (failOne decisionSig ((a $: l) ** headFailure) failureContext,
                    Nothing)
-            Nothing => (context, Nothing))
+            Nothing => (tailContext, Nothing))
         (\context => (context, Just (|:|)))
         (\x, l, head, tail, context =>
           let
