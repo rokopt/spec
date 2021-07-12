@@ -1,5 +1,6 @@
 module Executable.Test.Main
 
+import RefinedSExp.Test.TestLibrary
 import RefinedSExp.Test.ListTest
 import RefinedSExp.Test.RefinedListTest
 import RefinedSExp.Test.SExpTest
@@ -14,4 +15,7 @@ import RefinedSExp.Test.MatchTest
 
 main : IO ()
 main = do
+  ListTest.listTests
+  RefinedListTest.refinedListTests
+  SExpTest.sExpTests
   RefinedSExpTest.refinedSExpTests

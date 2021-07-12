@@ -5,3 +5,7 @@ import RefinedSExp.Test.TestLibrary
 import Library.Decidability
 
 %default total
+
+export
+listTests : IO ()
+listTests = pure ()

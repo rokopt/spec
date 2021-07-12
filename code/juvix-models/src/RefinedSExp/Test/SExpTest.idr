@@ -41,7 +41,18 @@ ns0_1' = 0 $:| ns1
 notationTest : 0 $: $^ 1 $+ ($|) = 0 $^^ 1
 notationTest = Refl
 
-bigNotationTest :
+bigNotationTest : SExp Nat
+bigNotationTest =
+  0 $:
+  (1 $: 2 $:^ 3) $+
+  (4 $: 5 $^+ (6 $: 7 $^+ (8 $: 9 $:^ 10) $+^ 11) $+ 12 $:^ 13) $+
+  14 $^+
+  15 $^+
+  (16 $: 17 $:^ 18) $+
+  (19 $^^ 20) $+^
+  21
+
+bigNotationTestCheck :
   0 $:
   (1 $: 2 $:^ 3) $+
   (4 $: 5 $^+ (6 $: 7 $^+ (8 $: 9 $:^ 10) $+^ 11) $+ 12 $:^ 13) $+
@@ -78,4 +89,38 @@ bigNotationTest :
   (NSLCons (NSCons 19 (NSLCons (NSAtom 20) NSNil))
   (NSLCons (NSAtom 21)
   NSNil)))))))
-bigNotationTest = Refl
+bigNotationTestCheck = Refl
+
+TestSExp : Type
+TestSExp = SExp PrimitiveExp
+
+TestSList : Type
+TestSList = SList PrimitiveExp
+
+sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
+  (SExp atom -> String, SList atom -> List String)
+sexpShows showAtom =
+  sexpNonDepContextFreeListFolds
+    (SExpNonDepContextFreeFoldListArgs
+      (\a, l, s => case l of
+        [] => "$(" ++ showAtom a ++ ")"
+        _ => "$(" ++ showAtom a ++ ":" ++
+          (foldl Prelude.Strings.(++) "" s) ++ ")\n"))
+
+Show atom => Show (SExp atom) where
+  show x = show' x where
+    show' : SExp atom -> String
+    show' x = case x of (a $: _) => fst (sexpShows show) x
+
+nilNotationTest : SList Nat
+nilNotationTest = ($|)
+
+testShowTestSExp : TestSExp
+testShowTestSExp = $^ (PrimTypeBool ** True)
+
+export
+sExpTests : IO ()
+sExpTests = do
+  printLn nilNotationTest
+  printLn bigNotationTest
+  printLn testShowTestSExp
