@@ -343,8 +343,8 @@ sexpDepFoldCorrect :
       {predecessors}
       context
       x
-sexpDepFoldCorrect signature context (a $: l) = ?sexpDepFoldCorrect_hole
-  -- XXX applyEq (sexpDepFoldFlipCorrect signature (a $: l))
+sexpDepFoldCorrect signature context (a $: l) =
+  applyEq (sexpDepFoldFlipCorrect signature (a $: l)) Refl
 
 export
 slistDepFoldCorrect :
@@ -363,7 +363,7 @@ slistDepFoldCorrect :
       context
       l
 slistDepFoldCorrect signature context l =
-  ?slistDepFoldCorrect_hole -- applyEq (slistDepFoldFlipCorrect signature l)
+  applyEq (slistDepFoldFlipCorrect signature l) Refl
 
 public export
 record SExpDepContextFreeFoldSig
@@ -389,9 +389,10 @@ SExpDepContextFreeFoldSigToDepFoldSig :
     {atom} {contextType=(\_ => ())} (\_, _ => sp) (\_, _ => lp)
 SExpDepContextFreeFoldSigToDepFoldSig signature =
   SExpDepFoldArgs
-    ?SExpDepContextFreeFoldSigToDepFoldSig_hole_expElim
-    ?SExpDepContextFreeFoldSigToDepFoldSig_hole_nilElim
-    ?SExpDepContextFreeFoldSigToDepFoldSig_hole_consElim
+    (\_, a, l, tailCall, _ => ((), expElim signature a l (snd (tailCall ()))))
+    (\_, _ => ((), nilElim signature))
+    (\_, x, l, headCall, tailCall, _ =>
+      ((), consElim signature x l (snd (headCall ())) (snd (tailCall ()))))
 
 public export
 sexpDepContextFreeFolds : {atom : Type} ->
