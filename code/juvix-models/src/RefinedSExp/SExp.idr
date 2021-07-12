@@ -394,6 +394,34 @@ sexpDepContextFreeFolds signature =
   in
   (\x => snd (fst folds x), \l => snd (snd folds l))
 
+public export
+record SExpNonDepContextFreeFoldListSig
+  {atom : Type} (sp : Type)
+  where
+    constructor SExpNonDepContextFreeFoldListArgs
+    expElim :
+      (a : atom) -> (l : SList atom) ->
+      (recursiveResult : List sp) ->
+      sp
+
+public export
+SExpNonDepContextFreeFoldListSigToContextFreeFoldSig :
+  {atom : Type} -> {sp : Type} ->
+  SExpNonDepContextFreeFoldListSig {atom} sp ->
+  SExpDepContextFreeFoldSig
+    {atom} (\_ => sp) (\_ => List sp)
+SExpNonDepContextFreeFoldListSigToContextFreeFoldSig signature =
+  SExpDepContextFreeFoldArgs (expElim signature) [] (\_, _ => (::))
+
+public export
+sexpNonDepContextFreeListFolds : {atom : Type} ->
+  {sp : Type} ->
+  (signature : SExpNonDepContextFreeFoldListSig {atom} sp) ->
+  ((x : SExp atom) -> sp, (l : SList atom) -> List sp)
+sexpNonDepContextFreeListFolds {atom} signature =
+  sexpDepContextFreeFolds {atom} {sp=(\_ => sp)} {lp=(\_ => List sp)}
+    (SExpNonDepContextFreeFoldListSigToContextFreeFoldSig signature)
+
 infixr 7 :$:
 public export
 data SExpForAll :
