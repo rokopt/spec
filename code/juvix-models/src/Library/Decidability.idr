@@ -381,12 +381,3 @@ infixr 4 **>
 (**>) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> c x ->
   DPairEither b c
 x **> cx = Right (x ** cx)
-
-public export
-Assertion : Type
-Assertion = ()
-
-public export
-Assert : (b : Bool) -> if b then () else List ()
-Assert True = ()
-Assert False = []
