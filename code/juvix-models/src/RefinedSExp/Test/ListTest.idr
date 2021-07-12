@@ -1,6 +1,7 @@
 module RefinedSExp.Test.ListTest
 
 import public RefinedSExp.List
-import public Library.Decidability
+import RefinedSExp.Test.TestLibrary
+import Library.Decidability
 
 %default total
