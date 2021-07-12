@@ -149,7 +149,7 @@ listDepFoldCorrect : {atom, contextType, lp : Type} ->
       context
       l
 listDepFoldCorrect signature context l =
-  applyEq (listDepFoldFlipCorrect signature l)
+  applyEq (listDepFoldFlipCorrect signature l) Refl
 
 public export
 record

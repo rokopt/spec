@@ -237,7 +237,9 @@ mutual
   slistDepFoldFlip signature {predecessors} [] =
     (sdepNilElim signature predecessors)
   slistDepFoldFlip signature {predecessors} (x :: l) =
-    ?slistDepFoldFlip_hole_cons
+    sdepConsElim signature predecessors x l
+      (sexpDepFoldFlip signature x)
+      (slistDepFoldFlip signature l)
 
 public export
 sexpDepFold :
@@ -278,17 +280,11 @@ SExpFoldNonDepSigToDepSig :
   SExpDepFoldSig 
     {atom} {contextType=(\_ => contextType)}
     (\_, _, _ => sp) (\_, _, _ => lp)
-SExpFoldNonDepSigToDepSig signature = ?SExpFoldNonDepSigToDepSig_hole
-
-public export
-slistDepFoldFlipDef :
-  {atom : Type} -> {contextType : SList atom -> Type} ->
-  {sp : SExpPredicate contextType} -> {lp : SListPredicate contextType} ->
-  (signature : SExpDepFoldSig sp lp) ->
-  {predecessors : SList atom} ->
-  (l : SList atom) ->
-  slistDepFoldFlip signature {predecessors} l = ?slistDepFoldFlipDef_hole
-slistDepFoldFlipDef signature {predecessors} l = Refl
+SExpFoldNonDepSigToDepSig signature =
+  SExpDepFoldArgs
+    (\_ => expElim signature)
+    (\_ => snilElim signature)
+    (\_ => sconsElim signature)
 
 mutual
   export
@@ -305,8 +301,8 @@ mutual
         (SExpFoldNonDepSigToDepSig signature)
         {predecessors}
         x
-  sexpDepFoldFlipCorrect signature (a $: l) = ?sexpDepFoldFlipCorrect_hole
-    -- XXX cong (expElim signature a l) (slistDepFoldFlipCorrect signature l)
+  sexpDepFoldFlipCorrect signature (a $: l) =
+    cong (expElim signature a l) (slistDepFoldFlipCorrect signature l)
 
   export
   slistDepFoldFlipCorrect :
@@ -322,10 +318,14 @@ mutual
         (SExpFoldNonDepSigToDepSig signature)
         {predecessors}
         l
-  slistDepFoldFlipCorrect signature [] = ?slistDepFoldFlipCorrect_nil -- Refl
+  slistDepFoldFlipCorrect signature [] = Refl
   slistDepFoldFlipCorrect signature {predecessors} (x :: l) =
-    ?slistDepFoldFlipCorrect_cons
-    -- XXX cong (sconsElim signature x l) (slistDepFoldFlipCorrect signature l)
+    let
+      headEq = sexpDepFoldFlipCorrect signature x
+      tailEq = slistDepFoldFlipCorrect signature l
+      congHead = cong (sconsElim signature x l) headEq
+    in
+    applyEq congHead tailEq
 
 export
 sexpDepFoldCorrect :
@@ -343,8 +343,8 @@ sexpDepFoldCorrect :
       {predecessors}
       context
       x
-sexpDepFoldCorrect signature context (a $: l) =
-  applyEq (sexpDepFoldFlipCorrect signature (a $: l))
+sexpDepFoldCorrect signature context (a $: l) = ?sexpDepFoldCorrect_hole
+  -- XXX applyEq (sexpDepFoldFlipCorrect signature (a $: l))
 
 export
 slistDepFoldCorrect :

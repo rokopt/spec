@@ -92,8 +92,11 @@ namespace DependentRelations
     (*~=) {depty} = (*<|) {depty}
 
 public export
-applyEq : {a, b : Type} -> {f, f' : a -> b} -> f = f' -> {x : a} -> f x = f' x
-applyEq Refl = Refl
+applyEq : {a, b : Type} ->
+  {f, f' : a -> b} -> f = f' ->
+  {x, x' : a} -> x = x' ->
+  f x = f' x'
+applyEq Refl Refl = Refl
 
 public export
 consEq : {a : Type} -> {x, x' : a} -> {l, l' : List a} ->
