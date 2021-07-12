@@ -138,7 +138,18 @@ inductiveDecide : {atom : Type} ->
   {predicate : DecidablePredicate atom} -> {contextType : Type} ->
   InductiveDecisionSig predicate contextType ->
   (x : SExp atom) -> Maybe (SExpForAll (SuccessPredicate predicate) x)
-inductiveDecide decisionSig = ?inductiveDecide_hole
+inductiveDecide decisionSig x' =
+  snd (fst
+    (sexpDepFoldsContextIndependent
+      {sp=(\x => Maybe (SExpForAll (SuccessPredicate predicate) x))}
+      {lp=(\x => Maybe (SListForAll (SuccessPredicate predicate) x))}
+      (SExpDepFoldContextIndependentArgs
+        (?inductiveDecide_hole_expElim)
+        (?inductiveDecide_hole_nilElim)
+        (?inductiveDecide_hole_consElim))
+      (initialContext decisionSig)
+    )
+  x')
 
 public export
 Checks : {atom : Type} ->
