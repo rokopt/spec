@@ -1,6 +1,7 @@
 module RefinedSExp.SExp
 
 import Library.FunctionsAndRelations
+import Library.Decidability
 import public RefinedSExp.List
 
 %default total
@@ -21,7 +22,7 @@ public export
 infixr 7 $+
 public export
 ($+) : {atom : Type} -> SExp atom -> SList atom -> SList atom
-($+) x l = x :: l
+($+) = (::)
 
 public export
 SCons : {atom : Type} -> atom -> SList atom -> SExp atom
@@ -393,6 +394,72 @@ sexpDepContextFreeFolds signature =
       sexpDepFolds (SExpDepContextFreeFoldSigToDepFoldSig signature) ()
   in
   (\x => snd (fst folds x), \l => snd (snd folds l))
+
+public export
+record SExpDepContextFreePairFoldSig
+  {atom : Type}
+  (sp : (x, x' : SExp atom) -> Type) (lp : (l, l' : SList atom) -> Type)
+  where
+    constructor SExpDepContextFreePairFoldArgs
+    expElim :
+      (a : atom) -> (l : SList atom) -> (a' : atom) -> (l' : SList atom) ->
+      (lpl : lp l l') -> sp (a $: l) (a' $: l')
+    nilNilElim : lp [] []
+    nilConsElim : (x' : SExp atom) -> (l' : SList atom) -> lp [] (x' :: l')
+    consNilElim : (x : SExp atom) -> (l : SList atom) -> lp (x :: l) []
+    consConsElim :
+      (x: SExp atom) -> (l : SList atom) ->
+      (x' : SExp atom) -> (l' : SList atom) ->
+      (spx : sp x x') -> (lpl : lp l l') ->
+      lp (x $+ l) (x' $+ l')
+
+public export
+sexpDepContextFreePairFolds : {atom : Type} ->
+  {sp : (x, x' : SExp atom) -> Type} -> {lp : (l, l' : SList atom) -> Type} ->
+  (signature : SExpDepContextFreePairFoldSig sp lp) ->
+  ((x, x' : SExp atom) -> sp x x', (l, l' : SList atom) -> lp l l')
+sexpDepContextFreePairFolds {atom} {sp} {lp} signature =
+  sexpDepContextFreeFolds
+    {sp=(\x => (x' : SExp atom) -> sp x x')}
+    {lp=(\l => (l' : SList atom) -> lp l l')}
+    (SExpDepContextFreeFoldArgs expCase nilCase consCase)
+    where
+      expCase : (a : atom) -> (l : SList atom) ->
+        (lpf : (l' : SList atom) -> lp l l') -> (x : SExp atom) ->
+        sp (a $: l) x
+      expCase a l lpf (a' $: l') = expElim signature a l a' l' (lpf l')
+
+      nilCase : (l' : SList atom) -> lp [] l'
+      nilCase [] = nilNilElim signature
+      nilCase (x' :: l') = nilConsElim signature x' l'
+
+      consCase : (x : SExp atom) -> (l : SList atom) ->
+        (spf : (x' : SExp atom) -> sp x  x') ->
+        (lpf : (l' : SList atom) -> lp l l') ->
+        (l' : SList atom) -> lp (x :: l)  l'
+      consCase x l spf lpf [] =
+        consNilElim signature x l
+      consCase x l spf lpf (x' :: l') =
+        consConsElim signature x l x' l' (spf x') (lpf l')
+
+public export
+sexpDecEq : {atom : Type} ->
+  (atomDecEq : DecEqPred atom) ->
+  ((x, x' : SExp atom) -> Dec (x = x'), (l, l' : SList atom) -> Dec (l = l'))
+sexpDecEq atomDecEq =
+  sexpDepContextFreePairFolds
+    (SExpDepContextFreePairFoldArgs
+      (\a, l, a', l', leq => case (atomDecEq a a', leq) of
+        (Yes Refl, Yes Refl) => Yes Refl
+        (No aneq, _) => No (\eq => case eq of Refl => aneq Refl)
+        (_, No lneq) => No (\eq => case eq of Refl => lneq Refl))
+      (Yes Refl)
+      (\_, _ => No (\eq => case eq of Refl impossible))
+      (\_, _ => No (\eq => case eq of Refl impossible))
+      (\x, l, x', l', xeq, leq => case (xeq, leq) of
+        (Yes Refl, Yes Refl) => Yes Refl
+        (No xneq, _) => No (\eq => case eq of Refl => xneq Refl)
+        (_, No lneq) => No (\eq => case eq of Refl => lneq Refl)))
 
 public export
 record SExpNonDepContextFreeFoldListSig
