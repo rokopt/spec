@@ -544,10 +544,6 @@ sexpMetaFolds {signature} {sdp} {ldp} metaSig =
   let
     folds =
       sexpDepContextFreeFolds
-        {sp=(\x =>
-          (predecessors : SList atom) ->
-          (context : contextType predecessors) ->
-          sdp predecessors context x (sexpDepFold signature context x))}
         (SExpDepContextFreeFoldArgs
           (metaExpElim metaSig)
           (metaNilElim metaSig)
