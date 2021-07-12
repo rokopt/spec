@@ -333,6 +333,13 @@ YesDPairInjective =
   UniqueHeterogeneousDPairInjective (\_, yes, yes' => IsYesUnique yes yes')
 
 public export
+JustDPairInjective : {a : Type} -> {b : a -> Type} ->
+  {dec : (x : a) -> Maybe (b x)} ->
+  {d, d' : DPair a (\x => IsJust (dec x))} -> fst d = fst d' -> d = d'
+JustDPairInjective =
+  UniqueHeterogeneousDPairInjective (\_, just, just' => IsJustUnique just just')
+
+public export
 square : Nat -> Nat
 square x = x * x
 

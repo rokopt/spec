@@ -124,6 +124,7 @@ record InductiveDecisionSig
   (predicate : DecidablePredicate atom)
   (contextType : Type) where
     constructor InductiveDecisionArgs
+    initialContext : contextType
     decideOne :
       (a : atom) -> (l : SList atom) ->
       (contextType, SListForAll (SuccessPredicate predicate) l) ->
@@ -131,3 +132,49 @@ record InductiveDecisionSig
     failOne :
       (contextType, DPair (SExp atom) (FailurePredicate predicate)) ->
       contextType
+
+public export
+inductiveDecide : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  InductiveDecisionSig predicate contextType ->
+  (x : SExp atom) -> Maybe (SExpForAll (SuccessPredicate predicate) x)
+inductiveDecide decisionSig = ?inductiveDecide_hole
+
+public export
+Checks : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  InductiveDecisionSig predicate contextType ->
+  SExp atom -> Type
+Checks signature x = IsJust (inductiveDecide signature x)
+
+public export
+Checked : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  InductiveDecisionSig predicate contextType ->
+  Type
+Checked signature = DPair (SExp atom) (Checks signature)
+
+public export
+decChecked : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  (signature : InductiveDecisionSig predicate contextType) ->
+  (x : SExp atom) -> Dec (Checks signature x)
+decChecked signature x = IsJustDec (inductiveDecide signature x)
+
+public export
+checksInjective : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  {signature : InductiveDecisionSig predicate contextType} ->
+  {x : SExp atom} -> (checks, checks' : Checks signature x) ->
+  checks = checks'
+checksInjective = IsJustUnique
+
+public export
+checkedInjective : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  {signature : InductiveDecisionSig predicate contextType} ->
+  {checked, checked' : Checked signature} ->
+  (fst checked = fst checked') ->
+  checked = checked'
+checkedInjective {signature} =
+  JustDPairInjective {dec=(inductiveDecide signature)}
