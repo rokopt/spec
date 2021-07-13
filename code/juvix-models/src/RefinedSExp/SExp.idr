@@ -109,9 +109,9 @@ record SExpFoldSig
       atom -> SList atom ->
       (contextType -> (contextType, lp)) ->
       contextType -> (contextType, sp)
-    snilElim :
+    nilElim :
       (context : contextType) -> (contextType, lp)
-    sconsElim :
+    consElim :
       (x : SExp atom) -> (l : SList atom) ->
       (headCall : contextType -> (contextType, sp)) ->
       (tailCall : contextType -> (contextType, lp)) ->
@@ -139,9 +139,9 @@ mutual
     (l : SList atom) ->
     (context : contextType) ->
     (contextType, lp)
-  slistFoldFlip signature [] = snilElim signature
+  slistFoldFlip signature [] = nilElim signature
   slistFoldFlip signature (x :: l) =
-    sconsElim
+    consElim
       signature x l (sexpFoldFlip signature x) (slistFoldFlip signature l)
 
 public export
@@ -183,7 +183,7 @@ record SExpDepFoldSig
   (sp : SExpPredicate atom contextType) (lp : SListPredicate atom contextType)
   where
     constructor SExpDepFoldArgs
-    sdepExpElim :
+    expElim :
       (a : atom) -> (l : SList atom) ->
       (recursiveCall :
         (calledContext : contextType) ->
@@ -191,10 +191,10 @@ record SExpDepFoldSig
           lp calledContext l)) ->
       (context : contextType) ->
       (contextType, sp context (a $: l))
-    sdepNilElim :
+    nilElim :
       (context : contextType) ->
       (contextType, lp context [])
-    sdepConsElim :
+    consElim :
       (x : SExp atom) -> (l : SList atom) ->
       (headCall :
         (calledContext : contextType) ->
@@ -218,7 +218,7 @@ mutual
     (context : contextType) ->
     (contextType, sp context x)
   sexpDepFoldFlip {atom} signature (a $: l) =
-    sdepExpElim {atom} signature a l
+    expElim {atom} signature a l
       (slistDepFoldFlip signature l)
 
   public export
@@ -231,9 +231,9 @@ mutual
     (context : contextType) ->
     (contextType, lp context l)
   slistDepFoldFlip signature [] =
-    (sdepNilElim signature)
+    (nilElim signature)
   slistDepFoldFlip signature (x :: l) =
-    sdepConsElim signature x l
+    consElim signature x l
       (sexpDepFoldFlip signature x)
       (slistDepFoldFlip signature l)
 
@@ -279,8 +279,8 @@ SExpFoldNonDepSigToDepSig :
 SExpFoldNonDepSigToDepSig signature =
   SExpDepFoldArgs
     (expElim signature)
-    (snilElim signature)
-    (sconsElim signature)
+    (nilElim signature)
+    (consElim signature)
 
 mutual
   export
@@ -315,7 +315,7 @@ mutual
     let
       headEq = sexpDepFoldFlipCorrect signature x
       tailEq = slistDepFoldFlipCorrect signature l
-      congHead = cong (sconsElim signature x l) headEq
+      congHead = cong (consElim signature x l) headEq
     in
     applyEq congHead tailEq
 
@@ -659,13 +659,13 @@ record SExpMetaFoldSig
       (metaContextType,
        (contextUponEntry : contextType) ->
         sdp metaContextUponEntry contextUponEntry (a $: l)
-          (sdepExpElim signature a l
+          (expElim signature a l
             (slistDepFoldFlip signature l) contextUponEntry))
     metaNilElim :
       (metaContext : metaContextType) ->
       (metaContextType,
        (context : contextType) ->
-       ldp metaContext context [] (sdepNilElim signature context))
+       ldp metaContext context [] (nilElim signature context))
     metaConsElim :
       (x : SExp atom) -> (l : SList atom) ->
       (headCall :
@@ -684,7 +684,7 @@ record SExpMetaFoldSig
       (metaContextType,
        (contextUponEntry : contextType) ->
         ldp metaContextUponEntry contextUponEntry (x :: l)
-        (sdepConsElim signature x l
+        (consElim signature x l
           (sexpDepFoldFlip signature x)
           (slistDepFoldFlip signature l)
           contextUponEntry))
