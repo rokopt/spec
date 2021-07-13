@@ -212,3 +212,61 @@ checkedInjective : {atom : Type} ->
   checked = checked'
 checkedInjective {signature} =
   JustDPairInjective {dec=(inductiveDecide signature)}
+
+public export
+record InductiveEliminatorSig
+  {atom : Type}
+  {predicate : DecidablePredicate atom}
+  {contextType : Type}
+  (domain : InductiveDecisionSig predicate contextType)
+  (codomain : Type) where
+    constructor InductiveEliminatorArgs
+
+public export
+inductiveEliminator : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  {domain : InductiveDecisionSig predicate contextType} ->
+  {codomain : Type} ->
+  (signature : InductiveEliminatorSig domain codomain) ->
+  Checked domain -> codomain
+inductiveEliminator signature checks = ?inductiveEliminator_hole
+
+public export
+record InductiveIntroductionSig
+  {atom : Type}
+  {predicate : DecidablePredicate atom}
+  {contextType : Type}
+  (domain : Type)
+  (codomain : InductiveDecisionSig predicate contextType) where
+    constructor InductiveIntroductionArgs
+
+public export
+inductiveIntroduction : {atom : Type} ->
+  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
+  {domain : Type} ->
+  {codomain : InductiveDecisionSig predicate contextType} ->
+  (signature : InductiveIntroductionSig domain codomain) ->
+  domain -> Checked codomain
+inductiveIntroduction signature x = ?inductiveIntroduction_hole
+
+public export
+record InductiveTransformSig
+  {atomDom, atomCod : Type}
+  {predicateDom : DecidablePredicate atomDom}
+  {predicateCod : DecidablePredicate atomCod}
+  {contextTypeDom, contextTypeCod : Type}
+  (domain : InductiveDecisionSig predicateDom contextTypeDom)
+  (codomain : InductiveDecisionSig predicateCod contextTypeCod) where
+    constructor InductiveTransformArgs
+
+public export
+inductiveTransform :
+  {atomDom, atomCod : Type} ->
+  {predicateDom : DecidablePredicate atomDom} ->
+  {predicateCod : DecidablePredicate atomCod} ->
+  {contextTypeDom, contextTypeCod : Type} ->
+  {domain : InductiveDecisionSig predicateDom contextTypeDom} ->
+  {codomain : InductiveDecisionSig predicateCod contextTypeCod} ->
+  (signature : InductiveTransformSig domain codomain) ->
+  Checked domain -> Checked codomain
+inductiveTransform signature x = ?inductiveTransform_hole
