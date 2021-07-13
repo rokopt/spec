@@ -160,16 +160,16 @@ inductiveDecide decisionSig x' =
         (\context => (context, Just (|:|)))
         (\x, l, head, tail, context =>
           let
-            (headContext, headForAll) = head context
+            (tailContext, tailResult) = tail context
           in
-          case headForAll of
-            Just headSuccess =>
-              let (tailContext, tailForAll) = tail headContext in
-              case tailForAll of
-                Just tailSuccess =>
-                  (tailContext, Just (headSuccess ::: tailSuccess))
-                Nothing => (tailContext, Nothing)
-            Nothing => (headContext, Nothing)))
+          case tailResult of
+            Just tailSuccess =>
+              let (headContext, headResult) = head tailContext in
+              case headResult of
+                Just headSuccess =>
+                  (headContext, Just (headSuccess ::: tailSuccess))
+                Nothing => (headContext, Nothing)
+            Nothing => (fst (head tailContext), Nothing)))
       (initialContext decisionSig)
     )
   x')
