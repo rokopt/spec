@@ -283,7 +283,9 @@ record ListMetaFoldSig
     List atom ->
     Type}
   (signature : ListDepFoldSig lp)
+  {metaContextType : Type}
   (ldp :
+    (metaContext : metaContextType) ->
     (context : contextType) ->
     (l : List atom) ->
     (contextType, lp context l) ->
@@ -291,18 +293,24 @@ record ListMetaFoldSig
   where
     constructor ListMetaFoldArgs
     metaNilElim :
-      (context : contextType) ->
-      ldp context [] (nilElim signature context)
+      (metaContext : metaContextType) ->
+      (metaContextType,
+       (context : contextType) ->
+       ldp metaContext context [] (nilElim signature context))
     metaConsElim :
       (a : atom) -> (l : List atom) ->
       (recursiveCall :
-        (calledContext : contextType) ->
-        ldp calledContext l
-          (listDepFoldFlip signature l calledContext)) ->
-      (contextUponEntry : contextType) ->
-      ldp contextUponEntry (a :: l)
+        (calledMetaContext : metaContextType) ->
+        (metaContextType,
+         (calledContext : contextType) ->
+          ldp calledMetaContext calledContext l
+            (listDepFoldFlip signature l calledContext))) ->
+      (metaContextUponEntry : metaContextType) ->
+      (metaContextType,
+       (contextUponEntry : contextType) ->
+        ldp metaContextUponEntry contextUponEntry (a :: l)
         (consElim signature a l
-          (listDepFoldFlip signature l) contextUponEntry)
+          (listDepFoldFlip signature l) contextUponEntry))
 
 public export
 listMetaFoldArgs :
@@ -312,19 +320,22 @@ listMetaFoldArgs :
     List atom ->
     Type} ->
   {signature : ListDepFoldSig lp} ->
+  {metaContextType : Type} ->
   {ldp :
+    (metaContext : metaContextType) ->
     (context : contextType) ->
     (l : List atom) ->
     (contextType, lp context l) ->
     Type} ->
   (metaSig : ListMetaFoldSig signature ldp) ->
-  ListDepContextFreeFoldSig
-    (\l =>
+  ListDepFoldSig {contextType=metaContextType}
+    (\metaContext, l =>
       (context : contextType) ->
-        ldp context l
+        ldp metaContext context l
           (listDepFold signature context l))
 listMetaFoldArgs metaSig =
-  (ListDepContextFreeFoldArgs (metaNilElim metaSig) (metaConsElim metaSig))
+  (ListDepFoldArgs {contextType=metaContextType}
+    (metaNilElim metaSig) (metaConsElim metaSig))
 
 public export
 listMetaFold :
@@ -334,13 +345,18 @@ listMetaFold :
     List atom ->
     Type} ->
   {signature : ListDepFoldSig lp} ->
+  {metaContextType : Type} ->
   {ldp :
+    (metaContext : metaContextType) ->
     (contextUponEntry : contextType) ->
     (l : List atom) ->
     (contextType, lp contextUponEntry l) ->
     Type} ->
   (metaSig : ListMetaFoldSig signature ldp) ->
-  (context : contextType) -> (l : List atom) ->
-  ldp context l (listDepFold signature context l)
-listMetaFold {signature} {ldp} metaSig context l =
-  listDepContextFreeFold (listMetaFoldArgs metaSig) l context
+  (metaContext : metaContextType) ->
+  (l : List atom) ->
+  (metaContextType,
+    (context : contextType) ->
+     ldp metaContext context l (listDepFold signature context l))
+listMetaFold {contextType} {signature} {metaContextType} {ldp} metaSig =
+  listDepFold {contextType=metaContextType} (listMetaFoldArgs metaSig)
