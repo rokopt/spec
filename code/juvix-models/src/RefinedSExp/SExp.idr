@@ -613,9 +613,9 @@ sexpForAllFoldsContextIndependent {contextType} {sp} signature =
         (fst sp, snd sp :$: snd slForAll))
       (\context => (context, (|:|)))
       (\x, l, headCall, tailCall, context =>
-        let head = headCall context in
-        let tail = tailCall (fst head) in
-        (fst tail, snd head ::: snd tail)))
+        let tail = tailCall context in
+        let head = headCall (fst tail) in
+        (fst head, snd head ::: snd tail)))
 
 SExpMetaPred :
   (metaContextType : Type) -> {atom : Type} -> {contextType : Type} ->
