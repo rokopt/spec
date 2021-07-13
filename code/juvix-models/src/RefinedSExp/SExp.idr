@@ -462,32 +462,32 @@ sexpDecEq atomDecEq =
         (_, No lneq) => No (\eq => case eq of Refl => lneq Refl)))
 
 public export
-record SExpNonDepContextFreeFoldListSig
+record SExpNonDepContextFreeListFoldSig
   {atom : Type} (sp : Type)
   where
-    constructor SExpNonDepContextFreeFoldListArgs
+    constructor SExpNonDepContextFreeListFoldArgs
     expElim :
       (a : atom) -> (l : SList atom) ->
       (recursiveResult : List sp) ->
       sp
 
 public export
-SExpNonDepContextFreeFoldListSigToContextFreeFoldSig :
+SExpNonDepContextFreeListFoldSigToContextFreeFoldSig :
   {atom : Type} -> {sp : Type} ->
-  SExpNonDepContextFreeFoldListSig {atom} sp ->
+  SExpNonDepContextFreeListFoldSig {atom} sp ->
   SExpDepContextFreeFoldSig
     {atom} (\_ => sp) (\_ => List sp)
-SExpNonDepContextFreeFoldListSigToContextFreeFoldSig signature =
+SExpNonDepContextFreeListFoldSigToContextFreeFoldSig signature =
   SExpDepContextFreeFoldArgs (expElim signature) [] (\_, _ => (::))
 
 public export
 sexpNonDepContextFreeListFolds : {atom : Type} ->
   {sp : Type} ->
-  (signature : SExpNonDepContextFreeFoldListSig {atom} sp) ->
+  (signature : SExpNonDepContextFreeListFoldSig {atom} sp) ->
   ((x : SExp atom) -> sp, (l : SList atom) -> List sp)
 sexpNonDepContextFreeListFolds {atom} signature =
   sexpDepContextFreeFolds {atom} {sp=(\_ => sp)} {lp=(\_ => List sp)}
-    (SExpNonDepContextFreeFoldListSigToContextFreeFoldSig signature)
+    (SExpNonDepContextFreeListFoldSigToContextFreeFoldSig signature)
 
 infixr 7 :$:
 public export

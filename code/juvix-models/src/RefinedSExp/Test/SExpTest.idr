@@ -10,7 +10,7 @@ sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
   (SExp atom -> String, SList atom -> List String)
 sexpShows showAtom =
   sexpNonDepContextFreeListFolds
-    (SExpNonDepContextFreeFoldListArgs
+    (SExpNonDepContextFreeListFoldArgs
       (\a, l, s => case l of
         [] => "$(" ++ showAtom a ++ ")"
         _ => "$(" ++ showAtom a ++ ":" ++
