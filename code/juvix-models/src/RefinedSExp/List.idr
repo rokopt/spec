@@ -9,18 +9,17 @@ import public Data.List
 -- picture why we need a context to write a _generic_ function which can be
 -- tail-recursive (if `consElim` is) in an eagerly-evaluated language.
 nonTailRecursiveListInd :
-  {f : Type -> Type} ->
   {atom : Type} ->
   {lp : List atom -> Type} ->
-  (nilElim : f (lp [])) ->
+  (nilElim : lp []) ->
   (consElim :
     (a : atom) -> (l : List atom) ->
-    f (lp l) -> f (lp (a :: l))) ->
-  (l : List atom) -> f (lp l)
-nonTailRecursiveListInd {f} nilElim consElim [] =
+    lp l -> lp (a :: l)) ->
+  (l : List atom) -> lp l
+nonTailRecursiveListInd nilElim consElim [] =
   nilElim
-nonTailRecursiveListInd {f} nilElim consElim (a :: l) =
-  consElim a l (nonTailRecursiveListInd {f} nilElim consElim l)
+nonTailRecursiveListInd nilElim consElim (a :: l) =
+  consElim a l (nonTailRecursiveListInd nilElim consElim l)
 
 public export
 record ListFoldSig {f : Type -> Type} (atom, contextType, lp : Type) where
@@ -38,10 +37,9 @@ listFoldFlip : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
   (l : List atom) ->
   (context : contextType) ->
   f (contextType, lp)
-listFoldFlip {f} signature [] =
-  nilElim {f} signature
-listFoldFlip signature (a :: l) =
-  consElim signature a l (listFoldFlip signature l)
+listFoldFlip {f} {lp} signature =
+  nonTailRecursiveListInd {atom} {lp=(\_ => contextType -> f (contextType, lp))}
+      (nilElim signature) (consElim signature)
 
 public export
 listFold : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
@@ -78,11 +76,10 @@ listDepFoldFlip : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
   (l : List atom) ->
   (context : contextType) ->
   f (contextType, lp context l)
-listDepFoldFlip {f} signature [] =
-  nilElim {f} signature
-listDepFoldFlip {f} signature (a :: l) =
-  consElim signature a l
-    (listDepFoldFlip signature l)
+listDepFoldFlip {f} {lp} signature =
+  nonTailRecursiveListInd {atom}
+    {lp=(\l => (context : contextType) -> f (contextType, lp context l))}
+      (nilElim signature) (consElim signature)
 
 public export
 listDepFold : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
