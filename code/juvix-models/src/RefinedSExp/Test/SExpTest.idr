@@ -14,7 +14,7 @@ sexpShows showAtom =
       (\a, l, s => case l of
         [] => "$(" ++ showAtom a ++ ")"
         _ => "$(" ++ showAtom a ++ ":" ++
-          (foldl Prelude.Strings.(++) "" s) ++ ")\n"))
+          (foldl Prelude.Types.String.(++) "" s) ++ ")\n"))
 
 public export
 Show atom => Show (SExp atom) where

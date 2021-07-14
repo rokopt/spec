@@ -110,7 +110,7 @@ intSqrtPf n =
       case isLTE (S r * S r) (S n) of
         Yes lte' => (S r ** (lte',
           let lt' =
-            LTESucc (lteTransitive lt (lteAddRight (S r * S r) {m = r + r})) in
+            LTESucc (transitive {rel=LTE} lt (lteAddRight (S r * S r) {m = r + r})) in
           let lt'' = lteSuccRight (lteSuccRight lt') in
           {- Rewrite lt'' to match the goal type. -}
           let lt1 =
