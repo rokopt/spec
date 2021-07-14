@@ -9,104 +9,106 @@ import public Data.List
 -- picture why we need a context to write a _generic_ function which can be
 -- tail-recursive (if `consElim` is) in an eagerly-evaluated language.
 nonTailRecursiveListInd :
+  {f : Type -> Type} ->
   {atom : Type} ->
   {lp : List atom -> Type} ->
-  (nilElim : lp []) ->
+  (nilElim : f (lp [])) ->
   (consElim :
     (a : atom) -> (l : List atom) ->
-    lp l -> lp (a :: l)) ->
-  (l : List atom) -> lp l
-nonTailRecursiveListInd nilElim consElim [] =
+    f (lp l) -> f (lp (a :: l))) ->
+  (l : List atom) -> f (lp l)
+nonTailRecursiveListInd {f} nilElim consElim [] =
   nilElim
-nonTailRecursiveListInd nilElim consElim (a :: l) =
-  consElim a l (nonTailRecursiveListInd nilElim consElim l)
+nonTailRecursiveListInd {f} nilElim consElim (a :: l) =
+  consElim a l (nonTailRecursiveListInd {f} nilElim consElim l)
 
 public export
-record ListFoldSig (atom, contextType, lp : Type) where
+record ListFoldSig {f : Type -> Type} (atom, contextType, lp : Type) where
   constructor ListFoldArgs
   nilElim :
-    (context : contextType) -> (contextType, lp)
+    (context : contextType) -> f (contextType, lp)
   consElim :
     (a : atom) -> (l : List atom) ->
-    (contextType -> (contextType, lp)) ->
-    (contextType -> (contextType, lp))
+    (contextType -> f (contextType, lp)) ->
+    (contextType -> f (contextType, lp))
 
 public export
-listFoldFlip : {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig atom contextType lp) ->
+listFoldFlip : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig {f} atom contextType lp) ->
   (l : List atom) ->
   (context : contextType) ->
-  (contextType, lp)
-listFoldFlip signature [] =
-  nilElim signature
+  f (contextType, lp)
+listFoldFlip {f} signature [] =
+  nilElim {f} signature
 listFoldFlip signature (a :: l) =
   consElim signature a l (listFoldFlip signature l)
 
 public export
-listFold : {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig atom contextType lp) ->
+listFold : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig {f} atom contextType lp) ->
   (context : contextType) ->
   (l : List atom) ->
-  (contextType, lp)
+  f (contextType, lp)
 listFold signature = flip (listFoldFlip signature)
 
 public export
 record
-ListDepFoldSig {atom : Type} {contextType : Type}
+ListDepFoldSig {f : Type -> Type} {atom : Type} {contextType : Type}
   (lp : (context : contextType) ->
     List atom ->
     Type) where
       constructor ListDepFoldArgs
       nilElim :
-        (context : contextType) -> (contextType, lp context [])
+        (context : contextType) -> f (contextType, lp context [])
       consElim :
         (a : atom) -> (l : List atom) ->
         (recursiveCall :
           (calledContext : contextType) ->
-          (contextType, lp calledContext l)) ->
+          f (contextType, lp calledContext l)) ->
         (contextUponEntry : contextType) ->
-        (contextType, lp contextUponEntry (a :: l))
+        f (contextType, lp contextUponEntry (a :: l))
 
 public export
-listDepFoldFlip : {atom : Type} -> {contextType : Type} ->
+listDepFoldFlip : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
   {lp :
     (context : contextType) ->
     List atom ->
     Type} ->
-  (signature : ListDepFoldSig lp) ->
+  (signature : ListDepFoldSig {f} lp) ->
   (l : List atom) ->
   (context : contextType) ->
-  (contextType, lp context l)
-listDepFoldFlip signature [] =
-  nilElim signature
-listDepFoldFlip signature (a :: l) =
+  f (contextType, lp context l)
+listDepFoldFlip {f} signature [] =
+  nilElim {f} signature
+listDepFoldFlip {f} signature (a :: l) =
   consElim signature a l
     (listDepFoldFlip signature l)
 
 public export
-listDepFold : {atom : Type} -> {contextType : Type} ->
+listDepFold : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
   {lp :
     (context : contextType) ->
     List atom ->
     Type} ->
-  (signature : ListDepFoldSig lp) ->
+  (signature : ListDepFoldSig {f} lp) ->
   (context : contextType) -> (l : List atom) ->
-  (contextType, lp context l)
-listDepFold signature context l = listDepFoldFlip signature l context
+  f (contextType, lp context l)
+listDepFold {f} signature context l = listDepFoldFlip signature l context
 
 public export
-ListFoldNonDepSigToDepSig : {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig atom contextType lp) ->
-  ListDepFoldSig
+ListFoldNonDepSigToDepSig : {f : Type -> Type} ->
+  {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig {f} atom contextType lp) ->
+  ListDepFoldSig {f}
     {atom} {contextType} (\_, _ => lp)
 ListFoldNonDepSigToDepSig signature =
   ListDepFoldArgs (nilElim signature) (consElim signature)
 
 public export
-listDepFoldFlipCorrect : {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig atom contextType lp) ->
+listDepFoldFlipCorrect : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
+  (signature : ListFoldSig {f} atom contextType lp) ->
   (l : List atom) ->
-  listFoldFlip signature l =
+  listFoldFlip {f} signature l =
     listDepFoldFlip
       {atom}
       {contextType}
@@ -119,7 +121,7 @@ listDepFoldFlipCorrect signature (a :: l) =
   cong (consElim signature a l) (listDepFoldFlipCorrect signature l)
 
 public export
-listDepFoldCorrect : {atom, contextType, lp : Type} ->
+listDepFoldCorrect : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
   (signature : ListFoldSig atom contextType lp) ->
   (context : contextType) ->
   (l : List atom) ->
@@ -128,41 +130,41 @@ listDepFoldCorrect : {atom, contextType, lp : Type} ->
       {atom}
       {contextType}
       {lp=(\_, _ => lp)}
-      (ListFoldNonDepSigToDepSig signature)
+      (ListFoldNonDepSigToDepSig {f} signature)
       context
       l
-listDepFoldCorrect signature context l =
+listDepFoldCorrect {f} signature context l =
   applyEq (listDepFoldFlipCorrect signature l) Refl
 
 public export
 record
-ListDepContextFreeFoldSig {atom : Type}
+ListDepContextFreeFoldSig {f : Type -> Type} {atom : Type}
   (lp : List atom -> Type) where
     constructor ListDepContextFreeFoldArgs
-    nilElim : lp []
+    nilElim : f (lp [])
     consElim :
-      (a : atom) -> (l : List atom) -> (recursiveResult : lp l) -> lp (a :: l)
+      (a : atom) -> (l : List atom) -> (recursiveResult : f (lp l)) ->
+      f (lp (a :: l))
 
 public export
 ListDepContextFreeFoldSigToDepFoldSig :
-  {atom : Type} -> {lp : List atom -> Type} ->
-  ListDepContextFreeFoldSig lp ->
-  ListDepFoldSig {atom} {contextType=()} (\_ => lp)
-ListDepContextFreeFoldSigToDepFoldSig signature =
-  ListDepFoldArgs
-    (\_ => ((), nilElim signature))
+  {f : Type -> Type} -> Functor f => {atom : Type} -> {lp : List atom -> Type} ->
+  ListDepContextFreeFoldSig {f} lp ->
+  ListDepFoldSig {f} {atom} {contextType=()} (\_ => lp)
+ListDepContextFreeFoldSigToDepFoldSig {f} signature =
+  ListDepFoldArgs {f}
+    (\_ => map (MkPair ()) (nilElim signature))
     (\a, l, recursiveCall, _ =>
-      ((), consElim signature a l (snd (recursiveCall ()))))
+      map (MkPair ()) (consElim signature a l (map snd (recursiveCall ()))))
 
 public export
-listDepContextFreeFold : {atom : Type} ->
+listDepContextFreeFold : {f : Type -> Type} -> Functor f =>
+  {atom : Type} ->
   {lp : List atom -> Type} ->
-  (signature : ListDepContextFreeFoldSig lp) ->
-  (l : List atom) -> lp l
-listDepContextFreeFold signature l =
-  snd
-    (listDepFold
-      (ListDepContextFreeFoldSigToDepFoldSig signature) () l)
+  (signature : ListDepContextFreeFoldSig {f} lp) ->
+  (l : List atom) -> f (lp l)
+listDepContextFreeFold {f} signature l =
+  map snd (listDepFold (ListDepContextFreeFoldSigToDepFoldSig signature) () l)
 
 infixr 7 :::
 public export
@@ -189,10 +191,12 @@ data ListExists :
             ListExists lp l ->
             ListExists lp (a :: l)
 
+public export
 NoExistsNil : {atom : Type} -> {lp : atom -> Type} -> Not (ListExists lp [])
 NoExistsNil ((<::) _) impossible
 NoExistsNil ((>::) _) impossible
 
+public export
 NoExistsNeither : {atom : Type} -> {lp : atom -> Type} ->
   {a : atom} -> {l : List atom} ->
   Not (lp a) -> Not (ListExists lp l) ->
@@ -201,94 +205,109 @@ NoExistsNeither noA _ ((<::) existsA) = noA existsA
 NoExistsNeither _ noList ((>::) existsList) = noList existsList
 
 public export
-ListForAllConstruct : {atom : Type} ->
+ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {lp : atom -> Type} ->
-  (f : (a : atom) -> lp a) -> (l : List atom) ->
-  ListForAll lp l
-ListForAllConstruct f =
-  listDepContextFreeFold
-    (ListDepContextFreeFoldArgs
-      (|:|)
-      (\a, _, lpl => f a ::: lpl))
+  (construct : (a : atom) -> f (lp a)) -> (l : List atom) ->
+  f (ListForAll lp l)
+ListForAllConstruct {f} {lp} construct =
+  listDepContextFreeFold {f} {lp=(ListForAll lp)}
+    (ListDepContextFreeFoldArgs {f}
+      (pure (|:|))
+      (\a, _, lpl => [| construct a ::: lpl |]))
+
+infixr 7 :::
+public export
+ListForAllConsDec : {atom : Type} -> {lp : atom -> Type} ->
+  {a : atom} -> {l : List atom} ->
+  Dec (lp a) -> Dec (ListForAll lp l) ->
+  Dec (ListForAll lp (a :: l))
+ListForAllConsDec decHead decTail =
+  case (decHead, decTail) of
+    (Yes yesHead, Yes yesTail) => Yes (yesHead ::: yesTail)
+    (No noHead, _) =>
+      No (\yesTail =>
+        case yesTail of
+          (|:|) impossible
+          (yesHead ::: _) => noHead yesHead)
+    (_, No noTail) =>
+      No (\yesHead =>
+        case yesHead of
+          (|:|) impossible
+          (_ ::: yesTail) => noTail yesTail)
 
 public export
-DecListForAll : {atom : Type} ->
+DecListForAll : {atom : Type} -> {f : Type -> Type} -> Applicative f =>
   {lp : atom -> Type} ->
-  (dec : (a : atom) -> Dec (lp a)) -> (l : List atom) ->
-  Dec (ListForAll lp l)
+  (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
+  f (Dec (ListForAll lp l))
 DecListForAll dec =
   listDepContextFreeFold
     (ListDepContextFreeFoldArgs {lp=(Dec . ListForAll lp)}
-      (Yes (|:|))
-      (\a, _, decList =>
-        case (dec a, decList) of
-          (Yes yesA, Yes yesList) => Yes (yesA ::: yesList)
-          (No noA, _) =>
-            No (\yesList =>
-              noA (case yesList of
-                (|:|) impossible
-                (yesA ::: _) => yesA))
-          (_, No noList) =>
-            No (\yesA =>
-              noList (case yesA of
-                (|:|) impossible
-                (_ ::: yesList) => yesList))))
+      (pure (Yes (|:|)))
+      (\a, _, decList => [| ListForAllConsDec (dec a) decList |] ))
 
 public export
-DecListExists : {atom : Type} ->
+ListExistsEitherDec : {atom : Type} -> {lp : atom -> Type} ->
+  {a : atom} -> {l : List atom} ->
+  Dec (lp a) -> Dec (ListExists lp l) ->
+  Dec (ListExists lp (a :: l))
+ListExistsEitherDec decHead decTail =
+  case (decHead, decTail) of
+    (Yes yesA, _) => Yes (<:: yesA)
+    (_, Yes existsList) => Yes (>:: existsList)
+    (No noA, No noList) => No (NoExistsNeither noA noList)
+
+public export
+DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {lp : atom -> Type} ->
-  (dec : (a : atom) -> Dec (lp a)) -> (l : List atom) ->
-  Dec (ListExists lp l)
+  (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
+  f (Dec (ListExists lp l))
 DecListExists dec =
   listDepContextFreeFold
     (ListDepContextFreeFoldArgs {lp=(Dec . ListExists lp)}
-      (No NoExistsNil)
-      (\a, _, decList =>
-        case (dec a, decList) of
-          (Yes yesA, _) => Yes (<:: yesA)
-          (_, Yes existsList) => Yes (>:: existsList)
-          (No noA, No noList) => No (NoExistsNeither noA noList)))
+      (pure (No NoExistsNil))
+      (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
 
 public export
 record
-ListForAllFoldSig {atom : Type}
+ListForAllFoldSig {f : Type -> Type} {atom : Type}
   (ap : atom -> Type) where
     constructor ListForAllFoldArgs
     consElim :
       (a : atom) -> (l : List atom) ->
-      (recursiveResult : ListForAll ap l) ->
-      ListForAll ap (a :: l)
+      (recursiveResult : f (ListForAll ap l)) ->
+      f (ListForAll ap (a :: l))
 
 public export
-ListForAllFoldSigToDepContextFreeFoldSig:
-  {atom : Type} -> {ap : atom -> Type} ->
-  ListForAllFoldSig {atom} ap ->
-  ListDepContextFreeFoldSig (ListForAll ap)
+ListForAllFoldSigToDepContextFreeFoldSig :
+  {f : Type -> Type} -> Applicative f => {atom : Type} -> {ap : atom -> Type} ->
+  ListForAllFoldSig {f} {atom} ap ->
+  ListDepContextFreeFoldSig {f} (ListForAll ap)
 ListForAllFoldSigToDepContextFreeFoldSig signature =
-  ListDepContextFreeFoldArgs (|:|) (consElim signature)
+  ListDepContextFreeFoldArgs (pure (|:|)) (consElim signature)
 
 public export
-listForAllFold : {atom : Type} ->
+listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {ap : atom -> Type} ->
-  (signature : ListForAllFoldSig ap) ->
-  (l : List atom) -> ListForAll ap l
+  (signature : ListForAllFoldSig {f} ap) ->
+  (l : List atom) -> f (ListForAll ap l)
 listForAllFold {atom} signature =
   listDepContextFreeFold (ListForAllFoldSigToDepContextFreeFoldSig signature)
 
 public export
-record ListMetaFoldSig
+record ListMetaFoldSig {f : Type -> Type}
   {atom : Type} {contextType : Type}
   {lp :
     (context : contextType) ->
     List atom ->
     Type}
-  (signature : ListDepFoldSig lp)
+  (signature : ListDepFoldSig {f} lp)
   {metaContextType : Type}
   (ldp :
     (metaContext : metaContextType) ->
     (context : contextType) ->
     (l : List atom) ->
-    (contextType, lp context l) ->
+    (f (contextType, lp context l)) ->
     Type)
   where
     constructor ListMetaFoldArgs
@@ -313,50 +332,54 @@ record ListMetaFoldSig
           (listDepFoldFlip signature l) contextUponEntry))
 
 public export
-listMetaFoldArgs :
+listMetaFoldArgs : {f : Type -> Type} ->
   {atom : Type} -> {contextType : Type} ->
   {lp :
     (context : contextType) ->
     List atom ->
     Type} ->
-  {signature : ListDepFoldSig lp} ->
+  {signature : ListDepFoldSig {f} lp} ->
   {metaContextType : Type} ->
   {ldp :
     (metaContext : metaContextType) ->
     (context : contextType) ->
     (l : List atom) ->
-    (contextType, lp context l) ->
+    f (contextType, lp context l) ->
     Type} ->
-  (metaSig : ListMetaFoldSig signature ldp) ->
-  ListDepFoldSig {contextType=metaContextType}
+  (metaSig : ListMetaFoldSig {f} signature ldp) ->
+  ListDepFoldSig {f=Prelude.Basics.id} {contextType=metaContextType}
     (\metaContext, l =>
       (context : contextType) ->
         ldp metaContext context l
           (listDepFold signature context l))
-listMetaFoldArgs metaSig =
-  (ListDepFoldArgs {contextType=metaContextType}
+listMetaFoldArgs {f} metaSig =
+  (ListDepFoldArgs {f=id} {contextType=metaContextType}
     (metaNilElim metaSig) (metaConsElim metaSig))
 
 public export
-listMetaFold :
+listMetaFold : {f : Type -> Type} ->
   {atom : Type} -> {contextType : Type} ->
   {lp :
     (context : contextType) ->
     List atom ->
     Type} ->
-  {signature : ListDepFoldSig lp} ->
+  {signature : ListDepFoldSig {f} lp} ->
   {metaContextType : Type} ->
   {ldp :
     (metaContext : metaContextType) ->
     (contextUponEntry : contextType) ->
     (l : List atom) ->
-    (contextType, lp contextUponEntry l) ->
+    f (contextType, lp contextUponEntry l) ->
     Type} ->
-  (metaSig : ListMetaFoldSig signature ldp) ->
+  (metaSig : ListMetaFoldSig {f} signature ldp) ->
   (metaContext : metaContextType) ->
   (l : List atom) ->
   (metaContextType,
     (context : contextType) ->
      ldp metaContext context l (listDepFold signature context l))
-listMetaFold {contextType} {signature} {metaContextType} {ldp} metaSig =
-  listDepFold {contextType=metaContextType} (listMetaFoldArgs metaSig)
+listMetaFold {f} {contextType} {signature} {metaContextType} {ldp} metaSig =
+  listDepFold {f=id} {contextType=metaContextType}
+    {lp=(\metaContext, l =>
+      (context : contextType) ->
+      ldp metaContext context l (listDepFold signature context l))}
+    (listMetaFoldArgs {f} metaSig)
