@@ -101,6 +101,48 @@ public export
 a $:^ a' = a $:+ $^ a'
 
 public export
+SExpSimpleDepFoldListPred : {atom : Type} ->
+  (sp : SExp atom -> Type) -> (lp : SList atom -> Type) ->
+  SList atom -> Type
+SExpSimpleDepFoldListPred sp lp [] = lp []
+SExpSimpleDepFoldListPred sp lp (x :: l) = sp x -> lp (x :: l)
+
+public export
+record SExpSimpleDepFoldSig
+  {atom : Type} (sp : SExp atom -> Type) (lp : SList atom -> Type)
+  where
+    constructor SExpSimpleDepFoldArgs
+    expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)
+    listElim :
+      ListSimpleDepFoldSig {atom=(SExp atom)}
+        {lp=(SExpSimpleDepFoldListPred sp lp)}
+
+mutual
+  public export
+  sexpSimpleDepFoldListPred : {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  {lp : SList atom -> Type} ->
+  (signature : SExpSimpleDepFoldSig sp lp) ->
+  (x : SExp atom) -> sp x
+  sexpSimpleDepFoldListPred signature (a $: l) =
+    expElim signature a l (slistSimpleDepFoldListPred signature l)
+
+  public export
+  slistSimpleDepFoldListPred : {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  {lp : SList atom -> Type} ->
+  (signature : SExpSimpleDepFoldSig sp lp) ->
+  (l : SList atom) -> lp l
+  slistSimpleDepFoldListPred signature [] =
+    nilElim (listElim signature)
+  slistSimpleDepFoldListPred signature (x :: l) =
+    listSimpleDepFold
+      {atom=(SExp atom)} {lp=(SExpSimpleDepFoldListPred sp lp)}
+      (SExpSimpleDepFoldSig.listElim signature)
+      (x :: l)
+      (sexpSimpleDepFoldListPred signature x)
+
+public export
 record SExpFoldSig
   (atom, contextType, sp, lp : Type)
   where

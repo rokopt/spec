@@ -5,21 +5,22 @@ import public Data.List
 
 %default total
 
--- This is not the induction principle that we'll use; it's here to help
--- picture why we need a context to write a _generic_ function which can be
--- tail-recursive (if `consElim` is) in an eagerly-evaluated language.
-nonTailRecursiveListInd :
-  {atom : Type} ->
-  {lp : List atom -> Type} ->
-  (nilElim : lp []) ->
-  (consElim :
-    (a : atom) -> (l : List atom) ->
-    lp l -> lp (a :: l)) ->
+public export
+record ListSimpleDepFoldSig
+  {atom : Type} (lp : List atom -> Type)
+  where
+    constructor ListSimpleDepFoldArgs
+    nilElim : lp []
+    consElim : (a : atom) -> (l : List atom) -> lp l -> lp (a :: l)
+
+public export
+listSimpleDepFold :
+  {atom : Type} -> {lp : List atom -> Type} ->
+  (signature : ListSimpleDepFoldSig lp) ->
   (l : List atom) -> lp l
-nonTailRecursiveListInd nilElim consElim [] =
-  nilElim
-nonTailRecursiveListInd nilElim consElim (a :: l) =
-  consElim a l (nonTailRecursiveListInd nilElim consElim l)
+listSimpleDepFold signature [] = nilElim signature
+listSimpleDepFold signature (a :: l) =
+  consElim signature a l (listSimpleDepFold signature l)
 
 public export
 record ListFoldSig {f : Type -> Type} (atom, contextType, lp : Type) where
@@ -38,8 +39,8 @@ listFoldFlip : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
   (context : contextType) ->
   f (contextType, lp)
 listFoldFlip {f} {lp} signature =
-  nonTailRecursiveListInd {atom} {lp=(\_ => contextType -> f (contextType, lp))}
-      (nilElim signature) (consElim signature)
+  listSimpleDepFold {lp=(\_ => contextType -> f (contextType, lp))}
+      (ListSimpleDepFoldArgs (nilElim signature) (consElim signature))
 
 public export
 listFold : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
@@ -77,9 +78,9 @@ listDepFoldFlip : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
   (context : contextType) ->
   f (contextType, lp context l)
 listDepFoldFlip {f} {lp} signature =
-  nonTailRecursiveListInd {atom}
+  listSimpleDepFold {atom}
     {lp=(\l => (context : contextType) -> f (contextType, lp context l))}
-      (nilElim signature) (consElim signature)
+      (ListSimpleDepFoldArgs (nilElim signature) (consElim signature))
 
 public export
 listDepFold : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
@@ -150,7 +151,8 @@ listDepContextFreeFold : {f : Type -> Type} ->
   (signature : ListDepContextFreeFoldSig {f} lp) ->
   (l : List atom) -> f (lp l)
 listDepContextFreeFold {f} {lp} signature =
-  nonTailRecursiveListInd {lp=(f . lp)} (nilElim signature) (consElim signature)
+  listSimpleDepFold {lp=(f . lp)}
+    (ListSimpleDepFoldArgs (nilElim signature) (consElim signature))
 
 infixr 7 :::
 public export
@@ -227,10 +229,11 @@ DecListForAll : {atom : Type} -> {f : Type -> Type} -> Applicative f =>
   (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
   f (Dec (ListForAll lp l))
 DecListForAll {f} {lp} dec =
-  nonTailRecursiveListInd
+  listSimpleDepFold
     {lp=(\l => f (Dec (ListForAll lp l)))}
+    (ListSimpleDepFoldArgs
       (pure (Yes (|:|)))
-      (\a, _, decList => [| ListForAllConsDec {lp} (dec a) decList |] )
+      (\a, _, decList => [| ListForAllConsDec {lp} (dec a) decList |] ))
 
 public export
 ListExistsEitherDec : {atom : Type} -> {lp : atom -> Type} ->
@@ -249,10 +252,11 @@ DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
   f (Dec (ListExists lp l))
 DecListExists {f} {lp} dec =
-  nonTailRecursiveListInd
+  listSimpleDepFold
     {lp=(\l => f (Dec (ListExists lp l)))}
+    (ListSimpleDepFoldArgs
       (pure (No NoExistsNil))
-      (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] )
+      (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
 public export
 record
 ListForAllFoldSig {f : Type -> Type} {atom : Type}
