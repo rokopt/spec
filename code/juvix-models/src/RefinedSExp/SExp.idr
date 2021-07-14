@@ -101,13 +101,6 @@ public export
 a $:^ a' = a $:+ $^ a'
 
 public export
-SExpSimpleDepFoldListPred : {atom : Type} ->
-  (sp : SExp atom -> Type) -> (lp : SList atom -> Type) ->
-  SList atom -> Type
-SExpSimpleDepFoldListPred sp lp [] = lp []
-SExpSimpleDepFoldListPred sp lp (x :: l) = sp x -> lp (x :: l)
-
-public export
 record SExpSimpleDepFoldSig
   {atom : Type} (sp : SExp atom -> Type) (lp : SList atom -> Type)
   where
