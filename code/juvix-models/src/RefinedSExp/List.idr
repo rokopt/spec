@@ -144,24 +144,13 @@ ListDepContextFreeFoldSig {f : Type -> Type} {atom : Type}
       f (lp (a :: l))
 
 public export
-ListDepContextFreeFoldSigToDepFoldSig :
-  {f : Type -> Type} -> Functor f => {atom : Type} -> {lp : List atom -> Type} ->
-  ListDepContextFreeFoldSig {f} lp ->
-  ListDepFoldSig {f} {atom} {contextType=()} (\_ => lp)
-ListDepContextFreeFoldSigToDepFoldSig {f} signature =
-  ListDepFoldArgs {f}
-    (\_ => map (MkPair ()) (nilElim signature))
-    (\a, l, recursiveCall, _ =>
-      map (MkPair ()) (consElim signature a l (map snd (recursiveCall ()))))
-
-public export
-listDepContextFreeFold : {f : Type -> Type} -> Functor f =>
+listDepContextFreeFold : {f : Type -> Type} ->
   {atom : Type} ->
   {lp : List atom -> Type} ->
   (signature : ListDepContextFreeFoldSig {f} lp) ->
   (l : List atom) -> f (lp l)
-listDepContextFreeFold {f} signature l =
-  map snd (listDepFold (ListDepContextFreeFoldSigToDepFoldSig signature) () l)
+listDepContextFreeFold {f} {lp} signature =
+  nonTailRecursiveListInd {lp=(f . lp)} (nilElim signature) (consElim signature)
 
 infixr 7 :::
 public export
@@ -237,11 +226,11 @@ DecListForAll : {atom : Type} -> {f : Type -> Type} -> Applicative f =>
   {lp : atom -> Type} ->
   (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
   f (Dec (ListForAll lp l))
-DecListForAll dec =
-  listDepContextFreeFold
-    (ListDepContextFreeFoldArgs {lp=(Dec . ListForAll lp)}
+DecListForAll {f} {lp} dec =
+  nonTailRecursiveListInd
+    {lp=(\l => f (Dec (ListForAll lp l)))}
       (pure (Yes (|:|)))
-      (\a, _, decList => [| ListForAllConsDec (dec a) decList |] ))
+      (\a, _, decList => [| ListForAllConsDec {lp} (dec a) decList |] )
 
 public export
 ListExistsEitherDec : {atom : Type} -> {lp : atom -> Type} ->
@@ -259,12 +248,11 @@ DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {lp : atom -> Type} ->
   (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
   f (Dec (ListExists lp l))
-DecListExists dec =
-  listDepContextFreeFold
-    (ListDepContextFreeFoldArgs {lp=(Dec . ListExists lp)}
+DecListExists {f} {lp} dec =
+  nonTailRecursiveListInd
+    {lp=(\l => f (Dec (ListExists lp l)))}
       (pure (No NoExistsNil))
-      (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
-
+      (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] )
 public export
 record
 ListForAllFoldSig {f : Type -> Type} {atom : Type}
