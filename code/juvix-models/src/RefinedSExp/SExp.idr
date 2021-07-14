@@ -137,10 +137,7 @@ mutual
     nilElim (listElim signature)
   slistSimpleDepFoldListPred signature (x :: l) =
     listSimpleDepFold
-      {atom=(SExp atom)} {lp=(SExpSimpleDepFoldListPred sp lp)}
-      (SExpSimpleDepFoldSig.listElim signature)
-      (x :: l)
-      (sexpSimpleDepFoldListPred signature x)
+      (listElim signature) (x :: l) (sexpSimpleDepFoldListPred signature x)
 
 public export
 record SExpFoldSig
