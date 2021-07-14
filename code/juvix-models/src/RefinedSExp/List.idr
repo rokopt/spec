@@ -258,6 +258,7 @@ DecListExists {f} {lp} dec =
     (ListSimpleDepFoldArgs
       (pure (No NoExistsNil))
       (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
+
 public export
 record
 ListForAllFoldSig {f : Type -> Type} {atom : Type}
