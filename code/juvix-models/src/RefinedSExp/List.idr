@@ -18,7 +18,8 @@ listSimpleDepFold :
   {atom : Type} -> {lp : List atom -> Type} ->
   (signature : ListSimpleDepFoldSig lp) ->
   (l : List atom) -> lp l
-listSimpleDepFold signature [] = nilElim signature
+listSimpleDepFold signature [] =
+  nilElim signature
 listSimpleDepFold signature (a :: l) =
   consElim signature a l (listSimpleDepFold signature l)
 

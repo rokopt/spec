@@ -112,10 +112,12 @@ record SExpSimpleDepFoldSig
   {atom : Type} (sp : SExp atom -> Type) (lp : SList atom -> Type)
   where
     constructor SExpSimpleDepFoldArgs
-    expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)
-    listElim :
-      ListSimpleDepFoldSig {atom=(SExp atom)}
-        {lp=(SExpSimpleDepFoldListPred sp lp)}
+    expElim :
+      (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)
+    nilElim :
+      lp []
+    consElim :
+      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)
 
 mutual
   public export
@@ -133,19 +135,12 @@ mutual
   {lp : SList atom -> Type} ->
   (signature : SExpSimpleDepFoldSig sp lp) ->
   (l : SList atom) -> lp l
-  slistSimpleDepFold {sp} {lp} signature l =
-    sexpSimpleDepFoldListPredToListPred signature l
-      (listSimpleDepFold (listElim signature) l)
-
-  public export
-  sexpSimpleDepFoldListPredToListPred : {atom : Type} ->
-    {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
-    (signature : SExpSimpleDepFoldSig sp lp) ->
-    (l : SList atom) -> SExpSimpleDepFoldListPred sp lp l -> lp l
-  sexpSimpleDepFoldListPredToListPred signature [] pred =
-    pred
-  sexpSimpleDepFoldListPredToListPred signature (x :: l) pred =
-    pred (sexpSimpleDepFold signature x)
+  slistSimpleDepFold signature [] =
+    nilElim signature
+  slistSimpleDepFold signature (x :: l) =
+    consElim signature x l
+      (sexpSimpleDepFold signature x)
+      (slistSimpleDepFold signature l)
 
 public export
 record SExpFoldSig
@@ -263,7 +258,11 @@ SExpDepFoldSigToSimple :
   SExpSimpleDepFoldSig
     (\x => (context : contextType) -> (contextType, sp context x))
     (\l => (context : contextType) -> (contextType, lp context l))
-SExpDepFoldSigToSimple signature = ?hole
+SExpDepFoldSigToSimple signature =
+  SExpSimpleDepFoldArgs
+    (expElim signature)
+    (nilElim signature)
+    (consElim signature)
 
 mutual
   public export
@@ -348,8 +347,8 @@ mutual
         {sp=(\_, _ => sp)} {lp=(\_,_ => lp)}
         (SExpFoldNonDepSigToDepSig signature)
         x
-  sexpDepFoldFlipCorrect signature (a $: l) = ?sexpDepFoldFlipCorrect_hole
-    -- XXX cong (expElim signature a l) (slistDepFoldFlipCorrect signature l)
+  sexpDepFoldFlipCorrect signature (a $: l) =
+    cong (expElim signature a l) (slistDepFoldFlipCorrect signature l)
 
   export
   slistDepFoldFlipCorrect :
@@ -363,16 +362,14 @@ mutual
         {sp=(\_, _ => sp)} {lp=(\_, _ => lp)}
         (SExpFoldNonDepSigToDepSig signature)
         l
-  slistDepFoldFlipCorrect signature [] = ?slistDepFoldFlipCorrect_hole_nil
-    -- XXX Refl
+  slistDepFoldFlipCorrect signature [] = Refl
   slistDepFoldFlipCorrect signature (x :: l) =
     let
       headEq = sexpDepFoldFlipCorrect signature x
       tailEq = slistDepFoldFlipCorrect signature l
       congHead = cong (consElim signature x l) headEq
     in
-    ?slistDepFoldFlipCorrect_hole_cons
-    -- XXX applyEq congHead tailEq
+    applyEq congHead tailEq
 
 export
 sexpDepFoldCorrect :
@@ -764,10 +761,6 @@ sexpMetaFolds :
 sexpMetaFolds {metaContextType} {signature} {sdp} {ldp} metaSig =
   sexpDepFolds {contextType=metaContextType}
     (SExpDepFoldArgs
-      ?sexpMetaFolds_hole_expElim
-      -- XXX (metaExpElim metaSig)
-      ?sexpMetaFolds_hole_nilElim
-      -- XXX (metaNilElim metaSig)
-      ?sexpMetaFolds_hole_consElim
-      -- XXX (metaConsElim metaSig)
-      )
+      (metaExpElim metaSig)
+      (metaNilElim metaSig)
+      (metaConsElim metaSig))
