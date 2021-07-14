@@ -119,25 +119,33 @@ record SExpSimpleDepFoldSig
 
 mutual
   public export
-  sexpSimpleDepFoldListPred : {atom : Type} ->
+  sexpSimpleDepFold : {atom : Type} ->
   {sp : SExp atom -> Type} ->
   {lp : SList atom -> Type} ->
   (signature : SExpSimpleDepFoldSig sp lp) ->
   (x : SExp atom) -> sp x
-  sexpSimpleDepFoldListPred signature (a $: l) =
-    expElim signature a l (slistSimpleDepFoldListPred signature l)
+  sexpSimpleDepFold signature (a $: l) =
+    expElim signature a l (slistSimpleDepFold signature l)
 
   public export
-  slistSimpleDepFoldListPred : {atom : Type} ->
+  slistSimpleDepFold : {atom : Type} ->
   {sp : SExp atom -> Type} ->
   {lp : SList atom -> Type} ->
   (signature : SExpSimpleDepFoldSig sp lp) ->
   (l : SList atom) -> lp l
-  slistSimpleDepFoldListPred signature [] =
-    nilElim (listElim signature)
-  slistSimpleDepFoldListPred signature (x :: l) =
-    listSimpleDepFold
-      (listElim signature) (x :: l) (sexpSimpleDepFoldListPred signature x)
+  slistSimpleDepFold {sp} {lp} signature l =
+    sexpSimpleDepFoldListPredToListPred signature l
+      (listSimpleDepFold (listElim signature) l)
+
+  public export
+  sexpSimpleDepFoldListPredToListPred : {atom : Type} ->
+    {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
+    (signature : SExpSimpleDepFoldSig sp lp) ->
+    (l : SList atom) -> SExpSimpleDepFoldListPred sp lp l -> lp l
+  sexpSimpleDepFoldListPredToListPred signature [] pred =
+    pred
+  sexpSimpleDepFoldListPredToListPred signature (x :: l) pred =
+    pred (sexpSimpleDepFold signature x)
 
 public export
 record SExpFoldSig
