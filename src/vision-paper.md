@@ -372,9 +372,9 @@ The actuation problem captures the second direction: influence of the structure 
 
 # Anoma
 
-The Anoma protocols instantiate such a candidate: arbitrarily expressive, time-limited, binding commitments to value, communicated through an intent gossip system, settled atomically on a distributed ledger by a trade system which preserves Pareto-efficiency, and capable of scaling fractally in both security and throughput to reflect real interdependencies.
+The Anoma protocol instantiates such a candidate: arbitrarily expressive, time-limited, binding commitments to value, communicated through an intent gossip system, settled atomically on a distributed ledger by a trade system which preserves Pareto-efficiency, and capable of scaling fractally in both security and throughput to reflect real interdependencies.
 
-Such a set of protocols is like a new language: alone, it is isolated, with no necessary relation to the world nor ability to effect change in it. Users must elect to interact with the Anoma network in order to exchange data to and from this commitment system — it is only through oracle access to the outside world that the state of the ledger can begin to reflect external states of affairs, and only through users electing to treat data on the ledger as significant that causal action can be taken back upon the world. Why might users use such a system? Language, as such, has no systemic binding force, yet it perseveres, should the new language of Anoma protocols prove useful we expect similarly.
+Such a set of protocols is like a new language: alone, it is isolated, with no necessary relation to the world nor ability to effect change in it. Users must elect to interact with the Anoma network in order to exchange data to and from this commitment system — it is only through oracle access to the outside world that the state of the ledger can begin to reflect external states of affairs, and only through users electing to treat data on the ledger as significant that causal action can be taken back upon the world. Why might users use such a system? Language, as such, has no systemic binding force, yet it perseveres, should the new language of the Anoma protocol prove useful we expect similarly.
 
 ## Abstract protocol
 
