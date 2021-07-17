@@ -6,22 +6,22 @@ import public Data.List
 %default total
 
 public export
-record ListSimpleDepFoldSig
+record ListEliminatorSig
   {atom : Type} (lp : List atom -> Type)
   where
-    constructor ListSimpleDepFoldArgs
+    constructor ListEliminatorArgs
     nilElim : lp []
     consElim : (a : atom) -> (l : List atom) -> lp l -> lp (a :: l)
 
 public export
-listSimpleDepFold :
+listEliminator :
   {atom : Type} -> {lp : List atom -> Type} ->
-  (signature : ListSimpleDepFoldSig lp) ->
+  (signature : ListEliminatorSig lp) ->
   (l : List atom) -> lp l
-listSimpleDepFold signature [] =
+listEliminator signature [] =
   nilElim signature
-listSimpleDepFold signature (a :: l) =
-  consElim signature a l (listSimpleDepFold signature l)
+listEliminator signature (a :: l) =
+  consElim signature a l (listEliminator signature l)
 
 public export
 record ListFoldSig {f : Type -> Type} (atom, contextType, lp : Type) where
@@ -40,8 +40,8 @@ listFoldFlip : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
   (context : contextType) ->
   f (contextType, lp)
 listFoldFlip {f} {lp} signature =
-  listSimpleDepFold {lp=(\_ => contextType -> f (contextType, lp))}
-      (ListSimpleDepFoldArgs (nilElim signature) (consElim signature))
+  listEliminator {lp=(\_ => contextType -> f (contextType, lp))}
+      (ListEliminatorArgs (nilElim signature) (consElim signature))
 
 public export
 listFold : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
@@ -79,9 +79,9 @@ listDepFoldFlip : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
   (context : contextType) ->
   f (contextType, lp context l)
 listDepFoldFlip {f} {lp} signature =
-  listSimpleDepFold {atom}
+  listEliminator {atom}
     {lp=(\l => (context : contextType) -> f (contextType, lp context l))}
-      (ListSimpleDepFoldArgs (nilElim signature) (consElim signature))
+      (ListEliminatorArgs (nilElim signature) (consElim signature))
 
 public export
 listDepFold : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
@@ -152,8 +152,8 @@ listDepContextFreeFold : {f : Type -> Type} ->
   (signature : ListDepContextFreeFoldSig {f} lp) ->
   (l : List atom) -> f (lp l)
 listDepContextFreeFold {f} {lp} signature =
-  listSimpleDepFold {lp=(f . lp)}
-    (ListSimpleDepFoldArgs (nilElim signature) (consElim signature))
+  listEliminator {lp=(f . lp)}
+    (ListEliminatorArgs (nilElim signature) (consElim signature))
 
 infixr 7 :::
 public export
@@ -230,9 +230,9 @@ DecListForAll : {atom : Type} -> {f : Type -> Type} -> Applicative f =>
   (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
   f (Dec (ListForAll lp l))
 DecListForAll {f} {lp} dec =
-  listSimpleDepFold
+  listEliminator
     {lp=(\l => f (Dec (ListForAll lp l)))}
-    (ListSimpleDepFoldArgs
+    (ListEliminatorArgs
       (pure (Yes (|:|)))
       (\a, _, decList => [| ListForAllConsDec {lp} (dec a) decList |] ))
 
@@ -253,9 +253,9 @@ DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
   f (Dec (ListExists lp l))
 DecListExists {f} {lp} dec =
-  listSimpleDepFold
+  listEliminator
     {lp=(\l => f (Dec (ListExists lp l)))}
-    (ListSimpleDepFoldArgs
+    (ListEliminatorArgs
       (pure (No NoExistsNil))
       (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
 
