@@ -480,7 +480,7 @@ The Anoma whitepaper [@anoma-whitepaper] provides an abbreviated summary of the 
 
 # Acknowledgments
 
-Thanks to Yuanfang Ding for discussion and reviews of this paper, without which it wouldn't be what it is. All remaining conceptual incongruities and spelling mistakes are my own.
+Thanks to Yuanfang Ding for discussions and reviews of this paper, without which it wouldn't be what it is. All remaining conceptual incongruities and spelling mistakes are my own.
 
 \pagebreak
 
