@@ -24,136 +24,28 @@ listEliminator signature (a :: l) =
   consElim signature a l (listEliminator signature l)
 
 public export
-record ListFoldSig {f : Type -> Type} (atom, contextType, lp : Type) where
-  constructor ListFoldArgs
-  nilElim :
-    (context : contextType) -> f (contextType, lp)
-  consElim :
-    (a : atom) -> (l : List atom) ->
-    (contextType -> f (contextType, lp)) ->
-    (contextType -> f (contextType, lp))
-
-public export
-listFoldFlip : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig {f} atom contextType lp) ->
-  (l : List atom) ->
-  (context : contextType) ->
-  f (contextType, lp)
-listFoldFlip {f} {lp} signature =
-  listEliminator {lp=(\_ => contextType -> f (contextType, lp))}
-      (ListEliminatorArgs (nilElim signature) (consElim signature))
-
-public export
-listFold : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig {f} atom contextType lp) ->
-  (context : contextType) ->
-  (l : List atom) ->
-  f (contextType, lp)
-listFold signature = flip (listFoldFlip signature)
-
-public export
-record
-ListDepFoldSig {f : Type -> Type} {atom : Type} {contextType : Type}
-  (lp : (context : contextType) ->
-    List atom ->
-    Type) where
-      constructor ListDepFoldArgs
-      nilElim :
-        (context : contextType) -> f (contextType, lp context [])
-      consElim :
-        (a : atom) -> (l : List atom) ->
-        (recursiveCall :
-          (calledContext : contextType) ->
-          f (contextType, lp calledContext l)) ->
-        (contextUponEntry : contextType) ->
-        f (contextType, lp contextUponEntry (a :: l))
+ListDepFoldSig : (f : Type -> Type) -> {atom : Type} -> {contextType : Type} ->
+  (lp : contextType -> List atom -> Type) -> Type
+ListDepFoldSig f lp =
+  ListEliminatorSig (\l =>
+    (context : contextType) -> f (contextType, lp context l))
 
 public export
 listDepFoldFlip : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
-  {lp :
-    (context : contextType) ->
-    List atom ->
-    Type} ->
-  (signature : ListDepFoldSig {f} lp) ->
-  (l : List atom) ->
-  (context : contextType) ->
+  {lp : (context : contextType) -> List atom -> Type} ->
+  (signature : ListDepFoldSig f lp) ->
+  (l : List atom) -> (context : contextType) ->
   f (contextType, lp context l)
-listDepFoldFlip {f} {lp} signature =
-  listEliminator {atom}
-    {lp=(\l => (context : contextType) -> f (contextType, lp context l))}
-      (ListEliminatorArgs (nilElim signature) (consElim signature))
+listDepFoldFlip {f} {lp} = listEliminator
 
 public export
 listDepFold : {f : Type -> Type} -> {atom : Type} -> {contextType : Type} ->
-  {lp :
-    (context : contextType) ->
-    List atom ->
-    Type} ->
-  (signature : ListDepFoldSig {f} lp) ->
+  {lp : (context : contextType) -> List atom -> Type} ->
+  (signature : ListDepFoldSig f lp) ->
   (context : contextType) -> (l : List atom) ->
   f (contextType, lp context l)
-listDepFold {f} signature context l = listDepFoldFlip signature l context
-
-public export
-ListFoldNonDepSigToDepSig : {f : Type -> Type} ->
-  {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig {f} atom contextType lp) ->
-  ListDepFoldSig {f}
-    {atom} {contextType} (\_, _ => lp)
-ListFoldNonDepSigToDepSig signature =
-  ListDepFoldArgs (nilElim signature) (consElim signature)
-
-public export
-listDepFoldFlipCorrect : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig {f} atom contextType lp) ->
-  (l : List atom) ->
-  listFoldFlip {f} signature l =
-    listDepFoldFlip
-      {atom}
-      {contextType}
-      {lp=(\_, _ => lp)}
-      (ListFoldNonDepSigToDepSig signature)
-      l
-listDepFoldFlipCorrect signature [] =
-  Refl
-listDepFoldFlipCorrect signature (a :: l) =
-  cong (consElim signature a l) (listDepFoldFlipCorrect signature l)
-
-public export
-listDepFoldCorrect : {f : Type -> Type} -> {atom, contextType, lp : Type} ->
-  (signature : ListFoldSig atom contextType lp) ->
-  (context : contextType) ->
-  (l : List atom) ->
-  listFold signature context l =
-    listDepFold
-      {atom}
-      {contextType}
-      {lp=(\_, _ => lp)}
-      (ListFoldNonDepSigToDepSig {f} signature)
-      context
-      l
-listDepFoldCorrect {f} signature context l =
-  applyEq (listDepFoldFlipCorrect signature l) Refl
-
-public export
-record
-ListDepContextFreeFoldSig {f : Type -> Type} {atom : Type}
-  (lp : List atom -> Type) where
-    constructor ListDepContextFreeFoldArgs
-    nilElim : f (lp [])
-    consElim :
-      (a : atom) -> (l : List atom) -> (recursiveResult : f (lp l)) ->
-      f (lp (a :: l))
-
-public export
-listDepContextFreeFold : {f : Type -> Type} ->
-  {atom : Type} ->
-  {lp : List atom -> Type} ->
-  (signature : ListDepContextFreeFoldSig {f} lp) ->
-  (l : List atom) -> f (lp l)
-listDepContextFreeFold {f} {lp} signature =
-  listEliminator {lp=(f . lp)}
-    (ListEliminatorArgs (nilElim signature) (consElim signature))
+listDepFold {f} {lp} signature context l =
+  listDepFoldFlip {f} {lp} signature l context
 
 infixr 7 :::
 public export
@@ -199,8 +91,8 @@ ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   (construct : (a : atom) -> f (lp a)) -> (l : List atom) ->
   f (ListForAll lp l)
 ListForAllConstruct {f} {lp} construct =
-  listDepContextFreeFold {f} {lp=(ListForAll lp)}
-    (ListDepContextFreeFoldArgs {f}
+  listEliminator {lp=(f . ListForAll lp)}
+    (ListEliminatorArgs
       (pure (|:|))
       (\a, _, lpl => [| construct a ::: lpl |]))
 
@@ -273,9 +165,9 @@ public export
 ListForAllFoldSigToDepContextFreeFoldSig :
   {f : Type -> Type} -> Applicative f => {atom : Type} -> {ap : atom -> Type} ->
   ListForAllFoldSig {f} {atom} ap ->
-  ListDepContextFreeFoldSig {f} (ListForAll ap)
+  ListEliminatorSig (f . (ListForAll ap))
 ListForAllFoldSigToDepContextFreeFoldSig signature =
-  ListDepContextFreeFoldArgs (pure (|:|)) (consElim signature)
+  ListEliminatorArgs (pure (|:|)) (consElim signature)
 
 public export
 listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
@@ -283,16 +175,13 @@ listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   (signature : ListForAllFoldSig {f} ap) ->
   (l : List atom) -> f (ListForAll ap l)
 listForAllFold {atom} signature =
-  listDepContextFreeFold (ListForAllFoldSigToDepContextFreeFoldSig signature)
+  listEliminator (ListForAllFoldSigToDepContextFreeFoldSig signature)
 
 public export
 record ListMetaFoldSig {f : Type -> Type}
   {atom : Type} {contextType : Type}
-  {lp :
-    (context : contextType) ->
-    List atom ->
-    Type}
-  (signature : ListDepFoldSig {f} lp)
+  {lp : (context : contextType) -> List atom -> Type}
+  (signature : ListDepFoldSig f lp)
   {metaContextType : Type}
   (ldp :
     (metaContext : metaContextType) ->
@@ -314,13 +203,13 @@ record ListMetaFoldSig {f : Type -> Type}
         (metaContextType,
          (calledContext : contextType) ->
           ldp calledMetaContext calledContext l
-            (listDepFoldFlip signature l calledContext))) ->
+            (listDepFoldFlip {f} {lp} signature l calledContext))) ->
       (metaContextUponEntry : metaContextType) ->
       (metaContextType,
        (contextUponEntry : contextType) ->
         ldp metaContextUponEntry contextUponEntry (a :: l)
         (consElim signature a l
-          (listDepFoldFlip signature l) contextUponEntry))
+          (listDepFoldFlip {f} {lp} signature l) contextUponEntry))
 
 public export
 listMetaFoldArgs : {f : Type -> Type} ->
@@ -329,7 +218,7 @@ listMetaFoldArgs : {f : Type -> Type} ->
     (context : contextType) ->
     List atom ->
     Type} ->
-  {signature : ListDepFoldSig {f} lp} ->
+  {signature : ListDepFoldSig f lp} ->
   {metaContextType : Type} ->
   {ldp :
     (metaContext : metaContextType) ->
@@ -337,15 +226,14 @@ listMetaFoldArgs : {f : Type -> Type} ->
     (l : List atom) ->
     f (contextType, lp context l) ->
     Type} ->
-  (metaSig : ListMetaFoldSig {f} signature ldp) ->
-  ListDepFoldSig {f=Prelude.Basics.id} {contextType=metaContextType}
+  (metaSig : ListMetaFoldSig {f} {lp} signature ldp) ->
+  ListDepFoldSig Prelude.Basics.id {contextType=metaContextType}
     (\metaContext, l =>
       (context : contextType) ->
         ldp metaContext context l
-          (listDepFold signature context l))
+          (listDepFold {f} {lp} signature context l))
 listMetaFoldArgs {f} metaSig =
-  (ListDepFoldArgs {f=id} {contextType=metaContextType}
-    (metaNilElim metaSig) (metaConsElim metaSig))
+  (ListEliminatorArgs (metaNilElim metaSig) (metaConsElim metaSig))
 
 public export
 listMetaFold : {f : Type -> Type} ->
@@ -354,7 +242,7 @@ listMetaFold : {f : Type -> Type} ->
     (context : contextType) ->
     List atom ->
     Type} ->
-  {signature : ListDepFoldSig {f} lp} ->
+  {signature : ListDepFoldSig f lp} ->
   {metaContextType : Type} ->
   {ldp :
     (metaContext : metaContextType) ->
@@ -367,10 +255,10 @@ listMetaFold : {f : Type -> Type} ->
   (l : List atom) ->
   (metaContextType,
     (context : contextType) ->
-     ldp metaContext context l (listDepFold signature context l))
+     ldp metaContext context l (listDepFold {f} {lp} signature context l))
 listMetaFold {f} {contextType} {signature} {metaContextType} {ldp} metaSig =
-  listDepFold {f=id} {contextType=metaContextType}
+  listDepFold {f=Prelude.Basics.id} {contextType=metaContextType}
     {lp=(\metaContext, l =>
       (context : contextType) ->
-      ldp metaContext context l (listDepFold signature context l))}
+      ldp metaContext context l (listDepFold {f} {lp} signature context l))}
     (listMetaFoldArgs {f} metaSig)
