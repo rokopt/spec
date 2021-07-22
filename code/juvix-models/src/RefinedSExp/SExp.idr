@@ -113,20 +113,20 @@ record SExpEliminatorSig
       (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)
 
 public export
-SExpSimpleDepFoldListPred : {atom : Type} ->
+SExpEliminatorListPred : {atom : Type} ->
   (sp : SExp atom -> Type) -> (lp : SList atom -> Type) ->
   SList atom -> Type
-SExpSimpleDepFoldListPred sp lp [] = lp []
-SExpSimpleDepFoldListPred sp lp (x :: l) = sp x -> lp (x :: l)
+SExpEliminatorListPred sp lp [] = lp []
+SExpEliminatorListPred sp lp (x :: l) = sp x -> lp (x :: l)
 
 mutual
   public export
-  sexpSimpleDepFold : {atom : Type} ->
+  sexpEliminator : {atom : Type} ->
   {sp : SExp atom -> Type} ->
   {lp : SList atom -> Type} ->
   (signature : SExpEliminatorSig sp lp) ->
   (x : SExp atom) -> sp x
-  sexpSimpleDepFold signature (a $: l) =
+  sexpEliminator signature (a $: l) =
     expElim signature a l (slistEliminator signature l)
 
   public export
@@ -139,30 +139,30 @@ mutual
     nilElim signature
   slistEliminator signature (x :: l) =
     consElim signature x l
-      (sexpSimpleDepFold signature x)
+      (sexpEliminator signature x)
       (slistEliminator signature l)
 
 export
-sexpSimpleDepFoldListPredToListPred : {atom : Type} ->
+sexpEliminatorListPredToListPred : {atom : Type} ->
   {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
   (signature : SExpEliminatorSig sp lp) ->
-  (l : SList atom) -> SExpSimpleDepFoldListPred sp lp l -> lp l
-sexpSimpleDepFoldListPredToListPred signature [] pred =
+  (l : SList atom) -> SExpEliminatorListPred sp lp l -> lp l
+sexpEliminatorListPredToListPred signature [] pred =
   pred
-sexpSimpleDepFoldListPredToListPred signature (x :: l) pred =
-  pred (sexpSimpleDepFold signature x)
+sexpEliminatorListPredToListPred signature (x :: l) pred =
+  pred (sexpEliminator signature x)
 
 export
-SExpSimpleDepFoldListSigToListSig : {atom : Type} ->
+SExpEliminatorListSigToListSig : {atom : Type} ->
   {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
   (signature : SExpEliminatorSig sp lp) ->
-  ListEliminatorSig {lp=(SExpSimpleDepFoldListPred sp lp)}
-SExpSimpleDepFoldListSigToListSig signature =
+  ListEliminatorSig {lp=(SExpEliminatorListPred sp lp)}
+SExpEliminatorListSigToListSig signature =
   ListEliminatorArgs
     (nilElim signature)
     (\x, l, pred, spx =>
       consElim signature x l spx
-        (sexpSimpleDepFoldListPredToListPred signature l pred))
+        (sexpEliminatorListPredToListPred signature l pred))
 
 export
 slistEliminatorMatchesListFold : {atom : Type} ->
@@ -171,12 +171,12 @@ slistEliminatorMatchesListFold : {atom : Type} ->
   (signature : SExpEliminatorSig sp lp) ->
   (l : SList atom) ->
   slistEliminator {sp} {lp} signature l =
-    sexpSimpleDepFoldListPredToListPred signature l
-      (listEliminator (SExpSimpleDepFoldListSigToListSig signature) l)
+    sexpEliminatorListPredToListPred signature l
+      (listEliminator (SExpEliminatorListSigToListSig signature) l)
 slistEliminatorMatchesListFold signature [] =
   Refl
 slistEliminatorMatchesListFold signature (x :: l) =
-  applyEq {f=(consElim signature x l (sexpSimpleDepFold signature x))} Refl
+  applyEq {f=(consElim signature x l (sexpEliminator signature x))} Refl
     (slistEliminatorMatchesListFold signature l)
 
 public export
@@ -312,7 +312,7 @@ mutual
     (context : contextType) ->
     (contextType, sp context x)
   sexpDepFoldFlip signature =
-    sexpSimpleDepFold (SExpDepFoldSigToSimple signature)
+    sexpEliminator (SExpDepFoldSigToSimple signature)
 
   public export
   slistDepFoldFlip :
