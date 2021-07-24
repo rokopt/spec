@@ -112,13 +112,6 @@ record SExpEliminatorSig
     consElim :
       (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)
 
-public export
-SExpEliminatorListPred : {atom : Type} ->
-  (sp : SExp atom -> Type) -> (lp : SList atom -> Type) ->
-  SList atom -> Type
-SExpEliminatorListPred sp lp [] = lp []
-SExpEliminatorListPred sp lp (x :: l) = sp x -> lp (x :: l)
-
 mutual
   public export
   sexpEliminator : {atom : Type} ->
@@ -142,6 +135,13 @@ mutual
       (sexpEliminator signature x)
       (slistEliminator signature l)
 
+public export
+SExpEliminatorListPred : {atom : Type} ->
+  (sp : SExp atom -> Type) -> (lp : SList atom -> Type) ->
+  SList atom -> Type
+SExpEliminatorListPred sp lp [] = lp []
+SExpEliminatorListPred sp lp (x :: l) = sp x -> lp (x :: l)
+
 export
 sexpEliminatorListPredToListPred : {atom : Type} ->
   {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
@@ -153,11 +153,11 @@ sexpEliminatorListPredToListPred signature (x :: l) pred =
   pred (sexpEliminator signature x)
 
 export
-SExpEliminatorListSigToListSig : {atom : Type} ->
+SExpEliminatorSigToListSig : {atom : Type} ->
   {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
   (signature : SExpEliminatorSig sp lp) ->
   ListEliminatorSig {lp=(SExpEliminatorListPred sp lp)}
-SExpEliminatorListSigToListSig signature =
+SExpEliminatorSigToListSig signature =
   ListEliminatorArgs
     (nilElim signature)
     (\x, l, pred, spx =>
@@ -172,7 +172,7 @@ slistEliminatorMatchesListFold : {atom : Type} ->
   (l : SList atom) ->
   slistEliminator {sp} {lp} signature l =
     sexpEliminatorListPredToListPred signature l
-      (listEliminator (SExpEliminatorListSigToListSig signature) l)
+      (listEliminator (SExpEliminatorSigToListSig signature) l)
 slistEliminatorMatchesListFold signature [] =
   Refl
 slistEliminatorMatchesListFold signature (x :: l) =
