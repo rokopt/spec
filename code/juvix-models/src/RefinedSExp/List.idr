@@ -73,19 +73,6 @@ data ListExists :
             ListExists ap (a :: l)
 
 public export
-NoExistsNil : {atom : Type} -> {ap : atom -> Type} -> Not (ListExists ap [])
-NoExistsNil ((<::) _) impossible
-NoExistsNil ((>::) _) impossible
-
-public export
-NoExistsNeither : {atom : Type} -> {ap : atom -> Type} ->
-  {a : atom} -> {l : List atom} ->
-  Not (ap a) -> Not (ListExists ap l) ->
-  Not (ListExists ap (a :: l))
-NoExistsNeither noA _ ((<::) existsA) = noA existsA
-NoExistsNeither _ noList ((>::) existsList) = noList existsList
-
-public export
 ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {ap : atom -> Type} ->
   (construct : (a : atom) -> f (ap a)) -> (l : List atom) ->
@@ -127,6 +114,19 @@ DecListForAll {f} {ap} dec =
     (ListEliminatorArgs
       (pure (Yes (|:|)))
       (\a, _, decList => [| ListForAllConsDec {ap} (dec a) decList |] ))
+
+public export
+NoExistsNil : {atom : Type} -> {ap : atom -> Type} -> Not (ListExists ap [])
+NoExistsNil ((<::) _) impossible
+NoExistsNil ((>::) _) impossible
+
+public export
+NoExistsNeither : {atom : Type} -> {ap : atom -> Type} ->
+  {a : atom} -> {l : List atom} ->
+  Not (ap a) -> Not (ListExists ap l) ->
+  Not (ListExists ap (a :: l))
+NoExistsNeither noA _ ((<::) existsA) = noA existsA
+NoExistsNeither _ noList ((>::) existsList) = noList existsList
 
 public export
 ListExistsEitherDec : {atom : Type} -> {ap : atom -> Type} ->
