@@ -34,18 +34,10 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.RefinedSExpTest
     , RefinedSExp.OldSExp
     , RefinedSExp.Test.OldSExpTest
-    , RefinedSExp.OldRefinedSExp
-    , RefinedSExp.Test.OldRefinedSExpTest
-    , RefinedSExp.PatternedSExpressions
-    , RefinedSExp.Test.PatternedSExpressionsTest
-    , RefinedSExp.Match
-    , RefinedSExp.Test.MatchTest
     , RefinedSExp.InductiveSExp
     , RefinedSExp.Test.InductiveSExpTest
     , RefinedSExp.ADT
     , RefinedSExp.Test.ADTTest
-    , RefinedSExp.AlgebraicPattern
-    , RefinedSExp.Test.AlgebraicPatternTest
     , RefinedSExp.DependentADT
     , RefinedSExp.Test.DependentADTTest
     , RefinedSExp.DependentMorphism
