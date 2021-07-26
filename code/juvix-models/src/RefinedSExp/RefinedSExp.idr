@@ -139,11 +139,12 @@ inductiveDecide : {atom : Type} ->
   InductiveDecisionSig predicate contextType ->
   (x : SExp atom) -> Maybe (SExpForAll (SuccessPredicate predicate) x)
 inductiveDecide decisionSig x' =
-  snd (fst
+  Builtin.snd (fst
     (sexpDepFoldsContextIndependent
+      {fs=(Prelude.Basics.id)} {fl=(Prelude.Basics.id)}
       {sp=(\x => Maybe (SExpForAll (SuccessPredicate predicate) x))}
       {lp=(\x => Maybe (SListForAll (SuccessPredicate predicate) x))}
-      (SExpDepFoldContextIndependentArgs
+      (SExpEliminatorArgs
         (\a, l, tail, context =>
           let
             (tailContext, tailDecision) = tail context

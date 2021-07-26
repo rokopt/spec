@@ -9,8 +9,8 @@ public export
 sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
   (SExp atom -> String, SList atom -> List String)
 sexpShows showAtom =
-  sexpNonDepContextFreeListFolds
-    (SExpNonDepContextFreeListFoldArgs
+  sexpNonDepListFolds
+    (SExpNonDepListFoldArgs
       (\a, l, s => case l of
         [] => "$(" ++ showAtom a ++ ")"
         _ => "$(" ++ showAtom a ++ ":" ++

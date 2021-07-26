@@ -50,58 +50,58 @@ listDepFold {f} {lp} signature context l =
 infixr 7 :::
 public export
 data ListForAll :
-  {atom : Type} -> (lp : atom -> Type) -> List atom -> Type where
-    (|:|) : {atom : Type} -> {lp : atom -> Type} ->
-            ListForAll lp []
-    (:::) : {atom : Type} -> {lp : atom -> Type} ->
+  {atom : Type} -> (ap : atom -> Type) -> List atom -> Type where
+    (|:|) : {atom : Type} -> {ap : atom -> Type} ->
+            ListForAll ap []
+    (:::) : {atom : Type} -> {ap : atom -> Type} ->
             {a : atom} -> {l : List atom} ->
-            lp a -> ListForAll lp l ->
-            ListForAll lp (a :: l)
+            ap a -> ListForAll ap l ->
+            ListForAll ap (a :: l)
 
 prefix 11 <::
 prefix 11 >::
 public export
 data ListExists :
-  {atom : Type} -> (lp : atom -> Type) -> List atom -> Type where
-    (<::) : {atom : Type} -> {lp : atom -> Type} ->
+  {atom : Type} -> (ap : atom -> Type) -> List atom -> Type where
+    (<::) : {atom : Type} -> {ap : atom -> Type} ->
             {a : atom} -> {l : List atom} ->
-            lp a ->
-            ListExists lp (a :: l)
-    (>::) : {atom : Type} -> {lp : atom -> Type} ->
+            ap a ->
+            ListExists ap (a :: l)
+    (>::) : {atom : Type} -> {ap : atom -> Type} ->
             {a : atom} -> {l : List atom} ->
-            ListExists lp l ->
-            ListExists lp (a :: l)
+            ListExists ap l ->
+            ListExists ap (a :: l)
 
 public export
-NoExistsNil : {atom : Type} -> {lp : atom -> Type} -> Not (ListExists lp [])
+NoExistsNil : {atom : Type} -> {ap : atom -> Type} -> Not (ListExists ap [])
 NoExistsNil ((<::) _) impossible
 NoExistsNil ((>::) _) impossible
 
 public export
-NoExistsNeither : {atom : Type} -> {lp : atom -> Type} ->
+NoExistsNeither : {atom : Type} -> {ap : atom -> Type} ->
   {a : atom} -> {l : List atom} ->
-  Not (lp a) -> Not (ListExists lp l) ->
-  Not (ListExists lp (a :: l))
+  Not (ap a) -> Not (ListExists ap l) ->
+  Not (ListExists ap (a :: l))
 NoExistsNeither noA _ ((<::) existsA) = noA existsA
 NoExistsNeither _ noList ((>::) existsList) = noList existsList
 
 public export
 ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
-  {lp : atom -> Type} ->
-  (construct : (a : atom) -> f (lp a)) -> (l : List atom) ->
-  f (ListForAll lp l)
-ListForAllConstruct {f} {lp} construct =
-  listEliminator {lp=(f . ListForAll lp)}
+  {ap : atom -> Type} ->
+  (construct : (a : atom) -> f (ap a)) -> (l : List atom) ->
+  f (ListForAll ap l)
+ListForAllConstruct {f} {ap} construct =
+  listEliminator {lp=(f . ListForAll ap)}
     (ListEliminatorArgs
       (pure (|:|))
       (\a, _, lpl => [| construct a ::: lpl |]))
 
 infixr 7 :::
 public export
-ListForAllConsDec : {atom : Type} -> {lp : atom -> Type} ->
+ListForAllConsDec : {atom : Type} -> {ap : atom -> Type} ->
   {a : atom} -> {l : List atom} ->
-  Dec (lp a) -> Dec (ListForAll lp l) ->
-  Dec (ListForAll lp (a :: l))
+  Dec (ap a) -> Dec (ListForAll ap l) ->
+  Dec (ListForAll ap (a :: l))
 ListForAllConsDec decHead decTail =
   case (decHead, decTail) of
     (Yes yesHead, Yes yesTail) => Yes (yesHead ::: yesTail)
@@ -118,21 +118,21 @@ ListForAllConsDec decHead decTail =
 
 public export
 DecListForAll : {atom : Type} -> {f : Type -> Type} -> Applicative f =>
-  {lp : atom -> Type} ->
-  (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
-  f (Dec (ListForAll lp l))
-DecListForAll {f} {lp} dec =
+  {ap : atom -> Type} ->
+  (dec : (a : atom) -> f (Dec (ap a))) -> (l : List atom) ->
+  f (Dec (ListForAll ap l))
+DecListForAll {f} {ap} dec =
   listEliminator
-    {lp=(\l => f (Dec (ListForAll lp l)))}
+    {lp=(\l => f (Dec (ListForAll ap l)))}
     (ListEliminatorArgs
       (pure (Yes (|:|)))
-      (\a, _, decList => [| ListForAllConsDec {lp} (dec a) decList |] ))
+      (\a, _, decList => [| ListForAllConsDec {ap} (dec a) decList |] ))
 
 public export
-ListExistsEitherDec : {atom : Type} -> {lp : atom -> Type} ->
+ListExistsEitherDec : {atom : Type} -> {ap : atom -> Type} ->
   {a : atom} -> {l : List atom} ->
-  Dec (lp a) -> Dec (ListExists lp l) ->
-  Dec (ListExists lp (a :: l))
+  Dec (ap a) -> Dec (ListExists ap l) ->
+  Dec (ListExists ap (a :: l))
 ListExistsEitherDec decHead decTail =
   case (decHead, decTail) of
     (Yes yesA, _) => Yes (<:: yesA)
@@ -141,12 +141,12 @@ ListExistsEitherDec decHead decTail =
 
 public export
 DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
-  {lp : atom -> Type} ->
-  (dec : (a : atom) -> f (Dec (lp a))) -> (l : List atom) ->
-  f (Dec (ListExists lp l))
-DecListExists {f} {lp} dec =
+  {ap : atom -> Type} ->
+  (dec : (a : atom) -> f (Dec (ap a))) -> (l : List atom) ->
+  f (Dec (ListExists ap l))
+DecListExists {f} {ap} dec =
   listEliminator
-    {lp=(\l => f (Dec (ListExists lp l)))}
+    {lp=(\l => f (Dec (ListExists ap l)))}
     (ListEliminatorArgs
       (pure (No NoExistsNil))
       (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
@@ -159,15 +159,18 @@ ListForAllFoldSig {f : Type -> Type} {atom : Type}
     consElim :
       (a : atom) -> (l : List atom) ->
       (recursiveResult : f (ListForAll ap l)) ->
-      f (ListForAll ap (a :: l))
+      f (ap a)
 
 public export
-ListForAllFoldSigToDepContextFreeFoldSig :
-  {f : Type -> Type} -> Applicative f => {atom : Type} -> {ap : atom -> Type} ->
+ListForAllFoldSigToEliminatorSig :
+  Applicative f =>
+  {atom : Type} -> {ap : atom -> Type} ->
   ListForAllFoldSig {f} {atom} ap ->
   ListEliminatorSig (f . (ListForAll ap))
-ListForAllFoldSigToDepContextFreeFoldSig signature =
-  ListEliminatorArgs (pure (|:|)) (consElim signature)
+ListForAllFoldSigToEliminatorSig {f} {atom} {ap} signature =
+  ListEliminatorArgs {lp=(f . ListForAll ap)}
+    (pure {f} (|:|))
+    (\a, l, forAll => (map (:::) (consElim signature a l forAll)) <*> forAll)
 
 public export
 listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
@@ -175,7 +178,7 @@ listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   (signature : ListForAllFoldSig {f} ap) ->
   (l : List atom) -> f (ListForAll ap l)
 listForAllFold {atom} signature =
-  listEliminator (ListForAllFoldSigToDepContextFreeFoldSig signature)
+  listEliminator (ListForAllFoldSigToEliminatorSig signature)
 
 public export
 record ListMetaFoldSig {f : Type -> Type}
