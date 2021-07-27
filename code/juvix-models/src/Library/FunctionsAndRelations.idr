@@ -605,3 +605,93 @@ IsDPairEquivalence m =
 public export
 DPairEquivalence : {a: Type} -> (b: a -> Type) -> Type
 DPairEquivalence b = DPair (DepRelationMap b) IsDPairEquivalence
+
+public export
+depCompose : {a : Type} -> {b : a -> Type} -> {c : (x : a) -> b x -> Type} ->
+  (g : (x : a) -> (y : b x) -> c x y) -> (f : (x : a) -> b x) ->
+  (x : a) -> c x (f x)
+depCompose g f x = g x (f x)
+
+public export
+Pi : {a : Type} -> (b : a -> Type) -> Type
+Pi {a} b = (x : a) -> b x
+
+public export
+Sigma : {a : Type} -> {b : a -> Type} -> (f : Pi b) -> (x : a) -> DPair a b
+Sigma f x = (x ** f x)
+
+Pred : Type -> Type
+Pred a = a -> Type
+
+mutual
+  public export
+  data GeneralType : Type where
+    SimpleType : Type -> GeneralType
+    DepType : GeneralDepType -> GeneralType
+    -- PiType : GeneralType -> GeneralType
+
+  public export GeneralPred : GeneralType -> Type
+  GeneralPred gty = metaType gty -> GeneralType
+
+  public export GeneralDepType : Type
+  GeneralDepType = DPair GeneralType GeneralPred
+
+  public export GeneralDPair : GeneralDepType -> Type
+  GeneralDPair (gty ** pred) = (x : metaType gty ** metaType (pred x))
+
+  public export
+  metaType : GeneralType -> Type
+  metaType (SimpleType sty) = sty
+  metaType (DepType dty) = GeneralDPair dty
+
+  public export
+  TypeDomain : GeneralType -> GeneralType
+  TypeDomain (SimpleType sty) = SimpleType ()
+  TypeDomain (DepType (gty ** _)) = gty
+
+  public export
+  TypeCodomain : (gty : GeneralType) -> GeneralPred (TypeDomain gty)
+  TypeCodomain (SimpleType sty) = \_ => SimpleType sty
+  TypeCodomain (DepType (_ ** pred)) = pred
+
+  public export
+  GeneralFunction : {gty : GeneralType} -> GeneralPred gty -> Type
+  GeneralFunction {gty} pred = (x : metaType gty) -> metaType (pred x)
+
+  public export
+  GeneralPi : GeneralType -> Type
+  GeneralPi gty = GeneralFunction {gty=(TypeDomain gty)} (TypeCodomain gty)
+
+DPred : {a : Type} -> (b : Pred a) -> Type
+DPred {a} b = DPair a b -> Type
+
+Foo : {a : Type} -> {b : Pred a} -> (c : DPred b) -> Pred a
+Foo {a} {b} c = \x => DPair (b x) (c . (MkDPair x))
+
+-- DepFoo : {a : Type} -> {b : DPred a} -> (c : DPred b) -> DPred c
+-- DepFoo = ?DepFoo_hole
+-- DepFoo {a} {b} c = \x => DPair (b x) (c . (MkDPair x))
+
+infixl 7 .~
+public export
+(.~) : {a : Type} -> {b : Pred a} -> {c : DPred b} ->
+  (g : Pi c) -> (f : Pi b) -> Pi (Foo c) -- (y : b x ** c (x ** y))
+-- g .~ f = \x => (f x ** g (Sigma f x))
+g .~ f = \x => (f x ** g (Sigma f x))
+
+{-
+infixl 7 .~
+public export
+(.~) : {a : Type} -> {b : a -> Type} -> {c : DPair a b -> Type} ->
+  (g : Pi c) -> (f : Pi b) -> Pi (c . Sigma f)
+g .~ f = \x => g (Sigma f x)
+-}
+
+{-
+export
+depComposeAssoc : {a : Type} -> {b : a -> Type} -> {c : DPair a b -> Type} ->
+  {d : Pi (c . Sigma f) -> Type} ->
+  (h : Pi d) -> (g : Pi c) -> (f : Pi b) ->
+  h .~ (g .~ f) = (h .~ g) .~ f
+depComposeAssoc = ?depComposeAssoc_hole
+-}
