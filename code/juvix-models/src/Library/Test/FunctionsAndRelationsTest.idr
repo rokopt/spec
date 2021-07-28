@@ -38,7 +38,7 @@ telescope_val_2 : :~ Telescope_test_2
 telescope_val_2 = (telescope_val_1 ** ["hi", "there"])
 
 telescope_val_3 : :~ Telescope_test_3
-telescope_val_3 = (2 **~ ["hi", "there"] **~ [3, 4, 5])
+telescope_val_3 = (2 **~ ["hi", "there"] **~ [2, 5, 99])
 
 test_string_table : Nat -> String
 test_string_table 0 = "hi"
@@ -50,12 +50,19 @@ telescope_fn_12 : Telescope_test_1 ~> Telescope_type_2
 telescope_fn_12 0 = []
 telescope_fn_12 (S n) = snoc (telescope_fn_12 n) (test_string_table n)
 
-telescope_foo_2 : Vect 2 String
-telescope_foo_2 = telescope_fn_12 2
-
-telescope_fn_2_correct :
+telescope_fn_12_correct :
   Sigma
    Library.Test.FunctionsAndRelationsTest.telescope_fn_12
    Library.Test.FunctionsAndRelationsTest.telescope_val_1 =
   Library.Test.FunctionsAndRelationsTest.telescope_val_2
-telescope_fn_2_correct = Refl
+telescope_fn_12_correct = Refl
+
+telescope_fn_23 : Telescope_test_2 ~> Telescope_type_3
+telescope_fn_23 (n ** v) = snoc (map length v) 99
+
+telescope_fn_23_correct :
+  Sigma
+   Library.Test.FunctionsAndRelationsTest.telescope_fn_23
+   Library.Test.FunctionsAndRelationsTest.telescope_val_2 =
+  Library.Test.FunctionsAndRelationsTest.telescope_val_3
+telescope_fn_23_correct = Refl
