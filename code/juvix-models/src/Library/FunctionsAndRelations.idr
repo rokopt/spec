@@ -698,11 +698,19 @@ public export
   (g : (a *~ b) :~> c) -> (f : a :~> b) -> (a :~> (c .** f))
 g :.~ f = \x => g (x **~ f)
 
+infixl 7 .**~
+public export
+(.**~) :
+  {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
+  (g : (a *~ b) :~> c) -> (f : a :~> b) ->
+  ((:~ a) -> DPair ((:~) (a *~ b)) c)
+g .**~ f = \x => x **~ f **~ g
+
 export
 depComposeAssociative :
   {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
   {d : TelescopePred (a *~ b *~ c)} ->
   (h : (a *~ b *~ c) :~> d) -> (g : (a *~ b) :~> c) -> (f : a :~> b) ->
-    (\x => h ((flip (**~) g) (x **~ f))) =
+    (\x => h (((.**~) {a} g f) x)) =
     (:.~) {a} {c=(d .** g)} ((:.~) {a=(a *~ b)} {c=d} h g) f
 depComposeAssociative h g f = Refl
