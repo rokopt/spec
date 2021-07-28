@@ -703,7 +703,6 @@ depComposeAssociative :
   {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
   {d : TelescopePred (a *~ b *~ c)} ->
   (h : (a *~ b *~ c) :~> d) -> (g : (a *~ b) :~> c) -> (f : a :~> b) ->
-    -- (:.~) h ((:.~) {c} g f) =
-    (\x => h ((x **~ f) ** g (x **~ f))) =
+    (\x => h ((flip (**~) g) (x **~ f))) =
     (:.~) {a} {c=(d .** g)} ((:.~) {a=(a *~ b)} {c=d} h g) f
 depComposeAssociative h g f = Refl
