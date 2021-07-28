@@ -48,4 +48,14 @@ test_string_table _ = "undefined"
 
 telescope_fn_12 : Telescope_test_1 ~> Telescope_type_2
 telescope_fn_12 0 = []
-telescope_fn_12 (S n) = snoc (telescope_fn_12 n) (test_string_table (S n))
+telescope_fn_12 (S n) = snoc (telescope_fn_12 n) (test_string_table n)
+
+telescope_foo_2 : Vect 2 String
+telescope_foo_2 = telescope_fn_12 2
+
+telescope_fn_2_correct :
+  Sigma
+   Library.Test.FunctionsAndRelationsTest.telescope_fn_12
+   Library.Test.FunctionsAndRelationsTest.telescope_val_1 =
+  Library.Test.FunctionsAndRelationsTest.telescope_val_2
+telescope_fn_2_correct = Refl

@@ -632,6 +632,10 @@ public export
 Pi : (a : Type) -> (b : a -> Type) -> Type
 Pi a b = (x : a) -> b x
 
+public export
+Sigma : {a : Type} -> {b : a -> Type} -> (f : Pi a b) -> (x : a) -> DPair a b
+Sigma f x = (x ** f x)
+
 infixr 7 ~>
 public export
 (~>) : (domain : Telescope) -> (codomain : (:~ domain) -> Type) ->
@@ -643,10 +647,6 @@ depCompose : {a : Type} -> {b : a -> Type} -> {c : (x : a) -> b x -> Type} ->
   (g : (x : a) -> (y : b x) -> c x y) -> (f : (x : a) -> b x) ->
   (x : a) -> c x (f x)
 depCompose g f x = g x (f x)
-
-public export
-Sigma : {a : Type} -> {b : a -> Type} -> (f : Pi a b) -> (x : a) -> DPair a b
-Sigma f x = (x ** f x)
 
 Pred : Type -> Type
 Pred a = a -> Type
