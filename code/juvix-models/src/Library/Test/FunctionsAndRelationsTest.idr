@@ -9,26 +9,26 @@ Telescope_type_1 : Type
 Telescope_type_1 = Nat
 
 Telescope_test_1 : Telescope
-Telescope_test_1 = |~ Telescope_type_1
+Telescope_test_1 = |- Telescope_type_1
 
-Telescope_type_2 : Nat -> Type
+Telescope_type_2 : Telescope_type_1 -> Type
 Telescope_type_2 = flip Vect String
 
 Telescope_test_2 : Telescope
 Telescope_test_2 = Telescope_test_1 *~ Telescope_type_2
 
 Telescope_test_2_correct :
-  Telescope_test_2 = |~ Telescope_type_1 *~ Telescope_type_2
+  Telescope_test_2 = |- Telescope_type_1 *~ Telescope_type_2
 Telescope_test_2_correct = Refl
 
-Telescope_type_3 : (n : Nat ** Vect n String) -> Type
+Telescope_type_3 : DPair Telescope_type_1 Telescope_type_2 -> Type
 Telescope_type_3 (n ** v) = Vect (S n) Nat
 
 Telescope_test_3 : Telescope
 Telescope_test_3 = Telescope_test_2 *~ Telescope_type_3
 
 Telescope_test_3_correct : Telescope_test_3 =
-  |~ Telescope_type_1 *~ Telescope_type_2 *~ Telescope_type_3
+  |- Telescope_type_1 *~ Telescope_type_2 *~ Telescope_type_3
 Telescope_test_3_correct = Refl
 
 telescope_val_1 : :~ Telescope_test_1

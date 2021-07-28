@@ -607,21 +607,41 @@ DPairEquivalence : {a: Type} -> (b: a -> Type) -> Type
 DPairEquivalence b = DPair (DepRelationMap b) IsDPairEquivalence
 
 mutual
-  prefix 11 |~
+  prefix 11 |~|
   infixl 7 *~
+  infixl 7 *-
   prefix 11 :~
 
   public export
   data Telescope : Type where
-    (|~) : Type -> Telescope
+    (|~|) : Telescope
+    (*-) : Telescope -> Type -> Telescope
     (*~) :
       (telescope : Telescope) -> (type : (:~ telescope) -> Type) ->
       Telescope
 
   public export
   (:~) : Telescope -> Type
-  (:~) (|~ type) = type
+  (:~) (|~|) = ()
+  (:~) ((|~|) *- type) = type
+  (:~) (telescope *- type) = Pair (:~ telescope) type
+  (:~) ((|~|) *~ type) = Void
   (:~) (telescope *~ type) = DPair (:~ telescope) type
+
+prefix 11 |-
+public export
+(|-) : Type -> Telescope
+(|-) type = (|~|) *- type
+
+prefix 11 |~
+public export
+(|~) : (() -> Type) -> Telescope
+(|~) type = (|~|) *- type ()
+
+infixl 7 **-
+public export
+(**-) : {a : Type} -> {b : Type} -> a -> b -> Pair a b
+x **- y = (x, y)
 
 infixl 7 **~
 public export
