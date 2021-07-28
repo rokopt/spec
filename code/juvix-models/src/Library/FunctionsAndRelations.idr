@@ -606,6 +606,28 @@ public export
 DPairEquivalence : {a: Type} -> (b: a -> Type) -> Type
 DPairEquivalence b = DPair (DepRelationMap b) IsDPairEquivalence
 
+mutual
+  prefix 11 |~
+  infixl 7 *~
+  prefix 11 :~
+
+  public export
+  data Telescope : Type where
+    (|~) : Type -> Telescope
+    (*~) :
+      (telescope : Telescope) -> (type : (:~ telescope) -> Type) ->
+      Telescope
+
+  public export
+  (:~) : Telescope -> Type
+  (:~) (|~ type) = type
+  (:~) (telescope *~ type) = DPair (:~ telescope) type
+
+infixl 7 **~
+public export
+(**~) : {a : Type} -> {b : a -> Type} -> (x : a) -> b x -> DPair a b
+x **~ y = (x ** y)
+
 public export
 depCompose : {a : Type} -> {b : a -> Type} -> {c : (x : a) -> b x -> Type} ->
   (g : (x : a) -> (y : b x) -> c x y) -> (f : (x : a) -> b x) ->
@@ -627,16 +649,19 @@ mutual
   public export
   data GeneralType : Type where
     SimpleType : Type -> GeneralType
-    DepType : GeneralDepType -> GeneralType
+    DepType : TypeFamily -> GeneralType
     -- PiType : GeneralType -> GeneralType
 
   public export GeneralPred : GeneralType -> Type
   GeneralPred gty = metaType gty -> GeneralType
 
-  public export GeneralDepType : Type
-  GeneralDepType = DPair GeneralType GeneralPred
+  public export TypeFamily : Type
+  TypeFamily = DPair GeneralType GeneralPred
 
-  public export GeneralDPair : GeneralDepType -> Type
+  public export PredType : {gty : GeneralType} -> GeneralPred gty -> GeneralType
+  PredType {gty} pred = DepType (gty ** pred)
+
+  public export GeneralDPair : TypeFamily -> Type
   GeneralDPair (gty ** pred) = (x : metaType gty ** metaType (pred x))
 
   public export
@@ -645,14 +670,14 @@ mutual
   metaType (DepType dty) = GeneralDPair dty
 
   public export
-  TypeDomain : GeneralType -> GeneralType
-  TypeDomain (SimpleType sty) = SimpleType ()
-  TypeDomain (DepType (gty ** _)) = gty
+  TypeIndex : GeneralType -> GeneralType
+  TypeIndex (SimpleType sty) = SimpleType ()
+  TypeIndex (DepType (gty ** _)) = gty
 
   public export
-  TypeCodomain : (gty : GeneralType) -> GeneralPred (TypeDomain gty)
-  TypeCodomain (SimpleType sty) = \_ => SimpleType sty
-  TypeCodomain (DepType (_ ** pred)) = pred
+  TypePred : (gty : GeneralType) -> GeneralPred (TypeIndex gty)
+  TypePred (SimpleType sty) = \_ => SimpleType sty
+  TypePred (DepType (_ ** pred)) = pred
 
   public export
   GeneralFunction : {gty : GeneralType} -> GeneralPred gty -> Type
@@ -660,13 +685,31 @@ mutual
 
   public export
   GeneralPi : GeneralType -> Type
-  GeneralPi gty = GeneralFunction {gty=(TypeDomain gty)} (TypeCodomain gty)
+  GeneralPi gty = GeneralFunction {gty=(TypeIndex gty)} (TypePred gty)
+
+{-
+infixl 7 :~
+public export
+(:~) : {a : GeneralType} ->
+  (b : GeneralPred a) -> (c : GeneralPred (PredType {gty=a} b)) ->
+  GeneralPred (DPair (metaType a) (metaType . b))
+b :~ c = ?typecomp_hole
+-}
 
 DPred : {a : Type} -> (b : Pred a) -> Type
 DPred {a} b = DPair a b -> Type
 
 Foo : {a : Type} -> {b : Pred a} -> (c : DPred b) -> Pred a
 Foo {a} {b} c = \x => DPair (b x) (c . (MkDPair x))
+
+infixl 7 <~
+public export
+(<~) : {a : GeneralType} ->
+  {b : GeneralPred a} -> {c : GeneralPred (PredType {gty=a} b)} ->
+  (g : GeneralFunction {gty=(PredType {gty=a} b)} c) ->
+  (f : GeneralFunction {gty=a} b) ->
+  GeneralFunction {gty=a} (c . Sigma f)
+a <~ b = ?depcomp_hole
 
 -- DepFoo : {a : Type} -> {b : DPred a} -> (c : DPred b) -> DPred c
 -- DepFoo = ?DepFoo_hole

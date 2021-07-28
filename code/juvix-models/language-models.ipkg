@@ -2,6 +2,7 @@ package language-models
 
 modules = Library.TypesAndFunctions
     , Library.FunctionsAndRelations
+    , Library.Test.FunctionsAndRelationsTest
     , IdrisSTL.Semiring
     , External.IntegerSquareRoot
     , Library.Decidability
