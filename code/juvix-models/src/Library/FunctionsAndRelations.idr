@@ -629,17 +629,23 @@ public export
 x **~ y = (x ** y)
 
 public export
+Pi : (a : Type) -> (b : a -> Type) -> Type
+Pi a b = (x : a) -> b x
+
+infixr 7 ~>
+public export
+(~>) : (domain : Telescope) -> (codomain : (:~ domain) -> Type) ->
+  Type
+domain ~> codomain = Pi (:~ domain) codomain
+
+public export
 depCompose : {a : Type} -> {b : a -> Type} -> {c : (x : a) -> b x -> Type} ->
   (g : (x : a) -> (y : b x) -> c x y) -> (f : (x : a) -> b x) ->
   (x : a) -> c x (f x)
 depCompose g f x = g x (f x)
 
 public export
-Pi : {a : Type} -> (b : a -> Type) -> Type
-Pi {a} b = (x : a) -> b x
-
-public export
-Sigma : {a : Type} -> {b : a -> Type} -> (f : Pi b) -> (x : a) -> DPair a b
+Sigma : {a : Type} -> {b : a -> Type} -> (f : Pi a b) -> (x : a) -> DPair a b
 Sigma f x = (x ** f x)
 
 Pred : Type -> Type
@@ -718,8 +724,7 @@ a <~ b = ?depcomp_hole
 infixl 7 .~
 public export
 (.~) : {a : Type} -> {b : Pred a} -> {c : DPred b} ->
-  (g : Pi c) -> (f : Pi b) -> Pi (Foo c) -- (y : b x ** c (x ** y))
--- g .~ f = \x => (f x ** g (Sigma f x))
+  (g : Pi (DPair a b) c) -> (f : Pi a b) -> Pi a (Foo c)
 g .~ f = \x => (f x ** g (Sigma f x))
 
 {-

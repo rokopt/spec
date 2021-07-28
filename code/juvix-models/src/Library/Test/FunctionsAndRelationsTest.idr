@@ -5,23 +5,47 @@ import Data.Vect
 
 %default total
 
-Telescope_test_1 : Type
-Telescope_test_1 = Nat
+Telescope_type_1 : Type
+Telescope_type_1 = Nat
 
-Telescope_test_2 : Nat -> Type
-Telescope_test_2 = (\n => Vect n String)
+Telescope_test_1 : Telescope
+Telescope_test_1 = |~ Telescope_type_1
 
-Telescope_test_3 : (n : Nat ** Vect n String) -> Type
-Telescope_test_3 (n ** v) = Vect (S n) Nat
+Telescope_type_2 : Nat -> Type
+Telescope_type_2 = flip Vect String
 
-Telescope_test : Telescope
-Telescope_test = |~ Telescope_test_1 *~ Telescope_test_2 *~ Telescope_test_3
+Telescope_test_2 : Telescope
+Telescope_test_2 = Telescope_test_1 *~ Telescope_type_2
 
-telescope_val_1 : :~ (|~ Telescope_test_1)
+Telescope_test_2_correct :
+  Telescope_test_2 = |~ Telescope_type_1 *~ Telescope_type_2
+Telescope_test_2_correct = Refl
+
+Telescope_type_3 : (n : Nat ** Vect n String) -> Type
+Telescope_type_3 (n ** v) = Vect (S n) Nat
+
+Telescope_test_3 : Telescope
+Telescope_test_3 = Telescope_test_2 *~ Telescope_type_3
+
+Telescope_test_3_correct : Telescope_test_3 =
+  |~ Telescope_type_1 *~ Telescope_type_2 *~ Telescope_type_3
+Telescope_test_3_correct = Refl
+
+telescope_val_1 : :~ Telescope_test_1
 telescope_val_1 = 2
 
-telescope_val_2 : :~ (|~ Telescope_test_1 *~ Telescope_test_2)
+telescope_val_2 : :~ Telescope_test_2
 telescope_val_2 = (telescope_val_1 ** ["hi", "there"])
 
-telescope_val_3 : :~ Telescope_test
+telescope_val_3 : :~ Telescope_test_3
 telescope_val_3 = (2 **~ ["hi", "there"] **~ [3, 4, 5])
+
+test_string_table : Nat -> String
+test_string_table 0 = "hi"
+test_string_table 1 = "there"
+test_string_table 2 = "someone"
+test_string_table _ = "undefined"
+
+telescope_fn_12 : Telescope_test_1 ~> Telescope_type_2
+telescope_fn_12 0 = []
+telescope_fn_12 (S n) = snoc (telescope_fn_12 n) (test_string_table (S n))
