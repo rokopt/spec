@@ -607,36 +607,38 @@ DPairEquivalence : {a: Type} -> (b: a -> Type) -> Type
 DPairEquivalence b = DPair (DepRelationMap b) IsDPairEquivalence
 
 mutual
-  prefix 11 |~|
+  prefix 11 |-
   infixl 7 *~
   infixl 7 *-
   prefix 11 :~
 
   public export
   data Telescope : Type where
-    (|~|) : Telescope
+    (|-) : Type -> Telescope
     (*-) : Telescope -> Type -> Telescope
     (*~) :
-      (telescope : Telescope) -> (type : (:~ telescope) -> Type) ->
+      (telescope : Telescope) -> (type : TelescopePred telescope) ->
       Telescope
 
   public export
-  (:~) : Telescope -> Type
-  (:~) (|~|) = ()
-  (:~) ((|~|) *- type) = type
-  (:~) (telescope *- type) = Pair (:~ telescope) type
-  (:~) ((|~|) *~ type) = Void
-  (:~) (telescope *~ type) = DPair (:~ telescope) type
+  TelescopePred : Telescope -> Type
+  TelescopePred telescope = (:~ telescope) -> Type
 
-prefix 11 |-
-public export
-(|-) : Type -> Telescope
-(|-) type = (|~|) *- type
+  public export
+  (:~) : Telescope -> Type
+  (:~) (|- type) = type
+  (:~) (telescope *- type) = Pair (:~ telescope) type
+  (:~) (telescope *~ type) = DPair (:~ telescope) type
 
 prefix 11 |~
 public export
 (|~) : (() -> Type) -> Telescope
-(|~) type = (|~|) *- type ()
+(|~) type = |- type ()
+
+infixl 7 *~-
+public export
+(*~-) : Telescope -> (() -> Type) -> Telescope
+telescope *~- type = telescope *- type ()
 
 infixl 7 **-
 public export
@@ -658,108 +660,27 @@ Sigma f x = (x ** f x)
 
 infixr 7 ~>
 public export
-(~>) : (domain : Telescope) -> (codomain : (:~ domain) -> Type) ->
-  Type
+(~>) : (domain : Telescope) -> (codomain : TelescopePred domain) -> Type
 domain ~> codomain = Pi (:~ domain) codomain
 
+infixr 7 .~*
 public export
-depCompose : {a : Type} -> {b : a -> Type} -> {c : (x : a) -> b x -> Type} ->
-  (g : (x : a) -> (y : b x) -> c x y) -> (f : (x : a) -> b x) ->
-  (x : a) -> c x (f x)
-depCompose g f x = g x (f x)
+(.~*) : {a : Type} -> {b : a -> Type} -> {c : DPair a b -> Type} ->
+  (g : Pi (DPair a b) c) -> (f : Pi a b) -> Pi a (c . Sigma f)
+g .~* f = (\x => g (Sigma f x))
 
-Pred : Type -> Type
-Pred a = a -> Type
-
-mutual
-  public export
-  data GeneralType : Type where
-    SimpleType : Type -> GeneralType
-    DepType : TypeFamily -> GeneralType
-    -- PiType : GeneralType -> GeneralType
-
-  public export GeneralPred : GeneralType -> Type
-  GeneralPred gty = metaType gty -> GeneralType
-
-  public export TypeFamily : Type
-  TypeFamily = DPair GeneralType GeneralPred
-
-  public export PredType : {gty : GeneralType} -> GeneralPred gty -> GeneralType
-  PredType {gty} pred = DepType (gty ** pred)
-
-  public export GeneralDPair : TypeFamily -> Type
-  GeneralDPair (gty ** pred) = (x : metaType gty ** metaType (pred x))
-
-  public export
-  metaType : GeneralType -> Type
-  metaType (SimpleType sty) = sty
-  metaType (DepType dty) = GeneralDPair dty
-
-  public export
-  TypeIndex : GeneralType -> GeneralType
-  TypeIndex (SimpleType sty) = SimpleType ()
-  TypeIndex (DepType (gty ** _)) = gty
-
-  public export
-  TypePred : (gty : GeneralType) -> GeneralPred (TypeIndex gty)
-  TypePred (SimpleType sty) = \_ => SimpleType sty
-  TypePred (DepType (_ ** pred)) = pred
-
-  public export
-  GeneralFunction : {gty : GeneralType} -> GeneralPred gty -> Type
-  GeneralFunction {gty} pred = (x : metaType gty) -> metaType (pred x)
-
-  public export
-  GeneralPi : GeneralType -> Type
-  GeneralPi gty = GeneralFunction {gty=(TypeIndex gty)} (TypePred gty)
-
-{-
-infixl 7 :~
+infixr 7 .-
 public export
-(:~) : {a : GeneralType} ->
-  (b : GeneralPred a) -> (c : GeneralPred (PredType {gty=a} b)) ->
-  GeneralPred (DPair (metaType a) (metaType . b))
-b :~ c = ?typecomp_hole
--}
+(.-) :
+  {a : Type} -> {b : TelescopePred (|- a)} -> {c : TelescopePred (|- a *~ b)} ->
+  (g : (|- a *~ b) ~> c) -> (f : (|- a) ~> b) ->
+  ((|- a) ~> (c .~* f))
+(.-) = (.~*)
 
-DPred : {a : Type} -> (b : Pred a) -> Type
-DPred {a} b = DPair a b -> Type
-
-Foo : {a : Type} -> {b : Pred a} -> (c : DPred b) -> Pred a
-Foo {a} {b} c = \x => DPair (b x) (c . (MkDPair x))
-
-infixl 7 <~
+infixr 7 .~
 public export
-(<~) : {a : GeneralType} ->
-  {b : GeneralPred a} -> {c : GeneralPred (PredType {gty=a} b)} ->
-  (g : GeneralFunction {gty=(PredType {gty=a} b)} c) ->
-  (f : GeneralFunction {gty=a} b) ->
-  GeneralFunction {gty=a} (c . Sigma f)
-a <~ b = ?depcomp_hole
-
--- DepFoo : {a : Type} -> {b : DPred a} -> (c : DPred b) -> DPred c
--- DepFoo = ?DepFoo_hole
--- DepFoo {a} {b} c = \x => DPair (b x) (c . (MkDPair x))
-
-infixl 7 .~
-public export
-(.~) : {a : Type} -> {b : Pred a} -> {c : DPred b} ->
-  (g : Pi (DPair a b) c) -> (f : Pi a b) -> Pi a (Foo c)
-g .~ f = \x => (f x ** g (Sigma f x))
-
-{-
-infixl 7 .~
-public export
-(.~) : {a : Type} -> {b : a -> Type} -> {c : DPair a b -> Type} ->
-  (g : Pi c) -> (f : Pi b) -> Pi (c . Sigma f)
-g .~ f = \x => g (Sigma f x)
--}
-
-{-
-export
-depComposeAssoc : {a : Type} -> {b : a -> Type} -> {c : DPair a b -> Type} ->
-  {d : Pi (c . Sigma f) -> Type} ->
-  (h : Pi d) -> (g : Pi c) -> (f : Pi b) ->
-  h .~ (g .~ f) = (h .~ g) .~ f
-depComposeAssoc = ?depComposeAssoc_hole
--}
+(.~) :
+  {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
+  (g : (a *~ b) ~> c) -> (f : a ~> b) ->
+  (a ~> (c .~* f))
+(.~) = (.~*)
