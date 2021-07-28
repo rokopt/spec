@@ -380,7 +380,7 @@ sexpNonDepListFolds signature =
 infixr 7 :$:
 public export
 data SExpForAll :
-  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
+  {atom : Type} -> (depType : SExp atom -> Type) -> SExp atom -> Type where
     (:$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
             {a : atom} -> {l : SList atom} ->
             depType (a $: l) ->
@@ -389,7 +389,7 @@ data SExpForAll :
 
 public export
 data SExpExists :
-  {atom : Type} -> (depType : SExp atom -> type) -> SExp atom -> Type where
+  {atom : Type} -> (depType : SExp atom -> Type) -> SExp atom -> Type where
     (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
             {a : atom} -> {l : SList atom} ->
             depType (a $: l) ->
@@ -400,13 +400,20 @@ data SExpExists :
             SExpExists depType (a $: l)
 
 public export
+record SExpExistsList
+  {atom : Type} (depType : SExp atom -> Type) (x : SExp atom) where
+    constructor SExpExistsCons
+    SExpExistsHead : SExpExists depType x
+    SExpExistsTail : List (SExpExists depType x)
+
+public export
 SListForAll : {atom : Type} ->
-  (depType : SExp atom -> type) -> SList atom -> Type
+  (depType : SExp atom -> Type) -> SList atom -> Type
 SListForAll = ListForAll . SExpForAll
 
 public export
 SListExists : {atom : Type} ->
-  (depType : SExp atom -> type) -> SList atom -> Type
+  (depType : SExp atom -> Type) -> SList atom -> Type
 SListExists = ListExists . SExpExists
 
 public export
