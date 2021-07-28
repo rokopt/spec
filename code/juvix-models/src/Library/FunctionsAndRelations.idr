@@ -606,41 +606,51 @@ public export
 DPairEquivalence : {a: Type} -> (b: a -> Type) -> Type
 DPairEquivalence b = DPair (DepRelationMap b) IsDPairEquivalence
 
-infixl 7 **-
+prefix 11 !-
 public export
-(**-) : {a : Type} -> {b : Type} -> a -> b -> Pair a b
-x **- y = (x, y)
+(!-) : Type -> Type
+(!-) a = a -> Type
+
+infixr 7 ~>
+public export
+(~>) : (a : Type) -> (b : !- a) -> Type
+a ~> b = (x : a) -> b x
+
+prefix 11 !~
+public export
+(!~) : {a : Type} -> (!- (!- a))
+(!~) {a} b = (x : a) -> b x -> Type
+
+infixl 7 .~
+public export
+(.~) : {a : Type} -> {b : !- a} -> (!~ b) -> (a ~> b) -> !- a
+c .~ f = \x => c x (f x)
+
+prefix 11 !~~
+public export
+(!~~) : {a : Type} -> {b : !- a} -> (!- (!~ b))
+(!~~) {a} {b} c = a ~> (\x => b x ~> c x)
+
+infixl 7 .~~
+public export
+(.~~) : {a : Type} -> {b : !- a} -> {c : !~ b} ->
+  (g : !~~ c) -> (f : a ~> b) -> a ~> (c .~ f)
+g .~~ f = \x => g x (f x)
+
+infixl 7 **<
+public export
+(**<) : {a : Type} -> {b : a -> Type} -> (x : a) -> b x -> DPair a b
+(**<) = MkDPair
 
 infixl 7 **~
 public export
-(**~) : {a : Type} -> {b : a -> Type} -> (x : a) -> b x -> DPair a b
-x **~ y = (x ** y)
-
-public export
-Pi : (a : Type) -> (b : a -> Type) -> Type
-Pi a b = (x : a) -> b x
-
-infixl 7 <*
-public export
-(<*) : {a : Type} -> {b : a -> Type} ->
-  (c : (x : a) -> b x -> Type) -> (f : Pi a b) ->
-  a -> Type
-c <* f = \x => c x (f x)
-
-public export
-SPi : {a : Type} -> (b : a -> Type) -> (c : (x : a) -> b x -> Type) -> Type
-SPi {a} b c = (x : a) -> Pi (b x) (c x)
+(**~) : {a : Type} -> {b : a -> Type} -> (x : a) -> (f : a ~> b) -> DPair a b
+x **~ f = (x ** f x)
 
 infixl 7 .**
 public export
-(.**) : {a : Type} -> {b : a -> Type} -> {c : (x : a) -> b x -> Type} ->
-  (g : SPi b c) -> (f : Pi a b) ->
-  Pi a (c <* f)
-g .** f = \x => g x (f x)
-
-public export
-Sigma : {a : Type} -> {b : a -> Type} -> (f : Pi a b) -> (x : a) -> DPair a b
-Sigma f = (MkDPair .** f)
+(.**) : {a : Type} -> {b : a -> Type} -> (!- (DPair a b)) -> (a ~> b) -> (!- a)
+c .** f = (\x => c (x **~ f))
 
 mutual
   prefix 11 |-
@@ -666,48 +676,34 @@ mutual
   (:~) (telescope *- type) = Pair (:~ telescope) type
   (:~) (telescope *~ type) = DPair (:~ telescope) type
 
-prefix 11 |~
+prefix 11 |~-
 public export
-(|~) : (() -> Type) -> Telescope
-(|~) type = |- type ()
+(|~-) : (() -> Type) -> Telescope
+(|~-) type = |- type ()
 
 infixl 7 *~-
 public export
 (*~-) : Telescope -> (() -> Type) -> Telescope
 telescope *~- type = telescope *- type ()
 
-infixr 7 ~>
+infixr 7 :~>
 public export
-(~>) : (domain : Telescope) -> (codomain : TelescopePred domain) -> Type
-domain ~> codomain = Pi (:~ domain) codomain
+(:~>) : (domain : Telescope) -> (codomain : TelescopePred domain) -> Type
+domain :~> codomain = (:~ domain) ~> codomain
 
-infixr 7 .~*
+infixr 7 :.~
 public export
-(.~*) : {a : Type} -> {b : a -> Type} -> {c : DPair a b -> Type} ->
-  (g : Pi (DPair a b) c) -> (f : Pi a b) -> Pi a (c . Sigma f)
-g .~* f = (\x => g (Sigma f x))
-
-infixr 7 .-
-public export
-(.-) :
-  {a : Type} -> {b : TelescopePred (|- a)} -> {c : TelescopePred (|- a *~ b)} ->
-  (g : (|- a *~ b) ~> c) -> (f : (|- a) ~> b) ->
-  ((|- a) ~> (c .~* f))
-(.-) = (.~*)
-
-infixr 7 .~
-public export
-(.~) :
+(:.~) :
   {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
-  (g : (a *~ b) ~> c) -> (f : a ~> b) ->
-  (a ~> (c .~* f))
-(.~) = (.~*)
+  (g : (a *~ b) :~> c) -> (f : a :~> b) -> (a :~> (c .** f))
+g :.~ f = \x => g (x **~ f)
 
 export
 depComposeAssociative :
   {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
   {d : TelescopePred (a *~ b *~ c)} ->
-  (h : (a *~ b *~ c) ~> d) -> (g : (a *~ b) ~> c) -> (f : a ~> b) ->
-    (.~) {a} {b} {c=(d .~* g)} ((.~) {a=(a *~ b)} {b=c} {c=d} h g) f =
-    (\x => h ((Sigma g .~* f) x))
-depComposeAssociative {a} {b} {c} {d} h g f = Refl
+  (h : (a *~ b *~ c) :~> d) -> (g : (a *~ b) :~> c) -> (f : a :~> b) ->
+    -- (:.~) h ((:.~) {c} g f) =
+    (\x => h ((x **~ f) ** g (x **~ f))) =
+    (:.~) {a} {c=(d .** g)} ((:.~) {a=(a *~ b)} {c=d} h g) f
+depComposeAssociative h g f = Refl
