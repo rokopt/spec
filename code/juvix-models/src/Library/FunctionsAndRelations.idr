@@ -663,12 +663,13 @@ mutual
     (|-) : Type -> Telescope
     (*-) : Telescope -> Type -> Telescope
     (*~) :
-      (telescope : Telescope) -> (type : TelescopePred telescope) ->
+      (telescope : Telescope) -> (type : (|:~) telescope) ->
       Telescope
 
+  prefix 11 |:~
   public export
-  TelescopePred : Telescope -> Type
-  TelescopePred telescope = (:~ telescope) -> Type
+  (|:~) : Telescope -> Type
+  (|:~) telescope = (!-) (:~ telescope)
 
   public export
   (:~) : Telescope -> Type
@@ -688,29 +689,56 @@ telescope *~- type = telescope *- type ()
 
 infixr 7 :~>
 public export
-(:~>) : (domain : Telescope) -> (codomain : TelescopePred domain) -> Type
+(:~>) : (domain : Telescope) -> (codomain : (|:~) domain) -> Type
 domain :~> codomain = (:~ domain) ~> codomain
 
-infixr 7 :.~
+infixr 7 :*~
+public export
+(:*~) :
+  {a : Telescope} -> {b : (|:~) a} ->
+  (c : (|:~) (a *~ b)) -> (f : a :~> b) -> |:~ a
+c :*~ f = \x => c (x **~ f)
+
+infixl 7 :.~
 public export
 (:.~) :
-  {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
   (g : (a *~ b) :~> c) -> (f : a :~> b) -> (a :~> (c .** f))
 g :.~ f = \x => g (x **~ f)
 
 infixl 7 .**~
 public export
 (.**~) :
-  {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
   (g : (a *~ b) :~> c) -> (f : a :~> b) ->
   ((:~ a) -> DPair ((:~) (a *~ b)) c)
 g .**~ f = \x => x **~ f **~ g
 
+infixl 7 *:~
+public export
+(*:~) :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  (d : (|:~) (a *~ b *~ c)) -> (f : a :~> b) ->
+  (|:~) (a *~ ((:*~) {a} c f))
+(*:~) d f = \p => case p of (x ** z) => d (x **~ f **< z)
+
+infixl 7 **:~
+public export
+(**:~) :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  {d : (|:~) (a *~ b *~ c)} ->
+  (h : (a *~ b *~ c) :~> d) ->
+  (f : a :~> b) ->
+  (a *~ ((:*~) {a} c f)) :~> ((*:~) {a} d f)
+(**:~) {d} h f = \p => case p of (x ** z) => h (x **~ f **< z)
+
 export
 depComposeAssociative :
-  {a : Telescope} -> {b : TelescopePred a} -> {c : TelescopePred (a *~ b)} ->
-  {d : TelescopePred (a *~ b *~ c)} ->
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  {d : (|:~) (a *~ b *~ c)} ->
   (h : (a *~ b *~ c) :~> d) -> (g : (a *~ b) :~> c) -> (f : a :~> b) ->
-    (\x => h (((.**~) {a} g f) x)) =
-    (:.~) {a} {c=(d .** g)} ((:.~) {a=(a *~ b)} {c=d} h g) f
+  (:.~) {a} {b=(c .** f)} {c=((*:~) {a} d f)}
+    ((**:~) {a} {b} {c} {d} h f) ((:.~) {a} {b} {c} g f) =
+  (:.~) {a} {b} {c=(d .** g)}
+    ((:.~) {a=(a *~ b)} {b=c} {c=d} h g) f
 depComposeAssociative h g f = Refl
