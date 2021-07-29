@@ -24,11 +24,11 @@ listEliminator signature (a :: l) =
   consElim signature a l (listEliminator signature l)
 
 public export
-listFunctorEliminator :
+listFunctor :
   {atom : Type} -> {lp : (!- (List atom)) -> (!- (List atom))} ->
   (signature : ((!- (List atom)) ~> (ListEliminatorSig . lp))) ->
   (parameter : !- (List atom)) -> (List atom ~> lp parameter)
-listFunctorEliminator {lp} signature parameter x =
+listFunctor {lp} signature parameter x =
   listEliminator
     {lp=(\l => ((parameter : (!- (List atom))) -> lp parameter l))}
     (ListEliminatorArgs
