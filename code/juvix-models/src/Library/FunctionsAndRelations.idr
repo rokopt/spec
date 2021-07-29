@@ -616,6 +616,11 @@ public export
 (~>) : (a : Type) -> (b : !- a) -> Type
 a ~> b = (x : a) -> b x
 
+infixr 7 ~~>
+public export
+(~~>) : {a : Type} -> (b, c : !- a) -> Type
+(~~>) {a} b c = (x : a) -> b x -> c x
+
 prefix 11 !~
 public export
 (!~) : {a : Type} -> (!- (!- a))

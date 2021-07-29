@@ -15,13 +15,27 @@ record ListEliminatorSig
 
 public export
 listEliminator :
-  {atom : Type} -> {lp : List atom -> Type} ->
+  {atom : Type} -> {lp : !- (List atom)} ->
   (signature : ListEliminatorSig lp) ->
-  (l : List atom) -> lp l
+  List atom ~> lp
 listEliminator signature [] =
   nilElim signature
 listEliminator signature (a :: l) =
   consElim signature a l (listEliminator signature l)
+
+public export
+listFunctorEliminator :
+  {atom : Type} -> {lp : (!- (List atom)) -> (!- (List atom))} ->
+  (signature : ((!- (List atom)) ~> (ListEliminatorSig . lp))) ->
+  (parameter : !- (List atom)) -> (List atom ~> lp parameter)
+listFunctorEliminator {lp} signature parameter x =
+  listEliminator
+    {lp=(\l => ((parameter : (!- (List atom))) -> lp parameter l))}
+    (ListEliminatorArgs
+      (\parameter => (nilElim (signature parameter)))
+      (\a, l, parameterizedPred, parameter =>
+        consElim (signature parameter) a l (parameterizedPred parameter))
+    ) x parameter
 
 public export
 ListDepFoldSig : (f : Type -> Type) -> {atom : Type} -> {contextType : Type} ->
@@ -163,7 +177,7 @@ ListForAllFoldSig {f : Type -> Type} {atom : Type}
 
 public export
 ListForAllFoldSigToEliminatorSig :
-  Applicative f =>
+  {f : Type -> Type} -> Applicative f =>
   {atom : Type} -> {ap : atom -> Type} ->
   ListForAllFoldSig {f} {atom} ap ->
   ListEliminatorSig (f . (ListForAll ap))
@@ -176,7 +190,7 @@ public export
 listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {ap : atom -> Type} ->
   (signature : ListForAllFoldSig {f} ap) ->
-  (l : List atom) -> f (ListForAll ap l)
+  List atom ~> f . (ListForAll ap)
 listForAllFold {atom} signature =
   listEliminator (ListForAllFoldSigToEliminatorSig signature)
 
