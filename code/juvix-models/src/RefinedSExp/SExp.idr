@@ -3,6 +3,7 @@ module RefinedSExp.SExp
 import Library.FunctionsAndRelations
 import Library.Decidability
 import public RefinedSExp.List
+import public Category.Category
 
 %default total
 
@@ -145,6 +146,12 @@ sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
 public export
+sexpTypeConstructors : {atom : Type} ->
+  (signature : SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)) ->
+  (!- (SExp atom), !- (SList atom))
+sexpTypeConstructors = sexpEliminators
+
+public export
 sexpParameterizedEliminators : {atom : Type} ->
   {sp : (!- (SExp atom)) -> (!- (SList atom)) -> (!- (SExp atom))} ->
   {lp : (!- (SExp atom)) -> (!- (SList atom)) -> (!- (SList atom))} ->
@@ -152,18 +159,14 @@ sexpParameterizedEliminators : {atom : Type} ->
     (spParam : (!- (SExp atom))) ->
     (lpParam : (!- (SList atom))) ->
     SExpEliminatorSig (sp spParam lpParam) (lp spParam lpParam)) ->
-  (spParam : (!- (SExp atom))) ->
-  (lpParam : (!- (SList atom))) ->
-  (SExp atom ~> sp spParam lpParam,
-   SList atom ~> lp spParam lpParam)
+  (spParam : (!- (SExp atom))) -> (lpParam : (!- (SList atom))) ->
+  (SExp atom ~> sp spParam lpParam, SList atom ~> lp spParam lpParam)
 sexpParameterizedEliminators parameterizedSignature spParam lpParam =
-  let
-    signature = SExpEliminatorArgs
+  sexpEliminators
+    (SExpEliminatorArgs
       (expElim (parameterizedSignature spParam lpParam))
       (nilElim (parameterizedSignature spParam lpParam))
-      (consElim (parameterizedSignature spParam lpParam))
-  in
-  sexpEliminators signature
+      (consElim (parameterizedSignature spParam lpParam)))
 
 public export
 SExpEliminatorListPred : {atom : Type} ->
@@ -565,3 +568,41 @@ sexpMetaFolds {fs} {fl} {sp} {lp} {metaContextType} {sdp} {ldp} metaSig =
       (metaExpElim metaSig)
       (metaNilElim metaSig)
       (metaConsElim metaSig))
+
+public export
+record SExpMetaEliminatorSig {atom : Type}
+  {sp : !- (SExp atom)}
+  {lp : !- (SList atom)}
+  (signature : SExpEliminatorSig sp lp)
+  (spp : (x : SExp atom) -> sp x -> Type)
+  (lpp : (l : SList atom) -> lp l -> Type)
+  where
+    constructor SExpMetaEliminatorArgs
+    metaExpElim :
+      (a : atom) -> (l : SList atom) ->
+      (lppl : lpp l (slistEliminator signature l)) ->
+      spp (a $: l) (expElim signature a l (slistEliminator signature l))
+    metaNilElim : lpp [] (nilElim signature)
+    metaConsElim :
+      (x : SExp atom) -> (l : SList atom) ->
+      (sppx : spp x (sexpEliminator signature x)) ->
+      (lppl : lpp l (slistEliminator signature l)) ->
+      lpp (x $+ l)
+        (consElim signature x l
+          (sexpEliminator signature x)
+          (slistEliminator signature l))
+
+public export
+sexpMetaEliminators : {atom : Type} ->
+  {sp : !- (SExp atom)} ->
+  {lp : !- (SList atom)} ->
+  {signature : SExpEliminatorSig sp lp} ->
+  {spp : (x : SExp atom) -> sp x -> Type} ->
+  {lpp : (l : SList atom) -> lp l -> Type} ->
+  (metaSig : SExpMetaEliminatorSig signature spp lpp) ->
+  ((x : SExp atom) -> spp x (sexpEliminator signature x),
+   (l : SList atom) -> lpp l (slistEliminator signature l))
+sexpMetaEliminators {sp} {lp} {spp} {lpp} metaSig =
+  sexpEliminators
+    (SExpEliminatorArgs
+      (metaExpElim metaSig) (metaNilElim metaSig) (metaConsElim metaSig))

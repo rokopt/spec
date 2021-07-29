@@ -513,3 +513,7 @@ record CategoryComponents where
   arrowConvert : ArrowTranslation arrow (SymmetricProduct objEquiv)
   id : (a: object) -> arrow (a, a)
   compose : {a, b, c: object} -> (arrow (b, c), arrow (a, b)) -> arrow (a, c)
+
+public export
+Algebra : (f : Type -> Type) -> (a : Type) -> Type
+Algebra f a = f a -> a

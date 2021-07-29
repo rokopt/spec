@@ -621,15 +621,14 @@ public export
 (~~>) : {a : Type} -> (b: !- a) -> (c : (!- a) -> (!- a)) -> Type
 (~~>) {a} b c = (x : a) -> b x -> c b x
 
-export
+public export
 composePi : {a : Type} ->
-  (parameterizedPred : ((!- a) -> (!- a))) ->
+  {parameterizedPred : ((!- a) -> (!- a))} ->
   {parameter : (!- a)} ->
   (parameter ~~> parameterizedPred) ->
   (a ~> parameter) ->
   a ~> (parameterizedPred parameter)
-composePi parameterizedPred parameterizedPi parameterPi x =
-  parameterizedPi x (parameterPi x)
+composePi parameterizedPi parameterPi x = parameterizedPi x (parameterPi x)
 
 prefix 11 !~
 public export
