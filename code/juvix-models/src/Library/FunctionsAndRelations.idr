@@ -622,14 +622,14 @@ public export
 (~~>) {a} b c = (x : a) -> b x -> c b x
 
 export
-piTransitive : {a : Type} ->
+composePi : {a : Type} ->
   (parameterizedPred : ((!- a) -> (!- a))) ->
   {parameter : (!- a)} ->
-  (a ~> parameter) ->
   (parameter ~~> parameterizedPred) ->
+  (a ~> parameter) ->
   a ~> (parameterizedPred parameter)
-piTransitive parameterizedPred parameterPi parameterImp x =
-  parameterImp x (parameterPi x)
+composePi parameterizedPred parameterizedPi parameterPi x =
+  parameterizedPi x (parameterPi x)
 
 prefix 11 !~
 public export
