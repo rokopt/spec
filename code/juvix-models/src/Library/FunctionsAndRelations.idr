@@ -618,8 +618,18 @@ a ~> b = (x : a) -> b x
 
 infixr 7 ~~>
 public export
-(~~>) : {a : Type} -> (b, c : !- a) -> Type
-(~~>) {a} b c = (x : a) -> b x -> c x
+(~~>) : {a : Type} -> (b: !- a) -> (c : (!- a) -> (!- a)) -> Type
+(~~>) {a} b c = (x : a) -> b x -> c b x
+
+export
+piTransitive : {a : Type} ->
+  (parameterizedPred : ((!- a) -> (!- a))) ->
+  {parameter : (!- a)} ->
+  (a ~> parameter) ->
+  (parameter ~~> parameterizedPred) ->
+  a ~> (parameterizedPred parameter)
+piTransitive parameterizedPred parameterPi parameterImp x =
+  parameterImp x (parameterPi x)
 
 prefix 11 !~
 public export
