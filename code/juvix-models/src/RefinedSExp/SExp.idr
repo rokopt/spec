@@ -137,12 +137,33 @@ mutual
 
 public export
 sexpEliminators : {atom : Type} ->
-  {sp : SExp atom -> Type} ->
-  {lp : SList atom -> Type} ->
+  {sp : !- (SExp atom)} ->
+  {lp : !- (SList atom)} ->
   (signature : SExpEliminatorSig sp lp) ->
   ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
+
+public export
+sexpParameterizedEliminators : {atom : Type} ->
+  {sp : (!- (SExp atom)) -> (!- (SList atom)) -> (!- (SExp atom))} ->
+  {lp : (!- (SExp atom)) -> (!- (SList atom)) -> (!- (SList atom))} ->
+  (parameterizedSignature :
+    (spParam : (!- (SExp atom))) ->
+    (lpParam : (!- (SList atom))) ->
+    SExpEliminatorSig (sp spParam lpParam) (lp spParam lpParam)) ->
+  (spParam : (!- (SExp atom))) ->
+  (lpParam : (!- (SList atom))) ->
+  (SExp atom ~> sp spParam lpParam,
+   SList atom ~> lp spParam lpParam)
+sexpParameterizedEliminators parameterizedSignature spParam lpParam =
+  let
+    signature = SExpEliminatorArgs
+      (expElim (parameterizedSignature spParam lpParam))
+      (nilElim (parameterizedSignature spParam lpParam))
+      (consElim (parameterizedSignature spParam lpParam))
+  in
+  sexpEliminators signature
 
 public export
 SExpEliminatorListPred : {atom : Type} ->
