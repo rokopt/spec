@@ -103,32 +103,39 @@ a $:^ a' = a $:+ $^ a'
 
 public export
 record SExpEliminatorSig
-  {atom : Type} (sp : SExp atom -> Type) (lp : SList atom -> Type)
+  {atom : Type}
+  {f : Type -> Type}
+  (sp : SExp atom -> Type) (lp : SList atom -> Type)
   where
     constructor SExpEliminatorArgs
     expElim :
-      (a : atom) -> (l : SList atom) -> lp l -> sp (a $: l)
+      (a : atom) -> (l : SList atom) -> f (lp l) -> f (sp (a $: l))
     nilElim :
-      lp []
+      f (lp [])
     consElim :
-      (x : SExp atom) -> (l : SList atom) -> sp x -> lp l -> lp (x $+ l)
+      (x : SExp atom) -> (l : SList atom) ->
+      f (sp x) -> f (lp l) -> f (lp (x $+ l))
 
 mutual
   public export
-  sexpEliminator : {atom : Type} ->
+  sexpEliminator :
+  {f : Type -> Type} ->
+  {atom : Type} ->
   {sp : SExp atom -> Type} ->
   {lp : SList atom -> Type} ->
-  (signature : SExpEliminatorSig sp lp) ->
-  (x : SExp atom) -> sp x
+  (signature : SExpEliminatorSig {f} sp lp) ->
+  (x : SExp atom) -> f (sp x)
   sexpEliminator signature (a $: l) =
     expElim signature a l (slistEliminator signature l)
 
   public export
-  slistEliminator : {atom : Type} ->
+  slistEliminator :
+  {f : Type -> Type} ->
+  {atom : Type} ->
   {sp : SExp atom -> Type} ->
   {lp : SList atom -> Type} ->
-  (signature : SExpEliminatorSig sp lp) ->
-  (l : SList atom) -> lp l
+  (signature : SExpEliminatorSig {f} sp lp) ->
+  (l : SList atom) -> f (lp l)
   slistEliminator signature [] =
     nilElim signature
   slistEliminator signature (x :: l) =
@@ -137,19 +144,22 @@ mutual
       (slistEliminator signature l)
 
 public export
-sexpEliminators : {atom : Type} ->
+sexpEliminators :
+  {f : Type -> Type} ->
+  {atom : Type} ->
   {sp : !- (SExp atom)} ->
   {lp : !- (SList atom)} ->
-  (signature : SExpEliminatorSig sp lp) ->
-  ((x : SExp atom) -> sp x, (l : SList atom) -> lp l)
+  (signature : SExpEliminatorSig {f} sp lp) ->
+  ((x : SExp atom) -> f (sp x), (l : SList atom) -> f (lp l))
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
 public export
 sexpTypeConstructors : {atom : Type} ->
-  (signature : SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)) ->
+  (signature : SExpEliminatorSig
+    {f=Prelude.Basics.id} {atom} (\_ => Type) (\_ => Type)) ->
   (!- (SExp atom), !- (SList atom))
-sexpTypeConstructors = sexpEliminators
+sexpTypeConstructors = sexpEliminators {f=Prelude.Basics.id}
 
 public export
 sexpParameterizedEliminators : {atom : Type} ->
@@ -158,11 +168,12 @@ sexpParameterizedEliminators : {atom : Type} ->
   (parameterizedSignature :
     (spParam : (!- (SExp atom))) ->
     (lpParam : (!- (SList atom))) ->
-    SExpEliminatorSig (sp spParam lpParam) (lp spParam lpParam)) ->
+    SExpEliminatorSig {f=Prelude.Basics.id}
+      (sp spParam lpParam) (lp spParam lpParam)) ->
   (spParam : (!- (SExp atom))) -> (lpParam : (!- (SList atom))) ->
   (SExp atom ~> sp spParam lpParam, SList atom ~> lp spParam lpParam)
 sexpParameterizedEliminators parameterizedSignature spParam lpParam =
-  sexpEliminators
+  sexpEliminators {f=Prelude.Basics.id}
     (SExpEliminatorArgs
       (expElim (parameterizedSignature spParam lpParam))
       (nilElim (parameterizedSignature spParam lpParam))
@@ -178,7 +189,7 @@ SExpEliminatorListPred sp lp (x :: l) = sp x -> lp (x :: l)
 export
 sexpEliminatorListPredToListPred : {atom : Type} ->
   {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
-  (signature : SExpEliminatorSig sp lp) ->
+  (signature : SExpEliminatorSig {f=Prelude.Basics.id} sp lp) ->
   (l : SList atom) -> SExpEliminatorListPred sp lp l -> lp l
 sexpEliminatorListPredToListPred signature [] pred =
   pred
@@ -188,7 +199,7 @@ sexpEliminatorListPredToListPred signature (x :: l) pred =
 export
 SExpEliminatorSigToListSig : {atom : Type} ->
   {sp : SExp atom -> Type} -> {lp : SList atom -> Type} ->
-  (signature : SExpEliminatorSig sp lp) ->
+  (signature : SExpEliminatorSig {f=Prelude.Basics.id} sp lp) ->
   ListEliminatorSig {lp=(SExpEliminatorListPred sp lp)}
 SExpEliminatorSigToListSig signature =
   ListEliminatorArgs
@@ -243,7 +254,7 @@ sexpDepFoldFlip :
   (x : SExp atom) ->
   (context : contextType) ->
   fs (contextType, sp context x)
-sexpDepFoldFlip = sexpEliminator
+sexpDepFoldFlip = sexpEliminator {f=Prelude.Basics.id}
 
 public export
 sexpDepFold :
@@ -336,7 +347,7 @@ sexpPairDepFolds {atom} {sp} {lp} signature =
   sexpEliminators
     {sp=(\x => (x' : SExp atom) -> sp x x')}
     {lp=(\l => (l' : SList atom) -> lp l l')}
-    (SExpEliminatorArgs expCase nilCase consCase)
+    (SExpEliminatorArgs {f=Prelude.Basics.id} expCase nilCase consCase)
     where
       expCase : (a : atom) -> (l : SList atom) ->
         (lpf : (l' : SList atom) -> lp l l') -> (x : SExp atom) ->
@@ -389,7 +400,7 @@ SExpNonDepListFoldSigToEliminatorSig :
   {atom : Type} -> {sp : Type} ->
   SExpNonDepListFoldSig {atom} sp ->
   SExpEliminatorSig
-    {atom} (\_ => sp) (\_ => List sp)
+    {f=Prelude.Basics.id} {atom} (\_ => sp) (\_ => List sp)
 SExpNonDepListFoldSigToEliminatorSig signature =
   SExpEliminatorArgs (expElim signature) [] (\_, _ => (::))
 
@@ -458,8 +469,8 @@ sexpForAllFolds : {f : Type -> Type} ->
   ((x : SExp atom) -> f (SExpForAll sp x),
    (l : SList atom) -> f (SListForAll sp l))
 sexpForAllFolds {f} {atom} {sp} signature =
-  sexpEliminators
-    {sp=(f . SExpForAll sp)} {lp=(f . SListForAll sp)}
+  sexpEliminators {f}
+    {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
     (SExpEliminatorArgs
       (\a, l, slForAll =>
         map (:$:) (expElim {f} signature a l slForAll) <*> slForAll)
@@ -575,24 +586,26 @@ record SExpMetaEliminatorSig
   {atom : Type}
   {sp : !- (SExp atom)}
   {lp : !- (SList atom)}
-  (signature : SExpEliminatorSig (f . sp) (f . lp))
+  (metaFunctor : Type -> Type)
+  (signature : SExpEliminatorSig {f} sp lp)
   (spp : (x : SExp atom) -> f (sp x) -> Type)
   (lpp : (l : SList atom) -> f (lp l) -> Type)
   where
     constructor SExpMetaEliminatorArgs
     metaExpElim :
       (a : atom) -> (l : SList atom) ->
-      (lppl : f (lpp l (slistEliminator signature l))) ->
-      f (spp (a $: l) (expElim signature a l (slistEliminator signature l)))
-    metaNilElim : f (lpp [] (nilElim signature))
+      (lppl : metaFunctor (lpp l (slistEliminator {f} signature l))) ->
+      metaFunctor (spp (a $: l)
+        (expElim signature a l (slistEliminator {f} signature l)))
+    metaNilElim : metaFunctor (lpp [] (nilElim signature))
     metaConsElim :
       (x : SExp atom) -> (l : SList atom) ->
-      (sppx : f (spp x (sexpEliminator signature x))) ->
-      (lppl : f (lpp l (slistEliminator signature l))) ->
-      f (lpp (x $+ l)
+      (sppx : metaFunctor (spp x (sexpEliminator {f} signature x))) ->
+      (lppl : metaFunctor (lpp l (slistEliminator {f} signature l))) ->
+      metaFunctor (lpp (x $+ l)
           (consElim signature x l
-            (sexpEliminator signature x)
-            (slistEliminator signature l)))
+            (sexpEliminator {f} signature x)
+            (slistEliminator {f} signature l)))
 
 public export
 sexpMetaEliminators :
@@ -600,13 +613,14 @@ sexpMetaEliminators :
   {atom : Type} ->
   {sp : !- (SExp atom)} ->
   {lp : !- (SList atom)} ->
-  {signature : SExpEliminatorSig (f . sp) (f . lp)} ->
+  {signature : SExpEliminatorSig {f} sp lp} ->
   {spp : (x : SExp atom) -> f (sp x) -> Type} ->
   {lpp : (l : SList atom) -> f (lp l) -> Type} ->
-  (metaSig : SExpMetaEliminatorSig {f} signature spp lpp) ->
-  ((x : SExp atom) -> f (spp x (sexpEliminator signature x)),
-   (l : SList atom) -> f (lpp l (slistEliminator signature l)))
-sexpMetaEliminators {f} {atom} {sp} {lp} {spp} {lpp} metaSig =
-  sexpEliminators
+  {metaFunctor : Type -> Type} ->
+  (metaSig : SExpMetaEliminatorSig {f} metaFunctor signature spp lpp) ->
+  ((x : SExp atom) -> metaFunctor (spp x (sexpEliminator {f} signature x)),
+   (l : SList atom) -> metaFunctor (lpp l (slistEliminator {f} signature l)))
+sexpMetaEliminators {f} {atom} {sp} {lp} {spp} {lpp} {metaFunctor} metaSig =
+  sexpEliminators {f=metaFunctor}
     (SExpEliminatorArgs
       (metaExpElim metaSig) (metaNilElim metaSig) (metaConsElim metaSig))
