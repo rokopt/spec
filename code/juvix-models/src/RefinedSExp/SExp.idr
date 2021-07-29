@@ -146,6 +146,16 @@ sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
 public export
+sexpFunctorialEliminators :
+  {f : Type -> Type} ->
+  {atom : Type} ->
+  {sp : !- (SExp atom)} ->
+  {lp : !- (SList atom)} ->
+  (signature : SExpEliminatorSig (f . sp) (f . lp)) ->
+  ((x : SExp atom) -> f (sp x), (l : SList atom) -> f (lp l))
+sexpFunctorialEliminators signature = sexpEliminators signature
+
+public export
 sexpTypeConstructors : {atom : Type} ->
   (signature : SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)) ->
   (!- (SExp atom), !- (SList atom))
