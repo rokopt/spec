@@ -78,6 +78,35 @@ RefinedSExpLiftedTests selector =
   (liftPred (fst tests), liftPred (snd tests))
 
 public export
+RefinedSExpTypes :
+  {atom : Type} ->
+  {m : Type -> Type} -> (Monad m, FTransitive m) =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  (m Type, m Type)
+RefinedSExpTypes selector =
+  let tests = RefinedSExpLiftedTests selector in
+  (map (DPair (SExp atom)) (fst tests), map (DPair (SList atom)) (snd tests))
+
+public export
+RefinedSExp :
+  {atom : Type} ->
+  {m : Type -> Type} -> (Monad m, FTransitive m) =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  m Type
+RefinedSExp selector = fst (RefinedSExpTypes selector)
+
+public export
+RefinedSList :
+  {atom : Type} ->
+  {m : Type -> Type} -> (Monad m, FTransitive m) =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  m Type
+RefinedSList selector = snd (RefinedSExpTypes selector)
+
+public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates
   SuccessPredicate : SExp atom -> Type
