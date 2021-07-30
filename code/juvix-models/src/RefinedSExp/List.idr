@@ -167,30 +167,29 @@ DecListExists {f} {ap} dec =
 
 public export
 record
-ListForAllFoldSig {f : Type -> Type} {atom : Type}
+ListForAllFoldSig {atom : Type}
   (ap : atom -> Type) where
     constructor ListForAllFoldArgs
     consElim :
       (a : atom) -> (l : List atom) ->
-      (recursiveResult : f (ListForAll ap l)) ->
-      f (ap a)
+      (recursiveResult : ListForAll ap l) ->
+      ap a
 
 public export
 ListForAllFoldSigToEliminatorSig :
-  {f : Type -> Type} -> Applicative f =>
   {atom : Type} -> {ap : atom -> Type} ->
-  ListForAllFoldSig {f} {atom} ap ->
-  ListEliminatorSig (f . (ListForAll ap))
-ListForAllFoldSigToEliminatorSig {f} {atom} {ap} signature =
-  ListEliminatorArgs {lp=(f . ListForAll ap)}
-    (pure {f} (|:|))
-    (\a, l, forAll => (map (:::) (consElim signature a l forAll)) <*> forAll)
+  ListForAllFoldSig {atom} ap ->
+  ListEliminatorSig (ListForAll ap)
+ListForAllFoldSigToEliminatorSig {atom} {ap} signature =
+  ListEliminatorArgs {lp=(ListForAll ap)}
+    (|:|)
+    (\a, l, forAll => consElim signature a l forAll ::: forAll)
 
 public export
-listForAllFold : {f : Type -> Type} -> Applicative f => {atom : Type} ->
+listForAllFold : {atom : Type} ->
   {ap : atom -> Type} ->
-  (signature : ListForAllFoldSig {f} ap) ->
-  List atom ~> f . (ListForAll ap)
+  (signature : ListForAllFoldSig ap) ->
+  List atom ~> ListForAll ap
 listForAllFold {atom} signature =
   listEliminator (ListForAllFoldSigToEliminatorSig signature)
 
