@@ -27,7 +27,8 @@ public export
 listParameterizedEliminator :
   {atom : Type} -> {lp : (!- (List atom)) -> (!- (List atom))} ->
   (signature : ((!- (List atom)) ~> (ListEliminatorSig . lp))) ->
-  (parameter : !- (List atom)) -> (List atom ~> lp parameter)
+  (parameter : !- (List atom)) ->
+  (List atom ~> lp parameter)
 listParameterizedEliminator {lp} signature parameter x =
   listEliminator
     {lp=(\l => ((parameter : (!- (List atom))) -> lp parameter l))}
@@ -72,20 +73,6 @@ data ListForAll :
             ap a -> ListForAll ap l ->
             ListForAll ap (a :: l)
 
-prefix 11 <::
-prefix 11 >::
-public export
-data ListExists :
-  {atom : Type} -> (ap : atom -> Type) -> List atom -> Type where
-    (<::) : {atom : Type} -> {ap : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            ap a ->
-            ListExists ap (a :: l)
-    (>::) : {atom : Type} -> {ap : atom -> Type} ->
-            {a : atom} -> {l : List atom} ->
-            ListExists ap l ->
-            ListExists ap (a :: l)
-
 public export
 ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {ap : atom -> Type} ->
@@ -129,6 +116,20 @@ DecListForAll {f} {ap} dec =
       (pure (Yes (|:|)))
       (\a, _, decList => [| ListForAllConsDec {ap} (dec a) decList |] ))
 
+prefix 11 <::
+prefix 11 >::
+public export
+data ListExists :
+  {atom : Type} -> (ap : atom -> Type) -> List atom -> Type where
+    (<::) : {atom : Type} -> {ap : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            ap a ->
+            ListExists ap (a :: l)
+    (>::) : {atom : Type} -> {ap : atom -> Type} ->
+            {a : atom} -> {l : List atom} ->
+            ListExists ap l ->
+            ListExists ap (a :: l)
+
 public export
 NoExistsNil : {atom : Type} -> {ap : atom -> Type} -> Not (ListExists ap [])
 NoExistsNil ((<::) _) impossible
@@ -160,7 +161,6 @@ DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   f (Dec (ListExists ap l))
 DecListExists {f} {ap} dec =
   listEliminator
-    {lp=(\l => f (Dec (ListExists ap l)))}
     (ListEliminatorArgs
       (pure (No NoExistsNil))
       (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
