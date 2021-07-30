@@ -74,6 +74,32 @@ data ListForAll :
             ListForAll ap (a :: l)
 
 public export
+ListForAllHead :
+  {atom : Type} -> {ap : atom -> Type} -> {a : atom} -> {l : List atom} ->
+  ListForAll ap (a :: l) -> ap a
+ListForAllHead (|:|) impossible
+ListForAllHead (apa ::: _) = apa
+
+public export
+ListForAllTail :
+  {atom : Type} -> {ap : atom -> Type} -> {a : atom} -> {l : List atom} ->
+  ListForAll ap (a :: l) -> ListForAll ap l
+ListForAllTail (|:|) impossible
+ListForAllTail (_ ::: apl) = apl
+
+public export
+ListForAllApplications : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {depType : atom -> Type} ->
+  (l : List atom) -> ListForAll (f . depType) l -> f (ListForAll depType l)
+ListForAllApplications {f} {depType} =
+  listEliminator
+    (ListEliminatorArgs
+      (\_ => pure (|:|))
+      (\a, l, mapForAll, forAll =>
+        map (:::) (ListForAllHead forAll) <*>
+          mapForAll (ListForAllTail forAll)))
+
+public export
 ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
   {ap : atom -> Type} ->
   (construct : (a : atom) -> f (ap a)) -> (l : List atom) ->
