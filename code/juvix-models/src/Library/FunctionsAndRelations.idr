@@ -765,3 +765,11 @@ applyPair fa fb = map MkPair fa <*> fb
 public export
 interface FTransitive f where
   liftPred : {a, b : Type} -> (a -> f b) -> f (a -> b)
+
+public export
+arrow : Type -> Type -> Type
+arrow a b = a -> b
+
+public export
+FTransitive (arrow a) where
+  liftPred = flip
