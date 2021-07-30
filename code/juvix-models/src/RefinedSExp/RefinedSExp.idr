@@ -10,8 +10,8 @@ public export
 record SExpFoldEitherSig {atom : Type} (m : Type -> Type)
   (sl, sr : SExp atom -> Type) where
     constructor SExpFoldEitherArgs
-    expElim : (a : atom) -> (l : SList atom) ->
-      SListForAll (m . sl) l -> m (DepEither sl sr (a $: l))
+    expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
+      m (DepEither sl sr (a $: l))
 
 public export
 sexpFoldEither :
@@ -28,10 +28,7 @@ sexpFoldEither {atom} {m} {sl} {sr} signature =
         mEither >>= (\either =>
           case either of
             Left allLeft =>
-              let pureAllLeft =
-                snd (SExpForAllMaps {f=m} (\_ => pure)) l allLeft
-              in
-              expElim signature a l pureAllLeft >>= (\exp =>
+              expElim signature a l allLeft >>= (\exp =>
                 pure (case exp of
                   Left expLeft => Left (expLeft :$: allLeft)
                   Right expRight => Right (SExpExistsCons ((<$:) expRight) [])))
