@@ -100,15 +100,15 @@ ListForAllApplications {f} {depType} =
           mapForAll (ListForAllTail forAll)))
 
 public export
-ListForAllConstruct : {f : Type -> Type} -> Applicative f => {atom : Type} ->
+ListForAllConstruct : {atom : Type} ->
   {ap : atom -> Type} ->
-  (construct : (a : atom) -> f (ap a)) -> (l : List atom) ->
-  f (ListForAll ap l)
-ListForAllConstruct {f} {ap} construct =
-  listEliminator {lp=(f . ListForAll ap)}
+  (construct : (a : atom) -> ap a) -> (l : List atom) ->
+  ListForAll ap l
+ListForAllConstruct {ap} construct =
+  listEliminator {lp=(ListForAll ap)}
     (ListEliminatorArgs
-      (pure (|:|))
-      (\a, _, lpl => [| construct a ::: lpl |]))
+      (|:|)
+      (\a, _, lpl => construct a ::: lpl))
 
 infixr 7 :::
 public export
