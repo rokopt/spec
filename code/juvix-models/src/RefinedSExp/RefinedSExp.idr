@@ -23,18 +23,16 @@ sexpFoldEither :
    (l : SList atom) -> m (SListEitherForAll sl sr l))
 sexpFoldEither {atom} {m} {sl} {sr} signature =
   sexpEliminators
-    {sp=(\x => m (Either (SExpForAll sl x) (SExpExistsList sr x)))}
-    {lp=(\l => m (Either (SListForAll sl l) (SListExistsList sr l)))}
     (SExpEliminatorArgs
-      (\a, l, mEither => do
-        either <- mEither
-        case either of
-          Left allLeft => do
-            exp <- expElim signature a l allLeft
-            pure (case exp of
-              Left expLeft => Left (expLeft :$: allLeft)
-              Right expRight => Right (SExpExistsCons ((<$:) expRight) []))
-          Right existsRight => pure (Right (slistExistsExp existsRight)))
+      (\a, l, mEither =>
+        mEither >>= (\either =>
+          case either of
+            Left allLeft =>
+              expElim signature a l allLeft >>= (\exp =>
+                pure (case exp of
+                  Left expLeft => Left (expLeft :$: allLeft)
+                  Right expRight => Right (SExpExistsCons ((<$:) expRight) [])))
+            Right existsRight => pure (Right (slistExistsExp existsRight))))
       (pure (Left (|:|)))
       (\_, _ => SExpEitherForAllCons))
 
