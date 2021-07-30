@@ -360,15 +360,23 @@ elegantPairingInverse z =
   in
   if w < sqrtz then (w, sqrtz) else (sqrtz, minus w sqrtz)
 
+public export
 DepEither : {a : Type} -> (b, c : a -> Type) -> a -> Type
 DepEither {a} b c = \x : a => Either (b x) (c x)
 
+public export
+PiEither : {a : Type} -> (b, c : a -> Type) -> Type
+PiEither {a} b c = a ~> DepEither b c
+
+public export
 DepLeft : {a : Type} -> {b, c : a -> Type} -> {x : a} -> b x -> DepEither b c x
 DepLeft bx = Left bx
 
+public export
 DepRight : {a : Type} -> {b, c : a -> Type} -> {x : a} -> c x -> DepEither b c x
 DepRight cx = Right cx
 
+public export
 DPairEither : {a : Type} -> (b, c : a -> Type) -> Type
 DPairEither {a} b c = Either (DPair a b) (DPair a c)
 

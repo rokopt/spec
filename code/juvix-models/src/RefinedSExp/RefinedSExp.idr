@@ -7,6 +7,41 @@ import public Library.Decidability
 %default total
 
 public export
+record SExpFoldEitherSig {atom : Type} (sl, sr : SExp atom -> Type) where
+  constructor SExpFoldEitherArgs
+  expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
+    DepEither sl sr (a $: l)
+
+public export
+sexpFoldEither :
+  {atom : Type} ->
+  {sl, sr : SExp atom -> Type} ->
+  (signature : SExpFoldEitherSig sl sr) ->
+  ((x : SExp atom) -> Either (SExpForAll sl x) (SExpExistsList sr x),
+   (l : SList atom) -> Either (SListForAll sl l) (SListExistsList sr l))
+sexpFoldEither {atom} {sl} {sr} signature =
+  sexpEliminators
+    (SExpEliminatorArgs
+      (\a, l, either =>
+        case either of
+          Left allLeft =>
+            case expElim signature a l allLeft of
+              Left expLeft => Left (expLeft :$: allLeft)
+              Right expRight => Right (SExpExistsCons ((<$:) expRight) [])
+          Right existsRight => Right (slistExistsExp existsRight))
+      (Left (|:|))
+      (\x, l, sEither, lEither =>
+        case (sEither, lEither) of
+          (Left sForAll, Left lForAll) =>
+            Left (sForAll ::: lForAll)
+          (Left sForAll, Right lExists) =>
+            Right (slistExistsShift lExists)
+          (Right sExists, Left lForAll) =>
+            Right (sexpExistsList sExists)
+          (Right sExists, Right lExists) =>
+            Right (slistExistsMerge sExists lExists)))
+
+public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates
   SuccessPredicate : SExp atom -> Type

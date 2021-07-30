@@ -469,6 +469,11 @@ data SExpExists :
             SExpExists depType (a $: l)
 
 public export
+SListExists : {atom : Type} ->
+  (depType : SExp atom -> Type) -> SList atom -> Type
+SListExists = ListExists . SExpExists
+
+public export
 record SExpExistsList
   {atom : Type} (depType : SExp atom -> Type) (x : SExp atom) where
     constructor SExpExistsCons
@@ -476,9 +481,79 @@ record SExpExistsList
     SExpExistsTail : List (SExpExists depType x)
 
 public export
-SListExists : {atom : Type} ->
-  (depType : SExp atom -> Type) -> SList atom -> Type
-SListExists = ListExists . SExpExists
+sexpExistsListCons : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {x : SExp atom} ->
+  SExpExists depType x -> SExpExistsList depType x ->
+  SExpExistsList depType x
+sexpExistsListCons newHead (SExpExistsCons oldHead tail) =
+  SExpExistsCons newHead (oldHead :: tail)
+
+public export
+record SListExistsList
+  {atom : Type} (depType : SExp atom -> Type) (l : SList atom) where
+    constructor SListExistsCons
+    SExpExistsHead : SListExists depType l
+    SExpExistsTail : List (SListExists depType l)
+
+public export
+slistExistsListCons : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {l : SList atom} ->
+  SListExists depType l -> SListExistsList depType l ->
+  SListExistsList depType l
+slistExistsListCons newHead (SListExistsCons oldHead tail) =
+  SListExistsCons newHead (oldHead :: tail)
+
+public export
+slistExistsListAppendList : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {l : SList atom} ->
+  List (SListExists depType l) ->
+  SListExistsList depType l ->
+  SListExistsList depType l
+slistExistsListAppendList [] exists = exists
+slistExistsListAppendList (lx :: llx) exists =
+  slistExistsListCons lx (slistExistsListAppendList llx exists)
+
+public export
+slistExistsListAppend : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {l : SList atom} ->
+  SListExistsList depType l -> SListExistsList depType l ->
+  SListExistsList depType l
+slistExistsListAppend (SListExistsCons leftHead leftTail) right =
+  slistExistsListAppendList (leftHead :: leftTail) right
+
+public export
+slistExistsExp : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {l : SList atom} -> {a : atom} ->
+  SListExistsList depType l ->
+  SExpExistsList depType (a $: l)
+slistExistsExp (SListExistsCons head tail) =
+  SExpExistsCons ((>$:) head) (map (>$:) tail)
+
+public export
+sexpExistsList : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {x : SExp atom} ->
+  {l : SList atom} ->
+  SExpExistsList depType x ->
+  SListExistsList depType (x $+ l)
+sexpExistsList (SExpExistsCons head tail) =
+  SListExistsCons ((<::) head) (map (<::) tail)
+
+public export
+slistExistsShift : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {l : SList atom} -> {x : SExp atom} ->
+  SListExistsList depType l ->
+  SListExistsList depType (x $+ l)
+slistExistsShift (SListExistsCons head tail) =
+  SListExistsCons ((>::) head) (map (>::) tail)
+
+public export
+slistExistsMerge : {atom : Type} -> {depType : SExp atom -> Type} ->
+  {x : SExp atom} -> {l : SList atom} ->
+  SExpExistsList depType x ->
+  SListExistsList depType l ->
+  SListExistsList depType (x $+ l)
+slistExistsMerge {x} {l} expList listList =
+  slistExistsListAppend (sexpExistsList expList) (slistExistsShift listList)
 
 public export
 SExpForAllApplications : {f : Type -> Type} -> Applicative f =>
