@@ -7,21 +7,21 @@ import public Library.Decidability
 %default total
 
 public export
-record SExpFoldEitherSig {atom : Type} (m : Type -> Type)
+record SExpEitherFoldSig {atom : Type} (m : Type -> Type)
   (sl, sr : SExp atom -> Type) where
-    constructor SExpFoldEitherArgs
+    constructor SExpEitherFoldArgs
     expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
       m (DepEither sl sr (a $: l))
 
 public export
-sexpFoldEither :
+sexpEitherFolds :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
-  (signature : SExpFoldEitherSig m sl sr) ->
+  (signature : SExpEitherFoldSig m sl sr) ->
   ((x : SExp atom) -> m (SExpEitherForAll sl sr x),
    (l : SList atom) -> m (SListEitherForAll sl sr l))
-sexpFoldEither {atom} {m} {sl} {sr} signature =
+sexpEitherFolds {atom} {m} {sl} {sr} signature =
   sexpEliminators
     (SExpEliminatorArgs
       (\a, l, mEither =>

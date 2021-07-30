@@ -29,14 +29,11 @@ listParameterizedEliminator :
   (signature : ((!- (List atom)) ~> (ListEliminatorSig . lp))) ->
   (parameter : !- (List atom)) ->
   (List atom ~> lp parameter)
-listParameterizedEliminator {lp} signature parameter x =
+listParameterizedEliminator {lp} signature parameter =
   listEliminator
-    {lp=(\l => ((parameter : (!- (List atom))) -> lp parameter l))}
     (ListEliminatorArgs
-      (\parameter => (nilElim (signature parameter)))
-      (\a, l, parameterizedPred, parameter =>
-        consElim (signature parameter) a l (parameterizedPred parameter))
-    ) x parameter
+      (nilElim (signature parameter))
+      (consElim (signature parameter)))
 
 public export
 ListDepFoldSig : (f : Type -> Type) -> {atom : Type} -> {contextType : Type} ->
