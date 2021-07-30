@@ -7,39 +7,48 @@ import public Library.Decidability
 %default total
 
 public export
-record SExpFoldEitherSig {atom : Type} (sl, sr : SExp atom -> Type) where
-  constructor SExpFoldEitherArgs
-  expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
-    DepEither sl sr (a $: l)
+record SExpFoldEitherSig {atom : Type} (m : Type -> Type)
+  (sl, sr : SExp atom -> Type) where
+    constructor SExpFoldEitherArgs
+    expElim : (a : atom) -> (l : SList atom) -> m (SListForAll sl l) ->
+      m (DepEither sl sr (a $: l))
 
 public export
 sexpFoldEither :
   {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
-  (signature : SExpFoldEitherSig sl sr) ->
-  ((x : SExp atom) -> Either (SExpForAll sl x) (SExpExistsList sr x),
-   (l : SList atom) -> Either (SListForAll sl l) (SListExistsList sr l))
-sexpFoldEither {atom} {sl} {sr} signature =
+  (signature : SExpFoldEitherSig m sl sr) ->
+  ((x : SExp atom) -> m (Either (SExpForAll sl x) (SExpExistsList sr x)),
+   (l : SList atom) -> m (Either (SListForAll sl l) (SListExistsList sr l)))
+sexpFoldEither {atom} {m} {sl} {sr} signature =
   sexpEliminators
+    {sp=(\x => m (Either (SExpForAll sl x) (SExpExistsList sr x)))}
+    {lp=(\l => m (Either (SListForAll sl l) (SListExistsList sr l)))}
     (SExpEliminatorArgs
-      (\a, l, either =>
+      (\a, l, mEither => do
+        either <- mEither
         case either of
-          Left allLeft =>
-            case expElim signature a l allLeft of
-              Left expLeft => Left (expLeft :$: allLeft)
-              Right expRight => Right (SExpExistsCons ((<$:) expRight) [])
-          Right existsRight => Right (slistExistsExp existsRight))
-      (Left (|:|))
-      (\x, l, sEither, lEither =>
+          Left allLeft => do
+            exp <- expElim signature a l (pure allLeft)
+            case exp of
+              Left expLeft => pure (Left (expLeft :$: allLeft))
+              Right expRight =>
+                pure (Right (SExpExistsCons ((<$:) expRight) []))
+          Right existsRight => pure (Right (slistExistsExp existsRight)))
+      (pure (Left (|:|)))
+      (\x, l, msEither, mlEither => do
+        sEither <- msEither
+        lEither <- mlEither
         case (sEither, lEither) of
           (Left sForAll, Left lForAll) =>
-            Left (sForAll ::: lForAll)
+            pure (Left (sForAll ::: lForAll))
           (Left sForAll, Right lExists) =>
-            Right (slistExistsShift lExists)
+            pure (Right (slistExistsShift lExists))
           (Right sExists, Left lForAll) =>
-            Right (sexpExistsList sExists)
+            pure (Right (sexpExistsList sExists))
           (Right sExists, Right lExists) =>
-            Right (slistExistsMerge sExists lExists)))
+            pure (Right (slistExistsMerge sExists lExists))))
 
 public export
 record DecidablePredicate (atom : Type) where
