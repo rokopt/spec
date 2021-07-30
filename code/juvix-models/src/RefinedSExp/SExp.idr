@@ -153,7 +153,7 @@ sexpFunctorialEliminators :
   {lp : !- (SList atom)} ->
   (signature : SExpEliminatorSig (f . sp) (f . lp)) ->
   ((x : SExp atom) -> f (sp x), (l : SList atom) -> f (lp l))
-sexpFunctorialEliminators signature = sexpEliminators signature
+sexpFunctorialEliminators = sexpEliminators
 
 public export
 sexpTypeConstructors : {atom : Type} ->
@@ -422,6 +422,41 @@ data SExpForAll :
             SExpForAll depType (a $: l)
 
 public export
+SListForAll : {atom : Type} ->
+  (depType : SExp atom -> Type) -> SList atom -> Type
+SListForAll = ListForAll . SExpForAll
+
+public export
+SExpForAllExp :
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  {a : atom} -> {l : SList atom} ->
+  SExpForAll depType (a $: l) -> depType (a $: l)
+SExpForAllExp (sp :$: _) = sp
+
+public export
+SExpForAllList :
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  {a : atom} -> {l : SList atom} ->
+  SExpForAll depType (a $: l) -> SListForAll depType l
+SExpForAllList (_ :$: lp) = lp
+
+public export
+SListForAllHead :
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  {x : SExp atom} -> {l : SList atom} ->
+  SListForAll depType (x $+ l) -> SExpForAll depType x
+SListForAllHead (|:|) impossible
+SListForAllHead (sp ::: _) = sp
+
+public export
+SListForAllTail :
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  {x : SExp atom} -> {l : SList atom} ->
+  SListForAll depType (x $+ l) -> SListForAll depType l
+SListForAllTail (|:|) impossible
+SListForAllTail (_ ::: lp) = lp
+
+public export
 data SExpExists :
   {atom : Type} -> (depType : SExp atom -> Type) -> SExp atom -> Type where
     (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
@@ -441,40 +476,72 @@ record SExpExistsList
     SExpExistsTail : List (SExpExists depType x)
 
 public export
-SListForAll : {atom : Type} ->
-  (depType : SExp atom -> Type) -> SList atom -> Type
-SListForAll = ListForAll . SExpForAll
-
-public export
 SListExists : {atom : Type} ->
   (depType : SExp atom -> Type) -> SList atom -> Type
 SListExists = ListExists . SExpExists
 
 public export
-record
-SExpForAllFoldSig {f : Type -> Type} {atom : Type}
-  (sp : SExp atom -> Type) where
-    constructor SExpForAllFoldArgs
-    expElim :
-      (a : atom) -> (l : SList atom) ->
-      f (SListForAll sp l) -> f (sp (a $: l))
+SExpForAllApplications : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  ((x : SExp atom) -> SExpForAll (f . depType) x -> f (SExpForAll depType x),
+   (l : SList atom) -> SListForAll (f . depType) l -> f (SListForAll depType l))
+SExpForAllApplications {f} {depType} =
+  sexpEliminators
+    {sp=(\x => (SExpForAll (f . depType) x) -> f (SExpForAll depType x))}
+    {lp=(\l => (SListForAll (f . depType) l) -> f (SListForAll depType l))}
+    (SExpEliminatorArgs
+      (\a, l, mapLForAll, sForAll =>
+        (map (:$:) (SExpForAllExp sForAll)) <*>
+        (mapLForAll (SExpForAllList sForAll)))
+      (\_ => pure (|:|))
+      (\x, l, mapSForAll, mapLForAll, slForAll =>
+        (map (:::) (mapSForAll (SListForAllHead slForAll))) <*>
+        (mapLForAll (SListForAllTail slForAll))))
 
 public export
-sexpForAllFolds : {f : Type -> Type} ->
+SExpForAllApply : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  (x : SExp atom) -> SExpForAll (f . depType) x -> f (SExpForAll depType x)
+SExpForAllApply {f} {depType} = fst (SExpForAllApplications {f} {depType})
+
+public export
+SListForAllApply : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  (l : SList atom) -> SListForAll (f . depType) l -> f (SListForAll depType l)
+SListForAllApply {f} {depType} = snd (SExpForAllApplications {f} {depType})
+
+public export
+record
+SExpForAllFoldSig {atom : Type} (sp : SExp atom -> Type) where
+  constructor SExpForAllFoldArgs
+  expElim :
+    (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $: l)
+
+public export
+sexpForAllFolds :
+  {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  (signature : SExpForAllFoldSig sp) ->
+  ((x : SExp atom) -> SExpForAll sp x, (l : SList atom) -> SListForAll sp l)
+sexpForAllFolds {atom} {sp} signature =
+  sexpEliminators
+    (SExpEliminatorArgs
+      (\a, l, slForAll => expElim signature a l slForAll :$: slForAll)
+      (|:|)
+      (\x, l, head, tail => head ::: tail))
+
+public export
+sexpApplicativeForAllFolds : {f : Type -> Type} ->
   Applicative f =>
   {atom : Type} ->
   {sp : SExp atom -> Type} ->
-  (signature : SExpForAllFoldSig {f} sp) ->
+  (signature : SExpForAllFoldSig (f . sp)) ->
   ((x : SExp atom) -> f (SExpForAll sp x),
    (l : SList atom) -> f (SListForAll sp l))
-sexpForAllFolds {f} {atom} {sp} signature =
-  sexpEliminators
-    {sp=(f . SExpForAll sp)} {lp=(f . SListForAll sp)}
-    (SExpEliminatorArgs
-      (\a, l, slForAll =>
-        map (:$:) (expElim {f} signature a l slForAll) <*> slForAll)
-      (pure (|:|))
-      (\x, l, head, tail => (map (:::) head) <*> tail))
+sexpApplicativeForAllFolds {f} {atom} {sp} signature =
+  let forAllFolds = sexpForAllFolds {sp=(f . sp)} signature in
+  (\x => SExpForAllApply x (fst forAllFolds x),
+   \l => SListForAllApply l (snd forAllFolds l))
 
 SExpMetaPred : (f : Type -> Type) ->
   (metaContextType : Type) -> {atom : Type} -> {contextType : Type} ->
