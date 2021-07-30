@@ -10,7 +10,7 @@ public export
 record SExpFoldEitherSig {atom : Type} (m : Type -> Type)
   (sl, sr : SExp atom -> Type) where
     constructor SExpFoldEitherArgs
-    expElim : (a : atom) -> (l : SList atom) -> m (SListForAll sl l) ->
+    expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
       m (DepEither sl sr (a $: l))
 
 public export
@@ -19,8 +19,8 @@ sexpFoldEither :
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (signature : SExpFoldEitherSig m sl sr) ->
-  ((x : SExp atom) -> m (Either (SExpForAll sl x) (SExpExistsList sr x)),
-   (l : SList atom) -> m (Either (SListForAll sl l) (SListExistsList sr l)))
+  ((x : SExp atom) -> m (SExpEitherForAll sl sr x),
+   (l : SList atom) -> m (SListEitherForAll sl sr l))
 sexpFoldEither {atom} {m} {sl} {sr} signature =
   sexpEliminators
     {sp=(\x => m (Either (SExpForAll sl x) (SExpExistsList sr x)))}
@@ -30,25 +30,13 @@ sexpFoldEither {atom} {m} {sl} {sr} signature =
         either <- mEither
         case either of
           Left allLeft => do
-            exp <- expElim signature a l (pure allLeft)
-            case exp of
-              Left expLeft => pure (Left (expLeft :$: allLeft))
-              Right expRight =>
-                pure (Right (SExpExistsCons ((<$:) expRight) []))
+            exp <- expElim signature a l allLeft
+            pure (case exp of
+              Left expLeft => Left (expLeft :$: allLeft)
+              Right expRight => Right (SExpExistsCons ((<$:) expRight) []))
           Right existsRight => pure (Right (slistExistsExp existsRight)))
       (pure (Left (|:|)))
-      (\x, l, msEither, mlEither => do
-        sEither <- msEither
-        lEither <- mlEither
-        case (sEither, lEither) of
-          (Left sForAll, Left lForAll) =>
-            pure (Left (sForAll ::: lForAll))
-          (Left sForAll, Right lExists) =>
-            pure (Right (slistExistsShift lExists))
-          (Right sExists, Left lForAll) =>
-            pure (Right (sexpExistsList sExists))
-          (Right sExists, Right lExists) =>
-            pure (Right (slistExistsMerge sExists lExists))))
+      (\_, _ => SExpEitherForAllCons))
 
 public export
 record DecidablePredicate (atom : Type) where

@@ -756,3 +756,8 @@ depComposeAssociative :
   (:.~) {a} {b} {c=(d .** g)}
     ((:.~) {a=(a *~ b)} {b=c} {c=d} h g) f
 depComposeAssociative h g f = Refl
+
+public export
+applyPair :
+  {f : Type -> Type} -> Applicative f => {a, b : Type} -> f a -> f b -> f (a, b)
+applyPair fa fb = map MkPair fa <*> fb

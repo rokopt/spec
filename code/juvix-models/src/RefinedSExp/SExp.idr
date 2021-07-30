@@ -556,6 +556,31 @@ slistExistsMerge {x} {l} expList listList =
   slistExistsListAppend (sexpExistsList expList) (slistExistsShift listList)
 
 public export
+SExpEitherForAll :
+  {atom : Type} -> (sl, sr : SExp atom -> Type) -> SExp atom -> Type
+SExpEitherForAll sl sr x = Either (SExpForAll sl x) (SExpExistsList sr x)
+
+public export
+SListEitherForAll :
+  {atom : Type} -> (sl, sr : SExp atom -> Type) -> SList atom -> Type
+SListEitherForAll sl sr l = Either (SListForAll sl l) (SListExistsList sr l)
+
+public export
+SExpEitherForAllCons : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {sl, sr : SExp atom -> Type} ->
+  {x : SExp atom} -> {l : SList atom} ->
+  f (SExpEitherForAll sl sr x) ->
+  f (SListEitherForAll sl sr l) ->
+  f (SListEitherForAll sl sr (x $+ l))
+SExpEitherForAllCons {f} fs fl =
+  map (\eithers => case eithers of
+    (Left sForAll, Left lForAll) => Left (sForAll ::: lForAll)
+    (Left sForAll, Right lExists) => Right (slistExistsShift lExists)
+    (Right sExists, Left lForAll) => Right (sexpExistsList sExists)
+    (Right sExists, Right lExists) => Right (slistExistsMerge sExists lExists))
+  (applyPair fs fl)
+
+public export
 SExpForAllApplications : {f : Type -> Type} -> Applicative f =>
   {atom : Type} -> {depType : SExp atom -> Type} ->
   ((x : SExp atom) -> SExpForAll (f . depType) x -> f (SExpForAll depType x),
