@@ -25,15 +25,15 @@ listEliminator signature (a :: l) =
 
 public export
 listParameterizedEliminator :
-  {atom : Type} -> {lp : (!- (List atom)) -> (!- (List atom))} ->
-  (signature : ((!- (List atom)) ~> (ListEliminatorSig . lp))) ->
-  (parameter : !- (List atom)) ->
-  (List atom ~> lp parameter)
-listParameterizedEliminator {lp} signature parameter =
+  {atom : Type} -> {lp : (List (!- (List atom))) -> (!- (List atom))} ->
+  (signature : ((List (!- (List atom))) ~> (ListEliminatorSig . lp))) ->
+  (params: List (!- (List atom))) ->
+  (List atom ~> lp params)
+listParameterizedEliminator {lp} signature params =
   listEliminator
     (ListEliminatorArgs
-      (nilElim (signature parameter))
-      (consElim (signature parameter)))
+      (nilElim (signature params))
+      (consElim (signature params)))
 
 public export
 ListDepFoldSig : (f : Type -> Type) -> {atom : Type} -> {contextType : Type} ->
