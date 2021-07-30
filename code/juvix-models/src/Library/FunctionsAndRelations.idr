@@ -761,3 +761,7 @@ public export
 applyPair :
   {f : Type -> Type} -> Applicative f => {a, b : Type} -> f a -> f b -> f (a, b)
 applyPair fa fb = map MkPair fa <*> fb
+
+public export
+interface FTransitive f where
+  liftPred : {a, b : Type} -> (a -> f b) -> f (a -> b)

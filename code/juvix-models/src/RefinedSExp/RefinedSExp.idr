@@ -38,33 +38,44 @@ sexpEitherFolds {atom} {m} {sl} {sr} signature =
       (\_, _ => SExpEitherForAllCons))
 
 public export
-RefinedSExps :
+RefinedSExpTests :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (SExp atom -> m Type, SList atom -> m Type)
-RefinedSExps selector =
+RefinedSExpTests selector =
   let folds = sexpEitherFolds selector in
   (\x => map IsLeft (fst folds x), \l => map IsLeft (snd folds l))
 
 public export
-RefinedSExp :
+RefinedSExpTest :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   SExp atom -> m Type
-RefinedSExp = fst . RefinedSExps
+RefinedSExpTest = fst . RefinedSExpTests
 
 public export
-RefinedSList :
+RefinedSListTest :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   SList atom -> m Type
-RefinedSList = snd . RefinedSExps
+RefinedSListTest = snd . RefinedSExpTests
+
+public export
+RefinedSExpLiftedTests :
+  {atom : Type} ->
+  {m : Type -> Type} -> (Monad m, FTransitive m) =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  (m (SExp atom -> Type), m (SList atom -> Type))
+RefinedSExpLiftedTests selector =
+  let tests = RefinedSExpTests selector in
+  (liftPred (fst tests), liftPred (snd tests))
 
 public export
 record DecidablePredicate (atom : Type) where
