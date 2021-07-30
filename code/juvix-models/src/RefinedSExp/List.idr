@@ -131,16 +131,16 @@ ListForAllConsDec decHead decTail =
           (_ ::: yesTail) => noTail yesTail)
 
 public export
-DecListForAll : {atom : Type} -> {f : Type -> Type} -> Applicative f =>
+DecListForAll : {atom : Type} ->
   {ap : atom -> Type} ->
-  (dec : (a : atom) -> f (Dec (ap a))) -> (l : List atom) ->
-  f (Dec (ListForAll ap l))
-DecListForAll {f} {ap} dec =
+  (dec : (a : atom) -> Dec (ap a)) -> (l : List atom) ->
+  Dec (ListForAll ap l)
+DecListForAll {ap} dec =
   listEliminator
-    {lp=(\l => f (Dec (ListForAll ap l)))}
+    {lp=(\l => Dec (ListForAll ap l))}
     (ListEliminatorArgs
-      (pure (Yes (|:|)))
-      (\a, _, decList => [| ListForAllConsDec {ap} (dec a) decList |] ))
+      (Yes (|:|))
+      (\a, _, decList => ListForAllConsDec {ap} (dec a) decList))
 
 prefix 11 <::
 prefix 11 >::
@@ -181,15 +181,15 @@ ListExistsEitherDec decHead decTail =
     (No noA, No noList) => No (NoExistsNeither noA noList)
 
 public export
-DecListExists : {f : Type -> Type} -> Applicative f => {atom : Type} ->
+DecListExists : {atom : Type} ->
   {ap : atom -> Type} ->
-  (dec : (a : atom) -> f (Dec (ap a))) -> (l : List atom) ->
-  f (Dec (ListExists ap l))
-DecListExists {f} {ap} dec =
+  (dec : (a : atom) -> Dec (ap a)) -> (l : List atom) ->
+  Dec (ListExists ap l)
+DecListExists {ap} dec =
   listEliminator
     (ListEliminatorArgs
-      (pure (No NoExistsNil))
-      (\a, _, decList => [| ListExistsEitherDec (dec a) decList |] ))
+      (No NoExistsNil)
+      (\a, _, decList => ListExistsEitherDec (dec a) decList))
 
 public export
 record
