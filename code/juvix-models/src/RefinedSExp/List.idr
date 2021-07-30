@@ -220,87 +220,28 @@ listForAllFold {atom} signature =
   listEliminator (ListForAllFoldSigToEliminatorSig signature)
 
 public export
-record ListMetaFoldSig {f : Type -> Type}
-  {atom : Type} {contextType : Type}
-  {lp : (context : contextType) -> List atom -> Type}
-  (signature : ListDepFoldSig f lp)
-  {metaContextType : Type}
-  (ldp :
-    (metaContext : metaContextType) ->
-    (context : contextType) ->
-    (l : List atom) ->
-    (f (contextType, lp context l)) ->
-    Type)
+record ListMetaEliminatorSig
+  {atom : Type}
+  {lp : !- (List atom)}
+  (signature : ListEliminatorSig lp)
+  (lpp : (l : List atom) -> lp l -> Type)
   where
-    constructor ListMetaFoldArgs
-    metaNilElim :
-      (metaContext : metaContextType) ->
-      (metaContextType,
-       (context : contextType) ->
-       ldp metaContext context [] (nilElim signature context))
+    constructor ListMetaEliminatorArgs
+    metaNilElim : lpp [] (nilElim signature)
     metaConsElim :
       (a : atom) -> (l : List atom) ->
-      (recursiveCall :
-        (calledMetaContext : metaContextType) ->
-        (metaContextType,
-         (calledContext : contextType) ->
-          ldp calledMetaContext calledContext l
-            (listDepFoldFlip {f} {lp} signature l calledContext))) ->
-      (metaContextUponEntry : metaContextType) ->
-      (metaContextType,
-       (contextUponEntry : contextType) ->
-        ldp metaContextUponEntry contextUponEntry (a :: l)
-        (consElim signature a l
-          (listDepFoldFlip {f} {lp} signature l) contextUponEntry))
+      (lppl : lpp l (listEliminator signature l)) ->
+      lpp (a :: l) (consElim signature a l (listEliminator signature l))
 
 public export
-listMetaFoldArgs : {f : Type -> Type} ->
-  {atom : Type} -> {contextType : Type} ->
-  {lp :
-    (context : contextType) ->
-    List atom ->
-    Type} ->
-  {signature : ListDepFoldSig f lp} ->
-  {metaContextType : Type} ->
-  {ldp :
-    (metaContext : metaContextType) ->
-    (context : contextType) ->
-    (l : List atom) ->
-    f (contextType, lp context l) ->
-    Type} ->
-  (metaSig : ListMetaFoldSig {f} {lp} signature ldp) ->
-  ListDepFoldSig Prelude.Basics.id {contextType=metaContextType}
-    (\metaContext, l =>
-      (context : contextType) ->
-        ldp metaContext context l
-          (listDepFold {f} {lp} signature context l))
-listMetaFoldArgs {f} metaSig =
-  (ListEliminatorArgs (metaNilElim metaSig) (metaConsElim metaSig))
-
-public export
-listMetaFold : {f : Type -> Type} ->
-  {atom : Type} -> {contextType : Type} ->
-  {lp :
-    (context : contextType) ->
-    List atom ->
-    Type} ->
-  {signature : ListDepFoldSig f lp} ->
-  {metaContextType : Type} ->
-  {ldp :
-    (metaContext : metaContextType) ->
-    (contextUponEntry : contextType) ->
-    (l : List atom) ->
-    f (contextType, lp contextUponEntry l) ->
-    Type} ->
-  (metaSig : ListMetaFoldSig {f} signature ldp) ->
-  (metaContext : metaContextType) ->
-  (l : List atom) ->
-  (metaContextType,
-    (context : contextType) ->
-     ldp metaContext context l (listDepFold {f} {lp} signature context l))
-listMetaFold {f} {contextType} {signature} {metaContextType} {ldp} metaSig =
-  listDepFold {f=Prelude.Basics.id} {contextType=metaContextType}
-    {lp=(\metaContext, l =>
-      (context : contextType) ->
-      ldp metaContext context l (listDepFold {f} {lp} signature context l))}
-    (listMetaFoldArgs {f} metaSig)
+listMetaEliminator :
+  {atom : Type} ->
+  {lp : !- (List atom)} ->
+  {signature : ListEliminatorSig lp} ->
+  {lpp : (l : List atom) -> lp l -> Type} ->
+  (metaSig : ListMetaEliminatorSig signature lpp) ->
+  (l : List atom) -> lpp l (listEliminator signature l)
+listMetaEliminator metaSig =
+  listEliminator
+    (ListEliminatorArgs
+      (metaNilElim metaSig) (metaConsElim metaSig))
