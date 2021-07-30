@@ -37,6 +37,35 @@ sexpEitherFolds {atom} {m} {sl} {sr} signature =
       (\_, _ => SExpEitherForAllCons))
 
 public export
+RefinedSExps :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  (SExp atom -> m Type, SList atom -> m Type)
+RefinedSExps selector =
+  let folds = sexpEitherFolds selector in
+  (\x => map IsLeft (fst folds x), \l => map IsLeft (snd folds l))
+
+public export
+RefinedSExp :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  SExp atom -> m Type
+RefinedSExp = fst . RefinedSExps
+
+public export
+RefinedSList :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  (selector : SExpEitherFoldSig m sl sr) ->
+  SList atom -> m Type
+RefinedSList = snd . RefinedSExps
+
+public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates
   SuccessPredicate : SExp atom -> Type

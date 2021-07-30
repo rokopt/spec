@@ -389,3 +389,7 @@ infixr 4 **>
 (**>) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> c x ->
   DPairEither b c
 x **> cx = Right (x ** cx)
+
+public export
+data IsLeft : {a, b : Type} -> Either a b -> Type where
+  ItIsLeft : {a, b : Type} -> {x : a} -> IsLeft (Left x)
