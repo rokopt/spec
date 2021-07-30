@@ -611,6 +611,24 @@ SListForAllApply : {f : Type -> Type} -> Applicative f =>
 SListForAllApply {f} {depType} = snd (SExpForAllApplications {f} {depType})
 
 public export
+SExpForAllMaps : {f : Type -> Type} ->
+  {atom : Type} -> {depType : SExp atom -> Type} ->
+  (fmap : (x : SExp atom) -> depType x -> f (depType x)) ->
+  ((x : SExp atom) -> SExpForAll depType x -> SExpForAll (f . depType) x,
+   (l : SList atom) -> SListForAll depType l -> SListForAll (f . depType) l)
+SExpForAllMaps {f} {depType} fmap =
+  sexpEliminators
+    (SExpEliminatorArgs
+      (\a, l, forAllMap, sForAll =>
+        fmap (a $: l) (SExpForAllExp sForAll) :$:
+          forAllMap (SExpForAllList sForAll))
+      (\_ =>
+        (|:|))
+      (\x, l, sForAllMap, lForAllMap, lForAll =>
+        sForAllMap (SListForAllHead lForAll) :::
+          lForAllMap (SListForAllTail lForAll)))
+
+public export
 record
 SExpForAllFoldSig {atom : Type} (sp : SExp atom -> Type) where
   constructor SExpForAllFoldArgs
