@@ -28,8 +28,8 @@ sexpEitherFolds {atom} {m} {sl} {sr} signature =
         mEither >>= (\either =>
           case either of
             Left allLeft =>
-              map (\exp =>
-                case exp of
+              map
+                (\exp => case exp of
                   Left expLeft => Left (expLeft :$: allLeft)
                   Right expRight => Right (SExpExistsCons ((<$:) expRight) []))
                 (expElim signature a l allLeft)
