@@ -38,44 +38,64 @@ sexpEitherFolds {atom} {m} {sl} {sr} signature =
       (\_, _ => SExpEitherForAllCons))
 
 public export
-RefinedSExpTests :
+sexpEitherFold :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  (signature : SExpEitherFoldSig m sl sr) ->
+  (x : SExp atom) -> m (SExpEitherForAll sl sr x)
+sexpEitherFold {atom} {m} {sl} {sr} signature =
+  fst (sexpEitherFolds signature)
+
+public export
+slistEitherFold :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  (signature : SExpEitherFoldSig m sl sr) ->
+  (l : SList atom) -> m (SListEitherForAll sl sr l)
+slistEitherFold {atom} {m} {sl} {sr} signature =
+  snd (sexpEitherFolds signature)
+
+public export
+SExpRefinements :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (SExp atom -> m Type, SList atom -> m Type)
-RefinedSExpTests selector =
+SExpRefinements selector =
   let folds = sexpEitherFolds selector in
   (\x => map IsLeft (fst folds x), \l => map IsLeft (snd folds l))
 
 public export
-RefinedSExpTest :
+SExpRefinement :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   SExp atom -> m Type
-RefinedSExpTest = fst . RefinedSExpTests
+SExpRefinement = fst . SExpRefinements
 
 public export
-RefinedSListTest :
+SListRefinement :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   SList atom -> m Type
-RefinedSListTest = snd . RefinedSExpTests
+SListRefinement = snd . SExpRefinements
 
 public export
-RefinedSExpLiftedTests :
+SExpLiftedRefinements :
   {atom : Type} ->
   {m : Type -> Type} -> (Monad m, FTransitive m) =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (m (SExp atom -> Type), m (SList atom -> Type))
-RefinedSExpLiftedTests selector =
-  let tests = RefinedSExpTests selector in
-  (liftPred (fst tests), liftPred (snd tests))
+SExpLiftedRefinements selector =
+  let refinements = SExpRefinements selector in
+  (liftPred (fst refinements), liftPred (snd refinements))
 
 public export
 RefinedSExpTypes :
@@ -85,8 +105,9 @@ RefinedSExpTypes :
   (selector : SExpEitherFoldSig m sl sr) ->
   (m Type, m Type)
 RefinedSExpTypes selector =
-  let tests = RefinedSExpLiftedTests selector in
-  (map (DPair (SExp atom)) (fst tests), map (DPair (SList atom)) (snd tests))
+  let refinements = SExpLiftedRefinements selector in
+  (map (DPair (SExp atom)) (fst refinements),
+   map (DPair (SList atom)) (snd refinements))
 
 public export
 RefinedSExp :
@@ -105,6 +126,57 @@ RefinedSList :
   (selector : SExpEitherFoldSig m sl sr) ->
   m Type
 RefinedSList selector = snd (RefinedSExpTypes selector)
+
+public export
+record SExpEitherMetaFoldSig
+  {atom : Type}
+  {m : Type -> Type}
+  {sl, sr : SExp atom -> Type}
+  (signature : SExpEitherFoldSig m sl sr)
+  (spp : (x : SExp atom) -> m (SExpEitherForAll sl sr x) -> Type)
+  (lpp : (l : SList atom) -> m (SListEitherForAll sl sr l) -> Type)
+  where
+    constructor SExpEitherMetaFoldArgs
+
+public export
+sexpEitherMetaFolds :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig m sl sr} ->
+  {spp : (x : SExp atom) -> m (SExpEitherForAll sl sr x) -> Type} ->
+  {lpp : (l : SList atom) -> m (SListEitherForAll sl sr l) -> Type} ->
+  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  ((x : SExp atom) -> spp x (sexpEitherFold signature x),
+   (l : SList atom) -> lpp l (slistEitherFold signature l))
+sexpEitherMetaFolds = ?sexpEitherMetaFolds_hole
+
+public export
+record SExpRefinementEliminatorSig
+  {atom : Type}
+  {m : Type -> Type}
+  {isMonad : Monad m}
+  {mAlg : Algebra m Type}
+  {sl, sr : SExp atom -> Type}
+  (signature : SExpEitherFoldSig m sl sr)
+  (srp : (x : SExp atom) -> mAlg (SExpRefinement signature x) -> Type)
+  (lrp : (l : SList atom) -> mAlg (SListRefinement signature l) -> Type)
+  where
+    constructor SExpRefinementEliminatorArgs
+
+public export
+sexpRefinementEliminators :
+  {atom : Type} ->
+  {m : Type -> Type} -> {isMonad : Monad m} ->
+  {mAlg : Algebra m Type} ->
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig m sl sr} ->
+  {srp : (x : SExp atom) -> mAlg (SExpRefinement signature x) -> Type} ->
+  {lrp : (l : SList atom) -> mAlg (SListRefinement signature l) -> Type} ->
+  (metaSig : SExpRefinementEliminatorSig {isMonad} {mAlg} signature srp lrp) ->
+  ((x : SExp atom) -> (rx : mAlg (SExpRefinement signature x)) -> srp x rx,
+   (l : SList atom) -> (rl : mAlg (SListRefinement signature l)) -> lrp l rl)
+sexpRefinementEliminators = ?sexpRefinementEliminators_hole
 
 public export
 record DecidablePredicate (atom : Type) where
@@ -313,61 +385,3 @@ checkedInjective : {atom : Type} ->
   checked = checked'
 checkedInjective {signature} =
   JustDPairInjective {dec=(inductiveDecide signature)}
-
-public export
-record InductiveEliminatorSig
-  {atom : Type}
-  {predicate : DecidablePredicate atom}
-  {contextType : Type}
-  (domain : InductiveDecisionSig predicate contextType)
-  (codomain : Type) where
-    constructor InductiveEliminatorArgs
-
-public export
-inductiveEliminator : {atom : Type} ->
-  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
-  {domain : InductiveDecisionSig predicate contextType} ->
-  {codomain : Type} ->
-  (signature : InductiveEliminatorSig domain codomain) ->
-  Checked domain -> codomain
-inductiveEliminator signature checks = ?inductiveEliminator_hole
-
-public export
-record InductiveIntroductionSig
-  {atom : Type}
-  {predicate : DecidablePredicate atom}
-  {contextType : Type}
-  (domain : Type)
-  (codomain : InductiveDecisionSig predicate contextType) where
-    constructor InductiveIntroductionArgs
-
-public export
-inductiveIntroduction : {atom : Type} ->
-  {predicate : DecidablePredicate atom} -> {contextType : Type} ->
-  {domain : Type} ->
-  {codomain : InductiveDecisionSig predicate contextType} ->
-  (signature : InductiveIntroductionSig domain codomain) ->
-  domain -> Checked codomain
-inductiveIntroduction signature x = ?inductiveIntroduction_hole
-
-public export
-record InductiveTransformSig
-  {atomDom, atomCod : Type}
-  {predicateDom : DecidablePredicate atomDom}
-  {predicateCod : DecidablePredicate atomCod}
-  {contextTypeDom, contextTypeCod : Type}
-  (domain : InductiveDecisionSig predicateDom contextTypeDom)
-  (codomain : InductiveDecisionSig predicateCod contextTypeCod) where
-    constructor InductiveTransformArgs
-
-public export
-inductiveTransform :
-  {atomDom, atomCod : Type} ->
-  {predicateDom : DecidablePredicate atomDom} ->
-  {predicateCod : DecidablePredicate atomCod} ->
-  {contextTypeDom, contextTypeCod : Type} ->
-  {domain : InductiveDecisionSig predicateDom contextTypeDom} ->
-  {codomain : InductiveDecisionSig predicateCod contextTypeCod} ->
-  (signature : InductiveTransformSig domain codomain) ->
-  Checked domain -> Checked codomain
-inductiveTransform signature x = ?inductiveTransform_hole
