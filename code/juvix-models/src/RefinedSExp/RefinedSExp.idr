@@ -179,6 +179,74 @@ sexpRefinementEliminators :
 sexpRefinementEliminators = ?sexpRefinementEliminators_hole
 
 public export
+record RefinedSExpEliminatorSig
+  {atom : Type}
+  {m : Type -> Type}
+  {isMonad : Monad m} {isTransitive: FTransitive m} {mAlg : Algebra m Type}
+  {sl, sr : SExp atom -> Type}
+  (signature : SExpEitherFoldSig m sl sr)
+  (srp : mAlg (RefinedSExp signature) -> Type)
+  (lrp : mAlg (RefinedSList signature) -> Type)
+  where
+    constructor RefinedSExpEliminatorArgs
+
+public export
+refinedSExpEliminators :
+  {atom : Type} ->
+  {m : Type -> Type} ->
+  {isMonad : Monad m} ->
+  {isTransitive : FTransitive m} ->
+  {mAlg : Algebra m Type} ->
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig m sl sr} ->
+  {srp : mAlg (RefinedSExp signature) -> Type} ->
+  {lrp : mAlg (RefinedSList signature) -> Type} ->
+  (metaSig : RefinedSExpEliminatorSig
+    {isMonad} {mAlg} {isTransitive} signature srp lrp) ->
+  ((rx : mAlg (RefinedSExp signature)) -> srp rx,
+   (rl : mAlg (RefinedSList signature)) -> lrp rl)
+refinedSExpEliminators = ?refinedSExpEliminators_hole
+
+public export
+record RefinedSExpTransformerSig
+  {m : Type -> Type}
+  {isMonad : Monad m}
+  {isTransitive : FTransitive m}
+  {mAlg : Algebra m Type}
+  {atom, atom' : Type}
+  {sl, sr, sl', sr' : SExp atom -> Type}
+  (signature : SExpEitherFoldSig m sl sr)
+  (signature' : SExpEitherFoldSig m sl' sr')
+  where
+    constructor RefinedSExpTransformerArgs
+
+public export
+refinedSExpTransformers :
+  {m : Type -> Type} ->
+  {isMonad : Monad m} ->
+  {isTransitive : FTransitive m} ->
+  {mAlg : Algebra m Type} ->
+  {atom, atom' : Type} ->
+  {sl, sr, sl', sr' : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig m sl sr} ->
+  {signature' : SExpEitherFoldSig m sl' sr'} ->
+  (transformSig : RefinedSExpTransformerSig
+    {isMonad} {mAlg} {isTransitive} signature signature') ->
+  (mAlg (RefinedSExp signature) -> mAlg (RefinedSExp signature'),
+   mAlg (RefinedSList signature) -> mAlg (RefinedSList signature'))
+refinedSExpTransformers = ?refinedSExpTransformers_hole
+
+-- XXX depdendent transformers; dependently-typed programming languages;
+-- elimination of refined sexps to dependently-typed programming languages;
+-- elimination of refined sexps to dependently-typed programming languages;
+-- parameterized (on other dependently-typed programming languages)
+-- dependently-typed programming languages; elimination of refined sexps
+-- to parameterized dependently-typed programming languages; elimination
+-- of refined sexps to transformations between dependently-typed programming
+-- languages; refined sexps _as_ a dependently-typed programming language;
+-- dependently-typed metaprogramming
+
+public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates
   SuccessPredicate : SExp atom -> Type
