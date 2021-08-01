@@ -211,6 +211,24 @@ sexpParameterizedEliminators parameterizedSignature spParams lpParams =
       (consElim (parameterizedSignature spParams lpParams)))
 
 public export
+sexpParameterizedSignatureEliminators :
+  {f : Type -> Type} ->
+  {da : DependentApplicative f} ->
+  {atom : Type} ->
+  {sp : List (!- (SExp atom)) -> List (!- (SList atom)) -> (!- (SExp atom))} ->
+  {lp : List (!- (SExp atom)) -> List (!- (SList atom)) -> (!- (SList atom))} ->
+  (parameterizedSignature :
+    (spParams : List (!- (SExp atom))) ->
+    (lpParams : List (!- (SList atom))) ->
+    f (SExpEliminatorSig (sp spParams lpParams) (lp spParams lpParams))) ->
+  (spParams : List (!- (SExp atom))) -> (lpParams : List (!- (SList atom))) ->
+  (SExp atom ~> f . (sp spParams lpParams),
+   SList atom ~> f . (lp spParams lpParams))
+sexpParameterizedSignatureEliminators {f} {da}
+  parameterizedSignature spParams lpParams =
+    sexpSignatureEliminators {f} {da} (parameterizedSignature spParams lpParams)
+
+public export
 SExpEliminatorListPred : {atom : Type} ->
   (sp : SExp atom -> Type) -> (lp : SList atom -> Type) ->
   SList atom -> Type
