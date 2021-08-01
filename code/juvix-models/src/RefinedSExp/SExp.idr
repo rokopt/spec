@@ -402,33 +402,40 @@ record SExpPairEliminatorSig
       lp (x $+ l) (x' $+ l')
 
 public export
+SExpPairEliminatorSigToEliminatorSig : {atom : Type} ->
+  {sp : (x, x' : SExp atom) -> Type} -> {lp : (l, l' : SList atom) -> Type} ->
+  SExpPairEliminatorSig sp lp ->
+  SExpEliminatorSig
+    (\x => (x' : SExp atom) -> sp x x')
+    (\l => (l' : SList atom) -> lp l l')
+SExpPairEliminatorSigToEliminatorSig signature =
+  (SExpEliminatorArgs expCase nilCase consCase)
+  where
+    expCase : (a : atom) -> (l : SList atom) ->
+      (lpf : (l' : SList atom) -> lp l l') -> (x : SExp atom) ->
+      sp (a $: l) x
+    expCase a l lpf (a' $: l') = expElim signature a l a' l' (lpf l')
+
+    nilCase : (l' : SList atom) -> lp [] l'
+    nilCase [] = nilNilElim signature
+    nilCase (x' :: l') = nilConsElim signature x' l'
+
+    consCase : (x : SExp atom) -> (l : SList atom) ->
+      (spf : (x' : SExp atom) -> sp x  x') ->
+      (lpf : (l' : SList atom) -> lp l l') ->
+      (l' : SList atom) -> lp (x :: l)  l'
+    consCase x l spf lpf [] =
+      consNilElim signature x l
+    consCase x l spf lpf (x' :: l') =
+      consConsElim signature x l x' l' (spf x') (lpf l')
+
+public export
 sexpPairDepFolds : {atom : Type} ->
   {sp : (x, x' : SExp atom) -> Type} -> {lp : (l, l' : SList atom) -> Type} ->
   (signature : SExpPairEliminatorSig sp lp) ->
   ((x, x' : SExp atom) -> sp x x', (l, l' : SList atom) -> lp l l')
 sexpPairDepFolds {atom} {sp} {lp} signature =
-  sexpEliminators
-    {sp=(\x => (x' : SExp atom) -> sp x x')}
-    {lp=(\l => (l' : SList atom) -> lp l l')}
-    (SExpEliminatorArgs expCase nilCase consCase)
-    where
-      expCase : (a : atom) -> (l : SList atom) ->
-        (lpf : (l' : SList atom) -> lp l l') -> (x : SExp atom) ->
-        sp (a $: l) x
-      expCase a l lpf (a' $: l') = expElim signature a l a' l' (lpf l')
-
-      nilCase : (l' : SList atom) -> lp [] l'
-      nilCase [] = nilNilElim signature
-      nilCase (x' :: l') = nilConsElim signature x' l'
-
-      consCase : (x : SExp atom) -> (l : SList atom) ->
-        (spf : (x' : SExp atom) -> sp x  x') ->
-        (lpf : (l' : SList atom) -> lp l l') ->
-        (l' : SList atom) -> lp (x :: l)  l'
-      consCase x l spf lpf [] =
-        consNilElim signature x l
-      consCase x l spf lpf (x' :: l') =
-        consConsElim signature x l x' l' (spf x') (lpf l')
+  sexpEliminators (SExpPairEliminatorSigToEliminatorSig signature)
 
 public export
 sexpDecEq : {atom : Type} ->
