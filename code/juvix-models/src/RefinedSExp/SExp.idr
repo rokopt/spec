@@ -102,8 +102,36 @@ public export
 a $:^ a' = a $:+ $^ a'
 
 public export
+SExpPred : Type -> Type
+SExpPred atom = !- (SExp atom)
+
+public export
+SListPred : Type -> Type
+SListPred atom = !- (SList atom)
+
+public export
+SPredPair : Type -> Type
+SPredPair atom = (SExpPred atom, SListPred atom)
+
+public export
+SPredPairList : Type -> Type
+SPredPairList atom = List (SPredPair atom)
+
+public export
+SExpPi : {atom : Type} -> SExpPred atom -> Type
+SExpPi pred = SExp atom ~> pred
+
+public export
+SListPi : {atom : Type} -> SListPred atom -> Type
+SListPi pred = SList atom ~> pred
+
+public export
+SPiPair : {atom : Type} -> SExpPred atom -> SListPred atom -> Type
+SPiPair sp lp = (SExpPi sp, SListPi lp)
+
+public export
 record SExpEliminatorSig
-  {atom : Type} (sp : SExp atom -> Type) (lp : SList atom -> Type)
+  {atom : Type} (sp : SExpPred atom) (lp : SListPred atom)
   where
     constructor SExpEliminatorArgs
     expElim :
@@ -116,19 +144,17 @@ record SExpEliminatorSig
 mutual
   public export
   sexpEliminator : {atom : Type} ->
-  {sp : SExp atom -> Type} ->
-  {lp : SList atom -> Type} ->
-  (signature : SExpEliminatorSig sp lp) ->
-  SExp atom ~> sp
+    {sp : SExpPred atom} -> {lp : SListPred atom} ->
+    (signature : SExpEliminatorSig sp lp) ->
+    SExpPi sp
   sexpEliminator signature (a $: l) =
     expElim signature a l (slistEliminator signature l)
 
   public export
   slistEliminator : {atom : Type} ->
-  {sp : SExp atom -> Type} ->
-  {lp : SList atom -> Type} ->
-  (signature : SExpEliminatorSig sp lp) ->
-  SList atom ~> lp
+    {sp : SExpPred atom} -> {lp : SListPred atom} ->
+    (signature : SExpEliminatorSig sp lp) ->
+    SListPi lp
   slistEliminator signature [] =
     nilElim signature
   slistEliminator signature (x :: l) =
@@ -138,10 +164,9 @@ mutual
 
 public export
 sexpEliminators : {atom : Type} ->
-  {sp : !- (SExp atom)} ->
-  {lp : !- (SList atom)} ->
+  {sp : SExpPred atom} -> {lp : SListPred atom} ->
   (signature : SExpEliminatorSig sp lp) ->
-  (SExp atom ~> sp, SList atom ~> lp)
+  SPiPair sp lp
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
@@ -149,10 +174,9 @@ public export
 sexpEliminatorsComposedPreds :
   {f : Type -> Type} ->
   {atom : Type} ->
-  {sp : !- (SExp atom)} ->
-  {lp : !- (SList atom)} ->
+  {sp : SExpPred atom} -> {lp : SListPred atom} ->
   (signature : SExpEliminatorSig (f . sp) (f . lp)) ->
-  (SExp atom ~> f . sp, SList atom ~> f . lp)
+  SPiPair (f . sp) (f . lp)
 sexpEliminatorsComposedPreds = sexpEliminators
 
 public export
@@ -160,8 +184,7 @@ SExpSignatureEliminatorSig :
   {f : Type -> Type} ->
   {da : DependentApplicative f} ->
   {atom : Type} ->
-  {sp : !- (SExp atom)} ->
-  {lp : !- (SList atom)} ->
+  {sp : SExpPred atom} -> {lp : SListPred atom} ->
   (signature : f (SExpEliminatorSig sp lp)) ->
   SExpEliminatorSig (f . sp) (f . lp)
 SExpSignatureEliminatorSig {f} {da} {sp} {lp} signature =
@@ -180,53 +203,45 @@ sexpSignatureEliminators :
   {f : Type -> Type} ->
   {da : DependentApplicative f} ->
   {atom : Type} ->
-  {sp : !- (SExp atom)} ->
-  {lp : !- (SList atom)} ->
+  {sp : SExpPred atom} -> {lp : SListPred atom} ->
   (signature : f (SExpEliminatorSig sp lp)) ->
-  (SExp atom ~> f . sp, SList atom ~> f . lp)
+  SPiPair (f . sp) (f . lp)
 sexpSignatureEliminators {f} {da} {sp} {lp} signature =
   sexpEliminators (SExpSignatureEliminatorSig {f} {da} signature)
 
 public export
 sexpTypeConstructors : {atom : Type} ->
   (signature : SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)) ->
-  (!- (SExp atom), !- (SList atom))
+  SPredPair atom
 sexpTypeConstructors = sexpEliminators
 
 public export
 sexpParameterizedEliminators : {atom : Type} ->
-  {sp : List (!- (SExp atom)) -> List (!- (SList atom)) -> (!- (SExp atom))} ->
-  {lp : List (!- (SExp atom)) -> List (!- (SList atom)) -> (!- (SList atom))} ->
+  {sp : List (SPredPair atom) -> SExpPred atom} ->
+  {lp : List (SPredPair atom) -> SListPred atom} ->
   (parameterizedSignature :
-    (spParams : List (!- (SExp atom))) ->
-    (lpParams : List (!- (SList atom))) ->
-    SExpEliminatorSig (sp spParams lpParams) (lp spParams lpParams)) ->
-  (spParams : List (!- (SExp atom))) -> (lpParams : List (!- (SList atom))) ->
-  (SExp atom ~> sp spParams lpParams, SList atom ~> lp spParams lpParams)
-sexpParameterizedEliminators parameterizedSignature spParams lpParams =
-  sexpEliminators
-    (SExpEliminatorArgs
-      (expElim (parameterizedSignature spParams lpParams))
-      (nilElim (parameterizedSignature spParams lpParams))
-      (consElim (parameterizedSignature spParams lpParams)))
+    (params : List (SPredPair atom)) ->
+    SExpEliminatorSig (sp params) (lp params)) ->
+  (params : List (SPredPair atom)) ->
+  SPiPair (sp params) (lp params)
+sexpParameterizedEliminators parameterizedSignature params =
+  sexpEliminators (parameterizedSignature params)
 
 public export
 sexpParameterizedSignatureEliminators :
   {f : Type -> Type} ->
   {da : DependentApplicative f} ->
   {atom : Type} ->
-  {sp : List (!- (SExp atom)) -> List (!- (SList atom)) -> (!- (SExp atom))} ->
-  {lp : List (!- (SExp atom)) -> List (!- (SList atom)) -> (!- (SList atom))} ->
+  {sp : List (SPredPair atom) -> SExpPred atom} ->
+  {lp : List (SPredPair atom) -> SListPred atom} ->
   (parameterizedSignature :
-    (spParams : List (!- (SExp atom))) ->
-    (lpParams : List (!- (SList atom))) ->
-    f (SExpEliminatorSig (sp spParams lpParams) (lp spParams lpParams))) ->
-  (spParams : List (!- (SExp atom))) -> (lpParams : List (!- (SList atom))) ->
-  (SExp atom ~> f . (sp spParams lpParams),
-   SList atom ~> f . (lp spParams lpParams))
+    (params : List (SPredPair atom)) ->
+    f (SExpEliminatorSig (sp params) (lp params))) ->
+  (params : List (SPredPair atom)) ->
+  SPiPair (f . (sp params)) (f . (lp params))
 sexpParameterizedSignatureEliminators {f} {da}
-  parameterizedSignature spParams lpParams =
-    sexpSignatureEliminators {f} {da} (parameterizedSignature spParams lpParams)
+  parameterizedSignature params =
+    sexpSignatureEliminators {f} {da} (parameterizedSignature params)
 
 public export
 SExpEliminatorListPred : {atom : Type} ->

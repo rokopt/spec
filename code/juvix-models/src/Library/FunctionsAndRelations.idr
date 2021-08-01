@@ -879,6 +879,7 @@ composeDependentApplicatives {f} {g} fDepApp gDepApp =
         gdp = dpure gDepApp {a'}
         fapp = appApplicative fDepApp
         gapp = appApplicative gDepApp
+        fdmfoo = fdm _ _ _ (g . a')
       in
       fdp ?composeDependentApplicatives_hole_pure x)
     ?composeDependentApplicatives_hole_application
