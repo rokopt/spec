@@ -763,16 +763,6 @@ applyPair :
 applyPair fa fb = map MkPair fa <*> fb
 
 public export
-record Functionable (f : Type -> Type) where
-  constructor MkFunctionable
-  functionize : {a, b : Type} -> (a -> f b) -> f (a -> b)
-
-public export
-interface FunctionableInterface f where
-  constructor MkFunctionableInterface
-  FunctionableRecord : Functionable f
-
-public export
 [ComposeFunctor] (Functor f, Functor g) => Functor (f . g) where
     map = map {f} . map {f=g}
 
@@ -943,10 +933,6 @@ Arrow a b = a -> b
 public export
 [ArrowFunctor] Functor (Arrow a) where
   map = (.)
-
-public export
-ArrowFunctionable : (a : Type) -> Functionable (Arrow a)
-ArrowFunctionable _ = MkFunctionable flip
 
 public export
 [ArrowApplicative] Functor (Arrow a) => Applicative (Arrow a) where

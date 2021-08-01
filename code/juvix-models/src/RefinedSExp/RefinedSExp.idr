@@ -89,46 +89,45 @@ SListRefinement = snd . SExpRefinements
 public export
 SExpLiftedRefinements :
   {atom : Type} ->
-  {m : Type -> Type} -> {functionable : Functionable m} -> Monad m =>
+  {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (m (SExp atom -> Type), m (SList atom -> Type))
-SExpLiftedRefinements {functionable} selector =
+SExpLiftedRefinements selector =
   let refinements = SExpRefinements selector in
-  (functionize functionable (fst refinements),
-   functionize functionable (snd refinements))
+  ?SExpLiftedRefinements_hole
 
 public export
 RefinedSExpTypes :
   {atom : Type} ->
-  {m : Type -> Type} -> {functionable : Functionable m} -> Monad m =>
+  {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (m Type, m Type)
-RefinedSExpTypes {functionable} selector =
-  let refinements = SExpLiftedRefinements {functionable} selector in
+RefinedSExpTypes selector =
+  let refinements = SExpLiftedRefinements selector in
   (map (DPair (SExp atom)) (fst refinements),
    map (DPair (SList atom)) (snd refinements))
 
 public export
 RefinedSExp :
   {atom : Type} ->
-  {m : Type -> Type} -> {functionable : Functionable m} -> Monad m =>
+  {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   m Type
-RefinedSExp {functionable} selector =
-  fst (RefinedSExpTypes {functionable} selector)
+RefinedSExp selector =
+  fst (RefinedSExpTypes selector)
 
 public export
 RefinedSList :
   {atom : Type} ->
-  {m : Type -> Type} -> {functionable : Functionable m} -> Monad m =>
+  {m : Type -> Type} -> Monad m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   m Type
-RefinedSList {functionable} selector =
-  snd (RefinedSExpTypes {functionable} selector)
+RefinedSList selector =
+  snd (RefinedSExpTypes selector)
 
 public export
 record SExpEitherMetaFoldSig
@@ -185,11 +184,11 @@ public export
 record RefinedSExpEliminatorSig
   {atom : Type}
   {m : Type -> Type}
-  {isMonad : Monad m} {functionable: Functionable m} {mAlg : Algebra m Type}
+  {isMonad : Monad m} {mAlg : Algebra m Type}
   {sl, sr : SExp atom -> Type}
   (signature : SExpEitherFoldSig m sl sr)
-  (srp : mAlg (RefinedSExp {functionable} signature) -> Type)
-  (lrp : mAlg (RefinedSList {functionable} signature) -> Type)
+  (srp : mAlg (RefinedSExp signature) -> Type)
+  (lrp : mAlg (RefinedSList signature) -> Type)
   where
     constructor RefinedSExpEliminatorArgs
 
@@ -198,23 +197,21 @@ refinedSExpEliminators :
   {atom : Type} ->
   {m : Type -> Type} ->
   {isMonad : Monad m} ->
-  {functionable : Functionable m} ->
   {mAlg : Algebra m Type} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig m sl sr} ->
-  {srp : mAlg (RefinedSExp {functionable} signature) -> Type} ->
-  {lrp : mAlg (RefinedSList {functionable} signature) -> Type} ->
+  {srp : mAlg (RefinedSExp signature) -> Type} ->
+  {lrp : mAlg (RefinedSList signature) -> Type} ->
   (metaSig : RefinedSExpEliminatorSig
-    {isMonad} {functionable} {mAlg} signature srp lrp) ->
-  ((rx : mAlg (RefinedSExp {functionable} signature)) -> srp rx,
-   (rl : mAlg (RefinedSList {functionable} signature)) -> lrp rl)
+    {isMonad} {mAlg} signature srp lrp) ->
+  ((rx : mAlg (RefinedSExp signature)) -> srp rx,
+   (rl : mAlg (RefinedSList signature)) -> lrp rl)
 refinedSExpEliminators = ?refinedSExpEliminators_hole
 
 public export
 record RefinedSExpTransformerSig
   {m : Type -> Type}
   {isMonad : Monad m}
-  {functionable : Functionable m}
   {mAlg : Algebra m Type}
   {atom, atom' : Type}
   {sl, sr, sl', sr' : SExp atom -> Type}
@@ -227,18 +224,17 @@ public export
 refinedSExpTransformers :
   {m : Type -> Type} ->
   {isMonad : Monad m} ->
-  {functionable : Functionable m} ->
   {mAlg : Algebra m Type} ->
   {atom, atom' : Type} ->
   {sl, sr, sl', sr' : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig m sl sr} ->
   {signature' : SExpEitherFoldSig m sl' sr'} ->
   (transformSig : RefinedSExpTransformerSig
-    {isMonad} {functionable} {mAlg} signature signature') ->
-  (mAlg (RefinedSExp {functionable} signature) ->
-    mAlg (RefinedSExp {functionable} signature'),
-   mAlg (RefinedSList {functionable} signature) ->
-    mAlg (RefinedSList {functionable} signature'))
+    {isMonad} {mAlg} signature signature') ->
+  (mAlg (RefinedSExp signature) ->
+    mAlg (RefinedSExp signature'),
+   mAlg (RefinedSList signature) ->
+    mAlg (RefinedSList signature'))
 refinedSExpTransformers = ?refinedSExpTransformers_hole
 
 -- XXX depdendent transformers; dependently-typed programming languages;
