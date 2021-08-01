@@ -763,13 +763,220 @@ applyPair :
 applyPair fa fb = map MkPair fa <*> fb
 
 public export
-interface FTransitive f where
-  liftPred : {a, b : Type} -> (a -> f b) -> f (a -> b)
+record Functionable (f : Type -> Type) where
+  constructor MkFunctionable
+  functionize : {a, b : Type} -> (a -> f b) -> f (a -> b)
 
 public export
-arrow : Type -> Type -> Type
-arrow a b = a -> b
+interface FunctionableInterface f where
+  constructor MkFunctionableInterface
+  FunctionableRecord : Functionable f
 
 public export
-FTransitive (arrow a) where
-  liftPred = flip
+[ComposeFunctor] (Functor f, Functor g) => Functor (f . g) where
+    map = map {f} . map {f=g}
+
+public export
+[ComposeApplicative] (Applicative f, Applicative g) => Applicative (f . g)
+  using ComposeFunctor where
+    pure = pure {f} . pure {f=g}
+    fgab <*> fga = map (<*>) fgab <*> fga
+
+public export
+DependentMap : (Type -> Type) -> Type
+DependentMap f = (a, b : Type) -> (a' : a -> Type) -> (b' : b -> Type) ->
+    (fab : a -> b) -> ((x : a) -> a' x -> b' (fab x)) ->
+    (x : a) -> f (a' x) -> f (b' (fab x))
+
+public export
+record DependentFunctor (f : Type -> Type) where
+  constructor MkDependentFunctor
+  DMap : DependentMap f
+
+public export
+interface DependentFunctorInterface f where
+  constructor MkDependentFunctorInterface
+  DependentFunctorRecord : DependentFunctor f
+
+public export
+dmap : {f : Type -> Type} -> {df : DependentFunctor f} ->
+  DependentMap f
+dmap {f} {df} = DMap df
+
+public export
+DependentMapToMap : {f : Type -> Type} -> DependentMap f ->
+  {a, b : Type} -> (a -> b) -> f a -> f b
+DependentMapToMap {a} {b} depMap fab =
+  depMap () () (\_ => a) (\_ =>b) id (\_ => fab) ()
+
+public export
+dfmap : {f : Type -> Type} -> {df : DependentFunctor f} ->
+  {a, b : Type} -> (a -> b) -> f a -> f b
+dfmap {f} {df} = DependentMapToMap {f} (dmap {f} {df})
+
+public export
+composeDependentFunctors : {f, g : Type -> Type} ->
+  (fFunctor : DependentFunctor f) ->
+  (gFunctor : DependentFunctor g) ->
+  DependentFunctor (f . g)
+composeDependentFunctors {f} {g} fFunctor gFunctor =
+  MkDependentFunctor
+    (\a, b, a', b', fab, piab, x, fgax =>
+      DMap fFunctor a b (g . a') (g . b') fab
+        (DMap gFunctor a b a' b' fab piab) x fgax)
+
+public export
+DependentPure : (Type -> Type) -> Type
+DependentPure f =
+  (a : Type) -> (a' : a -> Type) -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
+
+public export
+DependentApplication : (Type -> Type) -> Type
+DependentApplication f =
+  (a, b : Type) -> (a' : a -> Type) -> (b' : b -> Type) ->
+  (fab : a -> b) ->
+  ((x : a) -> (f (a' x -> b' (fab x)))) ->
+  (x : a) -> f (a' x) -> f (b' (fab x))
+
+public export
+record DependentApplicative (f : Type -> Type) where
+  constructor MkDependentApplicative
+  appApplicative : Applicative f
+  appFunctor : DependentFunctor f
+  DPure : DependentPure f
+  DApply : DependentApplication f
+
+public export
+amap : {f : Type -> Type} -> (da : DependentApplicative f) ->
+  DependentMap f
+amap = DMap . appFunctor
+
+public export
+dpure : {f : Type -> Type} -> (da : DependentApplicative f) ->
+  {a : Type} -> {a' : a -> Type} -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
+dpure {f} da {a} {a'} = DPure da a a'
+
+public export
+dapply : {f : Type -> Type} -> (da : DependentApplicative f) ->
+  {a, b : Type} -> {a' : a -> Type} -> {b' : b -> Type} ->
+  {fab : a -> b} ->
+  ((x : a) -> (f (a' x -> b' (fab x)))) ->
+  {x : a} -> f (a' x) -> f (b' (fab x))
+dapply {f} da {a} {b} {a'} {b'} {fab} piab {x} fax =
+  DApply da a b a' b' fab piab x fax
+
+public export
+interface DependentApplicativeInterface f where
+  constructor MkDependentApplicativeInterface
+  DependentApplicativeRecord : DependentApplicative f
+
+public export
+composeDependentApplicatives : {f, g : Type -> Type} ->
+  (fDepApp : DependentApplicative f) ->
+  (gDepApp : DependentApplicative g) ->
+  DependentApplicative (f . g)
+composeDependentApplicatives {f} {g} fDepApp gDepApp =
+  let fApp = appApplicative fDepApp in
+  let gApp = appApplicative gDepApp in
+  MkDependentApplicative
+    ComposeApplicative
+    (composeDependentFunctors (appFunctor fDepApp) (appFunctor gDepApp))
+    (\a, a', fgax, x =>
+      let
+        fdp = dpure fDepApp {a'=(g . a')}
+        fdm = amap fDepApp
+        fdp = dpure fDepApp {a'=(g . a')}
+        gdp = dpure gDepApp {a'}
+        fapp = appApplicative fDepApp
+        gapp = appApplicative gDepApp
+      in
+      fdp ?composeDependentApplicatives_hole_pure x)
+    ?composeDependentApplicatives_hole_application
+
+public export
+afmap : {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {a, b : Type} -> (a -> b) -> f a -> f b
+afmap {da} = dfmap {df=(appFunctor da)}
+
+public export
+afpure : {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {a : Type} -> a -> f a
+afpure {f} {da} = let applicative = appApplicative da in pure
+
+prefix 3 <^>
+public export
+(<^>) : {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {a : Type} -> a -> f a
+(<^>) {f} {da} {a} = afpure {f} {da} {a}
+
+public export
+afapply : {f : Type -> Type} -> (da : DependentApplicative f) ->
+  {a, b : Type} -> f (a -> b) -> f a -> f b
+afapply {f} da = let applicative = appApplicative da in (<*>)
+
+infixl 3 <~>
+public export
+(<~>) : {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {a, b : Type} -> f (a -> b) -> f a -> f b
+(<~>) {f} {a} {b} {da} = afapply {f} {a} {b} {da}
+
+public export
+DependentJoin : (Type -> Type) -> Type
+DependentJoin m =
+  (a : Type) -> (b : a -> Type) -> (x : a) -> m (m (b x)) -> m (b x)
+
+public export
+record DependentMonad (m : Type -> Type) where
+  constructor MkDependentMonad
+  monadApplicative : DependentApplicative m
+  djoin : DependentJoin m
+
+public export
+interface DependentMonadInterface f where
+  constructor MkDependentMonadInterface
+  DependentMonadRecord : DependentMonad f
+
+public export
+Arrow : Type -> Type -> Type
+Arrow a b = a -> b
+
+public export
+[ArrowFunctor] Functor (Arrow a) where
+  map = (.)
+
+public export
+ArrowFunctionable : (a : Type) -> Functionable (Arrow a)
+ArrowFunctionable _ = MkFunctionable flip
+
+public export
+[ArrowApplicative] Functor (Arrow a) => Applicative (Arrow a) where
+  pure x = \_ => x
+  f <*> g = \x => f x (g x)
+
+public export
+ArrowDependentMap : (domain : Type) -> DependentMap (Arrow domain)
+ArrowDependentMap domain a b a' b' fab piab x da d = piab x (da d)
+
+public export
+ArrowDependentFunctor : (domain : Type) -> DependentFunctor (Arrow domain)
+ArrowDependentFunctor domain = MkDependentFunctor (ArrowDependentMap domain)
+
+public export
+ArrowDependentPure : (domain : Type) -> DependentPure (Arrow domain)
+ArrowDependentPure _ = \a, b, pi, x => \x' => pi x' x
+
+public export
+ArrowDependentApplication :
+  (domain : Type) -> DependentApplication (Arrow domain)
+ArrowDependentApplication domain a b a' b' fab piab x da d = piab x d (da d)
+
+public export
+ArrowDependentApplicative :
+  (domain : Type) -> DependentApplicative (Arrow domain)
+ArrowDependentApplicative domain =
+  let arrowFunctor = ArrowFunctor {a=domain} in
+  MkDependentApplicative
+    ArrowApplicative
+    (ArrowDependentFunctor domain)
+    (ArrowDependentPure domain)
+    (ArrowDependentApplication domain)
