@@ -482,10 +482,30 @@ sexpNonDepListFolds : {atom : Type} ->
 sexpNonDepListFolds signature =
   sexpEliminators (SExpNonDepListFoldSigToEliminatorSig signature)
 
+public export
+SExpForAllsFromEliminator :
+  {atom : Type} -> (depType : SExpPred atom) -> SPredPair atom
+SExpForAllsFromEliminator depType =
+  sexpTypeConstructors
+    (SExpEliminatorArgs
+      (\a, l => Pair (depType (a $: l)))
+      ()
+      (\_, _ => Pair))
+
+public export
+SExpExistsFromEliminator :
+  {atom : Type} -> (depType : SExpPred atom) -> SPredPair atom
+SExpExistsFromEliminator depType =
+  sexpTypeConstructors
+    (SExpEliminatorArgs
+      (\a, l => Either (depType (a $: l)))
+      Void
+      (\_, _ => Either))
+
 infixr 7 :$:
 public export
 data SExpForAll :
-  {atom : Type} -> (depType : SExp atom -> Type) -> SExp atom -> Type where
+  {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom where
     (:$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
             {a : atom} -> {l : SList atom} ->
             depType (a $: l) ->
@@ -529,7 +549,7 @@ SListForAllTail (_ ::: lp) = lp
 
 public export
 data SExpExists :
-  {atom : Type} -> (depType : SExp atom -> Type) -> SExp atom -> Type where
+  {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom where
     (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
             {a : atom} -> {l : SList atom} ->
             depType (a $: l) ->
