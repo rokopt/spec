@@ -30,12 +30,12 @@ sexpEitherFolds {atom} {m} {sl} {sr} signature =
             Left allLeft =>
               map
                 (\exp => case exp of
-                  Left expLeft => Left (expLeft :$: allLeft)
-                  Right expRight => Right (SExpExistsCons ((<$:) expRight) []))
+                  Left expLeft => Left (expLeft, allLeft)
+                  Right expRight => Right (SExpExistsCons (Left expRight) []))
                 (expElim signature a l allLeft)
             Right existsRight => pure (Right (slistExistsExp existsRight))))
-      (pure (Left (|:|)))
-      (\_, _ => SExpEitherForAllCons))
+      (pure (Left ()))
+      (\_, _ => SExpEitherForAllCons {sl}))
 
 public export
 sexpEitherFold :
@@ -394,12 +394,12 @@ inductiveDecide decisionSig x' =
             Just tailSuccess =>
               case decideOne decisionSig a l tailSuccess tailContext of
                 (returnContext, DecisionSuccess headSuccess) =>
-                  (returnContext, Just (headSuccess :$: tailSuccess))
+                  (returnContext, Just (headSuccess, tailSuccess))
                 (failureContext, DecisionFailure headFailure) =>
                   (failOne decisionSig ((a $: l) ** headFailure) failureContext,
                    Nothing)
             Nothing => (tailContext, Nothing))
-        (\context => (context, Just (|:|)))
+        (\context => (context, Just ()))
         (\x, l, head, tail, context =>
           let
             (tailContext, tailResult) = tail context
@@ -409,7 +409,7 @@ inductiveDecide decisionSig x' =
               let (headContext, headResult) = head tailContext in
               case headResult of
                 Just headSuccess =>
-                  (headContext, Just (headSuccess ::: tailSuccess))
+                  (headContext, Just (headSuccess, tailSuccess))
                 Nothing => (headContext, Nothing)
             Nothing => (fst (head tailContext), Nothing)))
       (initialContext decisionSig)

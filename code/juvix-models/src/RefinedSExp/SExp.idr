@@ -482,28 +482,7 @@ sexpNonDepListFolds : {atom : Type} ->
 sexpNonDepListFolds signature =
   sexpEliminators (SExpNonDepListFoldSigToEliminatorSig signature)
 
-public export
-SExpForAllsFromEliminator :
-  {atom : Type} -> (depType : SExpPred atom) -> SPredPair atom
-SExpForAllsFromEliminator depType =
-  sexpTypeConstructors
-    (SExpEliminatorArgs
-      (\a, l => Pair (depType (a $: l)))
-      ()
-      (\_, _ => Pair))
-
-public export
-SExpExistsFromEliminator :
-  {atom : Type} -> (depType : SExpPred atom) -> SPredPair atom
-SExpExistsFromEliminator depType =
-  sexpTypeConstructors
-    (SExpEliminatorArgs
-      (\a, l => Either (depType (a $: l)))
-      Void
-      (\_, _ => Either))
-
-infixr 7 :$:
-public export
+{-
 data SExpForAll :
   {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom where
     (:$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
@@ -511,43 +490,62 @@ data SExpForAll :
             depType (a $: l) ->
             ListForAll (SExpForAll depType) l ->
             SExpForAll depType (a $: l)
+SExpForAll: {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom
+SExpForAll depType = fst (SExpForAllTypes depType)
 
-public export
 SListForAll : {atom : Type} ->
   (depType : SExp atom -> Type) -> SList atom -> Type
 SListForAll = ListForAll . SExpForAll
+ -}
+public export
+SExpForAllTypes :
+  {atom : Type} -> (depType : SExpPred atom) -> SPredPair atom
+SExpForAllTypes depType =
+  sexpTypeConstructors
+    (SExpEliminatorArgs
+      (\a, l => Pair (depType (a $: l)))
+      ()
+      (\_, _ => Pair))
+
+public export
+SExpForAll: {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom
+SExpForAll depType = fst (SExpForAllTypes depType)
+
+public export
+SListForAll: {atom : Type} -> (depType : SExpPred atom) -> SListPred atom
+SListForAll depType = snd (SExpForAllTypes depType)
 
 public export
 SExpForAllExp :
   {atom : Type} -> {depType : SExp atom -> Type} ->
   {a : atom} -> {l : SList atom} ->
   SExpForAll depType (a $: l) -> depType (a $: l)
-SExpForAllExp (sp :$: _) = sp
+SExpForAllExp (sp, _) = sp
 
 public export
 SExpForAllList :
   {atom : Type} -> {depType : SExp atom -> Type} ->
   {a : atom} -> {l : SList atom} ->
   SExpForAll depType (a $: l) -> SListForAll depType l
-SExpForAllList (_ :$: lp) = lp
+SExpForAllList (_, lp) = lp
 
 public export
 SListForAllHead :
   {atom : Type} -> {depType : SExp atom -> Type} ->
   {x : SExp atom} -> {l : SList atom} ->
   SListForAll depType (x $+ l) -> SExpForAll depType x
-SListForAllHead (|:|) impossible
-SListForAllHead (sp ::: _) = sp
+SListForAllHead () impossible
+SListForAllHead (sp, _) = sp
 
 public export
 SListForAllTail :
   {atom : Type} -> {depType : SExp atom -> Type} ->
   {x : SExp atom} -> {l : SList atom} ->
   SListForAll depType (x $+ l) -> SListForAll depType l
-SListForAllTail (|:|) impossible
-SListForAllTail (_ ::: lp) = lp
+SListForAllTail () impossible
+SListForAllTail (_, lp) = lp
 
-public export
+{-
 data SExpExists :
   {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom where
     (<$:) : {atom : Type} -> {depType : SExp atom -> Type} ->
@@ -559,10 +557,27 @@ data SExpExists :
             ListExists (SExpExists depType) l ->
             SExpExists depType (a $: l)
 
-public export
 SListExists : {atom : Type} ->
   (depType : SExp atom -> Type) -> SList atom -> Type
 SListExists = ListExists . SExpExists
+-}
+public export
+SExpExistsTypes :
+  {atom : Type} -> (depType : SExpPred atom) -> SPredPair atom
+SExpExistsTypes depType =
+  sexpTypeConstructors
+    (SExpEliminatorArgs
+      (\a, l => Either (depType (a $: l)))
+      Void
+      (\_, _ => Either))
+
+public export
+SExpExists: {atom : Type} -> (depType : SExpPred atom) -> SExpPred atom
+SExpExists depType = fst (SExpExistsTypes depType)
+
+public export
+SListExists: {atom : Type} -> (depType : SExpPred atom) -> SListPred atom
+SListExists depType = snd (SExpExistsTypes depType)
 
 public export
 record SExpExistsList
@@ -618,7 +633,7 @@ slistExistsExp : {atom : Type} -> {depType : SExp atom -> Type} ->
   SListExistsList depType l ->
   SExpExistsList depType (a $: l)
 slistExistsExp (SListExistsCons head tail) =
-  SExpExistsCons ((>$:) head) (map (>$:) tail)
+  SExpExistsCons (Right head) (map Right tail)
 
 public export
 sexpExistsList : {atom : Type} -> {depType : SExp atom -> Type} ->
@@ -627,7 +642,7 @@ sexpExistsList : {atom : Type} -> {depType : SExp atom -> Type} ->
   SExpExistsList depType x ->
   SListExistsList depType (x $+ l)
 sexpExistsList (SExpExistsCons head tail) =
-  SListExistsCons ((<::) head) (map (<::) tail)
+  SListExistsCons (Left head) (map Left tail)
 
 public export
 slistExistsShift : {atom : Type} -> {depType : SExp atom -> Type} ->
@@ -635,7 +650,7 @@ slistExistsShift : {atom : Type} -> {depType : SExp atom -> Type} ->
   SListExistsList depType l ->
   SListExistsList depType (x $+ l)
 slistExistsShift (SListExistsCons head tail) =
-  SListExistsCons ((>::) head) (map (>::) tail)
+  SListExistsCons (Right head) (map Right tail)
 
 public export
 slistExistsMerge : {atom : Type} -> {depType : SExp atom -> Type} ->
@@ -665,7 +680,7 @@ SExpEitherForAllCons : {f : Type -> Type} -> Applicative f =>
   f (SListEitherForAll sl sr (x $+ l))
 SExpEitherForAllCons {f} fs fl =
   map (\eithers => case eithers of
-    (Left sForAll, Left lForAll) => Left (sForAll ::: lForAll)
+    (Left sForAll, Left lForAll) => Left (sForAll, lForAll)
     (Left sForAll, Right lExists) => Right (slistExistsShift lExists)
     (Right sExists, Left lForAll) => Right (sexpExistsList sExists)
     (Right sExists, Right lExists) => Right (slistExistsMerge sExists lExists))
@@ -682,12 +697,14 @@ SExpForAllApplications {f} {depType} =
     {lp=(\l => (SListForAll (f . depType) l) -> f (SListForAll depType l))}
     (SExpEliminatorArgs
       (\a, l, mapLForAll, sForAll =>
-        (map (:$:) (SExpForAllExp sForAll)) <*>
-        (mapLForAll (SExpForAllList sForAll)))
-      (\_ => pure (|:|))
+        (map MkPair (SExpForAllExp {depType=(f . depType)} sForAll)) <*>
+        (mapLForAll (SExpForAllList {depType=(f . depType)} sForAll)))
+      (\_ => pure ())
       (\x, l, mapSForAll, mapLForAll, slForAll =>
-        (map (:::) (mapSForAll (SListForAllHead slForAll))) <*>
-        (mapLForAll (SListForAllTail slForAll))))
+        (map MkPair
+          (mapSForAll (SListForAllHead {depType=(f . depType)} slForAll))) <*>
+        (mapLForAll
+          (SListForAllTail {depType=(f . depType)} slForAll))))
 
 public export
 SExpForAllApply : {f : Type -> Type} -> Applicative f =>
@@ -711,13 +728,12 @@ SExpForAllMaps {f} {depType} fmap =
   sexpEliminators
     (SExpEliminatorArgs
       (\a, l, forAllMap, sForAll =>
-        fmap (a $: l) (SExpForAllExp sForAll) :$:
-          forAllMap (SExpForAllList sForAll))
-      (\_ =>
-        (|:|))
+        (fmap (a $: l) (SExpForAllExp {depType} sForAll),
+          forAllMap (SExpForAllList {depType} sForAll)))
+      (\_ => ())
       (\x, l, sForAllMap, lForAllMap, lForAll =>
-        sForAllMap (SListForAllHead lForAll) :::
-          lForAllMap (SListForAllTail lForAll)))
+        (sForAllMap (SListForAllHead {depType} lForAll),
+          lForAllMap (SListForAllTail {depType} lForAll))))
 
 public export
 record
@@ -735,9 +751,9 @@ sexpForAllFolds :
 sexpForAllFolds {atom} {sp} signature =
   sexpEliminators
     (SExpEliminatorArgs
-      (\a, l, slForAll => expElim signature a l slForAll :$: slForAll)
-      (|:|)
-      (\x, l, head, tail => head ::: tail))
+      (\a, l, slForAll => (expElim signature a l slForAll, slForAll))
+      ()
+      (\x, l, head, tail => (head, tail)))
 
 public export
 sexpApplicativeForAllFolds : {f : Type -> Type} ->
@@ -749,8 +765,8 @@ sexpApplicativeForAllFolds : {f : Type -> Type} ->
    (l : SList atom) -> f (SListForAll sp l))
 sexpApplicativeForAllFolds {f} {atom} {sp} signature =
   let forAllFolds = sexpForAllFolds {sp=(f . sp)} signature in
-  (\x => SExpForAllApply x (fst forAllFolds x),
-   \l => SListForAllApply l (snd forAllFolds l))
+  (\x => SExpForAllApply {depType=sp} x (fst forAllFolds x),
+   \l => SListForAllApply {depType=sp} l (snd forAllFolds l))
 
 public export
 record SExpMetaEliminatorSig
