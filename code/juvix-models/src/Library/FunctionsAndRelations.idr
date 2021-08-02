@@ -923,7 +923,8 @@ composeDependentApplicatives {f} {g} fDepApp gDepApp =
 public export
 DependentJoin : (Type -> Type) -> Type
 DependentJoin m =
-  (a : Type) -> (b : a -> Type) -> (x : a) -> m (m (b x)) -> m (b x)
+  (a : Type) -> (a' : a -> Type) -> (a'' : (x : a) -> a' x -> Type) ->
+    (x : a) -> (x' : a' x) -> m (m (a'' x x')) -> m (a' x)
 
 public export
 record DependentMonad (m : Type -> Type) where
