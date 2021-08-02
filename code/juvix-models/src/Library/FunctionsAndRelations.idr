@@ -763,6 +763,15 @@ applyPair :
 applyPair fa fb = map MkPair fa <*> fb
 
 public export
+Functor Prelude.Basics.id where
+  map = Prelude.Basics.id
+
+public export
+Applicative Prelude.Basics.id where
+  pure = Prelude.Basics.id
+  (<*>) = Prelude.Basics.id
+
+public export
 [ComposeFunctor] (Functor f, Functor g) => Functor (f . g) where
     map = map {f} . map {f=g}
 
