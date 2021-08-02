@@ -288,6 +288,60 @@ slistEliminatorMatchesListFold signature (x :: l) =
     (slistEliminatorMatchesListFold signature l)
 
 public export
+record SExpMetaEliminatorSig
+  {atom : Type}
+  {sp : !- (SExp atom)}
+  {lp : !- (SList atom)}
+  (signature : SExpEliminatorSig sp lp)
+  (spp : (x : SExp atom) -> sp x -> Type)
+  (lpp : (l : SList atom) -> lp l -> Type)
+  where
+    constructor SExpMetaEliminatorArgs
+    metaExpElim :
+      (a : atom) -> (l : SList atom) ->
+      (lppl : lpp l (slistEliminator signature l)) ->
+      spp (a $: l) (expElim signature a l (slistEliminator signature l))
+    metaNilElim : lpp [] (nilElim signature)
+    metaConsElim :
+      (x : SExp atom) -> (l : SList atom) ->
+      (sppx : spp x (sexpEliminator signature x)) ->
+      (lppl : lpp l (slistEliminator signature l)) ->
+      lpp (x $+ l)
+        (consElim signature x l
+          (sexpEliminator signature x)
+          (slistEliminator signature l))
+
+public export
+SExpMetaEliminatorSigToEliminatorSig :
+  {atom : Type} ->
+  {sp : !- (SExp atom)} ->
+  {lp : !- (SList atom)} ->
+  {signature : SExpEliminatorSig sp lp} ->
+  {spp : (x : SExp atom) -> sp x -> Type} ->
+  {lpp : (l : SList atom) -> lp l -> Type} ->
+  (metaSig : SExpMetaEliminatorSig signature spp lpp) ->
+  SExpEliminatorSig
+    (\x => spp x (sexpEliminator signature x))
+    (\l => lpp l (slistEliminator signature l))
+SExpMetaEliminatorSigToEliminatorSig metaSig =
+  (SExpEliminatorArgs
+    (metaExpElim metaSig) (metaNilElim metaSig) (metaConsElim metaSig))
+
+public export
+sexpMetaEliminators :
+  {atom : Type} ->
+  {sp : !- (SExp atom)} ->
+  {lp : !- (SList atom)} ->
+  {signature : SExpEliminatorSig sp lp} ->
+  {spp : (x : SExp atom) -> sp x -> Type} ->
+  {lpp : (l : SList atom) -> lp l -> Type} ->
+  (metaSig : SExpMetaEliminatorSig signature spp lpp) ->
+  ((x : SExp atom) -> spp x (sexpEliminator signature x),
+   (l : SList atom) -> lpp l (slistEliminator signature l))
+sexpMetaEliminators {atom} {sp} {lp} {spp} {lpp} metaSig =
+  sexpEliminators (SExpMetaEliminatorSigToEliminatorSig metaSig)
+
+public export
 SExpContextPred : (atom : Type) -> (contextType : Type) -> Type
 SExpContextPred atom contextType =
   (context : contextType) -> SExp atom -> Type
@@ -767,57 +821,3 @@ sexpApplicativeForAllFolds {f} {atom} {sp} signature =
   let forAllFolds = sexpForAllFolds {sp=(f . sp)} signature in
   (\x => SExpForAllApply {depType=sp} x (fst forAllFolds x),
    \l => SListForAllApply {depType=sp} l (snd forAllFolds l))
-
-public export
-record SExpMetaEliminatorSig
-  {atom : Type}
-  {sp : !- (SExp atom)}
-  {lp : !- (SList atom)}
-  (signature : SExpEliminatorSig sp lp)
-  (spp : (x : SExp atom) -> sp x -> Type)
-  (lpp : (l : SList atom) -> lp l -> Type)
-  where
-    constructor SExpMetaEliminatorArgs
-    metaExpElim :
-      (a : atom) -> (l : SList atom) ->
-      (lppl : lpp l (slistEliminator signature l)) ->
-      spp (a $: l) (expElim signature a l (slistEliminator signature l))
-    metaNilElim : lpp [] (nilElim signature)
-    metaConsElim :
-      (x : SExp atom) -> (l : SList atom) ->
-      (sppx : spp x (sexpEliminator signature x)) ->
-      (lppl : lpp l (slistEliminator signature l)) ->
-      lpp (x $+ l)
-        (consElim signature x l
-          (sexpEliminator signature x)
-          (slistEliminator signature l))
-
-public export
-SExpMetaEliminatorSigToEliminatorSig :
-  {atom : Type} ->
-  {sp : !- (SExp atom)} ->
-  {lp : !- (SList atom)} ->
-  {signature : SExpEliminatorSig sp lp} ->
-  {spp : (x : SExp atom) -> sp x -> Type} ->
-  {lpp : (l : SList atom) -> lp l -> Type} ->
-  (metaSig : SExpMetaEliminatorSig signature spp lpp) ->
-  SExpEliminatorSig
-    (\x => spp x (sexpEliminator signature x))
-    (\l => lpp l (slistEliminator signature l))
-SExpMetaEliminatorSigToEliminatorSig metaSig =
-  (SExpEliminatorArgs
-    (metaExpElim metaSig) (metaNilElim metaSig) (metaConsElim metaSig))
-
-public export
-sexpMetaEliminators :
-  {atom : Type} ->
-  {sp : !- (SExp atom)} ->
-  {lp : !- (SList atom)} ->
-  {signature : SExpEliminatorSig sp lp} ->
-  {spp : (x : SExp atom) -> sp x -> Type} ->
-  {lpp : (l : SList atom) -> lp l -> Type} ->
-  (metaSig : SExpMetaEliminatorSig signature spp lpp) ->
-  ((x : SExp atom) -> spp x (sexpEliminator signature x),
-   (l : SList atom) -> lpp l (slistEliminator signature l))
-sexpMetaEliminators {atom} {sp} {lp} {spp} {lpp} metaSig =
-  sexpEliminators (SExpMetaEliminatorSigToEliminatorSig metaSig)
