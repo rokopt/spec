@@ -770,7 +770,7 @@ public export
 [ComposeApplicative] (Applicative f, Applicative g) => Applicative (f . g)
   using ComposeFunctor where
     pure = pure {f} . pure {f=g}
-    fgab <*> fga = map (<*>) fgab <*> fga
+    (<*>) = ((<*>) {f}) . (map {f} ((<*>) {f=g}))
 
 public export
 DependentMap : (Type -> Type) -> Type
@@ -842,6 +842,11 @@ amap : {f : Type -> Type} -> (da : DependentApplicative f) ->
 amap = DMap . appFunctor
 
 public export
+afmap : {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {a, b : Type} -> (a -> b) -> f a -> f b
+afmap {da} = dfmap {df=(appFunctor da)}
+
+public export
 dpure : {f : Type -> Type} -> (da : DependentApplicative f) ->
   {a : Type} -> {a' : a -> Type} -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
 dpure {f} da {a} {a'} = DPure da a a'
@@ -859,35 +864,6 @@ public export
 interface DependentApplicativeInterface f where
   constructor MkDependentApplicativeInterface
   DependentApplicativeRecord : DependentApplicative f
-
-public export
-composeDependentApplicatives : {f, g : Type -> Type} ->
-  (fDepApp : DependentApplicative f) ->
-  (gDepApp : DependentApplicative g) ->
-  DependentApplicative (f . g)
-composeDependentApplicatives {f} {g} fDepApp gDepApp =
-  let fApp = appApplicative fDepApp in
-  let gApp = appApplicative gDepApp in
-  MkDependentApplicative
-    ComposeApplicative
-    (composeDependentFunctors (appFunctor fDepApp) (appFunctor gDepApp))
-    (\a, a', fgax, x =>
-      let
-        fdp = dpure fDepApp {a'=(g . a')}
-        fdm = amap fDepApp
-        fdp = dpure fDepApp {a'=(g . a')}
-        gdp = dpure gDepApp {a'}
-        fapp = appApplicative fDepApp
-        gapp = appApplicative gDepApp
-        fdmfoo = fdm _ _ _ (g . a')
-      in
-      fdp ?composeDependentApplicatives_hole_pure x)
-    ?composeDependentApplicatives_hole_application
-
-public export
-afmap : {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {a, b : Type} -> (a -> b) -> f a -> f b
-afmap {da} = dfmap {df=(appFunctor da)}
 
 public export
 afpure : {f : Type -> Type} -> {da : DependentApplicative f} ->
@@ -910,6 +886,30 @@ public export
 (<~>) : {f : Type -> Type} -> {da : DependentApplicative f} ->
   {a, b : Type} -> f (a -> b) -> f a -> f b
 (<~>) {f} {a} {b} {da} = afapply {f} {a} {b} {da}
+
+public export
+composeDependentApplicatives : {f, g : Type -> Type} ->
+  (fDepApp : DependentApplicative f) ->
+  (gDepApp : DependentApplicative g) ->
+  DependentApplicative (f . g)
+composeDependentApplicatives {f} {g} fDepApp gDepApp =
+  let fApp = appApplicative fDepApp in
+  let gApp = appApplicative gDepApp in
+  MkDependentApplicative
+    ComposeApplicative
+    (composeDependentFunctors (appFunctor fDepApp) (appFunctor gDepApp))
+    (\a, a', fgax, x =>
+      dpure fDepApp (afmap {f} {da=fDepApp} (dpure gDepApp) fgax) x)
+    (\a, b, a', b', fab, fgab =>
+      let
+        fmapgapp =
+          amap fDepApp a a
+            (\x => g (a' x -> b' (fab x)))
+            (\x => g (a' x) -> g (b' (fab x)))
+            id
+            (\_ => ((<*>) {f=g}))
+      in
+      (\x, fgax => (<*>) {f} (fmapgapp x (fgab x)) fgax))
 
 public export
 DependentJoin : (Type -> Type) -> Type
