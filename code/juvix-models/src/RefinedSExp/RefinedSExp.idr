@@ -10,7 +10,7 @@ public export
 record SExpEitherFoldSig {atom : Type} (m : Type -> Type)
   (sl, sr : SExp atom -> Type) where
     constructor SExpEitherFoldArgs
-    expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
+    expElim : (a : atom) -> (l : SList atom) -> m (SListForAll sl l) ->
       m (DepEither sl sr (a $: l))
 
 public export
@@ -22,7 +22,8 @@ SExpEitherFoldSigToEliminatorSig :
   SExpEliminatorSig (m . SExpEitherForAll sl sr) (m . SListEitherForAll sl sr)
 SExpEitherFoldSigToEliminatorSig signature =
   (SExpEliminatorArgs
-    (\a, l, mEither =>
+    (\a, l => let boop = expElim signature a l in (<*>) {f=m} ?hothoo)
+    {-
       mEither >>= (\either =>
         case either of
           Left allLeft =>
@@ -32,8 +33,9 @@ SExpEitherFoldSigToEliminatorSig signature =
                 Right expRight => Right (SExpExistsCons (Left expRight) []))
               (expElim signature a l allLeft)
           Right existsRight => pure (Right (slistExistsExp existsRight))))
+          -}
     (pure (Left ()))
-    (\_, _ => SExpEitherForAllCons {sl}))
+    (\_, _ => SExpEitherForAllCons {f=m} {sl}))
 
 public export
 sexpEitherFolds :

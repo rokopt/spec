@@ -726,6 +726,24 @@ SListEitherForAll :
 SListEitherForAll sl sr l = Either (SListForAll sl l) (SListExistsList sr l)
 
 public export
+SExpEitherForAllExp : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {sl, sr : SExp atom -> Type} ->
+  {a : atom} -> {l : SList atom} ->
+  f (DepEither sl sr (a $: l)) ->
+  f (SListEitherForAll sl sr l) ->
+  f (SExpEitherForAll sl sr (a $: l))
+SExpEitherForAllExp {f} fs fl =
+  map (\eithers => case eithers of
+    (Left sLeft, Left lForAll) => Left (sLeft, lForAll)
+    (Left sLeft, Right lExists) => Right (slistExistsExp lExists)
+    (Right sRight, Left lForAll) => Right (SExpExistsCons (Left sRight) [])
+    (Right sRight, Right (SListExistsCons headExists tailExists)) =>
+      Right
+        (SExpExistsCons
+          (Left sRight) (Right headExists :: map Right tailExists)))
+  (applyPair fs fl)
+
+public export
 SExpEitherForAllCons : {f : Type -> Type} -> Applicative f =>
   {atom : Type} -> {sl, sr : SExp atom -> Type} ->
   {x : SExp atom} -> {l : SList atom} ->
@@ -819,3 +837,31 @@ sexpApplicativeForAllFolds {f} {atom} {sp} signature =
   let forAllFolds = sexpForAllFolds {sp=(f . sp)} signature in
   (\x => SExpForAllApply {depType=sp} x (fst forAllFolds x),
    \l => SListForAllApply {depType=sp} l (snd forAllFolds l))
+
+public export
+record
+SExpEitherForAllFoldSig {f : Type -> Type}
+  {atom : Type} (sl, sr : SExp atom -> Type) where
+    constructor SExpForAllEitherFoldArgs
+    expElim :
+      (a : atom) -> (l : SList atom) ->
+        f (SListEitherForAll sl sr l) -> f (DepEither sl sr (a $: l))
+
+public export
+sexpEitherForAllFolds :
+  {f : Type -> Type} ->
+  {isApplicative : Applicative f} ->
+  {atom : Type} ->
+  {sl, sr : SExp atom -> Type} ->
+  (signature : SExpEitherForAllFoldSig {f} sl sr) ->
+  ((x : SExp atom) -> f (SExpEitherForAll sl sr x),
+   (l : SList atom) -> f (SListEitherForAll sl sr l))
+sexpEitherForAllFolds {atom} {sl} {sr} signature =
+  sexpEliminators
+    (SExpEliminatorArgs
+      (\a, l, slForAll =>
+        SExpEitherForAllExp {f} {sl} {sr}
+          (expElim signature a l slForAll) slForAll)
+      (pure (Left ()))
+      (\_, _ =>
+        SExpEitherForAllCons {f} {sl} {sr}))
