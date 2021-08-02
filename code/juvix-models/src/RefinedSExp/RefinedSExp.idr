@@ -14,6 +14,28 @@ record SExpEitherFoldSig {atom : Type} (m : Type -> Type)
       m (DepEither sl sr (a $: l))
 
 public export
+SExpEitherFoldSigToEliminatorSig :
+  {atom : Type} ->
+  {m : Type -> Type} -> Monad m =>
+  {sl, sr : SExp atom -> Type} ->
+  SExpEitherFoldSig m sl sr ->
+  SExpEliminatorSig (m . SExpEitherForAll sl sr) (m . SListEitherForAll sl sr)
+SExpEitherFoldSigToEliminatorSig signature =
+  (SExpEliminatorArgs
+    (\a, l, mEither =>
+      mEither >>= (\either =>
+        case either of
+          Left allLeft =>
+            map
+              (\exp => case exp of
+                Left expLeft => Left (expLeft, allLeft)
+                Right expRight => Right (SExpExistsCons (Left expRight) []))
+              (expElim signature a l allLeft)
+          Right existsRight => pure (Right (slistExistsExp existsRight))))
+    (pure (Left ()))
+    (\_, _ => SExpEitherForAllCons {sl}))
+
+public export
 sexpEitherFolds :
   {atom : Type} ->
   {m : Type -> Type} -> Monad m =>
@@ -22,20 +44,7 @@ sexpEitherFolds :
   ((x : SExp atom) -> m (SExpEitherForAll sl sr x),
    (l : SList atom) -> m (SListEitherForAll sl sr l))
 sexpEitherFolds {atom} {m} {sl} {sr} signature =
-  sexpEliminators
-    (SExpEliminatorArgs
-      (\a, l, mEither =>
-        mEither >>= (\either =>
-          case either of
-            Left allLeft =>
-              map
-                (\exp => case exp of
-                  Left expLeft => Left (expLeft, allLeft)
-                  Right expRight => Right (SExpExistsCons (Left expRight) []))
-                (expElim signature a l allLeft)
-            Right existsRight => pure (Right (slistExistsExp existsRight))))
-      (pure (Left ()))
-      (\_, _ => SExpEitherForAllCons {sl}))
+  sexpEliminators (SExpEitherFoldSigToEliminatorSig signature)
 
 public export
 sexpEitherFold :

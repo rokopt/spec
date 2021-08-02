@@ -747,8 +747,6 @@ SExpForAllApplications : {f : Type -> Type} -> Applicative f =>
    (l : SList atom) -> SListForAll (f . depType) l -> f (SListForAll depType l))
 SExpForAllApplications {f} {depType} =
   sexpEliminators
-    {sp=(\x => (SExpForAll (f . depType) x) -> f (SExpForAll depType x))}
-    {lp=(\l => (SListForAll (f . depType) l) -> f (SListForAll depType l))}
     (SExpEliminatorArgs
       (\a, l, mapLForAll, sForAll =>
         (map MkPair (SExpForAllExp {depType=(f . depType)} sForAll)) <*>
