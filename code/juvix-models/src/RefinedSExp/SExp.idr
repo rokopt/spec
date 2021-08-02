@@ -793,6 +793,22 @@ record SExpMetaEliminatorSig
           (slistEliminator signature l))
 
 public export
+SExpMetaEliminatorSigToEliminatorSig :
+  {atom : Type} ->
+  {sp : !- (SExp atom)} ->
+  {lp : !- (SList atom)} ->
+  {signature : SExpEliminatorSig sp lp} ->
+  {spp : (x : SExp atom) -> sp x -> Type} ->
+  {lpp : (l : SList atom) -> lp l -> Type} ->
+  (metaSig : SExpMetaEliminatorSig signature spp lpp) ->
+  SExpEliminatorSig
+    (\x => spp x (sexpEliminator signature x))
+    (\l => lpp l (slistEliminator signature l))
+SExpMetaEliminatorSigToEliminatorSig metaSig =
+  (SExpEliminatorArgs
+    (metaExpElim metaSig) (metaNilElim metaSig) (metaConsElim metaSig))
+
+public export
 sexpMetaEliminators :
   {atom : Type} ->
   {sp : !- (SExp atom)} ->
@@ -804,6 +820,4 @@ sexpMetaEliminators :
   ((x : SExp atom) -> spp x (sexpEliminator signature x),
    (l : SList atom) -> lpp l (slistEliminator signature l))
 sexpMetaEliminators {atom} {sp} {lp} {spp} {lpp} metaSig =
-  sexpEliminators
-    (SExpEliminatorArgs
-      (metaExpElim metaSig) (metaNilElim metaSig) (metaConsElim metaSig))
+  sexpEliminators (SExpMetaEliminatorSigToEliminatorSig metaSig)
