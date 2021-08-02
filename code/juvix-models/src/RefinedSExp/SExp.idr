@@ -813,17 +813,92 @@ SExpForAllFoldSig {atom : Type} (sp : SExp atom -> Type) where
     (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $: l)
 
 public export
+SExpForAllFoldSigToEliminatorSig :
+  {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  SExpForAllFoldSig {atom} sp ->
+  SExpEliminatorSig (\x => SExpForAll sp x) (\l => SListForAll sp l)
+SExpForAllFoldSigToEliminatorSig signature =
+  (SExpEliminatorArgs
+    (\a, l, slForAll => (expElim signature a l slForAll, slForAll))
+    ()
+    (\x, l, head, tail => (head, tail)))
+
+public export
 sexpForAllFolds :
   {atom : Type} ->
   {sp : SExp atom -> Type} ->
   (signature : SExpForAllFoldSig sp) ->
   ((x : SExp atom) -> SExpForAll sp x, (l : SList atom) -> SListForAll sp l)
-sexpForAllFolds {atom} {sp} signature =
-  sexpEliminators
-    (SExpEliminatorArgs
-      (\a, l, slForAll => (expElim signature a l slForAll, slForAll))
-      ()
-      (\x, l, head, tail => (head, tail)))
+sexpForAllFolds signature =
+  sexpEliminators (SExpForAllFoldSigToEliminatorSig signature)
+
+public export
+sexpForAllFold :
+  {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  (signature : SExpForAllFoldSig sp) ->
+  (x : SExp atom) -> SExpForAll sp x
+sexpForAllFold signature = fst (sexpForAllFolds signature)
+
+public export
+slistForAllFold :
+  {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  (signature : SExpForAllFoldSig sp) ->
+  (l : SList atom) -> SListForAll sp l
+slistForAllFold signature = snd (sexpForAllFolds signature)
+
+public export
+record SExpForAllMetaFoldSig
+  {atom : Type}
+  {sp : SExp atom -> Type}
+  (signature : SExpForAllFoldSig sp)
+  (spp : (x : SExp atom) -> SExpForAll sp x -> Type)
+  (lpp : (l : SList atom) -> SListForAll sp l -> Type)
+  where
+    constructor SExpForAllMetaFoldArgs
+    metaExpElim : (a : atom) -> (l : SList atom) ->
+      lpp l (slistForAllFold signature l) ->
+      spp (a $: l)
+        (expElim signature a l (slistForAllFold signature l),
+         slistForAllFold signature l)
+    metaNilElim : lpp [] ()
+    metaConsElim : (x : SExp atom) -> (l : SList atom) ->
+      spp x (sexpForAllFold signature x) ->
+      lpp l (slistForAllFold signature l) ->
+      lpp (x :: l) (sexpForAllFold signature x, slistForAllFold signature l)
+
+public export
+SExpForAllMetaFoldSigToEliminatorSig :
+  {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  {signature : SExpForAllFoldSig sp} ->
+  {spp : (x : SExp atom) -> SExpForAll sp x -> Type} ->
+  {lpp : (l : SList atom) -> SListForAll sp l -> Type} ->
+  SExpForAllMetaFoldSig signature spp lpp ->
+  SExpEliminatorSig
+    (\x => spp x (sexpForAllFold signature x))
+    (\l => lpp l (slistForAllFold signature l))
+SExpForAllMetaFoldSigToEliminatorSig metaSig =
+  (SExpEliminatorArgs
+    (metaExpElim metaSig)
+    (metaNilElim metaSig)
+    (metaConsElim metaSig)
+  )
+
+public export
+sexpForAllMetaFolds :
+  {atom : Type} ->
+  {sp : SExp atom -> Type} ->
+  {signature : SExpForAllFoldSig sp} ->
+  {spp : (x : SExp atom) -> SExpForAll sp x -> Type} ->
+  {lpp : (l : SList atom) -> SListForAll sp l -> Type} ->
+  (metaSig : SExpForAllMetaFoldSig signature spp lpp) ->
+  ((x : SExp atom) -> spp x (sexpForAllFold signature x),
+   (l : SList atom) -> lpp l (slistForAllFold signature l))
+sexpForAllMetaFolds {atom} {sp} {signature} {spp} {lpp} metaSig =
+  sexpEliminators (SExpForAllMetaFoldSigToEliminatorSig metaSig)
 
 public export
 sexpApplicativeForAllFolds : {f : Type -> Type} ->
