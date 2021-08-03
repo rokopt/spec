@@ -450,13 +450,25 @@ Functor SList where
   map = slistMap
 
 public export
+sexpApplicationsToAtom : {0 a, b : Type} ->
+  SExp (a -> b) ->
+  a -> SExp b
+sexpApplicationsToAtom xab x =
+  fst
+    (sexpConstListEliminators
+      (SExpConstListEliminatorArgs
+        (\x' => $^ (x' x))
+        (const ($|))))
+  xab
+
+public export
 sexpApplications : {0 a, b : Type} ->
   SExp (a -> b) ->
   (SExp a -> SExp b, SList a -> SList b)
 sexpApplications xab =
   sexpConstListEliminators
     (SExpConstListEliminatorArgs
-      (\a => ?sexpApplications_atomElim_hole)
+      (sexpApplicationsToAtom xab)
       (const ($|)))
 
 public export
