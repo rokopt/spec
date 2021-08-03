@@ -479,10 +479,18 @@ public export
 slistApplyExp : {0 a, b : Type} -> SExp (a -> b) -> SList a -> SList b
 slistApplyExp xab = snd (sexpApplications xab)
 
+public export
+slistApply : {0 a, b : Type} -> SList (a -> b) -> SList a -> SList b
+slistApply =
+  listEliminator {atom=(SExp (a -> b))} {lp=const (SList a -> SList b)}
+    (ListEliminatorArgs
+      (const [])
+      (\xab, lab, lalb, la => slistApplyExp xab la ++ lalb la))
+
 Applicative SExp where
   pure = ($^)
   (<*>) = sexpApply
 
 Applicative SList where
   pure x = [ ($^ x) ]
-  (<*>) = ?slistApply_hole
+  (<*>) = slistApply
