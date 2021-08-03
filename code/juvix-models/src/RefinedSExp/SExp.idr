@@ -726,22 +726,53 @@ SListEitherForAll :
 SListEitherForAll sl sr l = Either (SListForAll sl l) (SListExistsList sr l)
 
 public export
-SExpEitherForAllExp : {f : Type -> Type} -> Applicative f =>
+SExpEitherForAllExpPair :
   {atom : Type} -> {sl, sr : SExp atom -> Type} ->
   {a : atom} -> {l : SList atom} ->
-  f (DepEither sl sr (a $: l)) ->
-  f (SListEitherForAll sl sr l) ->
-  f (SExpEitherForAll sl sr (a $: l))
-SExpEitherForAllExp {f} fs fl =
-  map (\eithers => case eithers of
+  (DepEither sl sr (a $: l), SListEitherForAll sl sr l) ->
+  SExpEitherForAll sl sr (a $: l)
+SExpEitherForAllExpPair eithers =
+  case eithers of
     (Left sLeft, Left lForAll) => Left (sLeft, lForAll)
     (Left sLeft, Right lExists) => Right (slistExistsExp lExists)
     (Right sRight, Left lForAll) => Right (SExpExistsCons (Left sRight) [])
     (Right sRight, Right (SListExistsCons headExists tailExists)) =>
       Right
         (SExpExistsCons
-          (Left sRight) (Right headExists :: map Right tailExists)))
-  (applyPair fs fl)
+          (Left sRight) (Right headExists :: map Right tailExists))
+
+public export
+data SExpEitherForAllExpResult :
+  {atom : Type} -> (sl, sr : SExp atom -> Type) ->
+  (a : atom) -> (l : SList atom) -> Type where
+    SExpEitherForAllExpResultExecuted :
+      (SListForAll sl l, Either (sl (a $: l)) (sr (a $: l))) ->
+      SExpEitherForAllExpResult sl sr a l
+    SExpEitherForAllExpResultNotExecuted :
+      SListExistsList sr l -> SExpEitherForAllExpResult sl sr a l
+
+public export
+SExpEitherForAllExpPairMergeResult :
+  {atom : Type} -> {sl, sr : SExp atom -> Type} ->
+  {a : atom} -> {l : SList atom} ->
+  SExpEitherForAllExpResult sl sr a l -> SExpEitherForAll sl sr (a $: l)
+SExpEitherForAllExpPairMergeResult result = case result of
+  SExpEitherForAllExpResultExecuted (forAll, Left resultLeft) =>
+    Left (resultLeft, forAll)
+  SExpEitherForAllExpResultExecuted (forAll, Right resultRight) =>
+    Right (SExpExistsCons (Left resultRight) [])
+  SExpEitherForAllExpResultNotExecuted existsList =>
+    Right (slistExistsExp existsList)
+
+public export
+SExpEitherForAllExp : {f : Type -> Type} -> Applicative f =>
+  {atom : Type} -> {sl, sr : SExp atom -> Type} ->
+  {a : atom} -> {l : SList atom} ->
+  f (DepEither sl sr (a $: l)) ->
+  f (SListEitherForAll sl sr l) ->
+  f (SExpEitherForAll sl sr (a $: l))
+SExpEitherForAllExp {f} {sl} {sr} fs fl =
+  map (SExpEitherForAllExpPair {sl} {sr}) (applyPair fs fl)
 
 public export
 SExpEitherForAllCons : {f : Type -> Type} -> Applicative f =>

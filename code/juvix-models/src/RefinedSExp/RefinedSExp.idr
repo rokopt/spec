@@ -7,22 +7,42 @@ import public Library.Decidability
 %default total
 
 public export
-record SExpEitherFoldSig {atom : Type} (m : Type -> Type)
+record SExpEitherFoldSig {atom : Type} (f : Type -> Type)
   (sl, sr : SExp atom -> Type) where
     constructor SExpEitherFoldArgs
-    expElim : (a : atom) -> (l : SList atom) -> SListForAll sl l ->
-      m (DepEither sl sr (a $: l))
+    expElim : (a : atom) -> (l : SList atom) ->
+      f (SListForAll sl l -> DepEither sl sr (a $: l))
 
 public export
 SExpEitherFoldSigToEliminatorSig :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {f : Type -> Type} -> Applicative f =>
   {sl, sr : SExp atom -> Type} ->
-  SExpEitherFoldSig m sl sr ->
-  SExpEliminatorSig (m . SExpEitherForAll sl sr) (m . SListEitherForAll sl sr)
-SExpEitherFoldSigToEliminatorSig signature =
+  SExpEitherFoldSig f sl sr ->
+  SExpEliminatorSig (f . SExpEitherForAll sl sr) (f . SListEitherForAll sl sr)
+SExpEitherFoldSigToEliminatorSig {f} signature =
   (SExpEliminatorArgs
-    (\a, l, mEither =>
+    (\a, l =>
+      let
+        expElimStep : f (SListForAll sl l -> DepEither sl sr (a $: l))
+        expElimStep = expElim signature a l
+
+        expElimExtendDomain :
+          f (SListEitherForAll sl sr l) ->
+          f (SExpEitherForAllExpResult sl sr a l)
+        expElimExtendDomain =
+          applyEitherElim
+            (pure SExpEitherForAllExpResultExecuted <.>
+              map fMkPair expElimStep)
+            (pure SExpEitherForAllExpResultNotExecuted)
+
+        expElimMergeResults :
+          SExpEitherForAllExpResult sl sr a l ->
+          SExpEitherForAll sl sr (a $: l)
+        expElimMergeResults = SExpEitherForAllExpPairMergeResult {sl} {sr}
+      in
+      map expElimMergeResults . expElimExtendDomain
+    {-
       mEither >>= (\either =>
         case either of
           Left allLeft =>
@@ -31,25 +51,27 @@ SExpEitherFoldSigToEliminatorSig signature =
                 Left expLeft => Left (expLeft, allLeft)
                 Right expRight => Right (SExpExistsCons (Left expRight) []))
               (expElim signature a l allLeft)
-          Right existsRight => pure (Right (slistExistsExp existsRight))))
+          Right existsRight => pure (Right (slistExistsExp existsRight)))
+          -}
+    )
     (pure (Left ()))
-    (\_, _ => SExpEitherForAllCons {sl}))
+    (\_, _ => SExpEitherForAllCons {f} {sl}))
 
 public export
 sexpEitherFolds :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {f : Type -> Type} -> Applicative f =>
   {sl, sr : SExp atom -> Type} ->
-  (signature : SExpEitherFoldSig m sl sr) ->
-  ((x : SExp atom) -> m (SExpEitherForAll sl sr x),
-   (l : SList atom) -> m (SListEitherForAll sl sr l))
-sexpEitherFolds {atom} {m} {sl} {sr} signature =
+  (signature : SExpEitherFoldSig f sl sr) ->
+  ((x : SExp atom) -> f (SExpEitherForAll sl sr x),
+   (l : SList atom) -> f (SListEitherForAll sl sr l))
+sexpEitherFolds {atom} {f} {sl} {sr} signature =
   sexpEliminators (SExpEitherFoldSigToEliminatorSig signature)
 
 public export
 sexpEitherFold :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (signature : SExpEitherFoldSig m sl sr) ->
   (x : SExp atom) -> m (SExpEitherForAll sl sr x)
@@ -59,7 +81,7 @@ sexpEitherFold {atom} {m} {sl} {sr} signature =
 public export
 slistEitherFold :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (signature : SExpEitherFoldSig m sl sr) ->
   (l : SList atom) -> m (SListEitherForAll sl sr l)
@@ -69,7 +91,7 @@ slistEitherFold {atom} {m} {sl} {sr} signature =
 public export
 SExpRefinements :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (SExp atom -> m Type, SList atom -> m Type)
@@ -80,7 +102,7 @@ SExpRefinements selector =
 public export
 SExpRefinement :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   SExp atom -> m Type
@@ -89,7 +111,7 @@ SExpRefinement = fst . SExpRefinements
 public export
 SListRefinement :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   SList atom -> m Type
@@ -98,7 +120,7 @@ SListRefinement = snd . SExpRefinements
 public export
 SExpLiftedRefinements :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (m (SExp atom -> Type), m (SList atom -> Type))
@@ -109,7 +131,7 @@ SExpLiftedRefinements selector =
 public export
 RefinedSExpTypes :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   (m Type, m Type)
@@ -121,7 +143,7 @@ RefinedSExpTypes selector =
 public export
 RefinedSExp :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   m Type
@@ -131,7 +153,7 @@ RefinedSExp selector =
 public export
 RefinedSList :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   (selector : SExpEitherFoldSig m sl sr) ->
   m Type
@@ -152,7 +174,7 @@ record SExpEitherMetaFoldSig
 public export
 sexpEitherMetaFolds :
   {atom : Type} ->
-  {m : Type -> Type} -> Monad m =>
+  {m : Type -> Type} -> Applicative m =>
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig m sl sr} ->
   {spp : (x : SExp atom) -> m (SExpEitherForAll sl sr x) -> Type} ->
@@ -166,7 +188,7 @@ public export
 record SExpRefinementEliminatorSig
   {atom : Type}
   {m : Type -> Type}
-  {isMonad : Monad m}
+  {isApplicative : Applicative m}
   {mAlg : Algebra m Type}
   {sl, sr : SExp atom -> Type}
   (signature : SExpEitherFoldSig m sl sr)
@@ -178,13 +200,13 @@ record SExpRefinementEliminatorSig
 public export
 sexpRefinementEliminators :
   {atom : Type} ->
-  {m : Type -> Type} -> {isMonad : Monad m} ->
+  {m : Type -> Type} -> {isApplicative : Applicative m} ->
   {mAlg : Algebra m Type} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig m sl sr} ->
   {srp : (x : SExp atom) -> mAlg (SExpRefinement signature x) -> Type} ->
   {lrp : (l : SList atom) -> mAlg (SListRefinement signature l) -> Type} ->
-  (metaSig : SExpRefinementEliminatorSig {isMonad} {mAlg} signature srp lrp) ->
+  (metaSig : SExpRefinementEliminatorSig {isApplicative} {mAlg} signature srp lrp) ->
   ((x : SExp atom) -> (rx : mAlg (SExpRefinement signature x)) -> srp x rx,
    (l : SList atom) -> (rl : mAlg (SListRefinement signature l)) -> lrp l rl)
 sexpRefinementEliminators = ?sexpRefinementEliminators_hole
@@ -193,7 +215,7 @@ public export
 record RefinedSExpEliminatorSig
   {atom : Type}
   {m : Type -> Type}
-  {isMonad : Monad m} {mAlg : Algebra m Type}
+  {isApplicative : Applicative m} {mAlg : Algebra m Type}
   {sl, sr : SExp atom -> Type}
   (signature : SExpEitherFoldSig m sl sr)
   (srp : mAlg (RefinedSExp signature) -> Type)
@@ -205,14 +227,14 @@ public export
 refinedSExpEliminators :
   {atom : Type} ->
   {m : Type -> Type} ->
-  {isMonad : Monad m} ->
+  {isApplicative : Applicative m} ->
   {mAlg : Algebra m Type} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig m sl sr} ->
   {srp : mAlg (RefinedSExp signature) -> Type} ->
   {lrp : mAlg (RefinedSList signature) -> Type} ->
   (metaSig : RefinedSExpEliminatorSig
-    {isMonad} {mAlg} signature srp lrp) ->
+    {isApplicative} {mAlg} signature srp lrp) ->
   ((rx : mAlg (RefinedSExp signature)) -> srp rx,
    (rl : mAlg (RefinedSList signature)) -> lrp rl)
 refinedSExpEliminators = ?refinedSExpEliminators_hole
@@ -220,7 +242,7 @@ refinedSExpEliminators = ?refinedSExpEliminators_hole
 public export
 record RefinedSExpTransformerSig
   {m : Type -> Type}
-  {isMonad : Monad m}
+  {isApplicative : Applicative m}
   {mAlg : Algebra m Type}
   {atom, atom' : Type}
   {sl, sr, sl', sr' : SExp atom -> Type}
@@ -232,14 +254,14 @@ record RefinedSExpTransformerSig
 public export
 refinedSExpTransformers :
   {m : Type -> Type} ->
-  {isMonad : Monad m} ->
+  {isApplicative : Applicative m} ->
   {mAlg : Algebra m Type} ->
   {atom, atom' : Type} ->
   {sl, sr, sl', sr' : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig m sl sr} ->
   {signature' : SExpEitherFoldSig m sl' sr'} ->
   (transformSig : RefinedSExpTransformerSig
-    {isMonad} {mAlg} signature signature') ->
+    {isApplicative} {mAlg} signature signature') ->
   (mAlg (RefinedSExp signature) ->
     mAlg (RefinedSExp signature'),
    mAlg (RefinedSList signature) ->

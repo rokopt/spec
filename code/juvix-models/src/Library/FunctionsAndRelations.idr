@@ -109,6 +109,14 @@ mapPair : {a, a', b, b': Type} -> (f: a -> b) -> (f': a' -> b') ->
 mapPair f f' (x, x') = (f x, f' x')
 
 public export
+fMkPair : {a, b : Type} -> (f: a -> b) -> (x : a) -> (a, b)
+fMkPair f x = (x, f x)
+
+public export
+swapPair : {a, b : Type} -> (a, b) -> (b, a)
+swapPair p = (snd p, fst p)
+
+public export
 swap : {a, b, c : Type} -> (a -> b -> c) -> (b -> a -> c)
 swap f x y = f y x
 
@@ -758,11 +766,6 @@ depComposeAssociative :
 depComposeAssociative h g f = Refl
 
 public export
-applyPair :
-  {f : Type -> Type} -> Applicative f => {a, b : Type} -> f a -> f b -> f (a, b)
-applyPair fa fb = map MkPair fa <*> fb
-
-public export
 Functor Prelude.Basics.id where
   map = Prelude.Basics.id
 
@@ -770,6 +773,12 @@ public export
 Applicative Prelude.Basics.id where
   pure = Prelude.Basics.id
   (<*>) = Prelude.Basics.id
+
+infixl 3 <.>
+public export
+(<.>) : Applicative f =>
+  {a, b, c : Type} -> f (b -> c) -> f (a -> b) -> f (a -> c)
+h <.> g = map (.) h <*> g
 
 public export
 [ComposeFunctor] (Functor f, Functor g) => Functor (f . g) where
@@ -780,6 +789,29 @@ public export
   using ComposeFunctor where
     pure = pure {f} . pure {f=g}
     (<*>) = ((<*>) {f}) . (map {f} ((<*>) {f=g}))
+
+public export
+applyPair :
+  {f : Type -> Type} -> Applicative f => {a, b : Type} -> f a -> f b -> f (a, b)
+applyPair fa fb = map MkPair fa <*> fb
+
+public export
+apply2Args :
+  {f : Type -> Type} -> Applicative f => {a, b, c : Type} ->
+  f (a -> b -> c) -> f a -> f b -> f c
+apply2Args fabc fa fb = map uncurry fabc <*> applyPair fa fb
+
+public export
+eitherElim : {a, b, c : Type} -> (a -> c, b -> c) -> Either a b -> c
+eitherElim signature either = case either of
+  Left x => fst signature x
+  Right y => snd signature y
+
+public export
+applyEitherElim :
+  {f : Type -> Type} -> Applicative f =>
+  {a, b, c : Type} -> f (a -> c) -> f (b -> c) -> f (Either a b) -> f c
+applyEitherElim fac fbc fe = pure eitherElim <*> (applyPair fac fbc) <*> fe
 
 public export
 DependentMap : (Type -> Type) -> Type
