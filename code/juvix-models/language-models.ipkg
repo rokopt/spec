@@ -44,6 +44,15 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.DependentMorphism
     , RefinedSExp.Test.DependentMorphismTest
     , RefinedSExp.Test.TestLibrary
+    , RefinedSExp.New.Test.TestLibrary
+    , RefinedSExp.New.List
+    , RefinedSExp.New.Test.ListTest
+    , RefinedSExp.New.RefinedList
+    , RefinedSExp.New.Test.RefinedListTest
+    , RefinedSExp.New.SExp
+    , RefinedSExp.New.Test.SExpTest
+    , RefinedSExp.New.RefinedSExp
+    , RefinedSExp.New.Test.RefinedSExpTest
     , Executable.Test.Main
 
 depends = contrib, network
