@@ -64,6 +64,73 @@ slistEitherFold {atom} {f} {sl} {sr} signature =
   snd (sexpEitherFolds signature)
 
 public export
+record SExpEitherMetaFoldSig
+  {atom : Type}
+  {f : Type -> Type}
+  {sl, sr : SExp atom -> Type}
+  (signature : SExpEitherFoldSig f sl sr)
+  (spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type)
+  (lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type)
+  where
+    constructor SExpEitherMetaFoldArgs
+
+public export
+SExpEitherMetaFoldSigToEliminatorSig :
+  {atom : Type} ->
+  {f : Type -> Type} -> Applicative f =>
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig f sl sr} ->
+  {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
+  {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
+  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  SExpEliminatorSig
+    (\x => spp x (sexpEitherFold signature x))
+    (\l => lpp l (slistEitherFold signature l))
+SExpEitherMetaFoldSigToEliminatorSig metaSig =
+  SExpEliminatorArgs
+    (\a, l, lppl => ?SExpEitherMetaFoldSigToEliminatorSig_hole_expElim)
+    (?SExpEitherMetaFoldSigToEliminatorSig_hole_nilElim)
+    (\x, l, spxl, lppl => ?SExpEitherMetaFoldSigToEliminatorSig_hole_consElim)
+
+public export
+sexpEitherMetaFolds :
+  {atom : Type} ->
+  {f : Type -> Type} -> Applicative f =>
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig f sl sr} ->
+  {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
+  {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
+  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  ((x : SExp atom) -> spp x (sexpEitherFold signature x),
+   (l : SList atom) -> lpp l (slistEitherFold signature l))
+sexpEitherMetaFolds metaSig =
+  sexpEliminators (SExpEitherMetaFoldSigToEliminatorSig metaSig)
+
+public export
+sexpEitherMetaFold :
+  {atom : Type} ->
+  {f : Type -> Type} -> Applicative f =>
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig f sl sr} ->
+  {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
+  {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
+  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  (x : SExp atom) -> spp x (sexpEitherFold signature x)
+sexpEitherMetaFold = fst . sexpEitherMetaFolds
+
+public export
+slistEitherMetaFold :
+  {atom : Type} ->
+  {f : Type -> Type} -> Applicative f =>
+  {sl, sr : SExp atom -> Type} ->
+  {signature : SExpEitherFoldSig f sl sr} ->
+  {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
+  {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
+  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  (l : SList atom) -> lpp l (slistEitherFold signature l)
+slistEitherMetaFold = snd . sexpEitherMetaFolds
+
+public export
 SExpRefinements :
   {atom : Type} ->
   {f : Type -> Type} -> Applicative f =>
@@ -134,30 +201,6 @@ RefinedSList :
   f Type
 RefinedSList selector =
   snd (RefinedSExpTypes selector)
-
-public export
-record SExpEitherMetaFoldSig
-  {atom : Type}
-  {f : Type -> Type}
-  {sl, sr : SExp atom -> Type}
-  (signature : SExpEitherFoldSig f sl sr)
-  (spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type)
-  (lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type)
-  where
-    constructor SExpEitherMetaFoldArgs
-
-public export
-sexpEitherMetaFolds :
-  {atom : Type} ->
-  {f : Type -> Type} -> Applicative f =>
-  {sl, sr : SExp atom -> Type} ->
-  {signature : SExpEitherFoldSig f sl sr} ->
-  {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
-  {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
-  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
-  ((x : SExp atom) -> spp x (sexpEitherFold signature x),
-   (l : SList atom) -> lpp l (slistEitherFold signature l))
-sexpEitherMetaFolds = ?sexpEitherMetaFolds_hole
 
 public export
 record SExpRefinementEliminatorSig
