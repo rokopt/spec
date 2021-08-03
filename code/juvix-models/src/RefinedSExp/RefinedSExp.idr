@@ -14,21 +14,31 @@ record SExpEitherFoldSig {atom : Type} (f : Type -> Type)
       f (SListForAll sl l -> DepEither sl sr (a $: l))
 
 public export
+SExpEitherExpElimToExpElim :
+  {atom : Type} ->
+  {f : Type -> Type} -> Applicative f =>
+  {sl, sr : SExp atom -> Type} ->
+  ((a : atom) -> (l : SList atom) ->
+    f (SListForAll sl l -> DepEither sl sr (a $: l))) ->
+  ((a : atom) -> (l : SList atom) ->
+    f (SListEitherForAll sl sr l) -> f (SExpEitherForAll sl sr (a $: l)))
+SExpEitherExpElimToExpElim expElimIn a l =
+  map SExpEitherForAllExpPairMergeResult .
+    applyEitherElim
+      (pure (SExpEitherForAllExpResultExecuted {sl}) <.>
+        map fMkPair (expElimIn a l))
+      (pure SExpEitherForAllExpResultNotExecuted)
+
+public export
 SExpEitherFoldSigToEliminatorSig :
   {atom : Type} ->
   {f : Type -> Type} -> Applicative f =>
   {sl, sr : SExp atom -> Type} ->
   SExpEitherFoldSig f sl sr ->
   SExpEliminatorSig (f . SExpEitherForAll sl sr) (f . SListEitherForAll sl sr)
-SExpEitherFoldSigToEliminatorSig {f} signature =
+SExpEitherFoldSigToEliminatorSig {f} {sl} signature =
   (SExpEliminatorArgs
-    (\a, l =>
-      map SExpEitherForAllExpPairMergeResult .
-        applyEitherElim
-          (pure (SExpEitherForAllExpResultExecuted {sl}) <.>
-            map fMkPair (expElim signature a l))
-          (pure SExpEitherForAllExpResultNotExecuted)
-    )
+    (SExpEitherExpElimToExpElim {sl} (expElim signature))
     (pure (Left ()))
     (\_, _ => SExpEitherForAllCons {f} {sl}))
 
@@ -73,7 +83,17 @@ record SExpEitherMetaFoldSig
   (lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type)
   where
     constructor SExpEitherMetaFoldArgs
+    metaExpElim : (a : atom) -> (l : SList atom) ->
+      lpp l (slistEitherFold signature l) ->
+      spp (a $: l)
+        (SExpEitherExpElimToExpElim {f} {sl} {sr} (expElim signature)
+          a l (slistEitherFold signature l))
     metaNilElim : lpp [] (pure (Left ()))
+    metaConsElim : (x : SExp atom) -> (l : SList atom) ->
+      spp x (sexpEitherFold signature x) ->
+      lpp l (slistEitherFold signature l) ->
+      lpp (x $+ l) (SExpEitherForAllCons {f} {sl} {sr}
+        (sexpEitherFold signature x) (slistEitherFold signature l))
 
 public export
 SExpEitherMetaFoldSigToEliminatorSig :
@@ -89,9 +109,9 @@ SExpEitherMetaFoldSigToEliminatorSig :
     (\l => lpp l (slistEitherFold signature l))
 SExpEitherMetaFoldSigToEliminatorSig metaSig =
   SExpEliminatorArgs
-    (\a, l, lppl => ?SExpEitherMetaFoldSigToEliminatorSig_hole_expElim)
+    (metaExpElim metaSig)
     (metaNilElim metaSig)
-    (\x, l, spxl, lppl => ?SExpEitherMetaFoldSigToEliminatorSig_hole_consElim)
+    (metaConsElim metaSig)
 
 public export
 sexpEitherMetaFolds :
