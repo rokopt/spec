@@ -90,3 +90,11 @@ listMetaEliminator :
   ListMetaEliminatorSig signature lmp ->
   ListSigPi signature lmp
 listMetaEliminator = listEliminator . ListMetaEliminatorSigToEliminatorSig
+
+public export
+ListForAll : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
+ListForAll ap = listEliminator (ListEliminatorArgs () (const . Pair . ap))
+
+public export
+ListExists : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
+ListExists ap = listEliminator (ListEliminatorArgs Void (const . Either . ap))

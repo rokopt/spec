@@ -37,11 +37,11 @@ sexpPredsCompose : {atom : Type} ->
 sexpPredsCompose f sps = (f . fst sps, f . snd sps)
 
 public export
-SPredsExp : {atom : Type} -> SExpPreds atom -> SExpPred atom
+SPredsExp : {0 atom : Type} -> SExpPreds atom -> SExpPred atom
 SPredsExp = fst
 
 public export
-SPredsList : {atom : Type} -> SExpPreds atom -> SListPred atom
+SPredsList : {0 atom : Type} -> SExpPreds atom -> SListPred atom
 SPredsList = snd
 
 public export
@@ -339,14 +339,100 @@ sexpConstEliminators :
 sexpConstEliminators = sexpEliminators
 
 public export
+SExpForAllTypes :
+  {0 atom : Type} -> SExpPred atom -> SExpPreds atom
+SExpForAllTypes sp =
+  sexpConstEliminators {sp=Type} {lp=Type}
+    (SExpEliminatorArgs
+      (sp . ($^))
+      (Pair . sp . ($|))
+      ()
+      (const (const (Pair))))
+
+public export
+SExpForAll: {0 atom : Type} -> SExpPred atom -> SExpPred atom
+SExpForAll = SPredsExp . SExpForAllTypes
+
+public export
+SListForAll: {0 atom : Type} -> SExpPred atom -> SListPred atom
+SListForAll = SPredsList . SExpForAllTypes
+
+public export
+record SExpForAllEliminatorSig {atom : Type} (sp : SExpPred atom) where
+  constructor SExpForAllEliminatorArgs
+  atomElim : (a : atom) -> sp ($^ a)
+  listElim : (l : SList atom) -> SListForAll sp l -> sp ($| l)
+
+public export
+SExpForAllEliminatorSigToEliminatorSig :
+  {atom : Type} -> {sp : SExpPred atom} ->
+  SExpForAllEliminatorSig sp ->
+  SExpEliminatorSig (SExpForAll sp, SListForAll sp)
+SExpForAllEliminatorSigToEliminatorSig =
+  ?SExpForAllEliminatorSigToEliminatorSig_hole
+
+public export
+SForAllPis : {atom : Type} -> SExpPred atom -> Type
+SForAllPis sp = (SExp atom ~> SExpForAll sp, SList atom ~> SListForAll sp)
+
+public export
+sexpForAllEliminators : {atom : Type} -> {sp : SExpPred atom} ->
+  SExpForAllEliminatorSig sp ->
+  SForAllPis sp
+sexpForAllEliminators = sexpEliminators . SExpForAllEliminatorSigToEliminatorSig
+
+public export
+SExpExistsTypes :
+  {0 atom : Type} -> SExpPred atom -> SExpPreds atom
+SExpExistsTypes sp =
+  sexpConstEliminators {sp=Type} {lp=Type}
+    (SExpEliminatorArgs
+      (sp . ($^))
+      (Either . sp . ($|))
+      Void
+      (const (const (Either))))
+
+public export
+SExpExists: {0 atom : Type} -> SExpPred atom -> SExpPred atom
+SExpExists = SPredsExp . SExpExistsTypes
+
+public export
+SListExists: {0 atom : Type} -> SExpPred atom -> SListPred atom
+SListExists = SPredsList . SExpExistsTypes
+
+public export
+record SExpExistsEliminatorSig {atom : Type} (sp : SExpPred atom) where
+  constructor SExpExistsEliminatorArgs
+  atomElim : (a : atom) -> sp ($^ a)
+  listElim : (l : SList atom) -> SListExists sp l -> sp ($| l)
+
+public export
+SExpExistsEliminatorSigToEliminatorSig :
+  {atom : Type} -> {sp : SExpPred atom} ->
+  SExpExistsEliminatorSig sp ->
+  SExpEliminatorSig (SExpExists sp, SListExists sp)
+SExpExistsEliminatorSigToEliminatorSig =
+  ?SExpExistsEliminatorSigToEliminatorSig_hole
+
+public export
+SExistsPis : {atom : Type} -> SExpPred atom -> Type
+SExistsPis sp = (SExp atom ~> SExpExists sp, SList atom ~> SListExists sp)
+
+public export
+sexpExistsEliminators : {atom : Type} -> {sp : SExpPred atom} ->
+  SExpExistsEliminatorSig sp ->
+  SExistsPis sp
+sexpExistsEliminators = sexpEliminators . SExpExistsEliminatorSigToEliminatorSig
+
+public export
 sexpMaps : {0 a, b : Type} -> (a -> b) -> (SExp a -> SExp b, SList a -> SList b)
 sexpMaps f =
   sexpConstEliminators
     (SExpEliminatorArgs
       (($^) . f)
-      (\_ => ($|))
+      (const ($|))
       []
-      (\_, _ => (::)))
+      (const (const (::))))
 
 public export
 sexpMap : {0 a, b : Type} -> (a -> b) -> SExp a -> SExp b
@@ -359,4 +445,33 @@ slistMap = snd . sexpMaps
 Functor SExp where
   map = sexpMap
 
-{- XXX dependent applicative instance -}
+Functor SList where
+  map = slistMap
+
+public export
+sexpApplications : {0 a, b : Type} ->
+  SExp (a -> b) ->
+  (SExp a -> SExp b, SList a -> SList b)
+sexpApplications xab =
+  sexpConstEliminators
+    (SExpEliminatorArgs
+      (\a => ?sexpApplications_atomElim_hole)
+      (const ($|))
+      []
+      (const (const (::))))
+
+public export
+sexpApply : {0 a, b : Type} -> SExp (a -> b) -> SExp a -> SExp b
+sexpApply xab = fst (sexpApplications xab)
+
+public export
+slistApplyExp : {0 a, b : Type} -> SExp (a -> b) -> SList a -> SList b
+slistApplyExp xab = snd (sexpApplications xab)
+
+Applicative SExp where
+  pure = ($^)
+  (<*>) = sexpApply
+
+Applicative SList where
+  pure x = [ ($^ x) ]
+  (<*>) = ?slistApply_hole
