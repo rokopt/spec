@@ -66,41 +66,42 @@ slistEitherFold {atom} {f} {sl} {sr} signature =
 public export
 record SExpEitherMetaFoldSig
   {atom : Type}
-  {f : Type -> Type}
+  {f : Type -> Type} {isApplicative : Applicative f}
   {sl, sr : SExp atom -> Type}
   (signature : SExpEitherFoldSig f sl sr)
   (spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type)
   (lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type)
   where
     constructor SExpEitherMetaFoldArgs
+    metaNilElim : lpp [] (pure (Left ()))
 
 public export
 SExpEitherMetaFoldSigToEliminatorSig :
   {atom : Type} ->
-  {f : Type -> Type} -> Applicative f =>
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig f sl sr} ->
   {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
   {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
-  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  (metaSig : SExpEitherMetaFoldSig {isApplicative} signature spp lpp) ->
   SExpEliminatorSig
     (\x => spp x (sexpEitherFold signature x))
     (\l => lpp l (slistEitherFold signature l))
 SExpEitherMetaFoldSigToEliminatorSig metaSig =
   SExpEliminatorArgs
     (\a, l, lppl => ?SExpEitherMetaFoldSigToEliminatorSig_hole_expElim)
-    (?SExpEitherMetaFoldSigToEliminatorSig_hole_nilElim)
+    (metaNilElim metaSig)
     (\x, l, spxl, lppl => ?SExpEitherMetaFoldSigToEliminatorSig_hole_consElim)
 
 public export
 sexpEitherMetaFolds :
   {atom : Type} ->
-  {f : Type -> Type} -> Applicative f =>
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig f sl sr} ->
   {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
   {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
-  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  (metaSig : SExpEitherMetaFoldSig {isApplicative} signature spp lpp) ->
   ((x : SExp atom) -> spp x (sexpEitherFold signature x),
    (l : SList atom) -> lpp l (slistEitherFold signature l))
 sexpEitherMetaFolds metaSig =
@@ -109,24 +110,24 @@ sexpEitherMetaFolds metaSig =
 public export
 sexpEitherMetaFold :
   {atom : Type} ->
-  {f : Type -> Type} -> Applicative f =>
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig f sl sr} ->
   {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
   {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
-  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  (metaSig : SExpEitherMetaFoldSig {isApplicative} signature spp lpp) ->
   (x : SExp atom) -> spp x (sexpEitherFold signature x)
 sexpEitherMetaFold = fst . sexpEitherMetaFolds
 
 public export
 slistEitherMetaFold :
   {atom : Type} ->
-  {f : Type -> Type} -> Applicative f =>
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExp atom -> Type} ->
   {signature : SExpEitherFoldSig f sl sr} ->
   {spp : (x : SExp atom) -> f (SExpEitherForAll sl sr x) -> Type} ->
   {lpp : (l : SList atom) -> f (SListEitherForAll sl sr l) -> Type} ->
-  (metaSig : SExpEitherMetaFoldSig signature spp lpp) ->
+  (metaSig : SExpEitherMetaFoldSig {isApplicative} signature spp lpp) ->
   (l : SList atom) -> lpp l (slistEitherFold signature l)
 slistEitherMetaFold = snd . sexpEitherMetaFolds
 
