@@ -32,6 +32,11 @@ SExpPreds : Type -> Type
 SExpPreds atom = (SExpPred atom, SListPred atom)
 
 public export
+sexpPredsCompose : {atom : Type} ->
+  (Type -> Type) -> SExpPreds atom -> SExpPreds atom
+sexpPredsCompose f sps = (f . fst sps, f . snd sps)
+
+public export
 SPredsExp : {atom : Type} -> SExpPreds atom -> SExpPred atom
 SPredsExp = fst
 
@@ -234,3 +239,43 @@ SExpMetaEliminatorSigToEliminatorSig metaSig =
     (metaListElim metaSig)
     (metaNilElim metaSig)
     (metaConsElim metaSig)
+
+public export
+SExpSignatureComposeSig :
+  {f : Type -> Type} ->
+  {da : DependentApplicative f} ->
+  {atom : Type} ->
+  {sps : SExpPreds atom} ->
+  (signature : f (SExpEliminatorSig sps)) ->
+  SExpEliminatorSig (sexpPredsCompose f sps)
+SExpSignatureComposeSig {da} signature =
+  SExpEliminatorArgs {sps=(sexpPredsCompose f sps)}
+    (\a => dpure da (afmap {da} atomElim signature) a)
+    (\l, flpl => afapply da (dpure da (afmap {da} listElim signature) l) flpl)
+    (afmap {da} nilElim signature)
+    (\x, l, fspx, flpl =>
+      afapply da (afapply da
+        (dpure da (dpure da (afmap {da} consElim signature) x) l) fspx) flpl)
+
+public export
+sexpSignatureCompose :
+  {f : Type -> Type} ->
+  {da : DependentApplicative f} ->
+  {atom : Type} ->
+  {sps : SExpPreds atom} ->
+  (signature : f (SExpEliminatorSig sps)) ->
+  SPredPis (sexpPredsCompose f sps)
+sexpSignatureCompose {da} = sexpEliminators . SExpSignatureComposeSig {da}
+
+public export
+sexpParameterizedEliminators :
+  {atom : Type} ->
+  {sps : List (SExpPreds atom) -> SExpPreds atom} ->
+  (parameterizedSignature : List (SExpPreds atom) ~> SExpEliminatorSig . sps) ->
+  List (SExpPreds atom) ~> SPredPis . sps
+sexpParameterizedEliminators parameterizedSignature params =
+  sexpEliminators (parameterizedSignature params)
+
+{- XXX equivalence to list -}
+
+{- XXX dependent applicative instance -}
