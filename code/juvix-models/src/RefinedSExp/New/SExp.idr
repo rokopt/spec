@@ -347,7 +347,7 @@ SExpForAllTypes sp =
       (sp . ($^))
       (Pair . sp . ($|))
       ()
-      (const (const (Pair))))
+      (const (const Pair)))
 
 public export
 SExpForAll: {0 atom : Type} -> SExpPred atom -> SExpPred atom
@@ -368,8 +368,12 @@ SExpForAllEliminatorSigToEliminatorSig :
   {atom : Type} -> {sp : SExpPred atom} ->
   SExpForAllEliminatorSig sp ->
   SExpEliminatorSig (SExpForAll sp, SListForAll sp)
-SExpForAllEliminatorSigToEliminatorSig =
-  ?SExpForAllEliminatorSigToEliminatorSig_hole
+SExpForAllEliminatorSigToEliminatorSig signature =
+  (SExpEliminatorArgs
+    (atomElim signature)
+    (\l, lForAll => (listElim signature l lForAll, lForAll))
+    ()
+    (\_, _ => MkPair))
 
 public export
 SForAllPis : {atom : Type} -> SExpPred atom -> Type
@@ -390,7 +394,7 @@ SExpExistsTypes sp =
       (sp . ($^))
       (Either . sp . ($|))
       Void
-      (const (const (Either))))
+      (const (const Either)))
 
 public export
 SExpExists: {0 atom : Type} -> SExpPred atom -> SExpPred atom
@@ -401,38 +405,35 @@ SListExists: {0 atom : Type} -> SExpPred atom -> SListPred atom
 SListExists = SPredsList . SExpExistsTypes
 
 public export
-record SExpExistsEliminatorSig {atom : Type} (sp : SExpPred atom) where
-  constructor SExpExistsEliminatorArgs
-  atomElim : (a : atom) -> sp ($^ a)
-  listElim : (l : SList atom) -> SListExists sp l -> sp ($| l)
+record SExpConstListEliminatorSig {0 atom : Type} (sp : Type) where
+  constructor SExpConstListEliminatorArgs
+  atomElim : atom -> sp
+  listElim : (l : SList atom) -> List sp -> sp
 
 public export
-SExpExistsEliminatorSigToEliminatorSig :
-  {atom : Type} -> {sp : SExpPred atom} ->
-  SExpExistsEliminatorSig sp ->
-  SExpEliminatorSig (SExpExists sp, SListExists sp)
-SExpExistsEliminatorSigToEliminatorSig =
-  ?SExpExistsEliminatorSigToEliminatorSig_hole
+SExpConstListEliminatorSigToEliminatorSig :
+  {0 atom : Type} -> {0 sp : Type} ->
+  SExpConstListEliminatorSig {atom} sp ->
+  SExpEliminatorSig {atom} (const sp, const (List sp))
+SExpConstListEliminatorSigToEliminatorSig {atom} signature =
+  (SExpEliminatorArgs {atom}
+    (atomElim signature)
+    (listElim signature)
+    []
+    (const (const (::))))
 
 public export
-SExistsPis : {atom : Type} -> SExpPred atom -> Type
-SExistsPis sp = (SExp atom ~> SExpExists sp, SList atom ~> SListExists sp)
-
-public export
-sexpExistsEliminators : {atom : Type} -> {sp : SExpPred atom} ->
-  SExpExistsEliminatorSig sp ->
-  SExistsPis sp
-sexpExistsEliminators = sexpEliminators . SExpExistsEliminatorSigToEliminatorSig
+sexpConstListEliminators :
+  {0 atom : Type} -> {0 sp : Type} ->
+  (signature : SExpConstListEliminatorSig {atom} sp) ->
+  (SExp atom -> sp, SList atom -> List sp)
+sexpConstListEliminators {atom} {sp} =
+  sexpEliminators . SExpConstListEliminatorSigToEliminatorSig {atom} {sp}
 
 public export
 sexpMaps : {0 a, b : Type} -> (a -> b) -> (SExp a -> SExp b, SList a -> SList b)
 sexpMaps f =
-  sexpConstEliminators
-    (SExpEliminatorArgs
-      (($^) . f)
-      (const ($|))
-      []
-      (const (const (::))))
+  sexpConstListEliminators (SExpConstListEliminatorArgs (($^) . f) (const ($|)))
 
 public export
 sexpMap : {0 a, b : Type} -> (a -> b) -> SExp a -> SExp b
@@ -453,12 +454,10 @@ sexpApplications : {0 a, b : Type} ->
   SExp (a -> b) ->
   (SExp a -> SExp b, SList a -> SList b)
 sexpApplications xab =
-  sexpConstEliminators
-    (SExpEliminatorArgs
+  sexpConstListEliminators
+    (SExpConstListEliminatorArgs
       (\a => ?sexpApplications_atomElim_hole)
-      (const ($|))
-      []
-      (const (const (::))))
+      (const ($|)))
 
 public export
 sexpApply : {0 a, b : Type} -> SExp (a -> b) -> SExp a -> SExp b
