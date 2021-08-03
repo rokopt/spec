@@ -23,36 +23,11 @@ SExpEitherFoldSigToEliminatorSig :
 SExpEitherFoldSigToEliminatorSig {f} signature =
   (SExpEliminatorArgs
     (\a, l =>
-      let
-        expElimStep : f (SListForAll sl l -> DepEither sl sr (a $: l))
-        expElimStep = expElim signature a l
-
-        expElimExtendDomain :
-          f (SListEitherForAll sl sr l) ->
-          f (SExpEitherForAllExpResult sl sr a l)
-        expElimExtendDomain =
-          applyEitherElim
-            (pure SExpEitherForAllExpResultExecuted <.>
-              map fMkPair expElimStep)
-            (pure SExpEitherForAllExpResultNotExecuted)
-
-        expElimMergeResults :
-          SExpEitherForAllExpResult sl sr a l ->
-          SExpEitherForAll sl sr (a $: l)
-        expElimMergeResults = SExpEitherForAllExpPairMergeResult {sl} {sr}
-      in
-      map expElimMergeResults . expElimExtendDomain
-    {-
-      mEither >>= (\either =>
-        case either of
-          Left allLeft =>
-            map
-              (\exp => case exp of
-                Left expLeft => Left (expLeft, allLeft)
-                Right expRight => Right (SExpExistsCons (Left expRight) []))
-              (expElim signature a l allLeft)
-          Right existsRight => pure (Right (slistExistsExp existsRight)))
-          -}
+      map SExpEitherForAllExpPairMergeResult .
+        applyEitherElim
+          (pure (SExpEitherForAllExpResultExecuted {sl}) <.>
+            map fMkPair (expElim signature a l))
+          (pure SExpEitherForAllExpResultNotExecuted)
     )
     (pure (Left ()))
     (\_, _ => SExpEitherForAllCons {f} {sl}))
