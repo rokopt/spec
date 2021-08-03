@@ -109,6 +109,48 @@ sexpEliminators :
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
+export
+SExpPredsToListPred :
+  {atom : Type} -> (sps : SExpPreds atom) -> ListPred (SExp atom)
+SExpPredsToListPred sps [] = SPredsList sps []
+SExpPredsToListPred sps (x :: l) = SPredsExp sps x -> SPredsList sps (x :: l)
+
+export
+SListPiToListPi : {atom : Type} ->
+  {sps : SExpPreds atom} ->
+  (signature : SExpEliminatorSig sps) ->
+  (l : SList atom) ->
+  SExpPredsToListPred sps l ->
+  SPredsList sps l
+SListPiToListPi signature [] pred = pred
+SListPiToListPi signature (x :: l) pred = pred (sexpEliminator signature x)
+
+public export
+SExpSigToListSig :
+  {atom : Type} -> {sps : SExpPreds atom} ->
+  SExpEliminatorSig sps ->
+  ListEliminatorSig (SExpPredsToListPred sps)
+SExpSigToListSig signature =
+  ListEliminatorArgs
+    (nilElim signature)
+    (\x, l, pred, spx =>
+      consElim signature x l spx (SListPiToListPi signature l pred))
+
+export
+slistEliminatorMatchesListFold :
+  {atom : Type} ->
+  {sps : SExpPreds atom} ->
+  (signature : SExpEliminatorSig sps) ->
+  (l : SList atom) ->
+  slistEliminator signature l =
+    SListPiToListPi {sps} signature l
+      (listEliminator (SExpSigToListSig signature) l)
+slistEliminatorMatchesListFold signature [] =
+  Refl
+slistEliminatorMatchesListFold signature (x :: l) =
+  applyEq {f=(consElim signature x l (sexpEliminator signature x))} Refl
+    (slistEliminatorMatchesListFold signature l)
+
 public export
 SExpMetaPred : {atom : Type} -> SExpPred atom -> Type
 SExpMetaPred {atom} sp = (x : SExp atom) -> sp x -> Type
@@ -275,7 +317,5 @@ sexpParameterizedEliminators :
   List (SExpPreds atom) ~> SPredPis . sps
 sexpParameterizedEliminators parameterizedSignature params =
   sexpEliminators (parameterizedSignature params)
-
-{- XXX equivalence to list -}
 
 {- XXX dependent applicative instance -}
