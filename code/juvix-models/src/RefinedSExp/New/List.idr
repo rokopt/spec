@@ -21,7 +21,7 @@ record ListEliminatorSig {atom : Type} (lp : ListPred atom) where
 
 public export
 listEliminator :
-  {atom : Type} -> {lp : ListPred atom} ->
+  {0 atom : Type} -> {0 lp : ListPred atom} ->
   (signature : ListEliminatorSig lp) ->
   ListPi lp
 listEliminator signature [] =
@@ -61,7 +61,7 @@ ListSigEliminatorSig signature lmp =
 
 public export
 record ListMetaEliminatorSig
-  {atom : Type} {lp : ListPred atom}
+  {0 atom : Type} {0 lp : ListPred atom}
   (signature : ListEliminatorSig lp)
   (lmp : ListMetaPred lp)
   where
@@ -74,9 +74,9 @@ record ListMetaEliminatorSig
 
 public export
 ListMetaEliminatorSigToEliminatorSig :
-  {atom : Type} -> {lp : ListPred atom} ->
+  {0 atom : Type} -> {0 lp : ListPred atom} ->
   {signature : ListEliminatorSig lp} ->
-  {lmp : ListMetaPred lp} ->
+  {0 lmp : ListMetaPred lp} ->
   ListMetaEliminatorSig signature lmp ->
   ListSigEliminatorSig signature lmp
 ListMetaEliminatorSigToEliminatorSig metaSig =
@@ -84,9 +84,9 @@ ListMetaEliminatorSigToEliminatorSig metaSig =
 
 public export
 listMetaEliminator :
-  {atom : Type} -> {lp : ListPred atom} ->
+  {0 atom : Type} -> {0 lp : ListPred atom} ->
   {signature : ListEliminatorSig lp} ->
-  {lmp : ListMetaPred lp} ->
+  {0 lmp : ListMetaPred lp} ->
   ListMetaEliminatorSig signature lmp ->
   ListSigPi signature lmp
 listMetaEliminator = listEliminator . ListMetaEliminatorSigToEliminatorSig

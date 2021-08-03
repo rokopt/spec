@@ -766,6 +766,15 @@ depComposeAssociative :
 depComposeAssociative h g f = Refl
 
 public export
+record FunctorInterface (f : Type -> Type) where
+  constructor MkFunctorInterface
+  functorMap : {0 a, b : Type} -> (a -> b) -> f a -> f b
+
+public export
+[FunctorFromInterface] {fi : FunctorInterface f} -> Functor f where
+  map = functorMap fi
+
+public export
 Functor Prelude.Basics.id where
   map = Prelude.Basics.id
 
