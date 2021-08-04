@@ -96,6 +96,14 @@ NonEmptyList : Type -> Type
 NonEmptyList atom = (atom, List atom)
 
 public export
+neListMap : {0 a, b : Type} -> (a -> b) -> NonEmptyList a -> NonEmptyList b
+neListMap f (x, l) = (f x, map f l)
+
+public export
+Functor NonEmptyList where
+  map = neListMap
+
+public export
 ListForAll : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
 ListForAll ap = listEliminator (ListEliminatorArgs () (const . Pair . ap))
 

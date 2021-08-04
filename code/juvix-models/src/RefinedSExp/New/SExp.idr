@@ -522,6 +522,14 @@ SListAllLeftOrExistsRight sr sl l =
   Either (SListForAll sr l) (SListExistsSome sl l)
 
 public export
+slistExistsSomeShift : {0 atom : Type} ->
+  {sl, sr : SExpPred atom} ->
+  {x : SExp atom} -> {l : SList atom} ->
+  SListExistsSome sr l ->
+  SListExistsSome sr (x :: l)
+slistExistsSomeShift = neListMap Right
+
+public export
 record SExpConstListEliminatorSig {0 atom : Type} (sp : Type) where
   constructor SExpConstListEliminatorArgs
   atomElim : atom -> sp
