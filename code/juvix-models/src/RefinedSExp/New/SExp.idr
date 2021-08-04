@@ -241,6 +241,13 @@ SListSigPi : {atom : Type} -> {sps : SExpPreds atom} ->
 SListSigPi signature lmp = SListPi (SListSigToMetaPred signature lmp)
 
 public export
+SExpSigPis : {atom : Type} -> {sps : SExpPreds atom} ->
+  SExpEliminatorSig sps -> SExpMetaPreds sps -> Type
+SExpSigPis signature smps =
+  (SExpSigPi signature (SExpMetaPredsExp smps),
+   SListSigPi signature (SExpMetaPredsList smps))
+
+public export
 SExpSigEliminatorSig : {atom : Type} -> {sps : SExpPreds atom} ->
   SExpEliminatorSig sps -> SExpMetaPreds sps -> Type
 SExpSigEliminatorSig signature smps =
@@ -282,6 +289,15 @@ SExpMetaEliminatorSigToEliminatorSig metaSig =
     (metaListElim metaSig)
     (metaNilElim metaSig)
     (metaConsElim metaSig)
+
+public export
+sexpMetaEliminators :
+  {0 atom : Type} -> {0 sps : SExpPreds atom} ->
+  {signature : SExpEliminatorSig sps} ->
+  {0 smps : SExpMetaPreds sps} ->
+  SExpMetaEliminatorSig signature smps ->
+  SExpSigPis signature smps
+sexpMetaEliminators = sexpEliminators . SExpMetaEliminatorSigToEliminatorSig
 
 public export
 SExpSignatureComposeSig :
@@ -337,6 +353,10 @@ sexpConstEliminators :
   (signature : SExpEliminatorSig {atom} (SExpConstPreds sp lp)) ->
   (SExp atom -> sp, SList atom -> lp)
 sexpConstEliminators = sexpEliminators
+
+public export
+NonEmptySList : Type -> Type
+NonEmptySList atom = NonEmptyList (SExp atom)
 
 public export
 SExpForAllTypes :

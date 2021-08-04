@@ -92,6 +92,10 @@ listMetaEliminator :
 listMetaEliminator = listEliminator . ListMetaEliminatorSigToEliminatorSig
 
 public export
+NonEmptyList : Type -> Type
+NonEmptyList atom = (atom, List atom)
+
+public export
 ListForAll : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
 ListForAll ap = listEliminator (ListEliminatorArgs () (const . Pair . ap))
 
