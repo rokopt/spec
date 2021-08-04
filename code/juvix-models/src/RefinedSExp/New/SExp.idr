@@ -246,11 +246,20 @@ SListSigPi : {atom : Type} -> {sps : SExpPreds atom} ->
 SListSigPi signature lmp = SListPi (SListSigToMetaPred signature lmp)
 
 public export
+SSigPisExp : {atom : Type} -> {sps : SExpPreds atom} ->
+  SExpMetaPreds sps -> SExpEliminatorSig sps -> Type
+SSigPisExp smps signature = SExpSigPi signature (SExpMetaPredsExp smps)
+
+public export
+SSigPisList : {atom : Type} -> {sps : SExpPreds atom} ->
+  SExpMetaPreds sps -> SExpEliminatorSig sps -> Type
+SSigPisList smps signature = SListSigPi signature (SExpMetaPredsList smps)
+
+public export
 SExpSigPis : {atom : Type} -> {sps : SExpPreds atom} ->
   SExpMetaPreds sps -> SExpEliminatorSig sps -> Type
 SExpSigPis smps signature =
-  (SExpSigPi signature (SExpMetaPredsExp smps),
-   SListSigPi signature (SExpMetaPredsList smps))
+  (SSigPisExp smps signature, SSigPisList smps signature)
 
 public export
 SExpMetaEliminatorSig : {atom : Type} -> {sps : SExpPreds atom} ->
@@ -293,6 +302,9 @@ sexpEliminatorsComposeSig :
   SPredPis (sexpPredsCompose f sps)
 sexpEliminatorsComposeSig = sexpEliminators . SExpSignatureComposeSig {da}
 
+{- XXX add a function that works by taking an f(SExpMetaEliminatorSig),
+ - which you can do because that's an eliminator sig, which composes, and
+ - can thererfore produce a SExpMetaEliminatorSig(f.preds) -}
 public export
 sexpMetaComposedSigEliminators :
   {f : Type -> Type} -> {da : DependentApplicative f} ->
@@ -328,7 +340,9 @@ sexpParameterizedEliminators :
 sexpParameterizedEliminators parameterizedSignature params =
   sexpEliminators (parameterizedSignature params)
 
-{- XXX express this in terms of signature composition -}
+{- XXX express this in terms of signature composition so that we can
+ - act on the parameterized version rather than paramaterizing acting
+ - on a non-parameterized version -}
 public export
 sexpMetaParameterizedSigEliminators :
   {atom : Type} -> {sps : List (SExpPreds atom) -> SExpPreds atom} ->
@@ -383,13 +397,12 @@ public export
 SListForAll: {0 atom : Type} -> SExpPred atom -> SListPred atom
 SListForAll = SPredsList . SExpForAllTypes
 
+{- XXX write signature composer for this -}
 public export
 record SExpForAllEliminatorSig {atom : Type} (sp : SExpPred atom) where
   constructor SExpForAllEliminatorArgs
   atomElim : (a : atom) -> sp ($^ a)
   listElim : (l : SList atom) -> SListForAll sp l -> sp ($| l)
-
-{- XXX write signature composer for this -}
 
 public export
 SExpForAllEliminatorSigToEliminatorSig :
@@ -438,11 +451,22 @@ SExpForAllMetaPreds : {atom : Type} -> SExpPred atom -> Type
 SExpForAllMetaPreds sp = (SExpForAllMetaPred sp, SListForAllMetaPred sp)
 
 public export
+SExpForAllMetaPi : {atom : Type} -> {sp : SExpPred atom} ->
+  SExpForAllMetaPreds sp -> SExpForAllEliminatorSig sp -> Type
+SExpForAllMetaPi {atom} smps signature =
+  (x : SExp atom) -> fst smps x (sexpForAllEliminator signature x)
+
+public export
+SListForAllMetaPi : {atom : Type} -> {sp : SExpPred atom} ->
+  SExpForAllMetaPreds sp -> SExpForAllEliminatorSig sp -> Type
+SListForAllMetaPi {atom} smps signature =
+  (l : SList atom) -> snd smps l (slistForAllEliminator signature l)
+
+public export
 SExpForAllMetaPis : {atom : Type} -> {sp : SExpPred atom} ->
   SExpForAllMetaPreds sp -> SExpForAllEliminatorSig sp -> Type
-SExpForAllMetaPis {atom} {sp} smps signature =
-  ((x : SExp atom) -> fst smps x (sexpForAllEliminator signature x),
-   (l : SList atom) -> snd smps l (slistForAllEliminator signature l))
+SExpForAllMetaPis smps signature =
+  (SExpForAllMetaPi smps signature, SListForAllMetaPi smps signature)
 
 public export
 sexpForAllMetaEliminators : {atom : Type} -> {sp : SExpPred atom} ->
@@ -500,13 +524,12 @@ slistExistsSomeShift : {0 atom : Type} ->
   SListExistsSome sr (x :: l)
 slistExistsSomeShift = neListMap Right
 
+{- XXX write signature composer for this -}
 public export
 record SExpConstListEliminatorSig {0 atom : Type} (sp : Type) where
   constructor SExpConstListEliminatorArgs
   atomElim : atom -> sp
   listElim : (l : SList atom) -> List sp -> sp
-
-{- XXX write signature composer for this -}
 
 public export
 SExpConstListEliminatorSigToEliminatorSig :

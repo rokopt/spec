@@ -307,16 +307,6 @@ refinedSExpTransformers :
     mAlg (RefinedSList signature'))
 refinedSExpTransformers = ?refinedSExpTransformers_hole
 
--- XXX depdendent transformers; dependently-typed programming languages;
--- elimination of refined sexps to dependently-typed programming languages;
--- elimination of refined sexps to dependently-typed programming languages;
--- parameterized (on other dependently-typed programming languages)
--- dependently-typed programming languages; elimination of refined sexps
--- to parameterized dependently-typed programming languages; elimination
--- of refined sexps to transformations between dependently-typed programming
--- languages; refined sexps _as_ a dependently-typed programming language;
--- dependently-typed metaprogramming
-
 public export
 record DecidablePredicate (atom : Type) where
   constructor ResultPredicates

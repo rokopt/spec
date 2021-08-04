@@ -71,6 +71,7 @@ SExpAllOrExistsSigToEliminatorSig {sl} {sr} signature =
     (Left ())
     (SExpAllOrExistsEliminatorConsElim {sl} {sr})
 
+{- XXX write aliases for these return types -}
 public export
 sexpAllOrExistsEliminators : {0 atom : Type} ->
   {sl, sr : SExpPred atom} ->
@@ -94,6 +95,7 @@ slistAllOrExistsEliminator : {0 atom : Type} ->
   ((l : SList atom) -> SListAllLeftOrExistsRight sl sr l)
 slistAllOrExistsEliminator = snd . sexpAllOrExistsEliminators
 
+{- XXX write aliases for each half of these return types -}
 public export
 SExpAllOrExistsMetaPreds : {atom : Type} ->
   (sl, sr : SExpPred atom) -> Type
@@ -101,6 +103,7 @@ SExpAllOrExistsMetaPreds sl sr =
   ((x : SExp atom) -> SExpAllLeftOrExistsRight sl sr x -> Type,
    (l : SList atom) -> SListAllLeftOrExistsRight sl sr l -> Type)
 
+{- XXX write aliases for these composed return types -}
 public export
 sexpAllOrExistsMetaEliminators : {atom : Type} ->
   {sl, sr : SExpPred atom} ->
@@ -111,16 +114,28 @@ sexpAllOrExistsMetaEliminators : {atom : Type} ->
 sexpAllOrExistsMetaEliminators =
   sexpMetaEliminators
 
+{- XXX write a mapped-through-functor version of this -}
 public export
 SExpReturnsLeft : {0 atom : Type} ->
   {sl, sr : SExpPred atom} ->
   (signature : SExpAllOrExistsSig {atom} sl sr) ->
-  (x : SExp atom) -> Type
+  SExp atom -> Type
 SExpReturnsLeft signature x = IsLeft (sexpAllOrExistsEliminator signature x)
 
+{- XXX write a mapped-through-functor version of this -}
 public export
 SListReturnsLeft : {0 atom : Type} ->
   {sl, sr : SExpPred atom} ->
   (signature : SExpAllOrExistsSig {atom} sl sr) ->
-  (l : SList atom) -> Type
+  SList atom -> Type
 SListReturnsLeft signature l = IsLeft (slistAllOrExistsEliminator signature l)
+
+-- XXX depdendent transformers; dependently-typed programming languages;
+-- elimination of refined sexps to dependently-typed programming languages;
+-- elimination of refined sexps to dependently-typed programming languages;
+-- parameterized (on other dependently-typed programming languages)
+-- dependently-typed programming languages; elimination of refined sexps
+-- to parameterized dependently-typed programming languages; elimination
+-- of refined sexps to transformations between dependently-typed programming
+-- languages; refined sexps _as_ a dependently-typed programming language;
+-- dependently-typed metaprogramming
