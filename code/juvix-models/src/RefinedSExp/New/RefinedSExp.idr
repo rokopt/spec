@@ -94,24 +94,6 @@ slistAllOrExistsEliminator : {0 atom : Type} ->
 slistAllOrExistsEliminator = snd . sexpAllOrExistsEliminators
 
 public export
-sexpAllOrExistsComposeSigEliminator : {0 atom : Type} ->
-  {f : Type -> Type} -> {isFunctor : Functor f} ->
-  {sl, sr : SExpPred atom} ->
-  f (SExpAllOrExistsSig {atom} sl sr) ->
-  f ((x : SExp atom) -> SExpAllLeftOrExistsRight sl sr x)
-sexpAllOrExistsComposeSigEliminator {f} {isFunctor} =
-  map sexpAllOrExistsEliminator
-
-public export
-slistAllOrExistsComposeSigEliminator : {0 atom : Type} ->
-  {f : Type -> Type} -> {isFunctor : Functor f} ->
-  {sl, sr : SExpPred atom} ->
-  f (SExpAllOrExistsSig {atom} sl sr) ->
-  f ((l : SList atom) -> SListAllLeftOrExistsRight sl sr l)
-slistAllOrExistsComposeSigEliminator {f} {isFunctor} =
-  map slistAllOrExistsEliminator
-
-public export
 SExpAllOrExistsMetaPreds : {atom : Type} ->
   (sl, sr : SExpPred atom) -> Type
 SExpAllOrExistsMetaPreds sl sr =
@@ -132,8 +114,7 @@ SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig : {0 atom : Type} ->
   {smps : SExpAllOrExistsMetaPreds sl sr} ->
   SExpAllOrExistsMetaEliminatorSig signature smps ->
   SExpMetaEliminatorSig
-    (SExpAllOrExistsSigToEliminatorSig signature)
-    smps
+    smps (SExpAllOrExistsSigToEliminatorSig signature)
 SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig metaSig =
   ?SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig_hole
 
@@ -143,7 +124,7 @@ sexpAllOrExistsMetaEliminators : {0 atom : Type} ->
   {signature : SExpAllOrExistsSig {atom} sl sr} ->
   {smps : SExpAllOrExistsMetaPreds sl sr} ->
   SExpAllOrExistsMetaEliminatorSig signature smps ->
-  SExpSigPis (SExpAllOrExistsSigToEliminatorSig signature) smps
+  SExpSigPis smps (SExpAllOrExistsSigToEliminatorSig signature)
 sexpAllOrExistsMetaEliminators =
   sexpMetaEliminators .  SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig
 
