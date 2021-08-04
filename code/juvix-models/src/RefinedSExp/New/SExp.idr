@@ -494,12 +494,32 @@ SExpExistsTypes sp =
       (const (const Either)))
 
 public export
-SExpExists: {0 atom : Type} -> SExpPred atom -> SExpPred atom
+SExpExists : {0 atom : Type} -> SExpPred atom -> SExpPred atom
 SExpExists = SPredsExp . SExpExistsTypes
 
 public export
-SListExists: {0 atom : Type} -> SExpPred atom -> SListPred atom
+SListExists : {0 atom : Type} -> SExpPred atom -> SListPred atom
 SListExists = SPredsList . SExpExistsTypes
+
+public export
+SExpExistsSome : {0 atom : Type} -> SExpPred atom -> SExpPred atom
+SExpExistsSome sp = NonEmptyList . SExpExists sp
+
+public export
+SListExistsSome : {0 atom : Type} -> SExpPred atom -> SListPred atom
+SListExistsSome sp = NonEmptyList . SListExists sp
+
+public export
+SExpAllLeftOrExistsRight : {0 atom : Type} -> (sr, sl : SExpPred atom) ->
+  SExpPred atom
+SExpAllLeftOrExistsRight sr sl x =
+  Either (SExpForAll sr x) (SExpExistsSome sl x)
+
+public export
+SListAllLeftOrExistsRight : {0 atom : Type} -> (sr, sl : SExpPred atom) ->
+  SListPred atom
+SListAllLeftOrExistsRight sr sl l =
+  Either (SListForAll sr l) (SListExistsSome sl l)
 
 public export
 record SExpConstListEliminatorSig {0 atom : Type} (sp : Type) where
