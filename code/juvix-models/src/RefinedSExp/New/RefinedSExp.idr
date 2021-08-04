@@ -7,167 +7,156 @@ import public Library.Decidability
 %default total
 
 public export
-record SExpAllOrExistsSig {0 atom : Type} (f : Type -> Type)
+record SExpAllOrExistsSig {0 atom : Type}
   (sl, sr : SExpPred atom) where
     constructor SExpAllOrExistsArgs
-    atomElim : (a : atom) ->
-      f (DepEither sl sr ($^ a))
-    listElim : (l : SList atom) ->
-      f (SListForAll sl l -> DepEither sl sr ($| l))
+    atomElim : (a : atom) -> DepEither sl sr ($^ a)
+    listElim : (l : SList atom) -> SListForAll sl l -> DepEither sl sr ($| l)
 
 public export
 SExpAllOrExistsAtomElimToEliminatorAtomElim : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  ((a : atom) -> f (DepEither sl sr ($^ a))) ->
-  ((a : atom) -> f (SExpAllLeftOrExistsRight sl sr ($^ a)))
-SExpAllOrExistsAtomElimToEliminatorAtomElim {f} {sl} {sr} inAtomElim a =
-  applyEitherElim (pure Left) (pure (\r => Right (r, []))) (inAtomElim a)
+  ((a : atom) -> DepEither sl sr ($^ a)) ->
+  (a : atom) ->
+  SExpAllLeftOrExistsRight sl sr ($^ a)
+SExpAllOrExistsAtomElimToEliminatorAtomElim {sl} {sr} inAtomElim a =
+  case inAtomElim a of
+    Left aLeft => Left aLeft
+    Right aRight => Right (aRight, [])
 
 public export
 SExpAllOrExistsListElimToEliminatorListElim : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  ((l : SList atom) -> f (SListForAll sl l -> DepEither sl sr ($| l))) ->
-  ((l : SList atom) ->
-   f (SListAllLeftOrExistsRight sl sr l) ->
-   f (SExpAllLeftOrExistsRight sl sr ($| l)))
-SExpAllOrExistsListElimToEliminatorListElim {f} {sl} {sr} inListElim l =
+  ((l : SList atom) -> SListForAll sl l -> DepEither sl sr ($| l)) ->
+  (l : SList atom) ->
+  SListAllLeftOrExistsRight sl sr l ->
+  SExpAllLeftOrExistsRight sl sr ($| l)
+SExpAllOrExistsListElimToEliminatorListElim {sl} {sr} inListElim l spl =
   ?SExpAllOrExistsListElimToEliminatorListElim_hole
 
 public export
 SExpAllOrExistsEliminatorConsElim : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
   ((x : SExp atom) -> (l : SList atom) ->
-   f (SExpAllLeftOrExistsRight sl sr x) ->
-   f (SListAllLeftOrExistsRight sl sr l) ->
-   f (SListAllLeftOrExistsRight sl sr (x :: l)))
-SExpAllOrExistsEliminatorConsElim {f} {sl} {sr} x l fx fl =
-  map
-    (\eithers => case eithers of
-      (Left xAllLeft, Left lAllLeft) => Left (xAllLeft, lAllLeft)
-      (Left xAllLeft, Right rExistsRight) =>
-        Right (slistExistsSomeShift {sr} rExistsRight)
-      (Right xExistsRight, Left lAllLeft) =>
-        Right ?SExpAllOrExistsEliminatorConsElim_hole_right_left
-      (Right xExistsRight, Right rExistsRight) =>
-        Right ?SExpAllOrExistsEliminatorConsElim_hole_right_right
+   SExpAllLeftOrExistsRight sl sr x ->
+   SListAllLeftOrExistsRight sl sr l ->
+   SListAllLeftOrExistsRight sl sr (x :: l))
+SExpAllOrExistsEliminatorConsElim {sl} {sr} x l spx lpl =
+  case (spx, lpl) of
+    (Left xAllLeft, Left lAllLeft) => Left (xAllLeft, lAllLeft)
+    (Left xAllLeft, Right rExistsRight) =>
+      Right (slistExistsSomeShift {sr} rExistsRight)
+    (Right xExistsRight, Left lAllLeft) =>
+      Right ?SExpAllOrExistsEliminatorConsElim_hole_right_left
+    (Right xExistsRight, Right rExistsRight) =>
+      Right ?SExpAllOrExistsEliminatorConsElim_hole_right_right
     {-
     (Left sForAll, Left lForAll) => Left (sForAll, lForAll)
     (Left sForAll, Right lExists) => Right (slistExistsShift lExists)
     (Right sExists, Left lForAll) => Right (sexpExistsList sExists)
     (Right sExists, Right lExists) => Right (slistExistsMerge sExists lExists))
     -}
-    )
-    (applyPair fx fl)
 
 public export
 SExpAllOrExistsSigToEliminatorSig : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  SExpAllOrExistsSig {atom} f sl sr ->
+  SExpAllOrExistsSig {atom} sl sr ->
   SExpEliminatorSig
-    (f . SExpAllLeftOrExistsRight sl sr, f . SListAllLeftOrExistsRight sl sr)
-SExpAllOrExistsSigToEliminatorSig {f} {isApplicative} signature =
+    (SExpAllLeftOrExistsRight sl sr, SListAllLeftOrExistsRight sl sr)
+SExpAllOrExistsSigToEliminatorSig {sl} {sr} signature =
   SExpEliminatorArgs
-    (SExpAllOrExistsAtomElimToEliminatorAtomElim
-      {f} {sl} {sr} {isApplicative} (atomElim signature))
-    (SExpAllOrExistsListElimToEliminatorListElim
-      {f} {sl} {sr} {isApplicative} (listElim signature))
-    (pure (Left ()))
-    (SExpAllOrExistsEliminatorConsElim {f} {sl} {sr} {isApplicative})
+    (SExpAllOrExistsAtomElimToEliminatorAtomElim {sl} {sr} (atomElim signature))
+    (SExpAllOrExistsListElimToEliminatorListElim {sl} {sr} (listElim signature))
+    (Left ())
+    (SExpAllOrExistsEliminatorConsElim {sl} {sr})
 
 public export
 sexpAllOrExistsEliminators : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  SExpAllOrExistsSig {atom} f sl sr ->
-  SPredPis
-    (f . SExpAllLeftOrExistsRight sl sr, f . SListAllLeftOrExistsRight sl sr)
-sexpAllOrExistsEliminators {isApplicative} =
-  sexpEliminators . SExpAllOrExistsSigToEliminatorSig {isApplicative}
+  SExpAllOrExistsSig {atom} sl sr ->
+  ((x : SExp atom) -> SExpAllLeftOrExistsRight sl sr x,
+   (l : SList atom) -> SListAllLeftOrExistsRight sl sr l)
+sexpAllOrExistsEliminators =
+  sexpEliminators . SExpAllOrExistsSigToEliminatorSig
 
 public export
 sexpAllOrExistsEliminator : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  SExpAllOrExistsSig {atom} f sl sr ->
-  ((x : SExp atom) -> f (SExpAllLeftOrExistsRight sl sr x))
-sexpAllOrExistsEliminator {isApplicative} =
-  fst . sexpAllOrExistsEliminators {isApplicative}
+  SExpAllOrExistsSig {atom} sl sr ->
+  ((x : SExp atom) -> SExpAllLeftOrExistsRight sl sr x)
+sexpAllOrExistsEliminator = fst . sexpAllOrExistsEliminators
 
 public export
 slistAllOrExistsEliminator : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  SExpAllOrExistsSig {atom} f sl sr ->
-  ((l : SList atom) -> f (SListAllLeftOrExistsRight sl sr l))
-slistAllOrExistsEliminator {isApplicative} =
-  snd . sexpAllOrExistsEliminators {isApplicative}
+  SExpAllOrExistsSig {atom} sl sr ->
+  ((l : SList atom) -> SListAllLeftOrExistsRight sl sr l)
+slistAllOrExistsEliminator = snd . sexpAllOrExistsEliminators
+
+public export
+sexpAllOrExistsComposeSigEliminator : {0 atom : Type} ->
+  {f : Type -> Type} -> {isFunctor : Functor f} ->
+  {sl, sr : SExpPred atom} ->
+  f (SExpAllOrExistsSig {atom} sl sr) ->
+  f ((x : SExp atom) -> SExpAllLeftOrExistsRight sl sr x)
+sexpAllOrExistsComposeSigEliminator {f} {isFunctor} =
+  map sexpAllOrExistsEliminator
+
+public export
+slistAllOrExistsComposeSigEliminator : {0 atom : Type} ->
+  {f : Type -> Type} -> {isFunctor : Functor f} ->
+  {sl, sr : SExpPred atom} ->
+  f (SExpAllOrExistsSig {atom} sl sr) ->
+  f ((l : SList atom) -> SListAllLeftOrExistsRight sl sr l)
+slistAllOrExistsComposeSigEliminator {f} {isFunctor} =
+  map slistAllOrExistsEliminator
 
 public export
 SExpAllOrExistsMetaPreds : {atom : Type} ->
-  (f : Type -> Type) -> (sl, sr : SExpPred atom) -> Type
-SExpAllOrExistsMetaPreds f sl sr =
-  ((x : SExp atom) -> f (SExpAllLeftOrExistsRight sl sr x) -> Type,
-   (l : SList atom) -> f (SListAllLeftOrExistsRight sl sr l) -> Type)
+  (sl, sr : SExpPred atom) -> Type
+SExpAllOrExistsMetaPreds sl sr =
+  ((x : SExp atom) -> SExpAllLeftOrExistsRight sl sr x -> Type,
+   (l : SList atom) -> SListAllLeftOrExistsRight sl sr l -> Type)
 
 public export
 record SExpAllOrExistsMetaEliminatorSig {0 atom : Type}
-  {f : Type -> Type} {isApplicative : Applicative f}
   {sl, sr : SExpPred atom}
-  (signature : SExpAllOrExistsSig {atom} f sl sr)
-  (smps : SExpAllOrExistsMetaPreds f sl sr)
+  (signature : SExpAllOrExistsSig {atom} sl sr)
+  (smps : SExpAllOrExistsMetaPreds sl sr)
   where
     constructor SExpAllOrExistsMetaEliminatorArgs
 
 SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  {signature : SExpAllOrExistsSig {atom} f sl sr} ->
-  {smps : SExpAllOrExistsMetaPreds f sl sr} ->
-  SExpAllOrExistsMetaEliminatorSig {isApplicative} signature smps ->
+  {signature : SExpAllOrExistsSig {atom} sl sr} ->
+  {smps : SExpAllOrExistsMetaPreds sl sr} ->
+  SExpAllOrExistsMetaEliminatorSig signature smps ->
   SExpMetaEliminatorSig
-    (SExpAllOrExistsSigToEliminatorSig {isApplicative} signature)
+    (SExpAllOrExistsSigToEliminatorSig signature)
     smps
 SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig metaSig =
   ?SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig_hole
 
 public export
 sexpAllOrExistsMetaEliminators : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  {signature : SExpAllOrExistsSig {atom} f sl sr} ->
-  {smps : SExpAllOrExistsMetaPreds f sl sr} ->
-  SExpAllOrExistsMetaEliminatorSig {isApplicative} signature smps ->
-  SExpSigPis (SExpAllOrExistsSigToEliminatorSig {isApplicative} signature) smps
-sexpAllOrExistsMetaEliminators {isApplicative} =
-  sexpMetaEliminators .
-    SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig {isApplicative}
+  {signature : SExpAllOrExistsSig {atom} sl sr} ->
+  {smps : SExpAllOrExistsMetaPreds sl sr} ->
+  SExpAllOrExistsMetaEliminatorSig signature smps ->
+  SExpSigPis (SExpAllOrExistsSigToEliminatorSig signature) smps
+sexpAllOrExistsMetaEliminators =
+  sexpMetaEliminators .  SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig
 
 public export
 SExpReturnsLeft : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  (signature : SExpAllOrExistsSig {atom} f sl sr) ->
-  (x : SExp atom) -> f Type
-SExpReturnsLeft {isApplicative} signature x =
-  map IsLeft (sexpAllOrExistsEliminator {isApplicative} signature x)
+  (signature : SExpAllOrExistsSig {atom} sl sr) ->
+  (x : SExp atom) -> Type
+SExpReturnsLeft signature x = IsLeft (sexpAllOrExistsEliminator signature x)
 
 public export
 SListReturnsLeft : {0 atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sl, sr : SExpPred atom} ->
-  (signature : SExpAllOrExistsSig {atom} f sl sr) ->
-  (l : SList atom) -> f Type
-SListReturnsLeft {isApplicative} signature l =
-  map IsLeft (slistAllOrExistsEliminator {isApplicative} signature l)
-
-public export
-record SExpReturnsLeftEliminatorSig {0 atom : Type}
-  {f : Type -> Type} {isApplicative : Applicative f}
-  {sl, sr : SExpPred atom}
-  (signature : SExpAllOrExistsSig {atom} f sl sr)
-  where
-    constructor SExpReturnsLeftEliminatorArgs
+  (signature : SExpAllOrExistsSig {atom} sl sr) ->
+  (l : SList atom) -> Type
+SListReturnsLeft signature l = IsLeft (slistAllOrExistsEliminator signature l)

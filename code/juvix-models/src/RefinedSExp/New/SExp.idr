@@ -300,31 +300,14 @@ sexpMetaEliminators :
 sexpMetaEliminators = sexpEliminators . SExpMetaEliminatorSigToEliminatorSig
 
 public export
-SExpSignatureComposeSig :
-  {f : Type -> Type} ->
-  {da : DependentApplicative f} ->
-  {atom : Type} ->
-  {sps : SExpPreds atom} ->
-  (signature : f (SExpEliminatorSig sps)) ->
-  SExpEliminatorSig (sexpPredsCompose f sps)
-SExpSignatureComposeSig {da} signature =
-  SExpEliminatorArgs {sps=(sexpPredsCompose f sps)}
-    (\a => dpure da (afmap {da} atomElim signature) a)
-    (\l, flpl => afapply da (dpure da (afmap {da} listElim signature) l) flpl)
-    (afmap {da} nilElim signature)
-    (\x, l, fspx, flpl =>
-      afapply da (afapply da
-        (dpure da (dpure da (afmap {da} consElim signature) x) l) fspx) flpl)
-
-public export
 sexpSignatureCompose :
   {f : Type -> Type} ->
-  {da : DependentApplicative f} ->
+  {isFunctor : Functor f} ->
   {atom : Type} ->
   {sps : SExpPreds atom} ->
   (signature : f (SExpEliminatorSig sps)) ->
-  SPredPis (sexpPredsCompose f sps)
-sexpSignatureCompose {da} = sexpEliminators . SExpSignatureComposeSig {da}
+  f (SPredPis sps)
+sexpSignatureCompose = map sexpEliminators
 
 public export
 sexpParameterizedEliminators :
