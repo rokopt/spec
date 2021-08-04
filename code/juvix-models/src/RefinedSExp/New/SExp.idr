@@ -318,6 +318,7 @@ sexpMetaEliminatorsComposeSig :
 sexpMetaEliminatorsComposeSig {f} {da} {smps} {signature} =
   sexpEliminatorsComposeSig {f} {da} {sps=(SExpSigToMetaPreds smps signature)}
 
+{- XXX express this in terms of signature composition -}
 public export
 sexpParameterizedEliminators :
   {0 atom : Type} ->
@@ -327,6 +328,7 @@ sexpParameterizedEliminators :
 sexpParameterizedEliminators parameterizedSignature params =
   sexpEliminators (parameterizedSignature params)
 
+{- XXX express this in terms of signature composition -}
 public export
 sexpMetaParameterizedSigEliminators :
   {atom : Type} -> {sps : List (SExpPreds atom) -> SExpPreds atom} ->
@@ -386,6 +388,8 @@ record SExpForAllEliminatorSig {atom : Type} (sp : SExpPred atom) where
   constructor SExpForAllEliminatorArgs
   atomElim : (a : atom) -> sp ($^ a)
   listElim : (l : SList atom) -> SListForAll sp l -> sp ($| l)
+
+{- XXX write signature composer for this -}
 
 public export
 SExpForAllEliminatorSigToEliminatorSig :
@@ -501,6 +505,8 @@ record SExpConstListEliminatorSig {0 atom : Type} (sp : Type) where
   constructor SExpConstListEliminatorArgs
   atomElim : atom -> sp
   listElim : (l : SList atom) -> List sp -> sp
+
+{- XXX write signature composer for this -}
 
 public export
 SExpConstListEliminatorSigToEliminatorSig :

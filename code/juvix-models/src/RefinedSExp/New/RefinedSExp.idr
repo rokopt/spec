@@ -6,6 +6,7 @@ import public Library.Decidability
 
 %default total
 
+{- XXX write a signature composer for this -}
 public export
 record SExpAllOrExistsSig {0 atom : Type}
   (sl, sr : SExpPred atom) where
@@ -101,32 +102,14 @@ SExpAllOrExistsMetaPreds sl sr =
    (l : SList atom) -> SListAllLeftOrExistsRight sl sr l -> Type)
 
 public export
-record SExpAllOrExistsMetaEliminatorSig {0 atom : Type}
-  {sl, sr : SExpPred atom}
-  (signature : SExpAllOrExistsSig {atom} sl sr)
-  (smps : SExpAllOrExistsMetaPreds sl sr)
-  where
-    constructor SExpAllOrExistsMetaEliminatorArgs
-
-SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig : {0 atom : Type} ->
-  {sl, sr : SExpPred atom} ->
-  {signature : SExpAllOrExistsSig {atom} sl sr} ->
-  {smps : SExpAllOrExistsMetaPreds sl sr} ->
-  SExpAllOrExistsMetaEliminatorSig signature smps ->
-  SExpMetaEliminatorSig
-    smps (SExpAllOrExistsSigToEliminatorSig signature)
-SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig metaSig =
-  ?SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig_hole
-
-public export
 sexpAllOrExistsMetaEliminators : {atom : Type} ->
   {sl, sr : SExpPred atom} ->
   {signature : SExpAllOrExistsSig {atom} sl sr} ->
   {smps : SExpAllOrExistsMetaPreds sl sr} ->
-  SExpAllOrExistsMetaEliminatorSig signature smps ->
+  SExpMetaEliminatorSig smps (SExpAllOrExistsSigToEliminatorSig signature) ->
   SExpSigPis smps (SExpAllOrExistsSigToEliminatorSig signature)
 sexpAllOrExistsMetaEliminators =
-  sexpMetaEliminators .  SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig
+  sexpMetaEliminators
 
 public export
 SExpReturnsLeft : {0 atom : Type} ->
