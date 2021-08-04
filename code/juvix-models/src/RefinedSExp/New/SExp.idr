@@ -437,11 +437,25 @@ SExpForAllMetaPis {atom} {sp} signature smps =
    (l : SList atom) -> snd smps l (slistForAllEliminator signature l))
 
 public export
-record SExpForAllMetaEliminatorSig {atom : Type} {sp : SExpPred atom}
+record SExpForAllMetaEliminatorSig {0 atom : Type} {0 sp : SExpPred atom}
   (signature : SExpForAllEliminatorSig sp)
   (smps : SExpForAllMetaPreds sp)
   where
     constructor SExpForAllMetaEliminatorArgs
+    metaAtomElim :
+      (a : atom) -> fst smps ($^ a) (atomElim signature a)
+    metaListElim : (l : SList atom) ->
+      snd smps l (slistForAllEliminator signature l) ->
+      fst smps ($| l)
+        (listElim signature l (slistForAllEliminator signature l),
+         slistForAllEliminator signature l)
+    metaNilElim :
+      snd smps [] ()
+    metaConsElim : (x : SExp atom) -> (l : SList atom) ->
+      fst smps x (sexpForAllEliminator signature x) ->
+      snd smps l (slistForAllEliminator signature l) ->
+      snd smps (x :: l)
+        (sexpForAllEliminator signature x, slistForAllEliminator signature l)
 
 public export
 SExpForAllMetaEliminatorSigToMetaEliminatorSig :
@@ -452,12 +466,12 @@ SExpForAllMetaEliminatorSigToMetaEliminatorSig :
   SExpMetaEliminatorSig
     (SExpForAllEliminatorSigToEliminatorSig signature)
     smps
-SExpForAllMetaEliminatorSigToMetaEliminatorSig {sp} {signature} {smps} metaSig =
+SExpForAllMetaEliminatorSigToMetaEliminatorSig metaSig =
   SExpMetaEliminatorArgs
-    (?SExpForAllMetaEliminatorSigToMetaEliminatorSig_hole_atomElim)
-    (?SExpForAllMetaEliminatorSigToMetaEliminatorSig_hole_listElim)
-    (?SExpForAllMetaEliminatorSigToMetaEliminatorSig_hole_nilElim)
-    (?SExpForAllMetaEliminatorSigToMetaEliminatorSig_hole_consElim)
+    (metaAtomElim metaSig)
+    (metaListElim metaSig)
+    (metaNilElim metaSig)
+    (metaConsElim metaSig)
 
 public export
 sexpForAllMetaEliminators : {atom : Type} -> {sp : SExpPred atom} ->
