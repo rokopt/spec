@@ -119,7 +119,7 @@ SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig metaSig =
   ?SExpAllOrExistsMetaEliminatorSigToMetaEliminatorSig_hole
 
 public export
-sexpAllOrExistsMetaEliminators : {0 atom : Type} ->
+sexpAllOrExistsMetaEliminators : {atom : Type} ->
   {sl, sr : SExpPred atom} ->
   {signature : SExpAllOrExistsSig {atom} sl sr} ->
   {smps : SExpAllOrExistsMetaPreds sl sr} ->
