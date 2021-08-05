@@ -130,7 +130,7 @@ SListReturnsLeft : {0 atom : Type} ->
   SList atom -> Type
 SListReturnsLeft signature l = IsLeft (slistAllOrExistsEliminator signature l)
 
--- XXX depdendent transformers; dependently-typed programming languages;
+-- Next to do: depdendent transformers; dependently-typed programming languages;
 -- elimination of refined sexps to dependently-typed programming languages;
 -- elimination of refined sexps to dependently-typed programming languages;
 -- parameterized (on other dependently-typed programming languages)

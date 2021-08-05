@@ -32,17 +32,17 @@ SExpPreds : Type -> Type
 SExpPreds atom = (SExpPred atom, SListPred atom)
 
 public export
-sexpPredsCompose : {atom : Type} ->
-  (Type -> Type) -> SExpPreds atom -> SExpPreds atom
-sexpPredsCompose f sps = (f . fst sps, f . snd sps)
-
-public export
 SPredsExp : {0 atom : Type} -> SExpPreds atom -> SExpPred atom
 SPredsExp = fst
 
 public export
 SPredsList : {0 atom : Type} -> SExpPreds atom -> SListPred atom
 SPredsList = snd
+
+public export
+sexpPredsCompose : {atom : Type} ->
+  (Type -> Type) -> SExpPreds atom -> SExpPreds atom
+sexpPredsCompose f sps = (f . SPredsExp sps, f . SPredsList sps)
 
 public export
 SExpPi : {atom : Type} -> SExpPred atom -> Type
@@ -102,12 +102,38 @@ mutual
       (sexpEliminator signature x) (slistEliminator signature l)
 
 public export
+SExpSignatureComposeSig :
+  {f : Type -> Type} ->
+  {da : DependentApplicative f} ->
+  {atom : Type} ->
+  {sps : SExpPreds atom} ->
+  (signature : f (SExpEliminatorSig sps)) ->
+  SExpEliminatorSig (sexpPredsCompose f sps)
+SExpSignatureComposeSig {da} signature =
+  SExpEliminatorArgs {sps=(sexpPredsCompose f sps)}
+    (\a => dpure da (afmap {da} atomElim signature) a)
+    (\l, flpl => afapply da (dpure da (afmap {da} listElim signature) l) flpl)
+    (afmap {da} nilElim signature)
+    (\x, l, fspx, flpl =>
+      afapply da (afapply da
+        (dpure da (dpure da (afmap {da} consElim signature) x) l) fspx) flpl)
+
+public export
 sexpEliminators :
   {0 atom : Type} -> {0 sps : SExpPreds atom} ->
   (signature : SExpEliminatorSig sps) ->
   SPredPis sps
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
+
+public export
+sexpEliminatorsComposeSig :
+  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {atom : Type} ->
+  {sps : SExpPreds atom} ->
+  (signature : f (SExpEliminatorSig sps)) ->
+  SPredPis (sexpPredsCompose f sps)
+sexpEliminatorsComposeSig = sexpEliminators . SExpSignatureComposeSig {da}
 
 public export
 SExpPredsToListPred :
@@ -173,6 +199,36 @@ SExpMetaPreds : {atom : Type} -> SExpPreds atom -> Type
 SExpMetaPreds sps = (SExpPredsMetaExp sps, SExpPredsMetaList sps)
 
 public export
+SExpMetaPredsExp : {atom : Type} -> {sps : SExpPreds atom} ->
+  SExpMetaPreds sps -> SExpPredsMetaExp sps
+SExpMetaPredsExp = fst
+
+public export
+SExpMetaPredsList : {atom : Type} -> {sps : SExpPreds atom} ->
+  SExpMetaPreds sps -> SExpPredsMetaList sps
+SExpMetaPredsList = snd
+
+public export
+sexpMetaPredCompose : {atom : Type} ->
+  (Type -> Type) -> {sps : SExpPreds atom} ->
+  SExpPredsMetaExp sps -> SExpPredsMetaExp sps
+sexpMetaPredCompose f smp = \x, spx => f (smp x spx)
+
+public export
+slistMetaPredCompose : {atom : Type} ->
+  (Type -> Type) -> {sps : SExpPreds atom} ->
+  SExpPredsMetaList sps -> SExpPredsMetaList sps
+slistMetaPredCompose f lmp = \l, lpl => f (lmp l lpl)
+
+public export
+sexpMetaPredsCompose : {atom : Type} ->
+  (Type -> Type) -> {sps : SExpPreds atom} ->
+  SExpMetaPreds sps -> SExpMetaPreds sps
+sexpMetaPredsCompose f smps =
+  (sexpMetaPredCompose f (SExpMetaPredsExp smps),
+   slistMetaPredCompose f (SExpMetaPredsList smps))
+
+public export
 SExpMetaComposedPreds : {atom : Type} ->
   (Type -> Type) -> SExpPreds atom -> Type
 SExpMetaComposedPreds f sps = SExpMetaPreds (sexpPredsCompose f sps)
@@ -208,16 +264,6 @@ SListSigToMetaPred : {atom : Type} -> {sps : SExpPreds atom} ->
 SListSigToMetaPred signature lmp = \l => lmp l (slistEliminator signature l)
 
 public export
-SExpMetaPredsExp : {atom : Type} -> {sps : SExpPreds atom} ->
-  SExpMetaPreds sps -> SExpPredsMetaExp sps
-SExpMetaPredsExp = fst
-
-public export
-SExpMetaPredsList : {atom : Type} -> {sps : SExpPreds atom} ->
-  SExpMetaPreds sps -> SExpPredsMetaList sps
-SExpMetaPredsList = snd
-
-public export
 SExpSigToMetaPredExp : {atom : Type} -> {sps : SExpPreds atom} ->
   SExpMetaPreds sps -> SExpEliminatorSig sps -> SExpPred atom
 SExpSigToMetaPredExp smps signature =
@@ -225,15 +271,21 @@ SExpSigToMetaPredExp smps signature =
 
 public export
 SExpSigToMetaPredList : {atom : Type} -> {sps : SExpPreds atom} ->
-  SExpMetaPreds sps -> SExpEliminatorSig sps -> SListPred atom
+  (smps : SExpMetaPreds sps) -> SExpEliminatorSig sps -> SListPred atom
 SExpSigToMetaPredList smps signature =
   SListSigToMetaPred signature (SExpMetaPredsList smps)
 
 public export
 SExpSigToMetaPreds : {atom : Type} -> {sps : SExpPreds atom} ->
-  SExpMetaPreds sps -> SExpEliminatorSig sps -> SExpPreds atom
+  (smps : SExpMetaPreds sps) -> SExpEliminatorSig sps -> SExpPreds atom
 SExpSigToMetaPreds smps signature =
   (SExpSigToMetaPredExp smps signature, SExpSigToMetaPredList smps signature)
+
+public export
+SExpSigToComposedMetaPreds : {atom : Type} -> {sps : SExpPreds atom} ->
+  (Type -> Type) -> SExpMetaPreds sps -> SExpEliminatorSig sps -> SExpPreds atom
+SExpSigToComposedMetaPreds f smps signature =
+  sexpPredsCompose f (SExpSigToMetaPreds smps signature)
 
 public export
 SExpSigPi : {atom : Type} -> {sps : SExpPreds atom} ->
@@ -277,35 +329,6 @@ sexpMetaEliminators :
 sexpMetaEliminators = sexpEliminators
 
 public export
-SExpSignatureComposeSig :
-  {f : Type -> Type} ->
-  {da : DependentApplicative f} ->
-  {atom : Type} ->
-  {sps : SExpPreds atom} ->
-  (signature : f (SExpEliminatorSig sps)) ->
-  SExpEliminatorSig (sexpPredsCompose f sps)
-SExpSignatureComposeSig {da} signature =
-  SExpEliminatorArgs {sps=(sexpPredsCompose f sps)}
-    (\a => dpure da (afmap {da} atomElim signature) a)
-    (\l, flpl => afapply da (dpure da (afmap {da} listElim signature) l) flpl)
-    (afmap {da} nilElim signature)
-    (\x, l, fspx, flpl =>
-      afapply da (afapply da
-        (dpure da (dpure da (afmap {da} consElim signature) x) l) fspx) flpl)
-
-public export
-sexpEliminatorsComposeSig :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {atom : Type} ->
-  {sps : SExpPreds atom} ->
-  (signature : f (SExpEliminatorSig sps)) ->
-  SPredPis (sexpPredsCompose f sps)
-sexpEliminatorsComposeSig = sexpEliminators . SExpSignatureComposeSig {da}
-
-{- XXX add a function that works by taking an f(SExpMetaEliminatorSig),
- - which you can do because that's an eliminator sig, which composes, and
- - can thererfore produce a SExpMetaEliminatorSig(f.preds) -}
-public export
 sexpMetaComposedSigEliminators :
   {f : Type -> Type} -> {da : DependentApplicative f} ->
   {atom : Type} -> {sps : SExpPreds atom} ->
@@ -320,15 +343,37 @@ sexpMetaComposedSigEliminators :
 sexpMetaComposedSigEliminators = sexpMetaEliminators
 
 public export
-sexpMetaEliminatorsComposeSig :
+SExpMetaSignatureComposeSig :
+  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {atom : Type} -> {sps : SExpPreds atom} ->
+  {smps : SExpMetaPreds sps} ->
+  {signature : SExpEliminatorSig sps} ->
+  f (SExpMetaEliminatorSig {sps} smps signature) ->
+  SExpMetaEliminatorSig {sps} (sexpMetaPredsCompose {sps} f smps) signature
+SExpMetaSignatureComposeSig {f} {da} {smps} {signature} metaSig =
+  SExpSignatureComposeSig
+    {f} {da} {sps=(SExpSigToMetaPreds smps signature)} metaSig
+
+public export
+sexpMetaSignatureComposeSig :
   {f : Type -> Type} -> {da : DependentApplicative f} ->
   {atom : Type} -> {sps : SExpPreds atom} ->
   {smps : SExpMetaPreds sps} ->
   {signature : SExpEliminatorSig sps} ->
   f (SExpMetaEliminatorSig smps signature) ->
-  SPredPis (sexpPredsCompose f (SExpSigToMetaPreds smps signature))
-sexpMetaEliminatorsComposeSig {f} {da} {smps} {signature} =
-  sexpEliminatorsComposeSig {f} {da} {sps=(SExpSigToMetaPreds smps signature)}
+  SExpSigPis {sps} (sexpMetaPredsCompose {sps} f smps) signature
+sexpMetaSignatureComposeSig {f} {da} {sps} {smps} {signature} metaSig =
+  sexpMetaEliminators {signature} {smps=(sexpMetaPredsCompose f smps)}
+    (SExpMetaSignatureComposeSig {f} {da} {smps} metaSig)
+
+public export
+sexpMetaEliminatorsComposeSig :
+  {atom : Type} -> {0 sps : SExpPreds atom} ->
+  {0 smps : SExpMetaPreds sps} ->
+  {signature : SExpEliminatorSig sps} ->
+  SExpMetaEliminatorSig smps signature ->
+  SExpSigPis smps signature
+sexpMetaEliminatorsComposeSig = sexpEliminators
 
 {- XXX express this in terms of signature composition -}
 public export
