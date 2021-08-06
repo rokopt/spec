@@ -4,6 +4,12 @@ import public RefinedSExp.New.RefinedList
 import public RefinedSExp.New.SExp
 import public Library.Decidability
 
+-- “Ah Love! could thou and I with Fate conspire
+-- To grasp this sorry Scheme of Things entire,
+-- Would not we shatter it to bits -- and then
+-- Re-mould it nearer to the Heart's Desire!”
+--  - _Rubaiyat of Omar Khayyam_ (tr. Edward FitzGerald)
+
 %default total
 
 {- XXX write a signature composer for this -}
@@ -129,6 +135,27 @@ SListReturnsLeft : {0 atom : Type} ->
   (signature : SExpAllOrExistsSig {atom} sl sr) ->
   SList atom -> Type
 SListReturnsLeft signature l = IsLeft (slistAllOrExistsEliminator signature l)
+
+-- XXX Write (dependent, parameterized?) transformers
+
+-- XXX Write signature representation of dependent transformers
+
+-- XXX Show that signatures/transformer signatures form a (locally?)
+-- Cartesian closed category (perhaps they need to be parameterized
+-- for the "locally" part?)
+
+-- XXX Define the notion of refined-S-expression representation of signatures
+
+-- XXX Define the notion of refined-S-expression representation of functions
+-- (i.e. the signatures of tranformers)
+
+-- Show that refined-S-expression representations of signature categories
+-- also form a locally Caretesian closed category
+
+-- Show that the (dependent?) Applicative context into which we can place
+-- signature categories correspond to defining them within a metalanguage
+-- (the context gives the object language access to whatever metalanguage
+-- features the metalanguage chooses)
 
 -- Next to do: depdendent transformers; dependently-typed programming languages;
 -- elimination of refined sexps to dependently-typed programming languages;
