@@ -1,8 +1,8 @@
-module RefinedSExp.SExp
+module RefinedSExp.Old.SExp
 
 import Library.FunctionsAndRelations
 import Library.Decidability
-import public RefinedSExp.List
+import public RefinedSExp.Old.List
 import public Category.Category
 
 %default total

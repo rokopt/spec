@@ -25,25 +25,25 @@ modules = Library.TypesAndFunctions
     , Category.ComputableCategories
     , QCWF.CWF
     , QCWF.QCWF
-    , RefinedSExp.List
-    , RefinedSExp.Test.ListTest
-    , RefinedSExp.RefinedList
-    , RefinedSExp.Test.RefinedListTest
-    , RefinedSExp.SExp
-    , RefinedSExp.Test.SExpTest
-    , RefinedSExp.RefinedSExp
-    , RefinedSExp.Test.RefinedSExpTest
-    , RefinedSExp.OldSExp
-    , RefinedSExp.Test.OldSExpTest
-    , RefinedSExp.InductiveSExp
-    , RefinedSExp.Test.InductiveSExpTest
-    , RefinedSExp.ADT
-    , RefinedSExp.Test.ADTTest
-    , RefinedSExp.DependentADT
-    , RefinedSExp.Test.DependentADTTest
-    , RefinedSExp.DependentMorphism
-    , RefinedSExp.Test.DependentMorphismTest
-    , RefinedSExp.Test.TestLibrary
+    , RefinedSExp.Old.List
+    , RefinedSExp.Old.Test.ListTest
+    , RefinedSExp.Old.RefinedList
+    , RefinedSExp.Old.Test.RefinedListTest
+    , RefinedSExp.Old.SExp
+    , RefinedSExp.Old.Test.SExpTest
+    , RefinedSExp.Old.RefinedSExp
+    , RefinedSExp.Old.Test.RefinedSExpTest
+    , RefinedSExp.Old.OldSExp
+    , RefinedSExp.Old.Test.OldSExpTest
+    , RefinedSExp.Old.InductiveSExp
+    , RefinedSExp.Old.Test.InductiveSExpTest
+    , RefinedSExp.Old.ADT
+    , RefinedSExp.Old.Test.ADTTest
+    , RefinedSExp.Old.DependentADT
+    , RefinedSExp.Old.Test.DependentADTTest
+    , RefinedSExp.Old.DependentMorphism
+    , RefinedSExp.Old.Test.DependentMorphismTest
+    , RefinedSExp.Old.Test.TestLibrary
     , RefinedSExp.New.Test.TestLibrary
     , RefinedSExp.New.List
     , RefinedSExp.New.Test.ListTest

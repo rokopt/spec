@@ -1,17 +1,14 @@
-module RefinedSExp.Test.TestLibrary
+module RefinedSExp.Old.ADT
 
-import public Library.Decidability
+import public Data.Nat
+import public RefinedSExp.Old.RefinedSExp
+import public Library.List
 
 %default total
 
 public export
-Assertion : Type
-Assertion = ()
-
-public export
-Assert : (b : Bool) -> if b then () else List ()
-Assert True = ()
-Assert False = []
+data ADT : (primType : Type) -> Type where
+  PrimType : primType -> ADT primType
 
 -- Provide a "default" primitive type.
 
@@ -34,7 +31,6 @@ primTypeEq PrimTypeString PrimTypeBool = No (\eq => case eq of Refl impossible)
 primTypeEq PrimTypeString PrimTypeNat = No (\eq => case eq of Refl impossible)
 primTypeEq PrimTypeString PrimTypeString = Yes Refl
 
-public export
 interpretPrimitiveType : PrimitiveType -> Type
 interpretPrimitiveType PrimTypeBool = Bool
 interpretPrimitiveType PrimTypeNat = Nat
@@ -51,7 +47,6 @@ public export
 PrimitiveExp : Type
 PrimitiveExp = DPair PrimitiveType interpretPrimitiveType
 
-public export
 primExpEq : (primExp, primExp' : PrimitiveExp) -> Dec (primExp = primExp')
 primExpEq (primType ** primExp) (primType' ** primExp') with
   (primTypeEq primType primType')
@@ -61,9 +56,3 @@ primExpEq (primType ** primExp) (primType' ** primExp') with
         No neq => No (\eq => case eq of Refl => neq Refl)
     primExpEq (primType ** primExp) (primType' ** primExp') | No neq =
       No (\eq => case eq of Refl => neq Refl)
-
-public export
-Show PrimitiveExp where
-  show (PrimTypeBool ** b) = show b
-  show (PrimTypeNat ** n) = show n
-  show (PrimTypeString ** s) = s

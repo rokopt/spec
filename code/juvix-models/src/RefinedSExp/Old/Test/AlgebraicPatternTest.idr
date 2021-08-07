@@ -1,7 +1,7 @@
-module RefinedSExp.Test.AlgebraicPatternTest
+module RefinedSExp.Old.Test.AlgebraicPatternTest
 
-import public RefinedSExp.AlgebraicPattern
-import public RefinedSExp.Test.TestLibrary
+import public RefinedSExp.Old.AlgebraicPattern
+import public RefinedSExp.Old.Test.TestLibrary
 import Library.Decidability
 
 %default total

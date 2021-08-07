@@ -1,12 +1,12 @@
 module Executable.Test.Main
 
-import RefinedSExp.Test.TestLibrary
-import RefinedSExp.Test.ListTest
-import RefinedSExp.Test.RefinedListTest
-import RefinedSExp.Test.SExpTest
-import RefinedSExp.Test.RefinedSExpTest
-import RefinedSExp.Test.OldSExpTest
-import RefinedSExp.Test.ADTTest
+import RefinedSExp.Old.Test.TestLibrary
+import RefinedSExp.Old.Test.ListTest
+import RefinedSExp.Old.Test.RefinedListTest
+import RefinedSExp.Old.Test.SExpTest
+import RefinedSExp.Old.Test.RefinedSExpTest
+import RefinedSExp.Old.Test.OldSExpTest
+import RefinedSExp.Old.Test.ADTTest
 import RefinedSExp.New.Test.TestLibrary
 import RefinedSExp.New.Test.ListTest
 import RefinedSExp.New.Test.RefinedListTest
@@ -17,10 +17,10 @@ import RefinedSExp.New.Test.RefinedSExpTest
 
 main : IO ()
 main = do
-  RefinedSExp.Test.ListTest.listTests
-  RefinedSExp.Test.RefinedListTest.refinedListTests
-  RefinedSExp.Test.SExpTest.sExpTests
-  RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
+  RefinedSExp.Old.Test.ListTest.listTests
+  RefinedSExp.Old.Test.RefinedListTest.refinedListTests
+  RefinedSExp.Old.Test.SExpTest.sExpTests
+  RefinedSExp.Old.Test.RefinedSExpTest.refinedSExpTests
   RefinedSExp.New.Test.ListTest.listTests
   RefinedSExp.New.Test.RefinedListTest.refinedListTests
   RefinedSExp.New.Test.SExpTest.sExpTests

@@ -1,7 +1,7 @@
-module RefinedSExp.AlgebraicPattern
+module RefinedSExp.Old.AlgebraicPattern
 
 import public Data.Nat
-import public RefinedSExp.OldRefinedSExp
+import public RefinedSExp.Old.OldRefinedSExp
 import public Library.List
 
 %default total

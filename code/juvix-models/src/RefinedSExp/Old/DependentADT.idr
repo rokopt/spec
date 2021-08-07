@@ -1,6 +1,6 @@
-module RefinedSExp.DependentADT
+module RefinedSExp.Old.DependentADT
 
-import RefinedSExp.RefinedSExp
+import RefinedSExp.Old.RefinedSExp
 
 %default total
 

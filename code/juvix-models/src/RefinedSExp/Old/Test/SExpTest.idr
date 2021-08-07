@@ -1,7 +1,7 @@
-module RefinedSExp.Test.SExpTest
+module RefinedSExp.Old.Test.SExpTest
 
-import public RefinedSExp.SExp
-import public RefinedSExp.Test.TestLibrary
+import public RefinedSExp.Old.SExp
+import public RefinedSExp.Old.Test.TestLibrary
 
 %default total
 

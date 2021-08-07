@@ -1,4 +1,4 @@
-module RefinedSExp.OldSExp
+module RefinedSExp.Old.OldSExp
 
 import Category.ComputableCategories
 import Decidable.Equality

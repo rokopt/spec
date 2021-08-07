@@ -1,6 +1,6 @@
-module RefinedSExp.Test.PatternedSExpressionsTest
+module RefinedSExp.Old.Test.PatternedSExpressionsTest
 
-import RefinedSExp.PatternedSExpressions
+import RefinedSExp.Old.PatternedSExpressions
 
 %default total
 

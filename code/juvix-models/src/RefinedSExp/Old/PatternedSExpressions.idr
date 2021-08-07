@@ -1,8 +1,8 @@
-module RefinedSExp.PatternedSExpressions
+module RefinedSExp.Old.PatternedSExpressions
 
 import Decidable.Equality
 import public Library.List
-import public RefinedSExp.AlgebraicPattern
+import public RefinedSExp.Old.AlgebraicPattern
 
 %default total
 

@@ -1,7 +1,7 @@
-module RefinedSExp.RefinedSExp
+module RefinedSExp.Old.RefinedSExp
 
-import public RefinedSExp.RefinedList
-import public RefinedSExp.SExp
+import public RefinedSExp.Old.RefinedList
+import public RefinedSExp.Old.SExp
 import public Library.Decidability
 
 %default total
