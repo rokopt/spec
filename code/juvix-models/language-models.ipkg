@@ -25,6 +25,11 @@ modules = Library.TypesAndFunctions
     , Category.ComputableCategories
     , QCWF.CWF
     , QCWF.QCWF
+    , RefinedSExp.Test.TestLibrary
+    , RefinedSExp.SExp
+    , RefinedSExp.Test.SExpTest
+    , RefinedSExp.RefinedSExp
+    , RefinedSExp.Test.RefinedSExpTest
     , RefinedSExp.Old.List
     , RefinedSExp.Old.Test.ListTest
     , RefinedSExp.Old.RefinedList
