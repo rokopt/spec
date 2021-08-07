@@ -1,7 +1,7 @@
-module RefinedSExp.New.RefinedSExp
+module RefinedSExp.ListVariant.RefinedSExp
 
-import public RefinedSExp.New.RefinedList
-import public RefinedSExp.New.SExp
+import public RefinedSExp.ListVariant.RefinedList
+import public RefinedSExp.ListVariant.SExp
 import public Library.Decidability
 
 -- “Ah Love! could thou and I with Fate conspire

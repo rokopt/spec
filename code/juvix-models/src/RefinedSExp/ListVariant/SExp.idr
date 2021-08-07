@@ -1,6 +1,6 @@
-module RefinedSExp.New.SExp
+module RefinedSExp.ListVariant.SExp
 
-import public RefinedSExp.New.List
+import public RefinedSExp.ListVariant.List
 import Library.FunctionsAndRelations
 import Library.Decidability
 import public Category.Category

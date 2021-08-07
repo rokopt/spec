@@ -7,11 +7,11 @@ import RefinedSExp.Old.Test.SExpTest
 import RefinedSExp.Old.Test.RefinedSExpTest
 import RefinedSExp.Old.Test.OldSExpTest
 import RefinedSExp.Old.Test.ADTTest
-import RefinedSExp.New.Test.TestLibrary
-import RefinedSExp.New.Test.ListTest
-import RefinedSExp.New.Test.RefinedListTest
-import RefinedSExp.New.Test.SExpTest
-import RefinedSExp.New.Test.RefinedSExpTest
+import RefinedSExp.ListVariant.Test.TestLibrary
+import RefinedSExp.ListVariant.Test.ListTest
+import RefinedSExp.ListVariant.Test.RefinedListTest
+import RefinedSExp.ListVariant.Test.SExpTest
+import RefinedSExp.ListVariant.Test.RefinedSExpTest
 
 %default total
 
@@ -21,7 +21,7 @@ main = do
   RefinedSExp.Old.Test.RefinedListTest.refinedListTests
   RefinedSExp.Old.Test.SExpTest.sExpTests
   RefinedSExp.Old.Test.RefinedSExpTest.refinedSExpTests
-  RefinedSExp.New.Test.ListTest.listTests
-  RefinedSExp.New.Test.RefinedListTest.refinedListTests
-  RefinedSExp.New.Test.SExpTest.sExpTests
-  RefinedSExp.New.Test.RefinedSExpTest.refinedSExpTests
+  RefinedSExp.ListVariant.Test.ListTest.listTests
+  RefinedSExp.ListVariant.Test.RefinedListTest.refinedListTests
+  RefinedSExp.ListVariant.Test.SExpTest.sExpTests
+  RefinedSExp.ListVariant.Test.RefinedSExpTest.refinedSExpTests

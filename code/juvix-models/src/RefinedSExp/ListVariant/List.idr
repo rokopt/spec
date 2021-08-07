@@ -1,4 +1,4 @@
-module RefinedSExp.New.List
+module RefinedSExp.ListVariant.List
 
 import Library.FunctionsAndRelations
 import public Data.List
