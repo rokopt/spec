@@ -157,6 +157,14 @@ SListReturnsLeft signature l = IsLeft (slistAllOrExistsEliminator signature l)
 -- (the context gives the object language access to whatever metalanguage
 -- features the metalanguage chooses)
 
+-- Show that the Applicative contexts themselves form a category:  their
+-- domains are the object languages that they can define.  This means that
+-- an object language definition is "parameterized" on the metalanguage
+-- which defines it.  An object language need not know specifically which
+-- metalanguage is defining it; it can simply require some minimum
+-- Applicative context, and any metalanguage that can define that context
+-- can define the object language.  (Reverse mathematics?)
+
 -- Next to do: depdendent transformers; dependently-typed programming languages;
 -- elimination of refined sexps to dependently-typed programming languages;
 -- elimination of refined sexps to dependently-typed programming languages;
