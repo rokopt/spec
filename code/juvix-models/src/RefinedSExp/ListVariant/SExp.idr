@@ -3,6 +3,7 @@ module RefinedSExp.ListVariant.SExp
 import public RefinedSExp.ListVariant.List
 import Library.FunctionsAndRelations
 import Library.Decidability
+import Library.List
 import public Category.Category
 
 %default total

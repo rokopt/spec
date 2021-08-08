@@ -3,6 +3,7 @@ module RefinedSExp.ListVariant.RefinedSExp
 import public RefinedSExp.ListVariant.RefinedList
 import public RefinedSExp.ListVariant.SExp
 import public Library.Decidability
+import public Library.List
 
 -- “Ah Love! could thou and I with Fate conspire
 -- To grasp this sorry Scheme of Things entire,
