@@ -420,24 +420,6 @@ sexpForAllApplications {f} {isApplicative} {sp} =
       (sexpForAllApplicationsPairIntroRight {f} {isApplicative} {sp})
     )
 
-{- XXX
-public export
-record SExpWithPairPredEliminatorSig {0 atom : Type}
-  (0 sp : SExpPred atom) (0 pp : SExpPairPred atom) where
-    constructor SExpWithPairPredEliminatorArgs
-    atomElim : (a : atom) -> sp ($: a)
-    pairElim :
-      (x, x' : SExp atom) -> sp x -> sp x' -> pp (x, x') -> sp (x $. x')
-    atomPairIntro :
-      (a, a' : atom) -> sp ($: a) -> sp ($: a') -> pp ($: a, $: a')
-    expPairIntroLeft :
-      (x, x', x'' : SExp atom) -> sp x -> sp x' -> sp x'' ->
-        pp (x, x') -> pp ((x $. x'), x'')
-    expPairIntroRight :
-      (x, x', x'' : SExp atom) -> sp x -> sp x' -> sp x'' ->
-        pp (x', x'') -> pp (x, (x' $. x''))
-        -}
-
 public export
 sexpForAllApply :
   {0 atom : Type} ->
@@ -466,102 +448,34 @@ spairForAllApply {isApplicative} {sp} =
 
 {- XXX enhanced-with-applicative eliminator (with signature composer) -}
 
-{-
-  let
-    eliminator =
-      sexpPairEliminator
-        {atomPred=
-          (\a : atom => SExpForAll (f . sp) ($: a) -> f (SExpForAll sp ($: a)))}
-        {pairPred=
-          (\x, x' : SExp atom =>
-            (SExpForAll (f . sp) x, SExpForAll (f . sp) x') ->
-            f (SExpForAll sp x, SExpForAll sp x'))}
-        (SExpEliminatorArgs
-          (\_ => id)
-          (\x, x', mapForAll, mapForAll', sp, forAll, forAll' =>
-          {-
-            let
-              boo = mapForAll sp
-            in
-            -}
-            ?hole)
-        )
-  in
-  (\x, forAll => case x of
-    ($:) a => forAll
-    x $. x' =>
-      eliminator (x $. x') (fst forAll) (fst (snd forAll)) (snd (snd forAll)))
-      -}
-
-    {-
 public export
 SExpGeneralInductionComposeSig :
+  {atom : Type} ->
   {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {atom : Type} -> {sp : SExpPred atom} ->
+  {sp : SExpPred atom} ->
   f (SExpGeneralInductionSig sp) ->
   SExpGeneralInductionSig (f . sp)
-SExpForAllEliminatorComposeSig {f} {da} {sp} signature =
+SExpGeneralInductionComposeSig {f} {da} {sp} signature =
   SExpGeneralInductionArgs
     (\a => dpure da (afmap {da} atomElim signature) a)
-    (\l, flpl =>
-      afapply da (dpure da (afmap {da} (listElim {sp}) signature) l)
-        (slistForAllApply {f} {isApplicative=(appApplicative da)} {sp} l flpl))
+    (\x, x', forAll, forAll' =>
+      let isApplicative = appApplicative da in
+      afapply da (afapply da
+        (dpure da (dpure da (afmap {da} pairElim signature) x) x')
+          (sexpForAllApply {f} {isApplicative} {sp} x forAll))
+          (sexpForAllApply {f} {isApplicative} {sp} x' forAll'))
 
 public export
 sexpGeneralInductionComposeSig :
+  {atom : Type} ->
   {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {atom : Type} -> {sp : SExpPred atom} ->
+  {sp : SExpPred atom} ->
   f (SExpGeneralInductionSig sp) ->
-  SForAllPis (f . sp)
-sexpGeneralInductionsComposeSig {f} {sp} {da} =
-  sexpGeneralInductions . SExpForAllEliminatorComposeSig {f} {sp} {da}
+  SExpForAllPi (f . sp)
+sexpGeneralInductionComposeSig {f} {sp} {da} =
+  sexpGeneralInduction . SExpGeneralInductionComposeSig {f} {sp} {da}
 
-export
-sexpGeneralInductionsComposeSigConsistent :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {atom : Type} -> {sp : SExpPred atom} ->
-  (signature : f (SExpGeneralInductionSig sp)) ->
-  ((x : SExp atom) ->
-    sexpForAllApply {f} {isApplicative=(appApplicative da)} {sp}
-      x (sexpGeneralInduction {sp=(f . sp)}
-          (SExpForAllEliminatorComposeSig {da} {sp} signature) x) =
-    sexpEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-      (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-        (afmap {da} SExpGeneralInductionSigToEliminatorSig signature))
-      x,
-   (l : SList atom) ->
-    slistForAllApply {f} {isApplicative=(appApplicative da)} {sp}
-      l (slistForAllEliminator {sp=(f . sp)}
-          (SExpForAllEliminatorComposeSig {da} {sp} signature) l) =
-    slistEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-      (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-        (afmap {da} SExpGeneralInductionSigToEliminatorSig signature))
-      l)
-sexpGeneralInductionsComposeSigConsistent {da} {sp} signature =
-  sexpEliminators
-    {sps=
-      (\x =>
-        sexpForAllApply {f} {isApplicative=(appApplicative da)} {sp}
-          x (sexpGeneralInduction {sp=(f . sp)}
-              (SExpForAllEliminatorComposeSig {da} {sp} signature) x) =
-        sexpEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-          (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-            (afmap {da} SExpGeneralInductionSigToEliminatorSig signature))
-          x,
-       \l =>
-        slistForAllApply {f} {isApplicative=(appApplicative da)} {sp}
-          l (slistForAllEliminator {sp=(f . sp)}
-              (SExpForAllEliminatorComposeSig {da} {sp} signature) l) =
-        slistEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-          (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-            (afmap {da} SExpGeneralInductionSigToEliminatorSig signature))
-          l)}
-    (SExpEliminatorArgs
-      (?sexpGeneralInductionsComposeSigConsistent_hole_atomElim)
-      (?sexpGeneralInductionsComposeSigConsistent_hole_listElim)
-      (?sexpGeneralInductionsComposeSigConsistent_hole_nilElim)
-      (?sexpGeneralInductionsComposeSigConsistent_hole_consElim)
-    )
+{-
 
 public export
 SExpForAllMetaPred : {atom : Type} -> SExpPred atom -> Type
