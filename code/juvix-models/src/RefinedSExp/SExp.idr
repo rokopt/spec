@@ -63,6 +63,8 @@ sexpEliminatorComposeSig :
   {f : Type -> Type} ->
   (da : DependentApplicative f) ->
   {sp : SExpPred atom} ->
+  {- XXX can this be extended to make f a SExpDependentApplicative and the
+   - signature parameterized on an SExp? -}
   f (SExpEliminatorSig sp) ->
   SExpPi (f . sp)
 sexpEliminatorComposeSig da = sexpEliminator . SExpSignatureComposeSig da
