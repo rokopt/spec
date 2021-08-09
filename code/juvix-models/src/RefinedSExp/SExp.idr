@@ -23,6 +23,10 @@ SExpPi : {0 atom : Type} -> SExpPred atom -> Type
 SExpPi sp = SExp atom ~> sp
 
 public export
+SExpTypeConstructor : (0 atom : Type) -> Type
+SExpTypeConstructor atom = DependentTypeConstructor (SExp atom)
+
+public export
 record SExpEliminatorSig {0 atom : Type} (0 sp : SExpPred atom) where
   constructor SExpEliminatorArgs
   atomElim : (a : atom) -> sp ($: a)
@@ -40,9 +44,9 @@ sexpEliminator signature (x $. x') =
 
 public export
 SExpSignatureComposeSig :
+  {atom : Type} ->
   {f : Type -> Type} ->
   (da : DependentApplicative f) ->
-  {atom : Type} ->
   {sp : SExpPred atom} ->
   f (SExpEliminatorSig sp) ->
   SExpEliminatorSig (f . sp)
@@ -55,9 +59,9 @@ SExpSignatureComposeSig da fsignature =
 
 public export
 sexpEliminatorComposeSig :
+  {atom : Type} ->
   {f : Type -> Type} ->
   (da : DependentApplicative f) ->
-  {atom : Type} ->
   {sp : SExpPred atom} ->
   f (SExpEliminatorSig sp) ->
   SExpPi (f . sp)
@@ -145,8 +149,9 @@ sexpMetaEliminator = sexpEliminator
 
 public export
 sexpMetaComposedSigEliminator :
+  {0 atom : Type} ->
   {0 f : Type -> Type} -> {0 da : DependentApplicative f} ->
-  {0 atom : Type} -> {0 sp : SExpPred atom} ->
+  {0 sp : SExpPred atom} ->
   {0 smp : SExpMetaPred (f . sp)} ->
   {0 fsignature : f (SExpEliminatorSig sp)} ->
   SExpMetaEliminatorSig (SExpSignatureComposeSig da fsignature) smp ->
@@ -155,8 +160,9 @@ sexpMetaComposedSigEliminator {smp} = sexpMetaEliminator {smp}
 
 public export
 sexpMetaEliminatorComposeSig :
+  {atom : Type} ->
   {f : Type -> Type} -> (da : DependentApplicative f) ->
-  {atom : Type} -> {0 sp : SExpPred atom} ->
+  {0 sp : SExpPred atom} ->
   {smp : SExpMetaPred sp} ->
   {signature : SExpEliminatorSig sp} ->
   f (SExpMetaEliminatorSig signature smp) ->
@@ -340,8 +346,9 @@ SExpForAllWithPairPred sp = SExpPredWithPairPred sp (SExpForAllBoth sp)
 
 public export
 sexpForAllApplicationsPairElim :
+  {0 atom : Type} ->
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  {sp : SExp atom -> Type} ->
   (x, x' : SExp atom) ->
   (SExpForAll (f . sp) x -> f (SExpForAll sp x)) ->
   (SExpForAll (f . sp) x' -> f (SExpForAll sp x')) ->
@@ -357,8 +364,9 @@ sexpForAllApplicationsPairElim {f} {isApplicative} {sp}
 
 public export
 sexpForAllApplicationsPairIntroLeft :
+  {0 atom : Type} ->
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  {sp : SExp atom -> Type} ->
   (x, x', x'' : SExp atom) ->
   (SExpForAll (f . sp) x -> f (SExpForAll sp x)) ->
   (SExpForAll (f . sp) x' -> f (SExpForAll sp x')) ->
@@ -376,8 +384,9 @@ sexpForAllApplicationsPairIntroLeft {f} {isApplicative} {sp}
 
 public export
 sexpForAllApplicationsPairIntroRight :
+  {0 atom : Type} ->
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  {sp : SExp atom -> Type} ->
   (x, x', x'' : SExp atom) ->
   (SExpForAll (f . sp) x -> f (SExpForAll sp x)) ->
   (SExpForAll (f . sp) x' -> f (SExpForAll sp x')) ->
@@ -395,8 +404,9 @@ sexpForAllApplicationsPairIntroRight {f} {isApplicative} {sp}
 
 public export
 sexpForAllApplications :
+  {0 atom : Type} ->
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  {sp : SExp atom -> Type} ->
   SExpWithPairPi
     (\x => SExpForAll (f . sp) x -> f (SExpForAll sp x))
     (\p => SExpForAllBoth (f . sp) p -> f (SExpForAllBoth sp p))
@@ -430,16 +440,18 @@ record SExpWithPairPredEliminatorSig {0 atom : Type}
 
 public export
 sexpForAllApply :
+  {0 atom : Type} ->
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  {sp : SExp atom -> Type} ->
   (x : SExp atom) -> SExpForAll (f . sp) x -> f (SExpForAll sp x)
 sexpForAllApply {isApplicative} {sp} =
   fst (sexpForAllApplications {isApplicative} {sp})
 
 public export
 spairForAllApply :
+  {0 atom : Type} ->
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  {sp : SExp atom -> Type} ->
   (p : SExpPair atom) -> SExpForAllBoth (f . sp) p -> f (SExpForAllBoth sp p)
 spairForAllApply {isApplicative} {sp} =
   snd (sexpForAllApplications {isApplicative} {sp})

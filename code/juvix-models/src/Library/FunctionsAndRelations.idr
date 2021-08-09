@@ -849,6 +849,32 @@ applyEitherElim :
 applyEitherElim fac fbc fe = pure eitherElim <*> (applyPair fac fbc) <*> fe
 
 public export
+DependentTypeConstructor : (a : Type) -> Type
+DependentTypeConstructor a = (a -> Type) -> (a -> Type)
+
+public export
+record DependentFunctorOn
+  {0 a : Type} (0 f : DependentTypeConstructor a) where
+    constructor MkDependentFunctorOn
+    dfmap : (0 b, c : a -> Type) -> (0 x : a) -> (b x -> c x) -> f b x -> f c x
+
+public export
+record DependentApplicativeOn
+  {0 a : Type} (0 f : DependentTypeConstructor a) where
+    constructor MkDependentApplicativeOn
+    daFunctor : DependentFunctorOn f
+    dapure : (0 b : a -> Type) -> (0 x : a) -> b x -> f b x
+    dapply : (0 b, c : a -> Type) -> (0 x : a) ->
+      (f b x -> f c x) -> f b x -> f c x
+
+public export
+record DependentMonadOn
+  {0 a : Type} (0 m : DependentTypeConstructor a) where
+    constructor MkDependentMonadOn
+    dmApplicative : DependentApplicativeOn m
+    dmjoin : (b : a -> Type) -> (x : a) -> m (m b) x -> m b x
+
+public export
 DependentMap : (Type -> Type) -> Type
 DependentMap f = (a, b : Type) -> (a' : a -> Type) -> (b' : b -> Type) ->
     (fab : a -> b) -> ((x : a) -> a' x -> b' (fab x)) ->
