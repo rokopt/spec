@@ -800,9 +800,35 @@ public export
     (<*>) = ((<*>) {f}) . (map {f} ((<*>) {f=g}))
 
 public export
+proj32 : {0 a, b, c : Type} -> (a, b, c) -> b
+proj32 = fst . snd
+
+public export
+proj33 : {0 a, b, c : Type} -> (a, b, c) -> c
+proj33 = snd . snd
+
+public export
+proj42 : {0 a, b, c, d : Type} -> (a, b, c, d) -> b
+proj42 = fst . snd
+
+public export
+proj43 : {0 a, b, c, d : Type} -> (a, b, c, d) -> c
+proj43 = fst . snd . snd
+
+public export
+proj44 : {0 a, b, c, d : Type} -> (a, b, c, d) -> d
+proj44 = snd . snd . snd
+
+public export
 applyPair :
   {f : Type -> Type} -> Applicative f => {a, b : Type} -> f a -> f b -> f (a, b)
 applyPair fa fb = map MkPair fa <*> fb
+
+public export
+applyTriple :
+  {f : Type -> Type} -> Applicative f => {a, b, c : Type} ->
+    f a -> f b -> f c -> f (a, b, c)
+applyTriple fa fb fc = applyPair fa (applyPair fb fc)
 
 public export
 apply2Args :

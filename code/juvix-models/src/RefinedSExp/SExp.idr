@@ -223,7 +223,7 @@ SExpPredWithPairPredToPred : {0 atom : Type} ->
   {x : SExp atom} -> SExpPredWithPairPred sp spp x ->
   sp x
 SExpPredWithPairPredToPred {x=($: a)} sppx = sppx
-SExpPredWithPairPredToPred {x=(x' $. x'')} sppx = fst (snd (snd sppx))
+SExpPredWithPairPredToPred {x=(x' $. x'')} sppx = proj43 sppx
 
 sexpWithPairPredPairElim : {0 atom : Type} ->
   {0 expPred : SExpPred atom} -> {0 pairPred : SExpPairPred atom} ->
@@ -270,7 +270,7 @@ SExpPiToWithPairPi : {0 atom : Type} ->
   SExpWithPairPi expPred pairPred
 SExpPiToWithPairPi forAllExp =
   (\x => SExpPredWithPairPredToPred (forAllExp x),
-   \p => case p of (x', x'') => snd (snd (snd (forAllExp (x' $. x'')))))
+   \p => case p of (x', x'') => proj44 (forAllExp (x' $. x'')))
 
 sexpWithPairPredEliminators : {0 atom : Type} ->
   {0 expPred : SExpPred atom} -> {0 pairPred : SExpPairPred atom} ->
@@ -321,7 +321,7 @@ SExpGeneralInductionSigToEliminatorSig signature =
 
 public export
 SExpForAllBoth : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPairPred atom
-SExpForAllBoth sp (x, x') = (sp x, sp x')
+SExpForAllBoth sp (x, x') = (SExpForAll sp x, SExpForAll sp x')
 
 public export
 SExpForAllPi : {0 atom : Type} -> (sp : SExpPred atom) -> Type
@@ -339,20 +339,94 @@ SExpForAllWithPairPred : {0 atom : Type} -> (sp : SExpPred atom) ->
 SExpForAllWithPairPred sp = SExpPredWithPairPred sp (SExpForAllBoth sp)
 
 public export
+sexpForAllApplicationsPairElim :
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  (x, x' : SExp atom) ->
+  (SExpForAll (f . sp) x -> f (SExpForAll sp x)) ->
+  (SExpForAll (f . sp) x' -> f (SExpForAll sp x')) ->
+  (SExpForAllBoth (f . sp) (x, x') -> f (SExpForAllBoth sp (x, x'))) ->
+  SExpForAll (f . sp) (x $. x') ->
+  f (SExpForAll sp (x $. x'))
+sexpForAllApplicationsPairElim {f} {isApplicative} {sp}
+  x x' mapForAll mapForAll' mapForAllBoth (fsp, forAll, forAll') =
+    applyTriple
+      fsp
+      (mapForAll forAll)
+      (mapForAll' forAll')
+
+public export
+sexpForAllApplicationsPairIntroLeft :
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  (x, x', x'' : SExp atom) ->
+  (SExpForAll (f . sp) x -> f (SExpForAll sp x)) ->
+  (SExpForAll (f . sp) x' -> f (SExpForAll sp x')) ->
+  (SExpForAll (f . sp) x'' -> f (SExpForAll sp x'')) ->
+  (SExpForAllBoth (f . sp) (x, x') -> f (SExpForAllBoth sp (x, x'))) ->
+  SExpForAllBoth (f . sp) ((x $. x'), x'') ->
+  f (SExpForAllBoth sp ((x $. x'), x''))
+sexpForAllApplicationsPairIntroLeft {f} {isApplicative} {sp}
+  x x' x'' mapForAll mapForAll' mapForAll'' mapForAllBoth forAllBoth =
+    let ((fsp, fpp), forAll'') = forAllBoth in
+    applyPair (applyPair
+      fsp
+      (mapForAllBoth fpp))
+      (mapForAll'' forAll'')
+
+public export
+sexpForAllApplicationsPairIntroRight :
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {0 atom : Type} -> {sp : SExp atom -> Type} ->
+  (x, x', x'' : SExp atom) ->
+  (SExpForAll (f . sp) x -> f (SExpForAll sp x)) ->
+  (SExpForAll (f . sp) x' -> f (SExpForAll sp x')) ->
+  (SExpForAll (f . sp) x'' -> f (SExpForAll sp x'')) ->
+  (SExpForAllBoth (f . sp) (x', x'') -> f (SExpForAllBoth sp (x', x''))) ->
+  SExpForAllBoth (f . sp) (x, (x' $. x'')) ->
+  f (SExpForAllBoth sp (x, (x' $. x'')))
+sexpForAllApplicationsPairIntroRight {f} {isApplicative} {sp}
+  x x' x'' mapForAll mapForAll' mapForAll'' mapForAllBoth forAllBoth =
+    let (forAll, fsp, fpp) = forAllBoth in
+    applyTriple
+      (mapForAll forAll)
+      fsp
+      (mapForAllBoth fpp)
+
+public export
 sexpForAllApplications :
   {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {0 atom : Type} -> {sp : SExp atom -> Type} ->
-  ((x : SExp atom) -> SExpForAll (f . sp) x -> f (SExpForAll sp x),
-   (p : SExpPair atom) -> SExpForAllBoth (f . sp) p -> f (SExpForAllBoth sp p))
-sexpForAllApplications {isApplicative} {sp} =
+  SExpWithPairPi
+    (\x => SExpForAll (f . sp) x -> f (SExpForAll sp x))
+    (\p => SExpForAllBoth (f . sp) p -> f (SExpForAllBoth sp p))
+sexpForAllApplications {f} {isApplicative} {sp} =
   sexpWithPairPredEliminators
     (SExpWithPairPredEliminatorArgs
-      (?sexpForAllApplications_hole_atomElim)
-      (?sexpForAllApplications_hole_pairElim)
-      (?sexpForAllApplications_hole_atomPairIntro)
-      (?sexpForAllApplications_hole_expPairIntroLeft)
-      (?sexpForAllApplications_hole_expPairIntroRight)
+      (\_ => id)
+      (sexpForAllApplicationsPairElim {f} {isApplicative} {sp})
+      (\a, a', _, _, fp => applyPair (fst fp) (snd fp))
+      (sexpForAllApplicationsPairIntroLeft {f} {isApplicative} {sp})
+      (sexpForAllApplicationsPairIntroRight {f} {isApplicative} {sp})
     )
+
+{- XXX
+public export
+record SExpWithPairPredEliminatorSig {0 atom : Type}
+  (0 sp : SExpPred atom) (0 pp : SExpPairPred atom) where
+    constructor SExpWithPairPredEliminatorArgs
+    atomElim : (a : atom) -> sp ($: a)
+    pairElim :
+      (x, x' : SExp atom) -> sp x -> sp x' -> pp (x, x') -> sp (x $. x')
+    atomPairIntro :
+      (a, a' : atom) -> sp ($: a) -> sp ($: a') -> pp ($: a, $: a')
+    expPairIntroLeft :
+      (x, x', x'' : SExp atom) -> sp x -> sp x' -> sp x'' ->
+        pp (x, x') -> pp ((x $. x'), x'')
+    expPairIntroRight :
+      (x, x', x'' : SExp atom) -> sp x -> sp x' -> sp x'' ->
+        pp (x', x'') -> pp (x, (x' $. x''))
+        -}
 
 public export
 sexpForAllApply :
@@ -372,13 +446,13 @@ spairForAllApply {isApplicative} {sp} =
 
 {- XXX general induction composer -}
 
-{- XXX eliminator-generated-type eliminator (with signature composer)? -}
+{- XXX eliminator-generated-type eliminator (with signature composer) -}
 
-{- XXX eliminator-generated-dependent-type eliminator (w/signature composer)? -}
+{- XXX eliminator-generated-dependent-type eliminator (w/signature composer) -}
 
-{- XXX forall eliminator (with signature composer)? -}
+{- XXX forall eliminator (with signature composer) -}
 
-{- XXX enhanced-with-applicative eliminator (with signature composer)? -}
+{- XXX enhanced-with-applicative eliminator (with signature composer) -}
 
 {-
   let
