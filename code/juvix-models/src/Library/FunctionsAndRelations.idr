@@ -855,7 +855,7 @@ ApplicativeToFunctor {f} isApplicative = MkFunctor (map {f})
 infixl 4 <**>
 public export
 (<**>) : {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {a : Type} -> {a', a'' : a -> Type} ->
+  {0 a : Type} -> {0 a', a'' : a -> Type} ->
   f ((x : a) -> a' x -> a'' x) ->
   {x : a} -> f (a' x) -> f (a'' x)
 (<**>) {f} {isApplicative} {a} {a'} {a''} pi {x} fx =
@@ -881,7 +881,8 @@ public export
 
 public export
 dpure : {f : Type -> Type} -> (isApplicative : Applicative f) ->
-  {a : Type} -> {a' : a -> Type} -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
+  {0 a : Type} -> {0 a' : a -> Type} ->
+  f ((x : a) -> a' x) -> (x : a) -> f (a' x)
 dpure {f} isApplicative {a} {a'} fpi =
   let
     constmap = \pi : ((x : a) -> a' x), x : a, _ : () => pi x
@@ -912,7 +913,7 @@ record DependentMonadOn
   {0 a : Type} (0 m : DependentTypeConstructor a) where
     constructor MkDependentMonadOn
     dmApplicative : DependentApplicativeOn m
-    dmjoin : (b : a -> Type) -> (x : a) -> m (m b) x -> m b x
+    dmjoin : (0 b : a -> Type) -> (x : a) -> m (m b) x -> m b x
 
 public export
 DependentJoin : (Type -> Type) -> Type
