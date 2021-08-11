@@ -901,7 +901,6 @@ record DependentApplicative (f : Type -> Type) where
   constructor MkDependentApplicative
   appApplicative : Applicative f
   DPure : DependentPure f
-  DApply : DependentApplication f
 
 public export
 ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f
@@ -920,14 +919,6 @@ public export
 dpure : {f : Type -> Type} -> (da : DependentApplicative f) ->
   {a : Type} -> {a' : a -> Type} -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
 dpure {f} da {a} {a'} = DPure da a a'
-
-public export
-dapply : {f : Type -> Type} -> (da : DependentApplicative f) ->
-  {a : Type} -> {a', b' : a -> Type} ->
-  ((x : a) -> (f (a' x -> b' x))) ->
-  {x : a} -> f (a' x) -> f (b' x)
-dapply {f} da {a} {a'} {b'} fab {x} fax =
-  DApply da a a' b' fab x fax
 
 public export
 interface DependentApplicativeInterface f where
@@ -968,16 +959,6 @@ composeDependentApplicatives {f} {g} fDepApp gDepApp =
     ComposeApplicative
     (\a, a', fgax, x =>
       dpure fDepApp (afmap {f} {da=fDepApp} (dpure gDepApp) fgax) x)
-    (\a, a', b', fgab =>
-      let
-        fmapgapp =
-          amap fDepApp a a
-            (\x => g (a' x -> b' x))
-            (\x => g (a' x) -> g (b' x))
-            id
-            (\_ => ((<*>) {f=g}))
-      in
-      (\x, fgax => (<*>) {f} (fmapgapp x (fgab x)) fgax))
 
 public export
 DependentJoin : (Type -> Type) -> Type
@@ -1030,4 +1011,3 @@ ArrowDependentApplicative domain =
   MkDependentApplicative
     ArrowApplicative
     (ArrowDependentPure domain)
-    (ArrowDependentApplication domain)
