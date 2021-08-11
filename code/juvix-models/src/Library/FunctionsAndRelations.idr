@@ -849,30 +849,8 @@ applyEitherElim :
 applyEitherElim fac fbc fe = pure eitherElim <*> (applyPair fac fbc) <*> fe
 
 public export
-DependentTypeConstructor : (a : Type) -> Type
-DependentTypeConstructor a = (a -> Type) -> (a -> Type)
-
-public export
-record DependentFunctorOn
-  {0 a : Type} (0 f : DependentTypeConstructor a) where
-    constructor MkDependentFunctorOn
-    dfmap : (0 b, c : a -> Type) -> (0 x : a) -> (b x -> c x) -> f b x -> f c x
-
-public export
-record DependentApplicativeOn
-  {0 a : Type} (0 f : DependentTypeConstructor a) where
-    constructor MkDependentApplicativeOn
-    daFunctor : DependentFunctorOn f
-    dapure : (0 b : a -> Type) -> (0 x : a) -> b x -> f b x
-    dapply : (0 b, c : a -> Type) -> (0 x : a) ->
-      (f b x -> f c x) -> f b x -> f c x
-
-public export
-record DependentMonadOn
-  {0 a : Type} (0 m : DependentTypeConstructor a) where
-    constructor MkDependentMonadOn
-    dmApplicative : DependentApplicativeOn m
-    dmjoin : (b : a -> Type) -> (x : a) -> m (m b) x -> m b x
+ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f
+ApplicativeToFunctor {f} isApplicative = MkFunctor (map {f})
 
 infixl 4 <**>
 public export
@@ -902,10 +880,6 @@ public export
   map {f} (\p => case p of ((x' ** y') ** Refl) => y') fCertifiedDPair''
 
 public export
-ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f
-ApplicativeToFunctor {f} isApplicative = MkFunctor (map {f})
-
-public export
 dpure : {f : Type -> Type} -> (isApplicative : Applicative f) ->
   {a : Type} -> {a' : a -> Type} -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
 dpure {f} isApplicative {a} {a'} fpi =
@@ -913,6 +887,32 @@ dpure {f} isApplicative {a} {a'} fpi =
     constmap = \pi : ((x : a) -> a' x), x : a, _ : () => pi x
   in
   \_ => (<**>) {f} {isApplicative} (map {f} constmap fpi) (pure {f} ())
+
+public export
+DependentTypeConstructor : (a : Type) -> Type
+DependentTypeConstructor a = (a -> Type) -> (a -> Type)
+
+public export
+record DependentFunctorOn
+  {0 a : Type} (0 f : DependentTypeConstructor a) where
+    constructor MkDependentFunctorOn
+    dfmap : (0 b, c : a -> Type) -> (0 x : a) -> (b x -> c x) -> f b x -> f c x
+
+public export
+record DependentApplicativeOn
+  {0 a : Type} (0 f : DependentTypeConstructor a) where
+    constructor MkDependentApplicativeOn
+    daFunctor : DependentFunctorOn f
+    dapure : (0 b : a -> Type) -> (0 x : a) -> b x -> f b x
+    dapply : (0 b, c : a -> Type) -> (0 x : a) ->
+      (f b x -> f c x) -> f b x -> f c x
+
+public export
+record DependentMonadOn
+  {0 a : Type} (0 m : DependentTypeConstructor a) where
+    constructor MkDependentMonadOn
+    dmApplicative : DependentApplicativeOn m
+    dmjoin : (b : a -> Type) -> (x : a) -> m (m b) x -> m b x
 
 public export
 DependentJoin : (Type -> Type) -> Type
