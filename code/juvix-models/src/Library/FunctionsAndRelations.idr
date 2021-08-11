@@ -874,21 +874,6 @@ record DependentMonadOn
     dmApplicative : DependentApplicativeOn m
     dmjoin : (b : a -> Type) -> (x : a) -> m (m b) x -> m b x
 
-public export
-DependentMap : (Type -> Type) -> Type
-DependentMap f = (a, b : Type) -> (a' : a -> Type) -> (b' : b -> Type) ->
-    (fab : a -> b) -> ((x : a) -> a' x -> b' (fab x)) ->
-    (x : a) -> f (a' x) -> f (b' (fab x))
-
-public export
-dmap : (f : Type -> Type) -> {isFunctor : Functor f} -> DependentMap f
-dmap f {isFunctor} a b a' b' fab pi x fa' = map {f} (pi x) fa'
-
-public export
-DependentPure : (Type -> Type) -> Type
-DependentPure f =
-  (a : Type) -> (a' : a -> Type) -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
-
 infixl 4 <**>
 public export
 (<**>) : {f : Type -> Type} -> {isApplicative : Applicative f} ->
@@ -917,23 +902,8 @@ public export
   map {f} (\p => case p of ((x' ** y') ** Refl) => y') fCertifiedDPair''
 
 public export
-record DependentApplicative (f : Type -> Type) where
-  constructor MkDependentApplicative
-  appApplicative : Applicative f
-  DPure : DependentPure f
-
-public export
 ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f
 ApplicativeToFunctor {f} isApplicative = MkFunctor (map {f})
-
-public export
-amap : {f : Type -> Type} -> (da : DependentApplicative f) -> DependentMap f
-amap {f} da = dmap {isFunctor=ApplicativeToFunctor(appApplicative da)} f
-
-public export
-afmap : {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {a, b : Type} -> (a -> b) -> f a -> f b
-afmap {f} {da} = let isApplicative = appApplicative da in map {f}
 
 public export
 dpure : {f : Type -> Type} -> (isApplicative : Applicative f) ->
@@ -945,47 +915,6 @@ dpure {f} isApplicative {a} {a'} fpi =
   \_ => (<**>) {f} {isApplicative} (map {f} constmap fpi) (pure {f} ())
 
 public export
-interface DependentApplicativeInterface f where
-  constructor MkDependentApplicativeInterface
-  DependentApplicativeRecord : DependentApplicative f
-
-public export
-afpure : {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {a : Type} -> a -> f a
-afpure {f} {da} = let applicative = appApplicative da in pure
-
-prefix 3 <^>
-public export
-(<^>) : {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {a : Type} -> a -> f a
-(<^>) {f} {da} {a} = afpure {f} {da} {a}
-
-public export
-afapply : {f : Type -> Type} -> (da : DependentApplicative f) ->
-  {a, b : Type} -> f (a -> b) -> f a -> f b
-afapply {f} da = let applicative = appApplicative da in (<*>)
-
-infixl 3 <~>
-public export
-(<~>) : {f : Type -> Type} -> {da : DependentApplicative f} ->
-  {a, b : Type} -> f (a -> b) -> f a -> f b
-(<~>) {f} {a} {b} {da} = afapply {f} {a} {b} {da}
-
-public export
-composeDependentApplicatives : {f, g : Type -> Type} ->
-  (fDepApp : DependentApplicative f) ->
-  (gDepApp : DependentApplicative g) ->
-  DependentApplicative (f . g)
-composeDependentApplicatives {f} {g} fDepApp gDepApp =
-  let fApp = appApplicative fDepApp in
-  let gApp = appApplicative gDepApp in
-  MkDependentApplicative
-    ComposeApplicative
-    (\a, a', fgax, x =>
-      dpure (appApplicative fDepApp)
-        (afmap {f} {da=fDepApp} (dpure (appApplicative gDepApp)) fgax) x)
-
-public export
 DependentJoin : (Type -> Type) -> Type
 DependentJoin m =
   (a : Type) -> (a' : a -> Type) -> (a'' : (x : a) -> a' x -> Type) ->
@@ -994,7 +923,7 @@ DependentJoin m =
 public export
 record DependentMonad (m : Type -> Type) where
   constructor MkDependentMonad
-  monadApplicative : DependentApplicative m
+  monadApplicative : Applicative m
   djoin : DependentJoin m
 
 public export
@@ -1014,20 +943,3 @@ public export
 [ArrowApplicative] Functor (Arrow a) => Applicative (Arrow a) where
   pure x = \_ => x
   f <*> g = \x => f x (g x)
-
-public export
-ArrowDependentMap : (domain : Type) -> DependentMap (Arrow domain)
-ArrowDependentMap domain a b a' b' fab piab x da d = piab x (da d)
-
-public export
-ArrowDependentPure : (domain : Type) -> DependentPure (Arrow domain)
-ArrowDependentPure _ = \a, b, pi, x => \x' => pi x' x
-
-public export
-ArrowDependentApplicative :
-  (domain : Type) -> DependentApplicative (Arrow domain)
-ArrowDependentApplicative domain =
-  let arrowFunctor = ArrowFunctor {a=domain} in
-  MkDependentApplicative
-    ArrowApplicative
-    (ArrowDependentPure domain)
