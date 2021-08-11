@@ -889,6 +889,33 @@ DependentPure : (Type -> Type) -> Type
 DependentPure f =
   (a : Type) -> (a' : a -> Type) -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
 
+infixl 4 <**>
+public export
+(<**>) : {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {a : Type} -> {a', a'' : a -> Type} ->
+  f ((x : a) -> a' x -> a'' x) ->
+  {x : a} -> f (a' x) -> f (a'' x)
+(<**>) {f} {isApplicative} {a} {a'} {a''} pi {x} fx =
+  let
+    fCertifiedDPair' =
+      map
+        {f}
+        {b=((p : DPair a a' ** (fst p) = x))}
+        (\y : a' x => ((x ** y) ** Refl)) fx
+    fCertifiedDPair'' =
+      map
+        {f}
+        {b=((p : DPair a a' ** fst p = x) -> (q : DPair a a'' ** fst q = x))}
+        (\pi', p =>
+          case p of
+            ((x' ** y') ** eq) =>
+              case eq of
+                Refl => ((x ** pi' x y') ** Refl))
+        pi
+          <*> fCertifiedDPair'
+  in
+  map {f} (\p => case p of ((x' ** y') ** Refl) => y') fCertifiedDPair''
+
 public export
 record DependentApplicative (f : Type -> Type) where
   constructor MkDependentApplicative
@@ -909,9 +936,13 @@ afmap : {f : Type -> Type} -> {da : DependentApplicative f} ->
 afmap {f} {da} = let isApplicative = appApplicative da in map {f}
 
 public export
-dpure : {f : Type -> Type} -> (da : DependentApplicative f) ->
+dpure : {f : Type -> Type} -> (isApplicative : Applicative f) ->
   {a : Type} -> {a' : a -> Type} -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
-dpure {f} da {a} {a'} = DPure da a a'
+dpure {f} isApplicative {a} {a'} fpi =
+  let
+    constmap = \pi : ((x : a) -> a' x), x : a, _ : () => pi x
+  in
+  \_ => (<**>) {f} {isApplicative} (map {f} constmap fpi) (pure {f} ())
 
 public export
 interface DependentApplicativeInterface f where
@@ -951,7 +982,8 @@ composeDependentApplicatives {f} {g} fDepApp gDepApp =
   MkDependentApplicative
     ComposeApplicative
     (\a, a', fgax, x =>
-      dpure fDepApp (afmap {f} {da=fDepApp} (dpure gDepApp) fgax) x)
+      dpure (appApplicative fDepApp)
+        (afmap {f} {da=fDepApp} (dpure (appApplicative gDepApp)) fgax) x)
 
 public export
 DependentJoin : (Type -> Type) -> Type

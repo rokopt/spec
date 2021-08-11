@@ -105,19 +105,19 @@ mutual
 public export
 SExpSignatureComposeSig :
   {f : Type -> Type} ->
-  {da : DependentApplicative f} ->
+  {app : Applicative f} ->
   {atom : Type} ->
   {sps : SExpPreds atom} ->
   (signature : f (SExpEliminatorSig sps)) ->
   SExpEliminatorSig (sexpPredsCompose f sps)
-SExpSignatureComposeSig {da} signature =
+SExpSignatureComposeSig {app} signature =
   SExpEliminatorArgs {sps=(sexpPredsCompose f sps)}
-    (\a => dpure da (afmap {da} atomElim signature) a)
-    (\l, flpl => afapply da (dpure da (afmap {da} listElim signature) l) flpl)
-    (afmap {da} nilElim signature)
+    (\a => dpure app (map {f} atomElim signature) a)
+    (\l, flpl => (dpure app (map {f} listElim signature) l) <*> flpl)
+    (map {f} nilElim signature)
     (\x, l, fspx, flpl =>
-      afapply da (afapply da
-        (dpure da (dpure da (afmap {da} consElim signature) x) l) fspx) flpl)
+      ((dpure app (dpure app (map {f} consElim signature) x) l) <*> fspx)
+        <*> flpl)
 
 public export
 sexpEliminators :
@@ -129,12 +129,12 @@ sexpEliminators signature =
 
 public export
 sexpEliminatorsComposeSig :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} ->
   {sps : SExpPreds atom} ->
   (signature : f (SExpEliminatorSig sps)) ->
   SPredPis (sexpPredsCompose f sps)
-sexpEliminatorsComposeSig = sexpEliminators . SExpSignatureComposeSig {da}
+sexpEliminatorsComposeSig = sexpEliminators . SExpSignatureComposeSig {app}
 
 public export
 SExpPredsToListPred :
@@ -349,41 +349,41 @@ slistMetaEliminator = snd . sexpEliminators
 
 public export
 sexpMetaComposedSigEliminators :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} -> {sps : SExpPreds atom} ->
   {0 smps : SExpMetaComposedPreds f sps} ->
   {signature : f (SExpEliminatorSig sps)} ->
   SExpMetaEliminatorSig
     {sps=(sexpPredsCompose f sps)} smps
-    (SExpSignatureComposeSig {sps} {da} signature) ->
+    (SExpSignatureComposeSig {sps} {app} signature) ->
   SExpSigPis
     {sps=(sexpPredsCompose f sps)} smps
-    (SExpSignatureComposeSig {sps} {da} signature)
+    (SExpSignatureComposeSig {sps} {app} signature)
 sexpMetaComposedSigEliminators = sexpMetaEliminators
 
 public export
 SExpMetaSignatureComposeSig :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} -> {sps : SExpPreds atom} ->
   {smps : SExpMetaPreds sps} ->
   {signature : SExpEliminatorSig sps} ->
   f (SExpMetaEliminatorSig {sps} smps signature) ->
   SExpMetaEliminatorSig {sps} (sexpMetaPredsCompose {sps} f smps) signature
-SExpMetaSignatureComposeSig {f} {da} {smps} {signature} metaSig =
+SExpMetaSignatureComposeSig {f} {app} {smps} {signature} metaSig =
   SExpSignatureComposeSig
-    {f} {da} {sps=(SExpSigToMetaPreds smps signature)} metaSig
+    {f} {app} {sps=(SExpSigToMetaPreds smps signature)} metaSig
 
 public export
 sexpMetaSignatureComposeSig :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} -> {sps : SExpPreds atom} ->
   {smps : SExpMetaPreds sps} ->
   {signature : SExpEliminatorSig sps} ->
   f (SExpMetaEliminatorSig smps signature) ->
   SExpSigPis {sps} (sexpMetaPredsCompose {sps} f smps) signature
-sexpMetaSignatureComposeSig {f} {da} {sps} {smps} {signature} metaSig =
+sexpMetaSignatureComposeSig {f} {app} {sps} {smps} {signature} metaSig =
   sexpMetaEliminators {signature} {smps=(sexpMetaPredsCompose f smps)}
-    (SExpMetaSignatureComposeSig {f} {da} {smps} metaSig)
+    (SExpMetaSignatureComposeSig {f} {app} {smps} metaSig)
 
 public export
 sexpMetaEliminatorsComposeSig :
@@ -539,65 +539,65 @@ slistForAllApply {f} {isApplicative} {sp} =
 
 public export
 SExpForAllEliminatorComposeSig :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} -> {sp : SExpPred atom} ->
   f (SExpForAllEliminatorSig sp) ->
   SExpForAllEliminatorSig (f . sp)
-SExpForAllEliminatorComposeSig {f} {da} {sp} signature =
+SExpForAllEliminatorComposeSig {f} {app} {sp} signature =
   SExpForAllEliminatorArgs
-    (\a => dpure da (afmap {da} atomElim signature) a)
+    (\a => dpure app (map {f} atomElim signature) a)
     (\l, flpl =>
-      afapply da (dpure da (afmap {da} (listElim {sp}) signature) l)
-        (slistForAllApply {f} {isApplicative=(appApplicative da)} {sp} l flpl))
+      (dpure app (map {f} (listElim {sp}) signature) l) <*>
+        (slistForAllApply {f} {isApplicative=app} {sp} l flpl))
 
 public export
 sexpForAllEliminatorsComposeSig :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} -> {sp : SExpPred atom} ->
   f (SExpForAllEliminatorSig sp) ->
   SForAllPis (f . sp)
-sexpForAllEliminatorsComposeSig {f} {sp} {da} =
-  sexpForAllEliminators . SExpForAllEliminatorComposeSig {f} {sp} {da}
+sexpForAllEliminatorsComposeSig {f} {sp} {app} =
+  sexpForAllEliminators . SExpForAllEliminatorComposeSig {f} {sp} {app}
 
 export
 sexpForAllEliminatorsComposeSigConsistent :
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {app : Applicative f} ->
   {atom : Type} -> {sp : SExpPred atom} ->
   (signature : f (SExpForAllEliminatorSig sp)) ->
   ((x : SExp atom) ->
-    sexpForAllApply {f} {isApplicative=(appApplicative da)} {sp}
+    sexpForAllApply {f} {isApplicative=app} {sp}
       x (sexpForAllEliminator {sp=(f . sp)}
-          (SExpForAllEliminatorComposeSig {da} {sp} signature) x) =
+          (SExpForAllEliminatorComposeSig {app} {sp} signature) x) =
     sexpEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-      (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-        (afmap {da} SExpForAllEliminatorSigToEliminatorSig signature))
+      (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {app}
+        (map {f} SExpForAllEliminatorSigToEliminatorSig signature))
       x,
    (l : SList atom) ->
-    slistForAllApply {f} {isApplicative=(appApplicative da)} {sp}
+    slistForAllApply {f} {isApplicative=app} {sp}
       l (slistForAllEliminator {sp=(f . sp)}
-          (SExpForAllEliminatorComposeSig {da} {sp} signature) l) =
+          (SExpForAllEliminatorComposeSig {app} {sp} signature) l) =
     slistEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-      (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-        (afmap {da} SExpForAllEliminatorSigToEliminatorSig signature))
+      (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {app}
+        (map {f} SExpForAllEliminatorSigToEliminatorSig signature))
       l)
-sexpForAllEliminatorsComposeSigConsistent {da} {sp} signature =
+sexpForAllEliminatorsComposeSigConsistent {app} {sp} signature =
   sexpEliminators
     {sps=
       (\x =>
-        sexpForAllApply {f} {isApplicative=(appApplicative da)} {sp}
+        sexpForAllApply {f} {isApplicative=app} {sp}
           x (sexpForAllEliminator {sp=(f . sp)}
-              (SExpForAllEliminatorComposeSig {da} {sp} signature) x) =
+              (SExpForAllEliminatorComposeSig {app} {sp} signature) x) =
         sexpEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-          (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-            (afmap {da} SExpForAllEliminatorSigToEliminatorSig signature))
+          (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {app}
+            (map {f} SExpForAllEliminatorSigToEliminatorSig signature))
           x,
        \l =>
-        slistForAllApply {f} {isApplicative=(appApplicative da)} {sp}
+        slistForAllApply {f} {isApplicative=app} {sp}
           l (slistForAllEliminator {sp=(f . sp)}
-              (SExpForAllEliminatorComposeSig {da} {sp} signature) l) =
+              (SExpForAllEliminatorComposeSig {app} {sp} signature) l) =
         slistEliminator {sps=(f . SExpForAll sp, f . SListForAll sp)}
-          (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {da}
-            (afmap {da} SExpForAllEliminatorSigToEliminatorSig signature))
+          (SExpSignatureComposeSig {sps=(SExpForAll sp, SListForAll sp)} {app}
+            (map {f} SExpForAllEliminatorSigToEliminatorSig signature))
           l)}
     (SExpEliminatorArgs
       (?sexpForAllEliminatorsComposeSigConsistent_hole_atomElim)

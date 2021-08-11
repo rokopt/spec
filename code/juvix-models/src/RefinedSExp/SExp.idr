@@ -46,28 +46,28 @@ public export
 SExpSignatureComposeSig :
   {atom : Type} ->
   {f : Type -> Type} ->
-  (da : DependentApplicative f) ->
+  (app : Applicative f) ->
   {sp : SExpPred atom} ->
   f (SExpEliminatorSig sp) ->
   SExpEliminatorSig (f . sp)
-SExpSignatureComposeSig da fsignature =
+SExpSignatureComposeSig app fsignature =
   SExpEliminatorArgs
-    (dpure da (afmap {da} atomElim fsignature))
+    (dpure app (map {f} atomElim fsignature))
     (\x, x', fsx, fsx' =>
-      afapply da (afapply da
-        (dpure da (dpure da (afmap {da} pairElim fsignature) x) x') fsx) fsx')
+      ((dpure app (dpure app (map {f} pairElim fsignature) x) x') <*> fsx)
+        <*> fsx')
 
 public export
 sexpEliminatorComposeSig :
   {atom : Type} ->
   {f : Type -> Type} ->
-  (da : DependentApplicative f) ->
+  (app : Applicative f) ->
   {sp : SExpPred atom} ->
-  {- XXX can this be extended to make f a SExpDependentApplicative and the
-   - signature parameterized on an SExp? -}
+  {- XXX can this be extended to make f a SExpApplicative and the
+   - signature parameterized on an SExp -}
   f (SExpEliminatorSig sp) ->
   SExpPi (f . sp)
-sexpEliminatorComposeSig da = sexpEliminator . SExpSignatureComposeSig da
+sexpEliminatorComposeSig app = sexpEliminator . SExpSignatureComposeSig app
 
 public export
 SExpPredList : (0 atom : Type) -> Type
@@ -152,24 +152,24 @@ sexpMetaEliminator = sexpEliminator
 public export
 sexpMetaComposedSigEliminator :
   {0 atom : Type} ->
-  {0 f : Type -> Type} -> {0 da : DependentApplicative f} ->
+  {0 f : Type -> Type} -> {0 app : Applicative f} ->
   {0 sp : SExpPred atom} ->
   {0 smp : SExpMetaPred (f . sp)} ->
   {0 fsignature : f (SExpEliminatorSig sp)} ->
-  SExpMetaEliminatorSig (SExpSignatureComposeSig da fsignature) smp ->
-  SExpEliminatorPi (SExpSignatureComposeSig da fsignature) smp
+  SExpMetaEliminatorSig (SExpSignatureComposeSig app fsignature) smp ->
+  SExpEliminatorPi (SExpSignatureComposeSig app fsignature) smp
 sexpMetaComposedSigEliminator {smp} = sexpMetaEliminator {smp}
 
 public export
 sexpMetaEliminatorComposeSig :
   {atom : Type} ->
-  {f : Type -> Type} -> (da : DependentApplicative f) ->
+  {f : Type -> Type} -> (app : Applicative f) ->
   {0 sp : SExpPred atom} ->
   {smp : SExpMetaPred sp} ->
   {signature : SExpEliminatorSig sp} ->
   f (SExpMetaEliminatorSig signature smp) ->
   SExpEliminatorPi signature (sexpMetaPredCompose f smp)
-sexpMetaEliminatorComposeSig da = sexpEliminatorComposeSig da
+sexpMetaEliminatorComposeSig app = sexpEliminatorComposeSig app
 
 public export
 SExpConstPred : {0 atom : Type} -> Type -> SExpPred atom
@@ -453,29 +453,28 @@ spairForAllApply {isApplicative} {sp} =
 public export
 SExpGeneralInductionComposeSig :
   {atom : Type} ->
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sp : SExpPred atom} ->
   f (SExpGeneralInductionSig sp) ->
   SExpGeneralInductionSig (f . sp)
-SExpGeneralInductionComposeSig {f} {da} {sp} signature =
+SExpGeneralInductionComposeSig {f} {isApplicative} {sp} signature =
   SExpGeneralInductionArgs
-    (\a => dpure da (afmap {da} atomElim signature) a)
+    (\a => dpure isApplicative (map {f} atomElim signature) a)
     (\x, x', forAll, forAll' =>
-      let isApplicative = appApplicative da in
-      afapply da (afapply da
-        (dpure da (dpure da (afmap {da} pairElim signature) x) x')
-          (sexpForAllApply {f} {isApplicative} {sp} x forAll))
+      ((dpure isApplicative
+        (dpure isApplicative (map {f} pairElim signature) x) x') <*>
+          (sexpForAllApply {f} {isApplicative} {sp} x forAll)) <*>
           (sexpForAllApply {f} {isApplicative} {sp} x' forAll'))
 
 public export
 sexpGeneralInductionComposeSig :
   {atom : Type} ->
-  {f : Type -> Type} -> {da : DependentApplicative f} ->
+  {f : Type -> Type} -> {isApplicative : Applicative f} ->
   {sp : SExpPred atom} ->
   f (SExpGeneralInductionSig sp) ->
   SExpForAllPi (f . sp)
-sexpGeneralInductionComposeSig {f} {sp} {da} =
-  sexpGeneralInduction . SExpGeneralInductionComposeSig {f} {sp} {da}
+sexpGeneralInductionComposeSig {f} {sp} {isApplicative} =
+  sexpGeneralInduction . SExpGeneralInductionComposeSig {f} {sp} {isApplicative}
 
 {-
 
