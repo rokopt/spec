@@ -892,10 +892,9 @@ DependentPure f =
 public export
 DependentApplication : (Type -> Type) -> Type
 DependentApplication f =
-  (a, b : Type) -> (a' : a -> Type) -> (b' : b -> Type) ->
-  (fab : a -> b) ->
-  ((x : a) -> (f (a' x -> b' (fab x)))) ->
-  (x : a) -> f (a' x) -> f (b' (fab x))
+  (a : Type) -> (a', b' : a -> Type) ->
+  ((x : a) -> (f (a' x -> b' x))) ->
+  (x : a) -> f (a' x) -> f (b' x)
 
 public export
 record DependentApplicative (f : Type -> Type) where
@@ -924,12 +923,11 @@ dpure {f} da {a} {a'} = DPure da a a'
 
 public export
 dapply : {f : Type -> Type} -> (da : DependentApplicative f) ->
-  {a, b : Type} -> {a' : a -> Type} -> {b' : b -> Type} ->
-  {fab : a -> b} ->
-  ((x : a) -> (f (a' x -> b' (fab x)))) ->
-  {x : a} -> f (a' x) -> f (b' (fab x))
-dapply {f} da {a} {b} {a'} {b'} {fab} piab {x} fax =
-  DApply da a b a' b' fab piab x fax
+  {a : Type} -> {a', b' : a -> Type} ->
+  ((x : a) -> (f (a' x -> b' x))) ->
+  {x : a} -> f (a' x) -> f (b' x)
+dapply {f} da {a} {a'} {b'} fab {x} fax =
+  DApply da a a' b' fab x fax
 
 public export
 interface DependentApplicativeInterface f where
@@ -970,12 +968,12 @@ composeDependentApplicatives {f} {g} fDepApp gDepApp =
     ComposeApplicative
     (\a, a', fgax, x =>
       dpure fDepApp (afmap {f} {da=fDepApp} (dpure gDepApp) fgax) x)
-    (\a, b, a', b', fab, fgab =>
+    (\a, a', b', fgab =>
       let
         fmapgapp =
           amap fDepApp a a
-            (\x => g (a' x -> b' (fab x)))
-            (\x => g (a' x) -> g (b' (fab x)))
+            (\x => g (a' x -> b' x))
+            (\x => g (a' x) -> g (b' x))
             id
             (\_ => ((<*>) {f=g}))
       in
@@ -1022,7 +1020,7 @@ ArrowDependentPure _ = \a, b, pi, x => \x' => pi x' x
 public export
 ArrowDependentApplication :
   (domain : Type) -> DependentApplication (Arrow domain)
-ArrowDependentApplication domain a b a' b' fab piab x da d = piab x d (da d)
+ArrowDependentApplication domain a a' b' fab x da d = fab x d (da d)
 
 public export
 ArrowDependentApplicative :
