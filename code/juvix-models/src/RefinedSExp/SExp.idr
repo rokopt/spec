@@ -27,6 +27,10 @@ SExpTypeConstructor : (0 atom : Type) -> Type
 SExpTypeConstructor atom = DependentTypeConstructor (SExp atom)
 
 public export
+SExpPredList : (0 atom : Type) -> Type
+SExpPredList atom = List (SExpPred atom)
+
+public export
 record SExpEliminatorSig {0 atom : Type} (0 sp : SExpPred atom) where
   constructor SExpEliminatorArgs
   atomElim : (a : atom) -> sp ($: a)
@@ -63,43 +67,39 @@ sexpEliminatorComposeSig :
   {f : Type -> Type} ->
   (app : Applicative f) ->
   {sp : SExpPred atom} ->
-  {- XXX can this be extended to make f a SExpApplicative and the
-   - signature parameterized on an SExp -}
   f (SExpEliminatorSig sp) ->
   SExpPi (f . sp)
 sexpEliminatorComposeSig app = sexpEliminator . SExpSignatureComposeSig app
 
 public export
-SExpPredList : (0 atom : Type) -> Type
-SExpPredList atom = List (SExpPred atom)
+SExpParameterize : (parameter : Type) -> Type -> Type
+SExpParameterize parameter type = parameter -> type
 
 public export
-SExpParameterize : (0 atom : Type) -> Type -> Type
-SExpParameterize atom type = SExpPredList atom -> type
+SExpParameterizedPred : (0 atom : Type) -> (parameter : Type) -> Type
+SExpParameterizedPred atom parameter =
+  SExp atom -> SExpParameterize parameter Type
 
 public export
-SExpParameterizedPred : (0 atom : Type) -> Type
-SExpParameterizedPred atom = SExp atom -> SExpParameterize atom Type
+SExpParameterizedPredToPred : {0 atom : Type} -> {parameter : Type} ->
+  (sp : SExpParameterizedPred atom parameter) -> SExpPred atom
+SExpParameterizedPredToPred {parameter} sp = \x => parameter ~> sp x
 
 public export
-SExpParameterizedPredToPred : {0 atom : Type} ->
-  (sp : SExpParameterizedPred atom) -> SExpPred atom
-SExpParameterizedPredToPred sp = \x => SExpPredList atom ~> sp x
-
-public export
-SExpParameterizedEliminatorSig : {0 atom : Type} ->
-  (0 sp : SExpParameterizedPred atom) -> Type
+SExpParameterizedEliminatorSig : {0 atom : Type} -> {0 parameter : Type} ->
+  (0 sp : SExpParameterizedPred atom parameter) -> Type
 SExpParameterizedEliminatorSig sp =
   SExpEliminatorSig (SExpParameterizedPredToPred sp)
 
 public export
-SExpParameterizedPi : {0 atom : Type} ->
-  (sp : SExpParameterizedPred atom) -> Type
+SExpParameterizedPi : {0 atom : Type} -> {parameter : Type} ->
+  (sp : SExpParameterizedPred atom parameter) -> Type
 SExpParameterizedPi = SExpPi . SExpParameterizedPredToPred
 
+{- XXX could we also do this using signature composition -}
 sexpParameterizedEliminator :
-  {0 atom : Type} ->
-  {sp : SExpParameterizedPred atom} ->
+  {0 atom : Type} -> {0 parameter : Type} ->
+  {sp : SExpParameterizedPred atom parameter} ->
   SExpParameterizedEliminatorSig sp ->
   SExpParameterizedPi sp
 sexpParameterizedEliminator = sexpEliminator
