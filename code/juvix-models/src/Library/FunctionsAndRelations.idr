@@ -890,13 +890,6 @@ DependentPure f =
   (a : Type) -> (a' : a -> Type) -> f ((x : a) -> a' x) -> (x : a) -> f (a' x)
 
 public export
-DependentApplication : (Type -> Type) -> Type
-DependentApplication f =
-  (a : Type) -> (a', b' : a -> Type) ->
-  ((x : a) -> (f (a' x -> b' x))) ->
-  (x : a) -> f (a' x) -> f (b' x)
-
-public export
 record DependentApplicative (f : Type -> Type) where
   constructor MkDependentApplicative
   appApplicative : Applicative f
@@ -997,11 +990,6 @@ ArrowDependentMap domain a b a' b' fab piab x da d = piab x (da d)
 public export
 ArrowDependentPure : (domain : Type) -> DependentPure (Arrow domain)
 ArrowDependentPure _ = \a, b, pi, x => \x' => pi x' x
-
-public export
-ArrowDependentApplication :
-  (domain : Type) -> DependentApplication (Arrow domain)
-ArrowDependentApplication domain a a' b' fab x da d = fab x d (da d)
 
 public export
 ArrowDependentApplicative :
