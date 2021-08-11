@@ -881,41 +881,8 @@ DependentMap f = (a, b : Type) -> (a' : a -> Type) -> (b' : b -> Type) ->
     (x : a) -> f (a' x) -> f (b' (fab x))
 
 public export
-record DependentFunctor (f : Type -> Type) where
-  constructor MkDependentFunctor
-  DMap : DependentMap f
-
-public export
-interface DependentFunctorInterface f where
-  constructor MkDependentFunctorInterface
-  DependentFunctorRecord : DependentFunctor f
-
-public export
-dmap : {f : Type -> Type} -> {df : DependentFunctor f} ->
-  DependentMap f
-dmap {f} {df} = DMap df
-
-public export
-DependentMapToMap : {f : Type -> Type} -> DependentMap f ->
-  {a, b : Type} -> (a -> b) -> f a -> f b
-DependentMapToMap {a} {b} depMap fab =
-  depMap () () (\_ => a) (\_ =>b) id (\_ => fab) ()
-
-public export
-dfmap : {f : Type -> Type} -> {df : DependentFunctor f} ->
-  {a, b : Type} -> (a -> b) -> f a -> f b
-dfmap {f} {df} = DependentMapToMap {f} (dmap {f} {df})
-
-public export
-composeDependentFunctors : {f, g : Type -> Type} ->
-  (fFunctor : DependentFunctor f) ->
-  (gFunctor : DependentFunctor g) ->
-  DependentFunctor (f . g)
-composeDependentFunctors {f} {g} fFunctor gFunctor =
-  MkDependentFunctor
-    (\a, b, a', b', fab, piab, x, fgax =>
-      DMap fFunctor a b (g . a') (g . b') fab
-        (DMap gFunctor a b a' b' fab piab) x fgax)
+dmap : (f : Type -> Type) -> {isFunctor : Functor f} -> DependentMap f
+dmap f {isFunctor} a b a' b' fab pi x fa' = map {f} (pi x) fa'
 
 public export
 DependentPure : (Type -> Type) -> Type
@@ -934,19 +901,21 @@ public export
 record DependentApplicative (f : Type -> Type) where
   constructor MkDependentApplicative
   appApplicative : Applicative f
-  appFunctor : DependentFunctor f
   DPure : DependentPure f
   DApply : DependentApplication f
 
 public export
-amap : {f : Type -> Type} -> (da : DependentApplicative f) ->
-  DependentMap f
-amap = DMap . appFunctor
+ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f
+ApplicativeToFunctor {f} isApplicative = MkFunctor (map {f})
+
+public export
+amap : {f : Type -> Type} -> (da : DependentApplicative f) -> DependentMap f
+amap {f} da = dmap {isFunctor=ApplicativeToFunctor(appApplicative da)} f
 
 public export
 afmap : {f : Type -> Type} -> {da : DependentApplicative f} ->
   {a, b : Type} -> (a -> b) -> f a -> f b
-afmap {da} = dfmap {df=(appFunctor da)}
+afmap {f} {da} = let isApplicative = appApplicative da in map {f}
 
 public export
 dpure : {f : Type -> Type} -> (da : DependentApplicative f) ->
@@ -999,7 +968,6 @@ composeDependentApplicatives {f} {g} fDepApp gDepApp =
   let gApp = appApplicative gDepApp in
   MkDependentApplicative
     ComposeApplicative
-    (composeDependentFunctors (appFunctor fDepApp) (appFunctor gDepApp))
     (\a, a', fgax, x =>
       dpure fDepApp (afmap {f} {da=fDepApp} (dpure gDepApp) fgax) x)
     (\a, b, a', b', fab, fgab =>
@@ -1048,10 +1016,6 @@ ArrowDependentMap : (domain : Type) -> DependentMap (Arrow domain)
 ArrowDependentMap domain a b a' b' fab piab x da d = piab x (da d)
 
 public export
-ArrowDependentFunctor : (domain : Type) -> DependentFunctor (Arrow domain)
-ArrowDependentFunctor domain = MkDependentFunctor (ArrowDependentMap domain)
-
-public export
 ArrowDependentPure : (domain : Type) -> DependentPure (Arrow domain)
 ArrowDependentPure _ = \a, b, pi, x => \x' => pi x' x
 
@@ -1067,6 +1031,5 @@ ArrowDependentApplicative domain =
   let arrowFunctor = ArrowFunctor {a=domain} in
   MkDependentApplicative
     ArrowApplicative
-    (ArrowDependentFunctor domain)
     (ArrowDependentPure domain)
     (ArrowDependentApplication domain)
