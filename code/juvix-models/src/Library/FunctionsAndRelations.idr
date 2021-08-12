@@ -904,6 +904,11 @@ DependentToConstructorUnit :
 DependentToConstructorUnit f type = f (\_ => type) ()
 
 public export
+DependentToConstructorInhabitedType :
+  {0 a : Type} -> DependentTypeConstructor a -> (u : a) -> (Type -> Type)
+DependentToConstructorInhabitedType f u type = f (\_ => type) u
+
+public export
 record DependentFunctorOn
   {0 a : Type} (0 f : DependentTypeConstructor a) where
     constructor MkDependentFunctorOn
@@ -920,6 +925,12 @@ public export
 DependentToFunctorUnit : {0 f : DependentTypeConstructor ()} ->
   (dfo : DependentFunctorOn f) -> Functor (DependentToConstructorUnit f)
 DependentToFunctorUnit {f} dfo = MkFunctor (dfmap dfo)
+
+public export
+DependentToFunctorInhabitedType : {0 a : Type} ->
+  {0 f : DependentTypeConstructor a} -> (dfo : DependentFunctorOn f) ->
+  (u : a) -> Functor (DependentToConstructorInhabitedType f u)
+DependentToFunctorInhabitedType {f} dfo u = MkFunctor (dfmap dfo)
 
 public export
 dfCompose : {0 a : Type} -> {0 f, g : DependentTypeConstructor a} ->
