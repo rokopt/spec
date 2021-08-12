@@ -894,19 +894,81 @@ DependentTypeConstructor : (a : Type) -> Type
 DependentTypeConstructor a = (a -> Type) -> (a -> Type)
 
 public export
+ConstructorToDependent :
+  (Type -> Type) -> {0 a : Type} -> DependentTypeConstructor a
+ConstructorToDependent f {a} depType x = f (depType x)
+
+public export
+DependentToConstructorUnit :
+  DependentTypeConstructor () -> (Type -> Type)
+DependentToConstructorUnit f type = f (\_ => type) ()
+
+public export
 record DependentFunctorOn
   {0 a : Type} (0 f : DependentTypeConstructor a) where
     constructor MkDependentFunctorOn
-    dfmap : (0 b, c : a -> Type) -> (0 x : a) -> (b x -> c x) -> f b x -> f c x
+    dfmap : {0 b, c : a -> Type} -> {0 x : a} -> (b x -> c x) -> f b x -> f c x
+
+public export
+FunctorToDependent : {f : Type -> Type} ->
+  Functor f -> {0 a : Type} ->
+  DependentFunctorOn {a} (ConstructorToDependent {a} f)
+FunctorToDependent {f} functor {a} =
+  MkDependentFunctorOn map
+
+public export
+DependentToFunctorUnit : {0 f : DependentTypeConstructor ()} ->
+  (dfo : DependentFunctorOn f) -> Functor (DependentToConstructorUnit f)
+DependentToFunctorUnit {f} dfo = MkFunctor (dfmap dfo)
+
+public export
+dfCompose : {0 a : Type} -> {0 f, g : DependentTypeConstructor a} ->
+  DependentFunctorOn f -> DependentFunctorOn g ->
+  DependentFunctorOn (f . g)
+dfCompose {a} {f} {g} dff dfg =
+  MkDependentFunctorOn (dfmap dff . dfmap dfg)
 
 public export
 record DependentApplicativeOn
   {0 a : Type} (0 f : DependentTypeConstructor a) where
     constructor MkDependentApplicativeOn
     daFunctor : DependentFunctorOn f
-    dapure : (0 b : a -> Type) -> (0 x : a) -> b x -> f b x
-    dapply : (0 b, c : a -> Type) -> (0 x : a) ->
-      (f b x -> f c x) -> f b x -> f c x
+    dapure : {0 b : a -> Type} -> {0 x : a} -> b x -> f b x
+    dapply : {0 b, c : a -> Type} ->
+      {x : a} -> f (\x' => (b x' -> c x')) x -> f b x -> f c x
+
+damap : {0 a : Type} -> {0 f : DependentTypeConstructor a} ->
+  (da : DependentApplicativeOn f) ->
+  {0 b, c : a -> Type} -> {0 x : a} -> (b x -> c x) -> f b x -> f c x
+damap = dfmap . daFunctor
+
+public export
+ApplicativeToDependent : {f : Type -> Type} ->
+  Applicative f -> {0 a : Type} ->
+  DependentApplicativeOn {a} (ConstructorToDependent {a} f)
+ApplicativeToDependent {f} applicative {a} =
+  MkDependentApplicativeOn
+    (FunctorToDependent (ApplicativeToFunctor applicative)) pure (<*>)
+
+public export
+DependentToApplicativeUnit : {0 f : DependentTypeConstructor ()} ->
+  DependentApplicativeOn f ->
+  Applicative (DependentToConstructorUnit f)
+DependentToApplicativeUnit {f} dfo =
+  let functor = DependentToFunctorUnit (daFunctor dfo) in
+  MkApplicative
+    (\x => dapure dfo x)
+    (\fab, fa => dapply dfo fab fa)
+
+public export
+daCompose : {0 a : Type} -> {0 f, g : DependentTypeConstructor a} ->
+  DependentApplicativeOn f -> DependentApplicativeOn g ->
+  DependentApplicativeOn (f . g)
+daCompose {a} {f} {g} dff dfg =
+  MkDependentApplicativeOn
+    (dfCompose (daFunctor dff) (daFunctor dfg))
+    (dapure dff . dapure dfg)
+    (dapply dff . damap dff (dapply dfg))
 
 public export
 record DependentMonadOn
