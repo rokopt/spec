@@ -10,24 +10,24 @@ import public Category.Category
 prefix 1 $:
 infixr 7 $.
 public export
-data SExp : (0 atom : Type) -> Type where
+data SExp : (atom : Type) -> Type where
   ($:) : atom -> SExp atom
   ($.) : SExp atom -> SExp atom -> SExp atom
 
 public export
-SExpPred : (0 atom : Type) -> Type
+SExpPred : (atom : Type) -> Type
 SExpPred atom = !- (SExp atom)
 
 public export
-SExpPi : {0 atom : Type} -> SExpPred atom -> Type
+SExpPi : {atom : Type} -> SExpPred atom -> Type
 SExpPi sp = SExp atom ~> sp
 
 public export
-SExpTypeConstructor : (0 atom : Type) -> Type
+SExpTypeConstructor : (atom : Type) -> Type
 SExpTypeConstructor atom = DependentTypeConstructor (SExp atom)
 
 public export
-SExpPredList : (0 atom : Type) -> Type
+SExpPredList : (atom : Type) -> Type
 SExpPredList atom = List (SExpPred atom)
 
 public export
@@ -76,7 +76,7 @@ SExpParameterize : (parameter : Type) -> Type -> Type
 SExpParameterize parameter type = parameter -> type
 
 public export
-SExpParameterizedPred : (0 atom : Type) -> (parameter : Type) -> Type
+SExpParameterizedPred : (atom : Type) -> (parameter : Type) -> Type
 SExpParameterizedPred atom parameter =
   SExp atom -> SExpParameterize parameter Type
 
@@ -92,7 +92,7 @@ SExpParameterizedEliminatorSig sp =
   SExpEliminatorSig (SExpParameterizedPredToPred sp)
 
 public export
-SExpParameterizedPi : {0 atom : Type} -> {parameter : Type} ->
+SExpParameterizedPi : {atom : Type} -> {parameter : Type} ->
   (sp : SExpParameterizedPred atom parameter) -> Type
 SExpParameterizedPi = SExpPi . SExpParameterizedPredToPred
 
@@ -105,11 +105,11 @@ sexpParameterizedEliminator :
 sexpParameterizedEliminator = sexpEliminator
 
 public export
-SExpMetaPred : {0 atom : Type} -> (sp : SExpPred atom) -> Type
+SExpMetaPred : {atom : Type} -> (sp : SExpPred atom) -> Type
 SExpMetaPred {atom} sp = (x : SExp atom) -> sp x -> Type
 
 public export
-SExpMetaPi : {0 atom : Type} -> {sp : SExpPred atom} ->
+SExpMetaPi : {atom : Type} -> {sp : SExpPred atom} ->
   (smp : SExpMetaPred sp) -> Type
 SExpMetaPi {atom} {sp} smp = (x : SExp atom) -> (spx : sp x) -> smp x spx
 
@@ -130,7 +130,7 @@ SExpEliminatorPred : {0 atom : Type} -> {0 sp : SExpPred atom} ->
 SExpEliminatorPred signature smp = \x => smp x (sexpEliminator signature x)
 
 public export
-SExpEliminatorPi : {0 atom : Type} -> {0 sp : SExpPred atom} ->
+SExpEliminatorPi : {atom : Type} -> {0 sp : SExpPred atom} ->
   SExpEliminatorSig sp -> SExpMetaPred sp -> Type
 SExpEliminatorPi signature smp = SExpPi (SExpEliminatorPred signature smp)
 
@@ -183,11 +183,11 @@ sexpConstEliminator :
 sexpConstEliminator = sexpEliminator
 
 public export
-SExpPair : (0 atom : Type) -> Type
+SExpPair : (atom : Type) -> Type
 SExpPair atom = (SExp atom, SExp atom)
 
 public export
-SExpPairPred : (0 atom : Type) -> Type
+SExpPairPred : (atom : Type) -> Type
 SExpPairPred atom = SExpPair atom -> Type
 
 public export
@@ -209,11 +209,11 @@ record SExpWithPairPredEliminatorSig {0 atom : Type}
 {- XXX pair-eliminator composer -}
 
 public export
-SExpPairPi : {0 atom : Type} -> SExpPairPred atom -> Type
+SExpPairPi : {atom : Type} -> SExpPairPred atom -> Type
 SExpPairPi pp = SExpPair atom ~> pp
 
 public export
-SExpWithPairPi : {0 atom : Type} ->
+SExpWithPairPi : {atom : Type} ->
   (expPred : SExpPred atom) -> (pairPred : SExpPairPred atom) -> Type
 SExpWithPairPi expPred pairPred = (SExpPi expPred, SExpPairPi pairPred)
 
@@ -332,7 +332,7 @@ SExpForAllBoth : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPairPred atom
 SExpForAllBoth sp (x, x') = (SExpForAll sp x, SExpForAll sp x')
 
 public export
-SExpForAllPi : {0 atom : Type} -> (sp : SExpPred atom) -> Type
+SExpForAllPi : {atom : Type} -> (sp : SExpPred atom) -> Type
 SExpForAllPi = SExpPi . SExpForAll
 
 public export
@@ -525,13 +525,11 @@ public export
 sexpMap : {0 a, b : Type} -> (a -> b) -> (SExp a -> SExp b)
 sexpMap f = sexpEliminator (SExpEliminatorArgs (($:) . f) (const (const ($.))))
 
-{-
 public export
 Functor SExp where
   map = sexpMap
 
-
-
+{-
 
 Functor SList where
   map = slistMap

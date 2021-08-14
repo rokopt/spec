@@ -910,7 +910,7 @@ DependentToConstructorInhabitedType f u type = f (\_ => type) u
 
 public export
 record DependentFunctorOn
-  {0 a : Type} (0 f : DependentTypeConstructor a) where
+  {0 a : Type} (f : DependentTypeConstructor a) where
     constructor MkDependentFunctorOn
     dfmap : {0 b, c : a -> Type} -> {0 x : a} -> (b x -> c x) -> f b x -> f c x
 
@@ -941,7 +941,7 @@ dfCompose {a} {f} {g} dff dfg =
 
 public export
 record DependentApplicativeOn
-  {0 a : Type} (0 f : DependentTypeConstructor a) where
+  {0 a : Type} (f : DependentTypeConstructor a) where
     constructor MkDependentApplicativeOn
     daFunctor : DependentFunctorOn f
     dapure : {0 b : a -> Type} -> {0 x : a} -> b x -> f b x
