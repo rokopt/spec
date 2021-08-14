@@ -476,65 +476,38 @@ sexpGeneralInductionComposeSig :
 sexpGeneralInductionComposeSig {f} {sp} {isApplicative} =
   sexpGeneralInduction . SExpGeneralInductionComposeSig {f} {sp} {isApplicative}
 
-{-
-
 public export
 SExpForAllMetaPred : {atom : Type} -> SExpPred atom -> Type
 SExpForAllMetaPred sp = (x : SExp atom) -> SExpForAll sp x -> Type
 
 public export
-SListForAllMetaPred : {atom : Type} -> SExpPred atom -> Type
-SListForAllMetaPred sp = (l : SList atom) -> SListForAll sp l -> Type
-
-public export
-SExpForAllMetaPreds : {atom : Type} -> SExpPred atom -> Type
-SExpForAllMetaPreds sp = (SExpForAllMetaPred sp, SListForAllMetaPred sp)
-
-public export
 SExpForAllMetaPi : {atom : Type} -> {sp : SExpPred atom} ->
-  SExpForAllMetaPreds sp -> SExpGeneralInductionSig sp -> Type
-SExpForAllMetaPi {atom} smps signature =
-  (x : SExp atom) -> fst smps x (sexpGeneralInduction signature x)
+  SExpForAllMetaPred sp -> SExpGeneralInductionSig sp -> Type
+SExpForAllMetaPi {atom} smp signature =
+  (x : SExp atom) -> smp x (sexpGeneralInduction signature x)
 
 public export
-SListForAllMetaPi : {atom : Type} -> {sp : SExpPred atom} ->
-  SExpForAllMetaPreds sp -> SExpGeneralInductionSig sp -> Type
-SListForAllMetaPi {atom} smps signature =
-  (l : SList atom) -> snd smps l (slistForAllEliminator signature l)
-
-public export
-SExpForAllMetaPis : {atom : Type} -> {sp : SExpPred atom} ->
-  SExpForAllMetaPreds sp -> SExpGeneralInductionSig sp -> Type
-SExpForAllMetaPis smps signature =
-  (SExpForAllMetaPi smps signature, SListForAllMetaPi smps signature)
-
-public export
-sexpForAllMetaEliminators : {atom : Type} -> {sp : SExpPred atom} ->
-  {smps : SExpForAllMetaPreds sp} ->
+sexpForAllMetaEliminator : {atom : Type} -> {sp : SExpPred atom} ->
+  {smp : SExpForAllMetaPred sp} ->
   {signature : SExpGeneralInductionSig sp} ->
-  SExpMetaEliminatorSig smps
-    (SExpGeneralInductionSigToEliminatorSig signature) ->
-  SExpForAllMetaPis smps signature
-sexpForAllMetaEliminators = sexpMetaEliminators
+  SExpMetaEliminatorSig
+    (SExpGeneralInductionSigToEliminatorSig signature) smp ->
+  SExpForAllMetaPi smp signature
+sexpForAllMetaEliminator {smp} = sexpMetaEliminator {smp}
 
 public export
-SExpExistsTypes :
-  {0 atom : Type} -> SExpPred atom -> SExpPreds atom
-SExpExistsTypes sp =
-  sexpConstEliminators {sp=Type} {lp=Type}
+SExpExists :
+  {0 atom : Type} -> (sp : SExpPred atom) -> SExpPred atom
+SExpExists sp =
+  sexpConstEliminator {sp=Type}
     (SExpEliminatorArgs
-      (sp . ($^))
-      (Either . sp . ($|))
-      Void
-      (const (const Either)))
+      (sp . ($:))
+      (\x, x', exists, exists' =>
+        Either (sp (x $. x')) (Either exists exists')))
 
 public export
-SExpExists : {0 atom : Type} -> SExpPred atom -> SExpPred atom
-SExpExists = SPredsExp . SExpExistsTypes
-
-public export
-SListExists : {0 atom : Type} -> SExpPred atom -> SListPred atom
-SListExists = SPredsList . SExpExistsTypes
+SExpExistsEither : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPairPred atom
+SExpExistsEither sp (x, x') = Either (SExpExists sp x) (SExpExists sp x')
 
 public export
 NonEmptySList : Type -> Type
@@ -545,86 +518,23 @@ SExpExistsSome : {0 atom : Type} -> SExpPred atom -> SExpPred atom
 SExpExistsSome sp = NonEmptyList . SExpExists sp
 
 public export
-SListExistsSome : {0 atom : Type} -> SExpPred atom -> SListPred atom
-SListExistsSome sp = NonEmptyList . SListExists sp
+SExpDecForAll : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPred atom
+SExpDecForAll sp x = Either (SExpForAll sp x) (SExpExistsSome (Not . sp) x)
 
 public export
-SExpAllLeftOrExistsRight : {0 atom : Type} -> (sr, sl : SExpPred atom) ->
-  SExpPred atom
-SExpAllLeftOrExistsRight sr sl x =
-  Either (SExpForAll sr x) (SExpExistsSome sl x)
+sexpMap : {0 a, b : Type} -> (a -> b) -> (SExp a -> SExp b)
+sexpMap f = sexpEliminator (SExpEliminatorArgs (($:) . f) (const (const ($.))))
 
+{-
 public export
-SListAllLeftOrExistsRight : {0 atom : Type} -> (sr, sl : SExpPred atom) ->
-  SListPred atom
-SListAllLeftOrExistsRight sr sl l =
-  Either (SListForAll sr l) (SListExistsSome sl l)
-
-public export
-slistExistsSomeShift : {0 atom : Type} ->
-  {sl, sr : SExpPred atom} ->
-  {x : SExp atom} -> {l : SList atom} ->
-  SListExistsSome sr l ->
-  SListExistsSome sr (x :: l)
-slistExistsSomeShift = neListMap Right
-
-{- XXX write signature composer for this -}
-public export
-record SExpConstListEliminatorSig {0 atom : Type} (sp : Type) where
-  constructor SExpConstListEliminatorArgs
-  atomElim : atom -> sp
-  listElim : (l : SList atom) -> List sp -> sp
-
-public export
-SExpConstListEliminatorSigToEliminatorSig :
-  {0 atom : Type} -> {0 sp : Type} ->
-  SExpConstListEliminatorSig {atom} sp ->
-  SExpEliminatorSig {atom} (const sp, const (List sp))
-SExpConstListEliminatorSigToEliminatorSig {atom} signature =
-  (SExpEliminatorArgs {atom}
-    (atomElim signature)
-    (listElim signature)
-    []
-    (const (const (::))))
-
-public export
-sexpConstListEliminators :
-  {0 atom : Type} -> {0 sp : Type} ->
-  (signature : SExpConstListEliminatorSig {atom} sp) ->
-  (SExp atom -> sp, SList atom -> List sp)
-sexpConstListEliminators {atom} {sp} =
-  sexpEliminators . SExpConstListEliminatorSigToEliminatorSig {atom} {sp}
-
-public export
-sexpMaps : {0 a, b : Type} -> (a -> b) -> (SExp a -> SExp b, SList a -> SList b)
-sexpMaps f =
-  sexpConstListEliminators (SExpConstListEliminatorArgs (($^) . f) (const ($|)))
-
-public export
-sexpMap : {0 a, b : Type} -> (a -> b) -> SExp a -> SExp b
-sexpMap = fst . sexpMaps
-
-public export
-slistMap : {0 a, b : Type} -> (a -> b) -> SList a -> SList b
-slistMap = snd . sexpMaps
-
 Functor SExp where
   map = sexpMap
 
+
+
+
 Functor SList where
   map = slistMap
-
-public export
-sexpApplicationsToAtom : {0 a, b : Type} ->
-  SExp (a -> b) ->
-  a -> SExp b
-sexpApplicationsToAtom xab x =
-  fst
-    (sexpConstListEliminators
-      (SExpConstListEliminatorArgs
-        (\x' => $^ (x' x))
-        (const ($|))))
-  xab
 
 public export
 sexpApplications : {0 a, b : Type} ->
