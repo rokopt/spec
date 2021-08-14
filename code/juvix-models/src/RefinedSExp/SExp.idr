@@ -14,6 +14,11 @@ data SExp : (atom : Type) -> Type where
   ($:) : atom -> SExp atom
   ($.) : SExp atom -> SExp atom -> SExp atom
 
+prefix 1 $..
+public export
+($..) : PairOf (SExp atom) -> SExp atom
+($..) p = fst p $. snd p
+
 public export
 SExpPred : (atom : Type) -> Type
 SExpPred atom = !- (SExp atom)
@@ -529,42 +534,47 @@ public export
 Functor SExp where
   map = sexpMap
 
-{-
-
-Functor SList where
-  map = slistMap
-
 public export
-sexpApplications : {0 a, b : Type} ->
-  SExp (a -> b) ->
-  (SExp a -> SExp b, SList a -> SList b)
-sexpApplications xab =
-  sexpConstListEliminators
-    (SExpConstListEliminatorArgs
-      (sexpApplicationsToAtom xab)
-      (const ($|)))
+sexpApplyToAtom : {0 a, b : Type} -> SExp (a -> b) -> a -> SExp b
+sexpApplyToAtom =
+  sexpEliminator
+    (SExpEliminatorArgs ((.) ($:)) (\_, _, app, app', v => (app v $. app' v)))
 
 public export
 sexpApply : {0 a, b : Type} -> SExp (a -> b) -> SExp a -> SExp b
-sexpApply xab = fst (sexpApplications xab)
-
-public export
-sexpApplyList : {0 a, b : Type} -> SExp (a -> b) -> SList a -> SList b
-sexpApplyList xab = snd (sexpApplications xab)
-
-public export
-slistApply : {0 a, b : Type} -> SList (a -> b) -> SList a -> SList b
-slistApply =
-  listEliminator {atom=(SExp (a -> b))} {lp=const (SList a -> SList b)}
-    (ListEliminatorArgs
-      (const [])
-      (\xab, lab, lalb, la => sexpApplyList xab la ++ lalb la))
+sexpApply xab =
+  sexpEliminator (SExpEliminatorArgs (sexpApplyToAtom xab) (\_, _ => ($.)))
 
 Applicative SExp where
-  pure = ($^)
+  pure = ($:)
   (<*>) = sexpApply
 
-Applicative SList where
-  pure x = [ ($^ x) ]
-  (<*>) = slistApply
-  -}
+public export
+sexpJoin : {0 a : Type} -> SExp (SExp a) -> SExp a
+sexpJoin = sexpConstEliminator (SExpEliminatorArgs id (\_, _ => ($.)))
+
+Monad SExp where
+  join = sexpJoin
+
+public export
+sexpFoldR : {0 elem, acc : Type} ->
+  (elem -> acc -> acc) -> acc -> SExp elem -> acc
+sexpFoldR f = flip (sexpConstEliminator (SExpEliminatorArgs f (\_, _ => (.))))
+
+Foldable SExp where
+  foldr = sexpFoldR
+
+public export
+applySExpPair :
+  {0 f : Type -> Type} -> Applicative f => {0 a : Type} ->
+  f (SExp a) -> f (SExp a) -> f (SExp a)
+applySExpPair fa fa' = map ($..) (applyPair fa fa')
+
+sexpTraverse : {0 a, b : Type} -> {0 f : Type -> Type} ->
+  Applicative f => (a -> f b) ->
+  SExp a -> f (SExp b)
+sexpTraverse {f} g =
+  sexpEliminator (SExpEliminatorArgs (map ($:) . g) (\_, _ => applySExpPair))
+
+Traversable SExp where
+  traverse = sexpTraverse

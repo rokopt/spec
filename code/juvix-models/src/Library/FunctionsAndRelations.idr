@@ -821,7 +821,8 @@ proj44 = snd . snd . snd
 
 public export
 applyPair :
-  {f : Type -> Type} -> Applicative f => {a, b : Type} -> f a -> f b -> f (a, b)
+  {0 f : Type -> Type} -> Applicative f =>
+  {0 a, b : Type} -> f a -> f b -> f (a, b)
 applyPair fa fb = map MkPair fa <*> fb
 
 public export
