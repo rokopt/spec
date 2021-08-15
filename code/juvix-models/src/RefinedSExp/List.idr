@@ -110,3 +110,12 @@ eitherListElim : {types : List Type} -> (el : EitherList types) ->
 eitherListElim {types=[]} v _ = void v
 eitherListElim {types=(t :: ts)} (Left x) (f, _) = f x
 eitherListElim {types=(t :: ts)} (Right el) (_, fl) = eitherListElim el fl
+
+public export
+eitherListInject : {types : List Type} -> (n : Nat) ->
+  {auto ok : InBounds n types} -> index n types {ok} ->
+  EitherList types
+eitherListInject {types=(_ :: _)} Z {ok=InFirst} x =
+  Left x
+eitherListInject {types=(_ :: _)} (S n) {ok=(InLater ok)} x =
+  Right (eitherListInject n {ok} x)
