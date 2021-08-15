@@ -98,3 +98,15 @@ ListForAll ap = listEliminator (ListEliminatorArgs () (const . Pair . ap))
 public export
 ListExists : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
 ListExists ap = listEliminator (ListEliminatorArgs Void (const . Either . ap))
+
+public export
+EitherList : (types : List Type) -> Type
+EitherList [] = Void
+EitherList (t :: ts) = Either t (EitherList ts)
+
+public export
+eitherListElim : {types : List Type} -> (el : EitherList types) ->
+  {out : Type} -> ListForAll (\t => t -> out) types -> out
+eitherListElim {types=[]} v _ = void v
+eitherListElim {types=(t :: ts)} (Left x) (f, _) = f x
+eitherListElim {types=(t :: ts)} (Right el) (_, fl) = eitherListElim el fl
