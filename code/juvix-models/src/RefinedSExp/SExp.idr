@@ -610,6 +610,16 @@ Sized (SExp atom) where
   size = sexpSize
 
 public export
+sexpFoundedOnSizeInduction :
+  {0 sp : SExpPred atom} ->
+  (step :
+    (x : SExp atom) ->
+    ((y : SExp atom) -> (sexpSize y) `LT` (sexpSize x) -> sp y) ->
+    sp x) ->
+  SExp atom ~> sp
+sexpFoundedOnSizeInduction = sizeInd
+
+public export
 data SubSExp : {0 atom : Type} -> SExp atom -> SExp atom -> Type where
   SubSExpLeft : {0 atom : Type} -> (x, x' : SExp atom) ->
     SubSExp x (x $. x')
