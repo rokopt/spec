@@ -27,15 +27,32 @@ SExpPred atom = !- (SExp atom)
 
 public export
 SExpPi : {atom : Type} -> SExpPred atom -> Type
-SExpPi sp = SExp atom ~> sp
+SExpPi {atom} sp = SExp atom ~> sp
 
 public export
 SExpTypeConstructor : (atom : Type) -> Type
 SExpTypeConstructor atom = DependentTypeConstructor (SExp atom)
 
 public export
+SExpStrengthenedPred : {0 atom : Type} ->
+  SExpTypeConstructor atom -> SExpTypeConstructor atom
+SExpStrengthenedPred {atom} typeConstructor sp =
+  \x : SExp atom => (sp x, typeConstructor sp x)
+
+public export
 SExpPredList : (atom : Type) -> Type
 SExpPredList atom = List (SExpPred atom)
+
+public export
+SExpDependentApplicative :
+  {atom : Type} -> SExpTypeConstructor atom -> Type
+SExpDependentApplicative {atom} = DependentApplicativeOn {a=(SExp atom)}
+
+public export
+SExpApplicativeConstructor :
+  {f : Type -> Type} -> (app : Applicative f) -> {0 atom : Type} ->
+  SExpDependentApplicative (ConstructorToDependent {a=(SExp atom)} f)
+SExpApplicativeConstructor app = ApplicativeToDependent app
 
 public export
 record SExpEliminatorSig {0 atom : Type} (0 sp : SExpPred atom) where
@@ -77,6 +94,59 @@ sexpEliminatorComposeSig :
   f (SExpEliminatorSig sp) ->
   SExpPi (f . sp)
 sexpEliminatorComposeSig app = sexpEliminator . SExpSignatureComposeSig app
+
+{- XXX write a signature composer for this -}
+public export
+record SExpInductionStrengthenerSig
+  {0 atom : Type} (0 f : SExpTypeConstructor atom) where
+    constructor SExpInductionStrengthenerArgs
+    atomStrengthener : (0 sp : SExpPred atom) ->
+      (a : atom) -> sp ($: a) -> f sp ($: a)
+    pairStrengthener : (0 sp : SExpPred atom) ->
+      (x, x' : SExp atom) -> f sp x -> f sp x' -> sp (x $. x') -> f sp (x $. x')
+
+{- XXX write a signature composer for this -}
+public export
+record SExpStrengthenedInductionSig
+  {0 atom : Type} (0 f : SExpTypeConstructor atom) (sp : SExpPred atom) where
+    constructor SExpStrengthenedInductionArgs
+    atomElim : (a : atom) -> sp ($: a)
+    pairElim : (x, x' : SExp atom) -> f sp x -> f sp x' -> sp (x $. x')
+
+public export
+SExpStrengthenedInductionSigToEliminatorSig :
+  {0 atom : Type} ->
+  {0 f : SExpTypeConstructor atom} ->
+  SExpInductionStrengthenerSig f ->
+  {0 sp : SExpPred atom} ->
+  SExpStrengthenedInductionSig f sp ->
+  SExpEliminatorSig (SExpStrengthenedPred f sp)
+SExpStrengthenedInductionSigToEliminatorSig {sp} strengthenerSig inductionSig =
+  SExpEliminatorArgs
+    (\a =>
+      let spa = atomElim inductionSig a in
+      (spa, atomStrengthener strengthenerSig sp a spa))
+    (\x, x', sfsx, sfsx' => case (sfsx, sfsx') of
+      ((spx, fspx), (spx', fspx')) =>
+        let spxx' = pairElim inductionSig x x' fspx fspx' in
+        (spxx', pairStrengthener strengthenerSig sp x x' fspx fspx' spxx'))
+
+public export
+SExpStrengthenedPi : {atom : Type} ->
+  (f : SExpTypeConstructor atom) -> (sp : SExpPred atom) -> Type
+SExpStrengthenedPi {atom} f sp = SExpPi {atom} (SExpStrengthenedPred f sp)
+
+public export
+sexpStrengthenedInduction :
+  {0 atom : Type} ->
+  {0 f : SExpTypeConstructor atom} ->
+  (strengthenerSig : SExpInductionStrengthenerSig f) ->
+  {0 sp : SExpPred atom} ->
+  (inductionSig : SExpStrengthenedInductionSig f sp) ->
+  SExpStrengthenedPi f sp
+sexpStrengthenedInduction strengthenerSig inductionSig =
+  sexpEliminator
+    (SExpStrengthenedInductionSigToEliminatorSig strengthenerSig inductionSig)
 
 public export
 SExpParameterize : (parameter : Type) -> Type -> Type
@@ -155,6 +225,58 @@ sexpMetaEliminator :
   (metaSig : SExpMetaEliminatorSig signature smp) ->
   SExpEliminatorPi signature smp
 sexpMetaEliminator = sexpEliminator
+
+public export
+SExpMetaStrengthenedPred : {atom : Type} ->
+  (f : SExpTypeConstructor atom) -> (sp : SExpPred atom) -> Type
+SExpMetaStrengthenedPred {atom} f sp =
+  SExpMetaPred (SExpStrengthenedPred {atom} f sp)
+
+public export
+SExpMetaStrengthenedPi :
+  {atom : Type} -> {f : SExpTypeConstructor atom} ->
+  SExpInductionStrengthenerSig f ->
+  {sp : SExpPred atom} ->
+  SExpMetaStrengthenedPred f sp ->
+  SExpStrengthenedInductionSig f sp ->
+  Type
+SExpMetaStrengthenedPi {atom} strengthenerSig smp strengthenedSig =
+  SExpEliminatorPi
+    (SExpStrengthenedInductionSigToEliminatorSig
+      strengthenerSig strengthenedSig)
+    smp
+
+public export
+SExpMetaStrengthenedInductionSig :
+  {0 atom : Type} ->
+  {f : SExpTypeConstructor atom} ->
+  (strengthenerSig : SExpInductionStrengthenerSig f) ->
+  {0 sp : SExpPred atom} ->
+  (0 smp : SExpMetaStrengthenedPred f sp) ->
+  (inductionSig : SExpStrengthenedInductionSig f sp) ->
+  Type
+SExpMetaStrengthenedInductionSig strengthenerSig smp inductionSig =
+  SExpMetaEliminatorSig
+    (SExpStrengthenedInductionSigToEliminatorSig strengthenerSig inductionSig)
+    smp
+
+public export
+sexpMetaStrengthenedInduction :
+  {0 atom : Type} ->
+  {0 f : SExpTypeConstructor atom} ->
+  {strengthenerSig : SExpInductionStrengthenerSig f} ->
+  {0 sp : SExpPred atom} ->
+  {smp : SExpMetaStrengthenedPred f sp} ->
+  {inductionSig : SExpStrengthenedInductionSig f sp} ->
+  SExpMetaStrengthenedInductionSig {f} strengthenerSig smp inductionSig ->
+  SExpMetaStrengthenedPi {f} strengthenerSig smp inductionSig
+sexpMetaStrengthenedInduction {f} {sp} {smp} =
+  sexpMetaEliminator
+    {sp=(SExpStrengthenedPred f sp)}
+    {signature=
+      (SExpStrengthenedInductionSigToEliminatorSig
+        strengthenerSig inductionSig)}
+    {smp}
 
 public export
 sexpMetaComposedSigEliminator :
@@ -322,22 +444,22 @@ sexpForAllSelf {x} = sexpEliminator {sp=(\x => SExpForAll sp x -> sp x)}
   (SExpEliminatorArgs (\_ => id) (\_, _, _, _ => fst)) x
 
 public export
-record SExpGeneralInductionSig {0 atom : Type} (0 sp : SExpPred atom) where
-  constructor SExpGeneralInductionArgs
-  atomElim : (a : atom) -> sp ($: a)
-  pairElim :
-    (x, x' : SExp atom) -> SExpForAll sp x -> SExpForAll sp x' -> sp (x $. x')
+SExpGeneralInductionStrengthenerSig : SExpInductionStrengthenerSig SExpForAll
+SExpGeneralInductionStrengthenerSig =
+  SExpInductionStrengthenerArgs
+    (\_, _ => id)
+    (\_, _, _, forAll, forAll', spxx' => (spxx', forAll, forAll'))
 
 public export
-SExpGeneralInductionSigToEliminatorSig :
-  {0 atom : Type} -> {0 sp : SExpPred atom} ->
-  (signature : SExpGeneralInductionSig sp) ->
-  SExpEliminatorSig (SExpForAll sp)
-SExpGeneralInductionSigToEliminatorSig signature =
-  (SExpEliminatorArgs
-    (atomElim signature)
-    (\x, x', forAll, forAll' =>
-      (pairElim signature x x' forAll forAll', forAll, forAll')))
+sexpForAllStrengthenedInduction : {0 atom : Type} -> {0 sp : SExpPred atom} ->
+  SExpStrengthenedInductionSig SExpForAll sp ->
+  SExpStrengthenedPi SExpForAll sp
+sexpForAllStrengthenedInduction =
+  sexpStrengthenedInduction SExpGeneralInductionStrengthenerSig
+
+public export
+SExpGeneralInductionSig : {0 atom : Type} -> (sp : SExpPred atom) -> Type
+SExpGeneralInductionSig = SExpStrengthenedInductionSig SExpForAll
 
 public export
 SExpForAllPi : {atom : Type} -> (sp : SExpPred atom) -> Type
@@ -347,7 +469,8 @@ public export
 sexpGeneralInduction : {0 atom : Type} -> {0 sp : SExpPred atom} ->
   SExpGeneralInductionSig sp ->
   SExpForAllPi sp
-sexpGeneralInduction = sexpEliminator . SExpGeneralInductionSigToEliminatorSig
+sexpGeneralInduction signature x =
+  snd (sexpForAllStrengthenedInduction signature x)
 
 public export
 sexpGeneralInductionSelf : {0 atom : Type} -> {0 sp : SExpPred atom} ->
@@ -470,49 +593,25 @@ spairForAllApply {isApplicative} {sp} =
 {- XXX enhanced-with-applicative eliminator (with signature composer) -}
 
 public export
-SExpGeneralInductionComposeSig :
-  {atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {sp : SExpPred atom} ->
-  f (SExpGeneralInductionSig sp) ->
-  SExpGeneralInductionSig (f . sp)
-SExpGeneralInductionComposeSig {f} {isApplicative} {sp} signature =
-  SExpGeneralInductionArgs
-    (\a => dpure isApplicative (map {f} atomElim signature) a)
-    (\x, x', forAll, forAll' =>
-      ((dpure isApplicative
-        (dpure isApplicative (map {f} pairElim signature) x) x') <*>
-          (sexpForAllApply {f} {isApplicative} {sp} x forAll)) <*>
-          (sexpForAllApply {f} {isApplicative} {sp} x' forAll'))
-
-public export
-sexpGeneralInductionComposeSig :
-  {atom : Type} ->
-  {f : Type -> Type} -> {isApplicative : Applicative f} ->
-  {sp : SExpPred atom} ->
-  f (SExpGeneralInductionSig sp) ->
-  SExpForAllPi (f . sp)
-sexpGeneralInductionComposeSig {f} {sp} {isApplicative} =
-  sexpGeneralInduction . SExpGeneralInductionComposeSig {f} {sp} {isApplicative}
-
-public export
 SExpForAllMetaPred : {atom : Type} -> SExpPred atom -> Type
-SExpForAllMetaPred sp = (x : SExp atom) -> SExpForAll sp x -> Type
+SExpForAllMetaPred sp = SExpMetaStrengthenedPred SExpForAll sp
 
 public export
 SExpForAllMetaPi : {atom : Type} -> {sp : SExpPred atom} ->
   SExpForAllMetaPred sp -> SExpGeneralInductionSig sp -> Type
-SExpForAllMetaPi {atom} smp signature =
-  (x : SExp atom) -> smp x (sexpGeneralInduction signature x)
+SExpForAllMetaPi = SExpMetaStrengthenedPi SExpGeneralInductionStrengthenerSig
 
 public export
 sexpForAllMetaEliminator : {atom : Type} -> {sp : SExpPred atom} ->
   {smp : SExpForAllMetaPred sp} ->
-  {signature : SExpGeneralInductionSig sp} ->
-  SExpMetaEliminatorSig
-    (SExpGeneralInductionSigToEliminatorSig signature) smp ->
-  SExpForAllMetaPi smp signature
-sexpForAllMetaEliminator {smp} = sexpMetaEliminator {smp}
+  {inductionSig : SExpGeneralInductionSig sp} ->
+  SExpMetaStrengthenedInductionSig
+    SExpGeneralInductionStrengthenerSig smp inductionSig ->
+  SExpForAllMetaPi smp inductionSig
+sexpForAllMetaEliminator {smp} =
+  sexpMetaStrengthenedInduction
+    {strengthenerSig=SExpGeneralInductionStrengthenerSig}
+    {smp}
 
 public export
 SExpExists :
