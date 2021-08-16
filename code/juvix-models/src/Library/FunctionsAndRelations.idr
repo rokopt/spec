@@ -820,10 +820,18 @@ proj44 : {0 a, b, c, d : Type} -> (a, b, c, d) -> d
 proj44 = snd . snd . snd
 
 public export
+map2 :
+  {0 f : Type -> Type} -> Applicative f =>
+  {0 a, b : Type} ->
+  (a -> b -> c) ->
+  f a -> f b -> f c
+map2 {f} fab x x' = map {f} fab x <*> x'
+
+public export
 applyPair :
   {0 f : Type -> Type} -> Applicative f =>
   {0 a, b : Type} -> f a -> f b -> f (a, b)
-applyPair fa fb = map MkPair fa <*> fb
+applyPair = map2 MkPair
 
 public export
 applyTriple :
