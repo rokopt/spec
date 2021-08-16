@@ -4,6 +4,8 @@ import Library.FunctionsAndRelations
 import Library.Decidability
 import Library.List
 import public Category.Category
+import public Control.WellFounded
+import public RefinedSExp.List
 
 %default total
 
@@ -314,6 +316,11 @@ SExpForAll sp =
       (sp . ($:))
       (\x, x', forAll, forAll' => (sp (x $. x'), forAll, forAll')))
 
+public export sexpForAllSelf : {0 atom : Type} -> {0 sp : SExpPred atom} ->
+  {x : SExp atom} -> SExpForAll sp x -> sp x
+sexpForAllSelf {x} = sexpEliminator {sp=(\x => SExpForAll sp x -> sp x)}
+  (SExpEliminatorArgs (\_ => id) (\_, _, _, _ => fst)) x
+
 public export
 record SExpGeneralInductionSig {0 atom : Type} (0 sp : SExpPred atom) where
   constructor SExpGeneralInductionArgs
@@ -333,10 +340,6 @@ SExpGeneralInductionSigToEliminatorSig signature =
       (pairElim signature x x' forAll forAll', forAll, forAll')))
 
 public export
-SExpForAllBoth : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPairPred atom
-SExpForAllBoth sp (x, x') = (SExpForAll sp x, SExpForAll sp x')
-
-public export
 SExpForAllPi : {atom : Type} -> (sp : SExpPred atom) -> Type
 SExpForAllPi = SExpPi . SExpForAll
 
@@ -345,6 +348,17 @@ sexpGeneralInduction : {0 atom : Type} -> {0 sp : SExpPred atom} ->
   SExpGeneralInductionSig sp ->
   SExpForAllPi sp
 sexpGeneralInduction = sexpEliminator . SExpGeneralInductionSigToEliminatorSig
+
+public export
+sexpGeneralInductionSelf : {0 atom : Type} -> {0 sp : SExpPred atom} ->
+  SExpGeneralInductionSig sp ->
+  SExpPi sp
+sexpGeneralInductionSelf {sp} signature x =
+  sexpForAllSelf {sp} (sexpGeneralInduction signature x)
+
+public export
+SExpForAllBoth : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPairPred atom
+SExpForAllBoth sp (x, x') = (SExpForAll sp x, SExpForAll sp x')
 
 public export
 SExpForAllWithPairPred : {0 atom : Type} -> (sp : SExpPred atom) ->
@@ -508,7 +522,7 @@ SExpExists sp =
     (SExpEliminatorArgs
       (sp . ($:))
       (\x, x', exists, exists' =>
-        Either (sp (x $. x')) (Either exists exists')))
+        EitherList [sp (x $. x'), exists, exists']))
 
 public export
 SExpExistsEither : {0 atom : Type} -> (sp : SExpPred atom) -> SExpPairPred atom
@@ -536,15 +550,14 @@ Functor SExp where
 
 public export
 sexpApplyToAtom : {0 a, b : Type} -> SExp (a -> b) -> a -> SExp b
-sexpApplyToAtom =
-  sexpEliminator
-    (SExpEliminatorArgs ((.) ($:)) (\_, _, app, app', v => (app v $. app' v)))
+sexpApplyToAtom xf v = map (\f => f v) xf
 
 public export
 sexpApply : {0 a, b : Type} -> SExp (a -> b) -> SExp a -> SExp b
 sexpApply xab =
   sexpEliminator (SExpEliminatorArgs (sexpApplyToAtom xab) (\_, _ => ($.)))
 
+public export
 Applicative SExp where
   pure = ($:)
   (<*>) = sexpApply
@@ -553,6 +566,7 @@ public export
 sexpJoin : {0 a : Type} -> SExp (SExp a) -> SExp a
 sexpJoin = sexpConstEliminator (SExpEliminatorArgs id (\_, _ => ($.)))
 
+public export
 Monad SExp where
   join = sexpJoin
 
@@ -561,6 +575,7 @@ sexpFoldR : {0 elem, acc : Type} ->
   (elem -> acc -> acc) -> acc -> SExp elem -> acc
 sexpFoldR f = flip (sexpConstEliminator (SExpEliminatorArgs f (\_, _ => (.))))
 
+public export
 Foldable SExp where
   foldr = sexpFoldR
 
@@ -570,11 +585,140 @@ applySExpPair :
   f (SExp a) -> f (SExp a) -> f (SExp a)
 applySExpPair fa fa' = map ($..) (applyPair fa fa')
 
+public export
 sexpTraverse : {0 a, b : Type} -> {0 f : Type -> Type} ->
   Applicative f => (a -> f b) ->
   SExp a -> f (SExp b)
 sexpTraverse {f} g =
   sexpEliminator (SExpEliminatorArgs (map ($:) . g) (\_, _ => applySExpPair))
 
+public export
 Traversable SExp where
   traverse = sexpTraverse
+
+public export
+sexpSize : {0 atom : Type} -> SExp atom -> Nat
+sexpSize =
+  sexpConstEliminator
+    (SExpEliminatorArgs
+      (\_ => 1)
+      (\_, _ => (+))
+    )
+
+public export
+Sized (SExp atom) where
+  size = sexpSize
+
+public export
+data SubSExp : {0 atom : Type} -> SExp atom -> SExp atom -> Type where
+  SubSExpLeft : {0 atom : Type} -> (x, x' : SExp atom) ->
+    SubSExp x (x $. x')
+  SubSExpRight : {0 atom : Type} -> (x, x' : SExp atom) ->
+    SubSExp x (x' $. x)
+  SubSExpTrans : {0 atom : Type} -> {x, x', x'' : SExp atom} ->
+    SubSExp x x' -> SubSExp x' x'' -> SubSExp x x''
+
+public export
+superSExpNotAtom : {0 atom : Type} -> (x : SExp atom) -> (a : atom) ->
+  Not (SubSExp x ($: a))
+superSExpNotAtom x a (SubSExpLeft _ _) impossible
+superSExpNotAtom x a (SubSExpRight _ _) impossible
+superSExpNotAtom x a (SubSExpTrans sub sub') = superSExpNotAtom _ a sub'
+
+public export
+subSExpTransPair : {0 atom : Type} -> {x, x', y, y' : SExp atom} ->
+  SubSExp x x' -> SubSExp x' (y $. y') -> Either (SubSExp x y) (SubSExp x y')
+subSExpTransPair sub (SubSExpLeft _ _) = Left sub
+subSExpTransPair sub (SubSExpRight _ _) = Right sub
+subSExpTransPair sub (SubSExpTrans sub' sub'') =
+  case subSExpTransPair sub' sub'' of
+    Left subl => Left (SubSExpTrans sub subl)
+    Right subr => Right (SubSExpTrans sub subr)
+
+public export
+data InclusiveSubSExp : {0 atom : Type} -> SExp atom -> SExp atom -> Type where
+  ReflexiveSubSExp : {0 atom : Type} ->
+    (x : SExp atom) -> InclusiveSubSExp x x
+  InclusiveStrictSubSExp : {0 atom : Type} -> {x, x' : SExp atom} ->
+    SubSExp x x' -> InclusiveSubSExp x x'
+
+public export
+InclusiveSuperSExp : {0 atom : Type} -> SExp atom -> SExp atom -> Type
+InclusiveSuperSExp = flip InclusiveSubSExp
+
+public export
+SuperSExp : {0 atom : Type} -> SExp atom -> SExp atom -> Type
+SuperSExp = flip SubSExp
+
+public export
+SExpAccessible : {0 atom : Type} -> SExpPred atom
+SExpAccessible = Accessible SubSExp
+
+public export
+SExpSizeAccessible : (atom : Type) -> SExpPred atom
+SExpSizeAccessible atom = SizeAccessible
+
+public export
+interface SExpShaped atom a where
+  constructor MkSExpShaped
+  total sexpShape : a -> SExp atom
+
+public export
+Substructure : {atom, a : Type} -> SExpShaped atom a => a -> a -> Type
+Substructure {atom} = \x, y => SubSExp (sexpShape {atom} x) (sexpShape {atom} y)
+
+public export
+ShapeAccessible : {atom, a : Type} -> SExpShaped atom a => a -> Type
+ShapeAccessible {atom} {a} = Accessible (Substructure {atom} {a})
+
+public export
+sexpAccess : {0 atom, a : Type} -> SExpShaped atom a =>
+  (shape : SExp atom) -> (y : a) -> SubSExp (sexpShape y) shape ->
+  ShapeAccessible {atom} y
+sexpAccess ($: _) _ (SubSExpLeft _ _)
+  impossible
+sexpAccess (_ $. x') y (SubSExpLeft _ _) =
+  Access $ \z, subzy => sexpAccess (sexpShape y) z subzy
+sexpAccess ($: _) _ (SubSExpRight _ _)
+  impossible
+sexpAccess (x $. _) y (SubSExpRight _ _) =
+  Access $ \z, subzy => sexpAccess (sexpShape y) z subzy
+sexpAccess ($: _) _ (SubSExpTrans _ sub') =
+  void (superSExpNotAtom _ _ sub')
+sexpAccess (sl $. sr) y (SubSExpTrans {x'} {x''=(sl $. sr)} sub sub') =
+  Access $ \z, subzy => case subSExpTransPair sub sub' of
+    Left subyl => sexpAccess sl z (SubSExpTrans subzy subyl)
+    Right subyr => sexpAccess sr z (SubSExpTrans subzy subyr)
+
+public export
+sexpShapeAccessible :
+  {0 atom, a : Type} -> SExpShaped atom a => a ~> ShapeAccessible {atom}
+sexpShapeAccessible x = Access (sexpAccess (sexpShape x))
+
+public export
+SExpShaped atom (SExp atom) where
+  sexpShape = id
+
+public export
+(atom : Type) => WellFounded (SExp atom) (SubSExp {atom}) where
+  wellFounded = sexpShapeAccessible {atom} {a=(SExp atom)}
+
+public export
+SExpShaped atom a => WellFounded a (Substructure {atom} {a}) where
+  wellFounded = sexpShapeAccessible {atom} {a}
+
+public export
+sexpAccessInduction :
+  {0 atom, a : Type} -> SExpShaped atom a => {0 P : !- a} ->
+  (step : (x : a) -> ((y : a) -> Substructure {atom} {a} y x -> P y) -> P x) ->
+  (x : a) -> (0 _ : ShapeAccessible {atom} {a} x) -> P x
+sexpAccessInduction step x (Access f) =
+  step x $ \y, subyx => accInd step y (f y subyx)
+
+public export
+sexpWellFoundedInduction :
+  {0 atom, a : Type} -> SExpShaped atom a => {0 P : !- a} ->
+  (step : (x : a) -> ((y : a) -> Substructure {atom} {a} y x -> P y) -> P x) ->
+  a ~> P
+sexpWellFoundedInduction {atom} {a} step x =
+  sexpAccessInduction step x (sexpShapeAccessible x)
