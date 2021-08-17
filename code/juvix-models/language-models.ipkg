@@ -34,6 +34,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.SExpApplicativesTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.Datatypes
+    , RefinedSExp.Test.DatatypesTest
     , RefinedSExp.Old.List
     , RefinedSExp.Old.Test.ListTest
     , RefinedSExp.Old.RefinedList
