@@ -912,6 +912,13 @@ dpure {f} isApplicative {a} {a'} fpi =
   in
   \_ => (<**>) {f} {isApplicative} (map {f} constmap fpi) (pure {f} ())
 
+infixl 4 <***>
+public export
+(<***>) : {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {0 a : Type} -> {0 a' : a -> Type} ->
+  f ((x : a) -> a' x) -> (x : a) -> f (a' x)
+(<***>) {isApplicative} ff x = dpure isApplicative ff x
+
 public export
 DependentTypeConstructor : (a : Type) -> Type
 DependentTypeConstructor a = (a -> Type) -> (a -> Type)

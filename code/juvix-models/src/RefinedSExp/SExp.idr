@@ -43,6 +43,11 @@ SExpTypeConstructor : (atom : Type) -> Type
 SExpTypeConstructor atom = DependentTypeConstructor (SExp atom)
 
 public export
+SExpComposeConstructor : {0 atom : Type} ->
+  (Type -> Type) -> SExpTypeConstructor atom -> SExpTypeConstructor atom
+SExpComposeConstructor g f sp x = g (f sp x)
+
+public export
 SExpStrengthenedPred : {0 atom : Type} ->
   SExpTypeConstructor atom -> SExpTypeConstructor atom
 SExpStrengthenedPred {atom} typeConstructor sp =
