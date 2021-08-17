@@ -1036,14 +1036,27 @@ interface DependentMonadInterface f where
   DependentMonadRecord : DependentMonad f
 
 public export
-Arrow : Type -> Type -> Type
-Arrow a b = a -> b
+record Context (env : Type) (a : Type) where
+  constructor MkContext
+  withContext : env -> a
 
 public export
-[ArrowFunctor] Functor (Arrow a) where
-  map = (.)
+implementation {env : Type} -> Functor (Context env) where
+  map f (MkContext e) = MkContext $ f . e
 
 public export
-[ArrowApplicative] Functor (Arrow a) => Applicative (Arrow a) where
-  pure x = \_ => x
-  f <*> g = \x => f x (g x)
+implementation {env : Type} -> Applicative (Context env) where
+  pure = MkContext . const
+  (MkContext f) <*> (MkContext g) = MkContext $ \e => f e (g e)
+
+public export
+implementation {env : Type} -> Monad (Context env) where
+  join (MkContext ce) = MkContext $ \e => withContext (ce e) e
+
+public export
+getContext : {0 env, a : Type} -> Context env env
+getContext = MkContext id
+
+public export
+withLocal : {0 env, a : Type} -> (env -> env) -> Context env a -> Context env a
+withLocal l (MkContext c) = MkContext $ c . l
