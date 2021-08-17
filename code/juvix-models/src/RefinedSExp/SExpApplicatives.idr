@@ -23,10 +23,3 @@ SExpPairOfApplicativeEncodingSig atom =
             (injective sig y' z' eqyz')
         )
     )
-
-public export
-SExpPairOfApplicativeEliminatorSig :
-  {0 atom : Type} -> (0 fsap : SExpApplicativePred PairOf atom) -> Type
-SExpPairOfApplicativeEliminatorSig {atom} fsap =
-  SExpApplicativeEliminatorSig
-    PairOfApplicative (SExpPairOfApplicativeEncodingSig atom) fsap
