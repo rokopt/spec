@@ -174,6 +174,25 @@ UniqueHeterogeneousDPairInjective bUnique {d=(x ** y)} {d'=(x' ** y')} xeq =
     Refl => UniqueDPairInjective bUnique
 
 public export
+DTriple : {a : Type} -> (b : a -> Type) -> (c : (x : a) -> b x -> Type) -> Type
+DTriple {a} b c = (x : a ** y : b x ** c x y)
+
+public export
+dt31 : {0 a : Type} -> {0 b : a -> Type} -> {0 c : (x : a) -> b x -> Type} ->
+  DTriple b c -> a
+dt31 (x ** _ ** _) = x
+
+public export
+dt32 : {0 a : Type} -> {0 b : a -> Type} -> {0 c : (x : a) -> b x -> Type} ->
+  (dt : DTriple b c) -> b (dt31 dt)
+dt32 (_ ** y ** _) = y
+
+public export
+dt33 : {0 a : Type} -> {0 b : a -> Type} -> {0 c : (x : a) -> b x -> Type} ->
+  (dt : DTriple b c) -> c (dt31 dt) (dt32 dt)
+dt33 (_ ** _ ** z) = z
+
+public export
 Endofunction : Type -> Type
 Endofunction a = a -> a
 
