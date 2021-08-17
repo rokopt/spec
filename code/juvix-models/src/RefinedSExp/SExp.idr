@@ -22,6 +22,15 @@ public export
 ($..) p = fst p $. snd p
 
 public export
+sexpAtomInjective : {atom : Type} -> {a, a' : atom} -> $: a = $: a' -> a = a'
+sexpAtomInjective Refl = Refl
+
+public export
+sexpPairInjective : {atom : Type} -> {x, x', y, y' : SExp atom} ->
+  x $. x' = y $. y' -> (x = y, x' = y')
+sexpPairInjective Refl = (Refl, Refl)
+
+public export
 SExpPred : (atom : Type) -> Type
 SExpPred atom = !- (SExp atom)
 
@@ -53,6 +62,10 @@ SExpApplicativeConstructor :
   {f : Type -> Type} -> (app : Applicative f) -> {0 atom : Type} ->
   SExpDependentApplicative (ConstructorToDependent {a=(SExp atom)} f)
 SExpApplicativeConstructor app = ApplicativeToDependent app
+
+public export
+SExpApplicativePred : (f : Type -> Type) -> Type -> Type
+SExpApplicativePred f atom = !- (f (SExp atom))
 
 public export
 record SExpEliminatorSig {0 atom : Type} (0 sp : SExpPred atom) where
@@ -147,6 +160,101 @@ sexpStrengthenedInduction :
 sexpStrengthenedInduction strengthenerSig inductionSig =
   sexpEliminator
     (SExpStrengthenedInductionSigToEliminatorSig strengthenerSig inductionSig)
+
+{- XXX write a composer for this -}
+public export
+record SExpEncodingSig (0 type : Type) (0 atom : Type) where
+  constructor SExpEncodingArgs
+  encode : type -> SExp atom
+  injective : (y, y' : type) -> encode y = encode y' -> y = y'
+
+public export
+SExpAtomEncodingSig : (atom : Type) -> SExpEncodingSig atom atom
+SExpAtomEncodingSig atom = SExpEncodingArgs ($:) (\_, _ => sexpAtomInjective)
+
+public export
+SExpIdentityEncodingSig : (atom : Type) -> SExpEncodingSig (SExp atom) atom
+SExpIdentityEncodingSig atom = SExpEncodingArgs id (\_, _ => id)
+
+public export
+SExpPairEncodingSig : (atom : Type) -> SExpEncodingSig (PairOf (SExp atom)) atom
+SExpPairEncodingSig atom =
+  SExpEncodingArgs
+    ($..)
+    (\p, p', eq =>
+      let (fsteq, sndeq) = sexpPairInjective eq in pairInjective fsteq sndeq)
+
+public export
+record SExpApplicativeEncodingSig
+  {f : Type -> Type} (0 app : Applicative f) (0 atom : Type) where
+    constructor SExpApplicativeEncodingArgs
+    encodings : (type : Type) ->
+      SExpEncodingSig type atom -> SExpEncodingSig (f type) atom
+
+{- XXX write a signature composer for this -}
+public export
+record SExpApplicativeEliminatorSig
+  {f : Type -> Type} (0 app : Applicative f) {0 atom : Type}
+  (0 encoding : SExpApplicativeEncodingSig {f} app atom)
+  (0 fsap : SExpApplicativePred f atom) where
+    constructor SExpApplicativeEliminatorArgs
+    atomElim : (a : atom) ->
+      (fa : f (SExp atom)) ->
+      encode (encodings encoding
+        (SExp atom) (SExpIdentityEncodingSig atom)) fa = $: a ->
+      fsap fa
+    pairElim : (x, x' : SExp atom) ->
+      (fx, fx', fxx' : f (SExp atom)) ->
+      encode (encodings encoding
+        (SExp atom) (SExpIdentityEncodingSig atom)) fx = x ->
+      encode (encodings encoding
+        (SExp atom) (SExpIdentityEncodingSig atom)) fx' = x' ->
+      encode (encodings encoding
+        (SExp atom) (SExpIdentityEncodingSig atom)) fxx' = (x $. x') ->
+      fsap fx ->
+      fsap fx' ->
+      fsap fxx'
+
+{- XXX write a signature composer for this -}
+public export
+sexpApplicativeEliminator :
+  {f : Type -> Type} -> {app : Applicative f} -> {atom : Type} ->
+  {fsap : SExpApplicativePred f atom} ->
+  {encodingSig : SExpApplicativeEncodingSig app atom} ->
+  SExpApplicativeEliminatorSig app encodingSig fsap ->
+  f (SExp atom) ~> fsap
+sexpApplicativeEliminator {f} {app} {atom} {fsap} {encodingSig} eliminatorSig =
+  let
+    eliminator =
+      sexpEliminator
+        {sp=
+          (\x : SExp atom =>
+            (fx : f (SExp atom)) ->
+              encode
+                (encodings
+                  encodingSig (SExp atom) (SExpIdentityEncodingSig atom))
+                fx =
+              x ->
+              fsap fx)}
+        (SExpEliminatorArgs
+          (atomElim eliminatorSig)
+          (\x, x', fsx, fsx', fxx', isEncoding =>
+            pairElim eliminatorSig
+              x x'
+              ?holefx ?holefx'
+              fxx'
+              ?holee1 ?holee2
+              isEncoding
+              (fsx ?holefsx ?holefsx2)
+              (fsx' ?holefsx' ?holefsx2')
+          )
+        )
+  in
+  \y =>
+    eliminator
+      (encode
+        (encodings encodingSig (SExp atom) (SExpIdentityEncodingSig atom)) y)
+      y Refl
 
 public export
 SExpParameterize : (parameter : Type) -> Type -> Type

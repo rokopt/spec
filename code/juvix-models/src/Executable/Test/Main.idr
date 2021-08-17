@@ -3,6 +3,7 @@ module Executable.Test.Main
 import RefinedSExp.Test.TestLibrary
 import RefinedSExp.Test.ListTest
 import RefinedSExp.Test.SExpTest
+import RefinedSExp.Test.SExpApplicativesTest
 import RefinedSExp.Test.RefinedSExpTest
 import RefinedSExp.Old.Test.TestLibrary
 import RefinedSExp.Old.Test.ListTest
@@ -23,6 +24,7 @@ main : IO ()
 main = do
   RefinedSExp.Test.ListTest.listTests
   RefinedSExp.Test.SExpTest.sExpTests
+  RefinedSExp.Test.SExpApplicativesTest.sExpApplicativesTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
   RefinedSExp.Old.Test.ListTest.listTests
   RefinedSExp.Old.Test.RefinedListTest.refinedListTests

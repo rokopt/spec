@@ -104,7 +104,12 @@ consEq : {a : Type} -> {x, x' : a} -> {l, l' : List a} ->
 consEq Refl Refl = Refl
 
 public export
-mapPair : {a, a', b, b': Type} -> (f: a -> b) -> (f': a' -> b') ->
+pairInjective : {a, b : Type} -> {p, p' : (a, b)} ->
+  fst p = fst p' -> snd p = snd p' -> p = p'
+pairInjective {p=(_, _)} {p'=(_, _)} Refl Refl = Refl
+
+public export
+mapPair : {0 a, a', b, b': Type} -> (f: a -> b) -> (f': a' -> b') ->
           (a, a') -> (b, b')
 mapPair f f' (x, x') = (f x, f' x')
 
@@ -782,6 +787,15 @@ public export
 Applicative Prelude.Basics.id where
   pure = Prelude.Basics.id
   (<*>) = Prelude.Basics.id
+
+public export
+[PairOfFunctor] Functor PairOf where
+  map f = mapPair f f
+
+public export
+[PairOfApplicative] Applicative PairOf using PairOfFunctor where
+  pure x = (x, x)
+  (f, f') <*> (p, p') = (f p, f' p')
 
 infixl 3 <.>
 public export
