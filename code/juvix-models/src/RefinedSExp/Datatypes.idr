@@ -56,28 +56,35 @@ public export
 data DatatypeFunction : {penv : PrimitiveEnv} ->
   (pfenv : PrimitiveFuncEnv penv) -> (domain, codomain : Datatype penv) ->
   Type where
-    DatatypeCompose : {a, b, c : Datatype penv} ->
-      {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
-      DatatypeFunction pfenv b c ->
-      DatatypeFunction pfenv a b ->
-      DatatypeFunction pfenv a c
-
-    DatatypeFunctionGenerator :
-      {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
-      PrimFuncType pfenv (compileDatatype domain) (compileDatatype codomain) ->
+    DatatypeFromAlgebraic :
+      {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
+      {domain, codomain : Datatype penv} ->
+      AlgebraicFunction pfenv
+        (compileDatatype domain) (compileDatatype codomain) ->
       DatatypeFunction pfenv domain codomain
-
-    -- PatternMatch : XXX
 
 public export
 compileDatatypeFunction : {penv : PrimitiveEnv} ->
   {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
   DatatypeFunction pfenv domain codomain ->
   AlgebraicFunction pfenv (compileDatatype domain) (compileDatatype codomain)
-compileDatatypeFunction (DatatypeCompose g f) =
-  AlgebraicCompose (compileDatatypeFunction g) (compileDatatypeFunction f)
-compileDatatypeFunction (DatatypeFunctionGenerator f) =
-  AlgebraicFunctionGenerator f
+compileDatatypeFunction (DatatypeFromAlgebraic f) = f
+
+public export
+DatatypeCompose : {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
+  {a, b, c : Datatype penv} ->
+  DatatypeFunction pfenv b c ->
+  DatatypeFunction pfenv a b ->
+  DatatypeFunction pfenv a c
+DatatypeCompose (DatatypeFromAlgebraic f) (DatatypeFromAlgebraic g) =
+  DatatypeFromAlgebraic (AlgebraicCompose f g)
+
+public export
+DatatypeFunctionGenerator : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
+  PrimFuncType pfenv (compileDatatype domain) (compileDatatype codomain) ->
+  DatatypeFunction pfenv domain codomain
+DatatypeFunctionGenerator = DatatypeFromAlgebraic . AlgebraicFunctionGenerator
 
 public export
 interpretDatatype : {penv : PrimitiveEnv} ->
