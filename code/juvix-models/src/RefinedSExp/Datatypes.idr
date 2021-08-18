@@ -53,7 +53,47 @@ mutual
     compileRecordType t :: compileRecordTypeList ts
 
 public export
+data DatatypeFunction : {penv : PrimitiveEnv} ->
+  (pfenv : PrimitiveFuncEnv penv) -> (domain, codomain : Datatype penv) ->
+  Type where
+    DatatypeCompose : {a, b, c : Datatype penv} ->
+      {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
+      DatatypeFunction pfenv b c ->
+      DatatypeFunction pfenv a b ->
+      DatatypeFunction pfenv a c
+
+    DatatypeFunctionGenerator :
+      {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
+      PrimFuncType pfenv (compileDatatype domain) (compileDatatype codomain) ->
+      DatatypeFunction pfenv domain codomain
+
+    -- PatternMatch : XXX
+
+public export
+compileDatatypeFunction : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
+  DatatypeFunction pfenv domain codomain ->
+  AlgebraicFunction pfenv (compileDatatype domain) (compileDatatype codomain)
+compileDatatypeFunction (DatatypeCompose g f) =
+  AlgebraicCompose (compileDatatypeFunction g) (compileDatatypeFunction f)
+compileDatatypeFunction (DatatypeFunctionGenerator f) =
+  AlgebraicFunctionGenerator f
+
+public export
 interpretDatatype : {penv : PrimitiveEnv} ->
   AlgebraicTypeInterpretation penv -> Datatype penv -> Type
 interpretDatatype interpretation =
   interpretAlgebraicType interpretation . compileDatatype
+
+public export
+interpretDatatypeFunction : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} ->
+  {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+  (functionInterpretation :
+    AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+  {domain, codomain : Datatype penv} ->
+  DatatypeFunction pfenv domain codomain ->
+  interpretAlgebraicFunctionType typeInterpretation
+    (compileDatatype domain) (compileDatatype codomain)
+interpretDatatypeFunction functionInterpretation =
+  interpretAlgebraicFunction functionInterpretation . compileDatatypeFunction
