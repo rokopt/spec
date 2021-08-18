@@ -1041,3 +1041,11 @@ neListMap f (x, l) = (f x, map f l)
 public export
 Functor NonEmptyList where
   map = neListMap
+
+public export
+typeProduct : List Type -> Type
+typeProduct = foldr Pair ()
+
+public export
+typeCoproduct : List Type -> Type
+typeCoproduct = foldr Either Void
