@@ -10,6 +10,9 @@ import RefinedSExp.Test.DatatypesTest
 import RefinedSExp.Test.InductiveDatatypesTest
 import RefinedSExp.Test.DependentAlgebraicTypesTest
 import RefinedSExp.Test.DependentInductiveDatatypesTest
+import RefinedSExp.Test.AlgebraicTheoryTest
+import RefinedSExp.Test.DependentAlgebraicTheoryTest
+import RefinedSExp.Test.HigherOrderRecursionTest
 import RefinedSExp.Old.Test.TestLibrary
 import RefinedSExp.Old.Test.ListTest
 import RefinedSExp.Old.Test.RefinedListTest
@@ -36,6 +39,9 @@ main = do
   RefinedSExp.Test.InductiveDatatypesTest.inductiveDatatypesTests
   RefinedSExp.Test.DependentAlgebraicTypesTest.dependentAlgebraicTypesTests
   RefinedSExp.Test.DependentInductiveDatatypesTest.dependentInductiveDatatypesTests
+  RefinedSExp.Test.AlgebraicTheoryTest.algebraicTheoryTests
+  RefinedSExp.Test.DependentAlgebraicTheoryTest.dependentAlgebraicTheoryTests
+  RefinedSExp.Test.HigherOrderRecursionTest.higherOrderRecursionTests
   RefinedSExp.Old.Test.ListTest.listTests
   RefinedSExp.Old.Test.RefinedListTest.refinedListTests
   RefinedSExp.Old.Test.SExpTest.sExpTests
