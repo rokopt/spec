@@ -61,6 +61,53 @@ mutual
   compileAlgebraicTypeList (type :: types) =
     compileAlgebraicType type :: compileAlgebraicTypeList types
 
+-- The theory is also parameterized on primitive _functions_ provided
+-- by the system.  We allow the system to provide primitive functions on
+-- the algebraic closure of the primitive types, so that the system
+-- doesn't need to provide primitive types that would be redundant with
+-- algebraic types (such as if it wants to provide a primitive (+) function
+-- which takes a pair as an argument).
+public export
+record PrimitiveFuncEnv (penv : PrimitiveEnv) where
+  constructor PrimFuncs
+  PrimFuncType : (domain, codomain : AlgebraicType penv) -> Type
+  PrimFunc : {domain, codomain : AlgebraicType penv} ->
+    PrimFuncType domain codomain ->
+    compileAlgebraicType domain -> compileAlgebraicType codomain
+
+public export
+data AlgebraicFunction : {penv : PrimitiveEnv} ->
+  (pfenv : PrimitiveFuncEnv env) -> (domain, codomain : AlgebraicType penv) ->
+  Type where
+    AlgebraicCompose : {a, b, c : AlgebraicType penv} ->
+      AlgebraicFunction pfenv b c ->
+      AlgebraicFunction pfenv a b ->
+      AlgebraicFunction pfenv a c
+
+    AlgebraicFunctionGenerator :
+      PrimFuncType pfenv domain codomain ->
+      AlgebraicFunction pfenv domain codomain
+
+    AlgebraicExFalso : AlgebraicFunction pfenv AlgebraicVoid codomain
+
+    AlgebraicConstant : AlgebraicFunction pfenv domain AlgebraicUnit
+
+    {- XXX product, projections, coproduct, injections -}
+
+public export
+compileAlgebraicFunction : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : AlgebraicType penv} ->
+  AlgebraicFunction pfenv domain codomain ->
+  compileAlgebraicType domain -> compileAlgebraicType codomain
+compileAlgebraicFunction (AlgebraicCompose g f) =
+  compileAlgebraicFunction g . compileAlgebraicFunction f
+compileAlgebraicFunction (AlgebraicFunctionGenerator f) =
+  PrimFunc pfenv f
+compileAlgebraicFunction AlgebraicExFalso =
+  \v => void v
+compileAlgebraicFunction AlgebraicConstant =
+  \_ => ()
+
 mutual
   public export
   data GeneralType : (penv : PrimitiveEnv) -> Type where
@@ -120,50 +167,3 @@ mutual
 public export
 evalType : {penv : PrimitiveEnv} -> GeneralType penv -> Type
 evalType = compileAlgebraicType . compileGeneralType
-
--- The theory is also parameterized on primitive _functions_ provided
--- by the system.  We allow the system to provide primitive functions on
--- the algebraic closure of the primitive types, so that the system
--- doesn't need to provide primitive types that would be redundant with
--- algebraic types (such as if it wants to provide a primitive (+) function
--- which takes a pair as an argument).
-public export
-record PrimitiveFuncEnv (penv : PrimitiveEnv) where
-  constructor PrimFuncs
-  PrimFuncType : (domain, codomain : AlgebraicType penv) -> Type
-  PrimFunc : {domain, codomain : AlgebraicType penv} ->
-    PrimFuncType domain codomain ->
-    compileAlgebraicType domain -> compileAlgebraicType codomain
-
-public export
-data AlgebraicFunction : {penv : PrimitiveEnv} ->
-  (pfenv : PrimitiveFuncEnv env) -> (domain, codomain : AlgebraicType penv) ->
-  Type where
-    AlgebraicCompose : {a, b, c : AlgebraicType penv} ->
-      AlgebraicFunction pfenv b c ->
-      AlgebraicFunction pfenv a b ->
-      AlgebraicFunction pfenv a c
-
-    AlgebraicFunctionGenerator :
-      PrimFuncType pfenv domain codomain ->
-      AlgebraicFunction pfenv domain codomain
-
-    AlgebraicExFalso : AlgebraicFunction pfenv AlgebraicVoid codomain
-
-    AlgebraicConstant : AlgebraicFunction pfenv domain AlgebraicUnit
-
-    {- XXX product, projections, coproduct, injections -}
-
-public export
-compileAlgebraicFunction : {penv : PrimitiveEnv} ->
-  {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : AlgebraicType penv} ->
-  AlgebraicFunction pfenv domain codomain ->
-  compileAlgebraicType domain -> compileAlgebraicType codomain
-compileAlgebraicFunction (AlgebraicCompose g f) =
-  compileAlgebraicFunction g . compileAlgebraicFunction f
-compileAlgebraicFunction (AlgebraicFunctionGenerator f) =
-  PrimFunc pfenv f
-compileAlgebraicFunction AlgebraicExFalso =
-  \v => void v
-compileAlgebraicFunction AlgebraicConstant =
-  \_ => ()
