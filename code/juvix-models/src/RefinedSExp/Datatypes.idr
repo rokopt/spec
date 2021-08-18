@@ -16,6 +16,7 @@ mutual
     Primitive : PrimType penv -> Datatype penv
     Record : RecordType penv -> Datatype penv
     Constructors : List (RecordType penv) -> Datatype penv
+    FunctionType : (domain, codomain : Datatype penv) -> Datatype penv
 
   public export
   data RecordType : (penv : PrimitiveEnv) -> Type where
@@ -25,12 +26,18 @@ mutual
   public export
   compileDatatype : {penv : PrimitiveEnv} ->
     Datatype penv -> AlgebraicType penv
-  compileDatatype = ?compileDatatype_hole
+  compileDatatype (Primitive primType) = AlgebraicTypeGenerator primType
+  compileDatatype (Record rt) = compileRecordType rt
+  compileDatatype (Constructors records) =
+    AlgebraicCoproduct (compileRecordTypeList records)
+  compileDatatype (FunctionType domain codomain) =
+    AlgebraicExponential (compileDatatype domain) (compileDatatype codomain)
 
   public export
   compileDatatypeList : {penv : PrimitiveEnv} ->
     List (Datatype penv) -> List (AlgebraicType penv)
-  compileDatatypeList = ?compileDatatypeList_hole
+  compileDatatypeList [] = []
+  compileDatatypeList (t :: ts) = compileDatatype t :: compileDatatypeList ts
 
   public export
   compileRecordType : {penv : PrimitiveEnv} ->
@@ -42,9 +49,11 @@ mutual
   compileRecordTypeList : {penv : PrimitiveEnv} ->
     List (RecordType penv) -> List (AlgebraicType penv)
   compileRecordTypeList [] = []
-  compileRecordTypeList (type :: types) =
-    compileRecordType type :: compileRecordTypeList types
+  compileRecordTypeList (t :: ts) =
+    compileRecordType t :: compileRecordTypeList ts
 
 public export
-interpretDatatype : {penv : PrimitiveEnv} -> Datatype penv -> Type
-interpretDatatype = interpretAlgebraicType . compileDatatype
+interpretDatatype : {penv : PrimitiveEnv} ->
+  AlgebraicTypeInterpretation penv -> Datatype penv -> Type
+interpretDatatype interpretation =
+  interpretAlgebraicType interpretation . compileDatatype

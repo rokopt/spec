@@ -10,7 +10,6 @@ public export
 record PrimitiveEnv where
   constructor PrimArgs
   PrimType : Type
-  PrimExp : PrimType -> Type
 
 -- Standard algebraic data types, with the primitive types added as
 -- generators.  We will compile record types and inductive types to
@@ -34,27 +33,6 @@ public export
 typeCoproduct : List Type -> Type
 typeCoproduct = foldr Either Void
 
-mutual
-  -- Compile an algebraic data type to a metalanguage (Idris) type.
-  public export
-  interpretAlgebraicType : {penv : PrimitiveEnv} -> AlgebraicType penv -> Type
-  interpretAlgebraicType (AlgebraicTypeGenerator primType) = PrimExp penv primType
-  interpretAlgebraicType AlgebraicVoid = Void
-  interpretAlgebraicType AlgebraicUnit = ()
-  interpretAlgebraicType (AlgebraicProduct types) =
-    typeProduct (interpretAlgebraicTypeList types)
-  interpretAlgebraicType (AlgebraicCoproduct types) =
-    typeCoproduct (interpretAlgebraicTypeList types)
-  interpretAlgebraicType (AlgebraicExponential domain codomain) =
-    interpretAlgebraicType domain -> interpretAlgebraicType codomain
-
-  public export
-  interpretAlgebraicTypeList :
-    {penv : PrimitiveEnv} -> List (AlgebraicType penv) -> List Type
-  interpretAlgebraicTypeList [] = []
-  interpretAlgebraicTypeList (type :: types) =
-    interpretAlgebraicType type :: interpretAlgebraicTypeList types
-
 -- The theory is also parameterized on primitive _functions_ provided
 -- by the system.  We allow the system to provide primitive functions on
 -- the algebraic closure of the primitive types, so that the system
@@ -65,9 +43,6 @@ public export
 record PrimitiveFuncEnv (penv : PrimitiveEnv) where
   constructor PrimFuncs
   PrimFuncType : (domain, codomain : AlgebraicType penv) -> Type
-  PrimFunc : {domain, codomain : AlgebraicType penv} ->
-    PrimFuncType domain codomain ->
-    interpretAlgebraicType domain -> interpretAlgebraicType codomain
 
 public export
 data AlgebraicFunction : {penv : PrimitiveEnv} ->
@@ -88,22 +63,123 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
 
     {- XXX product, projections, coproduct, injections -}
 
+-- The inputs required to interpret algebraic types as metalanguage
+-- (Idris) types.
+public export
+record AlgebraicTypeInterpretation (penv : PrimitiveEnv) where
+  constructor AlgebraicTypeInterpretations
+  interpretPrimitiveType : PrimType penv -> Type
+
+mutual
+  -- Interpret an algebraic data type as a metalanguage (Idris) type.
+  public export
+  interpretAlgebraicType : {penv : PrimitiveEnv} ->
+    (interpretation : AlgebraicTypeInterpretation penv) ->
+    AlgebraicType penv -> Type
+  interpretAlgebraicType interpretation (AlgebraicTypeGenerator primType) =
+    interpretPrimitiveType interpretation primType
+  interpretAlgebraicType interpretation AlgebraicVoid = Void
+  interpretAlgebraicType interpretation AlgebraicUnit = ()
+  interpretAlgebraicType interpretation (AlgebraicProduct types) =
+    typeProduct (interpretAlgebraicTypeList interpretation types)
+  interpretAlgebraicType interpretation (AlgebraicCoproduct types) =
+    typeCoproduct (interpretAlgebraicTypeList interpretation types)
+  interpretAlgebraicType interpretation (AlgebraicExponential domain codomain) =
+    interpretAlgebraicType interpretation domain ->
+    interpretAlgebraicType interpretation codomain
+
+  public export
+  interpretAlgebraicTypeList : {penv : PrimitiveEnv} ->
+    (interpretation : AlgebraicTypeInterpretation penv) ->
+    List (AlgebraicType penv) -> List Type
+  interpretAlgebraicTypeList interpretation [] = []
+  interpretAlgebraicTypeList interpretation (type :: types) =
+    interpretAlgebraicType interpretation type ::
+      interpretAlgebraicTypeList interpretation types
+
+{-
+ - This environment provides all metalanguage types as primitive types.
+ - closure of the primitive types.
+ -}
+public export
+CompletePrimitiveTypeEnv : PrimitiveEnv
+CompletePrimitiveTypeEnv = PrimArgs Type
+
+public export
+CompletePrimitiveTypeInterpretation :
+  AlgebraicTypeInterpretation CompletePrimitiveTypeEnv
+CompletePrimitiveTypeInterpretation = AlgebraicTypeInterpretations id
+
+public export
+interpretAllMetaLanguageAlgebraicTypes :
+  AlgebraicType CompletePrimitiveTypeEnv -> Type
+interpretAllMetaLanguageAlgebraicTypes =
+  interpretAlgebraicType CompletePrimitiveTypeInterpretation
+
 public export
 interpretAlgebraicFunctionType : {penv : PrimitiveEnv} ->
+  (interpretation : AlgebraicTypeInterpretation penv) ->
   (domain, codomain : AlgebraicType penv) -> Type
-interpretAlgebraicFunctionType domain codomain =
-  interpretAlgebraicType domain -> interpretAlgebraicType codomain
+interpretAlgebraicFunctionType interpretation domain codomain =
+  interpretAlgebraicType interpretation domain ->
+  interpretAlgebraicType interpretation codomain
+
+-- The inputs required to interpret algebraic functions as metalanguage
+-- (Idris) functions.
+public export
+record AlgebraicFunctionInterpretation {penv : PrimitiveEnv}
+  (pfenv : PrimitiveFuncEnv penv)
+  (typeInterpretation : AlgebraicTypeInterpretation penv) where
+    constructor AlgebraicFunctionInterpretations
+    interpretPrimitiveFunction : {domain, codomain : AlgebraicType penv} ->
+      PrimFuncType pfenv domain codomain ->
+      interpretAlgebraicType typeInterpretation domain ->
+      interpretAlgebraicType typeInterpretation codomain
 
 public export
 interpretAlgebraicFunction : {penv : PrimitiveEnv} ->
-  {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : AlgebraicType penv} ->
+  {pfenv : PrimitiveFuncEnv penv} ->
+  {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+  (functionInterpretation :
+    AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+  {domain, codomain : AlgebraicType penv} ->
   AlgebraicFunction pfenv domain codomain ->
-  interpretAlgebraicFunctionType domain codomain
-interpretAlgebraicFunction (AlgebraicCompose g f) =
-  interpretAlgebraicFunction g . interpretAlgebraicFunction f
-interpretAlgebraicFunction (AlgebraicFunctionGenerator f) =
-  PrimFunc pfenv f
-interpretAlgebraicFunction AlgebraicExFalso =
+  interpretAlgebraicFunctionType typeInterpretation domain codomain
+interpretAlgebraicFunction functionInterpretation (AlgebraicCompose g f) =
+  interpretAlgebraicFunction functionInterpretation g .
+    interpretAlgebraicFunction functionInterpretation f
+interpretAlgebraicFunction functionInterpretation
+  (AlgebraicFunctionGenerator f) =
+    interpretPrimitiveFunction functionInterpretation f
+interpretAlgebraicFunction _ AlgebraicExFalso =
   \v => void v
-interpretAlgebraicFunction AlgebraicConstant =
+interpretAlgebraicFunction _ AlgebraicConstant =
   \_ => ()
+
+-- This environment provides all metalanguage functions on the algebraic
+-- closure of the primitive types.
+public export
+CompletePrimitiveFuncEnv : {penv : PrimitiveEnv} ->
+  (typeInterpretation : AlgebraicTypeInterpretation penv) ->
+  PrimitiveFuncEnv penv
+CompletePrimitiveFuncEnv typeInterpretation =
+  PrimFuncs (interpretAlgebraicFunctionType typeInterpretation)
+
+public export
+CompletePrimitiveFunctionInterpretation : {penv : PrimitiveEnv} ->
+  (typeInterpretation : AlgebraicTypeInterpretation penv) ->
+  AlgebraicFunctionInterpretation
+    (CompletePrimitiveFuncEnv typeInterpretation) typeInterpretation
+CompletePrimitiveFunctionInterpretation typeInterpretation =
+  AlgebraicFunctionInterpretations id
+
+public export
+interpretAllMetaLanguageAlgebraicFunctions : {penv : PrimitiveEnv} ->
+  (typeInterpretation : AlgebraicTypeInterpretation penv) ->
+  {domain, codomain : AlgebraicType penv} ->
+  AlgebraicFunction (CompletePrimitiveFuncEnv typeInterpretation)
+    domain codomain ->
+  interpretAlgebraicFunctionType typeInterpretation domain codomain
+interpretAllMetaLanguageAlgebraicFunctions typeInterpretation f =
+  interpretAlgebraicFunction
+    (CompletePrimitiveFunctionInterpretation typeInterpretation) f
