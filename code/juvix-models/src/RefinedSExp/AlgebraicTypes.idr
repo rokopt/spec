@@ -37,23 +37,23 @@ typeCoproduct = foldr Either Void
 mutual
   -- Compile an algebraic data type to a metalanguage (Idris) type.
   public export
-  compileAlgebraicType : {penv : PrimitiveEnv} -> AlgebraicType penv -> Type
-  compileAlgebraicType (AlgebraicTypeGenerator primType) = PrimExp penv primType
-  compileAlgebraicType AlgebraicVoid = Void
-  compileAlgebraicType AlgebraicUnit = ()
-  compileAlgebraicType (AlgebraicProduct types) =
-    typeProduct (compileAlgebraicTypeList types)
-  compileAlgebraicType (AlgebraicCoproduct types) =
-    typeCoproduct (compileAlgebraicTypeList types)
-  compileAlgebraicType (AlgebraicExponential domain codomain) =
-    compileAlgebraicType domain -> compileAlgebraicType codomain
+  interpretAlgebraicType : {penv : PrimitiveEnv} -> AlgebraicType penv -> Type
+  interpretAlgebraicType (AlgebraicTypeGenerator primType) = PrimExp penv primType
+  interpretAlgebraicType AlgebraicVoid = Void
+  interpretAlgebraicType AlgebraicUnit = ()
+  interpretAlgebraicType (AlgebraicProduct types) =
+    typeProduct (interpretAlgebraicTypeList types)
+  interpretAlgebraicType (AlgebraicCoproduct types) =
+    typeCoproduct (interpretAlgebraicTypeList types)
+  interpretAlgebraicType (AlgebraicExponential domain codomain) =
+    interpretAlgebraicType domain -> interpretAlgebraicType codomain
 
   public export
-  compileAlgebraicTypeList :
+  interpretAlgebraicTypeList :
     {penv : PrimitiveEnv} -> List (AlgebraicType penv) -> List Type
-  compileAlgebraicTypeList [] = []
-  compileAlgebraicTypeList (type :: types) =
-    compileAlgebraicType type :: compileAlgebraicTypeList types
+  interpretAlgebraicTypeList [] = []
+  interpretAlgebraicTypeList (type :: types) =
+    interpretAlgebraicType type :: interpretAlgebraicTypeList types
 
 -- The theory is also parameterized on primitive _functions_ provided
 -- by the system.  We allow the system to provide primitive functions on
@@ -67,7 +67,7 @@ record PrimitiveFuncEnv (penv : PrimitiveEnv) where
   PrimFuncType : (domain, codomain : AlgebraicType penv) -> Type
   PrimFunc : {domain, codomain : AlgebraicType penv} ->
     PrimFuncType domain codomain ->
-    compileAlgebraicType domain -> compileAlgebraicType codomain
+    interpretAlgebraicType domain -> interpretAlgebraicType codomain
 
 public export
 data AlgebraicFunction : {penv : PrimitiveEnv} ->
@@ -89,15 +89,21 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
     {- XXX product, projections, coproduct, injections -}
 
 public export
-compileAlgebraicFunction : {penv : PrimitiveEnv} ->
+interpretAlgebraicFunctionType : {penv : PrimitiveEnv} ->
+  (domain, codomain : AlgebraicType penv) -> Type
+interpretAlgebraicFunctionType domain codomain =
+  interpretAlgebraicType domain -> interpretAlgebraicType codomain
+
+public export
+interpretAlgebraicFunction : {penv : PrimitiveEnv} ->
   {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : AlgebraicType penv} ->
   AlgebraicFunction pfenv domain codomain ->
-  compileAlgebraicType domain -> compileAlgebraicType codomain
-compileAlgebraicFunction (AlgebraicCompose g f) =
-  compileAlgebraicFunction g . compileAlgebraicFunction f
-compileAlgebraicFunction (AlgebraicFunctionGenerator f) =
+  interpretAlgebraicFunctionType domain codomain
+interpretAlgebraicFunction (AlgebraicCompose g f) =
+  interpretAlgebraicFunction g . interpretAlgebraicFunction f
+interpretAlgebraicFunction (AlgebraicFunctionGenerator f) =
   PrimFunc pfenv f
-compileAlgebraicFunction AlgebraicExFalso =
+interpretAlgebraicFunction AlgebraicExFalso =
   \v => void v
-compileAlgebraicFunction AlgebraicConstant =
+interpretAlgebraicFunction AlgebraicConstant =
   \_ => ()

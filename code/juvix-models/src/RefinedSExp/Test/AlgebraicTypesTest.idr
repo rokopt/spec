@@ -13,11 +13,7 @@ TestPrimEnv = PrimArgs PrimitiveType interpretPrimitiveType
 -- metalanguage functions on the algebraic closure of the
 -- primitive types as generator functions.
 TestPrimFuncEnv : PrimitiveFuncEnv TestPrimEnv
-TestPrimFuncEnv =
-  PrimFuncs
-    (\domain, codomain =>
-      compileAlgebraicType domain -> compileAlgebraicType codomain)
-    id
+TestPrimFuncEnv = PrimFuncs interpretAlgebraicFunctionType id
 
 export
 algebraicTypesTests : IO ()
