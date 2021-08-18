@@ -5,7 +5,11 @@ import RefinedSExp.Test.ListTest
 import RefinedSExp.Test.SExpTest
 import RefinedSExp.Test.SExpApplicativesTest
 import RefinedSExp.Test.RefinedSExpTest
+import RefinedSExp.Test.AlgebraicTypesTest
 import RefinedSExp.Test.DatatypesTest
+import RefinedSExp.Test.InductiveDatatypesTest
+import RefinedSExp.Test.DependentAlgebraicTypesTest
+import RefinedSExp.Test.DependentInductiveDatatypesTest
 import RefinedSExp.Old.Test.TestLibrary
 import RefinedSExp.Old.Test.ListTest
 import RefinedSExp.Old.Test.RefinedListTest
@@ -27,7 +31,11 @@ main = do
   RefinedSExp.Test.SExpTest.sExpTests
   RefinedSExp.Test.SExpApplicativesTest.sExpApplicativesTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
+  RefinedSExp.Test.AlgebraicTypesTest.algebraicTypesTests
   RefinedSExp.Test.DatatypesTest.datatypesTests
+  RefinedSExp.Test.InductiveDatatypesTest.inductiveDatatypesTests
+  RefinedSExp.Test.DependentAlgebraicTypesTest.dependentAlgebraicTypesTests
+  RefinedSExp.Test.DependentInductiveDatatypesTest.dependentInductiveDatatypesTests
   RefinedSExp.Old.Test.ListTest.listTests
   RefinedSExp.Old.Test.RefinedListTest.refinedListTests
   RefinedSExp.Old.Test.SExpTest.sExpTests

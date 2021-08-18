@@ -6,6 +6,7 @@ import Category.Category
 import Control.WellFounded
 import RefinedSExp.List
 import RefinedSExp.SExp
+import public RefinedSExp.AlgebraicTypes
 
 %default total
 
@@ -150,6 +151,8 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
     AlgebraicExFalso : AlgebraicFunction pfenv AlgebraicVoid codomain
 
     AlgebraicConstant : AlgebraicFunction pfenv domain AlgebraicUnit
+
+    {- XXX product, projections, coproduct, injections -}
 
 public export
 compileAlgebraicFunction : {penv : PrimitiveEnv} ->

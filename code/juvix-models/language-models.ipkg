@@ -34,8 +34,16 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.SExpApplicativesTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.AlgebraicTypes
+    , RefinedSExp.Test.AlgebraicTypesTest
     , RefinedSExp.Datatypes
     , RefinedSExp.Test.DatatypesTest
+    , RefinedSExp.InductiveDatatypes
+    , RefinedSExp.Test.InductiveDatatypesTest
+    , RefinedSExp.DependentAlgebraicTypes
+    , RefinedSExp.Test.DependentAlgebraicTypesTest
+    , RefinedSExp.DependentInductiveDatatypes
+    , RefinedSExp.Test.DependentInductiveDatatypesTest
     , RefinedSExp.Old.List
     , RefinedSExp.Old.Test.ListTest
     , RefinedSExp.Old.RefinedList
