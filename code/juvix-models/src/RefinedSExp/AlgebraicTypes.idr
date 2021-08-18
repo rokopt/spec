@@ -60,13 +60,25 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
       ListForAll (AlgebraicFunction pfenv domain) codomains ->
       AlgebraicFunction pfenv domain (AlgebraicProduct codomains)
 
+    AlgebraicFunctionProjection :
+      (domains : List (AlgebraicType penv)) ->
+      (n : Nat) -> {auto ok : InBounds n domains} ->
+      AlgebraicFunction pfenv
+        (AlgebraicProduct domains)
+        (index n domains {ok})
+
     AlgebraicFunctionCoproduct :
       {domains : List (AlgebraicType penv)} ->
       {codomain : AlgebraicType penv} ->
       ListForAll (\domain => AlgebraicFunction pfenv domain codomain) domains ->
       AlgebraicFunction pfenv (AlgebraicCoproduct domains) codomain
 
-    {- XXX projections, injections -}
+    AlgebraicFunctionInjection :
+      (codomains : List (AlgebraicType penv)) ->
+      (n : Nat) -> {auto ok : InBounds n codomains} ->
+      AlgebraicFunction pfenv
+        (index n codomains {ok})
+        (AlgebraicCoproduct codomains)
 
 -- The inputs required to interpret algebraic types as metalanguage
 -- (Idris) types.
@@ -163,8 +175,14 @@ mutual
     \_ => ()
   interpretAlgebraicFunction interpretation (AlgebraicFunctionProduct fs) =
     interpretAlgebraicFunctionProduct interpretation fs
+  interpretAlgebraicFunction interpretation
+    (AlgebraicFunctionProjection domains n) =
+      interpretAlgebraicFunctionProjection interpretation domains n
   interpretAlgebraicFunction interpretation (AlgebraicFunctionCoproduct fs) =
     interpretAlgebraicFunctionCoproduct interpretation fs
+  interpretAlgebraicFunction interpretation
+    (AlgebraicFunctionInjection codomains n) =
+      interpretAlgebraicFunctionInjection interpretation codomains n
 
   public export
   interpretAlgebraicFunctionProduct : {penv : PrimitiveEnv} ->
@@ -185,6 +203,27 @@ mutual
        interpretAlgebraicFunctionProduct interpretation fs x)
 
   public export
+  interpretAlgebraicFunctionProjection : {penv : PrimitiveEnv} ->
+    {pfenv : PrimitiveFuncEnv penv} ->
+    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    (functionInterpretation :
+      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+    (domains : List (AlgebraicType penv)) ->
+    (n : Nat) -> {auto ok : InBounds n domains} ->
+    interpretAlgebraicFunctionType typeInterpretation
+      (AlgebraicProduct domains) (index n domains {ok})
+  interpretAlgebraicFunctionProjection interpretation [] _ impossible
+  interpretAlgebraicFunctionProjection interpretation
+    (d :: ds) Z {ok=InFirst} = fst
+  interpretAlgebraicFunctionProjection interpretation
+    (d :: ds) Z {ok=InLater _} impossible
+  interpretAlgebraicFunctionProjection interpretation
+    (d :: ds) (S _) {ok=InFirst} impossible
+  interpretAlgebraicFunctionProjection interpretation
+    (d :: ds) (S n) {ok=(InLater ok)} =
+      interpretAlgebraicFunctionProjection interpretation ds n {ok} . snd
+
+  public export
   interpretAlgebraicFunctionCoproduct : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
     {typeInterpretation : AlgebraicTypeInterpretation penv} ->
@@ -201,6 +240,27 @@ mutual
     \x => case x of
       Left x' => interpretAlgebraicFunction interpretation f x'
       Right x' => interpretAlgebraicFunctionCoproduct interpretation fs x'
+
+  public export
+  interpretAlgebraicFunctionInjection : {penv : PrimitiveEnv} ->
+    {pfenv : PrimitiveFuncEnv penv} ->
+    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    (functionInterpretation :
+      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+    (codomains : List (AlgebraicType penv)) ->
+    (n : Nat) -> {auto ok : InBounds n codomains} ->
+    interpretAlgebraicFunctionType typeInterpretation
+      (index n codomains {ok}) (AlgebraicCoproduct codomains)
+  interpretAlgebraicFunctionInjection interpretation [] _ impossible
+  interpretAlgebraicFunctionInjection interpretation
+    (c :: cs) Z {ok=InFirst} = Left
+  interpretAlgebraicFunctionInjection interpretation
+    (c :: cs) Z {ok=InLater _} impossible
+  interpretAlgebraicFunctionInjection interpretation
+    (c :: cs) (S _) {ok=InFirst} impossible
+  interpretAlgebraicFunctionInjection interpretation
+    (c :: cs) (S n) {ok=(InLater ok)} =
+      Right . interpretAlgebraicFunctionInjection interpretation cs n {ok}
 
 -- This environment provides all metalanguage functions on the algebraic
 -- closure of the primitive types.
