@@ -80,6 +80,16 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
         (index n codomains {ok})
         (AlgebraicCoproduct codomains)
 
+    AlgebraicFunctionEval : (domain, codomain : AlgebraicType penv) ->
+      AlgebraicFunction pfenv
+        (AlgebraicProduct [(AlgebraicExponential domain codomain), domain])
+        codomain
+
+    AlgebraicFunctionCurry :
+      {domLeft, domRight, codomain : AlgebraicType penv} ->
+      AlgebraicFunction pfenv (AlgebraicProduct [domLeft, domRight]) codomain ->
+      AlgebraicFunction pfenv domLeft (AlgebraicExponential domRight codomain)
+
 -- The inputs required to interpret algebraic types as metalanguage
 -- (Idris) types.
 public export
@@ -183,6 +193,12 @@ mutual
   interpretAlgebraicFunction interpretation
     (AlgebraicFunctionInjection codomains n) =
       interpretAlgebraicFunctionInjection interpretation codomains n
+  interpretAlgebraicFunction interpretation
+    (AlgebraicFunctionEval domain codomain) =
+      \(eval, x, ()) => eval x
+  interpretAlgebraicFunction interpretation
+    (AlgebraicFunctionCurry f) =
+      (\x, y => interpretAlgebraicFunction interpretation f (x, y, ()))
 
   public export
   interpretAlgebraicFunctionProduct : {penv : PrimitiveEnv} ->
