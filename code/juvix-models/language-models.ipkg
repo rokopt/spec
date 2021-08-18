@@ -46,8 +46,12 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.DependentInductiveDatatypesTest
     , RefinedSExp.AlgebraicTheory
     , RefinedSExp.Test.AlgebraicTheoryTest
+    , RefinedSExp.InductiveTypeTheory
+    , RefinedSExp.Test.InductiveTypeTheoryTest
     , RefinedSExp.DependentAlgebraicTheory
     , RefinedSExp.Test.DependentAlgebraicTheoryTest
+    , RefinedSExp.DependentInductiveTypeTheory
+    , RefinedSExp.Test.DependentInductiveTypeTheoryTest
     , RefinedSExp.HigherOrderRecursion
     , RefinedSExp.Test.HigherOrderRecursionTest
     , RefinedSExp.Old.List
