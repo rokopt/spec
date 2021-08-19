@@ -12,7 +12,7 @@ import public RefinedSExp.AlgebraicTypes
 mutual
   public export
   data Datatype : (penv : PrimitiveEnv) -> Type where
-    Primitive : PrimType penv -> Datatype penv
+    Algebraic : AlgebraicType penv -> Datatype penv
     Record : RecordType penv -> Datatype penv
     Constructors : List (RecordType penv) -> Datatype penv
     FunctionType : (domain, codomain : Datatype penv) -> Datatype penv
@@ -21,11 +21,15 @@ mutual
   data RecordType : (penv : PrimitiveEnv) -> Type where
     Fields : List (Datatype penv) -> RecordType penv
 
+public export
+Primitive : {penv : PrimitiveEnv} -> PrimType penv -> Datatype penv
+Primitive = Algebraic . AlgebraicTypeGenerator
+
 mutual
   public export
   compileDatatype : {penv : PrimitiveEnv} ->
     Datatype penv -> AlgebraicType penv
-  compileDatatype (Primitive primType) = AlgebraicTypeGenerator primType
+  compileDatatype (Algebraic primType) = primType
   compileDatatype (Record rt) = compileRecordType rt
   compileDatatype (Constructors records) =
     AlgebraicCoproduct (compileRecordTypeList records)

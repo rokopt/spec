@@ -1,7 +1,7 @@
 module RefinedSExp.AlgebraicTypes
 
-import Library.FunctionsAndRelations
-import Library.List
+import public Library.FunctionsAndRelations
+import public Library.List
 
 %default total
 
