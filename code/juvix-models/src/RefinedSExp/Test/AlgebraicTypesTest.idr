@@ -11,8 +11,8 @@ TestPrimEnv : PrimitiveEnv
 TestPrimEnv = PrimArgs PrimitiveType
 
 public export
-TestPrimTypeInterpretation : AlgebraicTypeInterpretation TestPrimEnv
-TestPrimTypeInterpretation = AlgebraicTypeInterpretations interpretPrimitiveType
+TestPrimTypeInterpretation : PrimitiveTypeInterpretation TestPrimEnv
+TestPrimTypeInterpretation = PrimitiveTypeInterpretations interpretPrimitiveType
 
 -- At the moment, this test environment just provides all
 -- metalanguage functions on the algebraic closure of the
@@ -23,7 +23,7 @@ TestPrimFuncEnv = CompletePrimitiveFuncEnv TestPrimTypeInterpretation
 
 public export
 TestPrimFuncInterpretation :
-  AlgebraicFunctionInterpretation TestPrimFuncEnv TestPrimTypeInterpretation
+  PrimitiveFunctionInterpretation TestPrimFuncEnv TestPrimTypeInterpretation
 TestPrimFuncInterpretation =
   CompletePrimitiveFunctionInterpretation TestPrimTypeInterpretation
 

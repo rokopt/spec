@@ -102,16 +102,16 @@ DatatypeFunctionGenerator = DatatypeFromAlgebraic . AlgebraicFunctionGenerator
 
 public export
 interpretDatatype : {penv : PrimitiveEnv} ->
-  AlgebraicTypeInterpretation penv -> Datatype penv -> Type
+  PrimitiveTypeInterpretation penv -> Datatype penv -> Type
 interpretDatatype interpretation =
   interpretAlgebraicType interpretation . compileDatatype
 
 public export
 interpretDatatypeFunction : {penv : PrimitiveEnv} ->
   {pfenv : PrimitiveFuncEnv penv} ->
-  {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+  {typeInterpretation : PrimitiveTypeInterpretation penv} ->
   (functionInterpretation :
-    AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+    PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
   {domain, codomain : Datatype penv} ->
   DatatypeFunction pfenv domain codomain ->
   interpretAlgebraicFunctionType typeInterpretation

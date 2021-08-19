@@ -93,15 +93,15 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
 -- The inputs required to interpret algebraic types as metalanguage
 -- (Idris) types.
 public export
-record AlgebraicTypeInterpretation (penv : PrimitiveEnv) where
-  constructor AlgebraicTypeInterpretations
+record PrimitiveTypeInterpretation (penv : PrimitiveEnv) where
+  constructor PrimitiveTypeInterpretations
   interpretPrimitiveType : PrimType penv -> Type
 
 mutual
   -- Interpret an algebraic data type as a metalanguage (Idris) type.
   public export
   interpretAlgebraicType : {penv : PrimitiveEnv} ->
-    (interpretation : AlgebraicTypeInterpretation penv) ->
+    (interpretation : PrimitiveTypeInterpretation penv) ->
     AlgebraicType penv -> Type
   interpretAlgebraicType interpretation (AlgebraicTypeGenerator primType) =
     interpretPrimitiveType interpretation primType
@@ -117,7 +117,7 @@ mutual
 
   public export
   interpretAlgebraicTypeList : {penv : PrimitiveEnv} ->
-    (interpretation : AlgebraicTypeInterpretation penv) ->
+    (interpretation : PrimitiveTypeInterpretation penv) ->
     List (AlgebraicType penv) -> List Type
   interpretAlgebraicTypeList interpretation [] = []
   interpretAlgebraicTypeList interpretation (type :: types) =
@@ -126,7 +126,6 @@ mutual
 
 {-
  - This environment provides all metalanguage types as primitive types.
- - closure of the primitive types.
  -}
 public export
 CompletePrimitiveTypeEnv : PrimitiveEnv
@@ -134,8 +133,8 @@ CompletePrimitiveTypeEnv = PrimArgs Type
 
 public export
 CompletePrimitiveTypeInterpretation :
-  AlgebraicTypeInterpretation CompletePrimitiveTypeEnv
-CompletePrimitiveTypeInterpretation = AlgebraicTypeInterpretations id
+  PrimitiveTypeInterpretation CompletePrimitiveTypeEnv
+CompletePrimitiveTypeInterpretation = PrimitiveTypeInterpretations id
 
 public export
 interpretAllMetaLanguageAlgebraicTypes :
@@ -145,7 +144,7 @@ interpretAllMetaLanguageAlgebraicTypes =
 
 public export
 interpretAlgebraicFunctionType : {penv : PrimitiveEnv} ->
-  (interpretation : AlgebraicTypeInterpretation penv) ->
+  (interpretation : PrimitiveTypeInterpretation penv) ->
   (domain, codomain : AlgebraicType penv) -> Type
 interpretAlgebraicFunctionType interpretation domain codomain =
   interpretAlgebraicType interpretation domain ->
@@ -154,10 +153,10 @@ interpretAlgebraicFunctionType interpretation domain codomain =
 -- The inputs required to interpret algebraic functions as metalanguage
 -- (Idris) functions.
 public export
-record AlgebraicFunctionInterpretation {penv : PrimitiveEnv}
+record PrimitiveFunctionInterpretation {penv : PrimitiveEnv}
   (pfenv : PrimitiveFuncEnv penv)
-  (typeInterpretation : AlgebraicTypeInterpretation penv) where
-    constructor AlgebraicFunctionInterpretations
+  (typeInterpretation : PrimitiveTypeInterpretation penv) where
+    constructor PrimitiveFunctionInterpretations
     interpretPrimitiveFunction : {domain, codomain : AlgebraicType penv} ->
       PrimFuncType pfenv domain codomain ->
       interpretAlgebraicType typeInterpretation domain ->
@@ -167,9 +166,9 @@ mutual
   public export
   interpretAlgebraicFunction : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
-    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
-      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
     {domain, codomain : AlgebraicType penv} ->
     AlgebraicFunction pfenv domain codomain ->
     interpretAlgebraicFunctionType typeInterpretation domain codomain
@@ -203,9 +202,9 @@ mutual
   public export
   interpretAlgebraicFunctionProduct : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
-    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
-      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
     {domain : AlgebraicType penv} ->
     {codomains : List (AlgebraicType penv)} ->
     ListForAll (AlgebraicFunction pfenv domain) codomains ->
@@ -221,9 +220,9 @@ mutual
   public export
   interpretAlgebraicFunctionProjection : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
-    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
-      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
     (domains : List (AlgebraicType penv)) ->
     (n : Nat) -> {auto ok : InBounds n domains} ->
     interpretAlgebraicFunctionType typeInterpretation
@@ -242,9 +241,9 @@ mutual
   public export
   interpretAlgebraicFunctionCoproduct : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
-    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
-      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
     {domains : List (AlgebraicType penv)} ->
     {codomain : AlgebraicType penv} ->
     ListForAll (flip (AlgebraicFunction pfenv) codomain) domains ->
@@ -260,9 +259,9 @@ mutual
   public export
   interpretAlgebraicFunctionInjection : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
-    {typeInterpretation : AlgebraicTypeInterpretation penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
-      AlgebraicFunctionInterpretation pfenv typeInterpretation) ->
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
     (codomains : List (AlgebraicType penv)) ->
     (n : Nat) -> {auto ok : InBounds n codomains} ->
     interpretAlgebraicFunctionType typeInterpretation
@@ -282,22 +281,22 @@ mutual
 -- closure of the primitive types.
 public export
 CompletePrimitiveFuncEnv : {penv : PrimitiveEnv} ->
-  (typeInterpretation : AlgebraicTypeInterpretation penv) ->
+  (typeInterpretation : PrimitiveTypeInterpretation penv) ->
   PrimitiveFuncEnv penv
 CompletePrimitiveFuncEnv typeInterpretation =
   PrimFuncs (interpretAlgebraicFunctionType typeInterpretation)
 
 public export
 CompletePrimitiveFunctionInterpretation : {penv : PrimitiveEnv} ->
-  (typeInterpretation : AlgebraicTypeInterpretation penv) ->
-  AlgebraicFunctionInterpretation
+  (typeInterpretation : PrimitiveTypeInterpretation penv) ->
+  PrimitiveFunctionInterpretation
     (CompletePrimitiveFuncEnv typeInterpretation) typeInterpretation
 CompletePrimitiveFunctionInterpretation typeInterpretation =
-  AlgebraicFunctionInterpretations id
+  PrimitiveFunctionInterpretations id
 
 public export
 interpretAllMetaLanguageAlgebraicFunctions : {penv : PrimitiveEnv} ->
-  (typeInterpretation : AlgebraicTypeInterpretation penv) ->
+  (typeInterpretation : PrimitiveTypeInterpretation penv) ->
   {domain, codomain : AlgebraicType penv} ->
   AlgebraicFunction (CompletePrimitiveFuncEnv typeInterpretation)
     domain codomain ->

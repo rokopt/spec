@@ -39,7 +39,7 @@ testFirstConstructorExpression = Left (0, ())
 
 public export
 testSecondConstructorExpression : interpretTestDatatype TestTwoConstructorType
-testSecondConstructorExpression = Right (Left (False, "Or is it?", ()))
+testSecondConstructorExpression = Right (Left (False, "Or is it", ()))
 
 public export
 testNestedDeclarationRecord : TestRecord
