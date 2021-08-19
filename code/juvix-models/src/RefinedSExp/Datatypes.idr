@@ -4,8 +4,7 @@ import Library.FunctionsAndRelations
 import Library.Decidability
 import Category.Category
 import Control.WellFounded
-import RefinedSExp.List
-import RefinedSExp.SExp
+import Library.List
 import public RefinedSExp.AlgebraicTypes
 
 %default total
@@ -63,12 +62,22 @@ data DatatypeFunction : {penv : PrimitiveEnv} ->
         (compileDatatype domain) (compileDatatype codomain) ->
       DatatypeFunction pfenv domain codomain
 
+    PatternMatch :
+      {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
+      {constructors : List (RecordType penv)} ->
+      {codomain : Datatype penv} ->
+      ListForAll (flip (AlgebraicFunction pfenv) (compileDatatype codomain))
+        (compileRecordTypeList constructors) ->
+      DatatypeFunction pfenv (Constructors constructors) codomain
+
 public export
 compileDatatypeFunction : {penv : PrimitiveEnv} ->
   {pfenv : PrimitiveFuncEnv penv} -> {domain, codomain : Datatype penv} ->
   DatatypeFunction pfenv domain codomain ->
   AlgebraicFunction pfenv (compileDatatype domain) (compileDatatype codomain)
 compileDatatypeFunction (DatatypeFromAlgebraic f) = f
+compileDatatypeFunction (PatternMatch {codomain} patterns) =
+  AlgebraicFunctionCoproduct patterns
 
 public export
 DatatypeCompose : {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
@@ -76,8 +85,9 @@ DatatypeCompose : {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
   DatatypeFunction pfenv b c ->
   DatatypeFunction pfenv a b ->
   DatatypeFunction pfenv a c
-DatatypeCompose (DatatypeFromAlgebraic f) (DatatypeFromAlgebraic g) =
-  DatatypeFromAlgebraic (AlgebraicCompose f g)
+DatatypeCompose f g =
+  DatatypeFromAlgebraic
+    (AlgebraicCompose (compileDatatypeFunction f) (compileDatatypeFunction g))
 
 public export
 DatatypeFunctionGenerator : {penv : PrimitiveEnv} ->
