@@ -7,35 +7,62 @@ import public RefinedSExp.DependentInductiveTypeTheory
 %default total
 
 public export
+data HigherOrderType : (penv : PrimitiveEnv) -> Type where
+  HigherOrderPrimitiveType : PrimType penv -> HigherOrderType penv
+  HigherOrderNat : HigherOrderType penv
+
+public export
+HigherOrderPrimEnv : PrimitiveEnv -> PrimitiveEnv
+HigherOrderPrimEnv = PrimArgs . HigherOrderType
+
+public export
+HigherOrderPrimFuncEnv : (penv : PrimitiveEnv) -> Type
+HigherOrderPrimFuncEnv = PrimitiveFuncEnv . HigherOrderPrimEnv
+
+public export
 data HigherOrderFunction :
-  {penv : PrimitiveEnv} -> (pfenv : PrimitiveFuncEnv penv) ->
-  AlgebraicType penv -> AlgebraicType penv -> Type where
+  {penv : PrimitiveEnv} ->
+  (pfenv : HigherOrderPrimFuncEnv penv) ->
+  AlgebraicType (HigherOrderPrimEnv penv) ->
+  AlgebraicType (HigherOrderPrimEnv penv) ->
+  Type where
+    HigherOrderPrimitiveFunction :
+      PrimFuncType pfenv domain codomain ->
+      HigherOrderFunction pfenv domain codomain
+    HigherOrderRecursion : Void -> -- XXX
+      HigherOrderFunction pfenv domain codomain
 
 public export
 HigherOrderFuncEnv : {penv : PrimitiveEnv} ->
-  PrimitiveFuncEnv penv -> PrimitiveFuncEnv penv
-HigherOrderFuncEnv pfenv = PrimFuncs (HigherOrderFunction pfenv)
+  HigherOrderPrimFuncEnv penv -> HigherOrderPrimFuncEnv penv
+HigherOrderFuncEnv = PrimFuncs . HigherOrderFunction
 
 public export
 interpretHigherOrderFunction :
-  {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
-  {typeInterpretation : PrimitiveTypeInterpretation penv} ->
+  {penv : PrimitiveEnv} -> {pfenv : HigherOrderPrimFuncEnv penv} ->
+  {typeInterpretation :
+    PrimitiveTypeInterpretation (HigherOrderPrimEnv penv)} ->
   (functionInterpretation :
     PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
-  {domain, codomain : AlgebraicType penv} ->
+  {domain, codomain : AlgebraicType (HigherOrderPrimEnv penv)} ->
   HigherOrderFunction pfenv domain codomain ->
   interpretAlgebraicFunctionType typeInterpretation domain codomain
-interpretHigherOrderFunction functionInterpretation function x =
-  ?interpretHigherOrderFunction_hole
+interpretHigherOrderFunction functionInterpretation
+  (HigherOrderPrimitiveFunction f) x =
+    interpretPrimitiveFunction functionInterpretation f x
+interpretHigherOrderFunction functionInterpretation
+  (HigherOrderRecursion _) x =
+    ?interpretHigherOrderFunction_hole_recursion
 
 public export
 HigherOrderFuncInterpretation :
   {penv : PrimitiveEnv} ->
-  {pfenv : PrimitiveFuncEnv penv} ->
-  {typeInterpretation : PrimitiveTypeInterpretation penv} ->
+  {pfenv : HigherOrderPrimFuncEnv penv} ->
+  {typeInterpretation :
+    PrimitiveTypeInterpretation (HigherOrderPrimEnv penv)} ->
   (functionInterpretation :
     PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
-  PrimitiveFunctionInterpretation {penv}
+  PrimitiveFunctionInterpretation {penv=(HigherOrderPrimEnv penv)}
     (HigherOrderFuncEnv pfenv) typeInterpretation
 HigherOrderFuncInterpretation =
   PrimitiveFunctionInterpretations . interpretHigherOrderFunction
