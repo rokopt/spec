@@ -12,6 +12,10 @@ record PrimitiveEnv where
   constructor PrimArgs
   PrimType : Type
 
+public export
+PrimitiveEnvFunctor : Type
+PrimitiveEnvFunctor = PrimitiveEnv -> PrimitiveEnv
+
 -- Standard algebraic data types, with the primitive types added as
 -- generators.  We will compile record types and inductive types to
 -- these to show that record types and inductive types do not extend
@@ -36,6 +40,11 @@ public export
 record PrimitiveFuncEnv (penv : PrimitiveEnv) where
   constructor PrimFuncs
   PrimFuncType : (domain, codomain : AlgebraicType penv) -> Type
+
+public export
+PrimitiveFuncEnvFunctor : PrimitiveEnvFunctor -> Type
+PrimitiveFuncEnvFunctor f =
+  {penv : PrimitiveEnv} -> PrimitiveFuncEnv penv -> PrimitiveFuncEnv (f penv)
 
 public export
 data AlgebraicFunction : {penv : PrimitiveEnv} ->
@@ -96,6 +105,11 @@ public export
 record PrimitiveTypeInterpretation (penv : PrimitiveEnv) where
   constructor PrimitiveTypeInterpretations
   interpretPrimitiveType : PrimType penv -> Type
+
+public export
+TypeInterpretationFunctor : PrimitiveEnvFunctor -> Type
+TypeInterpretationFunctor f = {penv : PrimitiveEnv} ->
+  PrimitiveTypeInterpretation penv -> PrimitiveTypeInterpretation (f penv)
 
 mutual
   -- Interpret an algebraic data type as a metalanguage (Idris) type.
@@ -161,6 +175,19 @@ record PrimitiveFunctionInterpretation {penv : PrimitiveEnv}
       PrimFuncType pfenv domain codomain ->
       interpretAlgebraicType typeInterpretation domain ->
       interpretAlgebraicType typeInterpretation codomain
+
+public export
+FunctionInterpretationFunctor : {fenv : PrimitiveEnvFunctor} ->
+  {ftype : TypeInterpretationFunctor fenv} ->
+  (ffenv : PrimitiveFuncEnvFunctor fenv) ->
+  {penv : PrimitiveEnv} ->
+  PrimitiveFuncEnv penv ->
+  (itype : PrimitiveTypeInterpretation penv) ->
+  Type
+FunctionInterpretationFunctor {fenv} {ftype} ffenv {penv} pfenv itype =
+  PrimitiveFunctionInterpretation {penv} pfenv itype ->
+  PrimitiveFunctionInterpretation
+    {penv=(fenv penv)} (ffenv {penv} pfenv) (ftype itype)
 
 mutual
   public export
