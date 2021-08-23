@@ -32,7 +32,7 @@ endoFunctionConstructor type = Fields [ endoFunction type ]
 public export
 natDatatype : TestDatatype -> TestDatatype
 natDatatype carrier =
-  ConstructorList [ unitConstructor, identityConstructor carrier ]
+  DatatypeFromRecords [ unitConstructor, identityConstructor carrier ]
 
 export
 inductiveDatatypesTests : IO ()

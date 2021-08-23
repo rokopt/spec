@@ -30,9 +30,38 @@ Primitive : {penv : PrimitiveEnv} -> PrimType penv -> Datatype penv
 Primitive = Algebraic . AlgebraicTypeGenerator
 
 public export
-ConstructorList : {penv : PrimitiveEnv} ->
+FieldsOf : {penv : PrimitiveEnv} -> RecordType penv -> List (Datatype penv)
+FieldsOf (Fields fields) = fields
+
+public export
+DatatypeFromList : {penv : PrimitiveEnv} ->
+  List (Datatype penv) -> Datatype penv
+DatatypeFromList = Record . Fields
+
+public export
+DatatypeFromRecords : {penv : PrimitiveEnv} ->
   List (RecordType penv) -> Datatype penv
-ConstructorList = Constructors . Records
+DatatypeFromRecords = Constructors . Records
+
+public export
+ConstructorsFromMatrix : {penv : PrimitiveEnv} ->
+  List (List (Datatype penv)) -> ConstructorType penv
+ConstructorsFromMatrix = Records . map Fields
+
+public export
+DatatypeFromMatrix : {penv : PrimitiveEnv} ->
+  List (List (Datatype penv)) -> Datatype penv
+DatatypeFromMatrix = Constructors . ConstructorsFromMatrix
+
+public export
+RecordsOf : {penv : PrimitiveEnv} ->
+  ConstructorType penv -> List (RecordType penv)
+RecordsOf (Records records) = records
+
+public export
+MatrixOf : {penv : PrimitiveEnv} ->
+  ConstructorType penv -> List (List (Datatype penv))
+MatrixOf = map FieldsOf . RecordsOf
 
 mutual
   public export
