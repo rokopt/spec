@@ -1029,3 +1029,23 @@ public export
 (~$) : {a : Type} -> {b : a -> Type} -> {x : a} -> {l : List a} ->
     ListExists b l -> ListExists b (x :: l)
 (~$) = ListExistsTail
+
+public export
+NonEmptyList : Type -> Type
+NonEmptyList atom = (atom, List atom)
+
+public export
+neListMap : {0 a, b : Type} -> (a -> b) -> NonEmptyList a -> NonEmptyList b
+neListMap f (x, l) = (f x, map f l)
+
+public export
+Functor NonEmptyList where
+  map = neListMap
+
+public export
+typeProduct : List Type -> Type
+typeProduct = foldr Pair ()
+
+public export
+typeCoproduct : List Type -> Type
+typeCoproduct = foldr Either Void

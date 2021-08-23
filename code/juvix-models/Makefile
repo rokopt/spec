@@ -18,9 +18,9 @@ clean:: idris2-clean
 clobber:: idris2-clobber
 
 git-clean-interactive::
-	git clean -idx
+	git clean -xdi
 
 git-clean-force::
-	git clean -fdxf
+	git clean -xdf
 
 all:: idris2

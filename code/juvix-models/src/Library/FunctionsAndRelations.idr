@@ -92,9 +92,34 @@ namespace DependentRelations
     (*~=) {depty} = (*<|) {depty}
 
 public export
-mapPair : {a, a', b, b': Type} -> (f: a -> b) -> (f': a' -> b') ->
+applyEq : {a, b : Type} ->
+  {f, f' : a -> b} -> f = f' ->
+  {x, x' : a} -> x = x' ->
+  f x = f' x'
+applyEq Refl Refl = Refl
+
+public export
+consEq : {a : Type} -> {x, x' : a} -> {l, l' : List a} ->
+  (x = x') -> (l = l') -> (x :: l) = (x' :: l')
+consEq Refl Refl = Refl
+
+public export
+pairInjective : {a, b : Type} -> {p, p' : (a, b)} ->
+  fst p = fst p' -> snd p = snd p' -> p = p'
+pairInjective {p=(_, _)} {p'=(_, _)} Refl Refl = Refl
+
+public export
+mapPair : {0 a, a', b, b': Type} -> (f: a -> b) -> (f': a' -> b') ->
           (a, a') -> (b, b')
 mapPair f f' (x, x') = (f x, f' x')
+
+public export
+fMkPair : {a, b : Type} -> (f: a -> b) -> (x : a) -> (a, b)
+fMkPair f x = (x, f x)
+
+public export
+swapPair : {a, b : Type} -> (a, b) -> (b, a)
+swapPair p = (snd p, fst p)
 
 public export
 swap : {a, b, c : Type} -> (a -> b -> c) -> (b -> a -> c)
@@ -147,6 +172,25 @@ UniqueHeterogeneousDPairInjective : {a : Type} -> {b : a -> Type} ->
 UniqueHeterogeneousDPairInjective bUnique {d=(x ** y)} {d'=(x' ** y')} xeq =
   case xeq of
     Refl => UniqueDPairInjective bUnique
+
+public export
+DTriple : {a : Type} -> (b : a -> Type) -> (c : (x : a) -> b x -> Type) -> Type
+DTriple {a} b c = (x : a ** y : b x ** c x y)
+
+public export
+dt31 : {0 a : Type} -> {0 b : a -> Type} -> {0 c : (x : a) -> b x -> Type} ->
+  DTriple b c -> a
+dt31 (x ** _ ** _) = x
+
+public export
+dt32 : {0 a : Type} -> {0 b : a -> Type} -> {0 c : (x : a) -> b x -> Type} ->
+  (dt : DTriple b c) -> b (dt31 dt)
+dt32 (_ ** y ** _) = y
+
+public export
+dt33 : {0 a : Type} -> {0 b : a -> Type} -> {0 c : (x : a) -> b x -> Type} ->
+  (dt : DTriple b c) -> c (dt31 dt) (dt32 dt)
+dt33 (_ ** _ ** z) = z
 
 public export
 Endofunction : Type -> Type
@@ -593,3 +637,445 @@ IsDPairEquivalence m =
 public export
 DPairEquivalence : {a: Type} -> (b: a -> Type) -> Type
 DPairEquivalence b = DPair (DepRelationMap b) IsDPairEquivalence
+
+prefix 11 !-
+public export
+(!-) : Type -> Type
+(!-) a = a -> Type
+
+infixr 7 ~>
+public export
+(~>) : (a : Type) -> (b : !- a) -> Type
+a ~> b = (x : a) -> b x
+
+infixr 7 ~~>
+public export
+(~~>) : {a : Type} -> (b: !- a) -> (c : (!- a) -> (!- a)) -> Type
+(~~>) {a} b c = (x : a) -> b x -> c b x
+
+public export
+composePi : {a : Type} ->
+  {parameterizedPred : ((!- a) -> (!- a))} ->
+  {parameter : (!- a)} ->
+  (parameter ~~> parameterizedPred) ->
+  (a ~> parameter) ->
+  a ~> (parameterizedPred parameter)
+composePi parameterizedPi parameterPi x = parameterizedPi x (parameterPi x)
+
+prefix 11 !~
+public export
+(!~) : {a : Type} -> (!- (!- a))
+(!~) {a} b = (x : a) -> b x -> Type
+
+infixl 7 .~
+public export
+(.~) : {a : Type} -> {b : !- a} -> (!~ b) -> (a ~> b) -> !- a
+c .~ f = \x => c x (f x)
+
+prefix 11 !~~
+public export
+(!~~) : {a : Type} -> {b : !- a} -> (!- (!~ b))
+(!~~) {a} {b} c = a ~> (\x => b x ~> c x)
+
+infixl 7 .~~
+public export
+(.~~) : {a : Type} -> {b : !- a} -> {c : !~ b} ->
+  (g : !~~ c) -> (f : a ~> b) -> a ~> (c .~ f)
+g .~~ f = \x => g x (f x)
+
+infixl 7 **<
+public export
+(**<) : {a : Type} -> {b : a -> Type} -> (x : a) -> b x -> DPair a b
+(**<) = MkDPair
+
+infixl 7 **~
+public export
+(**~) : {a : Type} -> {b : a -> Type} -> (x : a) -> (f : a ~> b) -> DPair a b
+x **~ f = (x ** f x)
+
+infixl 7 .**
+public export
+(.**) : {a : Type} -> {b : a -> Type} -> (!- (DPair a b)) -> (a ~> b) -> (!- a)
+c .** f = (\x => c (x **~ f))
+
+mutual
+  prefix 11 |-
+  infixl 7 *~
+  infixl 7 *-
+  prefix 11 :~
+
+  public export
+  data Telescope : Type where
+    (|-) : Type -> Telescope
+    (*-) : Telescope -> Type -> Telescope
+    (*~) :
+      (telescope : Telescope) -> (type : (|:~) telescope) ->
+      Telescope
+
+  prefix 11 |:~
+  public export
+  (|:~) : Telescope -> Type
+  (|:~) telescope = (!-) (:~ telescope)
+
+  public export
+  (:~) : Telescope -> Type
+  (:~) (|- type) = type
+  (:~) (telescope *- type) = Pair (:~ telescope) type
+  (:~) (telescope *~ type) = DPair (:~ telescope) type
+
+prefix 11 |~-
+public export
+(|~-) : (() -> Type) -> Telescope
+(|~-) type = |- type ()
+
+infixl 7 *~-
+public export
+(*~-) : Telescope -> (() -> Type) -> Telescope
+telescope *~- type = telescope *- type ()
+
+infixr 7 :~>
+public export
+(:~>) : (domain : Telescope) -> (codomain : (|:~) domain) -> Type
+domain :~> codomain = (:~ domain) ~> codomain
+
+infixr 7 :*~
+public export
+(:*~) :
+  {a : Telescope} -> {b : (|:~) a} ->
+  (c : (|:~) (a *~ b)) -> (f : a :~> b) -> |:~ a
+c :*~ f = \x => c (x **~ f)
+
+infixl 7 :.~
+public export
+(:.~) :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  (g : (a *~ b) :~> c) -> (f : a :~> b) -> (a :~> (c .** f))
+g :.~ f = \x => g (x **~ f)
+
+infixl 7 .**~
+public export
+(.**~) :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  (g : (a *~ b) :~> c) -> (f : a :~> b) ->
+  ((:~ a) -> DPair ((:~) (a *~ b)) c)
+g .**~ f = \x => x **~ f **~ g
+
+infixl 7 *:~
+public export
+(*:~) :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  (d : (|:~) (a *~ b *~ c)) -> (f : a :~> b) ->
+  (|:~) (a *~ ((:*~) {a} c f))
+(*:~) d f = \p => case p of (x ** z) => d (x **~ f **< z)
+
+infixl 7 **:~
+public export
+(**:~) :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  {d : (|:~) (a *~ b *~ c)} ->
+  (h : (a *~ b *~ c) :~> d) ->
+  (f : a :~> b) ->
+  (a *~ ((:*~) {a} c f)) :~> ((*:~) {a} d f)
+(**:~) {d} h f = \p => case p of (x ** z) => h (x **~ f **< z)
+
+export
+depComposeAssociative :
+  {a : Telescope} -> {b : (|:~) a} -> {c : (|:~) (a *~ b)} ->
+  {d : (|:~) (a *~ b *~ c)} ->
+  (h : (a *~ b *~ c) :~> d) -> (g : (a *~ b) :~> c) -> (f : a :~> b) ->
+  (:.~) {a} {b=(c .** f)} {c=((*:~) {a} d f)}
+    ((**:~) {a} {b} {c} {d} h f) ((:.~) {a} {b} {c} g f) =
+  (:.~) {a} {b} {c=(d .** g)}
+    ((:.~) {a=(a *~ b)} {b=c} {c=d} h g) f
+depComposeAssociative h g f = Refl
+
+public export
+record FunctorInterface (f : Type -> Type) where
+  constructor MkFunctorInterface
+  functorMap : {0 a, b : Type} -> (a -> b) -> f a -> f b
+
+public export
+[FunctorFromInterface] {fi : FunctorInterface f} -> Functor f where
+  map = functorMap fi
+
+public export
+Functor Prelude.Basics.id where
+  map = Prelude.Basics.id
+
+public export
+Applicative Prelude.Basics.id where
+  pure = Prelude.Basics.id
+  (<*>) = Prelude.Basics.id
+
+public export
+[PairOfFunctor] Functor PairOf where
+  map f = mapPair f f
+
+public export
+[PairOfApplicative] Applicative PairOf using PairOfFunctor where
+  pure x = (x, x)
+  (f, f') <*> (p, p') = (f p, f' p')
+
+infixl 3 <.>
+public export
+(<.>) : Applicative f =>
+  {a, b, c : Type} -> f (b -> c) -> f (a -> b) -> f (a -> c)
+h <.> g = map (.) h <*> g
+
+public export
+[ComposeFunctor] (Functor f, Functor g) => Functor (f . g) where
+    map = map {f} . map {f=g}
+
+public export
+[ComposeApplicative] (Applicative f, Applicative g) => Applicative (f . g)
+  using ComposeFunctor where
+    pure = pure {f} . pure {f=g}
+    (<*>) = ((<*>) {f}) . (map {f} ((<*>) {f=g}))
+
+public export
+proj32 : {0 a, b, c : Type} -> (a, b, c) -> b
+proj32 = fst . snd
+
+public export
+proj33 : {0 a, b, c : Type} -> (a, b, c) -> c
+proj33 = snd . snd
+
+public export
+proj42 : {0 a, b, c, d : Type} -> (a, b, c, d) -> b
+proj42 = fst . snd
+
+public export
+proj43 : {0 a, b, c, d : Type} -> (a, b, c, d) -> c
+proj43 = fst . snd . snd
+
+public export
+proj44 : {0 a, b, c, d : Type} -> (a, b, c, d) -> d
+proj44 = snd . snd . snd
+
+public export
+map2 :
+  {0 f : Type -> Type} -> Applicative f =>
+  {0 a, b : Type} ->
+  (a -> b -> c) ->
+  f a -> f b -> f c
+map2 {f} fab x x' = map {f} fab x <*> x'
+
+public export
+applyPair :
+  {0 f : Type -> Type} -> Applicative f =>
+  {0 a, b : Type} -> f a -> f b -> f (a, b)
+applyPair = map2 MkPair
+
+public export
+applyTriple :
+  {f : Type -> Type} -> Applicative f => {a, b, c : Type} ->
+    f a -> f b -> f c -> f (a, b, c)
+applyTriple fa fb fc = applyPair fa (applyPair fb fc)
+
+public export
+apply2Args :
+  {f : Type -> Type} -> Applicative f => {a, b, c : Type} ->
+  f (a -> b -> c) -> f a -> f b -> f c
+apply2Args fabc fa fb = map uncurry fabc <*> applyPair fa fb
+
+public export
+eitherElim : {a, b, c : Type} -> (a -> c, b -> c) -> Either a b -> c
+eitherElim signature either = case either of
+  Left x => fst signature x
+  Right y => snd signature y
+
+public export
+applyEitherElim :
+  {f : Type -> Type} -> Applicative f =>
+  {a, b, c : Type} -> f (a -> c) -> f (b -> c) -> f (Either a b) -> f c
+applyEitherElim fac fbc fe = pure eitherElim <*> (applyPair fac fbc) <*> fe
+
+public export
+ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f
+ApplicativeToFunctor {f} isApplicative = MkFunctor (map {f})
+
+infixl 4 <**>
+public export
+(<**>) : {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {0 a : Type} -> {0 a', a'' : a -> Type} ->
+  f ((x : a) -> a' x -> a'' x) ->
+  {x : a} -> f (a' x) -> f (a'' x)
+(<**>) {f} {isApplicative} {a} {a'} {a''} pi {x} fx =
+  let
+    fCertifiedDPair' =
+      map
+        {f}
+        {b=((p : DPair a a' ** (fst p) = x))}
+        (\y : a' x => ((x ** y) ** Refl)) fx
+    fCertifiedDPair'' =
+      map
+        {f}
+        {b=((p : DPair a a' ** fst p = x) -> (q : DPair a a'' ** fst q = x))}
+        (\pi', p =>
+          case p of
+            ((x' ** y') ** eq) =>
+              case eq of
+                Refl => ((x ** pi' x y') ** Refl))
+        pi
+          <*> fCertifiedDPair'
+  in
+  map {f} (\p => case p of ((x' ** y') ** Refl) => y') fCertifiedDPair''
+
+public export
+dpure : {f : Type -> Type} -> (isApplicative : Applicative f) ->
+  {0 a : Type} -> {0 a' : a -> Type} ->
+  f ((x : a) -> a' x) -> (x : a) -> f (a' x)
+dpure {f} isApplicative {a} {a'} fpi =
+  let
+    constmap = \pi : ((x : a) -> a' x), x : a, _ : () => pi x
+  in
+  \_ => (<**>) {f} {isApplicative} (map {f} constmap fpi) (pure {f} ())
+
+infixl 4 <***>
+public export
+(<***>) : {f : Type -> Type} -> {isApplicative : Applicative f} ->
+  {0 a : Type} -> {0 a' : a -> Type} ->
+  f ((x : a) -> a' x) -> (x : a) -> f (a' x)
+(<***>) {isApplicative} ff x = dpure isApplicative ff x
+
+public export
+DependentTypeConstructor : (a : Type) -> Type
+DependentTypeConstructor a = (a -> Type) -> (a -> Type)
+
+public export
+ConstructorToDependent :
+  (Type -> Type) -> {0 a : Type} -> DependentTypeConstructor a
+ConstructorToDependent f {a} depType x = f (depType x)
+
+public export
+DependentToConstructorUnit :
+  DependentTypeConstructor () -> (Type -> Type)
+DependentToConstructorUnit f type = f (\_ => type) ()
+
+public export
+DependentToConstructorInhabitedType :
+  {0 a : Type} -> DependentTypeConstructor a -> (u : a) -> (Type -> Type)
+DependentToConstructorInhabitedType f u type = f (\_ => type) u
+
+public export
+record DependentFunctorOn
+  {0 a : Type} (f : DependentTypeConstructor a) where
+    constructor MkDependentFunctorOn
+    dfmap : {0 b, c : a -> Type} -> {0 x : a} -> (b x -> c x) -> f b x -> f c x
+
+public export
+FunctorToDependent : {f : Type -> Type} ->
+  Functor f -> {0 a : Type} ->
+  DependentFunctorOn {a} (ConstructorToDependent {a} f)
+FunctorToDependent {f} functor {a} =
+  MkDependentFunctorOn map
+
+public export
+DependentToFunctorUnit : {0 f : DependentTypeConstructor ()} ->
+  (dfo : DependentFunctorOn f) -> Functor (DependentToConstructorUnit f)
+DependentToFunctorUnit {f} dfo = MkFunctor (dfmap dfo)
+
+public export
+DependentToFunctorInhabitedType : {0 a : Type} ->
+  {0 f : DependentTypeConstructor a} -> (dfo : DependentFunctorOn f) ->
+  (u : a) -> Functor (DependentToConstructorInhabitedType f u)
+DependentToFunctorInhabitedType {f} dfo u = MkFunctor (dfmap dfo)
+
+public export
+dfCompose : {0 a : Type} -> {0 f, g : DependentTypeConstructor a} ->
+  DependentFunctorOn f -> DependentFunctorOn g ->
+  DependentFunctorOn (f . g)
+dfCompose {a} {f} {g} dff dfg =
+  MkDependentFunctorOn (dfmap dff . dfmap dfg)
+
+public export
+record DependentApplicativeOn
+  {0 a : Type} (f : DependentTypeConstructor a) where
+    constructor MkDependentApplicativeOn
+    daFunctor : DependentFunctorOn f
+    dapure : {0 b : a -> Type} -> {0 x : a} -> b x -> f b x
+    dapply : {0 b, c : a -> Type} ->
+      {x : a} -> f (\x' => (b x' -> c x')) x -> f b x -> f c x
+
+damap : {0 a : Type} -> {0 f : DependentTypeConstructor a} ->
+  (da : DependentApplicativeOn f) ->
+  {0 b, c : a -> Type} -> {0 x : a} -> (b x -> c x) -> f b x -> f c x
+damap = dfmap . daFunctor
+
+public export
+ApplicativeToDependent : {f : Type -> Type} ->
+  Applicative f -> {0 a : Type} ->
+  DependentApplicativeOn {a} (ConstructorToDependent {a} f)
+ApplicativeToDependent {f} applicative {a} =
+  MkDependentApplicativeOn
+    (FunctorToDependent (ApplicativeToFunctor applicative)) pure (<*>)
+
+public export
+DependentToApplicativeUnit : {0 f : DependentTypeConstructor ()} ->
+  DependentApplicativeOn f ->
+  Applicative (DependentToConstructorUnit f)
+DependentToApplicativeUnit {f} dfo =
+  let functor = DependentToFunctorUnit (daFunctor dfo) in
+  MkApplicative
+    (\x => dapure dfo x)
+    (\fab, fa => dapply dfo fab fa)
+
+public export
+daCompose : {0 a : Type} -> {0 f, g : DependentTypeConstructor a} ->
+  DependentApplicativeOn f -> DependentApplicativeOn g ->
+  DependentApplicativeOn (f . g)
+daCompose {a} {f} {g} dff dfg =
+  MkDependentApplicativeOn
+    (dfCompose (daFunctor dff) (daFunctor dfg))
+    (dapure dff . dapure dfg)
+    (dapply dff . damap dff (dapply dfg))
+
+public export
+record DependentMonadOn
+  {0 a : Type} (0 m : DependentTypeConstructor a) where
+    constructor MkDependentMonadOn
+    dmApplicative : DependentApplicativeOn m
+    dmjoin : (0 b : a -> Type) -> (x : a) -> m (m b) x -> m b x
+
+public export
+DependentJoin : (Type -> Type) -> Type
+DependentJoin m =
+  (a : Type) -> (a' : a -> Type) -> (a'' : (x : a) -> a' x -> Type) ->
+    (x : a) -> (x' : a' x) -> m (m (a'' x x')) -> m (a' x)
+
+public export
+record DependentMonad (m : Type -> Type) where
+  constructor MkDependentMonad
+  monadApplicative : Applicative m
+  djoin : DependentJoin m
+
+public export
+interface DependentMonadInterface f where
+  constructor MkDependentMonadInterface
+  DependentMonadRecord : DependentMonad f
+
+public export
+record Context (env : Type) (a : Type) where
+  constructor MkContext
+  withContext : env -> a
+
+public export
+implementation {env : Type} -> Functor (Context env) where
+  map f (MkContext e) = MkContext $ f . e
+
+public export
+implementation {env : Type} -> Applicative (Context env) where
+  pure = MkContext . const
+  (MkContext f) <*> (MkContext g) = MkContext $ \e => f e (g e)
+
+public export
+implementation {env : Type} -> Monad (Context env) where
+  join (MkContext ce) = MkContext $ \e => withContext (ce e) e
+
+public export
+getContext : {0 env, a : Type} -> Context env env
+getContext = MkContext id
+
+public export
+withLocal : {0 env, a : Type} -> (env -> env) -> Context env a -> Context env a
+withLocal l (MkContext c) = MkContext $ c . l

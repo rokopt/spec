@@ -2,6 +2,8 @@ package language-models
 
 modules = Library.TypesAndFunctions
     , Library.FunctionsAndRelations
+    , Library.Test.FunctionsAndRelationsTest
+    , Library.Test.TestLibrary
     , IdrisSTL.Semiring
     , External.IntegerSquareRoot
     , Library.Decidability
@@ -24,10 +26,62 @@ modules = Library.TypesAndFunctions
     , Category.ComputableCategories
     , QCWF.CWF
     , QCWF.QCWF
-    , RefinedSExp.PatternedSExpressions
-    , RefinedSExp.Test.PatternedSExpressionsTest
+    , RefinedSExp.List
+    , RefinedSExp.Test.ListTest
     , RefinedSExp.SExp
     , RefinedSExp.Test.SExpTest
+    , RefinedSExp.SExpApplicatives
+    , RefinedSExp.Test.SExpApplicativesTest
+    , RefinedSExp.RefinedSExp
+    , RefinedSExp.Test.RefinedSExpTest
+    , Datatypes.AlgebraicTypes
+    , Datatypes.Test.AlgebraicTypesTest
+    , Datatypes.Datatypes
+    , Datatypes.Test.DatatypesTest
+    , Datatypes.InductiveDatatypes
+    , Datatypes.Test.InductiveDatatypesTest
+    , Datatypes.DependentAlgebraicTypes
+    , Datatypes.Test.DependentAlgebraicTypesTest
+    , Datatypes.DependentInductiveDatatypes
+    , Datatypes.Test.DependentInductiveDatatypesTest
+    , Theories.AlgebraicTheory
+    , Theories.Test.AlgebraicTheoryTest
+    , Theories.InductiveTypeTheory
+    , Theories.Test.InductiveTypeTheoryTest
+    , Theories.DependentAlgebraicTheory
+    , Theories.Test.DependentAlgebraicTheoryTest
+    , Theories.DependentInductiveTypeTheory
+    , Theories.Test.DependentInductiveTypeTheoryTest
+    , Theories.HigherOrderRecursion
+    , Theories.Test.HigherOrderRecursionTest
+    , RefinedSExp.Old.List
+    , RefinedSExp.Old.Test.ListTest
+    , RefinedSExp.Old.RefinedList
+    , RefinedSExp.Old.Test.RefinedListTest
+    , RefinedSExp.Old.SExp
+    , RefinedSExp.Old.Test.SExpTest
+    , RefinedSExp.Old.RefinedSExp
+    , RefinedSExp.Old.Test.RefinedSExpTest
+    , RefinedSExp.Old.OldSExp
+    , RefinedSExp.Old.Test.OldSExpTest
+    , RefinedSExp.Old.InductiveSExp
+    , RefinedSExp.Old.Test.InductiveSExpTest
+    , RefinedSExp.Old.ADT
+    , RefinedSExp.Old.Test.ADTTest
+    , RefinedSExp.Old.DependentADT
+    , RefinedSExp.Old.Test.DependentADTTest
+    , RefinedSExp.Old.DependentMorphism
+    , RefinedSExp.Old.Test.DependentMorphismTest
+    , RefinedSExp.Old.Test.TestLibrary
+    , RefinedSExp.ListVariant.Test.TestLibrary
+    , RefinedSExp.ListVariant.List
+    , RefinedSExp.ListVariant.Test.ListTest
+    , RefinedSExp.ListVariant.RefinedList
+    , RefinedSExp.ListVariant.Test.RefinedListTest
+    , RefinedSExp.ListVariant.SExp
+    , RefinedSExp.ListVariant.Test.SExpTest
+    , RefinedSExp.ListVariant.RefinedSExp
+    , RefinedSExp.ListVariant.Test.RefinedSExpTest
     , Executable.Test.Main
 
 depends = contrib, network

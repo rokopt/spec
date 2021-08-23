@@ -81,12 +81,12 @@ public export
 BoolCaseDec : Bool -> Type
 BoolCaseDec b = Either (b = True) (b = False)
 
-export
+public export
 caseDecFromBool : (b: Bool) -> BoolCaseDec b
 caseDecFromBool True = Left Refl
 caseDecFromBool False = Right Refl
 
-export
+public export
 boolFromCaseDec : {b: Bool} -> BoolCaseDec b -> Bool
 boolFromCaseDec bcd = case bcd of
                            Left Refl => True
@@ -121,7 +121,7 @@ boolCaseDecEither b trueCase falseCase = case caseDecFromBool b of
   Left Refl => Left (Refl ** trueCase Refl)
   Right Refl => Right (Refl ** falseCase Refl)
 
-export
+public export
 orElimination : {b, b': Bool} -> IsTrue (b || b') ->
                 Either (IsTrue b) (IsTrue b')
 orElimination {b=True} {b'=True} Refl = Left Refl
@@ -129,17 +129,17 @@ orElimination {b=True} {b'=False} Refl = Left Refl
 orElimination {b=False} {b'=True} Refl = Right Refl
 orElimination {b=False} {b'=False} Refl impossible
 
-export
+public export
 orIntroductionLeft : (b: Bool) -> {b': Bool} -> IsTrue b' -> IsTrue (b || b')
 orIntroductionLeft True Refl = Refl
 orIntroductionLeft False Refl = Refl
 
-export
+public export
 orIntroductionRight : {b: Bool} -> (b': Bool) -> IsTrue b -> IsTrue (b || b')
 orIntroductionRight True Refl = Refl
 orIntroductionRight False Refl = Refl
 
-export
+public export
 andElimination : {b, b': Bool} -> IsTrue (b && b') ->
                  ((IsTrue b), (IsTrue b'))
 andElimination {b=True} {b'=True} Refl = (Refl, Refl)
@@ -147,7 +147,7 @@ andElimination {b=True} {b'=False} Refl impossible
 andElimination {b=False} {b'=True} Refl impossible
 andElimination {b=False} {b'=False} Refl impossible
 
-export
+public export
 andIntroduction : {b, b': Bool} -> (IsTrue b, IsTrue b') -> IsTrue (b && b')
 andIntroduction (bTrue, bTrue') = case (bTrue, bTrue') of (Refl, Refl) => Refl
 
@@ -214,6 +214,11 @@ isJustIsTrueDec : {a : Type} -> (m : Maybe a) ->
 isJustIsTrueDec (Just _) = Yes Refl
 isJustIsTrueDec Nothing = No (\eq => case eq of Refl impossible)
 
+public export
+IsJustDec : {a : Type} -> (m : Maybe a) -> Dec (IsJust m)
+IsJustDec (Just _) = Yes ItIsJust
+IsJustDec Nothing = No (\eq => case eq of ItIsJust impossible)
+
 public export IsJustToTrue : {a : Type} -> {m : Maybe a} -> IsJust m ->
                              IsJustIsTrue m
 IsJustToTrue ItIsJust = Refl
@@ -232,6 +237,12 @@ public export isJustElim : {a : Type} -> {m : Maybe a} ->
                            IsJustIsTrue m -> a
 isJustElim {m=(Just x)} Refl = x
 isJustElim {m=(Nothing)} Refl impossible
+
+public export isJustElimElim :
+  {a : Type} -> {m : Maybe a} -> (just : IsJustIsTrue m) ->
+  m = Just (isJustElim {m} just)
+isJustElimElim {m=(Just x)} Refl = Refl
+isJustElimElim {m=(Nothing)} Refl impossible
 
 public export IsJustElim : {a : Type} -> {m : Maybe a} ->
                            IsJust m -> a
@@ -310,11 +321,23 @@ IsYesUnique : {type : Type} -> {dec : Dec type} -> (yes, yes' : IsYes dec) ->
 IsYesUnique yes yes' = uip yes yes'
 
 public export
+IsJustUnique : {type : Type} -> {m : Maybe type} -> (just, just' : IsJust m) ->
+  just = just'
+IsJustUnique ItIsJust ItIsJust = Refl
+
+public export
 YesDPairInjective : {a : Type} -> {b : a -> Type} ->
-  {dec : (x : a) -> Dec (b x)} -> {x : a} ->
+  {dec : (x : a) -> Dec (b x)} ->
   {d, d' : DPair a (\x => IsYes (dec x))} -> fst d = fst d' -> d = d'
 YesDPairInjective =
   UniqueHeterogeneousDPairInjective (\_, yes, yes' => IsYesUnique yes yes')
+
+public export
+JustDPairInjective : {a : Type} -> {b : a -> Type} ->
+  {dec : (x : a) -> Maybe (b x)} ->
+  {d, d' : DPair a (\x => IsJust (dec x))} -> fst d = fst d' -> d = d'
+JustDPairInjective =
+  UniqueHeterogeneousDPairInjective (\_, just, just' => IsJustUnique just just')
 
 public export
 square : Nat -> Nat
@@ -336,3 +359,37 @@ elegantPairingInverse z =
     w = minus z (square sqrtz)
   in
   if w < sqrtz then (w, sqrtz) else (sqrtz, minus w sqrtz)
+
+public export
+DepEither : {a : Type} -> (b, c : a -> Type) -> a -> Type
+DepEither {a} b c = \x : a => Either (b x) (c x)
+
+public export
+PiEither : {a : Type} -> (b, c : a -> Type) -> Type
+PiEither {a} b c = a ~> DepEither b c
+
+public export
+DepLeft : {a : Type} -> {b, c : a -> Type} -> {x : a} -> b x -> DepEither b c x
+DepLeft bx = Left bx
+
+public export
+DepRight : {a : Type} -> {b, c : a -> Type} -> {x : a} -> c x -> DepEither b c x
+DepRight cx = Right cx
+
+public export
+DPairEither : {a : Type} -> (b, c : a -> Type) -> Type
+DPairEither {a} b c = Either (DPair a b) (DPair a c)
+
+infixr 4 **<
+(**<) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> b x ->
+  DPairEither b c
+x **< bx = Left (x ** bx)
+
+infixr 4 **>
+(**>) : {a : Type} -> {b, c : a -> Type} -> (x : a) -> c x ->
+  DPairEither b c
+x **> cx = Right (x ** cx)
+
+public export
+data IsLeft : {a, b : Type} -> Either a b -> Type where
+  ItIsLeft : {a, b : Type} -> {x : a} -> IsLeft (Left x)

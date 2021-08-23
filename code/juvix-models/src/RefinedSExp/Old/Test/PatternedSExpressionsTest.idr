@@ -1,28 +1,29 @@
-module RefinedSExp.Test.PatternedSExpressionsTest
+module RefinedSExp.Old.Test.PatternedSExpressionsTest
 
-import RefinedSExp.PatternedSExpressions
+import RefinedSExp.Old.PatternedSExpressions
 
 %default total
 
-NatOrStringPat : Pattern
+NatOrStringPat : Pattern PrimitiveType
 NatOrStringPat = (#|) [ NatPat , StringPat ]
 
-PairNatOrStringPat : Pattern
+PairNatOrStringPat : Pattern PrimitiveType
 PairNatOrStringPat = (#*) [ NatOrStringPat , NatOrStringPat ]
 
-LocationAnnotation : Pattern
+LocationAnnotation : Pattern PrimitiveType
 LocationAnnotation = NatPat
 
-PairWithLocation : Pattern
+PairWithLocation : Pattern PrimitiveType
 PairWithLocation = (#*) [ PairNatOrStringPat , LocationAnnotation ]
 
-IsNumericAnnotation : Pattern
+IsNumericAnnotation : Pattern PrimitiveType
 IsNumericAnnotation = BoolPat
 
-LocationAndIsNumericAnnotation : Pattern
+LocationAndIsNumericAnnotation : Pattern PrimitiveType
 LocationAndIsNumericAnnotation =
   (#*) [ LocationAnnotation , IsNumericAnnotation ]
 
+{-
 AnnotatePairNatOrStringPatWithLocation :
   Transformer PairNatOrStringPat PairWithLocation
 AnnotatePairNatOrStringPatWithLocation matchedList = case matchedList of
@@ -36,3 +37,4 @@ AnnotatePairNatOrStringPatWithLocation matchedList = case matchedList of
       ?AnnotatePairNatOrStringPatWithLocation_hole
   (_ **(ListPairForAllCons _ (ListPairForAllCons _ (ListPairForAllCons _ _))))
     impossible
+-}

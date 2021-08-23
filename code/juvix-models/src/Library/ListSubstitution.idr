@@ -81,7 +81,7 @@ BindingListDomainInjective : {a, b : Type} -> {deq : DecEqPred a} ->
   fst dom = fst dom' ->
   dom = dom'
 BindingListDomainInjective {deq} {bl} {dom} =
-  YesDPairInjective {x=(fst dom)} {dec=(bindsAllElements deq bl)}
+  YesDPairInjective {dec=(bindsAllElements deq bl)}
 
 finSubstList : {a, b : Type} -> (bl : BindingList a b) -> (la : List a) ->
   BindsAllElements bl la -> List (List b)
