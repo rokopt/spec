@@ -14,16 +14,25 @@ mutual
   data Datatype : (penv : PrimitiveEnv) -> Type where
     Algebraic : AlgebraicType penv -> Datatype penv
     Record : RecordType penv -> Datatype penv
-    Constructors : List (RecordType penv) -> Datatype penv
+    Constructors : ConstructorType penv -> Datatype penv
     FunctionType : (domain, codomain : Datatype penv) -> Datatype penv
 
   public export
   data RecordType : (penv : PrimitiveEnv) -> Type where
     Fields : List (Datatype penv) -> RecordType penv
 
+  public export
+  data ConstructorType : (penv : PrimitiveEnv) -> Type where
+    Records : List (RecordType penv) -> ConstructorType penv
+
 public export
 Primitive : {penv : PrimitiveEnv} -> PrimType penv -> Datatype penv
 Primitive = Algebraic . AlgebraicTypeGenerator
+
+public export
+ConstructorList : {penv : PrimitiveEnv} ->
+  List (RecordType penv) -> Datatype penv
+ConstructorList = Constructors . Records
 
 mutual
   public export
@@ -31,8 +40,8 @@ mutual
     Datatype penv -> AlgebraicType penv
   compileDatatype (Algebraic primType) = primType
   compileDatatype (Record rt) = compileRecordType rt
-  compileDatatype (Constructors records) =
-    AlgebraicCoproduct (compileRecordTypeList records)
+  compileDatatype (Constructors constructors) =
+    compileConstructorType constructors
   compileDatatype (FunctionType domain codomain) =
     AlgebraicExponential (compileDatatype domain) (compileDatatype codomain)
 
@@ -47,6 +56,12 @@ mutual
     RecordType penv -> AlgebraicType penv
   compileRecordType (Fields types) =
     AlgebraicProduct (compileDatatypeList types)
+
+  public export
+  compileConstructorType : {penv : PrimitiveEnv} ->
+    ConstructorType penv -> AlgebraicType penv
+  compileConstructorType (Records records) =
+    AlgebraicCoproduct (compileRecordTypeList records)
 
   public export
   compileRecordTypeList : {penv : PrimitiveEnv} ->
@@ -68,11 +83,11 @@ data DatatypeFunction : {penv : PrimitiveEnv} ->
 
     PatternMatch :
       {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->
-      {constructors : List (RecordType penv)} ->
+      {records : List (RecordType penv)} ->
       {codomain : Datatype penv} ->
       ListForAll (flip (AlgebraicFunction pfenv) (compileDatatype codomain))
-        (compileRecordTypeList constructors) ->
-      DatatypeFunction pfenv (Constructors constructors) codomain
+        (compileRecordTypeList records) ->
+      DatatypeFunction pfenv (Constructors (Records records)) codomain
 
 public export
 compileDatatypeFunction : {penv : PrimitiveEnv} ->

@@ -27,7 +27,7 @@ TestBoolStringRecord =
 
 public export
 TestTwoConstructorType : TestDatatype
-TestTwoConstructorType = Constructors [ TestNatRecord, TestBoolStringRecord ]
+TestTwoConstructorType = ConstructorList [ TestNatRecord, TestBoolStringRecord ]
 
 public export
 interpretTestDatatype : TestDatatype -> Type
@@ -49,7 +49,7 @@ testNestedDeclarationRecord =
 public export
 TestNestedDeclarationType : TestDatatype
 TestNestedDeclarationType =
-  Constructors [testNestedDeclarationRecord, TestNatRecord]
+  ConstructorList [testNestedDeclarationRecord, TestNatRecord]
 
 public export
 testNestedDeclarationExpressionLeft :
