@@ -33,13 +33,13 @@ public export
 HigherOrderRecursorFunction : {penv : PrimitiveEnv} ->
   HigherOrderAlgebraicType penv -> HigherOrderAlgebraicType penv
 HigherOrderRecursorFunction type =
-  AlgebraicExponential (AlgebraicProduct [AlgebraicNat, type]) type
+  AlgebraicExponential (AlgebraicProduct AlgebraicNat type) type
 
 public export
 HigherOrderRecursorDomain : {penv : PrimitiveEnv} ->
   HigherOrderAlgebraicType penv -> HigherOrderAlgebraicType penv
 HigherOrderRecursorDomain type =
-  (AlgebraicProduct [type, HigherOrderRecursorFunction type, AlgebraicNat])
+  (AlgebraicListProduct [type, HigherOrderRecursorFunction type, AlgebraicNat])
 
 public export
 data HigherOrderFunction :
@@ -109,7 +109,7 @@ higherOrderRecursion :
 higherOrderRecursion functionInterpretation initial step Z =
   initial
 higherOrderRecursion functionInterpretation initial step (S n) =
-  higherOrderRecursion functionInterpretation (step (n, initial, ())) step n
+  higherOrderRecursion functionInterpretation (step (n, initial)) step n
 
 public export
 interpretHigherOrderRecursor :

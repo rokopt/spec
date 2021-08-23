@@ -25,10 +25,24 @@ data AlgebraicType : (penv : PrimitiveEnv) -> Type where
   AlgebraicTypeGenerator : PrimType penv -> AlgebraicType penv
   AlgebraicVoid : AlgebraicType penv
   AlgebraicUnit : AlgebraicType penv
-  AlgebraicProduct : List (AlgebraicType penv) -> AlgebraicType penv
-  AlgebraicCoproduct : List (AlgebraicType penv) -> AlgebraicType penv
+  AlgebraicProduct :
+    (domain, codomain : AlgebraicType penv) -> AlgebraicType penv
+  AlgebraicCoproduct :
+    (domain, codomain : AlgebraicType penv) -> AlgebraicType penv
   AlgebraicExponential :
     (domain, codomain : AlgebraicType penv) -> AlgebraicType penv
+
+public export
+AlgebraicListProduct : List (AlgebraicType penv) -> AlgebraicType penv
+AlgebraicListProduct [] = AlgebraicUnit
+AlgebraicListProduct (t :: ts) =
+  AlgebraicProduct t (AlgebraicListProduct ts)
+
+public export
+AlgebraicListCoproduct : List (AlgebraicType penv) -> AlgebraicType penv
+AlgebraicListCoproduct [] = AlgebraicVoid
+AlgebraicListCoproduct (t :: ts) =
+  AlgebraicCoproduct t (AlgebraicListCoproduct ts)
 
 -- The theory is also parameterized on primitive _functions_ provided
 -- by the system.  We allow the system to provide primitive functions on
@@ -48,7 +62,7 @@ PrimitiveFuncEnvFunctor f =
 
 public export
 data AlgebraicFunction : {penv : PrimitiveEnv} ->
-  (pfenv : PrimitiveFuncEnv env) -> (domain, codomain : AlgebraicType penv) ->
+  (pfenv : PrimitiveFuncEnv penv) -> (domain, codomain : AlgebraicType penv) ->
   Type where
     AlgebraicCompose : {a, b, c : AlgebraicType penv} ->
       AlgebraicFunction pfenv b c ->
@@ -64,40 +78,78 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
     AlgebraicConstant : AlgebraicFunction pfenv domain AlgebraicUnit
 
     AlgebraicFunctionProduct :
+      {pfenv : PrimitiveFuncEnv penv} ->
       {domain : AlgebraicType penv} ->
-      {codomains : List (AlgebraicType penv)} ->
-      ListForAll (AlgebraicFunction pfenv domain) codomains ->
-      AlgebraicFunction pfenv domain (AlgebraicProduct codomains)
+      {codomainLeft, codomainRight : AlgebraicType penv} ->
+      AlgebraicFunction pfenv domain codomainLeft ->
+      AlgebraicFunction pfenv domain codomainRight ->
+      AlgebraicFunction
+        pfenv domain (AlgebraicProduct codomainLeft codomainRight)
 
-    AlgebraicFunctionProjection :
-      (domains : List (AlgebraicType penv)) ->
-      (n : Nat) -> {auto ok : InBounds n domains} ->
-      AlgebraicFunction pfenv
-        (AlgebraicProduct domains)
-        (index n domains {ok})
+    AlgebraicFunctionLeftProjection :
+      {pfenv : PrimitiveFuncEnv penv} ->
+      {domain : AlgebraicType penv} ->
+      {domainLeft, domainRight : AlgebraicType penv} ->
+      AlgebraicFunction
+        pfenv (AlgebraicProduct domainLeft domainRight) domainLeft
+
+    AlgebraicFunctionRightProjection :
+      {pfenv : PrimitiveFuncEnv penv} ->
+      {domain : AlgebraicType penv} ->
+      {domainLeft, domainRight : AlgebraicType penv} ->
+      AlgebraicFunction
+        pfenv (AlgebraicProduct domainLeft domainRight) domainRight
 
     AlgebraicFunctionCoproduct :
-      {domains : List (AlgebraicType penv)} ->
+      {pfenv : PrimitiveFuncEnv penv} ->
+      {domainLeft, domainRight : AlgebraicType penv} ->
       {codomain : AlgebraicType penv} ->
-      ListForAll (\domain => AlgebraicFunction pfenv domain codomain) domains ->
-      AlgebraicFunction pfenv (AlgebraicCoproduct domains) codomain
+      AlgebraicFunction pfenv domainLeft codomain ->
+      AlgebraicFunction pfenv domainRight codomain ->
+      AlgebraicFunction
+        pfenv (AlgebraicCoproduct domainLeft domainRight) codomain
 
-    AlgebraicFunctionInjection :
-      (codomains : List (AlgebraicType penv)) ->
-      (n : Nat) -> {auto ok : InBounds n codomains} ->
-      AlgebraicFunction pfenv
-        (index n codomains {ok})
-        (AlgebraicCoproduct codomains)
+    AlgebraicFunctionLeftInjection :
+      {codomainLeft, codomainRight : AlgebraicType penv} ->
+      AlgebraicFunction
+        pfenv codomainLeft (AlgebraicCoproduct codomainLeft codomainRight)
+
+    AlgebraicFunctionRightInjection :
+      {codomainLeft, codomainRight : AlgebraicType penv} ->
+      AlgebraicFunction
+        pfenv codomainRight (AlgebraicCoproduct codomainLeft codomainRight)
 
     AlgebraicFunctionEval : (domain, codomain : AlgebraicType penv) ->
       AlgebraicFunction pfenv
-        (AlgebraicProduct [(AlgebraicExponential domain codomain), domain])
+        (AlgebraicProduct (AlgebraicExponential domain codomain) domain)
         codomain
 
     AlgebraicFunctionCurry :
       {domLeft, domRight, codomain : AlgebraicType penv} ->
-      AlgebraicFunction pfenv (AlgebraicProduct [domLeft, domRight]) codomain ->
+      AlgebraicFunction pfenv (AlgebraicProduct domLeft domRight) codomain ->
       AlgebraicFunction pfenv domLeft (AlgebraicExponential domRight codomain)
+
+public export
+AlgebraicFunctionListProduct : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} ->
+  {domain : AlgebraicType penv} -> {codomains : List (AlgebraicType penv)} ->
+  ListForAll (AlgebraicFunction pfenv domain) codomains ->
+  AlgebraicFunction pfenv domain (AlgebraicListProduct codomains)
+AlgebraicFunctionListProduct ListForAllEmpty =
+  AlgebraicConstant
+AlgebraicFunctionListProduct (ListForAllCons f fs) =
+  AlgebraicFunctionProduct f (AlgebraicFunctionListProduct fs)
+
+public export
+AlgebraicFunctionListCoproduct : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} ->
+  {domains : List (AlgebraicType penv)} -> {codomain : AlgebraicType penv} ->
+  ListForAll (flip (AlgebraicFunction pfenv) codomain) domains ->
+  AlgebraicFunction pfenv (AlgebraicListCoproduct domains) codomain
+AlgebraicFunctionListCoproduct ListForAllEmpty =
+  AlgebraicExFalso
+AlgebraicFunctionListCoproduct (ListForAllCons f fs) =
+  AlgebraicFunctionCoproduct f (AlgebraicFunctionListCoproduct fs)
 
 -- The inputs required to interpret algebraic types as metalanguage
 -- (Idris) types.
@@ -121,22 +173,30 @@ mutual
     interpretPrimitiveType interpretation primType
   interpretAlgebraicType interpretation AlgebraicVoid = Void
   interpretAlgebraicType interpretation AlgebraicUnit = ()
-  interpretAlgebraicType interpretation (AlgebraicProduct types) =
-    typeProduct (interpretAlgebraicTypeList interpretation types)
-  interpretAlgebraicType interpretation (AlgebraicCoproduct types) =
-    typeCoproduct (interpretAlgebraicTypeList interpretation types)
+  interpretAlgebraicType interpretation (AlgebraicProduct t t') =
+    interpretAlgebraicTypePair interpretation t t'
+  interpretAlgebraicType interpretation (AlgebraicCoproduct t t') =
+    interpretAlgebraicTypeEither interpretation t t'
   interpretAlgebraicType interpretation (AlgebraicExponential domain codomain) =
     interpretAlgebraicType interpretation domain ->
     interpretAlgebraicType interpretation codomain
 
   public export
-  interpretAlgebraicTypeList : {penv : PrimitiveEnv} ->
+  interpretAlgebraicTypePair : {penv : PrimitiveEnv} ->
     (interpretation : PrimitiveTypeInterpretation penv) ->
-    List (AlgebraicType penv) -> List Type
-  interpretAlgebraicTypeList interpretation [] = []
-  interpretAlgebraicTypeList interpretation (type :: types) =
-    interpretAlgebraicType interpretation type ::
-      interpretAlgebraicTypeList interpretation types
+    AlgebraicType penv -> AlgebraicType penv -> Type
+  interpretAlgebraicTypePair interpretation t t' =
+    (interpretAlgebraicType interpretation t,
+     interpretAlgebraicType interpretation t')
+
+  public export
+  interpretAlgebraicTypeEither : {penv : PrimitiveEnv} ->
+    (interpretation : PrimitiveTypeInterpretation penv) ->
+    AlgebraicType penv -> AlgebraicType penv -> Type
+  interpretAlgebraicTypeEither interpretation t t' =
+    Either
+      (interpretAlgebraicType interpretation t)
+      (interpretAlgebraicType interpretation t')
 
 {-
  - This environment provides all metalanguage types as primitive types.
@@ -209,22 +269,28 @@ mutual
     \v => void v
   interpretAlgebraicFunction _ AlgebraicConstant =
     \_ => ()
-  interpretAlgebraicFunction interpretation (AlgebraicFunctionProduct fs) =
-    interpretAlgebraicFunctionProduct interpretation fs
+  interpretAlgebraicFunction interpretation (AlgebraicFunctionProduct f f') =
+    interpretAlgebraicFunctionProduct interpretation f f'
   interpretAlgebraicFunction interpretation
-    (AlgebraicFunctionProjection domains n) =
-      interpretAlgebraicFunctionProjection interpretation domains n
-  interpretAlgebraicFunction interpretation (AlgebraicFunctionCoproduct fs) =
-    interpretAlgebraicFunctionCoproduct interpretation fs
+    AlgebraicFunctionLeftProjection =
+      interpretAlgebraicFunctionLeftProjection interpretation
   interpretAlgebraicFunction interpretation
-    (AlgebraicFunctionInjection codomains n) =
-      interpretAlgebraicFunctionInjection interpretation codomains n
+    AlgebraicFunctionRightProjection =
+      interpretAlgebraicFunctionRightProjection interpretation
+  interpretAlgebraicFunction interpretation (AlgebraicFunctionCoproduct f f') =
+    interpretAlgebraicFunctionCoproduct interpretation f f'
+  interpretAlgebraicFunction interpretation
+    AlgebraicFunctionLeftInjection =
+      interpretAlgebraicFunctionLeftInjection interpretation
+  interpretAlgebraicFunction interpretation
+    AlgebraicFunctionRightInjection =
+      interpretAlgebraicFunctionRightInjection interpretation
   interpretAlgebraicFunction interpretation
     (AlgebraicFunctionEval domain codomain) =
-      \(eval, x, ()) => eval x
+      \(eval, x) => eval x
   interpretAlgebraicFunction interpretation
     (AlgebraicFunctionCurry f) =
-      (\x, y => interpretAlgebraicFunction interpretation f (x, y, ()))
+      (\x, y => interpretAlgebraicFunction interpretation f (x, y))
 
   public export
   interpretAlgebraicFunctionProduct : {penv : PrimitiveEnv} ->
@@ -233,37 +299,37 @@ mutual
     (functionInterpretation :
       PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
     {domain : AlgebraicType penv} ->
-    {codomains : List (AlgebraicType penv)} ->
-    ListForAll (AlgebraicFunction pfenv domain) codomains ->
+    {codomainLeft, codomainRight : AlgebraicType penv} ->
+    AlgebraicFunction pfenv domain codomainLeft ->
+    AlgebraicFunction pfenv domain codomainRight ->
     interpretAlgebraicFunctionType typeInterpretation
-      domain (AlgebraicProduct codomains)
-  interpretAlgebraicFunctionProduct interpretation ListForAllEmpty =
-    \x => ()
-  interpretAlgebraicFunctionProduct interpretation (ListForAllCons f fs) =
+      domain (AlgebraicProduct codomainLeft codomainRight)
+  interpretAlgebraicFunctionProduct interpretation f f' =
     \x =>
       (interpretAlgebraicFunction interpretation f x,
-       interpretAlgebraicFunctionProduct interpretation fs x)
+       interpretAlgebraicFunction interpretation f' x)
 
   public export
-  interpretAlgebraicFunctionProjection : {penv : PrimitiveEnv} ->
+  interpretAlgebraicFunctionLeftProjection : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
     {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
       PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
-    (domains : List (AlgebraicType penv)) ->
-    (n : Nat) -> {auto ok : InBounds n domains} ->
+    {domainLeft, domainRight : AlgebraicType penv} ->
     interpretAlgebraicFunctionType typeInterpretation
-      (AlgebraicProduct domains) (index n domains {ok})
-  interpretAlgebraicFunctionProjection interpretation [] _ impossible
-  interpretAlgebraicFunctionProjection interpretation
-    (d :: ds) Z {ok=InFirst} = fst
-  interpretAlgebraicFunctionProjection interpretation
-    (d :: ds) Z {ok=InLater _} impossible
-  interpretAlgebraicFunctionProjection interpretation
-    (d :: ds) (S _) {ok=InFirst} impossible
-  interpretAlgebraicFunctionProjection interpretation
-    (d :: ds) (S n) {ok=(InLater ok)} =
-      interpretAlgebraicFunctionProjection interpretation ds n {ok} . snd
+      (AlgebraicProduct domainLeft domainRight) domainLeft
+  interpretAlgebraicFunctionLeftProjection interpretation = fst
+
+  public export
+  interpretAlgebraicFunctionRightProjection : {penv : PrimitiveEnv} ->
+    {pfenv : PrimitiveFuncEnv penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
+    (functionInterpretation :
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
+    {domainLeft, domainRight : AlgebraicType penv} ->
+    interpretAlgebraicFunctionType typeInterpretation
+      (AlgebraicProduct domainLeft domainRight) domainRight
+  interpretAlgebraicFunctionRightProjection interpretation = snd
 
   public export
   interpretAlgebraicFunctionCoproduct : {penv : PrimitiveEnv} ->
@@ -271,38 +337,40 @@ mutual
     {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
       PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
-    {domains : List (AlgebraicType penv)} ->
+    {domainLeft, domainRight : AlgebraicType penv} ->
     {codomain : AlgebraicType penv} ->
-    ListForAll (flip (AlgebraicFunction pfenv) codomain) domains ->
+    AlgebraicFunction pfenv domainLeft codomain ->
+    AlgebraicFunction pfenv domainRight codomain ->
     interpretAlgebraicFunctionType typeInterpretation
-      (AlgebraicCoproduct domains) codomain
-  interpretAlgebraicFunctionCoproduct interpretation ListForAllEmpty =
-    \x => void x
-  interpretAlgebraicFunctionCoproduct interpretation (ListForAllCons f fs) =
+      (AlgebraicCoproduct domainLeft domainRight) codomain
+  interpretAlgebraicFunctionCoproduct {penv} interpretation f f' =
     \x => case x of
       Left x' => interpretAlgebraicFunction interpretation f x'
-      Right x' => interpretAlgebraicFunctionCoproduct interpretation fs x'
+      Right x' => interpretAlgebraicFunction interpretation f' x'
 
   public export
-  interpretAlgebraicFunctionInjection : {penv : PrimitiveEnv} ->
+  interpretAlgebraicFunctionLeftInjection : {penv : PrimitiveEnv} ->
     {pfenv : PrimitiveFuncEnv penv} ->
     {typeInterpretation : PrimitiveTypeInterpretation penv} ->
     (functionInterpretation :
       PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
-    (codomains : List (AlgebraicType penv)) ->
-    (n : Nat) -> {auto ok : InBounds n codomains} ->
+    {codomainLeft : AlgebraicType penv} ->
+    {codomainRight : AlgebraicType penv} ->
     interpretAlgebraicFunctionType typeInterpretation
-      (index n codomains {ok}) (AlgebraicCoproduct codomains)
-  interpretAlgebraicFunctionInjection interpretation [] _ impossible
-  interpretAlgebraicFunctionInjection interpretation
-    (c :: cs) Z {ok=InFirst} = Left
-  interpretAlgebraicFunctionInjection interpretation
-    (c :: cs) Z {ok=InLater _} impossible
-  interpretAlgebraicFunctionInjection interpretation
-    (c :: cs) (S _) {ok=InFirst} impossible
-  interpretAlgebraicFunctionInjection interpretation
-    (c :: cs) (S n) {ok=(InLater ok)} =
-      Right . interpretAlgebraicFunctionInjection interpretation cs n {ok}
+      codomainLeft (AlgebraicCoproduct codomainLeft codomainRight)
+  interpretAlgebraicFunctionLeftInjection interpretation = Left
+
+  public export
+  interpretAlgebraicFunctionRightInjection : {penv : PrimitiveEnv} ->
+    {pfenv : PrimitiveFuncEnv penv} ->
+    {typeInterpretation : PrimitiveTypeInterpretation penv} ->
+    (functionInterpretation :
+      PrimitiveFunctionInterpretation pfenv typeInterpretation) ->
+    {codomainLeft : AlgebraicType penv} ->
+    {codomainRight : AlgebraicType penv} ->
+    interpretAlgebraicFunctionType typeInterpretation
+      codomainRight (AlgebraicCoproduct codomainLeft codomainRight)
+  interpretAlgebraicFunctionRightInjection interpretation = Right
 
 -- This environment provides all metalanguage functions on the algebraic
 -- closure of the primitive types.

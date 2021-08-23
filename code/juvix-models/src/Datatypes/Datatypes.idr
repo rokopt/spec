@@ -27,7 +27,7 @@ mutual
 
   public export
   data FunctionType : (penv : PrimitiveEnv) -> Type where
-    Signature : PairOf (Datatype penv) -> FunctionType penv
+    Signature : Datatype penv -> Datatype penv -> FunctionType penv
 
   public export
   Primitive : {penv : PrimitiveEnv} -> PrimType penv -> Datatype penv
@@ -68,27 +68,12 @@ mutual
   MatrixOf = map FieldsOf . RecordsOf
 
   public export
-  DomainFromPair : {penv : PrimitiveEnv} ->
-    PairOf (Datatype penv) -> Datatype penv
-  DomainFromPair = fst
-
-  public export
-  CodomainFromPair : {penv : PrimitiveEnv} ->
-    PairOf (Datatype penv) -> Datatype penv
-  CodomainFromPair = snd
-
-  public export
-  SignatureOf : {penv : PrimitiveEnv} ->
-    FunctionType penv -> PairOf (Datatype penv)
-  SignatureOf (Signature sig) = sig
-
-  public export
   DomainOf : {penv : PrimitiveEnv} -> FunctionType penv -> Datatype penv
-  DomainOf = DomainFromPair . SignatureOf
+  DomainOf (Signature domain _) = domain
 
   public export
   CodomainOf : {penv : PrimitiveEnv} -> FunctionType penv -> Datatype penv
-  CodomainOf = CodomainFromPair . SignatureOf
+  CodomainOf (Signature _ codomain) = codomain
 
   public export
   compileDatatype : {penv : PrimitiveEnv} ->
@@ -110,18 +95,18 @@ mutual
   compileRecordType : {penv : PrimitiveEnv} ->
     RecordType penv -> AlgebraicType penv
   compileRecordType (Fields types) =
-    AlgebraicProduct (compileDatatypeList types)
+    AlgebraicListProduct (compileDatatypeList types)
 
   public export
   compileConstructorType : {penv : PrimitiveEnv} ->
     ConstructorType penv -> AlgebraicType penv
   compileConstructorType (Records records) =
-    AlgebraicCoproduct (compileRecordTypeList records)
+    AlgebraicListCoproduct (compileRecordTypeList records)
 
   public export
   compileFunctionType : {penv : PrimitiveEnv} ->
     FunctionType penv -> AlgebraicType penv
-  compileFunctionType (Signature (domain, codomain)) =
+  compileFunctionType (Signature domain codomain) =
     AlgebraicExponential (compileDatatype domain) (compileDatatype codomain)
 
   public export
@@ -156,8 +141,8 @@ mutual
     DatatypeFunction pfenv domain codomain ->
     AlgebraicFunction pfenv (compileDatatype domain) (compileDatatype codomain)
   compileDatatypeFunction (DatatypeFromAlgebraic f) = f
-  compileDatatypeFunction (PatternMatch {codomain} patterns) =
-    AlgebraicFunctionCoproduct patterns
+  compileDatatypeFunction (PatternMatch patterns) =
+    AlgebraicFunctionListCoproduct patterns
 
   public export
   DatatypeCompose : {penv : PrimitiveEnv} -> {pfenv : PrimitiveFuncEnv penv} ->

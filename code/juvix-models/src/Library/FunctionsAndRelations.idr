@@ -201,6 +201,10 @@ PairOf : Type -> Type
 PairOf a = (a, a)
 
 public export
+PairForBoth : {a : Type} -> (b : a -> Type) -> PairOf a -> Type
+PairForBoth b (x, x') = (b x, b x')
+
+public export
 BinaryPredicate : Type -> Type
 BinaryPredicate a = PairOf a -> Type
 
