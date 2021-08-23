@@ -1,8 +1,8 @@
-module RefinedSExp.HigherOrderRecursion
+module Theories.HigherOrderRecursion
 
 import Library.FunctionsAndRelations
-import public RefinedSExp.InductiveTypeTheory
-import public RefinedSExp.DependentInductiveTypeTheory
+import public Theories.InductiveTypeTheory
+import public Theories.DependentInductiveTypeTheory
 
 %default total
 

@@ -1,4 +1,4 @@
-module RefinedSExp.AlgebraicTypes
+module Datatypes.AlgebraicTypes
 
 import public Library.FunctionsAndRelations
 import public Library.List

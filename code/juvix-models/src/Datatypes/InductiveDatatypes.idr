@@ -1,8 +1,8 @@
-module RefinedSExp.InductiveDatatypes
+module Datatypes.InductiveDatatypes
 
 import Library.FunctionsAndRelations
-import public RefinedSExp.AlgebraicTypes
-import public RefinedSExp.Datatypes
+import public Datatypes.AlgebraicTypes
+import public Datatypes.Datatypes
 
 %default total
 

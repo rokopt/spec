@@ -1,4 +1,4 @@
-module RefinedSExp.DependentAlgebraicTypes
+module Datatypes.DependentAlgebraicTypes
 
 import Library.FunctionsAndRelations
 

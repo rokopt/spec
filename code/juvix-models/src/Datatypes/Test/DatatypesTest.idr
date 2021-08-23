@@ -1,8 +1,8 @@
-module RefinedSExp.Test.DatatypesTest
+module Datatypes.Test.DatatypesTest
 
-import public RefinedSExp.Datatypes
-import public RefinedSExp.Test.AlgebraicTypesTest
-import RefinedSExp.Test.TestLibrary
+import public Datatypes.Datatypes
+import public Datatypes.Test.AlgebraicTypesTest
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
 import Library.List
 

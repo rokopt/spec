@@ -1,11 +1,11 @@
-module RefinedSExp.Datatypes
+module Datatypes.Datatypes
 
 import Library.FunctionsAndRelations
 import Library.Decidability
 import Category.Category
 import Control.WellFounded
 import Library.List
-import public RefinedSExp.AlgebraicTypes
+import public Datatypes.AlgebraicTypes
 
 %default total
 

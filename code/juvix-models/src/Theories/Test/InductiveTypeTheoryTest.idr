@@ -1,7 +1,7 @@
-module RefinedSExp.Test.InductiveTypeTheoryTest
+module Theories.Test.InductiveTypeTheoryTest
 
-import public RefinedSExp.InductiveTypeTheory
-import RefinedSExp.Test.TestLibrary
+import public Theories.InductiveTypeTheory
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
 
 %default total

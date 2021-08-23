@@ -1,7 +1,7 @@
-module RefinedSExp.Test.AlgebraicTypesTest
+module Datatypes.Test.AlgebraicTypesTest
 
-import public RefinedSExp.AlgebraicTypes
-import RefinedSExp.Test.TestLibrary
+import public Datatypes.AlgebraicTypes
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
 
 %default total

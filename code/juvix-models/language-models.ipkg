@@ -3,6 +3,7 @@ package language-models
 modules = Library.TypesAndFunctions
     , Library.FunctionsAndRelations
     , Library.Test.FunctionsAndRelationsTest
+    , Library.Test.TestLibrary
     , IdrisSTL.Semiring
     , External.IntegerSquareRoot
     , Library.Decidability
@@ -25,7 +26,6 @@ modules = Library.TypesAndFunctions
     , Category.ComputableCategories
     , QCWF.CWF
     , QCWF.QCWF
-    , RefinedSExp.Test.TestLibrary
     , RefinedSExp.List
     , RefinedSExp.Test.ListTest
     , RefinedSExp.SExp
@@ -34,26 +34,26 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.SExpApplicativesTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
-    , RefinedSExp.AlgebraicTypes
-    , RefinedSExp.Test.AlgebraicTypesTest
-    , RefinedSExp.Datatypes
-    , RefinedSExp.Test.DatatypesTest
-    , RefinedSExp.InductiveDatatypes
-    , RefinedSExp.Test.InductiveDatatypesTest
-    , RefinedSExp.DependentAlgebraicTypes
-    , RefinedSExp.Test.DependentAlgebraicTypesTest
-    , RefinedSExp.DependentInductiveDatatypes
-    , RefinedSExp.Test.DependentInductiveDatatypesTest
-    , RefinedSExp.AlgebraicTheory
-    , RefinedSExp.Test.AlgebraicTheoryTest
-    , RefinedSExp.InductiveTypeTheory
-    , RefinedSExp.Test.InductiveTypeTheoryTest
-    , RefinedSExp.DependentAlgebraicTheory
-    , RefinedSExp.Test.DependentAlgebraicTheoryTest
-    , RefinedSExp.DependentInductiveTypeTheory
-    , RefinedSExp.Test.DependentInductiveTypeTheoryTest
-    , RefinedSExp.HigherOrderRecursion
-    , RefinedSExp.Test.HigherOrderRecursionTest
+    , Datatypes.AlgebraicTypes
+    , Datatypes.Test.AlgebraicTypesTest
+    , Datatypes.Datatypes
+    , Datatypes.Test.DatatypesTest
+    , Datatypes.InductiveDatatypes
+    , Datatypes.Test.InductiveDatatypesTest
+    , Datatypes.DependentAlgebraicTypes
+    , Datatypes.Test.DependentAlgebraicTypesTest
+    , Datatypes.DependentInductiveDatatypes
+    , Datatypes.Test.DependentInductiveDatatypesTest
+    , Theories.AlgebraicTheory
+    , Theories.Test.AlgebraicTheoryTest
+    , Theories.InductiveTypeTheory
+    , Theories.Test.InductiveTypeTheoryTest
+    , Theories.DependentAlgebraicTheory
+    , Theories.Test.DependentAlgebraicTheoryTest
+    , Theories.DependentInductiveTypeTheory
+    , Theories.Test.DependentInductiveTypeTheoryTest
+    , Theories.HigherOrderRecursion
+    , Theories.Test.HigherOrderRecursionTest
     , RefinedSExp.Old.List
     , RefinedSExp.Old.Test.ListTest
     , RefinedSExp.Old.RefinedList

@@ -1,7 +1,7 @@
-module RefinedSExp.Test.DependentInductiveDatatypesTest
+module Datatypes.Test.DependentInductiveDatatypesTest
 
-import public RefinedSExp.DependentInductiveDatatypes
-import RefinedSExp.Test.TestLibrary
+import public Datatypes.DependentInductiveDatatypes
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
 
 %default total

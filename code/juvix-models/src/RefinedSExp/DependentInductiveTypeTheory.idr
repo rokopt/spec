@@ -1,6 +1,0 @@
-module RefinedSExp.DependentInductiveTypeTheory
-
-import Library.FunctionsAndRelations
-import public RefinedSExp.DependentInductiveDatatypes
-
-%default total

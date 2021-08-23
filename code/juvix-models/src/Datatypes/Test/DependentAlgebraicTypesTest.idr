@@ -1,7 +1,7 @@
-module RefinedSExp.Test.DependentAlgebraicTypesTest
+module Datatypes.Test.DependentAlgebraicTypesTest
 
-import public RefinedSExp.DependentAlgebraicTypes
-import RefinedSExp.Test.TestLibrary
+import public Datatypes.DependentAlgebraicTypes
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
 
 %default total

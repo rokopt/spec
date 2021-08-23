@@ -1,7 +1,7 @@
-module RefinedSExp.Test.DependentAlgebraicTheoryTest
+module Theories.Test.DependentAlgebraicTheoryTest
 
-import public RefinedSExp.DependentAlgebraicTheory
-import RefinedSExp.Test.TestLibrary
+import public Theories.DependentAlgebraicTheory
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
 
 %default total

@@ -1,6 +1,0 @@
-module RefinedSExp.DependentInductiveDatatypes
-
-import Library.FunctionsAndRelations
-import public RefinedSExp.DependentAlgebraicTypes
-
-%default total

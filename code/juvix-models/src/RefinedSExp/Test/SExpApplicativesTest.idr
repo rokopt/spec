@@ -1,7 +1,7 @@
 module RefinedSExp.Test.SExpApplicativesTest
 
 import public RefinedSExp.SExpApplicatives
-import public RefinedSExp.Test.TestLibrary
+import public Library.Test.TestLibrary
 
 export
 sExpApplicativesTests : IO ()

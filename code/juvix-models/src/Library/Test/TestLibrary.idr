@@ -1,4 +1,4 @@
-module RefinedSExp.Test.TestLibrary
+module Library.Test.TestLibrary
 
 import public Library.Decidability
 

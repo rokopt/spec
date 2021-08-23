@@ -1,9 +1,9 @@
-module RefinedSExp.Test.InductiveDatatypesTest
+module Datatypes.Test.InductiveDatatypesTest
 
-import public RefinedSExp.InductiveDatatypes
-import RefinedSExp.Test.TestLibrary
+import Datatypes.InductiveDatatypes
+import Library.Test.TestLibrary
 import Library.FunctionsAndRelations
-import RefinedSExp.Test.DatatypesTest
+import Datatypes.Test.DatatypesTest
 
 %default total
 
