@@ -44,6 +44,11 @@ AlgebraicListCoproduct [] = AlgebraicVoid
 AlgebraicListCoproduct (t :: ts) =
   AlgebraicCoproduct t (AlgebraicListCoproduct ts)
 
+public export
+AlgebraicElementType : {penv : PrimitiveEnv} ->
+  AlgebraicType penv -> AlgebraicType penv
+AlgebraicElementType type = AlgebraicExponential AlgebraicUnit type
+
 -- The theory is also parameterized on primitive _functions_ provided
 -- by the system.  We allow the system to provide primitive functions on
 -- the algebraic closure of the primitive types, so that the system
@@ -64,6 +69,8 @@ public export
 data AlgebraicFunction : {penv : PrimitiveEnv} ->
   (pfenv : PrimitiveFuncEnv penv) -> (domain, codomain : AlgebraicType penv) ->
   Type where
+    AlgebraicIdentity : (a : AlgebraicType penv) -> AlgebraicFunction pfenv a a
+
     AlgebraicCompose : {a, b, c : AlgebraicType penv} ->
       AlgebraicFunction pfenv b c ->
       AlgebraicFunction pfenv a b ->
@@ -76,6 +83,22 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
     AlgebraicExFalso : AlgebraicFunction pfenv AlgebraicVoid codomain
 
     AlgebraicConstant : AlgebraicFunction pfenv domain AlgebraicUnit
+
+    -- Consequences of the Yoneda lemma.
+    AlgebraicExponentToProduct :
+      (x, y, z : AlgebraicType penv) ->
+      AlgebraicFunction pfenv
+        (AlgebraicExponential z (AlgebraicExponential y x))
+        (AlgebraicExponential (AlgebraicProduct z y) x)
+    AlgebraicProductToExponent :
+      (x, y, z : AlgebraicType penv) ->
+      AlgebraicFunction pfenv
+        (AlgebraicExponential (AlgebraicProduct z y) x)
+        (AlgebraicExponential z (AlgebraicExponential y x))
+    AlgebraicUnitElim :
+      (codomain : AlgebraicType penv) ->
+      AlgebraicFunction pfenv
+        (AlgebraicExponential AlgebraicUnit codomain) codomain
 
     AlgebraicFunctionProduct :
       {pfenv : PrimitiveFuncEnv penv} ->
@@ -150,6 +173,43 @@ AlgebraicFunctionListCoproduct ListForAllEmpty =
   AlgebraicExFalso
 AlgebraicFunctionListCoproduct (ListForAllCons f fs) =
   AlgebraicFunctionCoproduct f (AlgebraicFunctionListCoproduct fs)
+
+public export
+GeneralizedElement : {penv : PrimitiveEnv} -> (pfenv : PrimitiveFuncEnv penv) ->
+  (type, stage : AlgebraicType penv) -> Type
+GeneralizedElement pfenv type stage = AlgebraicFunction pfenv stage type
+
+public export
+AlgebraicElement : {penv : PrimitiveEnv} -> (pfenv : PrimitiveFuncEnv penv) ->
+  AlgebraicType penv -> Type
+AlgebraicElement pfenv type = GeneralizedElement pfenv type AlgebraicUnit
+
+public export
+AlgebraicFunctionAsElement : {penv : PrimitiveEnv} ->
+  {pfenv : PrimitiveFuncEnv penv} ->
+  {domain, codomain : AlgebraicType penv} ->
+  AlgebraicFunction pfenv domain codomain ->
+  AlgebraicElement pfenv (AlgebraicExponential domain codomain)
+AlgebraicFunctionAsElement {domain} f =
+  AlgebraicFunctionCurry
+    (AlgebraicCompose f (AlgebraicFunctionRightProjection {domain}))
+
+public export
+record ReflectionEnv {penv : PrimitiveEnv} (pfenv : PrimitiveFuncEnv penv) where
+  constructor Reflection
+  Universe : Type
+  CodeType : Universe -> AlgebraicType penv
+  MemberType : Universe -> AlgebraicType penv
+  EncodeType : (universe : Universe) ->
+    AlgebraicFunction pfenv (MemberType universe) (CodeType universe)
+  FunctorType : {universe : Universe} ->
+    AlgebraicFunction pfenv (CodeType universe) (CodeType universe) -> Type
+  ReflectedFunctor :
+    {universe : Universe} ->
+    {codeMap :
+      AlgebraicFunction pfenv (CodeType universe) (CodeType universe)} ->
+    FunctorType codeMap ->
+    AlgebraicFunction pfenv (MemberType universe) (MemberType universe)
 
 -- The inputs required to interpret algebraic types as metalanguage
 -- (Idris) types.
@@ -259,6 +319,7 @@ mutual
     {domain, codomain : AlgebraicType penv} ->
     AlgebraicFunction pfenv domain codomain ->
     interpretAlgebraicFunctionType typeInterpretation domain codomain
+  interpretAlgebraicFunction functionInterpretation (AlgebraicIdentity a) = id
   interpretAlgebraicFunction functionInterpretation (AlgebraicCompose g f) =
     interpretAlgebraicFunction functionInterpretation g .
       interpretAlgebraicFunction functionInterpretation f
@@ -269,6 +330,12 @@ mutual
     \v => void v
   interpretAlgebraicFunction _ AlgebraicConstant =
     \_ => ()
+  interpretAlgebraicFunction _ (AlgebraicExponentToProduct x y z) =
+    \f, p => f (fst p) (snd p)
+  interpretAlgebraicFunction _ (AlgebraicProductToExponent x y z) =
+    \f, g, h => f (g, h)
+  interpretAlgebraicFunction _ (AlgebraicUnitElim _) =
+    \f => f ()
   interpretAlgebraicFunction interpretation (AlgebraicFunctionProduct f f') =
     interpretAlgebraicFunctionProduct interpretation f f'
   interpretAlgebraicFunction interpretation
