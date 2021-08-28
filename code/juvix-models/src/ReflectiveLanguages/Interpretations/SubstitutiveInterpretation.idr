@@ -1,0 +1,6 @@
+module ReflectiveLanguages.Interpretations.SubstitutiveInterpretation
+
+import ReflectiveLanguages.Substitutive
+import Library.FunctionsAndRelations
+
+%default total

@@ -27,6 +27,7 @@ import RefinedSExp.ListVariant.Test.ListTest
 import RefinedSExp.ListVariant.Test.RefinedListTest
 import RefinedSExp.ListVariant.Test.SExpTest
 import RefinedSExp.ListVariant.Test.RefinedSExpTest
+import ReflectiveLanguages.Test.SubstitutiveTest
 
 %default total
 
@@ -54,3 +55,4 @@ main = do
   RefinedSExp.ListVariant.Test.RefinedListTest.refinedListTests
   RefinedSExp.ListVariant.Test.SExpTest.sExpTests
   RefinedSExp.ListVariant.Test.RefinedSExpTest.refinedSExpTests
+  ReflectiveLanguages.Test.SubstitutiveTest.substitutiveTests

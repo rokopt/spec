@@ -82,6 +82,7 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.ListVariant.Test.SExpTest
     , RefinedSExp.ListVariant.RefinedSExp
     , RefinedSExp.ListVariant.Test.RefinedSExpTest
+    , ReflectiveLanguages.Test.SubstitutiveTest
     , Executable.Test.Main
 
 depends = contrib, network
