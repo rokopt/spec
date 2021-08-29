@@ -75,7 +75,7 @@ mutual
   InterpretKind Star = !- UnitSExp
   InterpretKind (KindArrow ks k) = InterpretKinds ks -> InterpretKind k
 
-  InterpretKinds : {numParams : Nat} -> Vect numParams SubstitutiveKind -> Type
+  InterpretKinds : List SubstitutiveKind -> Type
   InterpretKinds [] = ()
   InterpretKinds (k :: ks) = (InterpretKind k, InterpretKinds ks)
 

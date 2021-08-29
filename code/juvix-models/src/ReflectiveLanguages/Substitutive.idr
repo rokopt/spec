@@ -21,10 +21,7 @@ import Data.Fin
 public export
 data SubstitutiveKind : Type where
   Star : SubstitutiveKind
-  KindArrow : {numParams : Nat} ->
-    (domain: Vect numParams SubstitutiveKind) ->
-    (codomain : SubstitutiveKind) ->
-    SubstitutiveKind
+  KindArrow : List SubstitutiveKind -> SubstitutiveKind -> SubstitutiveKind
 
 mutual
   ||| A type defined by a coproduct of products.
@@ -44,8 +41,7 @@ mutual
       ||| function application.
       Substitute :
         {domainHead, codomain : SubstitutiveKind} ->
-        {numParams : Nat} ->
-        {domainTail : Vect n SubstitutiveKind} ->
+        {domainTail : List SubstitutiveKind} ->
         {numConstructors : Nat} ->
         Datatype
           (KindArrow (domainHead :: domainTail) codomain) numConstructors ->
