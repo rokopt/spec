@@ -14,6 +14,7 @@ mutual
     ($^) : atom -> SExp atom
     ($|) : SList atom -> SExp atom
 
+  public export
   SList : (atom : Type) -> Type
   SList atom = List (SExp atom)
 

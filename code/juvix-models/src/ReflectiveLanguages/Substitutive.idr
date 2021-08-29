@@ -21,8 +21,9 @@ import Data.Fin
 public export
 data SubstitutiveKind : Type where
   Star : SubstitutiveKind
-  KindArrow :
-    (domain: List SubstitutiveKind) -> (codomain : SubstitutiveKind) ->
+  KindArrow : {numParams : Nat} ->
+    (domain: Vect numParams SubstitutiveKind) ->
+    (codomain : SubstitutiveKind) ->
     SubstitutiveKind
 
 mutual
@@ -36,14 +37,15 @@ mutual
   data Datatype :
     (kind : SubstitutiveKind) -> (numConstructors : Nat) -> Type where
       Coproduct : {kind : SubstitutiveKind} -> {numConstructors: Nat} ->
-        Vect numConstructors (DPair Nat (Constructor kind)) ->
+        Vect numConstructors (VarLenConstructor kind) ->
         Datatype kind numConstructors
 
       ||| A type produced by substitution, which may be viewed as
       ||| function application.
       Substitute :
         {domainHead, codomain : SubstitutiveKind} ->
-        {domainTail : List SubstitutiveKind} ->
+        {numParams : Nat} ->
+        {domainTail : Vect n SubstitutiveKind} ->
         {numConstructors : Nat} ->
         Datatype
           (KindArrow (domainHead :: domainTail) codomain) numConstructors ->
@@ -58,7 +60,7 @@ mutual
   data Constructor :
     (kind : SubstitutiveKind) -> (numFields : Nat) -> Type where
       Product : {kind : SubstitutiveKind} -> {numFields : Nat} ->
-        Vect numFields (DPair Nat (Datatype kind)) ->
+        Vect numFields (VarLenDatatype kind) ->
         Constructor kind numFields
 
   public export
@@ -105,6 +107,11 @@ mutual
       Datatype kind numConstructors ->
       Fin numConstructors ->
       VarLenConstructor kind
+
+public export
+ConstructorFields : {kind : SubstitutiveKind} -> {numFields : Nat} ->
+  Constructor kind numFields -> Vect numFields (VarLenDatatype kind)
+ConstructorFields (Product fields) = fields
 {-
     {- XXX add comment -}
     Fixpoint : {numParams : Nat} ->
