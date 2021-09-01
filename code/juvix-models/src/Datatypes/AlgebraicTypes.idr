@@ -111,14 +111,12 @@ data AlgebraicFunction : {penv : PrimitiveEnv} ->
 
     AlgebraicFunctionLeftProjection :
       {pfenv : PrimitiveFuncEnv penv} ->
-      {domain : AlgebraicType penv} ->
       {domainLeft, domainRight : AlgebraicType penv} ->
       AlgebraicFunction
         pfenv (AlgebraicProduct domainLeft domainRight) domainLeft
 
     AlgebraicFunctionRightProjection :
       {pfenv : PrimitiveFuncEnv penv} ->
-      {domain : AlgebraicType penv} ->
       {domainLeft, domainRight : AlgebraicType penv} ->
       AlgebraicFunction
         pfenv (AlgebraicProduct domainLeft domainRight) domainRight
@@ -191,8 +189,7 @@ AlgebraicFunctionAsElement : {penv : PrimitiveEnv} ->
   AlgebraicFunction pfenv domain codomain ->
   AlgebraicElement pfenv (AlgebraicExponential domain codomain)
 AlgebraicFunctionAsElement {domain} f =
-  AlgebraicFunctionCurry
-    (AlgebraicCompose f (AlgebraicFunctionRightProjection {domain}))
+  AlgebraicFunctionCurry (AlgebraicCompose f AlgebraicFunctionRightProjection)
 
 public export
 record ReflectionEnv {penv : PrimitiveEnv} (pfenv : PrimitiveFuncEnv penv) where
