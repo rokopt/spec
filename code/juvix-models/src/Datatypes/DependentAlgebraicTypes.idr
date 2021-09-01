@@ -22,10 +22,30 @@ public export
 ($-) : {0 atom : Type} -> SExp atom
 ($-) = $| []
 
+prefix 11 $|-
+public export
+($|-) : {0 atom : Type} -> SExp atom -> SExp atom
+($|-) x = $| [ x ]
+
+prefix 11 $^-
+public export
+($^-) : {0 atom : Type} -> atom -> SExp atom
+($^-) a = $|- $^ a
+
 infix 7 $|:
 public export
 ($|:) : {0 atom : Type} -> SExp atom -> SList atom -> SExp atom
 x $|: l = $| (x :: l)
+
+infix 7 $.
+public export
+($.) : {0 atom : Type} -> SExp atom -> SExp atom -> SExp atom
+x $. x' = $| [x, x']
+
+infix 7 $^.
+public export
+($^.) : {0 atom : Type} -> atom -> SExp atom -> SExp atom
+a $^. x' = $^ a $. x'
 
 public export
 SPred : (atom : Type) -> Type

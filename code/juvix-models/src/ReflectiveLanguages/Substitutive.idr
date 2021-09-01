@@ -5,8 +5,51 @@ import Library.Decidability
 import RefinedSExp.List
 import Data.Vect
 import Data.Fin
+import public Datatypes.DependentAlgebraicTypes
 
 %default total
+
+public export
+SubstitutiveContext : Type
+SubstitutiveContext = SList Void
+
+public export
+EmptyContext : SubstitutiveContext
+EmptyContext = []
+
+public export
+ContextFromExp : SExp Void -> SubstitutiveContext
+ContextFromExp ($^ _) impossible
+ContextFromExp ($| l) = l
+
+mutual
+  prefix 11 *^
+  prefix 11 *|
+  infixr 7 *#
+
+  public export
+  data CSExp : (atom : Type) -> SubstitutiveContext -> Type where
+    (*^) : {atom : Type} -> {context : SubstitutiveContext} ->
+      atom -> CSExp atom context
+    (*#) : {atom : Type} -> {context : SubstitutiveContext} ->
+      (x : CSExp atom context) -> (n : Nat) ->
+      {auto ok : InBounds n context} ->
+      CSExp atom (ContextFromExp (index n context {ok}))
+    (*|) : {atom : Type} -> {context : SubstitutiveContext} ->
+      CSList atom context -> CSExp atom context
+
+  infixr 7 *-
+  infixr 7 *:
+  infixr 7 *~
+  public export
+  data CSList : (atom : Type) -> SubstitutiveContext -> Type where
+    (*-) : {atom : Type} -> {context : SubstitutiveContext} ->
+      CSList atom context
+    (*:) : {atom : Type} -> {context : SubstitutiveContext} ->
+      CSExp atom context -> CSList atom context -> CSList atom context
+    (*~) : {atom : Type} -> {context : SubstitutiveContext} ->
+      CSExp atom ($| context :: context) -> CSList atom context ->
+      CSList atom context
 
 --------------------------------------
 -- JUDGMENTS OF A MINIMAL METALOGIC --
@@ -18,6 +61,107 @@ import Data.Fin
 -- which may be expressed in any metalogic in which Gödel's
 -- incompleteness theorem can be derived.
 
+public export
+data SubstAtom : Type where
+  ObjectAtom : SubstAtom
+  MorphismAtom : SubstAtom
+
+public export
+SubstExp : Type
+SubstExp = SExp SubstAtom
+
+public export
+SubstList : Type
+SubstList = SList SubstAtom
+
+mutual
+  public export
+  data SubstContext : (rep : SubstList) -> Type where
+    SubstEmpty : SubstContext []
+    SubstTelescope : {firstRep : SubstList} -> {secondRep : SubstExp} ->
+      SubstContext firstRep -> SubstTerm firstRep secondRep ->
+      SubstContext (secondRep :: firstRep)
+
+  public export
+  data SubstObject : (rep : SubstExp) -> Type where
+
+  public export
+  data SubstMorphism : (domain, codomain : SubstExp) ->
+    (rep : SubstExp) -> Type where
+
+  public export
+  data ObjectInContext : (params : SubstList) -> (rep : SubstExp) -> Type where
+
+  public export
+  data MorphismInContext :
+    (params : SubstList) -> (domain, codomain : SubstExp) ->
+    (rep : SubstExp) -> Type where
+
+  public export
+  data SubstTerm : (params : SubstList) -> (rep : SubstExp) -> Type where
+    ObjectTerm : {params : SubstList} -> {rep : SubstExp} ->
+      SubstContext params -> ObjectInContext params rep ->
+      SubstTerm params (ObjectAtom $^. rep)
+    MorphismTerm : {params : SubstList} -> {domain, codomain, rep : SubstExp} ->
+      SubstContext params -> MorphismInContext params domain codomain rep ->
+      SubstTerm params (MorphismAtom $^. rep)
+
+{-
+mutual
+  public export
+  data ParameterList : Type where
+    TEmpty : ParameterList
+    TPair :
+      (left : ParameterList) -> (right : Datatype) ->
+      {auto domainMatch : ParameterListsEqual left (datatypeDomain right)} ->
+      ParameterList
+
+  public export
+  parameterListsEqual : ParameterList -> ParameterList -> Bool
+  parameterListsEqual TEmpty TEmpty = True
+  parameterListsEqual TEmpty (TPair _ _) = False
+  parameterListsEqual (TPair _ _) TEmpty = False
+  parameterListsEqual (TPair l r) (TPair l' r') =
+    parameterListsEqual l l' && datatypesEqual r r'
+
+  public export
+  ParameterListsEqual : ParameterList -> ParameterList -> Type
+  ParameterListsEqual tel tel' = IsTrue (parameterListsEqual tel tel')
+
+  public export
+  data Datatype : Type where
+    Coproduct : (types : List Datatype) ->
+    -- XXX compose
+    -- XXX fixpoint
+    -- XXX co-fixpoint
+    -- XXX sum-of-products
+    -- XXX separate decidable types from others
+
+  public export
+  datatypesEqual : Datatype -> Datatype -> Bool
+  datatypesEqual _ _ impossible
+
+  public export
+  DatatypesEqual : Datatype -> Datatype -> Type
+  DatatypesEqual type type' = IsTrue (datatypesEqual type type')
+
+  public export
+  datatypeDomain : Datatype -> ParameterList
+  datatypeDomain _ impossible
+
+  public export
+  data Constructor : Type where
+
+  public export
+  constructorsEqual : Constructor -> Constructor -> Bool
+  constructorsEqual _ _ impossible
+
+  public export
+  ConstructorsEqual : Constructor -> Constructor -> Type
+  ConstructorsEqual ctor ctor' = IsTrue (constructorsEqual ctor ctor')
+  -}
+
+{-
 public export
 data SubstitutiveKind : Type where
   Star : SubstitutiveKind
@@ -52,6 +196,15 @@ mutual
         Datatype (KindArrow [] codomain) numConstructors ->
         Datatype codomain numConstructors
 
+{- XXX
+      PatternMatch : {kind : SubstitutiveKind} -> {numConstructors : Nat} ->
+        {codomain : VarLenDatatype kind} ->
+        (ctors : Vect numConstructors (VarLenConstructor kind)) ->
+        {auto domainMatches : ListForAll MatchesVarLenConstructor ctors} ->
+        {auto codomainMatches :
+        Datatype (KindArrow )
+        -}
+
   public export
   data Constructor :
     (kind : SubstitutiveKind) -> (numFields : Nat) -> Type where
@@ -61,33 +214,31 @@ mutual
 
   public export
   data MatchesDatatype :
-    {kind : SubstitutiveKind} -> {numConstructors : Nat} -> {numFields : Nat} ->
-    Datatype kind numConstructors ->
-    Constructor kind numFields ->
+    {kind : SubstitutiveKind} -> {numConstructors : Nat} ->
+    (pattern, candidate : Datatype kind numConstructors) ->
     Type where
 
   public export
   data MatchesConstructor :
-    {kind : SubstitutiveKind} -> {numFields : Nat} -> {numConstructors : Nat} ->
-    Constructor kind numFields ->
-    Datatype kind numConstructors ->
+    {kind : SubstitutiveKind} -> {numFields : Nat} ->
+    (pattern, candidate : Constructor kind numFields) ->
     Type where
 
   public export
   matchesDatatype :
-    {kind : SubstitutiveKind} -> {numConstructors : Nat} -> {numFields : Nat} ->
-    (type : Datatype kind numConstructors) ->
-    (ctor : Constructor kind numFields) ->
-    Dec (MatchesDatatype type ctor)
-  matchesDatatype type ctor = No (\match => case match of _ impossible)
+    {kind : SubstitutiveKind} -> {numConstructors : Nat} ->
+    (pattern, candidate : Datatype kind numConstructors) ->
+    Dec (MatchesDatatype pattern candidate)
+  matchesDatatype pattern candidate =
+    No (\match => case match of _ impossible)
 
   public export
   matchesConstructor :
-    {kind : SubstitutiveKind} -> {numFields : Nat} -> {numConstructors : Nat} ->
-    (ctor : Constructor kind numFields) ->
-    (type : Datatype kind numConstructors) ->
+    {kind : SubstitutiveKind} -> {numFields : Nat} ->
+    (pattern, candidate : Constructor kind numFields) ->
     Dec (MatchesConstructor ctor type)
-  matchesConstructor ctor type = No (\match => case match of _ impossible)
+  matchesConstructor pattern candidate =
+    No (\match => case match of _ impossible)
 
   public export
   data VarLenDatatype : SubstitutiveKind -> Type where
@@ -98,11 +249,38 @@ mutual
   data VarLenConstructor : SubstitutiveKind -> Type where
     ConstructorWithLength : {kind : SubstitutiveKind} -> {numFields : Nat} ->
       Constructor kind numFields -> VarLenConstructor kind
-
     Project : {kind : SubstitutiveKind} -> {numConstructors : Nat} ->
       Datatype kind numConstructors ->
       Fin numConstructors ->
       VarLenConstructor kind
+
+  public export
+  data MatchesVarLenDatatype :
+    {kind : SubstitutiveKind} ->
+    (pattern, candidate : VarLenDatatype kind) ->
+    Type where
+
+  public export
+  matchesVarLenDatatype :
+    {kind : SubstitutiveKind} ->
+    (pattern, candidate : VarLenDatatype kind) ->
+    Dec (MatchesVarLenDatatype pattern candidate)
+  matchesVarLenDatatype pattern candidate =
+    No (\match => case match of _ impossible)
+
+  public export
+  data MatchesVarLenConstructor :
+    {kind : SubstitutiveKind} ->
+    (pattern, candidate : VarLenConstructor kind) ->
+    Type where
+
+  public export
+  matchesVarLenConstructor :
+    {kind : SubstitutiveKind} ->
+    (pattern, candidate : VarLenConstructor kind) ->
+    Dec (MatchesVarLenConstructor pattern candidate)
+  matchesVarLenConstructor pattern candidate =
+    No (\match => case match of _ impossible)
 
 public export
 ConstructorFields : {kind : SubstitutiveKind} -> {numFields : Nat} ->
@@ -126,4 +304,5 @@ ConstructorFields (Product fields) = fields
     {- XXX build docs to make sure I get comments right -}
 
   data InductiveType : (numParams : Nat) -> Type where
+    -}
     -}
