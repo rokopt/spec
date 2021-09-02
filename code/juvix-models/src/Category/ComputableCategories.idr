@@ -5,6 +5,8 @@ import Library.Decidability
 import Library.FunctionsAndRelations
 import OldSExp.SExpressions
 
+{-
+
 public export
 IsInjective : {a, b : Type} -> (f : a -> b) -> Type
 IsInjective {a} f = (x, x': a) -> f x = f x' -> x = x'
@@ -293,3 +295,4 @@ mutual
                       representative
       -- XXX once we have generators, split up into generator & composition --
       -- maybe just using FreeCategory
+-}

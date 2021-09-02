@@ -6,6 +6,7 @@ import Library.Decidability
 
 %default total
 
+{-
 namespace
 FreeCategories
     public export
@@ -717,3 +718,4 @@ namespace Subcategories
     Subcategory : {cat : FreeCategory} -> CategorySelection cat -> FreeCategory
     Subcategory selection = MkFreeCategory
         (SubcategoryObject selection) (SubcategoryMorphism selection)
+-}
