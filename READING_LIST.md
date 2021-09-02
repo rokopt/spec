@@ -2,6 +2,10 @@
 
 ### Papers
 
+#### Anoma
+- [Vision paper](https://anoma.network/papers/vision-paper.pdf)
+- [Whitepaper](https://anoma.network/papers/whitepaper.pdf)
+
 #### Protocol specifications
 
 - [Bitcoin Whitepaper - Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf)
