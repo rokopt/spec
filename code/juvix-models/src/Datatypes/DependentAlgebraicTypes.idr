@@ -147,3 +147,63 @@ Functor SExp where
 public export
 Functor SList where
   map = slistMap
+
+public export
+SPairPred : (atom : Type) -> Type
+SPairPred atom = SExp atom -> SExp atom -> Type
+
+public export
+SLPairPred : (atom : Type) -> Type
+SLPairPred atom = SList atom -> SList atom -> Type
+
+public export
+SPredPair : {atom : Type} -> (spp : SPairPred atom) -> SPred atom
+SPredPair {atom} spp = \x => (x' : SExp atom) -> spp x x'
+
+public export
+SLPredPair : {atom : Type} -> (lpp : SLPairPred atom) -> SLPred atom
+SLPredPair {atom} lpp = \l => (l' : SList atom) ->  lpp l l'
+
+public export
+record SExpPairEliminatorSig
+  {0 atom : Type} (0 spp : SPairPred atom) (0 lpp : SLPairPred atom)
+  where
+    constructor SExpPairEliminatorArgs
+    atomAtomElim : (a, a' : atom) -> spp ($^ a) ($^ a')
+    atomListElim : (a : atom) -> (l : SList atom) -> spp ($^ a) ($| l)
+    listAtomElim : (l : SList atom) -> (a : atom) -> spp ($| l) ($^ a)
+    listListElim : (l, l' : SList atom) -> lpp l l' -> spp ($| l) ($| l')
+    nilNilElim : lpp [] []
+    nilConsElim : (x : SExp atom) -> (l : SList atom) -> lpp [] (x :: l)
+    consNilElim : (x : SExp atom) -> (l : SList atom) -> lpp (x :: l) []
+    consConsElim :
+      (x, x' : SExp atom) -> (l, l' : SList atom) ->
+      spp x x' -> lpp l l' -> lpp (x :: l) (x' :: l')
+
+public export
+SExpPairEliminatorSigToEliminatorSig :
+  {0 atom : Type} -> {0 spp : SPairPred atom} -> {0 lpp : SLPairPred atom} ->
+  SExpPairEliminatorSig spp lpp ->
+  SExpEliminatorSig (SPredPair spp) (SLPredPair lpp)
+SExpPairEliminatorSigToEliminatorSig signature =
+  SExpEliminatorArgs
+    (\a, x => case x of
+      $^ a' => atomAtomElim signature a a'
+      $| l' => atomListElim signature a l')
+    (\l, lppl, x' => case x' of
+      $^ a' => listAtomElim signature l a'
+      $| l' => listListElim signature l l' (lppl l'))
+    (\l => case l of
+      [] => nilNilElim signature
+      (x' :: l') => nilConsElim signature x' l')
+    (\x, l, sppx, lppl, l' => case l' of
+      [] => consNilElim signature x l
+      (x' :: l') => consConsElim signature x x' l l' (sppx x') (lppl l'))
+
+public export
+sexpPairEliminators :
+  {0 atom : Type} -> {0 spp : SPairPred atom} -> {0 lpp : SLPairPred atom} ->
+  SExpPairEliminatorSig spp lpp ->
+  ((x, x' : SExp atom) -> spp x x', (l, l' : SList atom) -> lpp l l')
+sexpPairEliminators signature =
+  sexpEliminators (SExpPairEliminatorSigToEliminatorSig signature)

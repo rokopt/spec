@@ -10,6 +10,7 @@ import Datatypes.Test.DatatypesTest
 import Datatypes.Test.InductiveDatatypesTest
 import Datatypes.Test.DependentAlgebraicTypesTest
 import Datatypes.Test.DependentInductiveDatatypesTest
+import RefinedSExp.Test.SExpFinTest
 import Theories.Test.AlgebraicTheoryTest
 import Theories.Test.DependentAlgebraicTheoryTest
 import Theories.Test.HigherOrderRecursionTest
@@ -37,6 +38,7 @@ main = do
   RefinedSExp.Test.SExpTest.sExpTests
   RefinedSExp.Test.SExpApplicativesTest.sExpApplicativesTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
+  RefinedSExp.Test.SExpFinTest.sexpFinTests
   Datatypes.Test.AlgebraicTypesTest.algebraicTypesTests
   Datatypes.Test.DatatypesTest.datatypesTests
   Datatypes.Test.InductiveDatatypesTest.inductiveDatatypesTests
