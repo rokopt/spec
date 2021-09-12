@@ -3,6 +3,7 @@ module Library.Decidability
 import External.IntegerSquareRoot
 import Library.FunctionsAndRelations
 import public Data.Vect
+import public Data.Fin
 import public Decidable.Equality
 import public Data.Maybe
 import public Data.Nat
@@ -393,3 +394,10 @@ x **> cx = Right (x ** cx)
 public export
 data IsLeft : {a, b : Type} -> Either a b -> Type where
   ItIsLeft : {a, b : Type} -> {x : a} -> IsLeft (Left x)
+
+public export
+natToFinCert : {m, n : Nat} -> m `LT` n -> Fin n
+natToFinCert {m=Z} LTEZero impossible
+natToFinCert {m=Z} (LTESucc lte) = FZ
+natToFinCert {m=(S m')} LTEZero impossible
+natToFinCert {m=(S m')} (LTESucc lte) = FS (natToFinCert {m=m'} lte)

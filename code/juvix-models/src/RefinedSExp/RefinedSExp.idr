@@ -16,7 +16,6 @@ import public Library.Decidability
 -- | holes might be either constrained to be equal or not.
 mutual
   prefix 11 $<
-  prefix 11 $>
   prefix 11 $|
   public export
   data StructExp : (holesInContext, holesInExpression : Nat) -> Type where
@@ -34,7 +33,7 @@ mutual
       StructExp holesInContext holesInList
 
   prefix 7 $-
-  infix 7 $:
+  infixr 7 $:
   public export
   data StructList : (holesInContext, holesInList : Nat) -> Type where
     -- | An empty list contains no holes, and can be formed in any context.
@@ -43,4 +42,19 @@ mutual
     -- | of the tail.  Thus it might be viewed as a form of telescope.
     ($:) : StructExp holesInContext holesInHead ->
       StructList (holesInHead + holesInContext) holesInTail ->
-      StructList holesInContext (holesInHead + holesInTail)
+      StructList holesInContext (holesInTail + holesInHead)
+
+infixr 7 $:-
+public export
+($:-) : {holesInContext, holesInHead, holesInTail : Nat} ->
+  StructExp holesInContext holesInHead ->
+  StructExp (holesInHead + holesInContext) holesInTail ->
+  StructList holesInContext (holesInTail + holesInHead)
+h $:- t = h $: t $: ($-)
+
+prefix 11 $<+
+public export
+($<+): {holesInContext : Nat} -> (m : Nat) ->
+  {auto valid : m `LT` holesInContext} ->
+  StructExp holesInContext 0
+($<+) m {valid} = ($<) (natToFinCert valid)
