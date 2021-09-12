@@ -106,6 +106,44 @@ mutual
       SubstContext params -> MorphismInContext params domain codomain rep ->
       SubstTerm params (MorphismAtom $^. rep)
 
+public export
+data ConstructionAtom : Type where
+
+public export
+ConstructionExp : Type
+ConstructionExp = SExp ConstructionAtom
+
+public export
+ConstructionList : Type
+ConstructionList = SList ConstructionAtom
+
+mutual
+  public export
+  data ConstructionObject :
+    (inArities : List Nat) -> (outArity : Nat) -> Type where
+
+  public export
+  data ConstructionMorphism :
+    (inArities : List Nat) -> (outArity : Nat) -> Type where
+      ConstructionPair :
+        (domain, codomain : ConstructionObject inArities outArity) ->
+        ConstructionMorphism inArities outArity
+
+  public export
+  data Constructor :
+    (inArities : List Nat) -> (outArity : Nat) -> Type where
+      ConstructorObject : ConstructionObject inArities outArity ->
+        Constructor inArities outArity
+      ConstructorMorphism : ConstructionObject inArities outArity ->
+        Constructor inArities outArity
+
+  public export
+  data ConstructionSystem : (inArities : List Nat) -> (outArity : Nat) ->
+    (constructions : Nat) -> Type where
+      ConstructionMorphisms :
+        (inArities : List Nat) -> (outArity : Nat) -> (constructions : Nat) ->
+        Vect constructions (Constructor inArities outArity) ->
+        ConstructionSystem inArities outArity constructions
 {-
 mutual
   public export
