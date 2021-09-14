@@ -35,10 +35,6 @@ mutual
     ($|) : {holesInContext, holesInList : Nat} ->
       StructList holesInContext holesInList ->
       StructExp holesInContext holesInList
-    SSubst : {holesInContext, holesInPattern, holesInArguments : Nat} ->
-      StructExp holesInContext holesInPattern ->
-      Vect holesInPattern (StructExp holesInContext holesInArguments) ->
-      StructExp holesInContext holesInArguments
 
   prefix 7 $-
   infixr 7 $:
@@ -141,12 +137,6 @@ record StructInductionSig (xp : StructPred) (lp : StructListPred) where
     (l : StructList holesInContext holesInList) ->
     lp holesInContext holesInList l ->
     xp holesInContext holesInList ($| l)
-  substElim : (holesInContext, holesInPattern, holesInArguments : Nat) ->
-    (x : StructExp holesInContext holesInPattern) ->
-    (args : Vect holesInPattern (StructExp holesInContext holesInArguments)) ->
-    xp holesInContext holesInPattern x ->
-    HVect (map (xp holesInContext holesInArguments) args) ->
-    xp holesInContext holesInArguments (SSubst x args)
   nilElim : (holesInContext : Nat) ->
     lp holesInContext 0 ($-)
   consElim : (holesInContext, holesInHead, holesInTail : Nat) ->
@@ -171,15 +161,6 @@ mutual
   structInduction signature holesInContext holesInExpression ($| l) =
     listElim signature holesInContext holesInExpression l
       (structListInduction signature holesInContext holesInExpression l)
-  structInduction signature holesInContext holesInExpression
-    (SSubst {holesInContext} {holesInPattern}
-      {holesInArguments=holesInExpression} x args) =
-        substElim signature holesInContext holesInPattern holesInExpression
-          x args
-          (structInduction signature
-            holesInContext holesInPattern x)
-          (structVectInduction signature
-            holesInContext holesInPattern holesInExpression args)
 
   structListInduction : {xp : StructPred} -> {lp : StructListPred} ->
     StructInductionSig xp lp ->
@@ -195,6 +176,35 @@ mutual
         (structListInduction
           signature (holesInHead + holesInContext) holesInTail t)
 
+structInductions : {xp : StructPred} -> {lp : StructListPred} ->
+  StructInductionSig xp lp ->
+  ((holesInContext, holesInExpression : Nat) ->
+    (x : StructExp holesInContext holesInExpression) ->
+    xp holesInContext holesInExpression x,
+   (holesInContext, holesInList : Nat) ->
+    (l : StructList holesInContext holesInList) ->
+    lp holesInContext holesInList l)
+structInductions signature =
+  (structInduction signature, structListInduction signature)
+
+{-
+  substElim : (holesInContext, holesInPattern, holesInArguments : Nat) ->
+    (x : StructExp holesInContext holesInPattern) ->
+    (args : Vect holesInPattern (StructExp holesInContext holesInArguments)) ->
+    xp holesInContext holesInPattern x ->
+    HVect (map (xp holesInContext holesInArguments) args) ->
+    xp holesInContext holesInArguments (SSubst x args)
+
+  structInduction signature holesInContext holesInExpression
+    (SSubst {holesInContext} {holesInPattern}
+      {holesInArguments=holesInExpression} x args) =
+        substElim signature holesInContext holesInPattern holesInExpression
+          x args
+          (structInduction signature
+            holesInContext holesInPattern x)
+          (structVectInduction signature
+            holesInContext holesInPattern holesInExpression args)
+
   structVectInduction : {xp : StructPred} -> {lp : StructListPred} ->
     StructInductionSig xp lp ->
     (holesInContext, numArguments, holesInArguments : Nat) ->
@@ -209,14 +219,25 @@ mutual
         holesInContext holesInArguments arg ::
       structVectInduction signature
         holesInContext predNumArguments holesInArguments args
+-}
 
-structInductions : {xp : StructPred} -> {lp : StructListPred} ->
-  StructInductionSig xp lp ->
-  ((holesInContext, holesInExpression : Nat) ->
-    (x : StructExp holesInContext holesInExpression) ->
-    xp holesInContext holesInExpression x,
+structSubstitutions :
+  ((holesInContext, holesInPattern : Nat) ->
+    StructExp holesInContext holesInPattern ->
+    (holesInArguments : Nat) ->
+    Vect holesInPattern (StructExp holesInContext holesInArguments) ->
+    StructExp holesInContext holesInArguments,
    (holesInContext, holesInList : Nat) ->
-    (l : StructList holesInContext holesInList) ->
-    lp holesInContext holesInList l)
-structInductions signature =
-  (structInduction signature, structListInduction signature)
+    StructList holesInContext holesInList ->
+    (holesInArguments : Nat) ->
+    Vect holesInList (StructExp holesInContext holesInArguments) ->
+    StructList holesInContext holesInArguments)
+structSubstitutions =
+  structInductions
+    (StructInductionArgs
+      (?structSubstitutions_hole_reference)
+      (?structSubstitutions_hole_newhole)
+      (?structSubstitutions_hole_list)
+      (?structSubstitutions_hole_nil)
+      (?structSubstitutions_hole_cons)
+    )
