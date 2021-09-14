@@ -2,6 +2,7 @@ module RefinedSExp.RefinedSExp
 
 import public Library.Decidability
 import public Data.Nat
+import public Data.HVect
 
 -- “Ah Love! could thou and I with Fate conspire
 -- To grasp this sorry Scheme of Things entire,
@@ -34,6 +35,10 @@ mutual
     ($|) : {holesInContext, holesInList : Nat} ->
       StructList holesInContext holesInList ->
       StructExp holesInContext holesInList
+    SSubst : {holesInContext, holesInPattern, holesInArguments : Nat} ->
+      StructExp holesInContext holesInPattern ->
+      Vect holesInPattern (StructExp holesInContext holesInArguments) ->
+      StructExp holesInContext holesInArguments
 
   prefix 7 $-
   infixr 7 $:
@@ -48,6 +53,102 @@ mutual
       StructExp holesInContext holesInHead ->
       StructList (holesInHead + holesInContext) holesInTail ->
       StructList holesInContext (holesInTail + holesInHead)
+
+public export
+StructPred : Type
+StructPred =
+  (holesInContext, holesInExpression : Nat) ->
+  StructExp holesInContext holesInExpression ->
+  Type
+
+public export
+StructListPred : Type
+StructListPred =
+  (holesInContext, holesInExpression : Nat) ->
+  StructList holesInContext holesInExpression ->
+  Type
+
+-- | The signature of the (mutual) induction principle for structural
+-- | expressions and lists.
+public export
+record StructInductionSig (xp : StructPred) (lp : StructListPred) where
+  constructor StructInductionArgs
+  referenceElim : (holesInContext : Nat) -> (index : Fin holesInContext) ->
+    xp holesInContext 0 ($< index)
+  newHoleElim : (holesInContext : Nat) ->
+    xp holesInContext 1 ($>)
+  listElim : (holesInContext, holesInList : Nat) ->
+    (l : StructList holesInContext holesInList) ->
+    lp holesInContext holesInList l ->
+    xp holesInContext holesInList ($| l)
+  substElim : (holesInContext, holesInPattern, holesInArguments : Nat) ->
+    (x : StructExp holesInContext holesInPattern) ->
+    (args : Vect holesInPattern (StructExp holesInContext holesInArguments)) ->
+    xp holesInContext holesInPattern x ->
+    HVect (map (xp holesInContext holesInArguments) args) ->
+    xp holesInContext holesInArguments (SSubst x args)
+  nilElim : (holesInContext : Nat) ->
+    lp holesInContext 0 ($-)
+  consElim : (holesInContext, holesInHead, holesInTail : Nat) ->
+    (x : StructExp holesInContext holesInHead) ->
+    (l : StructList (holesInHead + holesInContext) holesInTail) ->
+    xp holesInContext holesInHead x ->
+    lp (holesInHead + holesInContext) holesInTail l ->
+    lp holesInContext (holesInTail + holesInHead) (x $: l)
+
+-- | The signature of the (mutual) induction principle for structural
+-- | expressions and lists.
+mutual
+  structInduction : {xp : StructPred} -> {lp : StructListPred} ->
+    StructInductionSig xp lp ->
+    (holesInContext, holesInExpression : Nat) ->
+    (x : StructExp holesInContext holesInExpression) ->
+    xp holesInContext holesInExpression x
+  structInduction signature holesInContext 0 ($< fin) =
+    referenceElim signature holesInContext fin
+  structInduction signature holesInContext 1 ($>) =
+    newHoleElim signature holesInContext
+  structInduction signature holesInContext holesInExpression ($| l) =
+    listElim signature holesInContext holesInExpression l
+      (structListInduction signature holesInContext holesInExpression l)
+  structInduction signature holesInContext holesInExpression
+    (SSubst {holesInContext} {holesInPattern}
+      {holesInArguments=holesInExpression} x args) =
+        substElim signature holesInContext holesInPattern holesInExpression
+          x args
+          (structInduction signature
+            holesInContext holesInPattern x)
+          (structVectInduction signature
+            holesInContext holesInPattern holesInExpression args)
+
+  structListInduction : {xp : StructPred} -> {lp : StructListPred} ->
+    StructInductionSig xp lp ->
+    (holesInContext, holesInList : Nat) ->
+    (l : StructList holesInContext holesInList) ->
+    lp holesInContext holesInList l
+  structListInduction signature holesInContext 0 ($-) =
+    nilElim signature holesInContext
+  structListInduction signature holesInContext (holesInTail + holesInHead)
+    (h $: t) =
+      consElim signature holesInContext holesInHead holesInTail h t
+        (structInduction signature holesInContext holesInHead h)
+        (structListInduction
+          signature (holesInHead + holesInContext) holesInTail t)
+
+  structVectInduction : {xp : StructPred} -> {lp : StructListPred} ->
+    StructInductionSig xp lp ->
+    (holesInContext, numArguments, holesInArguments : Nat) ->
+    (args : Vect numArguments (StructExp holesInContext holesInArguments)) ->
+    HVect (map (xp holesInContext holesInArguments) args)
+  structVectInduction signature
+    holesInContext 0 holesInArguments [] =
+      []
+  structVectInduction signature
+    holesInContext (S predNumArguments) holesInArguments (arg :: args) =
+      structInduction signature
+        holesInContext holesInArguments arg ::
+      structVectInduction signature
+        holesInContext predNumArguments holesInArguments args
 
 infixr 7 $:-
 public export
@@ -108,19 +209,3 @@ public export
     (holesInNthContext {holesInListContext} {holesInList} l index {indexValid})
     (holesInNthExp {holesInListContext} {holesInList} l index {indexValid})
 l $# index = snd (snd (sNth l index))
-
-mutual
-  public export
-  data StructExpRefinement : (holesInContext, holesInExpression : Nat) ->
-    Type where
-      RefinementAsExp : {holesInContext, holesInList : Nat} ->
-        StructListRefinement holesInContext holesInList ->
-        StructExpRefinement holesInContext holesInList
-
-  public export
-  data StructListRefinement : (holesInContext, holesInList : Nat) ->
-    Type where
-      Telescope : {holesInContext, holesInHead, holesInTail : Nat} ->
-        StructExpRefinement holesInContext holesInHead ->
-        StructListRefinement (holesInHead + holesInContext) holesInTail ->
-        StructListRefinement holesInContext (holesInTail + holesInHead)
