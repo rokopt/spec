@@ -111,12 +111,16 @@ l $# index = snd (snd (sNth l index))
 
 mutual
   public export
-  data StructExpRefinement : {holesInContext, holesInExpression : Nat} ->
-    StructExp holesInContext holesInExpression -> Type where
-      RefinementAsExp : StructListRefinement l -> StructExpRefinement ($| l)
+  data StructExpRefinement : (holesInContext, holesInExpression : Nat) ->
+    Type where
+      RefinementAsExp : {holesInContext, holesInList : Nat} ->
+        StructListRefinement holesInContext holesInList ->
+        StructExpRefinement holesInContext holesInList
 
   public export
-  data StructListRefinement : {holesInContext, holesInList : Nat} ->
-    StructList holesInContext holesInList -> Type where
-      RefinementsAsList : StructExpRefinement x -> StructListRefinement l ->
-        StructListRefinement (x $: l)
+  data StructListRefinement : (holesInContext, holesInList : Nat) ->
+    Type where
+      Telescope : {holesInContext, holesInHead, holesInTail : Nat} ->
+        StructExpRefinement holesInContext holesInHead ->
+        StructListRefinement (holesInHead + holesInContext) holesInTail ->
+        StructListRefinement holesInContext (holesInTail + holesInHead)

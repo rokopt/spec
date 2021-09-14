@@ -34,6 +34,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.SExpApplicativesTest
     , RefinedSExp.RefinedSExp
     , RefinedSExp.Test.RefinedSExpTest
+    , RefinedSExp.RefinementInterpretation
+    , RefinedSExp.Test.RefinementInterpretationTest
     , RefinedSExp.SExpFin
     , RefinedSExp.Test.SExpFinTest
     , Datatypes.AlgebraicTypes

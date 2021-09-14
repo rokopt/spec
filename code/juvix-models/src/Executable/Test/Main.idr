@@ -5,6 +5,7 @@ import RefinedSExp.Test.ListTest
 import RefinedSExp.Test.SExpTest
 import RefinedSExp.Test.SExpApplicativesTest
 import RefinedSExp.Test.RefinedSExpTest
+import RefinedSExp.Test.RefinementInterpretationTest
 import Datatypes.Test.AlgebraicTypesTest
 import Datatypes.Test.DatatypesTest
 import Datatypes.Test.InductiveDatatypesTest
@@ -38,6 +39,7 @@ main = do
   RefinedSExp.Test.SExpTest.sExpTests
   RefinedSExp.Test.SExpApplicativesTest.sExpApplicativesTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
+  RefinedSExp.Test.RefinementInterpretationTest.refinementInterpretationTests
   RefinedSExp.Test.SExpFinTest.sexpFinTests
   Datatypes.Test.AlgebraicTypesTest.algebraicTypesTests
   Datatypes.Test.DatatypesTest.datatypesTests
