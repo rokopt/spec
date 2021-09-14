@@ -54,6 +54,66 @@ mutual
       StructList (holesInHead + holesInContext) holesInTail ->
       StructList holesInContext (holesInTail + holesInHead)
 
+infixr 7 $:-
+public export
+($:-) : {holesInContext, holesInHead, holesInTail : Nat} ->
+  StructExp holesInContext holesInHead ->
+  StructExp (holesInHead + holesInContext) holesInTail ->
+  StructList holesInContext (holesInTail + holesInHead)
+h $:- t = h $: t $: ($-)
+
+prefix 11 $<+
+public export
+($<+): {holesInContext : Nat} -> (m : Nat) ->
+  {auto valid : m `LT` holesInContext} ->
+  StructExp holesInContext 0
+($<+) m {valid} = ($<) (natToFinCert valid)
+
+public export
+slength : {0 holesInContext, holesInList : Nat} ->
+  StructList holesInContext holesInList -> Nat
+slength ($-) = 0
+slength (($:) h t) = S (slength t)
+
+public export
+sNth : {holesInListContext, holesInList : Nat} ->
+  (l : StructList holesInListContext holesInList) ->
+  (index : Nat) ->
+  {auto indexValid : index `LT` (slength l)} ->
+  (holesInContext : Nat ** holesInExp : Nat **
+   StructExp holesInContext holesInExp)
+sNth ($-) _ {indexValid} =
+  void (succNotLTEzero indexValid)
+sNth {holesInListContext} (($:) {holesInHead} h t) Z =
+  (holesInListContext ** holesInHead ** h)
+sNth {holesInListContext} (($:) h t) (S n) {indexValid} =
+  sNth t n {indexValid=(fromLteSucc indexValid)}
+
+public export
+holesInNthContext : {holesInListContext, holesInList : Nat} ->
+  (l : StructList holesInListContext holesInList) ->
+  (index : Nat) -> {auto indexValid : index `LT` (slength l)} ->
+  Nat
+holesInNthContext l index = fst (sNth l index)
+
+public export
+holesInNthExp : {holesInListContext, holesInList : Nat} ->
+  (l : StructList holesInListContext holesInList) ->
+  (index : Nat) -> {auto indexValid : index `LT` (slength l)} ->
+  Nat
+holesInNthExp l index = fst (snd (sNth l index))
+
+infix 11 $#
+public export
+($#) : {holesInListContext, holesInList : Nat} ->
+  (l : StructList holesInListContext holesInList) ->
+  (index : Nat) ->
+  {auto indexValid : index `LT` (slength l)} ->
+  StructExp
+    (holesInNthContext {holesInListContext} {holesInList} l index {indexValid})
+    (holesInNthExp {holesInListContext} {holesInList} l index {indexValid})
+l $# index = snd (snd (sNth l index))
+
 public export
 StructPred : Type
 StructPred =
@@ -160,63 +220,3 @@ structInductions : {xp : StructPred} -> {lp : StructListPred} ->
     lp holesInContext holesInList l)
 structInductions signature =
   (structInduction signature, structListInduction signature)
-
-infixr 7 $:-
-public export
-($:-) : {holesInContext, holesInHead, holesInTail : Nat} ->
-  StructExp holesInContext holesInHead ->
-  StructExp (holesInHead + holesInContext) holesInTail ->
-  StructList holesInContext (holesInTail + holesInHead)
-h $:- t = h $: t $: ($-)
-
-prefix 11 $<+
-public export
-($<+): {holesInContext : Nat} -> (m : Nat) ->
-  {auto valid : m `LT` holesInContext} ->
-  StructExp holesInContext 0
-($<+) m {valid} = ($<) (natToFinCert valid)
-
-public export
-slength : {0 holesInContext, holesInList : Nat} ->
-  StructList holesInContext holesInList -> Nat
-slength ($-) = 0
-slength (($:) h t) = S (slength t)
-
-public export
-sNth : {holesInListContext, holesInList : Nat} ->
-  (l : StructList holesInListContext holesInList) ->
-  (index : Nat) ->
-  {auto indexValid : index `LT` (slength l)} ->
-  (holesInContext : Nat ** holesInExp : Nat **
-   StructExp holesInContext holesInExp)
-sNth ($-) _ {indexValid} =
-  void (succNotLTEzero indexValid)
-sNth {holesInListContext} (($:) {holesInHead} h t) Z =
-  (holesInListContext ** holesInHead ** h)
-sNth {holesInListContext} (($:) h t) (S n) {indexValid} =
-  sNth t n {indexValid=(fromLteSucc indexValid)}
-
-public export
-holesInNthContext : {holesInListContext, holesInList : Nat} ->
-  (l : StructList holesInListContext holesInList) ->
-  (index : Nat) -> {auto indexValid : index `LT` (slength l)} ->
-  Nat
-holesInNthContext l index = fst (sNth l index)
-
-public export
-holesInNthExp : {holesInListContext, holesInList : Nat} ->
-  (l : StructList holesInListContext holesInList) ->
-  (index : Nat) -> {auto indexValid : index `LT` (slength l)} ->
-  Nat
-holesInNthExp l index = fst (snd (sNth l index))
-
-infix 11 $#
-public export
-($#) : {holesInListContext, holesInList : Nat} ->
-  (l : StructList holesInListContext holesInList) ->
-  (index : Nat) ->
-  {auto indexValid : index `LT` (slength l)} ->
-  StructExp
-    (holesInNthContext {holesInListContext} {holesInList} l index {indexValid})
-    (holesInNthExp {holesInListContext} {holesInList} l index {indexValid})
-l $# index = snd (snd (sNth l index))
