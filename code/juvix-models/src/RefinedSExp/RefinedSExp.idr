@@ -150,6 +150,17 @@ mutual
       structVectInduction signature
         holesInContext predNumArguments holesInArguments args
 
+structInductions : {xp : StructPred} -> {lp : StructListPred} ->
+  StructInductionSig xp lp ->
+  ((holesInContext, holesInExpression : Nat) ->
+    (x : StructExp holesInContext holesInExpression) ->
+    xp holesInContext holesInExpression x,
+   (holesInContext, holesInList : Nat) ->
+    (l : StructList holesInContext holesInList) ->
+    lp holesInContext holesInList l)
+structInductions signature =
+  (structInduction signature, structListInduction signature)
+
 infixr 7 $:-
 public export
 ($:-) : {holesInContext, holesInHead, holesInTail : Nat} ->
