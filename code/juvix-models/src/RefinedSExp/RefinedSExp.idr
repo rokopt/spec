@@ -219,7 +219,6 @@ structInductions signature =
         holesInContext holesInArguments arg ::
       structVectInduction signature
         holesInContext predNumArguments holesInArguments args
--}
 
 structSubstitutions :
   ((holesInContext, holesInPattern : Nat) ->
@@ -232,12 +231,4 @@ structSubstitutions :
     (holesInArguments : Nat) ->
     Vect holesInList (StructExp holesInContext holesInArguments) ->
     StructList holesInContext holesInArguments)
-structSubstitutions =
-  structInductions
-    (StructInductionArgs
-      (?structSubstitutions_hole_reference)
-      (?structSubstitutions_hole_newhole)
-      (?structSubstitutions_hole_list)
-      (?structSubstitutions_hole_nil)
-      (?structSubstitutions_hole_cons)
-    )
+-}

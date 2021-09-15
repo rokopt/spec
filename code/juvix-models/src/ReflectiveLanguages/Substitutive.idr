@@ -3,12 +3,78 @@ module ReflectiveLanguages.Substitutive
 import Library.FunctionsAndRelations
 import Library.Decidability
 import RefinedSExp.List
-import Data.Vect
-import Data.Fin
 import public Datatypes.DependentAlgebraicTypes
+import public Data.Nat
 
 %default total
 
+mutual
+  prefix 11 *^
+  prefix 11 *|
+  infixr 7 *#
+
+  -- | An S-expression whose only atoms are de Bruijn indices.
+  -- | The "C" prefix is for "Context"; de Bruijn indices are references
+  -- | to variables in a context.
+  -- |
+  -- | An S-expression may be either an atom or a list of S-expressions.
+  public export
+  data CSExp : (contextSize : Nat) -> Type where
+    -- | An atom, which is a de Bruijn index.
+    (*^) : {contextSize : Nat} -> (index : Nat) ->
+      {auto indexValid : index `LT` contextSize} -> CSExp contextSize
+    -- | A list of S-expressions.
+    (*|) : {contextSize : Nat} -> CSList contextSize -> CSExp contextSize
+
+  infixr 7 *-
+  infixr 7 *:
+  infixr 7 *~
+  -- | The list form of S-expressions whose only atoms are de Bruijn indices.
+  public export
+  data CSList : (contextSize : Nat) -> Type where
+    -- | The empty list, which may be formed in any context.
+    (*-) : {contextSize : Nat} -> CSList contextSize
+    -- | A non-empty list whose tail's context does not include the head.
+    -- | This is a non-dependent list.
+    (*:) : {contextSize : Nat} ->
+      CSExp contextSize -> CSList contextSize -> CSList contextSize
+    -- | A non-empty list whose tail's context includes the head.
+    -- | This is a dependent list, also known as a telescope.
+    (*~) : {contextSize : Nat} ->
+      CSExp contextSize -> CSList (S contextSize) -> CSList contextSize
+
+mutual
+  -- | Introduce unused variables into the context of an S-expression.
+  public export
+  csIntro : {newVars, origContextSize : Nat} ->
+    CSExp origContextSize -> CSExp (newVars + origContextSize)
+  csIntro ((*^) index {indexValid}) =
+    (*^) index {indexValid=(plusLteMonotone LTEZero indexValid)}
+  csIntro (*| l) = *| (cslIntro l)
+
+  -- | Introduce unused variables into the context of an S-list.
+  public export
+  cslIntro : {newVars, origContextSize : Nat} ->
+    CSList origContextSize -> CSList (newVars + origContextSize)
+  cslIntro (*-) = (*-)
+  cslIntro (hd *: tl) = csIntro hd *: cslIntro tl
+  cslIntro {newVars} {origContextSize} (hd *~ tl) =
+    csIntro hd *~
+    replace {p=CSList} (sym (plusSuccRightSucc newVars origContextSize))
+      (cslIntro tl)
+
+-- | Decide whether all members of a list of indices are in bounds.
+isValidIndexList : (contextSize : Nat) -> List Nat -> Bool
+isValidIndexList contextSize [] = True
+isValidIndexList contextSize (index :: indices) =
+  index < contextSize && isValidIndexList contextSize indices
+
+-- | A proof that all members of a list of indices are in bounds.
+IsValidIndexList : (contextSize : Nat) -> List Nat -> Type
+IsValidIndexList contextSize indices =
+  IsTrue (isValidIndexList contextSize indices)
+
+{-
 public export
 SubstitutiveContext : Type
 SubstitutiveContext = SList Void
@@ -342,5 +408,6 @@ ConstructorFields (Product fields) = fields
     {- XXX build docs to make sure I get comments right -}
 
   data InductiveType : (numParams : Nat) -> Type where
+    -}
     -}
     -}
