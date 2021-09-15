@@ -8,11 +8,11 @@ import public Data.Nat
 
 %default total
 
-mutual
-  prefix 11 *^
-  prefix 11 *|
-  infixr 7 *#
+prefix 11 *^
+prefix 11 *|
+infixl 7 *~
 
+mutual
   -- | An S-expression whose only atoms are de Bruijn indices.
   -- | The "C" prefix is for "Context"; de Bruijn indices are references
   -- | to variables in a context.
@@ -26,50 +26,65 @@ mutual
     -- | A list of S-expressions.
     (*|) : {contextSize : Nat} -> CSList contextSize -> CSExp contextSize
 
-  infixr 7 *-
-  infixr 7 *:
-  infixr 7 *~
   -- | The list form of S-expressions whose only atoms are de Bruijn indices.
   public export
   data CSList : (contextSize : Nat) -> Type where
     -- | The empty list, which may be formed in any context.
     (*-) : {contextSize : Nat} -> CSList contextSize
-    -- | A non-empty list whose tail's context does not include the head.
-    -- | This is a non-dependent list.
-    (*:) : {contextSize : Nat} ->
-      CSExp contextSize -> CSList contextSize -> CSList contextSize
     -- | A non-empty list whose tail's context includes the head.
     -- | This is a dependent list, also known as a telescope.
     (*~) : {contextSize : Nat} ->
       CSExp contextSize -> CSList (S contextSize) -> CSList contextSize
 
 mutual
-  -- | Introduce unused variables into the context of an S-expression.
   public export
-  csIntro : {newVars, origContextSize : Nat} ->
-    CSExp origContextSize -> CSExp (newVars + origContextSize)
-  csIntro ((*^) index {indexValid}) =
-    (*^) index {indexValid=(plusLteMonotone LTEZero indexValid)}
-  csIntro (*| l) = *| (cslIntro l)
+  -- | Introduce an unused variable into the context of an S-expression.
+  csIntroOne : {origContextSize : Nat} -> CSExp origContextSize ->
+    CSExp (S origContextSize)
+  csIntroOne ((*^) index {indexValid}) =
+    (*^) index {indexValid=(lteSuccRight indexValid)}
+  csIntroOne (*| l) = *| (cslIntroOne l)
 
-  -- | Introduce unused variables into the context of an S-list.
   public export
-  cslIntro : {newVars, origContextSize : Nat} ->
-    CSList origContextSize -> CSList (newVars + origContextSize)
-  cslIntro (*-) = (*-)
-  cslIntro (hd *: tl) = csIntro hd *: cslIntro tl
-  cslIntro {newVars} {origContextSize} (hd *~ tl) =
-    csIntro hd *~
-    replace {p=CSList} (sym (plusSuccRightSucc newVars origContextSize))
-      (cslIntro tl)
+  -- | Introduce an unused variable into the context of an S-list.
+  cslIntroOne : {origContextSize : Nat} -> CSList origContextSize ->
+    CSList (S origContextSize)
+  cslIntroOne (*-) = (*-)
+  cslIntroOne (hd *~ tl) = csIntroOne hd *~ cslIntroOne tl
+
+-- | Introduce unused variables into the context of an S-expression.
+public export
+csIntro : {newVars, origContextSize : Nat} ->
+  CSExp origContextSize -> CSExp (newVars + origContextSize)
+csIntro {newVars=Z} x = x
+csIntro {newVars=(S Z)} x = csIntroOne x
+csIntro {newVars=(S (S n))} x = csIntroOne (csIntro {newVars=(S n)} x)
+
+-- | Introduce unused variables into the context of an S-list.
+public export
+cslIntro : {newVars, origContextSize : Nat} ->
+  CSList origContextSize -> CSList (newVars + origContextSize)
+cslIntro {newVars=Z} x = x
+cslIntro {newVars=(S Z)} x = cslIntroOne x
+cslIntro {newVars=(S (S n))} x = cslIntroOne (cslIntro {newVars=(S n)} x)
+
+-- | A non-empty list whose tail's context does not include the head.
+-- | This is a non-dependent list.
+infixr 7 *:
+public export
+(*:) : {contextSize : Nat} ->
+  CSExp contextSize -> CSList contextSize -> CSList contextSize
+hd *: tl = hd *~ (cslIntro {newVars=1} tl)
 
 -- | Decide whether all members of a list of indices are in bounds.
+public export
 isValidIndexList : (contextSize : Nat) -> List Nat -> Bool
 isValidIndexList contextSize [] = True
 isValidIndexList contextSize (index :: indices) =
   index < contextSize && isValidIndexList contextSize indices
 
 -- | A proof that all members of a list of indices are in bounds.
+public export
 IsValidIndexList : (contextSize : Nat) -> List Nat -> Type
 IsValidIndexList contextSize indices =
   IsTrue (isValidIndexList contextSize indices)

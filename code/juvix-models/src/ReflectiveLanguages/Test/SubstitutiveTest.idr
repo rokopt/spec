@@ -17,28 +17,28 @@ isAtom _ _ (*| _) = False
 export
 isSuccLike : (carrier, succ : Nat) ->
   {auto noDups : NoDuplicates [ carrier, succ ]} -> CSPred
-isSuccLike carrier succ _ (*| ( (*^ i) *: (*^ i') *: (*-) ) ) =
-  i == succ && i' == carrier
+isSuccLike carrier succ _ (*| ( (*^ i) *~ ((*^ i') *~ (*-)) ) ) =
+    i == succ && i' == carrier
 isSuccLike _ _ _ _ = False
 
 export
 isNatFLike : (carrier, zero, succ : Nat) ->
   {auto noDups : NoDuplicates [ zero, carrier, succ ]} -> CSLPred
 isNatFLike carrier zero succ {noDups} contextSize
-  ( zeroClause *: succClause *: (*-) ) =
+  ( zeroClause *~ (succClause *~ (*-)) ) =
     isAtom zero contextSize zeroClause &&
     isSuccLike
       carrier succ
         {noDups=(noDuplicatesTail {l=([ carrier, succ ])} noDups)}
-        contextSize succClause
+        (S contextSize) succClause
 isNatFLike _ _ _ _ _ = False
 
 export
 isNatLike : (zero, succ : Nat) -> {auto noDups : NoDuplicates [ zero, succ ]} ->
   CSPred
 isNatLike zero succ contextSize (*^ i) = zero == i
-isNatLike zero succ contextSize (*| ( (*^ i) *: n *: (*-) ) ) =
-  succ == i && isNatLike zero succ contextSize n
+isNatLike zero succ contextSize (*| ( (*^ i) *~ (n *~ (*-)) ) ) =
+  succ == i && isNatLike zero succ (S contextSize) n
 isNatLike _ _ _ _ = False
 
 export
