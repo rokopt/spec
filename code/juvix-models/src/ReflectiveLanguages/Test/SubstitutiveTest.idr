@@ -9,40 +9,6 @@ import Datatypes.DependentAlgebraicTypes
 
 %default total
 
-public export
-noDuplicates : List Nat -> Bool
-noDuplicates [] = True
-noDuplicates (n :: l) = find (== n) l == Nothing && noDuplicates l
-
-public export
-NoDuplicates : List Nat -> Type
-NoDuplicates = IsTrue . noDuplicates
-
-public export
-noDuplicatesTail : {n : Nat} -> {l : List Nat} ->
-  NoDuplicates (n :: l) -> NoDuplicates l
-noDuplicatesTail {l=[]} noDups = Refl
-noDuplicatesTail {n} {l=(n' :: l')} noDups with (n' == n)
-  noDuplicatesTail {n} {l=(n' :: l')} Refl | True impossible
-  noDuplicatesTail {n} {l=(n' :: l')} noDups | False =
-    snd $ andElimination noDups
-
-public export
-CSNPred : Nat -> Type
-CSNPred contextSize = CSExp contextSize -> Bool
-
-public export
-CSPred : Type
-CSPred = (contextSize : Nat) -> CSNPred contextSize
-
-public export
-CSLNPred : Nat -> Type
-CSLNPred contextSize = CSList contextSize -> Bool
-
-public export
-CSLPred : Type
-CSLPred = (contextSize : Nat) -> CSLNPred contextSize
-
 export
 isAtom : (index : Nat) -> CSPred
 isAtom givenIndex _ (*^ foundIndex) = givenIndex == foundIndex

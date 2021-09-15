@@ -2,11 +2,11 @@ module Library.Decidability
 
 import External.IntegerSquareRoot
 import Library.FunctionsAndRelations
-import public Data.Vect
 import public Data.Fin
 import public Decidable.Equality
 import public Data.Maybe
 import public Data.Nat
+import public Data.List
 
 %default total
 
@@ -401,3 +401,21 @@ natToFinCert {m=Z} LTEZero impossible
 natToFinCert {m=Z} (LTESucc lte) = FZ
 natToFinCert {m=(S m')} LTEZero impossible
 natToFinCert {m=(S m')} (LTESucc lte) = FS (natToFinCert {m=m'} lte)
+
+public export
+noDuplicates : Eq a => List a -> Bool
+noDuplicates [] = True
+noDuplicates (x :: l) = find (== x) l == Nothing && noDuplicates l
+
+public export
+NoDuplicates : Eq a => List a -> Type
+NoDuplicates = IsTrue . noDuplicates
+
+public export
+noDuplicatesTail : Eq a => {x : a} -> {l : List a} ->
+  NoDuplicates (x :: l) -> NoDuplicates l
+noDuplicatesTail {l=[]} noDups = Refl
+noDuplicatesTail {x} {l=(x' :: l')} noDups with (x' == x)
+  noDuplicatesTail {x} {l=(x' :: l')} Refl | True impossible
+  noDuplicatesTail {x} {l=(x' :: l')} noDups | False =
+    snd $ andElimination noDups
