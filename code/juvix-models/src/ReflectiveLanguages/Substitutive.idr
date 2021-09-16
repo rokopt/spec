@@ -69,12 +69,18 @@ cslIntro {newVars=(S Z)} x = cslIntroOne x
 cslIntro {newVars=(S (S n))} x = cslIntroOne (cslIntro {newVars=(S n)} x)
 
 -- | A non-empty list whose tail's context does not include the head.
--- | This is a non-dependent list.
+-- | This is a non-dependent cons.
 infixr 7 *:
 public export
 (*:) : {contextSize : Nat} ->
   CSExp contextSize -> CSList contextSize -> CSList contextSize
 hd *: tl = hd *~ (cslIntro {newVars=1} tl)
+
+-- | A non-dependent list.
+public export
+csList : {contextSize : Nat} -> List (CSExp contextSize) -> CSList contextSize
+csList [] = (*-)
+csList (x :: xs) = x *: (csList xs)
 
 -- | Decide whether all members of a list of indices are in bounds.
 public export
@@ -88,6 +94,22 @@ public export
 IsValidIndexList : (contextSize : Nat) -> List Nat -> Type
 IsValidIndexList contextSize indices =
   IsTrue (isValidIndexList contextSize indices)
+
+-- | A sum-of-products style of representing types.
+public export
+SumOfProducts : (contextSize : Nat) -> Type
+SumOfProducts = List . CSList
+
+mutual
+  -- | A representation of a characteristic function on S-expressions.
+  public export
+  data RefinedBy : {contextSize : Nat} ->
+    SumOfProducts contextSize -> CSExp contextSize -> Type where
+
+  -- | A representation of a characteristic function on S-lists.
+  public export
+  data RefinedByList : {contextSize : Nat} ->
+    CSList contextSize -> CSList contextSize -> Type where
 
 public export
 CSNPred : Nat -> Type
