@@ -110,3 +110,101 @@ CSLNPred contextSize = CSList contextSize -> Bool
 public export
 CSLPred : Type
 CSLPred = (contextSize : Nat) -> CSLNPred contextSize
+
+-- | Keyword atoms of S-expressions which represent refinements.
+public export
+data Keyword : Type where
+  -- | A non-dependent list.
+  KList : Keyword
+  -- | A dependent list, also known as a telescope.
+  KTelescope : Keyword
+
+-- | Atoms of S-expressions which represent refinements.
+public export
+data RAtom : (symbol : Type) -> Type where
+  -- | A keyword atom.
+  RKeyword : {symbol : Type} -> Keyword -> RAtom symbol
+  -- | A symbol specific to a particular language.
+  RSymbol : {symbol : Type} -> symbol -> RAtom symbol
+
+-- | Shorthand for a list atom in a particular refined S-expression language.
+public export
+RKList : {symbol : Type} -> RAtom symbol
+RKList = RKeyword KList
+
+-- | Shorthand for a telescope atom in a particular refined S-expression
+-- | language.
+public export
+RKTelescope : {symbol : Type} -> RAtom symbol
+RKTelescope = RKeyword KTelescope
+
+-- | The S-expressions of a particular refined S-expression language.
+public export
+RExp : (symbol : Type) -> Type
+RExp = SExp . RAtom
+
+-- | The definition of a particular refined S-expression language.
+public export
+record RefinementLanguage where
+  constructor RefinementLanguageArgs
+  rlApplicative : Type -> Type
+  rlIsApplicative : Applicative rlApplicative
+  rlContext : Type
+  rlPrimitive : Type
+  rlBadPrimitive : rlContext -> rlPrimitive -> Type
+  rlPrimitiveType : (context : rlContext) -> (primitive : rlPrimitive) ->
+    rlApplicative $ Either (RExp rlPrimitive) (rlBadPrimitive context primitive)
+  rlName : Type
+  rlLookupFailure : rlContext -> rlName -> Type
+  rlLookup : (context : rlContext) -> (name : rlName) ->
+    rlApplicative $ Either (RExp rlPrimitive) (rlLookupFailure context name)
+
+-- | The symbols of an S-expression language with all names resolved.
+public export
+RLSymbol : RefinementLanguage -> Type
+RLSymbol = RAtom . rlPrimitive
+
+-- | The S-expressions of a particular language, with all names resolved.
+public export
+RLExp : RefinementLanguage -> Type
+RLExp = RExp . rlPrimitive
+
+-- | The symbols that may be used in an S-expression which contains names,
+-- | which are used as shorthands for S-expressions within the language
+-- | without names.
+public export
+data NamedSymbol : RefinementLanguage -> Type where
+  NEPrimitive : refinementLanguage.rlPrimitive -> NamedSymbol refinementLanguage
+  NEName : refinementLanguage.rlName -> NamedSymbol refinementLanguage
+
+-- | The atoms of an S-expression language with a naming context.
+public export
+NamedAtom : RefinementLanguage -> Type
+NamedAtom = RAtom . NamedSymbol
+
+-- | The S-expressions of a particular language, with a naming context.
+NamedExp : RefinementLanguage -> Type
+NamedExp = RExp . NamedSymbol
+
+mutual
+  -- | The errors that can occur when typechecking an S-expression in a
+  -- | particular language.
+  public export
+  data TypecheckError : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> (x : NamedExp rl) -> Type where
+      --
+
+  public export
+  data TypecheckSuccess : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> (type : NamedExp rl) -> (x : NamedExp rl) ->
+    Type where
+      SymbolSuccess :
+        (rl : RefinementLanguage) -> (context : rl.rlContext) ->
+        (type : NamedExp rl) -> (a : NamedAtom rl) ->
+        TypecheckSuccess rl context type ($^ a)
+
+  -- | The result of attempting to typecheck an S-expression as a word
+  -- | of a particular refined S-expression language.
+  public export
+  data TypecheckResult : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> (x : NamedExp rl) -> Type where
