@@ -115,8 +115,10 @@ CSLPred = (contextSize : Nat) -> CSLNPred contextSize
 public export
 data Keyword : Type where
   -- | The initial refinement.
-  KVoid : Keyword
+  KInitial : Keyword
   -- | The terminal refinement.
+  KTerminal : Keyword
+  -- | The unique expression which satisfies the terminal refinement.
   KUnit : Keyword
   -- | A primitive expression in a particular refined S-expression language.
   KPrimitive : Keyword
@@ -132,16 +134,22 @@ data RAtom : (symbol : Type) -> Type where
 -- | Shorthand for the initial refinement in a particular refined S-expression
 -- | language.
 public export
-RKVoid : {symbol : Type} -> RAtom symbol
-RKVoid = RKeyword KVoid
+RKInitial : {symbol : Type} -> RAtom symbol
+RKInitial = RKeyword KInitial
 
 -- | Shorthand for the terminal refinement in a particular refined S-expression
 -- | language.
 public export
+RKTerminal : {symbol : Type} -> RAtom symbol
+RKTerminal = RKeyword KTerminal
+
+-- | Shorthand for the unique expression which satisfies the terminal refinement
+-- | in a particular refined S-expression language.
+public export
 RKUnit : {symbol : Type} -> RAtom symbol
 RKUnit = RKeyword KUnit
 
--- | Shorthand for a primitive expression in a particular refined S-expression
+-- | Shorthand for a primitive atom in a particular refined S-expression
 -- | language.
 public export
 RKPrimitive : {symbol : Type} -> RAtom symbol
@@ -186,6 +194,12 @@ public export
 RLList : RefinementLanguage -> Type
 RLList = RList . rlPrimitive
 
+-- | Shorthand for a primitive expression in a particular refined S-expression
+-- | language.
+public export
+RKLPrimitive : (rl : RefinementLanguage) -> rl.rlPrimitive -> RLExp rl
+RKLPrimitive rl primitive = RKPrimitive $:^ RSymbol primitive
+
 mutual
   -- | An individual typecheck error for a particular refined S-expression
   -- | language.
@@ -193,34 +207,54 @@ mutual
   data TypecheckError : (rl : RefinementLanguage) ->
     (context : rl.rlContext) -> (x : RLExp rl) -> Type where
       BadPrimitive : rl.rlBadPrimitive context primitive ->
-        TypecheckError rl context $ RKPrimitive $:^ RSymbol primitive
+        TypecheckError rl context $ RKLPrimitive rl primitive
 
   -- | The result of a successful typecheck of @x, returning type @type.
   public export
   data TypecheckSuccess : (rl : RefinementLanguage) ->
     (context : rl.rlContext) -> (type : RLExp rl) -> (x : RLExp rl) ->
     Type where
-      SymbolSuccess :
+      TerminalSuccess :
         (rl : RefinementLanguage) -> (context : rl.rlContext) ->
-        (type : RLExp rl) -> (a : RLAtom rl) ->
-        TypecheckSuccess rl context type ($^ a)
+        TypecheckSuccess rl context ($^ RKTerminal) ($^ RKUnit)
+      PrimitiveSuccess :
+        (rl : RefinementLanguage) -> (context : rl.rlContext) ->
+        (type : RLExp rl) -> (primitive : rl.rlPrimitive) ->
+        TypecheckSuccess rl context type $ RKLPrimitive rl primitive
+
+  -- | The result of successful typechecks of all members of a list of
+  -- | refined S-expressions.
+  public export
+  data TypecheckSuccesses : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> List (PairOf (RLExp rl)) ->
+    Type where
+      TypecheckVacuous : TypecheckSuccesses rl context []
+      TypecheckSuccessCons : TypecheckSuccess rl context type x ->
+        TypecheckSuccesses rl context l ->
+        TypecheckSuccesses rl context ((type, x) :: l)
 
   -- | The result of a failed typecheck of @x, which contains one or more
   -- | @TypecheckError terms.  It may also contain successful typechecks
   -- | of sub-expressions of the failed original expression.
   data TypecheckFailure : (rl : RefinementLanguage) ->
     (context : rl.rlContext) -> (x : RLExp rl) -> Type where
-      TypecheckAtomFailed : (rl : RefinementLanguage) ->
-        (context : rl.rlContext) -> (a : RLAtom rl) ->
-        TypecheckError rl context ($^ a) ->
-        TypecheckFailure rl context ($^ a)
-      TypecheckListFailed : (rl : RefinementLanguage) ->
-        (context : rl.rlContext) -> (a : RLAtom rl) ->
-        TypecheckError rl context ($^ a) ->
-        TypecheckFailure rl context ($^ a)
-      TypecheckNilFailed : (rl : RefinementLanguage) ->
-        (context : rl.rlContext) -> TypecheckError rl context ($-) ->
-        TypecheckFailure rl context ($-)
+      TypecheckSubExpressionFailed : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (l : RLList rl) ->
+        TypecheckSomeFailure rl context l ->
+        TypecheckFailure rl context ($| l)
+
+  -- | The result of a failed typecheck of at least one member of @l.
+  public export
+  data TypecheckSomeFailure : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> RLList rl -> Type where
+      TypecheckHeadFailed : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (x : RLExp rl) -> (l : RLList rl) ->
+        TypecheckFailure rl context x ->
+        TypecheckResults rl context l ->
+        TypecheckSomeFailure rl context (x :: l)
+      TypecheckFailureCons : TypecheckResult rl context x ->
+        TypecheckSomeFailure rl context l ->
+        TypecheckSomeFailure rl context (x :: l)
 
   -- | The result of attempting to typecheck an S-expression as a word
   -- | of a particular refined S-expression language.
@@ -228,17 +262,29 @@ mutual
   data TypecheckResult : (rl : RefinementLanguage) ->
     (context : rl.rlContext) -> (x : RLExp rl) -> Type where
       TypecheckSucceeded : (rl : RefinementLanguage) ->
-        (context : rl.rlContext) -> (x : RLExp rl) -> (type : RLExp rl) ->
+        (context : rl.rlContext) -> (type : RLExp rl) -> (x : RLExp rl) ->
         TypecheckSuccess rl context type x -> TypecheckResult rl context x
       TypecheckFailed : (rl : RefinementLanguage) ->
-        (context : rl.rlContext) -> (x : RLExp rl) -> (type : RLExp rl) ->
+        (context : rl.rlContext) -> (x : RLExp rl) ->
         TypecheckFailure rl context x -> TypecheckResult rl context x
+
+  -- | The results of attempting to typecheck each of a list of S-expressions
+  -- | of a particular refined S-expression language.
+  public export
+  data TypecheckResults : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> (l : RLList rl) -> Type where
+      TypecheckNil : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> TypecheckResults rl context []
+      TypecheckCons : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (x : RLExp rl) -> (l : RLList rl) ->
+        TypecheckResult rl context x -> TypecheckResults rl context l ->
+        TypecheckResults rl context (x :: l)
 
   -- | A witness that a typecheck result is a success.
   public export
   data IsTypecheckSuccess : {rl : RefinementLanguage} ->
     {context : rl.rlContext} -> {x : RLExp rl} ->
     TypecheckResult rl context x -> Type where
-      ResultIsSuccessful : (success : TypecheckSuccess rl context x type) ->
+      ResultIsSuccessful :
         (success : TypecheckSuccess rl context type x) ->
-        IsTypecheckSuccess (TypecheckSucceeded rl context x type success)
+        IsTypecheckSuccess (TypecheckSucceeded rl context type x success)
