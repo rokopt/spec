@@ -138,10 +138,17 @@ public export
 RKTelescope : {symbol : Type} -> RAtom symbol
 RKTelescope = RKeyword KTelescope
 
--- | The S-expressions of a particular refined S-expression language.
+-- | S-expressions using the symbols of a particular refined S-expression
+-- | language, along with keywords, as atoms.
 public export
 RExp : (symbol : Type) -> Type
 RExp = SExp . RAtom
+
+-- | S-lists using the symbols of a particular refined S-expression
+-- | language, along with keywords, as atoms.
+public export
+RList : (symbol : Type) -> Type
+RList = SList . RAtom
 
 -- | The definition of a particular refined S-expression language.
 public export
@@ -159,52 +166,72 @@ record RefinementLanguage where
   rlLookup : (context : rlContext) -> (name : rlName) ->
     rlApplicative $ Either (RExp rlPrimitive) (rlLookupFailure context name)
 
--- | The symbols of an S-expression language with all names resolved.
+-- | The atoms of a particular S-expression language.
 public export
-RLSymbol : RefinementLanguage -> Type
-RLSymbol = RAtom . rlPrimitive
+RLAtom : RefinementLanguage -> Type
+RLAtom = RAtom . rlPrimitive
 
--- | The S-expressions of a particular language, with all names resolved.
+-- | The S-expressions of a particular language.
 public export
 RLExp : RefinementLanguage -> Type
 RLExp = RExp . rlPrimitive
 
--- | The symbols that may be used in an S-expression which contains names,
--- | which are used as shorthands for S-expressions within the language
--- | without names.
+-- | The S-lists of a particular language.
 public export
-data NamedSymbol : RefinementLanguage -> Type where
-  NEPrimitive : refinementLanguage.rlPrimitive -> NamedSymbol refinementLanguage
-  NEName : refinementLanguage.rlName -> NamedSymbol refinementLanguage
-
--- | The atoms of an S-expression language with a naming context.
-public export
-NamedAtom : RefinementLanguage -> Type
-NamedAtom = RAtom . NamedSymbol
-
--- | The S-expressions of a particular language, with a naming context.
-NamedExp : RefinementLanguage -> Type
-NamedExp = RExp . NamedSymbol
+RLList : RefinementLanguage -> Type
+RLList = RList . rlPrimitive
 
 mutual
-  -- | The errors that can occur when typechecking an S-expression in a
-  -- | particular language.
+  -- | An individual typecheck error for a particular refined S-expression
+  -- | language.
   public export
   data TypecheckError : (rl : RefinementLanguage) ->
-    (context : rl.rlContext) -> (x : NamedExp rl) -> Type where
-      --
+    (context : rl.rlContext) -> (x : RLExp rl) -> Type where
 
+  -- | The result of a successful typecheck of @x, returning type @type.
   public export
   data TypecheckSuccess : (rl : RefinementLanguage) ->
-    (context : rl.rlContext) -> (type : NamedExp rl) -> (x : NamedExp rl) ->
+    (context : rl.rlContext) -> (type : RLExp rl) -> (x : RLExp rl) ->
     Type where
       SymbolSuccess :
         (rl : RefinementLanguage) -> (context : rl.rlContext) ->
-        (type : NamedExp rl) -> (a : NamedAtom rl) ->
+        (type : RLExp rl) -> (a : RLAtom rl) ->
         TypecheckSuccess rl context type ($^ a)
+
+  -- | The result of a failed typecheck of @x, which contains one or more
+  -- | @TypecheckError terms.  It may also contain successful typechecks
+  -- | of sub-expressions of the failed original expression.
+  data TypecheckFailure : (rl : RefinementLanguage) ->
+    (context : rl.rlContext) -> (x : RLExp rl) -> Type where
+      TypecheckAtomFailed : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (a : RLAtom rl) ->
+        TypecheckError rl context ($^ a) ->
+        TypecheckFailure rl context ($^ a)
+      TypecheckListFailed : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (a : RLAtom rl) ->
+        TypecheckError rl context ($^ a) ->
+        TypecheckFailure rl context ($^ a)
+      TypecheckNilFailed : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> TypecheckError rl context ($-) ->
+        TypecheckFailure rl context ($-)
 
   -- | The result of attempting to typecheck an S-expression as a word
   -- | of a particular refined S-expression language.
   public export
   data TypecheckResult : (rl : RefinementLanguage) ->
-    (context : rl.rlContext) -> (x : NamedExp rl) -> Type where
+    (context : rl.rlContext) -> (x : RLExp rl) -> Type where
+      TypecheckSucceeded : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (x : RLExp rl) -> (type : RLExp rl) ->
+        TypecheckSuccess rl context type x -> TypecheckResult rl context x
+      TypecheckFailed : (rl : RefinementLanguage) ->
+        (context : rl.rlContext) -> (x : RLExp rl) -> (type : RLExp rl) ->
+        TypecheckFailure rl context x -> TypecheckResult rl context x
+
+  -- | A witness that a typecheck result is a success.
+  public export
+  data IsTypecheckSuccess : {rl : RefinementLanguage} ->
+    {context : rl.rlContext} -> {x : RLExp rl} ->
+    TypecheckResult rl context x -> Type where
+      ResultIsSuccessful : (success : TypecheckSuccess rl context x type) ->
+        (success : TypecheckSuccess rl context type x) ->
+        IsTypecheckSuccess (TypecheckSucceeded rl context x type success)
