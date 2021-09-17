@@ -288,3 +288,33 @@ mutual
       ResultIsSuccessful :
         (success : TypecheckSuccess rl context type x) ->
         IsTypecheckSuccess (TypecheckSucceeded rl context type x success)
+
+  -- | A witness that all typecheck results in a list are successes.
+  public export
+  data AreTypecheckSuccesses : {rl : RefinementLanguage} ->
+    {context : rl.rlContext} -> {l : RLList rl} ->
+    TypecheckResults rl context l -> Type where
+      ResultsAreVacuous : AreTypecheckSuccesses (TypecheckNil rl context)
+      ResultsAreSuccessful : {rl : RefinementLanguage} ->
+        {context : rl.rlContext} ->
+        {x : RLExp rl} -> {l : RLList rl} ->
+        {result : TypecheckResult rl context x} ->
+        {results : TypecheckResults rl context l} ->
+        (success : IsTypecheckSuccess result) ->
+        (successes : AreTypecheckSuccesses results) ->
+        AreTypecheckSuccesses (TypecheckCons rl context x l result results)
+
+mutual
+  -- | Check whether a term is a word of a particular refined S-expression
+  -- | language.
+  public export
+  typecheck : (rl : RefinementLanguage) -> (context : rl.rlContext) ->
+    (x : RLExp rl) -> rl.rlApplicative (TypecheckResult rl context x)
+  typecheck rl context x = ?typecheck_hole
+
+  -- | Check whether each of a list of terms is a word of a particular
+  -- | refined S-expression language.
+  public export
+  typecheckList : (rl : RefinementLanguage) -> (context : rl.rlContext) ->
+    (l : RLList rl) -> rl.rlApplicative (TypecheckResults rl context l)
+  typecheckList rl context x = ?typecheckList_hole
