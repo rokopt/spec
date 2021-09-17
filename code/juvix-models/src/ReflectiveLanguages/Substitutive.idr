@@ -95,22 +95,6 @@ IsValidIndexList : (contextSize : Nat) -> List Nat -> Type
 IsValidIndexList contextSize indices =
   IsTrue (isValidIndexList contextSize indices)
 
-public export
-CSNPred : Nat -> Type
-CSNPred contextSize = CSExp contextSize -> Bool
-
-public export
-CSPred : Type
-CSPred = (contextSize : Nat) -> CSNPred contextSize
-
-public export
-CSLNPred : Nat -> Type
-CSLNPred contextSize = CSList contextSize -> Bool
-
-public export
-CSLPred : Type
-CSLPred = (contextSize : Nat) -> CSLNPred contextSize
-
 -- | Keyword atoms of S-expressions which represent refinements.
 public export
 data Keyword : Type where
