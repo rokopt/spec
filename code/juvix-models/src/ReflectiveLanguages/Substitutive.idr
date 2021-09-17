@@ -162,10 +162,6 @@ record RefinementLanguage where
   rlBadPrimitive : rlContext -> rlPrimitive -> Type
   rlPrimitiveType : (context : rlContext) -> (primitive : rlPrimitive) ->
     rlApplicative $ Either (RExp rlPrimitive) (rlBadPrimitive context primitive)
-  rlName : Type
-  rlLookupFailure : rlContext -> rlName -> Type
-  rlLookup : (context : rlContext) -> (name : rlName) ->
-    rlApplicative $ Either (RExp rlPrimitive) (rlLookupFailure context name)
 
 -- | The atoms of a particular S-expression language.
 public export
