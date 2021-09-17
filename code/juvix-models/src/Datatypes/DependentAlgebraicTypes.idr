@@ -47,6 +47,26 @@ public export
 ($^.) : {0 atom : Type} -> atom -> SExp atom -> SExp atom
 a $^. x' = $^ a $. x'
 
+prefix 11 $^|
+public export
+($^|) : {0 atom : Type} -> atom -> SList atom
+($^|) a = [ $^ a ]
+
+infix 7 $^:
+public export
+($^:) : {0 atom : Type} -> atom -> SList atom -> SList atom
+a $^: l' = $^ a :: l'
+
+infix 7 $^^
+public export
+($^^) : {0 atom : Type} -> atom -> atom -> SList atom
+a $^^ a' = a $^: $^| a'
+
+infix 7 $:^
+public export
+($:^) : {0 atom : Type} -> atom -> atom -> SExp atom
+a $:^ a' = $| (a $^^ a')
+
 public export
 SPred : (atom : Type) -> Type
 SPred atom = !- (SExp atom)

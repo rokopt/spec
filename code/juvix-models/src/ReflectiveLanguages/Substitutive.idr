@@ -118,6 +118,8 @@ data Keyword : Type where
   KVoid : Keyword
   -- | The terminal refinement.
   KUnit : Keyword
+  -- | A primitive expression in a particular refined S-expression language.
+  KPrimitive : Keyword
 
 -- | Atoms of S-expressions which represent refinements.
 public export
@@ -138,6 +140,12 @@ RKVoid = RKeyword KVoid
 public export
 RKUnit : {symbol : Type} -> RAtom symbol
 RKUnit = RKeyword KUnit
+
+-- | Shorthand for a primitive expression in a particular refined S-expression
+-- | language.
+public export
+RKPrimitive : {symbol : Type} -> RAtom symbol
+RKPrimitive = RKeyword KPrimitive
 
 -- | S-expressions using the symbols of a particular refined S-expression
 -- | language, along with keywords, as atoms.
@@ -184,6 +192,8 @@ mutual
   public export
   data TypecheckError : (rl : RefinementLanguage) ->
     (context : rl.rlContext) -> (x : RLExp rl) -> Type where
+      BadPrimitive : rl.rlBadPrimitive context primitive ->
+        TypecheckError rl context $ RKPrimitive $:^ RSymbol primitive
 
   -- | The result of a successful typecheck of @x, returning type @type.
   public export
