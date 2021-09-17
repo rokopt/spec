@@ -98,10 +98,10 @@ IsValidIndexList contextSize indices =
 -- | Keyword atoms of S-expressions which represent refinements.
 public export
 data Keyword : Type where
-  -- | A non-dependent list.
-  KList : Keyword
-  -- | A dependent list, also known as a telescope.
-  KTelescope : Keyword
+  -- | The initial refinement.
+  KVoid : Keyword
+  -- | The terminal refinement.
+  KUnit : Keyword
 
 -- | Atoms of S-expressions which represent refinements.
 public export
@@ -111,16 +111,17 @@ data RAtom : (symbol : Type) -> Type where
   -- | A symbol specific to a particular language.
   RSymbol : {symbol : Type} -> symbol -> RAtom symbol
 
--- | Shorthand for a list atom in a particular refined S-expression language.
-public export
-RKList : {symbol : Type} -> RAtom symbol
-RKList = RKeyword KList
-
--- | Shorthand for a telescope atom in a particular refined S-expression
+-- | Shorthand for the initial refinement in a particular refined S-expression
 -- | language.
 public export
-RKTelescope : {symbol : Type} -> RAtom symbol
-RKTelescope = RKeyword KTelescope
+RKVoid : {symbol : Type} -> RAtom symbol
+RKVoid = RKeyword KVoid
+
+-- | Shorthand for the terminal refinement in a particular refined S-expression
+-- | language.
+public export
+RKUnit : {symbol : Type} -> RAtom symbol
+RKUnit = RKeyword KUnit
 
 -- | S-expressions using the symbols of a particular refined S-expression
 -- | language, along with keywords, as atoms.
