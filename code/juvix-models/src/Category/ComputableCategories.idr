@@ -6,8 +6,20 @@ import Library.FunctionsAndRelations
 import OldSExp.SExpressions
 
 public export
+IsLeftInverseOf : {a, b : Type} -> (f : a -> b) -> (b -> a) -> Type
+IsLeftInverseOf {a} f g = (x : a) -> g (f x) = x
+
+public export
 IsInjective : {a, b : Type} -> (f : a -> b) -> Type
 IsInjective {a} f = (x, x': a) -> f x = f x' -> x = x'
+
+public export
+leftInverseImpliesInjective : {a, b : Type} -> (f : a -> b) -> {g : b -> a} ->
+  IsLeftInverseOf f g -> IsInjective f
+leftInverseImpliesInjective {a} f {g} isLeftInverse x x' fxeq =
+  trans
+    (sym (replace fxeq {p=(\y => g y = x)} (isLeftInverse x)))
+    (isLeftInverse x')
 
 public export
 Injection : Type -> Type -> Type
@@ -25,32 +37,40 @@ public export
 Countable : Type
 Countable = DPair Type Enumeration
 
+public export
 underlyingSet : Countable -> Type
 underlyingSet (set ** _) = set
 
+public export
 enumeration : (countable : Countable) -> underlyingSet countable -> Nat
 enumeration (_ ** (injection ** _)) = injection
 
+public export
 fromUnderlying : Countable -> Type -> Type
 fromUnderlying countable type = underlyingSet countable -> type
 
+public export
 countableEq : (countable : Countable) -> DecEqPred (underlyingSet countable)
 countableEq (_ ** (injection ** isInjective)) x x' =
   case decEq (injection x) (injection x') of
     Yes eq => Yes (isInjective x x' eq)
     No neq => No (neq . (cong injection))
 
+public export
 [countableDecEq] (countable : Countable) =>
   DecEq (underlyingSet countable) where
     decEq = countableEq countable
 
+public export
 listUnderlying : Countable -> Type
 listUnderlying = List . underlyingSet
 
+public export
 [listCountableDecEq] (countable : Countable) =>
   DecEq (listUnderlying countable) where
     decEq = let underlyingDecEq = countableDecEq in decEq
 
+public export
 listCountableEq :
   (countable : Countable) -> DecEqPred (listUnderlying countable)
 listCountableEq countable = let listDecEq = listCountableDecEq in decEq
