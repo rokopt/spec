@@ -23,7 +23,7 @@ mutual
     {codomain : RefinedObject codomainRep} ->
     RefinedMorphism representation domainRep codomainRep ->
     (interpretRefinedObject domain -> interpretRefinedObject codomain)
-  interpretRefinedMorphism {domain} (RefinedExFalso _) =
+  interpretRefinedMorphism {domain} (RefinedFromVoid _) =
     case domain of
       RefinedVoid => \v : Void => void v
       RefinedUnit impossible

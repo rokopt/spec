@@ -136,21 +136,21 @@ SExpInductivePredSig atom = SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
 public export
 data RefinedAtom : Type where
   RAVoid : RefinedAtom
-  RAExFalso : RefinedAtom
+  RAFromVoid : RefinedAtom
   RAUnit : RefinedAtom
   RAToUnit : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
 raEncode RAVoid = 0
-raEncode RAExFalso = 1
+raEncode RAFromVoid = 1
 raEncode RAUnit = 2
 raEncode RAToUnit = 3
 
 public export
 raDecode : Nat -> RefinedAtom
 raDecode 0 = RAVoid
-raDecode 1 = RAExFalso
+raDecode 1 = RAFromVoid
 raDecode 2 = RAUnit
 raDecode 3 = RAToUnit
 raDecode _ = RAVoid
@@ -159,7 +159,7 @@ export
 raDecodeIsLeftInverse :
   IsLeftInverseOf AlgebraicSExp.raEncode AlgebraicSExp.raDecode
 raDecodeIsLeftInverse RAVoid = Refl
-raDecodeIsLeftInverse RAExFalso = Refl
+raDecodeIsLeftInverse RAFromVoid = Refl
 raDecodeIsLeftInverse RAUnit = Refl
 raDecodeIsLeftInverse RAToUnit = Refl
 
@@ -209,8 +209,8 @@ RSVoid : RefinedSExp
 RSVoid = $^ RAVoid
 
 public export
-RSExFalso : (codomainRep : RefinedSExp) -> RefinedSExp
-RSExFalso codomainRep = RAExFalso $*** codomainRep
+RSFromVoid : (codomainRep : RefinedSExp) -> RefinedSExp
+RSFromVoid codomainRep = RAFromVoid $*** codomainRep
 
 public export
 RSUnit : RefinedSExp
@@ -229,8 +229,8 @@ mutual
   public export
   data RefinedMorphism :
     (representation, domainRep, codomainRep : RefinedSExp) -> Type where
-      RefinedExFalso : (codomainRep : RefinedSExp) ->
-        RefinedMorphism (RSExFalso codomainRep) RSVoid codomainRep
+      RefinedFromVoid : (codomainRep : RefinedSExp) ->
+        RefinedMorphism (RSFromVoid codomainRep) RSVoid codomainRep
       RefinedToUnit : (domainRep : RefinedSExp) ->
         RefinedMorphism (RSToUnit domainRep) domainRep RSUnit
 
@@ -249,9 +249,9 @@ mutual
   public export
   sexpAsMorphism : (representation, domainRep, codomainRep : RefinedSExp) ->
     Maybe (RefinedMorphism representation domainRep codomainRep)
-  sexpAsMorphism (RAExFalso $* [codomainRep]) (RAVoid $* []) codomainRep' =
+  sexpAsMorphism (RAFromVoid $* [codomainRep]) (RAVoid $* []) codomainRep' =
     case decEq codomainRep codomainRep' of
-      Yes Refl => Just (RefinedExFalso codomainRep)
+      Yes Refl => Just (RefinedFromVoid codomainRep)
       No _ => Nothing
   sexpAsMorphism (RAToUnit $* [domainRep]) domainRep' (RAUnit $* []) =
     case decEq domainRep domainRep' of
@@ -279,11 +279,11 @@ mutual
     {representation, domainRep, codomainRep : RefinedSExp} ->
     (morphism : RefinedMorphism representation domainRep codomainRep) ->
     sexpAsMorphism representation domainRep codomainRep = Just morphism
-  sexpAsMorphismComplete (RefinedExFalso codomainRep)
+  sexpAsMorphismComplete (RefinedFromVoid codomainRep)
     with (decEq codomainRep codomainRep)
-      sexpAsMorphismComplete (RefinedExFalso codomainRep) | Yes Refl =
+      sexpAsMorphismComplete (RefinedFromVoid codomainRep) | Yes Refl =
         Refl
-      sexpAsMorphismComplete (RefinedExFalso codomainRep) | No neq =
+      sexpAsMorphismComplete (RefinedFromVoid codomainRep) | No neq =
         void (neq Refl)
   sexpAsMorphismComplete (RefinedToUnit domainRep)
     with (decEq domainRep domainRep)
