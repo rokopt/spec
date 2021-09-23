@@ -130,11 +130,39 @@ mutual
     (representation, domainRep, codomainRep : RefinedSExp) -> Type where
 
   public export
+  data RefinedContract :
+    (representation, subjectMorphismRep : RefinedSExp) -> Type where
+
+  public export
   sexpAsObject : (representation : RefinedSExp) ->
     Maybe (RefinedObject representation)
   sexpAsObject _ = Nothing
 
   public export
-  sexpAsMorphism : (representation, domain, codomain : RefinedSExp) ->
-    Maybe (RefinedMorphism representation domain codoman)
+  sexpAsMorphism : (representation, domainRep, codomainRep : RefinedSExp) ->
+    Maybe (RefinedMorphism representation domainRep codomainRep)
   sexpAsMorphism _ _ _ = Nothing
+
+  public export
+  sexpAsContract : (representation, subjectMorphismRep : RefinedSExp) ->
+    Maybe (RefinedContract representation subjectMorphismRep)
+  sexpAsContract _ _ = Nothing
+
+  export
+  sexpAsObjectComplete : {representation : RefinedSExp} ->
+    (obj : RefinedObject representation) ->
+    sexpAsObject representation = Just obj
+  sexpAsObjectComplete _ impossible
+
+  export
+  sexpAsMorphismComplete :
+    {representation, domainRep, codomainRep : RefinedSExp} ->
+    (morphism : RefinedMorphism representation domainRep codomainRep) ->
+    sexpAsMorphism representation = Just morphism
+  sexpAsMorphismComplete _ impossible
+
+  export
+  sexpAsContractComplete : {representation, subjectMorphismRep : RefinedSExp} ->
+    (morphism : RefinedContract representation subjectMorphismRep) ->
+    sexpAsContract representation = Just morphism
+  sexpAsContractComplete _ impossible
