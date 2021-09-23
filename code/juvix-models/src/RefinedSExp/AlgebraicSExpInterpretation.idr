@@ -31,6 +31,10 @@ mutual
     case codomain of
       RefinedVoid impossible
       RefinedUnit => \v => ()
+  interpretRefinedMorphism {domain} {codomain} (RefinedIdentity objectRep) =
+    ?interpretRefinedMorphism_hole_identity
+  interpretRefinedMorphism {domain} {codomain} (RefinedCompose left right) =
+    ?interpretRefinedMorphism_hole_compose
 
   public export
   interpretRefinedContract :

@@ -139,6 +139,8 @@ data RefinedAtom : Type where
   RAFromVoid : RefinedAtom
   RAUnit : RefinedAtom
   RAToUnit : RefinedAtom
+  RAIdentity : RefinedAtom
+  RACompose : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -146,6 +148,8 @@ raEncode RAVoid = 0
 raEncode RAFromVoid = 1
 raEncode RAUnit = 2
 raEncode RAToUnit = 3
+raEncode RAIdentity = 4
+raEncode RACompose = 5
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -153,6 +157,8 @@ raDecode 0 = RAVoid
 raDecode 1 = RAFromVoid
 raDecode 2 = RAUnit
 raDecode 3 = RAToUnit
+raDecode 4 = RAIdentity
+raDecode 5 = RACompose
 raDecode _ = RAVoid
 
 export
@@ -162,6 +168,8 @@ raDecodeIsLeftInverse RAVoid = Refl
 raDecodeIsLeftInverse RAFromVoid = Refl
 raDecodeIsLeftInverse RAUnit = Refl
 raDecodeIsLeftInverse RAToUnit = Refl
+raDecodeIsLeftInverse RAIdentity = Refl
+raDecodeIsLeftInverse RACompose = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
@@ -220,6 +228,14 @@ public export
 RSToUnit : (domainRep : RefinedSExp) -> RefinedSExp
 RSToUnit domainRep = RAToUnit $*** domainRep
 
+public export
+RSIdentity : (objectRep : RefinedSExp) -> RefinedSExp
+RSIdentity objectRep = RAIdentity $*** objectRep
+
+public export
+RSCompose : (leftRep, rightRep : RefinedSExp) -> RefinedSExp
+RSCompose leftRep rightRep = RACompose $* [leftRep, rightRep]
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
@@ -229,6 +245,12 @@ mutual
   public export
   data RefinedMorphism :
     (representation, domainRep, codomainRep : RefinedSExp) -> Type where
+      RefinedIdentity : (objectRep : RefinedSExp) ->
+        RefinedMorphism (RSIdentity objectRep) objectRep objectRep
+      RefinedCompose : {a, b, c, leftRep, rightRep : RefinedSExp} ->
+        RefinedMorphism leftRep b c ->
+        RefinedMorphism rightRep a b ->
+        RefinedMorphism (RSCompose leftRep rightRep) a c
       RefinedFromVoid : (codomainRep : RefinedSExp) ->
         RefinedMorphism (RSFromVoid codomainRep) RSVoid codomainRep
       RefinedToUnit : (domainRep : RefinedSExp) ->
@@ -257,6 +279,17 @@ mutual
     case decEq domainRep domainRep' of
       Yes Refl => Just (RefinedToUnit domainRep)
       No _ => Nothing
+  sexpAsMorphism (RAIdentity $* [objectRep]) objectRep' objectRep'' =
+    let
+      (deq', deq'') = (decEq objectRep' objectRep, decEq objectRep'' objectRep)
+    in
+    case (deq', deq'') of
+      (Yes eq', Yes eq'') =>
+        case (sym eq') of
+          Refl => case (sym eq'') of Refl => Just $ RefinedIdentity objectRep''
+      _ => Nothing
+  sexpAsMorphism (RACompose $* [leftRep, rightRep]) domainRep codomainRep =
+    ?sexpAsMorphism_hole_compose
   sexpAsMorphism _ _ _ = Nothing
 
   public export
@@ -291,6 +324,14 @@ mutual
         Refl
       sexpAsMorphismComplete (RefinedToUnit domainRep) | No neq =
         void (neq Refl)
+  sexpAsMorphismComplete (RefinedIdentity objectRep)
+    with (decEq objectRep objectRep)
+      sexpAsMorphismComplete (RefinedIdentity objectRep) | Yes Refl =
+        Refl
+      sexpAsMorphismComplete (RefinedIdentity objectRep) | No neq =
+        void (neq Refl)
+  sexpAsMorphismComplete (RefinedCompose left right) =
+    ?sexpAsMorphismComplete_compose_hole
 
   export
   sexpAsContractComplete :
@@ -303,16 +344,14 @@ mutual
   sexpAsContractComplete _ impossible
 
 public export
-GeneralizedElement : (objectRep : RefinedSExp) ->
-  {object : RefinedObject objectRep} -> Type
-GeneralizedElement objectRep {object} =
+GeneralizedElement : (objectRep : RefinedSExp) -> Type
+GeneralizedElement objectRep =
   (domainRep : RefinedSExp **
    domain : RefinedObject domainRep **
    morphismRep : RefinedSExp **
    RefinedMorphism morphismRep domainRep objectRep)
 
 public export
-CategorialElement : (objectRep : RefinedSExp) ->
-  {object : RefinedObject objectRep} -> Type
-CategorialElement objectRep {object} =
+CategorialElement : (objectRep : RefinedSExp) -> Type
+CategorialElement objectRep =
   RefinedMorphism (RSToUnit objectRep) RSUnit objectRep
