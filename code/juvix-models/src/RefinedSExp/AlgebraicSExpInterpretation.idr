@@ -13,7 +13,7 @@ mutual
   public export
   interpretRefinedObject :
     {representation : RefinedSExp} -> RefinedObject representation -> Type
-  interpretRefinedObject _ impossible
+  interpretRefinedObject RefinedVoid = Void
 
   public export
   interpretRefinedMorphism :
@@ -22,7 +22,9 @@ mutual
     {codomain : RefinedObject codomainRep} ->
     RefinedMorphism representation domainRep codomainRep ->
     (interpretRefinedObject domain -> interpretRefinedObject codomain)
-  interpretRefinedMorphism _ impossible
+  interpretRefinedMorphism {domain} (RefinedExFalso codomainRep) =
+    case domain of
+      RefinedVoid => \v : Void => void v
 
   public export
   interpretRefinedContract :
