@@ -5,8 +5,6 @@ import Library.Decidability
 import Library.FunctionsAndRelations
 import OldSExp.SExpressions
 
-{-
-
 public export
 IsInjective : {a, b : Type} -> (f : a -> b) -> Type
 IsInjective {a} f = (x, x': a) -> f x = f x' -> x = x'
@@ -56,6 +54,8 @@ listUnderlying = List . underlyingSet
 listCountableEq :
   (countable : Countable) -> DecEqPred (listUnderlying countable)
 listCountableEq countable = let listDecEq = listCountableDecEq in decEq
+
+{-
 
 TotalComputableFunction : Type
 TotalComputableFunction = Nat -> Nat
