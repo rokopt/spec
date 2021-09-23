@@ -137,13 +137,48 @@ public export
 data RefinedAtom : Type where
   RAVoid : RefinedAtom
   RAExFalso : RefinedAtom
+  RAUnit : RefinedAtom
+  RAToUnit : RefinedAtom
+
+public export
+raEncode : RefinedAtom -> Nat
+raEncode RAVoid = 0
+raEncode RAExFalso = 1
+raEncode RAUnit = 2
+raEncode RAToUnit = 3
+
+public export
+raDecode : Nat -> RefinedAtom
+raDecode 0 = RAVoid
+raDecode 1 = RAExFalso
+raDecode 2 = RAUnit
+raDecode 3 = RAToUnit
+raDecode _ = RAVoid
+
+export
+raDecodeIsLeftInverse :
+  IsLeftInverseOf AlgebraicSExp.raEncode AlgebraicSExp.raDecode
+raDecodeIsLeftInverse RAVoid = Refl
+raDecodeIsLeftInverse RAExFalso = Refl
+raDecodeIsLeftInverse RAUnit = Refl
+raDecodeIsLeftInverse RAToUnit = Refl
+
+export
+raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
+raEncodeIsInjective =
+  leftInverseImpliesInjective raEncode {g=raDecode} raDecodeIsLeftInverse
+
+public export
+RAInjection : Injection RefinedAtom Nat
+RAInjection = (raEncode ** raEncodeIsInjective)
+
+public export
+RACountable : Countable
+RACountable = (RefinedAtom ** RAInjection)
 
 public export
 raDecEq : DecEqPred RefinedAtom
-raDecEq RAVoid RAVoid = Yes Refl
-raDecEq RAVoid RAExFalso = No $ \eq => case eq of Refl impossible
-raDecEq RAExFalso RAVoid = No $ \eq => case eq of Refl impossible
-raDecEq RAExFalso RAExFalso = Yes Refl
+raDecEq = countableEq RACountable
 
 public export
 RefinedSExp : Type
@@ -177,16 +212,27 @@ public export
 RSExFalso : (codomainRep : RefinedSExp) -> RefinedSExp
 RSExFalso codomainRep = RAExFalso $*** codomainRep
 
+public export
+RSUnit : RefinedSExp
+RSUnit = $^ RAUnit
+
+public export
+RSToUnit : (domainRep : RefinedSExp) -> RefinedSExp
+RSToUnit domainRep = RAToUnit $*** domainRep
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
       RefinedVoid : RefinedObject RSVoid
+      RefinedUnit : RefinedObject RSUnit
 
   public export
   data RefinedMorphism :
     (representation, domainRep, codomainRep : RefinedSExp) -> Type where
       RefinedExFalso : (codomainRep : RefinedSExp) ->
         RefinedMorphism (RSExFalso codomainRep) RSVoid codomainRep
+      RefinedToUnit : (domainRep : RefinedSExp) ->
+        RefinedMorphism (RSToUnit domainRep) domainRep RSUnit
 
   public export
   data RefinedContract :
@@ -197,6 +243,7 @@ mutual
   sexpAsObject : (representation : RefinedSExp) ->
     Maybe (RefinedObject representation)
   sexpAsObject (RAVoid $* []) = Just RefinedVoid
+  sexpAsObject (RAUnit $* []) = Just RefinedUnit
   sexpAsObject _ = Nothing
 
   public export
@@ -205,6 +252,10 @@ mutual
   sexpAsMorphism (RAExFalso $* [codomainRep]) (RAVoid $* []) codomainRep' =
     case decEq codomainRep codomainRep' of
       Yes Refl => Just (RefinedExFalso codomainRep)
+      No _ => Nothing
+  sexpAsMorphism (RAToUnit $* [domainRep]) domainRep' (RAUnit $* []) =
+    case decEq domainRep domainRep' of
+      Yes Refl => Just (RefinedToUnit domainRep)
       No _ => Nothing
   sexpAsMorphism _ _ _ = Nothing
 
@@ -221,6 +272,7 @@ mutual
     (obj : RefinedObject representation) ->
     sexpAsObject representation = Just obj
   sexpAsObjectComplete RefinedVoid = Refl
+  sexpAsObjectComplete RefinedUnit = Refl
 
   export
   sexpAsMorphismComplete :
@@ -233,6 +285,12 @@ mutual
         Refl
       sexpAsMorphismComplete (RefinedExFalso codomainRep) | No neq =
         void (neq Refl)
+  sexpAsMorphismComplete (RefinedToUnit domainRep)
+    with (decEq domainRep domainRep)
+      sexpAsMorphismComplete (RefinedToUnit domainRep) | Yes Refl =
+        Refl
+      sexpAsMorphismComplete (RefinedToUnit domainRep) | No neq =
+        void (neq Refl)
 
   export
   sexpAsContractComplete :
@@ -243,3 +301,18 @@ mutual
         representation domainRep codomainRep subjectMorphismRep) ->
     sexpAsContract representation = Just morphism
   sexpAsContractComplete _ impossible
+
+public export
+GeneralizedElement : (objectRep : RefinedSExp) ->
+  {object : RefinedObject objectRep} -> Type
+GeneralizedElement objectRep {object} =
+  (domainRep : RefinedSExp **
+   domain : RefinedObject domainRep **
+   morphismRep : RefinedSExp **
+   RefinedMorphism morphismRep domainRep objectRep)
+
+public export
+CategorialElement : (objectRep : RefinedSExp) ->
+  {object : RefinedObject objectRep} -> Type
+CategorialElement objectRep {object} =
+  RefinedMorphism (RSToUnit objectRep) RSUnit objectRep
