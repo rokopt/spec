@@ -304,17 +304,19 @@ mutual
         (successes : AreTypecheckSuccesses results) ->
         AreTypecheckSuccesses (TypecheckCons rl context x l result results)
 
+{-
 mutual
   -- | Check whether a term is a word of a particular refined S-expression
   -- | language.
   public export
   typecheck : (rl : RefinementLanguage) -> (context : rl.rlContext) ->
     (x : RLExp rl) -> rl.rlApplicative (TypecheckResult rl context x)
-  typecheck rl context x = ?typecheck_hole
+  typecheck rl context x = typecheck_hole
 
   -- | Check whether each of a list of terms is a word of a particular
   -- | refined S-expression language.
   public export
   typecheckList : (rl : RefinementLanguage) -> (context : rl.rlContext) ->
     (l : RLList rl) -> rl.rlApplicative (TypecheckResults rl context l)
-  typecheckList rl context x = ?typecheckList_hole
+  typecheckList rl context x = typecheckList_hole
+  -}
