@@ -385,20 +385,27 @@ mutual
     {representation, domainRep, codomainRep : RefinedSExp} ->
     (morphism : RefinedMorphism representation domainRep codomainRep) ->
     sexpAsObject domainRep = Just (refinedMorphismDomain morphism)
-  refinedMorphismDomainCorrect (RefinedIdentity object) = ?refinedMorphismDomainCorrect_hole_1
-  refinedMorphismDomainCorrect (RefinedCompose g f) = ?refinedMorphismDomainCorrect_hole_2
-  refinedMorphismDomainCorrect (RefinedFromVoid f) = ?refinedMorphismDomainCorrect_hole_3
-  refinedMorphismDomainCorrect (RefinedToUnit f) = ?refinedMorphismDomainCorrect_hole_4
+  refinedMorphismDomainCorrect (RefinedIdentity object) =
+    sexpAsObjectComplete object
+  refinedMorphismDomainCorrect (RefinedCompose _ f) =
+    refinedMorphismDomainCorrect f
+  refinedMorphismDomainCorrect (RefinedFromVoid _) =
+    Refl
+  refinedMorphismDomainCorrect (RefinedToUnit domainRep) =
+    sexpAsObjectComplete domainRep
 
   public export
   refinedMorphismCodomainCorrect :
     {representation, domainRep, codomainRep : RefinedSExp} ->
     (morphism : RefinedMorphism representation domainRep codomainRep) ->
     sexpAsObject codomainRep = Just (refinedMorphismCodomain morphism)
-  refinedMorphismCodomainCorrect (RefinedIdentity f) = ?refinedMorphismCodomainCorrect_hole_1
-  refinedMorphismCodomainCorrect (RefinedCompose g f) = ?refinedMorphismCodomainCorrect_hole_2
-  refinedMorphismCodomainCorrect (RefinedFromVoid f) = ?refinedMorphismCodomainCorrect_hole_3
-  refinedMorphismCodomainCorrect (RefinedToUnit f) = ?refinedMorphismCodomainCorrect_hole_4
+  refinedMorphismCodomainCorrect (RefinedIdentity object) =
+    sexpAsObjectComplete object
+  refinedMorphismCodomainCorrect (RefinedCompose g _) =
+    refinedMorphismCodomainCorrect g
+  refinedMorphismCodomainCorrect (RefinedFromVoid codomainRep) =
+    sexpAsObjectComplete codomainRep
+  refinedMorphismCodomainCorrect (RefinedToUnit _) = Refl
 
 mutual
   export
