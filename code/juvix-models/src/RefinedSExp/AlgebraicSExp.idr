@@ -2,6 +2,7 @@ module RefinedSExp.AlgebraicSExp
 
 import Library.FunctionsAndRelations
 import Library.Decidability
+import Library.List
 import Category.ComputableCategories
 
 %default total
@@ -134,6 +135,35 @@ SExpInductivePredSig : (0 atom : Type) -> Type
 SExpInductivePredSig atom = SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
 
 public export
+ForAllInductivePredSig :
+  {0 atom : Type} -> SPred atom -> SExpInductivePredSig atom
+ForAllInductivePredSig pred =
+  SExpEliminatorArgs (\a, l, lpl => (pred (a $* l), lpl)) () (\_, _, head, allTail => (head, allTail))
+
+mutual
+  data SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom where
+    SExpAndList : {pred : SPred atom} -> pred (a $* l) -> SListForAll pred l ->
+      SExpForAll pred (a $* l)
+
+  data SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom where
+    SForAllNil : {pred : SPred atom} -> SListForAll pred []
+    SForAllCons : {pred : SPred atom} ->
+      SExpForAll pred x -> SListForAll pred l ->
+      SListForAll pred (x :: l)
+
+mutual
+  data SExpExists : {0 atom : Type} -> SPred atom -> SPred atom where
+    SExpThis : {pred : SPred atom} -> pred x -> SExpExists pred x
+    SExpInList : {pred : SPred atom} -> SListExists pred l ->
+      SExpExists pred (x $* l)
+
+  data SListExists : {0 atom : Type} -> SPred atom -> SLPred atom where
+    SExpHead : {pred : SPred atom} -> SExpExists pred x ->
+      SListExists pred (x :: l)
+    SExpTail : {pred : SPred atom} -> SListExists pred l ->
+      SListExists pred (x :: l)
+
+public export
 data RefinedAtom : Type where
   RAVoid : RefinedAtom
   RAFromVoid : RefinedAtom
@@ -141,6 +171,9 @@ data RefinedAtom : Type where
   RAToUnit : RefinedAtom
   RAIdentity : RefinedAtom
   RACompose : RefinedAtom
+  RAProduct : RefinedAtom
+  RACoproduct : RefinedAtom
+  RAExponential : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -150,6 +183,9 @@ raEncode RAUnit = 2
 raEncode RAToUnit = 3
 raEncode RAIdentity = 4
 raEncode RACompose = 5
+raEncode RAProduct = 6
+raEncode RACoproduct = 7
+raEncode RAExponential = 8
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -159,6 +195,9 @@ raDecode 2 = RAUnit
 raDecode 3 = RAToUnit
 raDecode 4 = RAIdentity
 raDecode 5 = RACompose
+raDecode 6 = RAProduct
+raDecode 7 = RACoproduct
+raDecode 8 = RAExponential
 raDecode _ = RAVoid
 
 export
@@ -170,6 +209,9 @@ raDecodeIsLeftInverse RAUnit = Refl
 raDecodeIsLeftInverse RAToUnit = Refl
 raDecodeIsLeftInverse RAIdentity = Refl
 raDecodeIsLeftInverse RACompose = Refl
+raDecodeIsLeftInverse RAProduct = Refl
+raDecodeIsLeftInverse RACoproduct = Refl
+raDecodeIsLeftInverse RAExponential = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
@@ -236,11 +278,25 @@ public export
 RSCompose : (leftRep, rightRep : RefinedSExp) -> RefinedSExp
 RSCompose leftRep rightRep = RACompose $* [leftRep, rightRep]
 
+public export
+RSProduct : (objects : RefinedSList) -> RefinedSExp
+RSProduct objects = RAProduct $* objects
+
+public export
+RSCoproduct : (objects : RefinedSList) -> RefinedSExp
+RSCoproduct objects = RACoproduct $* objects
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
         RefinedVoid : RefinedObject RSVoid
         RefinedUnit : RefinedObject RSUnit
+        RefinedProduct : {representations : RefinedSList} ->
+          ListForAll RefinedObject representations ->
+          RefinedObject (RSProduct representations)
+        RefinedCoproduct : {representations : RefinedSList} ->
+          ListForAll RefinedObject representations ->
+          RefinedObject (RSCoproduct representations)
 
   public export
   data RefinedMorphism :
@@ -270,7 +326,25 @@ mutual
     Maybe (RefinedObject representation)
   sexpAsObject (RAVoid $* []) = Just RefinedVoid
   sexpAsObject (RAUnit $* []) = Just RefinedUnit
+  sexpAsObject (RAProduct $* objectReps) =
+    case slistAsObjects objectReps of
+      Just objects => Just (RefinedProduct objects)
+      Nothing => Nothing
+  sexpAsObject (RACoproduct $* objectReps) =
+    case slistAsObjects objectReps of
+      Just objects => Just (RefinedCoproduct objects)
+      Nothing => Nothing
   sexpAsObject _ = Nothing
+
+  public export
+  slistAsObjects : (representations : RefinedSList) ->
+    Maybe (ListForAll RefinedObject representations)
+  slistAsObjects [] = Just ListForAllEmpty
+  slistAsObjects (headRep :: tailReps) =
+    case (sexpAsObject headRep, slistAsObjects tailReps) of
+      (Just headObject, Just tailObjects) =>
+        Just (ListForAllCons headObject tailObjects)
+      _ => Nothing
 
   public export
   sexpAsMorphism : (representation : RefinedSExp) ->
@@ -367,6 +441,37 @@ mutual
     sexpAsObject representation = Just obj
   sexpAsObjectComplete RefinedVoid = Refl
   sexpAsObjectComplete RefinedUnit = Refl
+  sexpAsObjectComplete (RefinedProduct objects) =
+    rewrite (slistAsObjectsComplete objects) in Refl
+  sexpAsObjectComplete (RefinedCoproduct objects) =
+    rewrite (slistAsObjectsComplete objects) in Refl
+
+  export
+  slistAsObjectsComplete : {representations : RefinedSList} ->
+    (objects : ListForAll RefinedObject representations) ->
+    slistAsObjects representations = Just objects
+  slistAsObjectsComplete ListForAllEmpty = Refl
+  slistAsObjectsComplete {representations=(x :: l)} (ListForAllCons head tail)
+    with (sexpAsObject x, slistAsObjects l) proof p
+      slistAsObjectsComplete {representations=(x :: l)}
+        (ListForAllCons head tail) | (Just object, Just objects) =
+          let
+            pFst = PairFstEq p
+            pSnd = PairSndEq p
+            headComplete = sexpAsObjectComplete head
+            tailComplete = slistAsObjectsComplete tail
+            justHeadEq = trans (sym pFst) headComplete
+            justTailEq = trans (sym pSnd) tailComplete
+          in
+          case justHeadEq of Refl => case justTailEq of Refl => cong Just Refl
+      slistAsObjectsComplete {representations=(x :: l)}
+        (ListForAllCons head tail) | (Nothing, _) =
+          case trans (sym (PairFstEq p)) (sexpAsObjectComplete head) of
+            Refl impossible
+      slistAsObjectsComplete {representations=(x :: l)}
+        (ListForAllCons head tail) | (Just _, Nothing) =
+          case trans (sym (PairSndEq p)) (slistAsObjectsComplete tail) of
+            Refl impossible
 
   export
   objectRepresentationUnique : {representation : RefinedSExp} ->

@@ -2,6 +2,7 @@ module RefinedSExp.AlgebraicSExpInterpretation
 
 import public RefinedSExp.AlgebraicSExp
 import Data.Maybe
+import Library.List
 
 %default total
 
@@ -16,6 +17,29 @@ mutual
     {representation : RefinedSExp} -> RefinedObject representation -> Type
   interpretRefinedObject RefinedVoid = Void
   interpretRefinedObject RefinedUnit = ()
+  interpretRefinedObject (RefinedProduct {representations} objects) =
+    interpretRefinedProduct {representations} objects
+  interpretRefinedObject (RefinedCoproduct {representations} objects) =
+    interpretRefinedCoproduct {representations} objects
+
+  public export
+  interpretRefinedProduct : {representations : RefinedSList} ->
+    ListForAll RefinedObject representation -> Type
+  interpretRefinedProduct ListForAllEmpty = ()
+  interpretRefinedProduct
+    (ListForAllCons {l} head tail) =
+      (interpretRefinedObject head,
+       interpretRefinedProduct {representations=l} tail)
+
+  public export
+  interpretRefinedCoproduct : {representations : RefinedSList} ->
+    ListForAll RefinedObject representation -> Type
+  interpretRefinedCoproduct ListForAllEmpty = Void
+  interpretRefinedCoproduct
+    (ListForAllCons {l} head tail) =
+      Either
+        (interpretRefinedObject head)
+        (interpretRefinedCoproduct {representations=l} tail)
 
   public export
   interpretRefinedMorphism :

@@ -104,7 +104,16 @@ ListForAllDecSig {predicate} decide = ListIndHypotheses
 public export
 listForAllDec : {a : Type} -> {predicate : a -> Type} ->
   (decide : DecPred predicate) -> (l : List a) -> ListForAllDec predicate l
-listForAllDec predicate = listInd (ListForAllDecSig predicate)
+listForAllDec decide = listInd (ListForAllDecSig decide)
+
+public export
+listForAllMaybe : {a : Type} -> {predicate : a -> Type} ->
+  (decide : (x : a) -> Maybe (predicate x)) -> (l : List a) ->
+  Maybe (ListForAll predicate l)
+listForAllMaybe decide [] = Just ListForAllEmpty
+listForAllMaybe decide (x :: l) = case (decide x, listForAllMaybe decide l) of
+  (Just px, Just pl) => Just (ListForAllCons px pl)
+  _ => Nothing
 
 public export
 listForAllGet : {a : Type} -> {predicate : a -> Type} -> {l : List a} ->
