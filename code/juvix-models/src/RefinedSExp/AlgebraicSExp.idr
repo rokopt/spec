@@ -365,14 +365,20 @@ mutual
     {representation, domainRep, codomainRep : RefinedSExp} ->
     (morphism : RefinedMorphism representation domainRep codomainRep) ->
     sexpAsObject domainRep = Just (refinedMorphismDomain morphism)
-  refinedMorphismDomainCorrect = ?refinedMorphismDomainCorrect_hole
+  refinedMorphismDomainCorrect (RefinedIdentity object) = ?refinedMorphismDomainCorrect_hole_1
+  refinedMorphismDomainCorrect (RefinedCompose g f) = ?refinedMorphismDomainCorrect_hole_2
+  refinedMorphismDomainCorrect (RefinedFromVoid f) = ?refinedMorphismDomainCorrect_hole_3
+  refinedMorphismDomainCorrect (RefinedToUnit f) = ?refinedMorphismDomainCorrect_hole_4
 
   public export
   refinedMorphismCodomainCorrect :
     {representation, domainRep, codomainRep : RefinedSExp} ->
     (morphism : RefinedMorphism representation domainRep codomainRep) ->
     sexpAsObject codomainRep = Just (refinedMorphismCodomain morphism)
-  refinedMorphismCodomainCorrect = ?refinedMorphismCodomainCorrect_hole
+  refinedMorphismCodomainCorrect (RefinedIdentity f) = ?refinedMorphismCodomainCorrect_hole_1
+  refinedMorphismCodomainCorrect (RefinedCompose g f) = ?refinedMorphismCodomainCorrect_hole_2
+  refinedMorphismCodomainCorrect (RefinedFromVoid f) = ?refinedMorphismCodomainCorrect_hole_3
+  refinedMorphismCodomainCorrect (RefinedToUnit f) = ?refinedMorphismCodomainCorrect_hole_4
 
   public export
   refinedContractSubjectMorphismCorrect :
@@ -424,6 +430,7 @@ mutual
     in
     justInjective $ trans (sym complete) complete'
 
+mutual
   export
   sexpAsMorphismComplete :
     {representation, domainRep, codomainRep : RefinedSExp} ->
