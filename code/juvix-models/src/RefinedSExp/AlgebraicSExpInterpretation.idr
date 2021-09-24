@@ -1,6 +1,7 @@
 module RefinedSExp.AlgebraicSExpInterpretation
 
 import public RefinedSExp.AlgebraicSExp
+import Data.Maybe
 
 %default total
 
@@ -31,10 +32,28 @@ mutual
     case codomain of
       RefinedVoid impossible
       RefinedUnit => \v => ()
-  interpretRefinedMorphism {domain} {codomain} (RefinedIdentity objectRep) =
-    ?interpretRefinedMorphism_hole_identity
-  interpretRefinedMorphism {domain} {codomain} (RefinedCompose left right) =
-    ?interpretRefinedMorphism_hole_compose
+  interpretRefinedMorphism {domain} {codomain} (RefinedIdentity object) =
+    rewrite (objectRepresentationUnique domain codomain) in id
+  interpretRefinedMorphism {domain} {codomain} (RefinedCompose {a} {b} {c} left right) =
+    let
+      domLeftCorrect = refinedMorphismDomainCorrect left
+      codRightCorrect = refinedMorphismCodomainCorrect right
+      domLeftEqualsCodRight =
+        justInjective $ trans (sym domLeftCorrect) codRightCorrect
+      lm =
+        interpretRefinedMorphism
+          {domain=(refinedMorphismDomain left)} {codomain} left
+      rm =
+        interpretRefinedMorphism
+          {domain} {codomain=(refinedMorphismCodomain right)} right
+      lm' =
+        replace
+          {p=
+            (\m => interpretRefinedObject m -> interpretRefinedObject codomain)}
+          domLeftEqualsCodRight
+          lm
+    in
+    lm' . rm
 
   public export
   interpretRefinedContract :

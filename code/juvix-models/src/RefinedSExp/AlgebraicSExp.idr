@@ -245,15 +245,18 @@ mutual
   public export
   data RefinedMorphism :
     (representation, domainRep, codomainRep : RefinedSExp) -> Type where
-      RefinedIdentity : (objectRep : RefinedSExp) ->
+      RefinedIdentity : {objectRep : RefinedSExp} ->
+        RefinedObject objectRep ->
         RefinedMorphism (RSIdentity objectRep) objectRep objectRep
       RefinedCompose : {a, b, c, leftRep, rightRep : RefinedSExp} ->
         RefinedMorphism leftRep b c ->
         RefinedMorphism rightRep a b ->
         RefinedMorphism (RSCompose leftRep rightRep) a c
-      RefinedFromVoid : (codomainRep : RefinedSExp) ->
+      RefinedFromVoid : {codomainRep : RefinedSExp} ->
+        RefinedObject codomainRep ->
         RefinedMorphism (RSFromVoid codomainRep) RSVoid codomainRep
-      RefinedToUnit : (domainRep : RefinedSExp) ->
+      RefinedToUnit : {domainRep : RefinedSExp} ->
+        RefinedObject domainRep ->
         RefinedMorphism (RSToUnit domainRep) domainRep RSUnit
 
   public export
@@ -261,6 +264,7 @@ mutual
     (representation, domainRep, codomainRep, subjectMorphismRep :
       RefinedSExp) -> Type where
 
+mutual
   public export
   sexpAsObject : (representation : RefinedSExp) ->
     Maybe (RefinedObject representation)
@@ -269,37 +273,139 @@ mutual
   sexpAsObject _ = Nothing
 
   public export
-  sexpAsMorphism : (representation, domainRep, codomainRep : RefinedSExp) ->
-    Maybe (RefinedMorphism representation domainRep codomainRep)
-  sexpAsMorphism (RAFromVoid $* [codomainRep]) (RAVoid $* []) codomainRep' =
-    case decEq codomainRep codomainRep' of
-      Yes Refl => Just (RefinedFromVoid codomainRep)
-      No _ => Nothing
-  sexpAsMorphism (RAToUnit $* [domainRep]) domainRep' (RAUnit $* []) =
-    case decEq domainRep domainRep' of
-      Yes Refl => Just (RefinedToUnit domainRep)
-      No _ => Nothing
-  sexpAsMorphism (RAIdentity $* [objectRep]) objectRep' objectRep'' =
-    let
-      (deq', deq'') = (decEq objectRep' objectRep, decEq objectRep'' objectRep)
-    in
-    case (deq', deq'') of
-      (Yes eq', Yes eq'') =>
-        case (sym eq') of
-          Refl => case (sym eq'') of Refl => Just $ RefinedIdentity objectRep''
+  sexpAsMorphism : (representation : RefinedSExp) ->
+    Maybe
+      (domainRep : RefinedSExp ** codomainRep : RefinedSExp **
+       RefinedMorphism representation domainRep codomainRep)
+  sexpAsMorphism (RAFromVoid $* [codomainRep]) =
+    case sexpAsObject codomainRep of
+      Just codomain => Just (RSVoid ** codomainRep ** RefinedFromVoid codomain)
+      Nothing => Nothing
+  sexpAsMorphism (RAToUnit $* [domainRep]) =
+    case sexpAsObject domainRep of
+      Just domain => Just (domainRep ** RSUnit ** RefinedToUnit domain)
+      Nothing => Nothing
+  sexpAsMorphism (RAIdentity $* [objectRep]) =
+    case sexpAsObject objectRep of
+      Just object => Just (objectRep ** objectRep ** RefinedIdentity object)
+      Nothing => Nothing
+  sexpAsMorphism (RACompose $* [leftRep, rightRep]) =
+    case (sexpAsMorphism leftRep, sexpAsMorphism rightRep) of
+      (Just (leftDomRep ** leftCodRep ** leftMorphism),
+       Just (rightDomRep ** rightCodRep ** rightMorphism)) =>
+        case decEq rightCodRep leftDomRep of
+          Yes Refl =>
+            Just (rightDomRep ** leftCodRep **
+                  RefinedCompose leftMorphism rightMorphism)
+          No _ => Nothing
       _ => Nothing
-  sexpAsMorphism (RACompose $* [leftRep, rightRep]) domainRep codomainRep =
-    ?sexpAsMorphism_hole_compose
-  sexpAsMorphism _ _ _ = Nothing
+  sexpAsMorphism _ = Nothing
 
   public export
-  sexpAsContract :
-    (representation, domainRep, codomainRep, subjectMorphismRep :
-      RefinedSExp) ->
+  sexpAsContract : (representation : RefinedSExp) ->
     Maybe
-      (RefinedContract representation domainRep codomainRep subjectMorphismRep)
-  sexpAsContract _ _ _ _ = Nothing
+      (domainRep : RefinedSExp ** codomainRep : RefinedSExp **
+       subjectMorphismRep : RefinedSExp **
+       RefinedContract representation domainRep codomainRep subjectMorphismRep)
+  sexpAsContract _ = Nothing
 
+mutual
+  public export
+  refinedMorphismDomain :
+    {representation, domainRep, codomainRep : RefinedSExp} ->
+    RefinedMorphism representation domainRep codomainRep ->
+    RefinedObject domainRep
+  refinedMorphismDomain (RefinedIdentity object) =
+    object
+  refinedMorphismDomain (RefinedCompose _ right) =
+    refinedMorphismDomain right
+  refinedMorphismDomain (RefinedFromVoid _) = RefinedVoid
+  refinedMorphismDomain (RefinedToUnit domain) = domain
+
+  public export
+  refinedMorphismCodomain :
+    {representation, domainRep, codomainRep : RefinedSExp} ->
+    RefinedMorphism representation domainRep codomainRep ->
+    RefinedObject codomainRep
+  refinedMorphismCodomain (RefinedIdentity object) =
+    object
+  refinedMorphismCodomain (RefinedCompose left _) =
+    refinedMorphismCodomain left
+  refinedMorphismCodomain (RefinedFromVoid codomain) = codomain
+  refinedMorphismCodomain (RefinedToUnit _) = RefinedUnit
+
+  public export
+  refinedContractSubjectMorphism :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    RefinedContract representation domainRep codomainRep subjectMorphismRep ->
+    RefinedMorphism subjectMorphismRep domainRep codomainRep
+  refinedContractSubjectMorphism _ impossible
+
+  public export
+  refinedContractDomain :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    RefinedContract representation domainRep codomainRep subjectMorphismRep ->
+    RefinedObject domainRep
+  refinedContractDomain =
+    refinedMorphismDomain . refinedContractSubjectMorphism
+
+  public export
+  refinedContractCodomain :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    RefinedContract representation domainRep codomainRep subjectMorphismRep ->
+    RefinedObject codomainRep
+  refinedContractCodomain =
+    refinedMorphismCodomain . refinedContractSubjectMorphism
+
+  public export
+  refinedMorphismDomainCorrect :
+    {representation, domainRep, codomainRep : RefinedSExp} ->
+    (morphism : RefinedMorphism representation domainRep codomainRep) ->
+    sexpAsObject domainRep = Just (refinedMorphismDomain morphism)
+  refinedMorphismDomainCorrect = ?refinedMorphismDomainCorrect_hole
+
+  public export
+  refinedMorphismCodomainCorrect :
+    {representation, domainRep, codomainRep : RefinedSExp} ->
+    (morphism : RefinedMorphism representation domainRep codomainRep) ->
+    sexpAsObject codomainRep = Just (refinedMorphismCodomain morphism)
+  refinedMorphismCodomainCorrect = ?refinedMorphismCodomainCorrect_hole
+
+  public export
+  refinedContractSubjectMorphismCorrect :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    sexpAsMorphism subjectMorphismRep =
+      Just (refinedContractSubjectMorphism morphism)
+  refinedContractSubjectMorphismCorrect _ impossible
+
+  public export
+  refinedContractDomainCorrect :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    sexpAsObject domainRep = Just (refinedContractDomain contract)
+  refinedContractDomainCorrect _ impossible
+
+  public export
+  refinedContractCodomainCorrect :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    sexpAsObject codomainRep = Just (refinedContractCodomain contract)
+  refinedContractCodomainCorrect _ impossible
+
+mutual
   export
   sexpAsObjectComplete : {representation : RefinedSExp} ->
     (obj : RefinedObject representation) ->
@@ -308,40 +414,76 @@ mutual
   sexpAsObjectComplete RefinedUnit = Refl
 
   export
+  objectRepresentationUnique : {representation : RefinedSExp} ->
+    (obj, obj' : RefinedObject representation) ->
+    obj = obj'
+  objectRepresentationUnique {representation} obj obj' =
+    let
+      complete = sexpAsObjectComplete obj
+      complete' = sexpAsObjectComplete obj'
+    in
+    justInjective $ trans (sym complete) complete'
+
+  export
   sexpAsMorphismComplete :
     {representation, domainRep, codomainRep : RefinedSExp} ->
     (morphism : RefinedMorphism representation domainRep codomainRep) ->
-    sexpAsMorphism representation domainRep codomainRep = Just morphism
-  sexpAsMorphismComplete (RefinedFromVoid codomainRep)
-    with (decEq codomainRep codomainRep)
-      sexpAsMorphismComplete (RefinedFromVoid codomainRep) | Yes Refl =
-        Refl
-      sexpAsMorphismComplete (RefinedFromVoid codomainRep) | No neq =
-        void (neq Refl)
-  sexpAsMorphismComplete (RefinedToUnit domainRep)
-    with (decEq domainRep domainRep)
-      sexpAsMorphismComplete (RefinedToUnit domainRep) | Yes Refl =
-        Refl
-      sexpAsMorphismComplete (RefinedToUnit domainRep) | No neq =
-        void (neq Refl)
-  sexpAsMorphismComplete (RefinedIdentity objectRep)
-    with (decEq objectRep objectRep)
-      sexpAsMorphismComplete (RefinedIdentity objectRep) | Yes Refl =
-        Refl
-      sexpAsMorphismComplete (RefinedIdentity objectRep) | No neq =
-        void (neq Refl)
+    sexpAsMorphism representation = Just (domainRep ** codomainRep ** morphism)
+  sexpAsMorphismComplete (RefinedFromVoid codomain) =
+    rewrite (refinedMorphismCodomainCorrect (RefinedFromVoid codomain)) in Refl
+  sexpAsMorphismComplete (RefinedToUnit domain) =
+    rewrite (refinedMorphismDomainCorrect (RefinedToUnit domain)) in Refl
+  sexpAsMorphismComplete (RefinedIdentity object) =
+    rewrite (refinedMorphismDomainCorrect (RefinedIdentity object)) in Refl
   sexpAsMorphismComplete (RefinedCompose left right) =
+    let
+      lcc = refinedMorphismDomainCorrect left
+      lcd = refinedMorphismCodomainCorrect left
+      rcc = refinedMorphismDomainCorrect right
+      rcd = refinedMorphismCodomainCorrect right
+      lcomp = sexpAsMorphismComplete left
+      rcomp = sexpAsMorphismComplete right
+    in
     ?sexpAsMorphismComplete_compose_hole
+
+  export
+  morphismRepresentationUnique :
+    {representation, domainRep, domainRep', codomainRep, codomainRep' :
+      RefinedSExp} ->
+    (morphism : RefinedMorphism representation domainRep codomainRep) ->
+    (morphism' : RefinedMorphism representation domainRep' codomainRep') ->
+    morphism = morphism'
+  morphismRepresentationUnique morphism morphism' =
+    let
+      complete = sexpAsMorphismComplete morphism
+      complete' = sexpAsMorphismComplete morphism'
+      completeEq = justInjective $ trans (sym complete) complete'
+    in
+    case completeEq of Refl => Refl
 
   export
   sexpAsContractComplete :
     {representation, domainRep, codomainRep, subjectMorphismRep :
       RefinedSExp} ->
-    (morphism :
+    (contract :
       RefinedContract
         representation domainRep codomainRep subjectMorphismRep) ->
-    sexpAsContract representation = Just morphism
+    sexpAsContract representation =
+      Just (domainRep ** codomainRep ** subjectMorphismRep ** contract)
   sexpAsContractComplete _ impossible
+
+  export
+  contractRepresentationUnique :
+    {representation, domainRep, domainRep', codomainRep, codomainRep',
+      subjectMorphismRep, subjectMorphismRep' : RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    (contract' :
+      RefinedContract
+        representation domainRep' codomainRep' subjectMorphismRep') ->
+    contract = contract'
+  contractRepresentationUnique _ impossible
 
 public export
 GeneralizedElement : (objectRep : RefinedSExp) -> Type
