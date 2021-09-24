@@ -419,16 +419,15 @@ mutual
     rewrite (refinedMorphismDomainCorrect (RefinedToUnit domain)) in Refl
   sexpAsMorphismComplete (RefinedIdentity object) =
     rewrite (refinedMorphismDomainCorrect (RefinedIdentity object)) in Refl
-  sexpAsMorphismComplete (RefinedCompose left right) =
-    let
-      lcc = refinedMorphismDomainCorrect left
-      lcd = refinedMorphismCodomainCorrect left
-      rcc = refinedMorphismDomainCorrect right
-      rcd = refinedMorphismCodomainCorrect right
-      lcomp = sexpAsMorphismComplete left
-      rcomp = sexpAsMorphismComplete right
-    in
-    ?sexpAsMorphismComplete_compose_hole
+  sexpAsMorphismComplete (RefinedCompose {b} left right)
+    with (decEq b b) proof bRefl
+      sexpAsMorphismComplete (RefinedCompose {b} left right) | Yes Refl =
+        rewrite (sexpAsMorphismComplete left) in
+        rewrite (sexpAsMorphismComplete right) in
+        rewrite bRefl in
+        Refl
+      sexpAsMorphismComplete (RefinedCompose {b} left right) | No neq =
+        void (neq Refl)
 
   export
   morphismRepresentationUnique :
