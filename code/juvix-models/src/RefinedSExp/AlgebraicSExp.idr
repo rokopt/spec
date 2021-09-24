@@ -360,6 +360,26 @@ mutual
   refinedContractCodomain =
     refinedMorphismCodomain . refinedContractSubjectMorphism
 
+mutual
+  export
+  sexpAsObjectComplete : {representation : RefinedSExp} ->
+    (obj : RefinedObject representation) ->
+    sexpAsObject representation = Just obj
+  sexpAsObjectComplete RefinedVoid = Refl
+  sexpAsObjectComplete RefinedUnit = Refl
+
+  export
+  objectRepresentationUnique : {representation : RefinedSExp} ->
+    (obj, obj' : RefinedObject representation) ->
+    obj = obj'
+  objectRepresentationUnique {representation} obj obj' =
+    let
+      complete = sexpAsObjectComplete obj
+      complete' = sexpAsObjectComplete obj'
+    in
+    justInjective $ trans (sym complete) complete'
+
+mutual
   public export
   refinedMorphismDomainCorrect :
     {representation, domainRep, codomainRep : RefinedSExp} ->
@@ -379,56 +399,6 @@ mutual
   refinedMorphismCodomainCorrect (RefinedCompose g f) = ?refinedMorphismCodomainCorrect_hole_2
   refinedMorphismCodomainCorrect (RefinedFromVoid f) = ?refinedMorphismCodomainCorrect_hole_3
   refinedMorphismCodomainCorrect (RefinedToUnit f) = ?refinedMorphismCodomainCorrect_hole_4
-
-  public export
-  refinedContractSubjectMorphismCorrect :
-    {representation, domainRep, codomainRep, subjectMorphismRep :
-      RefinedSExp} ->
-    (contract :
-      RefinedContract
-        representation domainRep codomainRep subjectMorphismRep) ->
-    sexpAsMorphism subjectMorphismRep =
-      Just (refinedContractSubjectMorphism morphism)
-  refinedContractSubjectMorphismCorrect _ impossible
-
-  public export
-  refinedContractDomainCorrect :
-    {representation, domainRep, codomainRep, subjectMorphismRep :
-      RefinedSExp} ->
-    (contract :
-      RefinedContract
-        representation domainRep codomainRep subjectMorphismRep) ->
-    sexpAsObject domainRep = Just (refinedContractDomain contract)
-  refinedContractDomainCorrect _ impossible
-
-  public export
-  refinedContractCodomainCorrect :
-    {representation, domainRep, codomainRep, subjectMorphismRep :
-      RefinedSExp} ->
-    (contract :
-      RefinedContract
-        representation domainRep codomainRep subjectMorphismRep) ->
-    sexpAsObject codomainRep = Just (refinedContractCodomain contract)
-  refinedContractCodomainCorrect _ impossible
-
-mutual
-  export
-  sexpAsObjectComplete : {representation : RefinedSExp} ->
-    (obj : RefinedObject representation) ->
-    sexpAsObject representation = Just obj
-  sexpAsObjectComplete RefinedVoid = Refl
-  sexpAsObjectComplete RefinedUnit = Refl
-
-  export
-  objectRepresentationUnique : {representation : RefinedSExp} ->
-    (obj, obj' : RefinedObject representation) ->
-    obj = obj'
-  objectRepresentationUnique {representation} obj obj' =
-    let
-      complete = sexpAsObjectComplete obj
-      complete' = sexpAsObjectComplete obj'
-    in
-    justInjective $ trans (sym complete) complete'
 
 mutual
   export
@@ -468,6 +438,39 @@ mutual
     in
     case completeEq of Refl => Refl
 
+mutual
+  public export
+  refinedContractSubjectMorphismCorrect :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    sexpAsMorphism subjectMorphismRep =
+      Just (refinedContractSubjectMorphism morphism)
+  refinedContractSubjectMorphismCorrect _ impossible
+
+  public export
+  refinedContractDomainCorrect :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    sexpAsObject domainRep = Just (refinedContractDomain contract)
+  refinedContractDomainCorrect _ impossible
+
+  public export
+  refinedContractCodomainCorrect :
+    {representation, domainRep, codomainRep, subjectMorphismRep :
+      RefinedSExp} ->
+    (contract :
+      RefinedContract
+        representation domainRep codomainRep subjectMorphismRep) ->
+    sexpAsObject codomainRep = Just (refinedContractCodomain contract)
+  refinedContractCodomainCorrect _ impossible
+
+mutual
   export
   sexpAsContractComplete :
     {representation, domainRep, codomainRep, subjectMorphismRep :
