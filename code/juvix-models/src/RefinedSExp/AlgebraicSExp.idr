@@ -239,25 +239,25 @@ RSCompose leftRep rightRep = RACompose $* [leftRep, rightRep]
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
-      RefinedVoid : RefinedObject RSVoid
-      RefinedUnit : RefinedObject RSUnit
+        RefinedVoid : RefinedObject RSVoid
+        RefinedUnit : RefinedObject RSUnit
 
   public export
   data RefinedMorphism :
     (representation, domainRep, codomainRep : RefinedSExp) -> Type where
-      RefinedIdentity : {objectRep : RefinedSExp} ->
-        RefinedObject objectRep ->
-        RefinedMorphism (RSIdentity objectRep) objectRep objectRep
-      RefinedCompose : {a, b, c, leftRep, rightRep : RefinedSExp} ->
-        RefinedMorphism leftRep b c ->
-        RefinedMorphism rightRep a b ->
-        RefinedMorphism (RSCompose leftRep rightRep) a c
-      RefinedFromVoid : {codomainRep : RefinedSExp} ->
-        RefinedObject codomainRep ->
-        RefinedMorphism (RSFromVoid codomainRep) RSVoid codomainRep
-      RefinedToUnit : {domainRep : RefinedSExp} ->
-        RefinedObject domainRep ->
-        RefinedMorphism (RSToUnit domainRep) domainRep RSUnit
+        RefinedIdentity : {objectRep : RefinedSExp} ->
+          RefinedObject objectRep ->
+          RefinedMorphism (RSIdentity objectRep) objectRep objectRep
+        RefinedCompose : {a, b, c, leftRep, rightRep : RefinedSExp} ->
+          RefinedMorphism leftRep b c ->
+          RefinedMorphism rightRep a b ->
+          RefinedMorphism (RSCompose leftRep rightRep) a c
+        RefinedFromVoid : {codomainRep : RefinedSExp} ->
+          RefinedObject codomainRep ->
+          RefinedMorphism (RSFromVoid codomainRep) RSVoid codomainRep
+        RefinedToUnit : {domainRep : RefinedSExp} ->
+          RefinedObject domainRep ->
+          RefinedMorphism (RSToUnit domainRep) domainRep RSUnit
 
   public export
   data RefinedContract :
