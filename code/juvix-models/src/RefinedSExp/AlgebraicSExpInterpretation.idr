@@ -88,6 +88,9 @@ mutual
   interpretRefinedMorphism {codomain} (RefinedZero _) =
     case codomain of
       RefinedNat => \_ => Z
+  interpretRefinedMorphism
+    {domain=RefinedNat} {codomain=RefinedNat} RefinedSuccessor =
+      S
 
   public export
   interpretRefinedContract :

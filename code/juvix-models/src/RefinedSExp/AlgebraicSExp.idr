@@ -331,8 +331,8 @@ RSZero : (domainRep : RefinedSExp) -> RefinedSExp
 RSZero domainRep = RAZero $*** domainRep
 
 public export
-RSSuccessor : (predecessor : RefinedSExp) -> RefinedSExp
-RSSuccessor predecessor = RASuccessor $*** predecessor
+RSSuccessor : RefinedSExp
+RSSuccessor = $^ RASuccessor
 
 public export
 RSNat : RefinedSExp
@@ -373,6 +373,8 @@ mutual
         RefinedZero : {domainRep : RefinedSExp} ->
           RefinedObject domainRep ->
           RefinedMorphism (RSZero domainRep) domainRep RSNat
+        RefinedSuccessor :
+          RefinedMorphism RSSuccessor RSNat RSNat
 
   public export
   data RefinedContract :
@@ -441,6 +443,7 @@ mutual
     case sexpAsObject domainRep of
       Just domain => Just (domainRep ** RSNat ** RefinedZero domain)
       Nothing => Nothing
+  sexpAsMorphism (RASuccessor $* []) = Just (RSNat ** RSNat ** RefinedSuccessor)
   sexpAsMorphism _ = Nothing
 
   public export
@@ -464,6 +467,7 @@ mutual
   refinedMorphismDomain (RefinedFromVoid _) = RefinedVoid
   refinedMorphismDomain (RefinedToUnit domain) = domain
   refinedMorphismDomain (RefinedZero domain) = domain
+  refinedMorphismDomain RefinedSuccessor = RefinedNat
 
   public export
   refinedMorphismCodomain :
@@ -477,6 +481,7 @@ mutual
   refinedMorphismCodomain (RefinedFromVoid codomain) = codomain
   refinedMorphismCodomain (RefinedToUnit _) = RefinedUnit
   refinedMorphismCodomain (RefinedZero _) = RefinedNat
+  refinedMorphismCodomain RefinedSuccessor = RefinedNat
 
   public export
   refinedContractSubjectMorphism :
@@ -574,6 +579,7 @@ mutual
     sexpAsObjectComplete domainRep
   refinedMorphismDomainCorrect (RefinedZero domainRep) =
     sexpAsObjectComplete domainRep
+  refinedMorphismDomainCorrect RefinedSuccessor = Refl
 
   public export
   refinedMorphismCodomainCorrect :
@@ -588,6 +594,7 @@ mutual
     sexpAsObjectComplete codomainRep
   refinedMorphismCodomainCorrect (RefinedToUnit _) = Refl
   refinedMorphismCodomainCorrect (RefinedZero _) = Refl
+  refinedMorphismCodomainCorrect RefinedSuccessor = Refl
 
 mutual
   export
@@ -612,6 +619,7 @@ mutual
         void (neq Refl)
   sexpAsMorphismComplete (RefinedZero domain) =
     rewrite (refinedMorphismDomainCorrect (RefinedZero domain)) in Refl
+  sexpAsMorphismComplete RefinedSuccessor = Refl
 
   export
   morphismRepresentationUnique :
