@@ -35,8 +35,7 @@ mutual
   interpretRefinedProduct
     (ListForAllCons {l} head tail) =
       (interpretRefinedObject head,
-       interpretRefinedObject head ->
-        interpretRefinedProduct {representations=l} tail)
+       interpretRefinedProduct {representations=l} tail)
 
   public export
   interpretRefinedCoproduct : {representations : RefinedSList} ->
