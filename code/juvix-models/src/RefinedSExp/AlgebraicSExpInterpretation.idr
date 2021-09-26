@@ -24,6 +24,9 @@ mutual
   interpretRefinedObject (RefinedExponential domain codomain) =
     interpretRefinedExponential domain codomain
   interpretRefinedObject RefinedNat = Nat
+  interpretRefinedObject ReflectedAtom = RefinedAtom
+  interpretRefinedObject ReflectedExp = RefinedSExp
+  interpretRefinedObject ReflectedList = RefinedSList
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->

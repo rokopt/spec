@@ -181,6 +181,16 @@ data RefinedAtom : Type where
   RAZero : RefinedAtom
   RASuccessor : RefinedAtom
   RANat : RefinedAtom
+  RAEval : RefinedAtom
+  RACurry : RefinedAtom
+  RARecursive : RefinedAtom
+  RAFixpoint : RefinedAtom
+  RAAtom : RefinedAtom
+  RARExp : RefinedAtom
+  RANil : RefinedAtom
+  RACons : RefinedAtom
+  RARList : RefinedAtom
+  RARAtom : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -200,6 +210,16 @@ raEncode RAInject = 12
 raEncode RAZero = 13
 raEncode RASuccessor = 14
 raEncode RANat = 15
+raEncode RAEval = 16
+raEncode RACurry = 17
+raEncode RARecursive = 18
+raEncode RAFixpoint = 19
+raEncode RAAtom = 20
+raEncode RARExp = 21
+raEncode RANil = 22
+raEncode RACons = 23
+raEncode RARList = 24
+raEncode RARAtom = 25
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -219,6 +239,16 @@ raDecode 12 = RAInject
 raDecode 13 = RAZero
 raDecode 14 = RASuccessor
 raDecode 15 = RANat
+raDecode 16 = RAEval
+raDecode 17 = RACurry
+raDecode 18 = RARecursive
+raDecode 19 = RAFixpoint
+raDecode 20 = RAAtom
+raDecode 21 = RARExp
+raDecode 22 = RANil
+raDecode 23 = RACons
+raDecode 24 = RARList
+raDecode 25 = RARAtom
 raDecode _ = RAVoid
 
 export
@@ -240,6 +270,16 @@ raDecodeIsLeftInverse RAInject = Refl
 raDecodeIsLeftInverse RAZero = Refl
 raDecodeIsLeftInverse RASuccessor = Refl
 raDecodeIsLeftInverse RANat = Refl
+raDecodeIsLeftInverse RAEval = Refl
+raDecodeIsLeftInverse RACurry = Refl
+raDecodeIsLeftInverse RARecursive = Refl
+raDecodeIsLeftInverse RAFixpoint = Refl
+raDecodeIsLeftInverse RAAtom = Refl
+raDecodeIsLeftInverse RARExp = Refl
+raDecodeIsLeftInverse RANil = Refl
+raDecodeIsLeftInverse RACons = Refl
+raDecodeIsLeftInverse RARList = Refl
+raDecodeIsLeftInverse RARAtom = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
@@ -319,12 +359,20 @@ RSExponential : (domain, codomain : RefinedSExp) -> RefinedSExp
 RSExponential domain codomain = RAExponential $* [domain, codomain]
 
 public export
-RSTuple : (morphisms : RefinedSList) -> RefinedSExp
-RSTuple morphisms = RATuple $* morphisms
+RSTuple : (fields : RefinedSList) -> RefinedSExp
+RSTuple fields = RATuple $* fields
 
 public export
-RSProject : (product : RefinedSExp) -> (index : RefinedSExp) -> RefinedSExp
-RSProject product index = RAProject $* [product, index]
+RSProject : (index : RefinedSExp) -> (products : RefinedSList) -> RefinedSExp
+RSProject index products = RAProject $* index :: products
+
+public export
+RSCase : (cases : RefinedSList) -> RefinedSExp
+RSCase cases = RACase $* cases
+
+public export
+RSInject : (index : RefinedSExp) -> (codomains : RefinedSList) -> RefinedSExp
+RSInject index codomains = RAInject $* index :: codomains
 
 public export
 RSZero : (domainRep : RefinedSExp) -> RefinedSExp
@@ -337,6 +385,38 @@ RSSuccessor = $^ RASuccessor
 public export
 RSNat : RefinedSExp
 RSNat = $^ RANat
+
+public export
+RSEval : (domain, codomain : RefinedSExp) -> RefinedSExp
+RSEval domain codomain = RAEval $* [domain, codomain]
+
+public export
+RSCurry : (morphism : RefinedSExp) -> RefinedSExp
+RSCurry morphism = RACurry $*** morphism
+
+public export
+RSAtom : (atom : RefinedAtom) -> RefinedSExp
+RSAtom atom = RAAtom $**^ atom
+
+public export
+RSSExp : RefinedSExp
+RSSExp = $^ RARExp
+
+public export
+RSNil : RefinedSExp
+RSNil = $^ RANil
+
+public export
+RSCons : (head, tail : RefinedSExp) -> RefinedSExp
+RSCons head tail = RACons $* [head, tail]
+
+public export
+RSSList : RefinedSExp
+RSSList = $^ RARList
+
+public export
+RSSAtom : RefinedSExp
+RSSAtom = $^ RARAtom
 
 mutual
   public export
@@ -353,6 +433,9 @@ mutual
           RefinedObject domainRep -> RefinedObject codomainRep ->
           RefinedObject (RSExponential domainRep codomainRep)
         RefinedNat : RefinedObject RSNat
+        ReflectedAtom : RefinedObject RSSAtom
+        ReflectedExp : RefinedObject RSSExp
+        ReflectedList : RefinedObject RSSList
 
   public export
   data RefinedMorphism :
@@ -400,6 +483,9 @@ mutual
       (Just domain, Just codomain) => Just (RefinedExponential domain codomain)
       _ => Nothing
   sexpAsObject (RANat $* []) = Just RefinedNat
+  sexpAsObject (RARAtom $* []) = Just ReflectedAtom
+  sexpAsObject (RARExp $* []) = Just ReflectedExp
+  sexpAsObject (RARList $* []) = Just ReflectedList
   sexpAsObject _ = Nothing
 
   public export
@@ -524,6 +610,9 @@ mutual
     rewrite (sexpAsObjectComplete domain) in
     rewrite (sexpAsObjectComplete codomain) in Refl
   sexpAsObjectComplete RefinedNat = Refl
+  sexpAsObjectComplete ReflectedAtom = Refl
+  sexpAsObjectComplete ReflectedExp = Refl
+  sexpAsObjectComplete ReflectedList = Refl
 
   export
   slistAsObjectsComplete : {representations : RefinedSList} ->
