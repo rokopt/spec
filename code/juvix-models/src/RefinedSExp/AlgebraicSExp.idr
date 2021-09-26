@@ -286,6 +286,10 @@ public export
 RSCoproduct : (objects : RefinedSList) -> RefinedSExp
 RSCoproduct objects = RACoproduct $* objects
 
+public export
+RSExponential : (domain, codomain : RefinedSExp) -> RefinedSExp
+RSExponential domain codomain = RAExponential $* [domain, codomain]
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
@@ -297,6 +301,9 @@ mutual
         RefinedCoproduct : {representations : RefinedSList} ->
           ListForAll RefinedObject representations ->
           RefinedObject (RSCoproduct representations)
+        RefinedExponential : {domainRep, codomainRep : RefinedSExp} ->
+          RefinedObject domainRep -> RefinedObject codomainRep ->
+          RefinedObject (RSExponential domainRep codomainRep)
 
   public export
   data RefinedMorphism :
@@ -334,6 +341,10 @@ mutual
     case slistAsObjects objectReps of
       Just objects => Just (RefinedCoproduct objects)
       Nothing => Nothing
+  sexpAsObject (RAExponential $* [domainRep, codomainRep]) =
+    case (sexpAsObject domainRep, sexpAsObject codomainRep) of
+      (Just domain, Just codomain) => Just (RefinedExponential domain codomain)
+      _ => Nothing
   sexpAsObject _ = Nothing
 
   public export
@@ -445,6 +456,9 @@ mutual
     rewrite (slistAsObjectsComplete objects) in Refl
   sexpAsObjectComplete (RefinedCoproduct objects) =
     rewrite (slistAsObjectsComplete objects) in Refl
+  sexpAsObjectComplete (RefinedExponential domain codomain) =
+    rewrite (sexpAsObjectComplete domain) in
+    rewrite (sexpAsObjectComplete codomain) in Refl
 
   export
   slistAsObjectsComplete : {representations : RefinedSList} ->

@@ -21,6 +21,8 @@ mutual
     interpretRefinedProduct {representations} objects
   interpretRefinedObject (RefinedCoproduct {representations} objects) =
     interpretRefinedCoproduct {representations} objects
+  interpretRefinedObject (RefinedExponential domain codomain) =
+    interpretRefinedExponential domain codomain
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
@@ -40,6 +42,12 @@ mutual
       Either
         (interpretRefinedObject head)
         (interpretRefinedCoproduct {representations=l} tail)
+
+  public export
+  interpretRefinedExponential : {domainRep, codomainRep : RefinedSExp} ->
+    RefinedObject domainRep -> RefinedObject codomainRep -> Type
+  interpretRefinedExponential domain codomain =
+    interpretRefinedObject domain -> interpretRefinedObject codomain
 
   public export
   interpretRefinedMorphism :
