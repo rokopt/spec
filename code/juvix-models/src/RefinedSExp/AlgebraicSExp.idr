@@ -193,6 +193,15 @@ data RefinedAtom : Type where
   RARAtom : RefinedAtom
   RACorecursive : RefinedAtom
   RACofixpoint : RefinedAtom
+  RABool : RefinedAtom
+  RATrue : RefinedAtom
+  RAFalse : RefinedAtom
+  RAIf : RefinedAtom
+  RAEqual : RefinedAtom
+  RARefinement : RefinedAtom
+  RARefinedBy : RefinedAtom
+  RAListRefinement : RefinedAtom
+  RAListRefinedBy : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -224,6 +233,15 @@ raEncode RARList = 24
 raEncode RARAtom = 25
 raEncode RACorecursive = 26
 raEncode RACofixpoint = 27
+raEncode RABool = 28
+raEncode RATrue = 29
+raEncode RAFalse = 30
+raEncode RAIf = 31
+raEncode RAEqual = 32
+raEncode RARefinement = 33
+raEncode RARefinedBy = 34
+raEncode RAListRefinement = 35
+raEncode RAListRefinedBy = 36
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -255,6 +273,15 @@ raDecode 24 = RARList
 raDecode 25 = RARAtom
 raDecode 26 = RACorecursive
 raDecode 27 = RACofixpoint
+raDecode 28 = RABool
+raDecode 29 = RATrue
+raDecode 30 = RAFalse
+raDecode 31 = RAIf
+raDecode 32 = RAEqual
+raDecode 33 = RARefinement
+raDecode 34 = RARefinedBy
+raDecode 35 = RAListRefinement
+raDecode 36 = RAListRefinedBy
 raDecode _ = RAVoid
 
 export
@@ -288,6 +315,15 @@ raDecodeIsLeftInverse RARList = Refl
 raDecodeIsLeftInverse RARAtom = Refl
 raDecodeIsLeftInverse RACorecursive = Refl
 raDecodeIsLeftInverse RACofixpoint = Refl
+raDecodeIsLeftInverse RABool = Refl
+raDecodeIsLeftInverse RATrue = Refl
+raDecodeIsLeftInverse RAFalse = Refl
+raDecodeIsLeftInverse RAIf = Refl
+raDecodeIsLeftInverse RAEqual = Refl
+raDecodeIsLeftInverse RARefinement = Refl
+raDecodeIsLeftInverse RARefinedBy = Refl
+raDecodeIsLeftInverse RAListRefinement = Refl
+raDecodeIsLeftInverse RAListRefinedBy = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
@@ -425,6 +461,42 @@ RSSList = $^ RARList
 public export
 RSSAtom : RefinedSExp
 RSSAtom = $^ RARAtom
+
+public export
+RSBool : RefinedSExp
+RSBool = $^ RABool
+
+public export
+RSTrue : (domainRep : RefinedSExp) -> RefinedSExp
+RSTrue domainRep = RATrue $*** domainRep
+
+public export
+RSFalse : (domainRep : RefinedSExp) -> RefinedSExp
+RSFalse domainRep = RAFalse $*** domainRep
+
+public export
+RSIf : (test, trueCase, falseCase : RefinedSExp) -> RefinedSExp
+RSIf test trueCase falseCase = RAIf $* [test, trueCase, falseCase]
+
+public export
+RSEqual : (x, x': RefinedSExp) -> RefinedSExp
+RSEqual x x' = RAEqual $* [x, x']
+
+public export
+RSRefinement : (subject : RefinedSExp) -> RefinedSExp
+RSRefinement subject = RARefinement $*** subject
+
+public export
+RSRefinedBy : (test : RefinedSExp) -> RefinedSExp
+RSRefinedBy test = RARefinedBy $*** test
+
+public export
+RSListRefinement : (subject : RefinedSList) -> RefinedSExp
+RSListRefinement subject = RARefinement $* subject
+
+public export
+RSListRefinedBy : (test : RefinedSExp) -> RefinedSExp
+RSListRefinedBy test = RARefinedBy $*** test
 
 mutual
   public export
