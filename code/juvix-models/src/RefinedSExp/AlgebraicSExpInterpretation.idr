@@ -94,6 +94,9 @@ mutual
   interpretRefinedMorphism
     {domain=RefinedNat} {codomain=RefinedNat} RefinedSuccessor =
       S
+  interpretRefinedMorphism {codomain} (RefinedNil _) =
+    case codomain of
+      ReflectedList => \_ => []
 
   public export
   interpretRefinedContract :
