@@ -23,6 +23,7 @@ mutual
     interpretRefinedCoproduct {representations} objects
   interpretRefinedObject (RefinedExponential domain codomain) =
     interpretRefinedExponential domain codomain
+  interpretRefinedObject RefinedNat = Nat
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
