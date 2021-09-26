@@ -191,6 +191,8 @@ data RefinedAtom : Type where
   RACons : RefinedAtom
   RARList : RefinedAtom
   RARAtom : RefinedAtom
+  RACorecursive : RefinedAtom
+  RACofixpoint : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -220,6 +222,8 @@ raEncode RANil = 22
 raEncode RACons = 23
 raEncode RARList = 24
 raEncode RARAtom = 25
+raEncode RACorecursive = 26
+raEncode RACofixpoint = 27
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -249,6 +253,8 @@ raDecode 22 = RANil
 raDecode 23 = RACons
 raDecode 24 = RARList
 raDecode 25 = RARAtom
+raDecode 26 = RACorecursive
+raDecode 27 = RACofixpoint
 raDecode _ = RAVoid
 
 export
@@ -280,6 +286,8 @@ raDecodeIsLeftInverse RANil = Refl
 raDecodeIsLeftInverse RACons = Refl
 raDecodeIsLeftInverse RARList = Refl
 raDecodeIsLeftInverse RARAtom = Refl
+raDecodeIsLeftInverse RACorecursive = Refl
+raDecodeIsLeftInverse RACofixpoint = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
