@@ -60,10 +60,8 @@ mutual
   interpretRefinedMorphism {domain} (RefinedFromVoid _) =
     case domain of
       RefinedVoid => \v : Void => void v
-      RefinedUnit impossible
   interpretRefinedMorphism {codomain} (RefinedToUnit _) =
     case codomain of
-      RefinedVoid impossible
       RefinedUnit => \v => ()
   interpretRefinedMorphism {domain} {codomain} (RefinedIdentity object) =
     rewrite (objectRepresentationUnique domain codomain) in id
@@ -87,6 +85,9 @@ mutual
           lm
     in
     lm' . rm
+  interpretRefinedMorphism {codomain} (RefinedZero _) =
+    case codomain of
+      RefinedNat => \_ => Z
 
   public export
   interpretRefinedContract :

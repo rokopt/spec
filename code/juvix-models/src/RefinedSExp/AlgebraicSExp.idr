@@ -327,8 +327,8 @@ RSProject : (product : RefinedSExp) -> (index : RefinedSExp) -> RefinedSExp
 RSProject product index = RAProject $* [product, index]
 
 public export
-RSZero : RefinedSExp
-RSZero = $^ RAZero
+RSZero : (domainRep : RefinedSExp) -> RefinedSExp
+RSZero domainRep = RAZero $*** domainRep
 
 public export
 RSSuccessor : (predecessor : RefinedSExp) -> RefinedSExp
@@ -370,6 +370,9 @@ mutual
         RefinedToUnit : {domainRep : RefinedSExp} ->
           RefinedObject domainRep ->
           RefinedMorphism (RSToUnit domainRep) domainRep RSUnit
+        RefinedZero : {domainRep : RefinedSExp} ->
+          RefinedObject domainRep ->
+          RefinedMorphism (RSZero domainRep) domainRep RSNat
 
   public export
   data RefinedContract :
@@ -434,6 +437,10 @@ mutual
                   RefinedCompose leftMorphism rightMorphism)
           No _ => Nothing
       _ => Nothing
+  sexpAsMorphism (RAZero $* [domainRep]) =
+    case sexpAsObject domainRep of
+      Just domain => Just (domainRep ** RSNat ** RefinedZero domain)
+      Nothing => Nothing
   sexpAsMorphism _ = Nothing
 
   public export
@@ -456,6 +463,7 @@ mutual
     refinedMorphismDomain right
   refinedMorphismDomain (RefinedFromVoid _) = RefinedVoid
   refinedMorphismDomain (RefinedToUnit domain) = domain
+  refinedMorphismDomain (RefinedZero domain) = domain
 
   public export
   refinedMorphismCodomain :
@@ -468,6 +476,7 @@ mutual
     refinedMorphismCodomain left
   refinedMorphismCodomain (RefinedFromVoid codomain) = codomain
   refinedMorphismCodomain (RefinedToUnit _) = RefinedUnit
+  refinedMorphismCodomain (RefinedZero _) = RefinedNat
 
   public export
   refinedContractSubjectMorphism :
@@ -563,6 +572,8 @@ mutual
     Refl
   refinedMorphismDomainCorrect (RefinedToUnit domainRep) =
     sexpAsObjectComplete domainRep
+  refinedMorphismDomainCorrect (RefinedZero domainRep) =
+    sexpAsObjectComplete domainRep
 
   public export
   refinedMorphismCodomainCorrect :
@@ -576,6 +587,7 @@ mutual
   refinedMorphismCodomainCorrect (RefinedFromVoid codomainRep) =
     sexpAsObjectComplete codomainRep
   refinedMorphismCodomainCorrect (RefinedToUnit _) = Refl
+  refinedMorphismCodomainCorrect (RefinedZero _) = Refl
 
 mutual
   export
@@ -598,6 +610,8 @@ mutual
         Refl
       sexpAsMorphismComplete (RefinedCompose {b} left right) | No neq =
         void (neq Refl)
+  sexpAsMorphismComplete (RefinedZero domain) =
+    rewrite (refinedMorphismDomainCorrect (RefinedZero domain)) in Refl
 
   export
   morphismRepresentationUnique :
