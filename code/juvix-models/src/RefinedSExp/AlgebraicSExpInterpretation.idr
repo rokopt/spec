@@ -4,7 +4,13 @@ import public RefinedSExp.AlgebraicSExp
 import Data.Maybe
 import Library.List
 
-%default total
+{-
+ - XXX Make total either by interpreting to signatures, or making
+ - S-expressions the only possible target of a refined "maybe" (and
+ - using that in concert with reflection), or by finding a way to show
+ - Idris that the representation argument always decreases.
+ -}
+%default partial
 
 public export
 Contract : {domain, codomain : Type} -> (f : domain -> codomain) -> Type
@@ -36,20 +42,26 @@ mutual
     {representation=(RSMaybeRefinement objectRep testCodomainRep testRep)}
     (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
       (x : interpretRefinedObject object **
-       let
-        m =
-          interpretRefinedMorphism
-            {representation=testRep}
-            {codomainRep=(RAMaybe $*** testCodomainRep)}
-            {domain=object}
-            {codomain=(RefinedMaybe testCodomain)}
-            test
-        mx = m x
-      in
-      IsJust
+       IsJust
         {a=(interpretRefinedObject
-          {representation=testCodomainRep} testCodomain)} $
-            ?interpretRefinedObject_maybe_refinement_hole {- XXX mx -} )
+          {representation=testCodomainRep} testCodomain)}
+          (refinedMaybeMap {representation=testCodomainRep} testCodomain
+            (interpretRefinedMorphism
+              {representation=testRep}
+              {codomainRep=(RAMaybe $*** testCodomainRep)}
+              {domain=object}
+              {codomain=(RefinedMaybe testCodomain)}
+              test
+              x)))
+
+  export
+  refinedMaybeMap :
+    {representation : RefinedSExp} ->
+    (object : RefinedObject representation) ->
+    interpretRefinedObject
+      {representation=(RAMaybe $*** representation)} (RefinedMaybe object) ->
+    Maybe (interpretRefinedObject {representation} object)
+  refinedMaybeMap {representation} object mx = mx
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
@@ -88,7 +100,9 @@ mutual
       RefinedUnit => \v => ()
   interpretRefinedMorphism {domain} {codomain} (RefinedIdentity object) =
     rewrite (objectRepresentationUnique domain codomain) in id
-  interpretRefinedMorphism {domain} {codomain}
+  interpretRefinedMorphism
+    -- {representation=(RACompose $* [leftRep, rightRep])}
+    {domain} {codomain}
     (RefinedCompose {a} {b} {c} {leftRep} {rightRep} left right) =
       let
         domLeftCorrect = refinedMorphismDomainCorrect left
