@@ -99,6 +99,12 @@ mutual
   interpretRefinedMorphism {codomain} (RefinedNil _) =
     case codomain of
       ReflectedList => \_ => []
+  interpretRefinedMorphism {domainRep} {codomainRep=(RSMaybe domainRep)}
+    {domain} {codomain=(RefinedMaybe domain')} (RefinedJust _) =
+      rewrite objectRepresentationUnique domain domain' in Just
+  interpretRefinedMorphism {codomain=(RefinedMaybe codomain')}
+    (RefinedNothing _ _) =
+      \_ => Nothing
 
   public export
   interpretRefinedContract :

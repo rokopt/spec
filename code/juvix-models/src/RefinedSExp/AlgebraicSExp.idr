@@ -519,8 +519,8 @@ RSJust : (objectRep : RefinedSExp) -> RefinedSExp
 RSJust objectRep = RAJust $*** objectRep
 
 public export
-RSNothing : (objectRep : RefinedSExp) -> RefinedSExp
-RSNothing objectRep = RANothing $*** objectRep
+RSNothing : (domainRep, codomainRep : RefinedSExp) -> RefinedSExp
+RSNothing domainRep codomainRep = RANothing $* [domainRep, codomainRep]
 
 mutual
   public export
@@ -568,6 +568,13 @@ mutual
         RefinedNil : {domainRep : RefinedSExp} ->
           RefinedObject domainRep ->
           RefinedMorphism (RSNil domainRep) domainRep RSSList
+        RefinedJust : {objectRep : RefinedSExp} ->
+          RefinedObject objectRep ->
+          RefinedMorphism (RSJust objectRep) objectRep (RSMaybe objectRep)
+        RefinedNothing : {domainRep, codomainRep : RefinedSExp} ->
+          RefinedObject domainRep -> RefinedObject codomainRep ->
+          RefinedMorphism
+            (RSNothing domainRep codomainRep) domainRep (RSMaybe codomainRep)
 
   public export
   data RefinedContract :
@@ -648,6 +655,16 @@ mutual
     case sexpAsObject domainRep of
       Just domain => Just (domainRep ** RSSList ** RefinedNil domain)
       Nothing => Nothing
+  sexpAsMorphism (RAJust $* [objectRep]) =
+    case sexpAsObject objectRep of
+      Just object => Just (objectRep ** RSMaybe objectRep ** RefinedJust object)
+      Nothing => Nothing
+  sexpAsMorphism (RANothing $* [domainRep, codomainRep]) =
+    case (sexpAsObject domainRep, sexpAsObject codomainRep) of
+      (Just domain, Just codomain) =>
+        Just (domainRep ** RSMaybe codomainRep **
+              RefinedNothing domain codomain)
+      _ => Nothing
   sexpAsMorphism _ = Nothing
 
   public export
@@ -673,6 +690,8 @@ mutual
   refinedMorphismDomain (RefinedZero domain) = domain
   refinedMorphismDomain RefinedSuccessor = RefinedNat
   refinedMorphismDomain (RefinedNil domain) = domain
+  refinedMorphismDomain (RefinedJust object) = object
+  refinedMorphismDomain (RefinedNothing domain _) = domain
 
   public export
   refinedMorphismCodomain :
@@ -688,6 +707,8 @@ mutual
   refinedMorphismCodomain (RefinedZero _) = RefinedNat
   refinedMorphismCodomain RefinedSuccessor = RefinedNat
   refinedMorphismCodomain (RefinedNil _) = ReflectedList
+  refinedMorphismCodomain (RefinedJust object) = RefinedMaybe object
+  refinedMorphismCodomain (RefinedNothing _ codomain) = RefinedMaybe codomain
 
   public export
   refinedContractSubjectMorphism :
@@ -793,6 +814,10 @@ mutual
   refinedMorphismDomainCorrect RefinedSuccessor = Refl
   refinedMorphismDomainCorrect (RefinedNil domainRep) =
     sexpAsObjectComplete domainRep
+  refinedMorphismDomainCorrect (RefinedJust object) =
+    sexpAsObjectComplete object
+  refinedMorphismDomainCorrect (RefinedNothing domain _) =
+    sexpAsObjectComplete domain
 
   public export
   refinedMorphismCodomainCorrect :
@@ -809,6 +834,10 @@ mutual
   refinedMorphismCodomainCorrect (RefinedZero _) = Refl
   refinedMorphismCodomainCorrect RefinedSuccessor = Refl
   refinedMorphismCodomainCorrect (RefinedNil _) = Refl
+  refinedMorphismCodomainCorrect (RefinedJust object) =
+    rewrite (sexpAsObjectComplete object) in Refl
+  refinedMorphismCodomainCorrect (RefinedNothing _ codomain) =
+    rewrite (sexpAsObjectComplete codomain) in Refl
 
 mutual
   export
@@ -836,6 +865,13 @@ mutual
   sexpAsMorphismComplete RefinedSuccessor = Refl
   sexpAsMorphismComplete (RefinedNil domain) =
     rewrite (refinedMorphismDomainCorrect (RefinedNil domain)) in Refl
+  sexpAsMorphismComplete (RefinedJust object) =
+    rewrite (sexpAsObjectComplete object) in
+    Refl
+  sexpAsMorphismComplete (RefinedNothing domain codomain) =
+    rewrite (sexpAsObjectComplete domain) in
+    rewrite (sexpAsObjectComplete codomain) in
+    Refl
 
   export
   morphismRepresentationUnique :
