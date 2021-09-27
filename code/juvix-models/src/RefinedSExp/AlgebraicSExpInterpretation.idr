@@ -4,7 +4,7 @@ import public RefinedSExp.AlgebraicSExp
 import Data.Maybe
 import Library.List
 
-%default total
+%default partial -- XXX Make total by interpretation via signatures
 
 public export
 Contract : {domain, codomain : Type} -> (f : domain -> codomain) -> Type
@@ -29,6 +29,12 @@ mutual
   interpretRefinedObject ReflectedList = RefinedSList
   interpretRefinedObject (RefinedMaybe object) =
     Maybe (interpretRefinedObject object)
+  interpretRefinedObject
+    {representation=(RSMaybeRefinement objectRep testCodomainRep testRep)}
+    (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
+      (x : interpretRefinedObject object **
+       IsJust {a=(interpretRefinedObject testCodomain)} $
+        interpretRefinement test x)
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
@@ -105,6 +111,17 @@ mutual
   interpretRefinedMorphism {codomain=(RefinedMaybe codomain')}
     (RefinedNothing _ _) =
       \_ => Nothing
+
+  public export
+  interpretRefinement :
+    {representation, objectRep, testCodomainRep : RefinedSExp} ->
+    {object : RefinedObject objectRep} ->
+    {testCodomain : RefinedObject testCodomainRep} ->
+    RefinedMorphism representation objectRep (RSMaybe testCodomainRep) ->
+    (interpretRefinedObject object ->
+      Maybe $ interpretRefinedObject testCodomain)
+  interpretRefinement {representation} {objectRep} {testCodomainRep} {object} {testCodomain} m =
+    interpretRefinedMorphism {domain=object} {codomain=(RefinedMaybe testCodomain)} m
 
   public export
   interpretRefinedContract :

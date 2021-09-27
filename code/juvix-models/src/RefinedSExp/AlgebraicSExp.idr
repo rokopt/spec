@@ -205,6 +205,7 @@ data RefinedAtom : Type where
   RAMaybe : RefinedAtom
   RAJust : RefinedAtom
   RANothing : RefinedAtom
+  RAMaybeRefinement : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -248,6 +249,7 @@ raEncode RAListRefinedBy = 36
 raEncode RAMaybe = 37
 raEncode RAJust = 38
 raEncode RANothing = 39
+raEncode RAMaybeRefinement = 40
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -291,6 +293,7 @@ raDecode 36 = RAListRefinedBy
 raDecode 37 = RAMaybe
 raDecode 38 = RAJust
 raDecode 39 = RANothing
+raDecode 40 = RAMaybeRefinement
 raDecode _ = RAVoid
 
 export
@@ -336,6 +339,7 @@ raDecodeIsLeftInverse RAListRefinedBy = Refl
 raDecodeIsLeftInverse RAMaybe = Refl
 raDecodeIsLeftInverse RAJust = Refl
 raDecodeIsLeftInverse RANothing = Refl
+raDecodeIsLeftInverse RAMaybeRefinement = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
@@ -522,6 +526,12 @@ public export
 RSNothing : (domainRep, codomainRep : RefinedSExp) -> RefinedSExp
 RSNothing domainRep codomainRep = RANothing $* [domainRep, codomainRep]
 
+public export
+RSMaybeRefinement :
+  (objectRep, testCodomainRep, testRep : RefinedSExp) -> RefinedSExp
+RSMaybeRefinement objectRep testCodomainRep testRep =
+  RAMaybeRefinement $* [objectRep, testCodomainRep, testRep]
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
@@ -543,6 +553,11 @@ mutual
         RefinedMaybe : {objectRep : RefinedSExp} ->
           RefinedObject objectRep ->
           RefinedObject (RSMaybe objectRep)
+        MaybeRefinement : {objectRep, testCodomainRep, testRep : RefinedSExp} ->
+          RefinedObject objectRep ->
+          RefinedObject testCodomainRep ->
+          RefinedMorphism testRep objectRep (RSMaybe testCodomainRep) ->
+          RefinedObject (RSMaybeRefinement objectRep testCodomainRep testRep)
 
   public export
   data RefinedMorphism :
@@ -607,6 +622,19 @@ mutual
     case sexpAsObject objectRep of
       Just object => Just (RefinedMaybe object)
       Nothing => Nothing
+  sexpAsObject (RAMaybeRefinement $* [objectRep, testCodomainRep, testRep]) =
+    case (sexpAsObject objectRep,
+          sexpAsObject testCodomainRep,
+          sexpAsMorphism testRep) of
+      (Just object,
+       Just testCodomain,
+       Just (objectRep' ** (RAMaybe $* [testCodomainRep']) ** test)) =>
+        case (decEq objectRep objectRep',
+              decEq testCodomainRep testCodomainRep') of
+                (Yes Refl, Yes Refl) =>
+                  Just (MaybeRefinement object testCodomain test)
+                _ => Nothing
+      _ => Nothing
   sexpAsObject _ = Nothing
 
   public export
@@ -675,7 +703,6 @@ mutual
        RefinedContract representation domainRep codomainRep subjectMorphismRep)
   sexpAsContract _ = Nothing
 
-mutual
   public export
   refinedMorphismDomain :
     {representation, domainRep, codomainRep : RefinedSExp} ->
@@ -756,6 +783,14 @@ mutual
   sexpAsObjectComplete ReflectedList = Refl
   sexpAsObjectComplete (RefinedMaybe objectRep) =
     rewrite (sexpAsObjectComplete objectRep) in Refl
+  sexpAsObjectComplete
+    (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
+      rewrite sexpAsObjectComplete object in
+      rewrite sexpAsObjectComplete testCodomain in
+      rewrite sexpAsMorphismComplete test in
+      rewrite decEqRefl decEq objectRep in
+      rewrite decEqRefl decEq testCodomainRep in
+      Refl
 
   export
   slistAsObjectsComplete : {representations : RefinedSList} ->
@@ -795,7 +830,6 @@ mutual
     in
     justInjective $ trans (sym complete) complete'
 
-mutual
   public export
   refinedMorphismDomainCorrect :
     {representation, domainRep, codomainRep : RefinedSExp} ->
@@ -839,7 +873,6 @@ mutual
   refinedMorphismCodomainCorrect (RefinedNothing _ codomain) =
     rewrite (sexpAsObjectComplete codomain) in Refl
 
-mutual
   export
   sexpAsMorphismComplete :
     {representation, domainRep, codomainRep : RefinedSExp} ->

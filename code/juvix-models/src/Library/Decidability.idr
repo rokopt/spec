@@ -51,6 +51,12 @@ decEqBool : {a: Type} -> DecEqPred a -> (x, x' : a) -> Bool
 decEqBool deq x x' = isYes (deq x x')
 
 public export
+decEqRefl : {a : Type} -> (deq : DecEqPred a) -> (x : a) -> deq x x = Yes Refl
+decEqRefl deq x with (deq x x)
+  decEqRefl deq x | Yes Refl = Refl
+  decEqRefl deq x | No neq = void (neq Refl)
+
+public export
 DecidableType : Type
 DecidableType = DPair Type DecEqPred
 
