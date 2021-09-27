@@ -4,7 +4,7 @@ import public RefinedSExp.AlgebraicSExp
 import Data.Maybe
 import Library.List
 
-%default partial -- XXX Make total by interpretation via signatures
+%default total
 
 public export
 Contract : {domain, codomain : Type} -> (f : domain -> codomain) -> Type
@@ -21,45 +21,55 @@ mutual
     interpretRefinedProduct {representations} objects
   interpretRefinedObject (RefinedCoproduct {representations} objects) =
     interpretRefinedCoproduct {representations} objects
-  interpretRefinedObject (RefinedExponential domain codomain) =
-    interpretRefinedExponential domain codomain
+  interpretRefinedObject
+    (RefinedExponential {domainRep} {codomainRep} domain codomain) =
+      interpretRefinedObject {representation=domainRep} domain ->
+      interpretRefinedObject {representation=codomainRep} codomain
   interpretRefinedObject RefinedNat = Nat
   interpretRefinedObject ReflectedAtom = RefinedAtom
   interpretRefinedObject ReflectedExp = RefinedSExp
   interpretRefinedObject ReflectedList = RefinedSList
-  interpretRefinedObject (RefinedMaybe object) =
-    Maybe (interpretRefinedObject object)
+  interpretRefinedObject {representation=(RSMaybe objectRep)}
+    (RefinedMaybe object) =
+      Maybe (interpretRefinedObject {representation=objectRep} object)
   interpretRefinedObject
     {representation=(RSMaybeRefinement objectRep testCodomainRep testRep)}
     (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
+      let
+        m =
+          interpretRefinedMorphism
+            {representation=testRep}
+            {codomainRep=(RAMaybe $*** testCodomainRep)}
+            {domain=object}
+            {codomain=(RefinedMaybe testCodomain)}
+            test
+      in
       (x : interpretRefinedObject object **
-       IsJust {a=(interpretRefinedObject testCodomain)} $
-        interpretRefinement test x)
+       IsJust
+        {a=(interpretRefinedObject
+          {representation=testCodomainRep} testCodomain)} $
+            ?interpretRefinedObject_maybe_refinement_hole {- XXX (m x) -} )
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
-    ListForAll RefinedObject representation -> Type
-  interpretRefinedProduct ListForAllEmpty = ()
+    ListForAll RefinedObject representations -> Type
+  interpretRefinedProduct {representations=[]} ListForAllEmpty = ()
   interpretRefinedProduct
-    (ListForAllCons {l} head tail) =
-      (interpretRefinedObject head,
+    {representations=(x :: l)}
+    (ListForAllCons head tail) =
+      (interpretRefinedObject {representation=x} head,
        interpretRefinedProduct {representations=l} tail)
 
   public export
   interpretRefinedCoproduct : {representations : RefinedSList} ->
-    ListForAll RefinedObject representation -> Type
+    ListForAll RefinedObject representations -> Type
   interpretRefinedCoproduct ListForAllEmpty = Void
   interpretRefinedCoproduct
-    (ListForAllCons {l} head tail) =
+    {representations=(x :: l)}
+    (ListForAllCons head tail) =
       Either
-        (interpretRefinedObject head)
+        (interpretRefinedObject {representation=x} head)
         (interpretRefinedCoproduct {representations=l} tail)
-
-  public export
-  interpretRefinedExponential : {domainRep, codomainRep : RefinedSExp} ->
-    RefinedObject domainRep -> RefinedObject codomainRep -> Type
-  interpretRefinedExponential domain codomain =
-    interpretRefinedObject domain -> interpretRefinedObject codomain
 
   public export
   interpretRefinedMorphism :
@@ -76,26 +86,29 @@ mutual
       RefinedUnit => \v => ()
   interpretRefinedMorphism {domain} {codomain} (RefinedIdentity object) =
     rewrite (objectRepresentationUnique domain codomain) in id
-  interpretRefinedMorphism {domain} {codomain} (RefinedCompose {a} {b} {c} left right) =
-    let
-      domLeftCorrect = refinedMorphismDomainCorrect left
-      codRightCorrect = refinedMorphismCodomainCorrect right
-      domLeftEqualsCodRight =
-        justInjective $ trans (sym domLeftCorrect) codRightCorrect
-      lm =
-        interpretRefinedMorphism
-          {domain=(refinedMorphismDomain left)} {codomain} left
-      rm =
-        interpretRefinedMorphism
-          {domain} {codomain=(refinedMorphismCodomain right)} right
-      lm' =
-        replace
-          {p=
-            (\m => interpretRefinedObject m -> interpretRefinedObject codomain)}
-          domLeftEqualsCodRight
-          lm
-    in
-    lm' . rm
+  interpretRefinedMorphism {domain} {codomain}
+    (RefinedCompose {a} {b} {c} {leftRep} {rightRep} left right) =
+      let
+        domLeftCorrect = refinedMorphismDomainCorrect left
+        codRightCorrect = refinedMorphismCodomainCorrect right
+        domLeftEqualsCodRight =
+          justInjective $ trans (sym domLeftCorrect) codRightCorrect
+        lm =
+          interpretRefinedMorphism {representation=leftRep}
+            {domain=(refinedMorphismDomain left)} {codomain} left
+        rm =
+          interpretRefinedMorphism {representation=rightRep}
+            {domain} {codomain=(refinedMorphismCodomain right)} right
+        lm' =
+          replace
+            {p=
+              (\d =>
+                interpretRefinedObject {representation=b} d ->
+                interpretRefinedObject {representation=c} codomain)}
+            domLeftEqualsCodRight
+            lm
+      in
+      lm' . rm
   interpretRefinedMorphism {codomain} (RefinedZero _) =
     case codomain of
       RefinedNat => \_ => Z
@@ -111,17 +124,6 @@ mutual
   interpretRefinedMorphism {codomain=(RefinedMaybe codomain')}
     (RefinedNothing _ _) =
       \_ => Nothing
-
-  public export
-  interpretRefinement :
-    {representation, objectRep, testCodomainRep : RefinedSExp} ->
-    {object : RefinedObject objectRep} ->
-    {testCodomain : RefinedObject testCodomainRep} ->
-    RefinedMorphism representation objectRep (RSMaybe testCodomainRep) ->
-    (interpretRefinedObject object ->
-      Maybe $ interpretRefinedObject testCodomain)
-  interpretRefinement {representation} {objectRep} {testCodomainRep} {object} {testCodomain} m =
-    interpretRefinedMorphism {domain=object} {codomain=(RefinedMaybe testCodomain)} m
 
   public export
   interpretRefinedContract :
