@@ -97,5 +97,7 @@ depends = contrib, network
 
 sourcedir = "src"
 
+opts = "--total --warnpartial"
+
 main = Executable.Test.Main
 executable = language-models-test
