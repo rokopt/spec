@@ -202,6 +202,9 @@ data RefinedAtom : Type where
   RARefinedBy : RefinedAtom
   RAListRefinement : RefinedAtom
   RAListRefinedBy : RefinedAtom
+  RAMaybe : RefinedAtom
+  RAJust : RefinedAtom
+  RANothing : RefinedAtom
 
 public export
 raEncode : RefinedAtom -> Nat
@@ -242,6 +245,9 @@ raEncode RARefinement = 33
 raEncode RARefinedBy = 34
 raEncode RAListRefinement = 35
 raEncode RAListRefinedBy = 36
+raEncode RAMaybe = 37
+raEncode RAJust = 38
+raEncode RANothing = 39
 
 public export
 raDecode : Nat -> RefinedAtom
@@ -282,6 +288,9 @@ raDecode 33 = RARefinement
 raDecode 34 = RARefinedBy
 raDecode 35 = RAListRefinement
 raDecode 36 = RAListRefinedBy
+raDecode 37 = RAMaybe
+raDecode 38 = RAJust
+raDecode 39 = RANothing
 raDecode _ = RAVoid
 
 export
@@ -324,6 +333,9 @@ raDecodeIsLeftInverse RARefinement = Refl
 raDecodeIsLeftInverse RARefinedBy = Refl
 raDecodeIsLeftInverse RAListRefinement = Refl
 raDecodeIsLeftInverse RAListRefinedBy = Refl
+raDecodeIsLeftInverse RAMaybe = Refl
+raDecodeIsLeftInverse RAJust = Refl
+raDecodeIsLeftInverse RANothing = Refl
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
@@ -498,6 +510,18 @@ public export
 RSListRefinedBy : (test : RefinedSExp) -> RefinedSExp
 RSListRefinedBy test = RARefinedBy $*** test
 
+public export
+RSMaybe : (objectRep : RefinedSExp) -> RefinedSExp
+RSMaybe objectRep = RAMaybe $*** objectRep
+
+public export
+RSJust : (objectRep : RefinedSExp) -> RefinedSExp
+RSJust objectRep = RAJust $*** objectRep
+
+public export
+RSNothing : (objectRep : RefinedSExp) -> RefinedSExp
+RSNothing objectRep = RANothing $*** objectRep
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
@@ -516,6 +540,9 @@ mutual
         ReflectedAtom : RefinedObject RSSAtom
         ReflectedExp : RefinedObject RSSExp
         ReflectedList : RefinedObject RSSList
+        RefinedMaybe : {objectRep : RefinedSExp} ->
+          RefinedObject objectRep ->
+          RefinedObject (RSMaybe objectRep)
 
   public export
   data RefinedMorphism :
@@ -569,6 +596,10 @@ mutual
   sexpAsObject (RARAtom $* []) = Just ReflectedAtom
   sexpAsObject (RARExp $* []) = Just ReflectedExp
   sexpAsObject (RARList $* []) = Just ReflectedList
+  sexpAsObject (RAMaybe $* [objectRep]) =
+    case sexpAsObject objectRep of
+      Just object => Just (RefinedMaybe object)
+      Nothing => Nothing
   sexpAsObject _ = Nothing
 
   public export
@@ -702,6 +733,8 @@ mutual
   sexpAsObjectComplete ReflectedAtom = Refl
   sexpAsObjectComplete ReflectedExp = Refl
   sexpAsObjectComplete ReflectedList = Refl
+  sexpAsObjectComplete (RefinedMaybe objectRep) =
+    rewrite (sexpAsObjectComplete objectRep) in Refl
 
   export
   slistAsObjectsComplete : {representations : RefinedSList} ->

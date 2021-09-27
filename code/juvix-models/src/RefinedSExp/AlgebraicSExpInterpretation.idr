@@ -27,6 +27,8 @@ mutual
   interpretRefinedObject ReflectedAtom = RefinedAtom
   interpretRefinedObject ReflectedExp = RefinedSExp
   interpretRefinedObject ReflectedList = RefinedSList
+  interpretRefinedObject (RefinedMaybe object) =
+    Maybe (interpretRefinedObject object)
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
