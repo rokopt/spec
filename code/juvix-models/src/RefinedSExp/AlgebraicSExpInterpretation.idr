@@ -35,7 +35,8 @@ mutual
   interpretRefinedObject
     {representation=(RSMaybeRefinement objectRep testCodomainRep testRep)}
     (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
-      let
+      (x : interpretRefinedObject object **
+       let
         m =
           interpretRefinedMorphism
             {representation=testRep}
@@ -43,12 +44,12 @@ mutual
             {domain=object}
             {codomain=(RefinedMaybe testCodomain)}
             test
+        mx = m x
       in
-      (x : interpretRefinedObject object **
-       IsJust
+      IsJust
         {a=(interpretRefinedObject
           {representation=testCodomainRep} testCodomain)} $
-            ?interpretRefinedObject_maybe_refinement_hole {- XXX (m x) -} )
+            ?interpretRefinedObject_maybe_refinement_hole {- XXX mx -} )
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
@@ -77,7 +78,8 @@ mutual
     {domain : RefinedObject domainRep} ->
     {codomain : RefinedObject codomainRep} ->
     RefinedMorphism representation domainRep codomainRep ->
-    (interpretRefinedObject domain -> interpretRefinedObject codomain)
+    interpretRefinedObject {representation=domainRep} domain ->
+    interpretRefinedObject {representation=codomainRep} codomain
   interpretRefinedMorphism {domain} (RefinedFromVoid _) =
     case domain of
       RefinedVoid => \v : Void => void v
