@@ -138,7 +138,10 @@ public export
 ForAllInductivePredSig :
   {0 atom : Type} -> SPred atom -> SExpInductivePredSig atom
 ForAllInductivePredSig pred =
-  SExpEliminatorArgs (\a, l, lpl => (pred (a $* l), lpl)) () (\_, _, head, allTail => (head, allTail))
+  SExpEliminatorArgs
+    (\a, l, lpl => (pred (a $* l), lpl))
+    ()
+    (\_, _, head, allTail => (head, allTail))
 
 mutual
   data SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom where
