@@ -27,6 +27,10 @@ public export
 checkedUnit : CheckedRefinement RSUnit
 checkedUnit = Refl
 
+public export
+checkedTypeList : CheckedRefinementList [RSVoid, RSUnit]
+checkedTypeList = Refl
+
 export
 algebraicSExpTests : IO ()
 algebraicSExpTests = pure ()

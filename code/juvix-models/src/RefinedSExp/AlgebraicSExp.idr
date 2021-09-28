@@ -546,6 +546,16 @@ mutual
   CheckedRefinement : (representation : RefinedSExp) -> Type
   CheckedRefinement = IsTrue . checkAsRefinement
 
+  public export
+  checkAsRefinementList : (l : RefinedSList) -> Bool
+  checkAsRefinementList [] = True
+  checkAsRefinementList (x :: l) =
+    checkAsRefinement x && checkAsRefinementList l
+
+  public export
+  CheckedRefinementList : (representation : RefinedSList) -> Type
+  CheckedRefinementList = IsTrue . checkAsRefinementList
+
 mutual
   public export
   data RefinedObject : (representation : RefinedSExp) -> Type where

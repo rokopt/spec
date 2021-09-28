@@ -19,6 +19,14 @@ mutual
   interpretRefinement (RAVoid $* []) = Void
   interpretRefinement (RAUnit $* []) = Unit
 
+  public export total
+  interpretRefinementList : (representation : RefinedSList) ->
+    {auto checked : CheckedRefinementList representation} -> List Type
+  interpretRefinementList [] = []
+  interpretRefinementList (x :: l) {checked} =
+    interpretRefinement x {checked=(andLeft checked)} ::
+    interpretRefinementList l {checked=(andRight checked)}
+
 public export
 Contract : {domain, codomain : Type} -> (f : domain -> codomain) -> Type
 Contract {domain} {codomain} f =

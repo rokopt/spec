@@ -10,6 +10,14 @@ public export
 interpretsVoid : interpretRefinement RSVoid = Void
 interpretsVoid = Refl
 
+public export
+interpretsUnit : interpretRefinement RSUnit = Unit
+interpretsUnit = Refl
+
+public export
+interpretsList : interpretRefinementList [RSVoid, RSUnit] = [Void, Unit]
+interpretsList = Refl
+
 export
 algebraicSExpInterpretationTests : IO ()
 algebraicSExpInterpretationTests = pure ()

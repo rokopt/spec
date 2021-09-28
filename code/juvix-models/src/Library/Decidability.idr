@@ -147,12 +147,17 @@ orIntroductionRight True Refl = Refl
 orIntroductionRight False Refl = Refl
 
 public export
+andLeft : {b, b': Bool} -> IsTrue (b && b') -> IsTrue b
+andLeft {b=True} Refl = Refl
+
+public export
+andRight : {b, b': Bool} -> IsTrue (b && b') -> IsTrue b'
+andRight {b=True} Refl = Refl
+
+public export
 andElimination : {b, b': Bool} -> IsTrue (b && b') ->
                  ((IsTrue b), (IsTrue b'))
-andElimination {b=True} {b'=True} Refl = (Refl, Refl)
-andElimination {b=True} {b'=False} Refl impossible
-andElimination {b=False} {b'=True} Refl impossible
-andElimination {b=False} {b'=False} Refl impossible
+andElimination t = (andLeft t, andRight t)
 
 public export
 andIntroduction : {b, b': Bool} -> (IsTrue b, IsTrue b') -> IsTrue (b && b')
