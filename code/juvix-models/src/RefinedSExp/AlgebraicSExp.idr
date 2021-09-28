@@ -1,9 +1,9 @@
 module RefinedSExp.AlgebraicSExp
 
-import Library.FunctionsAndRelations
-import Library.Decidability
-import Library.List
-import Category.ComputableCategories
+import public Library.FunctionsAndRelations
+import public Library.Decidability
+import public Library.List
+import public Category.ComputableCategories
 
 %default total
 
@@ -386,6 +386,14 @@ DecEq RefinedSList where
   decEq = rslDecEq
 
 public export
+Eq RefinedSExp where
+  x == x' = isYes $ rsDecEq x x'
+
+public export
+Eq RefinedSList where
+  l == l' = isYes $ rslDecEq l l'
+
+public export
 RSVoid : RefinedSExp
 RSVoid = $^ RAVoid
 
@@ -555,6 +563,39 @@ mutual
   public export
   CheckedRefinementList : (representation : RefinedSList) -> Type
   CheckedRefinementList = IsTrue . checkAsRefinementList
+
+  public export
+  checkAsMorphism :
+    (representation, domainRep, codomainRep : RefinedSExp) -> Bool
+  checkAsMorphism (RAFromVoid $* [domain]) (RAVoid $* []) domain' =
+    domain == domain'
+  checkAsMorphism _ _ _ = False
+
+  public export
+  CheckedMorphism :
+    (representation, domainRep, codomainRep : RefinedSExp) -> Type
+  CheckedMorphism representation domainRep codomainRep =
+    IsTrue (checkAsMorphism representation domainRep codomainRep)
+
+  public export
+  checkAsMorphismList :
+    (representations : RefinedSList) ->
+    (domains : RefinedSList) ->
+    (codomains : RefinedSList) ->
+    Bool
+  checkAsMorphismList [] [] [] = True
+  checkAsMorphismList (x :: l) (d :: ds) (c :: cs) =
+    checkAsMorphism x d c && checkAsMorphismList l ds cs
+  checkAsMorphismList _ _ _ = False
+
+  public export
+  CheckedMorphismList :
+    (representations : RefinedSList) ->
+    (domains : RefinedSList) ->
+    (codomains : RefinedSList) ->
+    Type
+  CheckedMorphismList representations domains codomains =
+    IsTrue $ checkAsMorphismList representations domains codomains
 
 mutual
   public export

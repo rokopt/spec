@@ -57,6 +57,12 @@ decEqRefl deq x with (deq x x)
   decEqRefl deq x | No neq = void (neq Refl)
 
 public export
+decEqReflYes : {a : Type} -> {deq : DecEqPred a} -> {x : a} ->
+  isYes (deq x x) = True
+decEqReflYes {deq} {x} with (decEqRefl deq x)
+  decEqReflYes {deq} {x} | eq = rewrite eq in Refl
+
+public export
 DecidableType : Type
 DecidableType = DPair Type DecEqPred
 

@@ -31,6 +31,10 @@ public export
 checkedTypeList : CheckedRefinementList [RSVoid, RSUnit]
 checkedTypeList = Refl
 
+public export
+checkedFromVoid : {x : RefinedSExp} -> CheckedMorphism (RSFromVoid x) RSVoid x
+checkedFromVoid = decEqReflYes {deq=decEq}
+
 export
 algebraicSExpTests : IO ()
 algebraicSExpTests = pure ()
