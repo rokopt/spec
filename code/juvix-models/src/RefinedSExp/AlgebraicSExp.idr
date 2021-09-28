@@ -648,6 +648,12 @@ mutual
   sexpRepresentsObjectUnique {r} {r'} = IsJustUnique r r'
 
   public export
+  sexpRepresentedObject : {representation : RefinedSExp} ->
+    (r : SExpRepresentsObject representation) ->
+    RefinedObject representation
+  sexpRepresentedObject = IsJustElim
+
+  public export
   slistAsObjects : (representations : RefinedSList) ->
     Maybe (ListForAll RefinedObject representations)
   slistAsObjects [] = Just ListForAllEmpty
@@ -661,6 +667,12 @@ mutual
   SListRepresentsObjects : RefinedSList -> Type
   SListRepresentsObjects representations =
     IsJust $ slistAsObjects representations
+
+  public export
+  slistRepresentedObjects : {representations : RefinedSList} ->
+    (r : SListRepresentsObjects representations) ->
+    ListForAll RefinedObject representations
+  slistRepresentedObjects = IsJustElim
 
   public export
   slistRepresentsObjectsUnique : {representations : RefinedSList} ->
@@ -719,6 +731,13 @@ mutual
   public export
   SExpRepresentsMorphism : RefinedSExp -> Type
   SExpRepresentsMorphism representation = IsJust $ sexpAsMorphism representation
+
+  public export
+  sexpRepresentedMorphism : {representation : RefinedSExp} ->
+    (r : SExpRepresentsMorphism representation) ->
+    (domainRep : RefinedSExp ** codomainRep : RefinedSExp **
+     RefinedMorphism representation domainRep codomainRep)
+  sexpRepresentedMorphism = IsJustElim
 
   public export
   sexpRepresentsMorphismUnique : {representation : RefinedSExp} ->
