@@ -569,6 +569,8 @@ mutual
     (representation, domainRep, codomainRep : RefinedSExp) -> Bool
   checkAsMorphism (RAFromVoid $* [domain]) (RAVoid $* []) domain' =
     domain == domain'
+  checkAsMorphism (RAToUnit $* [codomain]) codomain' (RAUnit $* []) =
+    codomain == codomain'
   checkAsMorphism _ _ _ = False
 
   public export

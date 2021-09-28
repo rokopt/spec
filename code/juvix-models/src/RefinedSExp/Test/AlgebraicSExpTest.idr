@@ -35,6 +35,16 @@ public export
 checkedFromVoid : {x : RefinedSExp} -> CheckedMorphism (RSFromVoid x) RSVoid x
 checkedFromVoid = decEqReflYes {deq=decEq}
 
+public export
+checkedToUnit : {x : RefinedSExp} -> CheckedMorphism (RSToUnit x) x RSUnit
+checkedToUnit = decEqReflYes {deq=decEq}
+
+public export
+checkedFunctionList : {x, x' : RefinedSExp} ->
+  CheckedMorphismList [RSFromVoid x, RSToUnit x'] [RSVoid, x'] [x, RSUnit]
+checkedFunctionList =
+  andIntroduction (checkedFromVoid, andIntroduction (checkedToUnit, Refl))
+
 export
 algebraicSExpTests : IO ()
 algebraicSExpTests = pure ()
