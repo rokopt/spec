@@ -43,7 +43,7 @@ public export
 checkedFunctionList : {x, x' : RefinedSExp} ->
   CheckedMorphismList [RSFromVoid x, RSToUnit x'] [RSVoid, x'] [x, RSUnit]
 checkedFunctionList =
-  andIntroduction (checkedFromVoid, andIntroduction (checkedToUnit, Refl))
+  andIntroduction checkedFromVoid (andIntroduction checkedToUnit Refl)
 
 export
 algebraicSExpTests : IO ()

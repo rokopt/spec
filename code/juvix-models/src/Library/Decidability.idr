@@ -166,8 +166,8 @@ andElimination : {b, b': Bool} -> IsTrue (b && b') ->
 andElimination t = (andLeft t, andRight t)
 
 public export
-andIntroduction : {b, b': Bool} -> (IsTrue b, IsTrue b') -> IsTrue (b && b')
-andIntroduction (bTrue, bTrue') = case (bTrue, bTrue') of (Refl, Refl) => Refl
+andIntroduction : {b, b': Bool} -> IsTrue b -> IsTrue b' -> IsTrue (b && b')
+andIntroduction bTrue bTrue' = case (bTrue, bTrue') of (Refl, Refl) => Refl
 
 public export
 isLeft : {A, B: Type} -> Either A B -> Bool
