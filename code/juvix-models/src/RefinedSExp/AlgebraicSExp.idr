@@ -638,6 +638,16 @@ mutual
   sexpAsObject _ = Nothing
 
   public export
+  SExpRepresentsObject : RefinedSExp -> Type
+  SExpRepresentsObject representation = IsJust $ sexpAsObject representation
+
+  public export
+  sexpRepresentsObjectUnique : {representation : RefinedSExp} ->
+    {r, r' : SExpRepresentsObject representation} ->
+    r = r'
+  sexpRepresentsObjectUnique {r} {r'} = IsJustUnique r r'
+
+  public export
   slistAsObjects : (representations : RefinedSList) ->
     Maybe (ListForAll RefinedObject representations)
   slistAsObjects [] = Just ListForAllEmpty
@@ -646,6 +656,17 @@ mutual
       (Just headObject, Just tailObjects) =>
         Just (ListForAllCons headObject tailObjects)
       _ => Nothing
+
+  public export
+  SListRepresentsObjects : RefinedSList -> Type
+  SListRepresentsObjects representations =
+    IsJust $ slistAsObjects representations
+
+  public export
+  slistRepresentsObjectsUnique : {representations : RefinedSList} ->
+    {r, r' : SListRepresentsObjects representations} ->
+    r = r'
+  slistRepresentsObjectsUnique {r} {r'} = IsJustUnique r r'
 
   public export
   sexpAsMorphism : (representation : RefinedSExp) ->
@@ -696,12 +717,32 @@ mutual
   sexpAsMorphism _ = Nothing
 
   public export
+  SExpRepresentsMorphism : RefinedSExp -> Type
+  SExpRepresentsMorphism representation = IsJust $ sexpAsMorphism representation
+
+  public export
+  sexpRepresentsMorphismUnique : {representation : RefinedSExp} ->
+    {r, r' : SExpRepresentsMorphism representation} ->
+    r = r'
+  sexpRepresentsMorphismUnique {r} {r'} = IsJustUnique r r'
+
+  public export
   sexpAsContract : (representation : RefinedSExp) ->
     Maybe
       (domainRep : RefinedSExp ** codomainRep : RefinedSExp **
        subjectMorphismRep : RefinedSExp **
        RefinedContract representation domainRep codomainRep subjectMorphismRep)
   sexpAsContract _ = Nothing
+
+  public export
+  SExpRepresentsContract : RefinedSExp -> Type
+  SExpRepresentsContract representation = IsJust $ sexpAsContract representation
+
+  public export
+  sexpRepresentsContractUnique : {representation : RefinedSExp} ->
+    {r, r' : SExpRepresentsContract representation} ->
+    r = r'
+  sexpRepresentsContractUnique {r} {r'} = IsJustUnique r r'
 
   public export
   refinedMorphismDomain :
