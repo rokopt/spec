@@ -1,6 +1,6 @@
 module RefinedSExp.Test.AlgebraicSExpTest
 
-import Library.Test.TestLibrary
+import public Library.Test.TestLibrary
 import public RefinedSExp.AlgebraicSExp
 
 %default total
@@ -18,6 +18,14 @@ public export
 algebraicSuccessorCorrect :
   sexpAsMorphism RSSuccessor = Just (RSNat ** RSNat ** RefinedSuccessor)
 algebraicSuccessorCorrect = Refl
+
+public export
+checkedVoid : CheckedRefinement RSVoid
+checkedVoid = Refl
+
+public export
+checkedUnit : CheckedRefinement RSUnit
+checkedUnit = Refl
 
 export
 algebraicSExpTests : IO ()

@@ -537,6 +537,17 @@ RSMaybeRefinement objectRep testCodomainRep testRep =
 
 mutual
   public export
+  checkAsRefinement : (x : RefinedSExp) -> Bool
+  checkAsRefinement (RAVoid $* []) = True
+  checkAsRefinement (RAUnit $* []) = True
+  checkAsRefinement _ = False
+
+  public export
+  CheckedRefinement : (representation : RefinedSExp) -> Type
+  CheckedRefinement = IsTrue . checkAsRefinement
+
+mutual
+  public export
   data RefinedObject : (representation : RefinedSExp) -> Type where
         RefinedVoid : RefinedObject RSVoid
         RefinedUnit : RefinedObject RSUnit

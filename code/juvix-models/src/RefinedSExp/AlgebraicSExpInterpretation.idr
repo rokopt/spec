@@ -12,6 +12,13 @@ import Library.List
  -}
 %default partial
 
+mutual
+  public export total
+  interpretRefinement : (representation : RefinedSExp) ->
+    {auto checked : CheckedRefinement representation} -> Type
+  interpretRefinement (RAVoid $* []) = Void
+  interpretRefinement (RAUnit $* []) = Unit
+
 public export
 Contract : {domain, codomain : Type} -> (f : domain -> codomain) -> Type
 Contract {domain} {codomain} f =
