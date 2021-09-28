@@ -551,8 +551,8 @@ mutual
         ReflectedAtom : RefinedObject RSSAtom
         ReflectedExp : RefinedObject RSSExp
         ReflectedList : RefinedObject RSSList
-        RefinedMaybe : {objectRep : RefinedSExp} ->
-          RefinedObject objectRep ->
+        RefinedMaybe : (objectRep : RefinedSExp) ->
+          {auto objectValid : SExpRepresentsObject objectRep} ->
           RefinedObject (RSMaybe objectRep)
         MaybeRefinement : {objectRep, testCodomainRep, testRep : RefinedSExp} ->
           RefinedObject objectRep ->
@@ -625,9 +625,9 @@ mutual
   sexpAsObject (RARExp $* []) = Just ReflectedExp
   sexpAsObject (RARList $* []) = Just ReflectedList
   sexpAsObject (RAMaybe $* [objectRep]) =
-    case sexpAsObject objectRep of
-      Just object => Just (RefinedMaybe object)
-      Nothing => Nothing
+    case sexpRepresentsObject objectRep of
+      Yes _ => Just (RefinedMaybe objectRep)
+      No _ => Nothing
   sexpAsObject (RAMaybeRefinement $* [objectRep, testCodomainRep, testRep]) =
     case (sexpAsObject objectRep,
           sexpAsObject testCodomainRep,
@@ -663,6 +663,13 @@ mutual
   sexpRepresentsObject :
     (representation : RefinedSExp) -> Dec (SExpRepresentsObject representation)
   sexpRepresentsObject representation = IsJustDec (sexpAsObject representation)
+
+  public export
+  objectEnsuresRepresentation :
+    {representation : RefinedSExp} -> RefinedObject representation ->
+    SExpRepresentsObject representation
+  objectEnsuresRepresentation object =
+    rewrite (sexpAsObjectComplete object) in ItIsJust
 
   public export
   slistAsObjects : (representations : RefinedSList) ->
@@ -826,8 +833,11 @@ mutual
   refinedMorphismCodomain (RefinedZero _) = RefinedNat
   refinedMorphismCodomain RefinedSuccessor = RefinedNat
   refinedMorphismCodomain (RefinedNil _) = ReflectedList
-  refinedMorphismCodomain (RefinedJust object) = RefinedMaybe object
-  refinedMorphismCodomain (RefinedNothing _ codomain) = RefinedMaybe codomain
+  refinedMorphismCodomain (RefinedJust {objectRep} object) =
+    RefinedMaybe objectRep {objectValid=(objectEnsuresRepresentation object)}
+  refinedMorphismCodomain (RefinedNothing {codomainRep} _ codomain) =
+    RefinedMaybe codomainRep
+      {objectValid=(objectEnsuresRepresentation codomain)}
 
   public export
   refinedContractSubjectMorphism :
@@ -855,7 +865,6 @@ mutual
   refinedContractCodomain =
     refinedMorphismCodomain . refinedContractSubjectMorphism
 
-mutual
   export
   sexpAsObjectComplete : {representation : RefinedSExp} ->
     (obj : RefinedObject representation) ->
@@ -887,8 +896,15 @@ mutual
   sexpAsObjectComplete ReflectedAtom = Refl
   sexpAsObjectComplete ReflectedExp = Refl
   sexpAsObjectComplete ReflectedList = Refl
-  sexpAsObjectComplete (RefinedMaybe objectRep) =
-    rewrite (sexpAsObjectComplete objectRep) in Refl
+  sexpAsObjectComplete (RefinedMaybe objectRep {objectValid})
+    with (sexpRepresentsObject objectRep)
+      sexpAsObjectComplete (RefinedMaybe objectRep {objectValid}) |
+        Yes objectValid' =
+          rewrite sexpRepresentsObjectUnique objectValid objectValid' in
+          Refl
+      sexpAsObjectComplete (RefinedMaybe objectRep {objectValid}) |
+        No objectInvalid =
+          void $ objectInvalid objectValid
   sexpAsObjectComplete
     (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
       rewrite sexpAsObjectComplete object in

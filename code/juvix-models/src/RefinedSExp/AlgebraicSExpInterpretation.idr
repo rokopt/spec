@@ -37,33 +37,27 @@ mutual
   interpretRefinedObject ReflectedAtom = RefinedAtom
   interpretRefinedObject ReflectedExp = RefinedSExp
   interpretRefinedObject ReflectedList = RefinedSList
-  interpretRefinedObject {representation=(RSMaybe objectRep)}
-    (RefinedMaybe object) =
-      Maybe (interpretRefinedObject {representation=objectRep} object)
+  interpretRefinedObject (RefinedMaybe objectRep {objectValid}) =
+    Maybe
+      (interpretRefinedObject {representation=objectRep}
+        (sexpRepresentedObject objectValid))
   interpretRefinedObject
     {representation=(RSMaybeRefinement objectRep testCodomainRep testRep)}
     (MaybeRefinement {objectRep} {testCodomainRep} object testCodomain test) =
       (x : interpretRefinedObject object **
-       IsJust
-        {a=(interpretRefinedObject
-          {representation=testCodomainRep} testCodomain)}
-          (refinedMaybeMap {representation=testCodomainRep} testCodomain
-            (interpretRefinedMorphism
-              {representation=testRep}
-              {codomainRep=(RAMaybe $*** testCodomainRep)}
-              {domain=object}
-              {codomain=(RefinedMaybe testCodomain)}
-              test
-              x)))
-
-  export
-  refinedMaybeMap :
-    {representation : RefinedSExp} ->
-    (object : RefinedObject representation) ->
-    interpretRefinedObject
-      {representation=(RAMaybe $*** representation)} (RefinedMaybe object) ->
-    Maybe (interpretRefinedObject {representation} object)
-  refinedMaybeMap {representation} object mx = mx
+       let
+        m =
+          interpretRefinedMorphism
+            {representation=testRep}
+            {codomainRep=(RAMaybe $*** testCodomainRep)}
+            {domain=object}
+            {codomain=
+              (RefinedMaybe testCodomainRep
+                {objectValid=(objectEnsuresRepresentation testCodomain)})}
+            test
+            x
+       in
+       ?interpretRefinedObject_mayberefinement_hole)
 
   public export
   interpretRefinedProduct : {representations : RefinedSList} ->
@@ -137,8 +131,9 @@ mutual
     case codomain of
       ReflectedList => \_ => []
   interpretRefinedMorphism {domainRep} {codomainRep=(RSMaybe domainRep)}
-    {domain} {codomain=(RefinedMaybe domain')} (RefinedJust _) =
-      rewrite objectRepresentationUnique domain domain' in Just
+    {domain} {codomain=(RefinedMaybe domainRep {objectValid})} (RefinedJust _) =
+      rewrite objectRepresentationUnique (IsJustElim objectValid) domain in
+      Just
   interpretRefinedMorphism {codomain=(RefinedMaybe codomain')}
     (RefinedNothing _ _) =
       \_ => Nothing
