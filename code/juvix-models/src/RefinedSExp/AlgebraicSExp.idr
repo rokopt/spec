@@ -543,8 +543,9 @@ mutual
         RefinedCoproduct : {representations : RefinedSList} ->
           ListForAll RefinedObject representations ->
           RefinedObject (RSCoproduct representations)
-        RefinedExponential : {domainRep, codomainRep : RefinedSExp} ->
-          RefinedObject domainRep -> RefinedObject codomainRep ->
+        RefinedExponential : (domainRep, codomainRep : RefinedSExp) ->
+          {auto domainValid : SExpRepresentsObject domainRep} ->
+          {auto codomainValid : SExpRepresentsObject codomainRep} ->
           RefinedObject (RSExponential domainRep codomainRep)
         RefinedNat : RefinedObject RSNat
         ReflectedAtom : RefinedObject RSSAtom
@@ -596,7 +597,6 @@ mutual
     (representation, domainRep, codomainRep, subjectMorphismRep :
       RefinedSExp) -> Type where
 
-mutual
   public export
   sexpAsObject : (representation : RefinedSExp) ->
     Maybe (RefinedObject representation)
@@ -610,10 +610,16 @@ mutual
     case slistAsObjects objectReps of
       Just objects => Just (RefinedCoproduct objects)
       Nothing => Nothing
-  sexpAsObject (RAExponential $* [domainRep, codomainRep]) =
-    case (sexpAsObject domainRep, sexpAsObject codomainRep) of
-      (Just domain, Just codomain) => Just (RefinedExponential domain codomain)
-      _ => Nothing
+  sexpAsObject (RAExponential $* [domainRep, codomainRep]) with
+    (sexpRepresentsObject domainRep, sexpRepresentsObject codomainRep)
+      sexpAsObject (RAExponential $* [domainRep, codomainRep]) |
+        (Yes domainValid, Yes codomainValid) =
+          Just (RefinedExponential domainRep codomainRep
+            {domainValid}
+            {codomainValid})
+      sexpAsObject (RAExponential $* [domainRep, codomainRep]) |
+        _ =
+          Nothing
   sexpAsObject (RANat $* []) = Just RefinedNat
   sexpAsObject (RARAtom $* []) = Just ReflectedAtom
   sexpAsObject (RARExp $* []) = Just ReflectedExp
@@ -643,15 +649,20 @@ mutual
 
   public export
   sexpRepresentsObjectUnique : {representation : RefinedSExp} ->
-    {r, r' : SExpRepresentsObject representation} ->
+    (r, r' : SExpRepresentsObject representation) ->
     r = r'
-  sexpRepresentsObjectUnique {r} {r'} = IsJustUnique r r'
+  sexpRepresentsObjectUnique = IsJustUnique
 
   public export
   sexpRepresentedObject : {representation : RefinedSExp} ->
     (r : SExpRepresentsObject representation) ->
     RefinedObject representation
   sexpRepresentedObject = IsJustElim
+
+  public export
+  sexpRepresentsObject :
+    (representation : RefinedSExp) -> Dec (SExpRepresentsObject representation)
+  sexpRepresentsObject representation = IsJustDec (sexpAsObject representation)
 
   public export
   slistAsObjects : (representations : RefinedSList) ->
@@ -673,6 +684,13 @@ mutual
     (r : SListRepresentsObjects representations) ->
     ListForAll RefinedObject representations
   slistRepresentedObjects = IsJustElim
+
+  public export
+  slistRepresentsObjects :
+    (representations : RefinedSList) ->
+    Dec (SListRepresentsObjects representations)
+  slistRepresentsObjects representations =
+    IsJustDec (slistAsObjects representations)
 
   public export
   slistRepresentsObjectsUnique : {representations : RefinedSList} ->
@@ -741,9 +759,16 @@ mutual
 
   public export
   sexpRepresentsMorphismUnique : {representation : RefinedSExp} ->
-    {r, r' : SExpRepresentsMorphism representation} ->
+    (r, r' : SExpRepresentsMorphism representation) ->
     r = r'
-  sexpRepresentsMorphismUnique {r} {r'} = IsJustUnique r r'
+  sexpRepresentsMorphismUnique = IsJustUnique
+
+  public export
+  sexpRepresentsMorphism :
+    (representation : RefinedSExp) ->
+    Dec (SExpRepresentsMorphism representation)
+  sexpRepresentsMorphism representation =
+    IsJustDec (sexpAsMorphism representation)
 
   public export
   sexpAsContract : (representation : RefinedSExp) ->
@@ -759,9 +784,16 @@ mutual
 
   public export
   sexpRepresentsContractUnique : {representation : RefinedSExp} ->
-    {r, r' : SExpRepresentsContract representation} ->
+    (r, r' : SExpRepresentsContract representation) ->
     r = r'
-  sexpRepresentsContractUnique {r} {r'} = IsJustUnique r r'
+  sexpRepresentsContractUnique = IsJustUnique
+
+  public export
+  sexpRepresentsContract :
+    (representation : RefinedSExp) ->
+    Dec (SExpRepresentsContract representation)
+  sexpRepresentsContract representation =
+    IsJustDec (sexpAsContract representation)
 
   public export
   refinedMorphismDomain :
@@ -834,9 +866,23 @@ mutual
     rewrite (slistAsObjectsComplete objects) in Refl
   sexpAsObjectComplete (RefinedCoproduct objects) =
     rewrite (slistAsObjectsComplete objects) in Refl
-  sexpAsObjectComplete (RefinedExponential domain codomain) =
-    rewrite (sexpAsObjectComplete domain) in
-    rewrite (sexpAsObjectComplete codomain) in Refl
+  sexpAsObjectComplete
+    (RefinedExponential domainRep codomainRep {domainValid} {codomainValid})
+    with (sexpRepresentsObject domainRep, sexpRepresentsObject codomainRep)
+      sexpAsObjectComplete
+        (RefinedExponential domain codomain {domainValid} {codomainValid}) |
+          (Yes domainValid', Yes codomainValid') =
+            rewrite sexpRepresentsObjectUnique domainValid domainValid' in
+            rewrite sexpRepresentsObjectUnique codomainValid codomainValid' in
+            Refl
+      sexpAsObjectComplete
+        (RefinedExponential domain codomain {domainValid} {codomainValid}) |
+          (No domainInvalid, _) =
+            void $ domainInvalid domainValid
+      sexpAsObjectComplete
+        (RefinedExponential domain codomain {domainValid} {codomainValid}) |
+          (_, No codomainInvalid) =
+            void $ codomainInvalid codomainValid
   sexpAsObjectComplete RefinedNat = Refl
   sexpAsObjectComplete ReflectedAtom = Refl
   sexpAsObjectComplete ReflectedExp = Refl

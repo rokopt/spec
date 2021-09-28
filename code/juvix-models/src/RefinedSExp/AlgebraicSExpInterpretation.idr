@@ -28,9 +28,11 @@ mutual
   interpretRefinedObject (RefinedCoproduct {representations} objects) =
     interpretRefinedCoproduct {representations} objects
   interpretRefinedObject
-    (RefinedExponential {domainRep} {codomainRep} domain codomain) =
-      interpretRefinedObject {representation=domainRep} domain ->
-      interpretRefinedObject {representation=codomainRep} codomain
+    (RefinedExponential domainRep codomainRep {domainValid} {codomainValid}) =
+      interpretRefinedObject {representation=domainRep}
+        (sexpRepresentedObject domainValid) ->
+      interpretRefinedObject {representation=codomainRep}
+        (sexpRepresentedObject codomainValid)
   interpretRefinedObject RefinedNat = Nat
   interpretRefinedObject ReflectedAtom = RefinedAtom
   interpretRefinedObject ReflectedExp = RefinedSExp
