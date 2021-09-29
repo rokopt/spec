@@ -170,6 +170,16 @@ andIntroduction : {b, b': Bool} -> IsTrue b -> IsTrue b' -> IsTrue (b && b')
 andIntroduction bTrue bTrue' = case (bTrue, bTrue') of (Refl, Refl) => Refl
 
 public export
+andLeftElim : {b, b': Bool} -> (t : IsTrue b) -> (t' : IsTrue b') ->
+  andLeft {b} {b'} (andIntroduction {b} {b'} t t') = t
+andLeftElim Refl Refl = Refl
+
+public export
+andRightElim : {b, b': Bool} -> (t : IsTrue b) -> (t' : IsTrue b') ->
+  andRight {b} {b'} (andIntroduction {b} {b'} t t') = t'
+andRightElim Refl Refl = Refl
+
+public export
 isLeft : {A, B: Type} -> Either A B -> Bool
 isLeft (Left _) = True
 isLeft (Right _) = False

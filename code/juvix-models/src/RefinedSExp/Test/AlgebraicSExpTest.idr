@@ -32,18 +32,22 @@ checkedTypeList : CheckedRefinementList [RSVoid, RSUnit]
 checkedTypeList = Refl
 
 public export
-checkedFromVoid : {x : RefinedSExp} -> CheckedMorphism (RSFromVoid x) RSVoid x
-checkedFromVoid = decEqReflYes {deq=decEq}
+checkedFromVoid : {x : RefinedSExp} -> CheckedRefinement x ->
+  CheckedMorphism (RSFromVoid x) RSVoid x
+checkedFromVoid _ = decEqReflYes {deq=rsDecEq}
 
 public export
-checkedToUnit : {x : RefinedSExp} -> CheckedMorphism (RSToUnit x) x RSUnit
-checkedToUnit = decEqReflYes {deq=decEq}
+checkedToUnit : {x : RefinedSExp} -> CheckedRefinement x ->
+  CheckedMorphism (RSToUnit x) x RSUnit
+checkedToUnit _ = decEqReflYes {deq=rsDecEq}
 
+{-
 public export
 checkedFunctionList : {x, x' : RefinedSExp} ->
+  CheckedRefinement x -> CheckedRefinement x' ->
   CheckedMorphismList [RSFromVoid x, RSToUnit x'] [RSVoid, x'] [x, RSUnit]
-checkedFunctionList =
-  andIntroduction checkedFromVoid (andIntroduction checkedToUnit Refl)
+checkedFunctionList checked checked' = ?checkedFunctionList_hole
+-}
 
 export
 algebraicSExpTests : IO ()

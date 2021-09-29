@@ -545,6 +545,26 @@ RSMaybeRefinement objectRep testCodomainRep testRep =
 
 mutual
   public export
+  checkAsFunction : (representation : RefinedSExp) -> Bool
+  checkAsFunction (RACompose $* [leftRep, rightRep]) =
+    checkAsFunction leftRep && checkAsFunction rightRep
+  checkAsFunction _ = False
+
+  public export
+  CheckedFunction : (representation : RefinedSExp) -> Type
+  CheckedFunction = IsTrue . checkAsFunction
+
+  public export
+  checkAsFunctionList : (l : RefinedSList) -> Bool
+  checkAsFunctionList [] = True
+  checkAsFunctionList (x :: l) =
+    checkAsFunction x && checkAsFunctionList l
+
+  public export
+  CheckedFunctionList : (representation : RefinedSList) -> Type
+  CheckedFunctionList = IsTrue . checkAsFunctionList
+
+  public export
   checkAsRefinement : (x : RefinedSExp) -> Bool
   checkAsRefinement (RAVoid $* []) = True
   checkAsRefinement (RAUnit $* []) = True
@@ -565,8 +585,17 @@ mutual
   CheckedRefinementList = IsTrue . checkAsRefinementList
 
   public export
+  CheckedRefinementListCons : {head : RefinedSExp} -> {tail : RefinedSList} ->
+    CheckedRefinement head -> CheckedRefinementList tail ->
+    CheckedRefinementList (head :: tail)
+  CheckedRefinementListCons = andIntroduction
+
+  public export
   checkAsMorphism :
-    (representation, domainRep, codomainRep : RefinedSExp) -> Bool
+    (representation, domainRep, codomainRep : RefinedSExp) ->
+    {auto domainChecked : CheckedRefinement domainRep} ->
+    {auto codomainChecked : CheckedRefinement codomainRep} ->
+    Bool
   checkAsMorphism (RAFromVoid $* [domain]) (RAVoid $* []) domain' =
     domain == domain'
   checkAsMorphism (RAToUnit $* [codomain]) codomain' (RAUnit $* []) =
@@ -575,19 +604,29 @@ mutual
 
   public export
   CheckedMorphism :
-    (representation, domainRep, codomainRep : RefinedSExp) -> Type
+    (representation, domainRep, codomainRep : RefinedSExp) ->
+    {auto domainChecked : CheckedRefinement domainRep} ->
+    {auto codomainChecked : CheckedRefinement codomainRep} ->
+    Type
   CheckedMorphism representation domainRep codomainRep =
-    IsTrue (checkAsMorphism representation domainRep codomainRep)
+     IsTrue $ checkAsMorphism representation domainRep codomainRep
 
   public export
   checkAsMorphismList :
     (representations : RefinedSList) ->
-    (domains : RefinedSList) ->
-    (codomains : RefinedSList) ->
+    (domains : RefinedSList) -> (codomains : RefinedSList) ->
+    {auto domainsChecked : CheckedRefinementList domains} ->
+    {auto codomainsChecked : CheckedRefinementList codomains} ->
     Bool
   checkAsMorphismList [] [] [] = True
-  checkAsMorphismList (x :: l) (d :: ds) (c :: cs) =
-    checkAsMorphism x d c && checkAsMorphismList l ds cs
+  checkAsMorphismList (x :: l) (d :: ds) (c :: cs)
+    {domainsChecked} {codomainsChecked} =
+      checkAsMorphism x d c
+        {domainChecked=(andLeft domainsChecked)}
+        {codomainChecked=(andLeft codomainsChecked)} &&
+      checkAsMorphismList l ds cs
+        {domainsChecked=(andRight domainsChecked)}
+        {codomainsChecked=(andRight codomainsChecked)}
   checkAsMorphismList _ _ _ = False
 
   public export
@@ -595,9 +634,38 @@ mutual
     (representations : RefinedSList) ->
     (domains : RefinedSList) ->
     (codomains : RefinedSList) ->
+    {auto domainsChecked : CheckedRefinementList domains} ->
+    {auto codomainsChecked : CheckedRefinementList codomains} ->
     Type
   CheckedMorphismList representations domains codomains =
-    IsTrue $ checkAsMorphismList representations domains codomains
+     IsTrue $ checkAsMorphismList representations domains codomains
+
+  public export
+  CheckedMorphismListCons :
+    {head : RefinedSExp} -> {tail : RefinedSList} ->
+    {headDomain : RefinedSExp} -> {headCodomain : RefinedSExp} ->
+    {tailDomains : RefinedSList} -> {tailCodomains: RefinedSList} ->
+    {auto headDomainChecked : CheckedRefinement headDomain} ->
+    {auto headCodomainChecked : CheckedRefinement headCodomain} ->
+    {auto tailDomainsChecked : CheckedRefinementList tailDomains} ->
+    {auto tailCodomainsChecked : CheckedRefinementList tailCodomains} ->
+    CheckedMorphism head headDomain headCodomain ->
+    CheckedMorphismList tail tailDomains tailCodomains ->
+    CheckedMorphismList
+      (head :: tail)
+      (headDomain :: tailDomains)
+      (headCodomain :: tailCodomains)
+      {domainsChecked=(
+          CheckedRefinementListCons {head=headDomain} {tail=tailDomains}
+            headDomainChecked tailDomainsChecked)}
+      {codomainsChecked=(
+          CheckedRefinementListCons {head=headCodomain} {tail=tailCodomains}
+            headCodomainChecked tailCodomainsChecked)}
+  CheckedMorphismListCons headChecked tailChecked =
+    let ale = andLeftElim headChecked tailChecked in
+    let are = andRightElim headChecked tailChecked in
+    let allChecked = andIntroduction headChecked tailChecked in
+    ?CheckedMorphismListCons_hole
 
 mutual
   public export
