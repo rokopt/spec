@@ -74,12 +74,20 @@ public export
 a $**^ a' = a $* $*^ a'
 
 public export
+QNPred : (atom : Type) -> (order : Nat) -> Type
+QNPred atom order = QExp atom order -> Type
+
+public export
 QPred : (atom : Type) -> Type
-QPred atom = (order : Nat) -> QExp atom order -> Type
+QPred atom = (order : Nat) -> QNPred atom order
+
+public export
+QLNPred : (atom : Type) -> (order : Nat) -> Type
+QLNPred atom order = QList atom order -> Type
 
 public export
 QLPred : (atom : Type) -> Type
-QLPred atom = (order : Nat) -> QList atom order -> Type
+QLPred atom = (order : Nat) -> QLNPred atom order
 
 public export
 record QExpEliminatorSig
