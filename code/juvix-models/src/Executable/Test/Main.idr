@@ -32,6 +32,9 @@ import RefinedSExp.ListVariant.Test.RefinedListTest
 import RefinedSExp.ListVariant.Test.SExpTest
 import RefinedSExp.ListVariant.Test.RefinedSExpTest
 import ReflectiveLanguages.Test.SubstitutiveTest
+import ReflectiveLanguages.Interpretations.Test.SubstitutiveInterpretationTest
+import ReflectiveLanguages.Test.QExpTest
+import ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
 
 %default total
 
@@ -64,3 +67,6 @@ main = do
   RefinedSExp.ListVariant.Test.SExpTest.sExpTests
   RefinedSExp.ListVariant.Test.RefinedSExpTest.refinedSExpTests
   ReflectiveLanguages.Test.SubstitutiveTest.substitutiveTests
+  ReflectiveLanguages.Interpretations.Test.SubstitutiveInterpretationTest.substitutiveInterpretationTests
+  ReflectiveLanguages.Test.QExpTest.qexpTests
+  ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest.qexpInterpretationTests

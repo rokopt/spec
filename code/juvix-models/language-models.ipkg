@@ -90,7 +90,14 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.ListVariant.Test.SExpTest
     , RefinedSExp.ListVariant.RefinedSExp
     , RefinedSExp.ListVariant.Test.RefinedSExpTest
+    , ReflectiveLanguages.Substitutive
     , ReflectiveLanguages.Test.SubstitutiveTest
+    , ReflectiveLanguages.Interpretations.SubstitutiveInterpretation
+    , ReflectiveLanguages.Interpretations.Test.SubstitutiveInterpretationTest
+    , ReflectiveLanguages.QExp
+    , ReflectiveLanguages.Test.QExpTest
+    , ReflectiveLanguages.Interpretations.QExpInterpretation
+    , ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
     , Executable.Test.Main
 
 depends = contrib, network
