@@ -162,6 +162,9 @@ mutual
     QExpInList : {0 pred : QPred atom} -> {order : Nat} ->
       {a : atom} -> {l : QList atom order} ->
       QListExists pred order l -> QExpExists pred order (a $* l)
+    QEvalInList : {0 pred : QPred atom} -> {order : Nat} ->
+      {a : atom} -> {l : QList atom order} ->
+      QListExists pred order l -> QExpExists pred (S order) (a $> l)
 
   data QListExists : {0 atom : Type} ->
       (0 pred : QPred atom) -> QLPred atom where
