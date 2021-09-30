@@ -20,6 +20,10 @@ isYes (Yes _) = True
 isYes (No _) = False
 
 public export
+[decEqToEq] DecEq a => Eq a where
+  x == x' = isYes $ decEq x x'
+
+public export
 IsYes : {type : Type} -> Dec type -> Type
 IsYes dec = isYes dec = True
 

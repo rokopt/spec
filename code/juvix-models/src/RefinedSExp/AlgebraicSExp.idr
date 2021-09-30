@@ -204,37 +204,52 @@ rkDecEq : DecEqPred RefinedKeyword
 rkDecEq = countableEq RKCountable
 
 public export
-RefinedAtom : Type
-RefinedAtom = RefinedKeyword
+DecEq RefinedKeyword where
+  decEq = rkDecEq
 
 public export
-raEncode : RefinedAtom -> Nat
-raEncode = rkEncode
-
-public export
-raDecode : Nat -> RefinedAtom
-raDecode = rkDecode
+data RefinedCustomSymbol : Type where
+  RefinedNatSymbol : Nat -> RefinedCustomSymbol
+  RefinedStringSymbol : String -> RefinedCustomSymbol
 
 export
-raDecodeIsLeftInverse :
-  IsLeftInverseOf AlgebraicSExp.raEncode AlgebraicSExp.raDecode
-raDecodeIsLeftInverse = rkDecodeIsLeftInverse
-
-export
-raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
-raEncodeIsInjective = rkEncodeIsInjective
+rcDecEq : DecEqPred RefinedCustomSymbol
+rcDecEq (RefinedNatSymbol n) (RefinedNatSymbol n') = case decEq n n' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+rcDecEq (RefinedNatSymbol _) (RefinedStringSymbol _) =
+  No $ \eq => case eq of Refl impossible
+rcDecEq (RefinedStringSymbol _) (RefinedNatSymbol _) =
+  No $ \eq => case eq of Refl impossible
+rcDecEq (RefinedStringSymbol s) (RefinedStringSymbol s') = case decEq s s' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-RAInjection : Injection RefinedAtom Nat
-RAInjection = (raEncode ** raEncodeIsInjective)
+DecEq RefinedCustomSymbol where
+  decEq = rcDecEq
 
 public export
-RACountable : Countable
-RACountable = (RefinedAtom ** RAInjection)
+data RefinedAtom : Type where
+  RAKeyword : RefinedKeyword -> RefinedAtom
+  RACustom : RefinedCustomSymbol -> RefinedAtom
 
 public export
 raDecEq : DecEqPred RefinedAtom
-raDecEq = rkDecEq
+raDecEq (RAKeyword n) (RAKeyword n') = case decEq n n' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+raDecEq (RAKeyword _) (RACustom _) =
+  No $ \eq => case eq of Refl impossible
+raDecEq (RACustom _) (RAKeyword _) =
+  No $ \eq => case eq of Refl impossible
+raDecEq (RACustom s) (RACustom s') = case decEq s s' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+
+public export
+DecEq RefinedAtom where
+  decEq = raDecEq
 
 public export
 RefinedSExp : Type
@@ -261,16 +276,8 @@ DecEq RefinedSList where
   decEq = rslDecEq
 
 public export
-Eq RefinedSExp where
-  x == x' = isYes $ rsDecEq x x'
-
-public export
-Eq RefinedSList where
-  l == l' = isYes $ rslDecEq l l'
-
-public export
 RAVoid : RefinedAtom
-RAVoid = RKVoid
+RAVoid = RAKeyword RKVoid
 
 public export
 RSVoid : RefinedSExp
@@ -278,7 +285,7 @@ RSVoid = $^ RAVoid
 
 public export
 RAFromVoid : RefinedAtom
-RAFromVoid = RKFromVoid
+RAFromVoid = RAKeyword RKFromVoid
 
 public export
 RSFromVoid : (codomainRep : RefinedSExp) -> RefinedSExp
@@ -286,7 +293,7 @@ RSFromVoid codomainRep = RAFromVoid $*** codomainRep
 
 public export
 RAUnit : RefinedAtom
-RAUnit = RKUnit
+RAUnit = RAKeyword RKUnit
 
 public export
 RSUnit : RefinedSExp
@@ -294,7 +301,7 @@ RSUnit = $^ RAUnit
 
 public export
 RAToUnit : RefinedAtom
-RAToUnit = RKToUnit
+RAToUnit = RAKeyword RKToUnit
 
 public export
 RSToUnit : (domainRep : RefinedSExp) -> RefinedSExp
