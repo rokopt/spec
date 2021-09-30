@@ -79,6 +79,25 @@ public export
 CharacterizesDomain : GeneralComputableFunction -> Refinement -> Type
 CharacterizesDomain f r = (RefinesDomain f r, IncludesDomain f r)
 
+-- | A refinement on S-expressions such that any expression selected
+-- | by the refinement is the output of a given function for some input.
+public export
+RefinesRange : GeneralComputableFunction -> Refinement -> Type
+RefinesRange f r = (x : RefinedSExp) ->
+  IsTrue (r x) -> (preX : RefinedSExp ** f preX = Just x)
+
+-- | A refinement on S-expressions such that any successful output of the
+-- | given function is selected by the refinement.
+public export
+IncludesRange : GeneralComputableFunction -> Refinement -> Type
+IncludesRange f r = (x : RefinedSExp) ->
+  (success : IsJust (f x)) -> IsTrue $ r $ IsJustElim success
+
+-- | A refinement on S-expressions which selects exactly those expressions
+-- | which are the outputs of a given function for some input.
+CharacterizesRange : GeneralComputableFunction -> Refinement -> Type
+CharacterizesRange f r = (RefinesRange f r, IncludesRange f r)
+
 -------------------------------------------------------------------
 ---- Interpretations into the top-level metalanguage (Idris-2) ----
 -------------------------------------------------------------------
