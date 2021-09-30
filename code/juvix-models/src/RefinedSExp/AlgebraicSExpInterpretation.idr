@@ -52,7 +52,7 @@ f #~~ g = ((x : RefinedSExp) -> f x = g x)
 --------------------------------
 
 -- | A refinement is a characteristic function on S-expressions.  A
--- | refinement specificies a decidable subset of S-expressions.
+-- | refinement selects a decidable subset of S-expressions.
 public export
 Refinement : Type
 Refinement = RefinedSExp -> Bool
@@ -60,6 +60,24 @@ Refinement = RefinedSExp -> Bool
 public export
 ListRefinement : Type
 ListRefinement = RefinedSList -> Bool
+
+-- | A refinement on S-expressions such that a given function succeeds
+-- | on all expressions selected by the refinement.
+public export
+RefinesDomain : GeneralComputableFunction -> Refinement -> Type
+RefinesDomain f r = (x : RefinedSExp) -> IsTrue (r x) -> IsJust (f x)
+
+-- | A refinement on S-expressions such that any expression on which
+-- | a given function succeeds is selected by the refinement.
+public export
+IncludesDomain : GeneralComputableFunction -> Refinement -> Type
+IncludesDomain f r = (x : RefinedSExp) -> IsJust (f x) -> IsTrue (r x)
+
+-- | A refinement on S-expressions which selects exactly those expressions
+-- | for which a given function succeeds.
+public export
+CharacterizesDomain : GeneralComputableFunction -> Refinement -> Type
+CharacterizesDomain f r = (RefinesDomain f r, IncludesDomain f r)
 
 -------------------------------------------------------------------
 ---- Interpretations into the top-level metalanguage (Idris-2) ----

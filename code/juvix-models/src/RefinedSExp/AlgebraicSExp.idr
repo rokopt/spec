@@ -72,7 +72,7 @@ SLPred atom = !- (SList atom)
 
 public export
 record SExpEliminatorSig
-  {0 atom : Type} (0 sp : SPred atom) (0 lp : SLPred atom)
+  {atom : Type} (0 sp : SPred atom) (0 lp : SLPred atom)
   where
     constructor SExpEliminatorArgs
     expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $* l)
@@ -83,7 +83,7 @@ record SExpEliminatorSig
 mutual
   public export
   sexpEliminator :
-    {0 atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
+    {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
     (signature : SExpEliminatorSig sp lp) ->
     SExp atom ~> sp
   sexpEliminator signature (a $* l) =
@@ -91,7 +91,7 @@ mutual
 
   public export
   slistEliminator :
-    {0 atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
+    {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
     (signature : SExpEliminatorSig sp lp) ->
     SList atom ~> lp
   slistEliminator signature [] =
@@ -102,11 +102,24 @@ mutual
 
 public export
 sexpEliminators :
-  {0 atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
+  {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
   (signature : SExpEliminatorSig sp lp) ->
   (SExp atom ~> sp, SList atom ~> lp)
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
+
+public export
+sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
+  (SExp atom -> String, SList atom -> String)
+sexpShows {atom} showAtom =
+  sexpEliminators $ SExpEliminatorArgs
+    (\a, l, lString => case l of
+      [] => showAtom a
+      _ :: _ => "(" ++ showAtom a ++ " " ++ lString ++ ")")
+    ""
+    (\_, l, sx, sl => case l of
+      [] => sx
+      _ :: _ => sx ++ ", " ++ sl)
 
 mutual
   public export
@@ -161,6 +174,13 @@ data RefinedKeyword : Type where
   RKUnit : RefinedKeyword
   RKToUnit : RefinedKeyword
 
+Show RefinedKeyword where
+  show RKUnused = "RKUnused"
+  show RKVoid = "RKVoid"
+  show RKFromVoid = "RKFromVoid"
+  show RKUnit = "RKUnit"
+  show RKToUnit = "RKToUnit"
+
 public export
 rkEncode : RefinedKeyword -> Nat
 rkEncode RKUnused = 0
@@ -212,6 +232,10 @@ data RefinedCustomSymbol : Type where
   RefinedNatSymbol : Nat -> RefinedCustomSymbol
   RefinedStringSymbol : String -> RefinedCustomSymbol
 
+Show RefinedCustomSymbol where
+  show (RefinedNatSymbol n) = show n
+  show (RefinedStringSymbol s) = show s
+
 export
 rcDecEq : DecEqPred RefinedCustomSymbol
 rcDecEq (RefinedNatSymbol n) (RefinedNatSymbol n') = case decEq n n' of
@@ -233,6 +257,14 @@ public export
 data RefinedAtom : Type where
   RAKeyword : RefinedKeyword -> RefinedAtom
   RACustom : RefinedCustomSymbol -> RefinedAtom
+
+Show RefinedAtom where
+  show (RAKeyword k) = show k
+  show (RACustom c) = show c
+
+public export
+raShow : RefinedAtom -> String
+raShow = show
 
 public export
 raDecEq : DecEqPred RefinedAtom
@@ -258,6 +290,12 @@ RefinedSExp = SExp RefinedAtom
 public export
 RefinedSList : Type
 RefinedSList = SList RefinedAtom
+
+Show RefinedSExp where
+  show = fst (sexpShows show)
+
+Show RefinedSList where
+  show l = "(" ++ snd (sexpShows show) l ++ ")"
 
 public export
 rsDecEq : DecEqPred RefinedSExp
