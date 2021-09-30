@@ -33,6 +33,13 @@ PartialComputableFunction : Type
 PartialComputableFunction = RefinedSExp -> SymmetricSum RefinedSExp
 
 public export
+IsTotal : PartialComputableFunction -> Type
+IsTotal f = (x : RefinedSExp) -> IsLeft $ f x
+
+-- | Extend the notion of computable functions to include error propagation,
+-- | to allow arbitrary descriptions of the forms of failures in earlier
+-- | steps of chains of composed functions.
+public export
 FailurePropagator : Type
 FailurePropagator = Endofunction RefinedSExp
 
@@ -40,17 +47,56 @@ public export
 ComputableFunction : Type
 ComputableFunction = (PartialComputableFunction, FailurePropagator)
 
+-- | Compose a computable function with a partial computable function.
+-- | (See "railway-oriented programming"!)
+infixl 1 ~.
+public export
+(~.) : ComputableFunction -> PartialComputableFunction ->
+  PartialComputableFunction
+(~.) g f x with (f x)
+  (~.) g f x | Left fx = fst g fx
+  (~.) g f x | Right fxFailure = Right $ snd g fxFailure
+
+-- | An equivalence on computable functions which ignores differences
+-- | in the expressions describing failures (but does require that the
+-- | functions succeed on the same sets of inputs).
+infixl 1 #~-
+public export
+(#~-) : ComputableFunction -> ComputableFunction -> Type
+(f, _) #~- (g, _) =
+  ((x : RefinedSExp) -> Either (IsLeft $ f x) (IsLeft $ g x) -> f x = g x)
+
 -- | Composition of computable functions according to the rules described
 -- | above.  To apply the output function, we must provide one input
 -- | function for each argument of the output function.
 infixl 1 #.
 public export
 (#.) : ComputableFunction -> ComputableFunction -> ComputableFunction
-(left, leftFailurePropagator) #. (right, rightFailurePropagator) =
-  (right >=> left, leftFailurePropagator . rightFailurePropagator)
+g #. f = (g ~. fst f, snd g . snd f)
 
+-- | A compiler is, like any program that we can execute, a computable
+-- | function.  What distinguishes a compiler from arbitrary computable
+-- | functions is that if a compiler succeeds at compiling some expression,
+-- | then the output expression may itself be interpreted as a computable
+-- | function.
+-- |
+-- | Note that this definition admits the possibility that a single
+-- | computable function might be interpreted as a compiler in more than
+-- | one way.
 public export
-record RefinedLanguage where
-  constructor Compiler
-  check : ComputableFunction
-  -- compile :
+Compiler : PartialComputableFunction -> Type
+Compiler f = (x : RefinedSExp) -> IsLeft (f x) -> PartialComputableFunction
+
+-- | A strongly normalizing language is one whose functions all terminate.
+-- | To interpret a computable function as a compiler for a strongly
+-- | normalizing language therefore means interpreting all successful
+-- | outputs as _total_ computable functions.  This could be treated as
+-- | an expression of the notion that "well-typed programs never go wrong".
+-- |
+-- | Note that this definition does not require that the compiler _itself_
+-- | be a total computable function.
+public export
+Normalizing : {c : PartialComputableFunction} -> Compiler c -> Type
+Normalizing {c} isCompiler =
+  (x : RefinedSExp) -> (success : IsLeft (c x)) ->
+  IsTotal (isCompiler x success)

@@ -427,6 +427,11 @@ data IsLeft : {a, b : Type} -> Either a b -> Type where
   ItIsLeft : {a, b : Type} -> {x : a} -> IsLeft (Left x)
 
 public export
+IsLeftElim : {A, B: Type} -> {x : Either A B} -> IsLeft x -> A
+IsLeftElim {x=(Left x')} ItIsLeft = x'
+IsLeftElim {x=(Right _)} ItIsLeft impossible
+
+public export
 natToFinCert : {m, n : Nat} -> m `LT` n -> Fin n
 natToFinCert {m=Z} LTEZero impossible
 natToFinCert {m=Z} (LTESucc lte) = FZ
