@@ -7,8 +7,6 @@ import public Category.ComputableCategories
 
 %default total
 
-%default total
-
 mutual
   infixr 7 $*
   prefix 11 $>
