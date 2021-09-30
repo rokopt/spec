@@ -26,6 +26,8 @@ public export
   GeneralComputableFunction
 (#.) = flip (>=>)
 
+-- | A total computable function returns some input for every output
+-- | (its domain is all S-expressions and it terminates on all inputs).
 public export
 IsTotal : GeneralComputableFunction -> Type
 IsTotal f = (x : RefinedSExp) -> IsJust $ f x
@@ -59,39 +61,13 @@ public export
 ListRefinement : Type
 ListRefinement = RefinedSList -> Bool
 
-public export
-Signature : Type
-Signature = PairOf Type
-
--- | A compiler is, like any program that we can execute, a computable
--- | function.  What distinguishes a compiler from arbitrary computable
--- | functions is that if a compiler succeeds at compiling some expression,
--- | then the output expression may itself be interpreted as a computable
--- | function.
--- |
--- | Note that this definition admits the possibility that a single
--- | computable function might be interpreted as a compiler in more than
--- | one way.
-public export
-Compiler : GeneralComputableFunction -> Type
-Compiler f = (x : RefinedSExp) -> IsJust (f x) -> GeneralComputableFunction
-
--- | A strongly normalizing language is one whose functions all terminate.
--- | To interpret a computable function as a compiler for a strongly
--- | normalizing language therefore means interpreting all successful
--- | outputs as _total_ computable functions.  This could be treated as
--- | an expression of the notion that "well-typed programs never go wrong".
--- |
--- | Note that this definition does not require that the compiler _itself_
--- | be a total computable function.
-public export
-Normalizing : {c : GeneralComputableFunction} -> Compiler c -> Type
-Normalizing {c} interpret =
-  (x : RefinedSExp) -> (checked : IsJust (c x)) -> IsTotal (interpret x checked)
-
 -------------------------------------------------------------------
 ---- Interpretations into the top-level metalanguage (Idris-2) ----
 -------------------------------------------------------------------
+
+public export
+Signature : Type
+Signature = PairOf Type
 
 -- | A typechecker in our top-level metalanguage -- in this case Idris-2 --
 -- | is a function which decides whether any given expression represents
@@ -181,3 +157,33 @@ public export
 (##.) : ExtendedComputableFunction -> ExtendedComputableFunction ->
   ExtendedComputableFunction
 g ##. (f, fFail) = (extendedAfterAnnotated g f, snd g . fFail)
+
+-------------------------------------------
+---- Compilers as computable functions ----
+-------------------------------------------
+
+-- | A compiler is, like any program that we can execute, a computable
+-- | function.  What distinguishes a compiler from arbitrary computable
+-- | functions is that if a compiler succeeds at compiling some expression,
+-- | then the output expression may itself be interpreted as a computable
+-- | function.
+-- |
+-- | Note that this definition admits the possibility that a single
+-- | computable function might be interpreted as a compiler in more than
+-- | one way.
+public export
+Compiler : GeneralComputableFunction -> Type
+Compiler f = (x : RefinedSExp) -> IsJust (f x) -> GeneralComputableFunction
+
+-- | A strongly normalizing language is one whose functions all terminate.
+-- | To interpret a computable function as a compiler for a strongly
+-- | normalizing language therefore means interpreting all successful
+-- | outputs as _total_ computable functions.  This could be treated as
+-- | an expression of the notion that "well-typed programs never go wrong".
+-- |
+-- | Note that this definition does not require that the compiler _itself_
+-- | be a total computable function.
+public export
+Normalizing : {c : GeneralComputableFunction} -> Compiler c -> Type
+Normalizing {c} interpret =
+  (x : RefinedSExp) -> (checked : IsJust (c x)) -> IsTotal (interpret x checked)
