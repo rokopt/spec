@@ -57,18 +57,27 @@ public export
   (~.) g f x | Left fx = fst g fx
   (~.) g f x | Right fxFailure = Right $ snd g fxFailure
 
+-- | An equivalence on partial computable functions which ignores differences
+-- | in the expressions describing failures (but does require that the
+-- | functions succeed on the same sets of inputs).
+infixl 1 #~~
+public export
+(#~~) : PartialComputableFunction -> PartialComputableFunction -> Type
+f #~~ g =
+  ((x : RefinedSExp) -> Either (IsLeft $ f x) (IsLeft $ g x) -> f x = g x)
+
 -- | An equivalence on computable functions which ignores differences
 -- | in the expressions describing failures (but does require that the
 -- | functions succeed on the same sets of inputs).
 infixl 1 #~-
 public export
 (#~-) : ComputableFunction -> ComputableFunction -> Type
-(f, _) #~- (g, _) =
-  ((x : RefinedSExp) -> Either (IsLeft $ f x) (IsLeft $ g x) -> f x = g x)
+(f, _) #~- (g, _) = f #~~ g
 
 -- | Composition of computable functions according to the rules described
 -- | above.  To apply the output function, we must provide one input
 -- | function for each argument of the output function.
+-- | (See "railway-oriented programming" again!)
 infixl 1 #.
 public export
 (#.) : ComputableFunction -> ComputableFunction -> ComputableFunction
