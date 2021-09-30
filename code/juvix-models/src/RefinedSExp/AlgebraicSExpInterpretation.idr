@@ -97,6 +97,5 @@ Compiler f = (x : RefinedSExp) -> IsLeft (f x) -> PartialComputableFunction
 -- | be a total computable function.
 public export
 Normalizing : {c : PartialComputableFunction} -> Compiler c -> Type
-Normalizing {c} isCompiler =
-  (x : RefinedSExp) -> (success : IsLeft (c x)) ->
-  IsTotal (isCompiler x success)
+Normalizing {c} interpret =
+  (x : RefinedSExp) -> (checked : IsLeft (c x)) -> IsTotal (interpret x checked)
