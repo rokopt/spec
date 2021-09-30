@@ -113,7 +113,6 @@ sexpEliminatorComposeSig :
   SExpPi (f . sp)
 sexpEliminatorComposeSig app = sexpEliminator . SExpSignatureComposeSig app
 
-{- XXX write a signature composer for this -}
 public export
 record SExpInductionStrengthenerSig
   {0 atom : Type} (0 f : SExpTypeConstructor atom) where
@@ -123,7 +122,6 @@ record SExpInductionStrengthenerSig
     pairStrengthener : (0 sp : SExpPred atom) ->
       (x, x' : SExp atom) -> f sp x -> f sp x' -> sp (x $. x') -> f sp (x $. x')
 
-{- XXX write a signature composer for this -}
 public export
 record SExpStrengthenedInductionSig
   {0 atom : Type} (0 f : SExpTypeConstructor atom) (sp : SExpPred atom) where
@@ -166,7 +164,6 @@ sexpStrengthenedInduction strengthenerSig inductionSig =
   sexpEliminator
     (SExpStrengthenedInductionSigToEliminatorSig strengthenerSig inductionSig)
 
-{- XXX write a composer for this -}
 public export
 record SExpEncodingSig (0 type : Type) (0 atom : Type) where
   constructor SExpEncodingArgs
@@ -221,7 +218,6 @@ SExpParameterizedPi : {atom : Type} -> {parameter : Type} ->
   (sp : SExpParameterizedPred atom parameter) -> Type
 SExpParameterizedPi = SExpPi . SExpParameterizedPredToPred
 
-{- XXX could we also do this using signature composition -}
 sexpParameterizedEliminator :
   {0 atom : Type} -> {0 parameter : Type} ->
   {sp : SExpParameterizedPred atom parameter} ->
@@ -382,8 +378,6 @@ record SExpWithPairPredEliminatorSig {0 atom : Type}
     expPairIntroRight :
       (x, x', x'' : SExp atom) -> sp x -> sp x' -> sp x'' ->
         pp (x', x'') -> pp (x, (x' $. x''))
-
-{- XXX pair-eliminator composer -}
 
 public export
 SExpPairPi : {atom : Type} -> SExpPairPred atom -> Type
@@ -629,16 +623,6 @@ spairForAllApply :
   (p : SExpPair atom) -> SExpForAllBoth (f . sp) p -> f (SExpForAllBoth sp p)
 spairForAllApply {isApplicative} {sp} =
   snd (sexpForAllApplications {isApplicative} {sp})
-
-{- XXX general induction composer -}
-
-{- XXX eliminator-generated-type eliminator (with signature composer) -}
-
-{- XXX eliminator-generated-dependent-type eliminator (w/signature composer) -}
-
-{- XXX forall eliminator (with signature composer) -}
-
-{- XXX enhanced-with-applicative eliminator (with signature composer) -}
 
 public export
 SExpForAllMetaPred : {atom : Type} -> SExpPred atom -> Type
