@@ -33,29 +33,8 @@ PartialComputableFunction : Type
 PartialComputableFunction = RefinedSExp -> SymmetricSum RefinedSExp
 
 public export
-IsTotal : PartialComputableFunction -> Type
-IsTotal f = (x : RefinedSExp) -> IsLeft $ f x
-
--- | Extend the notion of computable functions to include error propagation,
--- | to allow arbitrary descriptions of the forms of failures in earlier
--- | steps of chains of composed functions.
-public export
-FailurePropagator : Type
-FailurePropagator = Endofunction RefinedSExp
-
-public export
-ComputableFunction : Type
-ComputableFunction = (PartialComputableFunction, FailurePropagator)
-
--- | Compose a computable function with a partial computable function.
--- | (See "railway-oriented programming"!)
-infixl 1 ~.
-public export
-(~.) : ComputableFunction -> PartialComputableFunction ->
-  PartialComputableFunction
-(~.) g f x with (f x)
-  (~.) g f x | Left fx = fst g fx
-  (~.) g f x | Right fxFailure = Right $ snd g fxFailure
+PartialIsTotal : PartialComputableFunction -> Type
+PartialIsTotal f = (x : RefinedSExp) -> IsLeft $ f x
 
 -- | An equivalence on partial computable functions which ignores differences
 -- | in the expressions describing failures (but does require that the
@@ -66,6 +45,22 @@ public export
 f #~~ g =
   ((x : RefinedSExp) -> Either (IsLeft $ f x) (IsLeft $ g x) -> f x = g x)
 
+-- | Extend the notion of computable functions to include error propagation,
+-- | to allow arbitrary descriptions of the forms of failures in earlier
+-- | steps of chains of composed functions.
+
+public export
+FailurePropagator : Type
+FailurePropagator = Endofunction RefinedSExp
+
+public export
+ComputableFunction : Type
+ComputableFunction = (PartialComputableFunction, FailurePropagator)
+
+public export
+IsTotal : ComputableFunction -> Type
+IsTotal = PartialIsTotal . fst
+
 -- | An equivalence on computable functions which ignores differences
 -- | in the expressions describing failures (but does require that the
 -- | functions succeed on the same sets of inputs).
@@ -73,6 +68,16 @@ infixl 1 #~-
 public export
 (#~-) : ComputableFunction -> ComputableFunction -> Type
 (f, _) #~- (g, _) = f #~~ g
+
+-- | Compose a computable function with a partial computable function.
+-- | (See "railway-oriented programming"!)
+infixl 1 ~.
+public export
+(~.) : ComputableFunction -> PartialComputableFunction ->
+  PartialComputableFunction
+(~.) g f x with (f x)
+  (~.) g f x | Left fx = fst g fx
+  (~.) g f x | Right fxFailure = Right $ snd g fxFailure
 
 -- | Composition of computable functions according to the rules described
 -- | above.  To apply the output function, we must provide one input
@@ -107,4 +112,5 @@ Compiler f = (x : RefinedSExp) -> IsLeft (f x) -> PartialComputableFunction
 public export
 Normalizing : {c : PartialComputableFunction} -> Compiler c -> Type
 Normalizing {c} interpret =
-  (x : RefinedSExp) -> (checked : IsLeft (c x)) -> IsTotal (interpret x checked)
+  (x : RefinedSExp) -> (checked : IsLeft (c x)) ->
+  PartialIsTotal (interpret x checked)
