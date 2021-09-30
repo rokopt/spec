@@ -154,42 +154,75 @@ mutual
       SListExists pred (x :: l)
 
 public export
-data RefinedAtom : Type where
-  RAUnused : RefinedAtom
-  RAVoid : RefinedAtom
-  RAFromVoid : RefinedAtom
-  RAUnit : RefinedAtom
-  RAToUnit : RefinedAtom
+data RefinedKeyword : Type where
+  RKUnused : RefinedKeyword
+  RKVoid : RefinedKeyword
+  RKFromVoid : RefinedKeyword
+  RKUnit : RefinedKeyword
+  RKToUnit : RefinedKeyword
+
+public export
+rkEncode : RefinedKeyword -> Nat
+rkEncode RKUnused = 0
+rkEncode RKVoid = 1
+rkEncode RKFromVoid = 2
+rkEncode RKUnit = 3
+rkEncode RKToUnit = 4
+
+public export
+rkDecode : Nat -> RefinedKeyword
+rkDecode 1 = RKVoid
+rkDecode 2 = RKFromVoid
+rkDecode 3 = RKUnit
+rkDecode 4 = RKToUnit
+rkDecode _ = RKUnused
+
+export
+rkDecodeIsLeftInverse :
+  IsLeftInverseOf AlgebraicSExp.rkEncode AlgebraicSExp.rkDecode
+rkDecodeIsLeftInverse RKVoid = Refl
+rkDecodeIsLeftInverse RKFromVoid = Refl
+rkDecodeIsLeftInverse RKUnit = Refl
+rkDecodeIsLeftInverse RKToUnit = Refl
+rkDecodeIsLeftInverse RKUnused = Refl
+
+export
+rkEncodeIsInjective : IsInjective AlgebraicSExp.rkEncode
+rkEncodeIsInjective =
+  leftInverseImpliesInjective rkEncode {g=rkDecode} rkDecodeIsLeftInverse
+
+public export
+RKInjection : Injection RefinedKeyword Nat
+RKInjection = (rkEncode ** rkEncodeIsInjective)
+
+public export
+RKCountable : Countable
+RKCountable = (RefinedKeyword ** RKInjection)
+
+public export
+rkDecEq : DecEqPred RefinedKeyword
+rkDecEq = countableEq RKCountable
+
+public export
+RefinedAtom : Type
+RefinedAtom = RefinedKeyword
 
 public export
 raEncode : RefinedAtom -> Nat
-raEncode RAUnused = 0
-raEncode RAVoid = 1
-raEncode RAFromVoid = 2
-raEncode RAUnit = 3
-raEncode RAToUnit = 4
+raEncode = rkEncode
 
 public export
 raDecode : Nat -> RefinedAtom
-raDecode 1 = RAVoid
-raDecode 2 = RAFromVoid
-raDecode 3 = RAUnit
-raDecode 4 = RAToUnit
-raDecode _ = RAUnused
+raDecode = rkDecode
 
 export
 raDecodeIsLeftInverse :
   IsLeftInverseOf AlgebraicSExp.raEncode AlgebraicSExp.raDecode
-raDecodeIsLeftInverse RAVoid = Refl
-raDecodeIsLeftInverse RAFromVoid = Refl
-raDecodeIsLeftInverse RAUnit = Refl
-raDecodeIsLeftInverse RAToUnit = Refl
-raDecodeIsLeftInverse RAUnused = Refl
+raDecodeIsLeftInverse = rkDecodeIsLeftInverse
 
 export
 raEncodeIsInjective : IsInjective AlgebraicSExp.raEncode
-raEncodeIsInjective =
-  leftInverseImpliesInjective raEncode {g=raDecode} raDecodeIsLeftInverse
+raEncodeIsInjective = rkEncodeIsInjective
 
 public export
 RAInjection : Injection RefinedAtom Nat
@@ -201,7 +234,7 @@ RACountable = (RefinedAtom ** RAInjection)
 
 public export
 raDecEq : DecEqPred RefinedAtom
-raDecEq = countableEq RACountable
+raDecEq = rkDecEq
 
 public export
 RefinedSExp : Type
@@ -236,16 +269,32 @@ Eq RefinedSList where
   l == l' = isYes $ rslDecEq l l'
 
 public export
+RAVoid : RefinedAtom
+RAVoid = RKVoid
+
+public export
 RSVoid : RefinedSExp
 RSVoid = $^ RAVoid
+
+public export
+RAFromVoid : RefinedAtom
+RAFromVoid = RKFromVoid
 
 public export
 RSFromVoid : (codomainRep : RefinedSExp) -> RefinedSExp
 RSFromVoid codomainRep = RAFromVoid $*** codomainRep
 
 public export
+RAUnit : RefinedAtom
+RAUnit = RKUnit
+
+public export
 RSUnit : RefinedSExp
 RSUnit = $^ RAUnit
+
+public export
+RAToUnit : RefinedAtom
+RAToUnit = RKToUnit
 
 public export
 RSToUnit : (domainRep : RefinedSExp) -> RefinedSExp
