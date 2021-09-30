@@ -54,11 +54,11 @@ FailurePropagator : Type
 FailurePropagator = Endofunction RefinedSExp
 
 public export
-ComputableFunction : Type
-ComputableFunction = (PartialComputableFunction, FailurePropagator)
+ExtendedComputableFunction : Type
+ExtendedComputableFunction = (PartialComputableFunction, FailurePropagator)
 
 public export
-IsTotal : ComputableFunction -> Type
+IsTotal : ExtendedComputableFunction -> Type
 IsTotal = PartialIsTotal . fst
 
 -- | An equivalence on computable functions which ignores differences
@@ -66,27 +66,41 @@ IsTotal = PartialIsTotal . fst
 -- | functions succeed on the same sets of inputs).
 infixl 1 #~-
 public export
-(#~-) : ComputableFunction -> ComputableFunction -> Type
+(#~-) : ExtendedComputableFunction -> ExtendedComputableFunction -> Type
 (f, _) #~- (g, _) = f #~~ g
 
--- | Compose a computable function with a partial computable function.
+-- | Compose an extended computable function with a partial computable function.
 -- | (See "railway-oriented programming"!)
 infixl 1 ~.
 public export
-(~.) : ComputableFunction -> PartialComputableFunction ->
+(~.) : ExtendedComputableFunction -> PartialComputableFunction ->
   PartialComputableFunction
 (~.) g f x with (f x)
   (~.) g f x | Left fx = fst g fx
   (~.) g f x | Right fxFailure = Right $ snd g fxFailure
 
--- | Composition of computable functions according to the rules described
--- | above.  To apply the output function, we must provide one input
--- | function for each argument of the output function.
--- | (See "railway-oriented programming" again!)
+-- | Composition of extended computable functions according to the rules
+-- | described above.  (See "railway-oriented programming" again!)
 infixl 1 #.
 public export
-(#.) : ComputableFunction -> ComputableFunction -> ComputableFunction
+(#.) : ExtendedComputableFunction -> ExtendedComputableFunction ->
+  ExtendedComputableFunction
 g #. f = (g ~. fst f, snd g . snd f)
+
+public export
+Signature : Type
+Signature = PairOf Type
+
+-- | A typechecker in our top-level metalanguage -- in this case Idris-2 --
+-- | is a function which decides whether any given expression represents
+-- | a metalanguage function, and if so, of what type.
+public export
+Typechecker : Type
+Typechecker = RefinedSExp -> Maybe Signature
+
+public export
+TypeFamily : Type
+TypeFamily = (indexType : Type ** indexType -> Type)
 
 -- | A compiler is, like any program that we can execute, a computable
 -- | function.  What distinguishes a compiler from arbitrary computable
