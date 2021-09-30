@@ -222,8 +222,9 @@ maybePairElimination (Just x) (Just y) = Left ((x, y) ** (Refl, Refl))
 maybePairElimination Nothing _ = Right (Left Refl)
 maybePairElimination (Just x) Nothing = Right (Right Refl)
 
-public export IsNothing : {a: Type} -> Maybe a -> Type
-IsNothing = IsTrue . isNothing
+public export
+data IsNothing : {a: Type} -> Maybe a -> Type where
+  ItIsNothing : {a : Type} -> IsNothing {a} Nothing
 
 public export
 IsJustIsTrue : {a : Type} -> (m : Maybe a) -> Type
