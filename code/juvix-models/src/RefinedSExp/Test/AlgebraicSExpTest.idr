@@ -5,6 +5,12 @@ import public RefinedSExp.AlgebraicSExp
 
 %default total
 
+Show (SExp Nat) where
+  show = fst $ sexpShows show
+
+Show (SList Nat) where
+  show = snd $ sexpShows show
+
 public export
 sexpNotationTest : SExp Nat
 sexpNotationTest =
@@ -12,4 +18,8 @@ sexpNotationTest =
 
 export
 algebraicSExpTests : IO ()
-algebraicSExpTests = pure ()
+algebraicSExpTests = do
+  printLn "Begin algebraicSExpTests:"
+  printLn $ show sexpNotationTest
+  printLn "End algebraicSExpTests."
+  pure ()

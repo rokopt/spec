@@ -115,11 +115,11 @@ sexpShows {atom} showAtom =
   sexpEliminators $ SExpEliminatorArgs
     (\a, l, lString => case l of
       [] => showAtom a
-      _ :: _ => "(" ++ showAtom a ++ " " ++ lString ++ ")")
+      _ :: _ => "(" ++ showAtom a ++ " $* " ++ lString ++ ")")
     ""
     (\_, l, sx, sl => case l of
       [] => sx
-      _ :: _ => sx ++ ", " ++ sl)
+      _ :: _ => sx ++ " : " ++ sl)
 
 mutual
   public export
