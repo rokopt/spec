@@ -11,13 +11,13 @@ import public Category.ComputableCategories
 
 mutual
   infixr 7 $*
-  infixr 7 $>
+  prefix 11 $>
   public export
   data QExp : (atom : Type) -> (order : Nat) -> Type where
     ($*) : {atom : Type} -> {order : Nat} ->
       atom -> QList atom order -> QExp atom order
     ($>) : {atom : Type} -> {order : Nat} ->
-      atom -> QList atom order -> QExp atom (S order)
+      QExp atom order -> QExp atom (S order)
 
   public export
   QList : (atom : Type) -> (order : Nat) -> Type
@@ -97,10 +97,10 @@ record QExpEliminatorSig
     expElim : (order : Nat) -> (a : atom) -> (l : QList atom order) ->
       lp order l ->
       qp order (a $* l)
-    evalElim : (order : Nat) -> (a : atom) -> (l : QList atom order) ->
+    evalElim : (order : Nat) ->
       ((x : QExp atom order) -> qp order x) ->
-      lp order l ->
-      qp (S order) (a $> l)
+      ((l : QList atom order) -> lp order l) ->
+      (x : QExp atom order) -> qp (S order) ($> x)
     nilElim : (order : Nat) -> lp order []
     consElim :
       (order : Nat) -> (x : QExp atom order) -> (l : QList atom order) ->
@@ -115,10 +115,11 @@ mutual
   qexpEliminator signature order (a $* l) =
     expElim signature order a l
       (qlistEliminator signature order l)
-  qexpEliminator signature (S order) (a $> l) =
-    evalElim signature order a l
+  qexpEliminator signature (S order) ($> x) =
+    evalElim signature order
       (qexpEliminator signature order)
-      (qlistEliminator signature order l)
+      (qlistEliminator signature order)
+      x
 
   public export
   qlistEliminator :
@@ -147,10 +148,10 @@ mutual
       {a : atom} -> {l : QList atom order} ->
       pred order (a $* l) -> QListForAll pred order l ->
       QExpForAll pred order (a $* l)
-    QEvalAndList : {0 pred : QPred atom} -> {order : Nat} ->
-      {a : atom} -> {l : QList atom order} ->
-      pred (S order) (a $> l) -> QListForAll pred order l ->
-      QExpForAll pred (S order) (a $> l)
+    QEvalAndExp : {0 pred : QPred atom} -> {order : Nat} ->
+      {x : QExp atom order} ->
+      pred (S order) ($> x) -> QExpForAll pred order x ->
+      QExpForAll pred (S order) ($> x)
 
   data QListForAll : {0 atom : Type} ->
       (0 pred : QPred atom) -> QLPred atom where
@@ -167,12 +168,12 @@ mutual
     QExpThis : {0 pred : QPred atom} -> {order : Nat} ->
       {x : QExp atom order} ->
       pred order x -> QExpExists pred order x
+    QEvalThis : {0 pred : QPred atom} -> {order : Nat} ->
+      {x : QExp atom order} ->
+      QExpExists pred order x -> QExpExists pred (S order) ($> x)
     QExpInList : {0 pred : QPred atom} -> {order : Nat} ->
       {a : atom} -> {l : QList atom order} ->
       QListExists pred order l -> QExpExists pred order (a $* l)
-    QEvalInList : {0 pred : QPred atom} -> {order : Nat} ->
-      {a : atom} -> {l : QList atom order} ->
-      QListExists pred order l -> QExpExists pred (S order) (a $> l)
 
   data QListExists : {0 atom : Type} ->
       (0 pred : QPred atom) -> QLPred atom where
@@ -191,10 +192,10 @@ record QExpGeneralInductionSig
     expElim : (order : Nat) -> (a : atom) -> (l : QList atom order) ->
       QListForAll qp order l ->
       qp order (a $* l)
-    evalElim : (order : Nat) -> (a : atom) -> (l : QList atom order) ->
+    evalElim : (order : Nat) ->
       ((x : QExp atom order) -> QExpForAll qp order x) ->
-      QListForAll qp order l ->
-      qp (S order) (a $> l)
+      ((l : QList atom order) -> QListForAll qp order l) ->
+      (x : QExp atom order) -> qp (S order) ($> x)
 
 public export
 QExpGeneralInductionToEliminatorSig : {0 atom : Type} -> {0 qp : QPred atom} ->
@@ -204,8 +205,8 @@ QExpGeneralInductionToEliminatorSig {qp} signature =
   QExpEliminatorArgs
     (\order, a, l, lForAll =>
       QExpAndList (expElim signature order a l lForAll) lForAll)
-    (\order, a, l, eval, lForAll =>
-      QEvalAndList (evalElim signature order a l eval lForAll) lForAll)
+    (\order, evalExp, evalList, x =>
+      QEvalAndExp (evalElim signature order evalExp evalList x) (evalExp x))
     (\_ => QForAllNil)
     (\_, _, _ => QForAllCons)
 
@@ -217,6 +218,41 @@ qexpGeneralInductions :
    (order : Nat) -> (l : QList atom order) -> QListForAll qp order l)
 qexpGeneralInductions = qexpEliminators . QExpGeneralInductionToEliminatorSig
 
+public export
+record QExpMetaInductionSig
+  {0 atom : Type} (0 qp : QPred atom)
+  where
+    constructor QExpMetaInductionArgs
+    expElim : (order : Nat) -> (a : atom) -> (l : QList atom order) ->
+      QListForAll qp order l ->
+      qp order (a $* l)
+    macroElim :
+      (order : Nat) ->
+      ((x : QExp atom order) -> QExpForAll qp order x) ->
+      ((l : QList atom order) -> QListForAll qp order l) ->
+      QExp atom order -> QExp atom order
+    macroElimCorrect : (order : Nat) ->
+      (evalExp : (x : QExp atom order) -> QExpForAll qp order x) ->
+      (evalList : (l : QList atom order) -> QListForAll qp order l) ->
+      (x : QExp atom order) -> qp (S order) ($> x)
+
+public export
+QExpMetaInductionToGeneralSig : {0 atom : Type} -> {0 qp : QPred atom} ->
+  QExpMetaInductionSig qp ->
+  QExpGeneralInductionSig qp
+QExpMetaInductionToGeneralSig {qp} signature =
+  QExpGeneralInductionArgs
+    (expElim signature)
+    (macroElimCorrect signature)
+
+public export
+qexpMetaInductions :
+  {0 atom : Type} -> {0 qp : QPred atom} ->
+  (signature : QExpMetaInductionSig qp) ->
+  ((order : Nat) -> (x : QExp atom order) -> QExpForAll qp order x,
+   (order : Nat) -> (l : QList atom order) -> QListForAll qp order l)
+qexpMetaInductions = qexpGeneralInductions . QExpMetaInductionToGeneralSig
+
 mutual
   public export
   qexpDecEq :
@@ -227,13 +263,11 @@ mutual
       (Yes Refl, Yes Refl) => Yes Refl
       (No aNeq, _) => No $ \eq => case eq of Refl => aNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
-  qexpDecEq aEq (a $* l) (a' $> l') = No $ \eq => case eq of Refl impossible
-  qexpDecEq aEq (a $> l) (a' $* l') = No $ \eq => case eq of Refl impossible
-  qexpDecEq aEq (a $> l) (a' $> l') =
-    case (aEq a a', qlistDecEq aEq l l') of
-      (Yes Refl, Yes Refl) => Yes Refl
-      (No aNeq, _) => No $ \eq => case eq of Refl => aNeq Refl
-      (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
+  qexpDecEq aEq (a $* l) ($> x) = No $ \eq => case eq of Refl impossible
+  qexpDecEq aEq ($> x) (a' $* l') = No $ \eq => case eq of Refl impossible
+  qexpDecEq aEq ($> x) ($> x') = case qexpDecEq aEq x x' of
+      Yes Refl => Yes Refl
+      No neq => No $ \eq => case eq of Refl => neq Refl
 
   public export
   qlistDecEq :
