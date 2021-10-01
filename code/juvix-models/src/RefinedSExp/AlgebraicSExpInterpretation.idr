@@ -98,8 +98,25 @@ public export
 CharacterizesRange : GeneralComputableFunction -> Refinement -> Type
 CharacterizesRange f r = (RefinesRange f r, IncludesRange f r)
 
+---------------------------------------------------------------------------
+---- Definition of RefinedSExp language by interpretation into Idris-2 ----
+---------------------------------------------------------------------------
+
+public export
+checkRSExp : RefinedSExp -> Bool
+checkRSExp x = ?checkRSExp_hole
+
+public export
+interpretRSExp : RefinedSExp -> Maybe GeneralComputableFunction
+interpretRSExp x = ?interpretRSExp_hole
+
+public export
+checkRSExpCorrect : (x : RefinedSExp) ->
+  IsTrue (checkRSExp x) -> IsJust (interpretRSExp x)
+checkRSExpCorrect x checked = ?checkRSExpCorrect_hole
+
 -------------------------------------------------------------------
----- Interpretations into the top-level metalanguage (Idris-2) ----
+---- Interpretations as top-level metalanguage (Idris-2) types ----
 -------------------------------------------------------------------
 
 public export
