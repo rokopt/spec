@@ -10,7 +10,7 @@ import Library.List
 ---- Computable functions as (Idris-2) functions on S-expressions ----
 ----------------------------------------------------------------------
 
--- | A computable function takes an argument and returns either a result or
+-- | A computable function takes an argument and either returns a result or
 -- | fails.
 public export
 GeneralComputableFunction : Type
@@ -115,34 +115,6 @@ checkRSExpCorrect : (x : RefinedSExp) ->
   IsTrue (checkRSExp x) -> IsJust (interpretRSExp x)
 checkRSExpCorrect x checked = ?checkRSExpCorrect_hole
 
--------------------------------------------------------------------
----- Interpretations as top-level metalanguage (Idris-2) types ----
--------------------------------------------------------------------
-
-public export
-Signature : Type
-Signature = PairOf Type
-
--- | A typechecker in our top-level metalanguage -- in this case Idris-2 --
--- | is a function which decides whether any given expression represents
--- | a metalanguage function, and if so, of what type.
-public export
-MetaTypechecker : Type
-MetaTypechecker = RefinedSExp -> Maybe Signature
-
--- | An interpreter in our top-level metalanguage -- in this case Idris-2 --
--- | is a function which, given a typechecker, interprets those expressions
--- | which typecheck as functions of the types that the typechecker returns.
-public export
-MetaInterpreter : MetaTypechecker -> Type
-MetaInterpreter typechecker =
-  (x : RefinedSExp) -> (signature : IsJust $ typechecker x) ->
-  (fst $ IsJustElim signature) -> (snd $ IsJustElim signature)
-
-public export
-TypeFamily : Type
-TypeFamily = (indexType : Type ** indexType -> Type)
-
 -------------------------------------------
 ---- Interpretation of primitive types ----
 -------------------------------------------
@@ -242,16 +214,24 @@ g ##. (f, fFail) = (extendedAfterAnnotated g f, snd g . fFail)
 
 -- | A compiler is, like any program that we can execute, a computable
 -- | function.  What distinguishes a compiler from arbitrary computable
--- | functions is that if a compiler succeeds at compiling some expression,
--- | then the output expression may itself be interpreted as a computable
--- | function.
+-- | functions is that its outputs are expressions specifically intended
+-- | to be interpreted as computable functions -- we may _attempt_ to
+-- | interpret any S-expression, but most interpretations of most S-expressions
+-- | as computable functions will produce computable functions which fail on
+-- | most or all inputs or which don't have any interpretation that the
+-- | programmer can make sense of.  We thus define "compiler" so as to
+-- | represent a function whose outputs we are interested in interpreting
+-- | as computable functions.  Indeed, we interpret them as _extended_
+-- | computable functions so that a compiler may add error-checking to
+-- | the programs it produces.
 -- |
 -- | Note that this definition admits the possibility that a single
 -- | computable function might be interpreted as a compiler in more than
 -- | one way.
 public export
-Compiler : GeneralComputableFunction -> Type
-Compiler f = (x : RefinedSExp) -> IsJust (f x) -> GeneralComputableFunction
+Compiler : ExtendedComputableFunction -> Type
+Compiler f =
+  (x : RefinedSExp) -> IsJust (fst (fst f) x) -> ExtendedComputableFunction
 
 -- | A strongly normalizing language is one whose functions all terminate.
 -- | To interpret a computable function as a compiler for a strongly
@@ -262,6 +242,35 @@ Compiler f = (x : RefinedSExp) -> IsJust (f x) -> GeneralComputableFunction
 -- | Note that this definition does not require that the compiler _itself_
 -- | be a total computable function.
 public export
-Normalizing : {c : GeneralComputableFunction} -> Compiler c -> Type
+Normalizing : {c : ExtendedComputableFunction} -> Compiler c -> Type
 Normalizing {c} interpret =
-  (x : RefinedSExp) -> (checked : IsJust (c x)) -> IsTotal (interpret x checked)
+  (x : RefinedSExp) -> (checked : IsJust (fst (fst c) x)) ->
+  IsTotal (fst (fst (interpret x checked)))
+
+-------------------------------------------------------------------
+---- Interpretations as top-level metalanguage (Idris-2) types ----
+-------------------------------------------------------------------
+
+public export
+Signature : Type
+Signature = PairOf Type
+
+-- | A typechecker in our top-level metalanguage -- in this case Idris-2 --
+-- | is a function which decides whether any given expression represents
+-- | a metalanguage function, and if so, of what type.
+public export
+MetaTypechecker : Type
+MetaTypechecker = RefinedSExp -> Maybe Signature
+
+-- | An interpreter in our top-level metalanguage -- in this case Idris-2 --
+-- | is a function which, given a typechecker, interprets those expressions
+-- | which typecheck as functions of the types that the typechecker returns.
+public export
+MetaInterpreter : MetaTypechecker -> Type
+MetaInterpreter typechecker =
+  (x : RefinedSExp) -> (signature : IsJust $ typechecker x) ->
+  (fst $ IsJustElim signature) -> (snd $ IsJustElim signature)
+
+public export
+TypeFamily : Type
+TypeFamily = (indexType : Type ** indexType -> Type)
