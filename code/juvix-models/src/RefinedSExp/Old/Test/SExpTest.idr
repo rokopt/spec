@@ -123,6 +123,7 @@ testShowTestSExp = $^ (PrimTypeBool ** True)
 export
 sExpTests : IO ()
 sExpTests = do
-  printLn nilNotationTest
-  printLn bigNotationTest
-  printLn testShowTestSExp
+  -- printLn nilNotationTest
+  -- printLn bigNotationTest
+  -- printLn testShowTestSExp
+  pure ()

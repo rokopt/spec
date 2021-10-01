@@ -15,6 +15,10 @@ IsTrue : Bool -> Type
 IsTrue b = (b = True)
 
 public export
+IsFalse : Bool -> Type
+IsFalse b = (b = False)
+
+public export
 isYes : {t: Type} -> Dec t -> Bool
 isYes (Yes _) = True
 isYes (No _) = False

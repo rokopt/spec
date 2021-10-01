@@ -12,7 +12,6 @@ import Library.List
 
 -- | A computable function takes an argument and returns either a result or
 -- | fails.
-
 public export
 GeneralComputableFunction : Type
 GeneralComputableFunction = RefinedSExp -> Maybe RefinedSExp
@@ -41,7 +40,7 @@ toTotal :
   {f : GeneralComputableFunction} -> IsTotal f -> TotalComputableFunction
 toTotal isTotal x = IsJustElim $ isTotal x
 
--- | Extensional equivalence on computable functions.
+-- | Extensional equality on computable functions.
 infixl 1 #~~
 public export
 (#~~) : GeneralComputableFunction -> GeneralComputableFunction -> Type
@@ -95,6 +94,7 @@ IncludesRange f r = (x : RefinedSExp) ->
 
 -- | A refinement on S-expressions which selects exactly those expressions
 -- | which are the outputs of a given function for some input.
+public export
 CharacterizesRange : GeneralComputableFunction -> Refinement -> Type
 CharacterizesRange f r = (RefinesRange f r, IncludesRange f r)
 

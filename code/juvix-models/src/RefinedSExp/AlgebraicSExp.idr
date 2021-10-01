@@ -169,6 +169,8 @@ mutual
 public export
 data RefinedKeyword : Type where
   RKUnused : RefinedKeyword
+  RKIdentity : RefinedKeyword
+  RKCompose : RefinedKeyword
   RKVoid : RefinedKeyword
   RKFromVoid : RefinedKeyword
   RKUnit : RefinedKeyword
@@ -176,6 +178,8 @@ data RefinedKeyword : Type where
 
 Show RefinedKeyword where
   show RKUnused = "RKUnused"
+  show RKIdentity = "RKIdentity"
+  show RKCompose = "RKCompose"
   show RKVoid = "RKVoid"
   show RKFromVoid = "RKFromVoid"
   show RKUnit = "RKUnit"
@@ -184,27 +188,33 @@ Show RefinedKeyword where
 public export
 rkEncode : RefinedKeyword -> Nat
 rkEncode RKUnused = 0
-rkEncode RKVoid = 1
-rkEncode RKFromVoid = 2
-rkEncode RKUnit = 3
-rkEncode RKToUnit = 4
+rkEncode RKIdentity = 1
+rkEncode RKCompose = 2
+rkEncode RKVoid = 3
+rkEncode RKFromVoid = 4
+rkEncode RKUnit = 5
+rkEncode RKToUnit = 6
 
 public export
 rkDecode : Nat -> RefinedKeyword
-rkDecode 1 = RKVoid
-rkDecode 2 = RKFromVoid
-rkDecode 3 = RKUnit
-rkDecode 4 = RKToUnit
+rkDecode 1 = RKIdentity
+rkDecode 2 = RKCompose
+rkDecode 3 = RKVoid
+rkDecode 4 = RKFromVoid
+rkDecode 5 = RKUnit
+rkDecode 6 = RKToUnit
 rkDecode _ = RKUnused
 
 export
 rkDecodeIsLeftInverse :
   IsLeftInverseOf AlgebraicSExp.rkEncode AlgebraicSExp.rkDecode
+rkDecodeIsLeftInverse RKUnused = Refl
+rkDecodeIsLeftInverse RKIdentity = Refl
+rkDecodeIsLeftInverse RKCompose = Refl
 rkDecodeIsLeftInverse RKVoid = Refl
 rkDecodeIsLeftInverse RKFromVoid = Refl
 rkDecodeIsLeftInverse RKUnit = Refl
 rkDecodeIsLeftInverse RKToUnit = Refl
-rkDecodeIsLeftInverse RKUnused = Refl
 
 export
 rkEncodeIsInjective : IsInjective AlgebraicSExp.rkEncode
@@ -229,23 +239,23 @@ DecEq RefinedKeyword where
 
 public export
 data RefinedCustomSymbol : Type where
-  RefinedNatSymbol : Nat -> RefinedCustomSymbol
-  RefinedStringSymbol : String -> RefinedCustomSymbol
+  RCNat : Nat -> RefinedCustomSymbol
+  RCString : String -> RefinedCustomSymbol
 
 Show RefinedCustomSymbol where
-  show (RefinedNatSymbol n) = show n
-  show (RefinedStringSymbol s) = show s
+  show (RCNat n) = show n
+  show (RCString s) = s
 
 export
 rcDecEq : DecEqPred RefinedCustomSymbol
-rcDecEq (RefinedNatSymbol n) (RefinedNatSymbol n') = case decEq n n' of
+rcDecEq (RCNat n) (RCNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-rcDecEq (RefinedNatSymbol _) (RefinedStringSymbol _) =
+rcDecEq (RCNat _) (RCString _) =
   No $ \eq => case eq of Refl impossible
-rcDecEq (RefinedStringSymbol _) (RefinedNatSymbol _) =
+rcDecEq (RCString _) (RCNat _) =
   No $ \eq => case eq of Refl impossible
-rcDecEq (RefinedStringSymbol s) (RefinedStringSymbol s') = case decEq s s' of
+rcDecEq (RCString s) (RCString s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -284,6 +294,10 @@ DecEq RefinedAtom where
   decEq = raDecEq
 
 public export
+Eq RefinedAtom using decEqToEq where
+  (==) = (==)
+
+public export
 RefinedSExp : Type
 RefinedSExp = SExp RefinedAtom
 
@@ -291,9 +305,11 @@ public export
 RefinedSList : Type
 RefinedSList = SList RefinedAtom
 
+public export
 Show RefinedSExp where
   show = fst (sexpShows show)
 
+public export
 Show RefinedSList where
   show l = "(" ++ snd (sexpShows show) l ++ ")"
 
@@ -312,6 +328,22 @@ DecEq RefinedSExp where
 public export
 DecEq RefinedSList where
   decEq = rslDecEq
+
+public export
+RANat : Nat -> RefinedAtom
+RANat = RACustom . RCNat
+
+public export
+RSNat : Nat -> RefinedSExp
+RSNat = ($^) . RANat
+
+public export
+RAString : String -> RefinedAtom
+RAString = RACustom . RCString
+
+public export
+RSString : String -> RefinedSExp
+RSString = ($^) . RAString
 
 public export
 RAVoid : RefinedAtom
@@ -344,3 +376,11 @@ RAToUnit = RAKeyword RKToUnit
 public export
 RSToUnit : (domainRep : RefinedSExp) -> RefinedSExp
 RSToUnit domainRep = RAToUnit $*** domainRep
+
+public export
+RACompose : RefinedAtom
+RACompose = RAKeyword RKCompose
+
+public export
+RSCompose : (functions : RefinedSList) -> RefinedSExp
+RSCompose = ($*) RACompose
