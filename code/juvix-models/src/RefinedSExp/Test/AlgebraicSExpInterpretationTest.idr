@@ -1,35 +1,12 @@
 module RefinedSExp.Test.AlgebraicSExpInterpretationTest
 
+import public RefinedSExp.AlgebraicSExp
 import public RefinedSExp.AlgebraicSExpInterpretation
 import RefinedSExp.Test.AlgebraicSExpTest
 import Library.Test.TestLibrary
 import Data.Vect
 
 %default total
-
-atomIsNat : RefinedAtom -> Bool
-atomIsNat (RACustom (RCNat _)) = True
-atomIsNat _ = False
-
-atomIsString : RefinedAtom -> Bool
-atomIsString (RACustom (RCString _)) = True
-atomIsString _ = False
-
-isNatAtom : Refinement
-isNatAtom (a $* []) = atomIsNat a
-isNatAtom _ = False
-
-isStringAtom : Refinement
-isStringAtom (a $* []) = atomIsString a
-isStringAtom _ = False
-
-isGivenNat : Nat -> Refinement
-isGivenNat n ((RACustom (RCNat a)) $* []) = n == a
-isGivenNat _ _ = False
-
-isGivenString : String -> Refinement
-isGivenString s ((RACustom (RCString a)) $* []) = s == a
-isGivenString _ _ = False
 
 sevenIsNatAtom : IsTrue $ isNatAtom $ RSNat 7
 sevenIsNatAtom = Refl

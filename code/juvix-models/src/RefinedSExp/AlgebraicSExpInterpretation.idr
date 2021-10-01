@@ -126,6 +126,30 @@ public export
 TypeFamily : Type
 TypeFamily = (indexType : Type ** indexType -> Type)
 
+-------------------------------------------
+---- Interpretation of primitive types ----
+-------------------------------------------
+
+public export
+isNatAtom : Refinement
+isNatAtom (a $* []) = atomIsNat a
+isNatAtom _ = False
+
+public export
+isStringAtom : Refinement
+isStringAtom (a $* []) = atomIsString a
+isStringAtom _ = False
+
+public export
+isGivenNat : Nat -> Refinement
+isGivenNat n ((RACustom (RCNat a)) $* []) = n == a
+isGivenNat _ _ = False
+
+public export
+isGivenString : String -> Refinement
+isGivenString s ((RACustom (RCString a)) $* []) = s == a
+isGivenString _ _ = False
+
 -----------------------------------------------
 ---- Extensions to admit error propagation ----
 -----------------------------------------------

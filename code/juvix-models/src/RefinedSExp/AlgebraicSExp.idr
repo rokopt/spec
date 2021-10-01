@@ -346,6 +346,16 @@ RSString : String -> RefinedSExp
 RSString = ($^) . RAString
 
 public export
+atomIsNat : RefinedAtom -> Bool
+atomIsNat (RACustom (RCNat _)) = True
+atomIsNat _ = False
+
+public export
+atomIsString : RefinedAtom -> Bool
+atomIsString (RACustom (RCString _)) = True
+atomIsString _ = False
+
+public export
 RAVoid : RefinedAtom
 RAVoid = RAKeyword RKVoid
 
