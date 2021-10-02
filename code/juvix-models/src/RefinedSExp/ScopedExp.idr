@@ -225,37 +225,37 @@ Ord Keyword where
 -- | equality.
 public export
 data Name : Type where
+  NReflectedKeyword : Keyword -> Name
   NNat : Nat -> Name
   NString : String -> Name
-  NKeyword : Keyword -> Name -- reflection of keyword names into user names
 
 public export
 Show Name where
+  show (NReflectedKeyword k) = "~" ++ show k
   show (NNat n) = show n
   show (NString s) = s
-  show (NKeyword k) = "~" ++ show k
 
 export
 nDecEq : DecEqPred Name
+nDecEq (NReflectedKeyword k) (NReflectedKeyword k') = case decEq k k' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+nDecEq (NReflectedKeyword _) (NNat _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NReflectedKeyword _) (NString _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NNat _) (NReflectedKeyword _) =
+  No $ \eq => case eq of Refl impossible
 nDecEq (NNat n) (NNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 nDecEq (NNat _) (NString _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NNat _) (NKeyword _) =
+nDecEq (NString _) (NReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
 nDecEq (NString _) (NNat _) =
   No $ \eq => case eq of Refl impossible
 nDecEq (NString s) (NString s') = case decEq s s' of
-  Yes Refl => Yes Refl
-  No neq => No $ \eq => case eq of Refl => neq Refl
-nDecEq (NString _) (NKeyword _) =
-  No $ \eq => case eq of Refl impossible
-nDecEq (NKeyword _) (NNat _) =
-  No $ \eq => case eq of Refl impossible
-nDecEq (NKeyword _) (NString _) =
-  No $ \eq => case eq of Refl impossible
-nDecEq (NKeyword k) (NKeyword k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -269,15 +269,15 @@ Eq Name using decEqToEq where
 
 public export
 Ord Name where
+  NReflectedKeyword k < NReflectedKeyword k' = k < k'
+  NReflectedKeyword _ < NNat _ = True
+  NReflectedKeyword _ < NString _ = True
+  NNat _ < NReflectedKeyword _ = False
   NNat n < NNat n' = n < n'
   NNat _ < NString _ = True
-  NNat _ < NKeyword _ = True
+  NString _ < NReflectedKeyword _ = False
   NString _ < NNat _ = False
   NString s < NString s' = s < s'
-  NString _ < NKeyword _ = True
-  NKeyword _ < NNat _ = False
-  NKeyword _ < NString _ = False
-  NKeyword k < NKeyword k' = k < k'
 
 public export
 data NameAtom : Type where
@@ -320,6 +320,10 @@ Ord NameAtom where
   NAKeyword _ < NAName _ = True
   NAName _ < NAKeyword _ = False
   NAName s < NAName s' = s < s'
+
+public export
+NAReflectedKeyword : Keyword -> NameAtom
+NAReflectedKeyword = NAName . NReflectedKeyword
 
 public export
 NANat : Nat -> NameAtom
