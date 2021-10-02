@@ -200,7 +200,7 @@ mutual
   -- Therefore, a custom atom interpreted by the top-level (Idris-2) interpreter
   -- is analogous to an unbound variable.  Thus, interpreted as a function, it
   -- fails on all inputs.
-  interpretRSExp (RACustom _ $* _) = \_ => Nothing
+  interpretRSExp (RAName _ $* _) = \_ => Nothing
 
   public export
   interpretAndCompose : RefinedSList -> GeneralComputableFunction
@@ -228,12 +228,12 @@ isStringAtom _ = False
 
 public export
 isGivenNat : Nat -> Refinement
-isGivenNat n ((RACustom (RCNat a)) $* []) = n == a
+isGivenNat n ((RAName (RCNat a)) $* []) = n == a
 isGivenNat _ _ = False
 
 public export
 isGivenString : String -> Refinement
-isGivenString s ((RACustom (RCString a)) $* []) = s == a
+isGivenString s ((RAName (RCString a)) $* []) = s == a
 isGivenString _ _ = False
 
 -----------------------------------------------

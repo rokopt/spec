@@ -243,16 +243,16 @@ DecEq RefinedKeyword where
   decEq = rkDecEq
 
 public export
-data RefinedCustomSymbol : Type where
-  RCNat : Nat -> RefinedCustomSymbol
-  RCString : String -> RefinedCustomSymbol
+data RefinedName : Type where
+  RCNat : Nat -> RefinedName
+  RCString : String -> RefinedName
 
-Show RefinedCustomSymbol where
+Show RefinedName where
   show (RCNat n) = show n
   show (RCString s) = s
 
 export
-rcDecEq : DecEqPred RefinedCustomSymbol
+rcDecEq : DecEqPred RefinedName
 rcDecEq (RCNat n) (RCNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
@@ -265,17 +265,17 @@ rcDecEq (RCString s) (RCString s') = case decEq s s' of
   No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-DecEq RefinedCustomSymbol where
+DecEq RefinedName where
   decEq = rcDecEq
 
 public export
 data RefinedAtom : Type where
   RAKeyword : RefinedKeyword -> RefinedAtom
-  RACustom : RefinedCustomSymbol -> RefinedAtom
+  RAName : RefinedName -> RefinedAtom
 
 Show RefinedAtom where
   show (RAKeyword k) = show k
-  show (RACustom c) = show c
+  show (RAName c) = show c
 
 public export
 raShow : RefinedAtom -> String
@@ -286,11 +286,11 @@ raDecEq : DecEqPred RefinedAtom
 raDecEq (RAKeyword n) (RAKeyword n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-raDecEq (RAKeyword _) (RACustom _) =
+raDecEq (RAKeyword _) (RAName _) =
   No $ \eq => case eq of Refl impossible
-raDecEq (RACustom _) (RAKeyword _) =
+raDecEq (RAName _) (RAKeyword _) =
   No $ \eq => case eq of Refl impossible
-raDecEq (RACustom s) (RACustom s') = case decEq s s' of
+raDecEq (RAName s) (RAName s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -336,7 +336,7 @@ DecEq RefinedSList where
 
 public export
 RANat : Nat -> RefinedAtom
-RANat = RACustom . RCNat
+RANat = RAName . RCNat
 
 public export
 RSNat : Nat -> RefinedSExp
@@ -344,7 +344,7 @@ RSNat = ($^) . RANat
 
 public export
 RAString : String -> RefinedAtom
-RAString = RACustom . RCString
+RAString = RAName . RCString
 
 public export
 RSString : String -> RefinedSExp
@@ -352,12 +352,12 @@ RSString = ($^) . RAString
 
 public export
 atomIsNat : RefinedAtom -> Bool
-atomIsNat (RACustom (RCNat _)) = True
+atomIsNat (RAName (RCNat _)) = True
 atomIsNat _ = False
 
 public export
 atomIsString : RefinedAtom -> Bool
-atomIsString (RACustom (RCString _)) = True
+atomIsString (RAName (RCString _)) = True
 atomIsString _ = False
 
 public export
