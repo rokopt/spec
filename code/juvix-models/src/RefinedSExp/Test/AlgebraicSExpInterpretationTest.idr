@@ -8,6 +8,24 @@ import Data.Vect
 
 %default total
 
+identityExp : RefinedSExp
+identityExp = RSIdentity
+
+interpretedIdentity : GeneralComputableFunction
+interpretedIdentity = interpretRSExp identityExp
+
+helloWorld : RefinedSExp
+helloWorld = RSString "helloWorld"
+
+identityIsJust :
+  interpretedIdentity AlgebraicSExpInterpretationTest.helloWorld =
+  Just AlgebraicSExpInterpretationTest.helloWorld
+identityIsJust = Refl
+
+toUnitIsConstant :
+  interpretRSExp RSToUnit (RSString "helloWorld") = Just RSUnitTerm
+toUnitIsConstant = Refl
+
 sevenIsNatAtom : IsTrue $ isNatAtom $ RSNat 7
 sevenIsNatAtom = Refl
 

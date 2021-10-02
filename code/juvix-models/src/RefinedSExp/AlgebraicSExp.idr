@@ -377,6 +377,14 @@ RSVoid : RefinedSExp
 RSVoid = $^ RAVoid
 
 public export
+RAIdentity : RefinedAtom
+RAIdentity = RAKeyword RKIdentity
+
+public export
+RSIdentity : RefinedSExp
+RSIdentity = $^ RAIdentity
+
+public export
 RAFromVoid : RefinedAtom
 RAFromVoid = RAKeyword RKFromVoid
 
@@ -405,8 +413,8 @@ RAToUnit : RefinedAtom
 RAToUnit = RAKeyword RKToUnit
 
 public export
-RSToUnit : (domainRep : RefinedSExp) -> RefinedSExp
-RSToUnit domainRep = RAToUnit $*** domainRep
+RSToUnit : RefinedSExp
+RSToUnit = $^ RAToUnit
 
 public export
 RACompose : RefinedAtom

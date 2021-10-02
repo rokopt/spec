@@ -156,35 +156,46 @@ mutual
   -- | on all (or perhaps nearly all) inputs.
   public export
   interpretRSExp : RefinedSExp -> GeneralComputableFunction
+
   -- The identity function always succeeds and returns its argument.
   interpretRSExp (RAKeyword RKIdentity $* []) = Just
+
   -- The identity atom should not have any arguments.
   interpretRSExp (RAKeyword RKIdentity $* _ :: _) = alwaysFail
+
   -- Composing a list folds the list with composition operator, using the
   -- identity function as the initial value.
   interpretRSExp (RAKeyword RKCompose $* l) = interpretAndCompose l
+
   -- Void is a type, not a function; interpreted as a function, therefore,
   -- it always fails.
   interpretRSExp (RAKeyword RKVoid $* _) = alwaysFail
+
   -- FromVoid is ex falso -- a legitimate way of reasoning.  However,
   -- it is, and should be, impossible to _interpret_ -- because it can
   -- only be called on a paramater which can never be constructed (if the
   -- logic is consistent).  Therefore, an attempt to interpret it always
   -- fails (and there is no sensible interpretation that we could give it).
   interpretRSExp (RAKeyword RKFromVoid $* _) = alwaysFail
+
   -- UnitType is a type, not a function; interpreted as a function, therefore,
   -- it always fails.
   interpretRSExp (RAKeyword RKUnitType $* _) = alwaysFail
+
   -- UnitTerm is a term, not a function; interpreted as a function, therefore,
   -- it always fails.
   interpretRSExp (RAKeyword RKUnitTerm $* _) = alwaysFail
+
   -- The to-unit function is a constant function which returns the
   -- single term of unit type.
   interpretRSExp (RAKeyword RKToUnit $* []) = \_ => Just RSUnitTerm
+
   -- The to-unit function should not have any arguments.
   interpretRSExp (RAKeyword RKToUnit $* _ :: _) = alwaysFail
+
   -- A failed S-expression represents a function that fails on all inputs.
   interpretRSExp (RAKeyword RKFailed $* _) = alwaysFail
+
   -- For a symbol to be "custom" means that it has no built-in interpretation.
   -- Therefore, a custom atom interpreted by the top-level (Idris-2) interpreter
   -- is analogous to an unbound variable.  Thus, interpreted as a function, it
@@ -195,6 +206,11 @@ mutual
   interpretAndCompose : RefinedSList -> GeneralComputableFunction
   interpretAndCompose [] = Just
   interpretAndCompose (x :: xs) = interpretRSExp x #. interpretAndCompose xs
+
+-- | Confirm that we correctly interpreted composition of an empty list
+-- | as the identity.
+ComposeNilIsIdentity : interpretAndCompose [] = interpretRSExp RSIdentity
+ComposeNilIsIdentity = Refl
 
 -------------------------------------------
 ---- Interpretation of primitive types ----
