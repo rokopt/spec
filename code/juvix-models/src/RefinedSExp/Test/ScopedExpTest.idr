@@ -16,8 +16,8 @@ public export
 emptyContext : PureNameContext
 emptyContext = ClosureMap empty
 
-export partial
-scopedExpTests : IO ()
+export
+partial scopedExpTests : IO ()
 scopedExpTests = do
   printLn "Begin scopedSExpTests:"
   printLn $ show scopedExpNotationTest

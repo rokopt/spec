@@ -388,7 +388,7 @@ mutual
     ClosureMap : {name, term : Type} ->
       SortedMap name (Closure name term) -> NamingContext name term
 
-  public export partial
+  public export partial -- Show instance
   (Show name, Show term) => Show (NamingContext name term) where
     show (ClosureMap m) = show m
 
@@ -398,7 +398,7 @@ mutual
     closureTerm : term
     closureContext : NamingContext name term
 
-  public export partial
+  public export partial -- Show instance
   (Show name, Show term) => Show (Closure name term) where
     show (NamedContext t c) = "(" ++ show t ++ ", " ++ show c ++ ")"
 

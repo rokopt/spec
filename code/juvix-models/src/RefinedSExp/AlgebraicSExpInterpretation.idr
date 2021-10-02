@@ -121,13 +121,14 @@ public export
 IsRefinedBy : InputOutputRefinement -> Type
 IsRefinedBy r = (f : GeneralComputableFunction) -> HasInputOutputBehavior r f
 
+{-
 -- | Compose two input/output refinements.
 public export
 composeInputOutputRefinements :
   (g, f : GeneralComputableFunction) ->
   (rg, rf : InputOutputRefinement) ->
   InputOutputRefinement
-composeInputOutputRefinements g f rg rf = ?composeInputOutputRefinements_hole
+composeInputOutputRefinements g f rg rf = composeInputOutputRefinements_hole
 
 public export
 composeInputOutputRefinementProofs :
@@ -137,7 +138,8 @@ composeInputOutputRefinementProofs :
   HasInputOutputBehavior rf f ->
   HasInputOutputBehavior (composeInputOutputRefinements g f rg rf) $ g #. f
 composeInputOutputRefinementProofs {g} {f} {rg} {rf} rgp rgf =
-  ?composeInputOutputRefinementProofs_hole
+  composeInputOutputRefinementProofs_hole
+  -}
 
 ---------------------------------------------------------------------------
 ---- Definition of RefinedSExp language by interpretation into Idris-2 ----
@@ -218,7 +220,7 @@ mutual
   -- Not implemented yet.
   interpretRSExp interpretName
     (RAKeyword RKWithName $* [RAName name $* [], interpretation]) =
-      ?interpretRSExp_withName_hole
+      alwaysFail
 
   -- "withName" should take precisely two arguments, a name and its
   -- interpretation, and the name must be a name atom.  Any other

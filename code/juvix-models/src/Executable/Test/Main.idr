@@ -39,8 +39,8 @@ import ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
 
 %default total
 
-export partial
-main : IO ()
+export
+partial main : IO ()
 main = do
   RefinedSExp.Test.ListTest.listTests
   RefinedSExp.Test.SExpTest.sExpTests
