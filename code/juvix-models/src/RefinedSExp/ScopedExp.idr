@@ -63,18 +63,6 @@ public export
 ($**^) : {name : Type} -> name -> name -> SExp name
 n $**^ n' = n $* $*^ n'
 
-mutual
-  public export
-  data NamingContext : (name, term : Type) -> Type where
-    ClosureMap : {name, term : Type} ->
-      SortedMap name (Closure name term) -> NamingContext name term
-
-  public export
-  record Closure (name, term : Type) where
-    constructor NamedContext
-    closureTerm : term
-    closureContext : NamingContext name term
-
 public export
 SPred : (name : Type) -> Type
 SPred name = SExp name -> Type
@@ -368,6 +356,18 @@ DecEq NamedSList where
 public export
 Eq NamedSExp using decEqToEq where
   (==) = (==)
+
+mutual
+  public export
+  data NamingContext : (name, term : Type) -> Type where
+    ClosureMap : {name, term : Type} ->
+      SortedMap name (Closure name term) -> NamingContext name term
+
+  public export
+  record Closure (name, term : Type) where
+    constructor NamedContext
+    closureTerm : term
+    closureContext : NamingContext name term
 
 public export
 PureNameContext : Type
