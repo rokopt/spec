@@ -244,29 +244,29 @@ DecEq RefinedKeyword where
 
 public export
 data RefinedName : Type where
-  RCNat : Nat -> RefinedName
-  RCString : String -> RefinedName
+  RNNat : Nat -> RefinedName
+  RNString : String -> RefinedName
 
 Show RefinedName where
-  show (RCNat n) = show n
-  show (RCString s) = s
+  show (RNNat n) = show n
+  show (RNString s) = s
 
 export
-rcDecEq : DecEqPred RefinedName
-rcDecEq (RCNat n) (RCNat n') = case decEq n n' of
+rnDecEq : DecEqPred RefinedName
+rnDecEq (RNNat n) (RNNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-rcDecEq (RCNat _) (RCString _) =
+rnDecEq (RNNat _) (RNString _) =
   No $ \eq => case eq of Refl impossible
-rcDecEq (RCString _) (RCNat _) =
+rnDecEq (RNString _) (RNNat _) =
   No $ \eq => case eq of Refl impossible
-rcDecEq (RCString s) (RCString s') = case decEq s s' of
+rnDecEq (RNString s) (RNString s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
 DecEq RefinedName where
-  decEq = rcDecEq
+  decEq = rnDecEq
 
 public export
 data RefinedAtom : Type where
@@ -275,7 +275,7 @@ data RefinedAtom : Type where
 
 Show RefinedAtom where
   show (RAKeyword k) = show k
-  show (RAName c) = show c
+  show (RAName n) = show n
 
 public export
 raShow : RefinedAtom -> String
@@ -336,7 +336,7 @@ DecEq RefinedSList where
 
 public export
 RANat : Nat -> RefinedAtom
-RANat = RAName . RCNat
+RANat = RAName . RNNat
 
 public export
 RSNat : Nat -> RefinedSExp
@@ -344,7 +344,7 @@ RSNat = ($^) . RANat
 
 public export
 RAString : String -> RefinedAtom
-RAString = RAName . RCString
+RAString = RAName . RNString
 
 public export
 RSString : String -> RefinedSExp
@@ -352,12 +352,12 @@ RSString = ($^) . RAString
 
 public export
 atomIsNat : RefinedAtom -> Bool
-atomIsNat (RAName (RCNat _)) = True
+atomIsNat (RAName (RNNat _)) = True
 atomIsNat _ = False
 
 public export
 atomIsString : RefinedAtom -> Bool
-atomIsString (RAName (RCString _)) = True
+atomIsString (RAName (RNString _)) = True
 atomIsString _ = False
 
 public export

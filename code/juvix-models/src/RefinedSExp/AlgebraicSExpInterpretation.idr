@@ -228,12 +228,12 @@ isStringAtom _ = False
 
 public export
 isGivenNat : Nat -> Refinement
-isGivenNat n ((RAName (RCNat a)) $* []) = n == a
+isGivenNat n ((RAName (RNNat a)) $* []) = n == a
 isGivenNat _ _ = False
 
 public export
 isGivenString : String -> Refinement
-isGivenString s ((RAName (RCString a)) $* []) = s == a
+isGivenString s ((RAName (RNString a)) $* []) = s == a
 isGivenString _ _ = False
 
 -----------------------------------------------
