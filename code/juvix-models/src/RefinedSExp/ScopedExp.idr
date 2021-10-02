@@ -148,7 +148,7 @@ mutual
 -- | is an interpretation of names.  Therefore, there is no interpretation
 -- | of names outside of the notion of interpreting an S-expression:  for
 -- | example, there is no inherent connection between the name "NNat 5" and
--- | the natunal number 5.  The only structure that names have is a decidable
+-- | the natural number 5.  The only structure that names have is a decidable
 -- | equality.
 public export
 data Name : Type where
