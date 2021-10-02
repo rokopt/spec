@@ -366,22 +366,6 @@ public export
 Eq NamedSExp using decEqToEq where
   (==) = (==)
 
-mutual
-  public export
-  data NamingContext : (name, term : Type) -> Type where
-    ClosureMap : {name, term : Type} ->
-      SortedMap name (Closure name term) -> NamingContext name term
-
-  public export
-  record Closure (name, term : Type) where
-    constructor NamedContext
-    closureTerm : term
-    closureContext : NamingContext name term
-
-public export
-PureNameContext : Type
-PureNameContext = NamingContext Name NamedSExp
-
 public export
 NPred : Type
 NPred = NamedSExp -> Type
@@ -389,3 +373,38 @@ NPred = NamedSExp -> Type
 public export
 NLPred : Type
 NLPred = NamedSList -> Type
+
+public export
+NSComputation : Type
+NSComputation = NamedSList -> NamedSExp
+
+public export
+NSCPred : Type
+NSCPred = NSComputation -> Type
+
+mutual
+  public export
+  data NamingContext : (name, term : Type) -> Type where
+    ClosureMap : {name, term : Type} ->
+      SortedMap name (Closure name term) -> NamingContext name term
+
+  public export partial
+  (Show name, Show term) => Show (NamingContext name term) where
+    show (ClosureMap m) = show m
+
+  public export
+  record Closure (name, term : Type) where
+    constructor NamedContext
+    closureTerm : term
+    closureContext : NamingContext name term
+
+  public export partial
+  (Show name, Show term) => Show (Closure name term) where
+    show (NamedContext t c) = "(" ++ show t ++ ", " ++ show c ++ ")"
+
+public export
+PureNameContext : Type
+PureNameContext = NamingContext Name NamedSExp
+
+public export
+MetaContext : Type

@@ -12,10 +12,15 @@ scopedExpNotationTest =
     (NANat 4 $*** (NANat 5 $* (NANat 6 $*** (NAString "seven" $**^ NANat 8)) $:^
       NAReflectedKeyword WithName)) $:^ NANat 10
 
-export
+public export
+emptyContext : PureNameContext
+emptyContext = ClosureMap empty
+
+export partial
 scopedExpTests : IO ()
 scopedExpTests = do
   printLn "Begin scopedSExpTests:"
   printLn $ show scopedExpNotationTest
   printLn "End scopedExpTests."
+  printLn $ "The empty context looks like: " ++ show emptyContext
   pure ()
