@@ -233,3 +233,40 @@ mutual
     constructor NamedContext
     closureName : NamedSExp
     closureContext : NamingContext
+
+NPred : Type
+NPred = SPred Name
+
+public export
+record NamedSExpEliminatorSig (pred : NPred) where
+  constructor NamedSExpEliminatorArg
+  nexpElim :
+    (n : Name) -> (l : NamedSList) -> ListForAll pred l -> pred (n $* l)
+
+NamedEliminatorToSignature : {pred : NPred} ->
+  NamedSExpEliminatorSig pred ->
+  SExpEliminatorSig pred (ListForAll pred)
+NamedEliminatorToSignature signature =
+  SExpEliminatorArgs
+    (nexpElim signature)
+    ListForAllEmpty
+    (\_, _ => ListForAllCons)
+
+public export
+nsexpEliminators :
+  {pred : NPred} -> (signature : NamedSExpEliminatorSig pred) ->
+  (NamedSExp ~> pred, NamedSList ~> ListForAll pred)
+nsexpEliminators signature =
+  sexpEliminators $ NamedEliminatorToSignature signature
+
+public export
+nsexpEliminator :
+  {pred : NPred} -> (signature : NamedSExpEliminatorSig pred) ->
+  NamedSExp ~> pred
+nsexpEliminator = fst . nsexpEliminators
+
+public export
+nslistEliminator :
+  {pred : NPred} -> (signature : NamedSExpEliminatorSig pred) ->
+  NamedSExp ~> pred
+nslistEliminator = fst . nsexpEliminators
