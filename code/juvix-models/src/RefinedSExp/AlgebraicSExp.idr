@@ -242,6 +242,12 @@ public export
 DecEq RefinedKeyword where
   decEq = rkDecEq
 
+-- | Names are ways of accesssing the the context; put another way, a context
+-- | is an interpretation of names.  Therefore, there is no interpretation
+-- | of names outside of the notion of interpreting an S-expression:  for
+-- | example, there is no inherent connection between the name "RNNat 5" and
+-- | the natural number 5.  The only structure that names have is a decidable
+-- | equality.
 public export
 data RefinedName : Type where
   RNNat : Nat -> RefinedName

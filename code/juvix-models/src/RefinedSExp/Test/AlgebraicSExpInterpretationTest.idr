@@ -12,7 +12,7 @@ identityExp : RefinedSExp
 identityExp = RSIdentity
 
 interpretedIdentity : GeneralComputableFunction
-interpretedIdentity = interpretRSExp identityExp
+interpretedIdentity = interpretClosedRSExp identityExp
 
 helloWorld : RefinedSExp
 helloWorld = RSString "helloWorld"
@@ -23,7 +23,7 @@ identityIsJust :
 identityIsJust = Refl
 
 toUnitIsConstant :
-  interpretRSExp RSToUnit (RSString "helloWorld") = Just RSUnitTerm
+  interpretClosedRSExp RSToUnit (RSString "helloWorld") = Just RSUnitTerm
 toUnitIsConstant = Refl
 
 sevenIsNatAtom : IsTrue $ isNatAtom $ RSNat 7
