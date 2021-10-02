@@ -149,24 +149,32 @@ data Keyword : Type where
   UnboundName : Keyword
   WithName : Keyword
   WithNameWrongArguments : Keyword
+  NonFunctionalKeyword : Keyword
+
+public export
+keywordToString : Keyword -> String
+keywordToString UnboundName = "UnboundName"
+keywordToString WithName = "WithName"
+keywordToString WithNameWrongArguments = "WithNameWrongArguments"
+keywordToString NonFunctionalKeyword = "NonFunctionalKeyword"
 
 public export
 Show Keyword where
-  show UnboundName = ":UnboundName"
-  show WithName = ":WithName"
-  show WithNameWrongArguments = ":WithNameWrongArguments"
+  show k = ":" ++ keywordToString k
 
 public export
 kEncode : Keyword -> Nat
 kEncode UnboundName = 0
 kEncode WithName = 1
 kEncode WithNameWrongArguments = 2
+kEncode NonFunctionalKeyword = 3
 
 public export
 kDecode : Nat -> Keyword
 kDecode 0 = UnboundName
 kDecode 1 = WithName
 kDecode 2 = WithNameWrongArguments
+kDecode 3 = NonFunctionalKeyword
 kDecode _ = UnboundName
 
 export
@@ -175,6 +183,7 @@ kDecodeIsLeftInverse :
 kDecodeIsLeftInverse UnboundName = Refl
 kDecodeIsLeftInverse WithName = Refl
 kDecodeIsLeftInverse WithNameWrongArguments = Refl
+kDecodeIsLeftInverse NonFunctionalKeyword = Refl
 
 export
 kEncodeIsInjective : IsInjective ScopedExp.kEncode
@@ -219,9 +228,9 @@ data Name : Type where
 
 public export
 Show Name where
-  show (NReflectedKeyword k) = "~" ++ show k
+  show (NReflectedKeyword k) = "~" ++ keywordToString k
   show (NNat n) = show n
-  show (NString s) = s
+  show (NString s) = "'" ++ s
 
 export
 nDecEq : DecEqPred Name
