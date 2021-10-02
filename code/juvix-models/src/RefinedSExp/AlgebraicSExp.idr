@@ -168,32 +168,35 @@ mutual
 
 public export
 data RefinedKeyword : Type where
-  RKUnused : RefinedKeyword
+  RKFailed : RefinedKeyword
   RKIdentity : RefinedKeyword
   RKCompose : RefinedKeyword
   RKVoid : RefinedKeyword
   RKFromVoid : RefinedKeyword
-  RKUnit : RefinedKeyword
+  RKUnitType : RefinedKeyword
+  RKUnitTerm : RefinedKeyword
   RKToUnit : RefinedKeyword
 
 Show RefinedKeyword where
-  show RKUnused = "RKUnused"
+  show RKFailed = "RKFailed"
   show RKIdentity = "RKIdentity"
   show RKCompose = "RKCompose"
   show RKVoid = "RKVoid"
   show RKFromVoid = "RKFromVoid"
-  show RKUnit = "RKUnit"
+  show RKUnitType = "RKUnitType"
+  show RKUnitTerm = "RKUnitTerm"
   show RKToUnit = "RKToUnit"
 
 public export
 rkEncode : RefinedKeyword -> Nat
-rkEncode RKUnused = 0
+rkEncode RKFailed = 0
 rkEncode RKIdentity = 1
 rkEncode RKCompose = 2
 rkEncode RKVoid = 3
 rkEncode RKFromVoid = 4
-rkEncode RKUnit = 5
-rkEncode RKToUnit = 6
+rkEncode RKUnitType = 5
+rkEncode RKUnitTerm = 6
+rkEncode RKToUnit = 7
 
 public export
 rkDecode : Nat -> RefinedKeyword
@@ -201,19 +204,21 @@ rkDecode 1 = RKIdentity
 rkDecode 2 = RKCompose
 rkDecode 3 = RKVoid
 rkDecode 4 = RKFromVoid
-rkDecode 5 = RKUnit
-rkDecode 6 = RKToUnit
-rkDecode _ = RKUnused
+rkDecode 5 = RKUnitType
+rkDecode 6 = RKUnitTerm
+rkDecode 7 = RKToUnit
+rkDecode _ = RKFailed
 
 export
 rkDecodeIsLeftInverse :
   IsLeftInverseOf AlgebraicSExp.rkEncode AlgebraicSExp.rkDecode
-rkDecodeIsLeftInverse RKUnused = Refl
+rkDecodeIsLeftInverse RKFailed = Refl
 rkDecodeIsLeftInverse RKIdentity = Refl
 rkDecodeIsLeftInverse RKCompose = Refl
 rkDecodeIsLeftInverse RKVoid = Refl
 rkDecodeIsLeftInverse RKFromVoid = Refl
-rkDecodeIsLeftInverse RKUnit = Refl
+rkDecodeIsLeftInverse RKUnitType = Refl
+rkDecodeIsLeftInverse RKUnitTerm = Refl
 rkDecodeIsLeftInverse RKToUnit = Refl
 
 export
@@ -356,6 +361,14 @@ atomIsString (RACustom (RCString _)) = True
 atomIsString _ = False
 
 public export
+RAFailed : RefinedAtom
+RAFailed = RAKeyword RKVoid
+
+public export
+RSFailed : RefinedSExp
+RSFailed = $^ RAFailed
+
+public export
 RAVoid : RefinedAtom
 RAVoid = RAKeyword RKVoid
 
@@ -372,12 +385,20 @@ RSFromVoid : (codomainRep : RefinedSExp) -> RefinedSExp
 RSFromVoid codomainRep = RAFromVoid $*** codomainRep
 
 public export
-RAUnit : RefinedAtom
-RAUnit = RAKeyword RKUnit
+RAUnitType : RefinedAtom
+RAUnitType = RAKeyword RKUnitType
 
 public export
-RSUnit : RefinedSExp
-RSUnit = $^ RAUnit
+RAUnitTerm : RefinedAtom
+RAUnitTerm = RAKeyword RKUnitTerm
+
+public export
+RSUnitType : RefinedSExp
+RSUnitType = $^ RAUnitType
+
+public export
+RSUnitTerm : RefinedSExp
+RSUnitTerm = $^ RAUnitTerm
 
 public export
 RAToUnit : RefinedAtom
