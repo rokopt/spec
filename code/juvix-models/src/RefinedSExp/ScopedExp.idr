@@ -77,11 +77,11 @@ mutual
 
 public export
 SPred : (name : Type) -> Type
-SPred name = !- (SExp name)
+SPred name = SExp name -> Type
 
 public export
 SLPred : (name : Type) -> Type
-SLPred name = !- (SList name)
+SLPred name = SList name -> Type
 
 public export
 record SExpEliminatorSig
@@ -156,6 +156,67 @@ mutual
       (No xNeq, _) => No $ \eq => case eq of Refl => xNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
 
+public export
+data Keyword : Type where
+  UnboundName : Keyword
+  WithName : Keyword
+  WithNameWrongArguments : Keyword
+
+public export
+Show Keyword where
+  show UnboundName = ":UnboundName"
+  show WithName = ":WithName"
+  show WithNameWrongArguments = ":WithNameWrongArguments"
+
+public export
+kEncode : Keyword -> Nat
+kEncode UnboundName = 0
+kEncode WithName = 1
+kEncode WithNameWrongArguments = 2
+
+public export
+kDecode : Nat -> Keyword
+kDecode 0 = UnboundName
+kDecode 1 = WithName
+kDecode 2 = WithNameWrongArguments
+kDecode _ = UnboundName
+
+export
+kDecodeIsLeftInverse :
+  IsLeftInverseOf ScopedExp.kEncode ScopedExp.kDecode
+kDecodeIsLeftInverse UnboundName = Refl
+kDecodeIsLeftInverse WithName = Refl
+kDecodeIsLeftInverse WithNameWrongArguments = Refl
+
+export
+kEncodeIsInjective : IsInjective ScopedExp.kEncode
+kEncodeIsInjective =
+  leftInverseImpliesInjective kEncode {g=kDecode} kDecodeIsLeftInverse
+
+public export
+KInjection : Injection Keyword Nat
+KInjection = (kEncode ** kEncodeIsInjective)
+
+public export
+KCountable : Countable
+KCountable = (Keyword ** KInjection)
+
+public export
+kDecEq : DecEqPred Keyword
+kDecEq = countableEq KCountable
+
+public export
+DecEq Keyword where
+  decEq = kDecEq
+
+public export
+Eq Keyword using decEqToEq where
+  (==) = (==)
+
+public export
+Ord Keyword where
+  k < k' = kEncode k < kEncode k'
+
 -- | Names are ways of accesssing the the context; put another way, a context
 -- | is an interpretation of names.  Therefore, there is no interpretation
 -- | of names outside of the notion of interpreting an S-expression:  for
@@ -166,10 +227,13 @@ public export
 data Name : Type where
   NNat : Nat -> Name
   NString : String -> Name
+  NKeyword : Keyword -> Name -- reflection of keyword names into user names
 
+public export
 Show Name where
   show (NNat n) = show n
   show (NString s) = s
+  show (NKeyword k) = "~" ++ show k
 
 export
 nDecEq : DecEqPred Name
@@ -178,9 +242,20 @@ nDecEq (NNat n) (NNat n') = case decEq n n' of
   No neq => No $ \eq => case eq of Refl => neq Refl
 nDecEq (NNat _) (NString _) =
   No $ \eq => case eq of Refl impossible
+nDecEq (NNat _) (NKeyword _) =
+  No $ \eq => case eq of Refl impossible
 nDecEq (NString _) (NNat _) =
   No $ \eq => case eq of Refl impossible
 nDecEq (NString s) (NString s') = case decEq s s' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+nDecEq (NString _) (NKeyword _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NKeyword _) (NNat _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NKeyword _) (NString _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NKeyword k) (NKeyword k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -196,8 +271,13 @@ public export
 Ord Name where
   NNat n < NNat n' = n < n'
   NNat _ < NString _ = True
+  NNat _ < NKeyword _ = True
   NString _ < NNat _ = False
   NString s < NString s' = s < s'
+  NString _ < NKeyword _ = True
+  NKeyword _ < NNat _ = False
+  NKeyword _ < NString _ = False
+  NKeyword k < NKeyword k' = k < k'
 
 public export
 NamedSExp : Type
@@ -239,8 +319,10 @@ public export
 PureNameContext : Type
 PureNameContext = NamingContext Name NamedSExp
 
+public export
 NPred : Type
-NPred = PureNameContext -> NamedSExp -> Type
+NPred = NamedSExp -> Type
 
+public export
 NLPred : Type
-NLPred = PureNameContext -> NamedSList -> Type
+NLPred = NamedSList -> Type
