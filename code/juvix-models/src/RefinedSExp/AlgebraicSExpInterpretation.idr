@@ -98,22 +98,60 @@ public export
 CharacterizesRange : GeneralComputableFunction -> Refinement -> Type
 CharacterizesRange f r = (RefinesRange f r, IncludesRange f r)
 
+-- | A refinement which may be treated as a predicate on the input-output
+-- | behavior of an arbitrary general computable function.  This might be viewed
+-- | as an unbundled dependent type.
+public export
+InputOutputRefinement : Type
+InputOutputRefinement =
+  (RefinedSExp -> Bool, -- The domain of the refinement (when it applies)
+   Maybe RefinedSExp -> Bool, -- the possible return values
+   RefinedSExp -> Maybe RefinedSExp -> Bool) -- How input and output relate
+
+-- | The type of proofs that a given function's input-output behavior satisfies
+-- | a given dependent refinement.
+public export
+HasInputOutputBehavior :
+  InputOutputRefinement -> GeneralComputableFunction -> Type
+HasInputOutputBehavior (domain, codomain, relation) f =
+  (x : RefinedSExp) -> IsTrue (domain x) ->
+    (IsTrue $ codomain (f x), IsTrue $ relation x (f x))
+
+public export
+IsRefinedBy : InputOutputRefinement -> Type
+IsRefinedBy r = (f : GeneralComputableFunction) -> HasInputOutputBehavior r f
+
+-- | Compose two input/output refinements.
+public export
+composeInputOutputRefinements :
+  (g, f : GeneralComputableFunction) ->
+  (rg, rf : InputOutputRefinement) ->
+  InputOutputRefinement
+composeInputOutputRefinements g f rg rf = ?composeInputOutputRefinements_hole
+
+public export
+composeInputOutputRefinementProofs :
+  {g, f : GeneralComputableFunction} ->
+  {rg, rf : InputOutputRefinement} ->
+  HasInputOutputBehavior rg g ->
+  HasInputOutputBehavior rf f ->
+  HasInputOutputBehavior (composeInputOutputRefinements g f rg rf) $ g #. f
+composeInputOutputRefinementProofs {g} {f} {rg} {rf} rgp rgf =
+  ?composeInputOutputRefinementProofs_hole
+
 ---------------------------------------------------------------------------
 ---- Definition of RefinedSExp language by interpretation into Idris-2 ----
 ---------------------------------------------------------------------------
 
+-- | Interpret a refined S-expression as a general computatable function.
+-- | Note that this signature implies that we can _always_ do such an
+-- | interpretation.  That is true, even though a given random S-expression
+-- | would almost certainly be nonsense if interpreted as a function --
+-- | but we would still interpret it, simply as a function which failed
+-- | on all (or perhaps nearly all) inputs.
 public export
-checkRSExp : RefinedSExp -> Bool
-checkRSExp x = ?checkRSExp_hole
-
-public export
-interpretRSExp : RefinedSExp -> Maybe GeneralComputableFunction
+interpretRSExp : RefinedSExp -> GeneralComputableFunction
 interpretRSExp x = ?interpretRSExp_hole
-
-public export
-checkRSExpCorrect : (x : RefinedSExp) ->
-  IsTrue (checkRSExp x) -> IsJust (interpretRSExp x)
-checkRSExpCorrect x checked = ?checkRSExpCorrect_hole
 
 -------------------------------------------
 ---- Interpretation of primitive types ----
