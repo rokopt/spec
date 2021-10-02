@@ -4,6 +4,7 @@ import public Library.FunctionsAndRelations
 import public Library.Decidability
 import public Library.List
 import public Category.ComputableCategories
+import public Data.SortedMap
 
 %default total
 
@@ -221,3 +222,14 @@ DecEq NamedSList where
 public export
 Eq NamedSExp using decEqToEq where
   (==) = (==)
+
+mutual
+  public export
+  data NamingContext : Type where
+    ClosureMap : SortedMap Name Closure -> NamingContext
+
+  public export
+  record Closure where
+    constructor NamedContext
+    closureName : NamedSExp
+    closureContext : NamingContext
