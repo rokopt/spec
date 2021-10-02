@@ -166,82 +166,6 @@ mutual
     SExpTail : {pred : SPred atom} -> SListExists pred l ->
       SListExists pred (x :: l)
 
-public export
-data RefinedKeyword : Type where
-  RKFailed : RefinedKeyword
-  RKIdentity : RefinedKeyword
-  RKCompose : RefinedKeyword
-  RKVoid : RefinedKeyword
-  RKFromVoid : RefinedKeyword
-  RKUnitType : RefinedKeyword
-  RKUnitTerm : RefinedKeyword
-  RKToUnit : RefinedKeyword
-
-Show RefinedKeyword where
-  show RKFailed = "RKFailed"
-  show RKIdentity = "RKIdentity"
-  show RKCompose = "RKCompose"
-  show RKVoid = "RKVoid"
-  show RKFromVoid = "RKFromVoid"
-  show RKUnitType = "RKUnitType"
-  show RKUnitTerm = "RKUnitTerm"
-  show RKToUnit = "RKToUnit"
-
-public export
-rkEncode : RefinedKeyword -> Nat
-rkEncode RKFailed = 0
-rkEncode RKIdentity = 1
-rkEncode RKCompose = 2
-rkEncode RKVoid = 3
-rkEncode RKFromVoid = 4
-rkEncode RKUnitType = 5
-rkEncode RKUnitTerm = 6
-rkEncode RKToUnit = 7
-
-public export
-rkDecode : Nat -> RefinedKeyword
-rkDecode 1 = RKIdentity
-rkDecode 2 = RKCompose
-rkDecode 3 = RKVoid
-rkDecode 4 = RKFromVoid
-rkDecode 5 = RKUnitType
-rkDecode 6 = RKUnitTerm
-rkDecode 7 = RKToUnit
-rkDecode _ = RKFailed
-
-export
-rkDecodeIsLeftInverse :
-  IsLeftInverseOf AlgebraicSExp.rkEncode AlgebraicSExp.rkDecode
-rkDecodeIsLeftInverse RKFailed = Refl
-rkDecodeIsLeftInverse RKIdentity = Refl
-rkDecodeIsLeftInverse RKCompose = Refl
-rkDecodeIsLeftInverse RKVoid = Refl
-rkDecodeIsLeftInverse RKFromVoid = Refl
-rkDecodeIsLeftInverse RKUnitType = Refl
-rkDecodeIsLeftInverse RKUnitTerm = Refl
-rkDecodeIsLeftInverse RKToUnit = Refl
-
-export
-rkEncodeIsInjective : IsInjective AlgebraicSExp.rkEncode
-rkEncodeIsInjective =
-  leftInverseImpliesInjective rkEncode {g=rkDecode} rkDecodeIsLeftInverse
-
-public export
-RKInjection : Injection RefinedKeyword Nat
-RKInjection = (rkEncode ** rkEncodeIsInjective)
-
-public export
-RKCountable : Countable
-RKCountable = (RefinedKeyword ** RKInjection)
-
-public export
-rkDecEq : DecEqPred RefinedKeyword
-rkDecEq = countableEq RKCountable
-
-public export
-DecEq RefinedKeyword where
-  decEq = rkDecEq
-
 -- | Names are ways of accesssing the the context; put another way, a context
 -- | is an interpretation of names.  Therefore, there is no interpretation
 -- | of names outside of the notion of interpreting an S-expression:  for
@@ -273,6 +197,87 @@ rnDecEq (RNString s) (RNString s') = case decEq s s' of
 public export
 DecEq RefinedName where
   decEq = rnDecEq
+
+public export
+data RefinedKeyword : Type where
+  RKFailed : RefinedKeyword
+  RKWithName : RefinedKeyword
+  RKIdentity : RefinedKeyword
+  RKCompose : RefinedKeyword
+  RKVoid : RefinedKeyword
+  RKFromVoid : RefinedKeyword
+  RKUnitType : RefinedKeyword
+  RKUnitTerm : RefinedKeyword
+  RKToUnit : RefinedKeyword
+
+Show RefinedKeyword where
+  show RKFailed = "RKFailed"
+  show RKIdentity = "RKIdentity"
+  show RKCompose = "RKCompose"
+  show RKVoid = "RKVoid"
+  show RKFromVoid = "RKFromVoid"
+  show RKUnitType = "RKUnitType"
+  show RKUnitTerm = "RKUnitTerm"
+  show RKToUnit = "RKToUnit"
+  show RKWithName = "RKWithName"
+
+public export
+rkEncode : RefinedKeyword -> Nat
+rkEncode RKFailed = 0
+rkEncode RKIdentity = 1
+rkEncode RKCompose = 2
+rkEncode RKVoid = 3
+rkEncode RKFromVoid = 4
+rkEncode RKUnitType = 5
+rkEncode RKUnitTerm = 6
+rkEncode RKToUnit = 7
+rkEncode RKWithName = 8
+
+public export
+rkDecode : Nat -> RefinedKeyword
+rkDecode 1 = RKIdentity
+rkDecode 2 = RKCompose
+rkDecode 3 = RKVoid
+rkDecode 4 = RKFromVoid
+rkDecode 5 = RKUnitType
+rkDecode 6 = RKUnitTerm
+rkDecode 7 = RKToUnit
+rkDecode 8 = RKWithName
+rkDecode _ = RKFailed
+
+export
+rkDecodeIsLeftInverse :
+  IsLeftInverseOf AlgebraicSExp.rkEncode AlgebraicSExp.rkDecode
+rkDecodeIsLeftInverse RKFailed = Refl
+rkDecodeIsLeftInverse RKIdentity = Refl
+rkDecodeIsLeftInverse RKCompose = Refl
+rkDecodeIsLeftInverse RKVoid = Refl
+rkDecodeIsLeftInverse RKFromVoid = Refl
+rkDecodeIsLeftInverse RKUnitType = Refl
+rkDecodeIsLeftInverse RKUnitTerm = Refl
+rkDecodeIsLeftInverse RKToUnit = Refl
+rkDecodeIsLeftInverse RKWithName = Refl
+
+export
+rkEncodeIsInjective : IsInjective AlgebraicSExp.rkEncode
+rkEncodeIsInjective =
+  leftInverseImpliesInjective rkEncode {g=rkDecode} rkDecodeIsLeftInverse
+
+public export
+RKInjection : Injection RefinedKeyword Nat
+RKInjection = (rkEncode ** rkEncodeIsInjective)
+
+public export
+RKCountable : Countable
+RKCountable = (RefinedKeyword ** RKInjection)
+
+public export
+rkDecEq : DecEqPred RefinedKeyword
+rkDecEq = countableEq RKCountable
+
+public export
+DecEq RefinedKeyword where
+  decEq = rkDecEq
 
 public export
 data RefinedAtom : Type where
@@ -429,3 +434,11 @@ RACompose = RAKeyword RKCompose
 public export
 RSCompose : (functions : RefinedSList) -> RefinedSExp
 RSCompose = ($*) RACompose
+
+public export
+RAWithName : RefinedAtom
+RAWithName = RAKeyword RKWithName
+
+public export
+RSWithName : RefinedSExp
+RSWithName = $^ RAWithName

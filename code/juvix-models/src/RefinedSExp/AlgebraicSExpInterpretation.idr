@@ -215,6 +215,16 @@ mutual
   -- decidable equality.
   interpretRSExp interpretName (RAName _ $* (_ :: _)) = alwaysFail
 
+  -- Not implemented yet.
+  interpretRSExp interpretName
+    (RAKeyword RKWithName $* [RAName name $* [], interpretation]) =
+      ?interpretRSExp_withName_hole
+
+  -- "withName" should take precisely two arguments, a name and its
+  -- interpretation, and the name must be a name atom.  Any other
+  -- form is illegal.
+  interpretRSExp interpretName (RAKeyword RKWithName $* _) = alwaysFail
+
   public export
   interpretAndComposeRSList :
     NameInterpretation -> RefinedSList -> GeneralComputableFunction
