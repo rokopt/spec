@@ -8,9 +8,9 @@ import public RefinedSExp.ScopedExp
 public export
 scopedExpNotationTest : NamedSExp
 scopedExpNotationTest =
-  NNat 0 $* (NNat 1 $* NString "two" $^^ NNat 3) ::
-    (NNat 4 $*** (NNat 5 $* (NNat 6 $*** (NString "seven" $**^ NNat 8)) $:^
-      NNat 9)) $:^ NNat 10
+  NANat 0 $* (NANat 1 $* NAString "two" $^^ NANat 3) ::
+    (NANat 4 $*** (NANat 5 $* (NANat 6 $*** (NAString "seven" $**^ NANat 8)) $:^
+      NANat 9)) $:^ NANat 10
 
 export
 scopedExpTests : IO ()

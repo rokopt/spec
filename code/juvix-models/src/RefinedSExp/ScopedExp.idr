@@ -280,12 +280,62 @@ Ord Name where
   NKeyword k < NKeyword k' = k < k'
 
 public export
+data NameAtom : Type where
+  NAKeyword : Keyword -> NameAtom
+  NAName : Name -> NameAtom
+
+public export
+Show NameAtom where
+  show (NAKeyword k) = show k
+  show (NAName n) = show n
+
+public export
+naShow : NameAtom -> String
+naShow = show
+
+public export
+naDecEq : DecEqPred NameAtom
+naDecEq (NAKeyword n) (NAKeyword n') = case decEq n n' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+naDecEq (NAKeyword _) (NAName _) =
+  No $ \eq => case eq of Refl impossible
+naDecEq (NAName _) (NAKeyword _) =
+  No $ \eq => case eq of Refl impossible
+naDecEq (NAName s) (NAName s') = case decEq s s' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+
+public export
+DecEq NameAtom where
+  decEq = naDecEq
+
+public export
+Eq NameAtom using decEqToEq where
+  (==) = (==)
+
+public export
+Ord NameAtom where
+  NAKeyword n < NAKeyword n' = n < n'
+  NAKeyword _ < NAName _ = True
+  NAName _ < NAKeyword _ = False
+  NAName s < NAName s' = s < s'
+
+public export
+NANat : Nat -> NameAtom
+NANat = NAName . NNat
+
+public export
+NAString : String -> NameAtom
+NAString = NAName . NString
+
+public export
 NamedSExp : Type
-NamedSExp = SExp Name
+NamedSExp = SExp NameAtom
 
 public export
 NamedSList : Type
-NamedSList = SList Name
+NamedSList = SList NameAtom
 
 public export
 Show NamedSExp where
@@ -297,11 +347,11 @@ Show NamedSList where
 
 public export
 nsDecEq : DecEqPred NamedSExp
-nsDecEq = sexpDecEq nDecEq
+nsDecEq = sexpDecEq naDecEq
 
 public export
 nslDecEq : DecEqPred NamedSList
-nslDecEq = slistDecEq nDecEq
+nslDecEq = slistDecEq naDecEq
 
 public export
 DecEq NamedSExp where
