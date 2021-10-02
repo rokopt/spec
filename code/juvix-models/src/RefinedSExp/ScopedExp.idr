@@ -142,3 +142,82 @@ mutual
       (Yes Refl, Yes Refl) => Yes Refl
       (No xNeq, _) => No $ \eq => case eq of Refl => xNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
+
+-- | Names are ways of accesssing the the context; put another way, a context
+-- | is an interpretation of names.  Therefore, there is no interpretation
+-- | of names outside of the notion of interpreting an S-expression:  for
+-- | example, there is no inherent connection between the name "NNat 5" and
+-- | the natunal number 5.  The only structure that names have is a decidable
+-- | equality.
+public export
+data Name : Type where
+  NNat : Nat -> Name
+  NString : String -> Name
+
+Show Name where
+  show (NNat n) = show n
+  show (NString s) = s
+
+export
+nDecEq : DecEqPred Name
+nDecEq (NNat n) (NNat n') = case decEq n n' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+nDecEq (NNat _) (NString _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NString _) (NNat _) =
+  No $ \eq => case eq of Refl impossible
+nDecEq (NString s) (NString s') = case decEq s s' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+
+public export
+DecEq Name where
+  decEq = nDecEq
+
+public export
+Eq Name using decEqToEq where
+  (==) = (==)
+
+public export
+Ord Name where
+  NNat n < NNat n' = n < n'
+  NNat _ < NString _ = True
+  NString _ < NNat _ = False
+  NString s < NString s' = s < s'
+
+public export
+NamedSExp : Type
+NamedSExp = SExp Name
+
+public export
+NamedSList : Type
+NamedSList = SList Name
+
+public export
+Show NamedSExp where
+  show = fst (sexpShows show)
+
+public export
+Show NamedSList where
+  show l = "(" ++ snd (sexpShows show) l ++ ")"
+
+public export
+nsDecEq : DecEqPred NamedSExp
+nsDecEq = sexpDecEq nDecEq
+
+public export
+nslDecEq : DecEqPred NamedSList
+nslDecEq = slistDecEq nDecEq
+
+public export
+DecEq NamedSExp where
+  decEq = nsDecEq
+
+public export
+DecEq NamedSList where
+  decEq = nslDecEq
+
+public export
+Eq NamedSExp using decEqToEq where
+  (==) = (==)

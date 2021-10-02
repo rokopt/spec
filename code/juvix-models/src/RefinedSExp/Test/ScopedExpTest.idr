@@ -5,16 +5,12 @@ import public RefinedSExp.ScopedExp
 
 %default total
 
-Show (SExp Nat) where
-  show = fst $ sexpShows show
-
-Show (SList Nat) where
-  show = snd $ sexpShows show
-
 public export
-scopedExpNotationTest : SExp Nat
+scopedExpNotationTest : NamedSExp
 scopedExpNotationTest =
-  0 $* (1 $* 2 $^^ 3) :: (4 $*** (5 $* (6 $*** (7 $**^ 8)) $:^ 9)) $:^ 10
+  NNat 0 $* (NNat 1 $* NString "two" $^^ NNat 3) ::
+    (NNat 4 $*** (NNat 5 $* (NNat 6 $*** (NString "seven" $**^ NNat 8)) $:^
+      NNat 9)) $:^ NNat 10
 
 export
 scopedExpTests : IO ()
