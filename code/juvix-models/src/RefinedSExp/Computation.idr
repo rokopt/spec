@@ -269,169 +269,165 @@ public export
 Ord Keyword where
   k < k' = kEncode k < kEncode k'
 
--- | Names are ways of accesssing the the context; put another way, a context
--- | is an interpretation of names.  Therefore, there is no interpretation
--- | of names outside of the notion of interpreting an S-expression:  for
--- | example, there is no inherent connection between the name "NNat 5" and
--- | the natural number 5.  The only structure that names have is a decidable
--- | equality.
+-- | Uninterpreted data -- a "type of individuals" for particular use
+-- | when _interpreting_ expressions as representing computable functions.
 public export
-data Name : Type where
-  NReflectedKeyword : Keyword -> Name
-  NNat : Nat -> Name
-  NString : String -> Name
+data Data : Type where
+  DReflectedKeyword : Keyword -> Data
+  DNat : Nat -> Data
+  DString : String -> Data
 
 public export
-Show Name where
-  show (NReflectedKeyword k) = "~" ++ keywordToString k
-  show (NNat n) = show n
-  show (NString s) = "'" ++ s
+Show Data where
+  show (DReflectedKeyword k) = "~" ++ keywordToString k
+  show (DNat n) = show n
+  show (DString s) = "'" ++ s
 
 export
-nDecEq : DecEqPred Name
-nDecEq (NReflectedKeyword k) (NReflectedKeyword k') = case decEq k k' of
+dDecEq : DecEqPred Data
+dDecEq (DReflectedKeyword k) (DReflectedKeyword k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-nDecEq (NReflectedKeyword _) (NNat _) =
+dDecEq (DReflectedKeyword _) (DNat _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NReflectedKeyword _) (NString _) =
+dDecEq (DReflectedKeyword _) (DString _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NNat _) (NReflectedKeyword _) =
+dDecEq (DNat _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NNat n) (NNat n') = case decEq n n' of
+dDecEq (DNat n) (DNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-nDecEq (NNat _) (NString _) =
+dDecEq (DNat _) (DString _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NString _) (NReflectedKeyword _) =
+dDecEq (DString _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NString _) (NNat _) =
+dDecEq (DString _) (DNat _) =
   No $ \eq => case eq of Refl impossible
-nDecEq (NString s) (NString s') = case decEq s s' of
+dDecEq (DString s) (DString s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-DecEq Name where
-  decEq = nDecEq
+DecEq Data where
+  decEq = dDecEq
 
 public export
-Eq Name using decEqToEq where
+Eq Data using decEqToEq where
   (==) = (==)
 
 public export
-Ord Name where
-  NReflectedKeyword k < NReflectedKeyword k' = k < k'
-  NReflectedKeyword _ < NNat _ = True
-  NReflectedKeyword _ < NString _ = True
-  NNat _ < NReflectedKeyword _ = False
-  NNat n < NNat n' = n < n'
-  NNat _ < NString _ = True
-  NString _ < NReflectedKeyword _ = False
-  NString _ < NNat _ = False
-  NString s < NString s' = s < s'
+Ord Data where
+  DReflectedKeyword k < DReflectedKeyword k' = k < k'
+  DReflectedKeyword _ < DNat _ = True
+  DReflectedKeyword _ < DString _ = True
+  DNat _ < DReflectedKeyword _ = False
+  DNat n < DNat n' = n < n'
+  DNat _ < DString _ = True
+  DString _ < DReflectedKeyword _ = False
+  DString _ < DNat _ = False
+  DString s < DString s' = s < s'
 
 public export
-data NameAtom : Type where
-  NAKeyword : Keyword -> NameAtom
-  NAName : Name -> NameAtom
+data DataAtom : Type where
+  DAKeyword : Keyword -> DataAtom
+  DAData : Data -> DataAtom
 
 public export
-Show NameAtom where
-  show (NAKeyword k) = show k
-  show (NAName n) = show n
+Show DataAtom where
+  show (DAKeyword k) = show k
+  show (DAData n) = show n
 
 public export
-naShow : NameAtom -> String
-naShow = show
+daShow : DataAtom -> String
+daShow = show
 
 public export
-naDecEq : DecEqPred NameAtom
-naDecEq (NAKeyword n) (NAKeyword n') = case decEq n n' of
+daDecEq : DecEqPred DataAtom
+daDecEq (DAKeyword n) (DAKeyword n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-naDecEq (NAKeyword _) (NAName _) =
+daDecEq (DAKeyword _) (DAData _) =
   No $ \eq => case eq of Refl impossible
-naDecEq (NAName _) (NAKeyword _) =
+daDecEq (DAData _) (DAKeyword _) =
   No $ \eq => case eq of Refl impossible
-naDecEq (NAName s) (NAName s') = case decEq s s' of
+daDecEq (DAData s) (DAData s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-DecEq NameAtom where
-  decEq = naDecEq
+DecEq DataAtom where
+  decEq = daDecEq
 
 public export
-Eq NameAtom using decEqToEq where
+Eq DataAtom using decEqToEq where
   (==) = (==)
 
 public export
-Ord NameAtom where
-  NAKeyword n < NAKeyword n' = n < n'
-  NAKeyword _ < NAName _ = True
-  NAName _ < NAKeyword _ = False
-  NAName s < NAName s' = s < s'
+Ord DataAtom where
+  DAKeyword n < DAKeyword n' = n < n'
+  DAKeyword _ < DAData _ = True
+  DAData _ < DAKeyword _ = False
+  DAData s < DAData s' = s < s'
 
 public export
-NAFail : NameAtom
-NAFail = NAKeyword Fail
+DAFail : DataAtom
+DAFail = DAKeyword Fail
 
 public export
-NAReflectedKeyword : Keyword -> NameAtom
-NAReflectedKeyword = NAName . NReflectedKeyword
+DAReflectedKeyword : Keyword -> DataAtom
+DAReflectedKeyword = DAData . DReflectedKeyword
 
 public export
-NANat : Nat -> NameAtom
-NANat = NAName . NNat
+DANat : Nat -> DataAtom
+DANat = DAData . DNat
 
 public export
-NAString : String -> NameAtom
-NAString = NAName . NString
+DAString : String -> DataAtom
+DAString = DAData . DString
 
 public export
-NamedSExp : Type
-NamedSExp = SExp NameAtom
+DSExp : Type
+DSExp = SExp DataAtom
 
 public export
-NamedSList : Type
-NamedSList = SList NameAtom
+DSList : Type
+DSList = SList DataAtom
 
 public export
-Show NamedSExp where
+Show DSExp where
   show = fst (sexpShows show)
 
 public export
-Show NamedSList where
+Show DSList where
   show l = "(" ++ snd (sexpShows show) l ++ ")"
 
 public export
-nsDecEq : DecEqPred NamedSExp
-nsDecEq = sexpDecEq naDecEq
+dsDecEq : DecEqPred DSExp
+dsDecEq = sexpDecEq daDecEq
 
 public export
-nslDecEq : DecEqPred NamedSList
-nslDecEq = slistDecEq naDecEq
+dslDecEq : DecEqPred DSList
+dslDecEq = slistDecEq daDecEq
 
 public export
-DecEq NamedSExp where
-  decEq = nsDecEq
+DecEq DSExp where
+  decEq = dsDecEq
 
 public export
-DecEq NamedSList where
-  decEq = nslDecEq
+DecEq DSList where
+  decEq = dslDecEq
 
 public export
-Eq NamedSExp using decEqToEq where
+Eq DSExp using decEqToEq where
   (==) = (==)
 
 public export
-NSFail : NamedSExp
-NSFail = $^ NAFail
+DSFail : DSExp
+DSFail = $^ DAFail
 
 public export
 ComputableFunction : Type
-ComputableFunction = NamedSList -> NamedSExp
+ComputableFunction = DSList -> DSExp
 
 mutual
   public export
@@ -452,11 +448,3 @@ mutual
   public export partial -- Show instance
   (Show name, Show term) => Show (Closure name term) where
     show (NamedContext t c) = "(" ++ show t ++ ", " ++ show c ++ ")"
-
-public export
-NameBinding : Type
-NameBinding = NamingContext Name NamedSExp
-
-public export
-NameInterpretation : Type
-NameInterpretation = NamingContext Name ComputableFunction

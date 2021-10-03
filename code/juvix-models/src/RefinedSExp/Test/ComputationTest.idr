@@ -6,14 +6,14 @@ import public RefinedSExp.Computation
 %default total
 
 public export
-computationNotationTest : NamedSExp
+computationNotationTest : DSExp
 computationNotationTest =
-  NANat 0 $* (NAKeyword Curry $* NAString "two" $^^ NANat 3) ::
-    (NANat 4 $*** (NANat 5 $* (NANat 6 $*** (NAString "seven" $**^ NANat 8)) $:^
-      NAReflectedKeyword Cofix)) $:^ NANat 10
+  DANat 0 $* (DAKeyword Curry $* DAString "two" $^^ DANat 3) ::
+    (DANat 4 $*** (DANat 5 $* (DANat 6 $*** (DAString "seven" $**^ DANat 8)) $:^
+      DAReflectedKeyword Cofix)) $:^ DANat 10
 
 public export
-emptyContext : NameBinding
+emptyContext : NamingContext Data DSExp
 emptyContext = ClosureMap empty
 
 export
