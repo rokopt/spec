@@ -8,6 +8,21 @@ import public Data.SortedMap
 
 %default total
 
+-----------------------
+---- S-expressions ----
+-----------------------
+
+-- I continue to waffle over representations.  On the whole
+-- I think I like this form with an atom and a list because
+-- of the separation that it expresses between composition
+-- and evaluation, between functional programming and
+-- metaprogramming.  I might want to port some of the
+-- machinery from the PairVariant, such as the many instances
+-- and the well-founded induction (both performing well-founded
+-- induction on S-expressions using their size, and using
+-- S-expressions to perform well-founded induction on other
+-- structures using the S-expressions' shape).
+
 mutual
   infixr 7 $*
   public export
@@ -146,19 +161,33 @@ mutual
 
 public export
 data Keyword : Type where
-  UnboundName : Keyword
-  WithMacro : Keyword
-  WithMacroWrongArgumentCount : Keyword
-  NonFunctionalKeyword : Keyword
+  Fail : Keyword
+  Compose : Keyword
+  Identity : Keyword
+  Const : Keyword
+  Tuple : Keyword
+  Project : Keyword
+  Enum : Keyword
+  Inject : Keyword
   Eval : Keyword
+  Curry : Keyword
+  Fix : Keyword
+  Cofix : Keyword
 
 public export
 keywordToString : Keyword -> String
-keywordToString UnboundName = "UnboundName"
-keywordToString WithMacro = "WithMacro"
-keywordToString WithMacroWrongArgumentCount = "WithMacroWrongArgumentCount"
-keywordToString NonFunctionalKeyword = "NonFunctionalKeyword"
+keywordToString Fail = "Fail"
+keywordToString Compose = "Compose"
+keywordToString Identity = "Identity"
+keywordToString Const = "Const"
+keywordToString Tuple = "Tuple"
+keywordToString Project = "Project"
+keywordToString Enum = "Enum"
+keywordToString Inject = "Inject"
 keywordToString Eval = "Eval"
+keywordToString Curry = "Curry"
+keywordToString Fix = "Fix"
+keywordToString Cofix = "Cofix"
 
 public export
 Show Keyword where
@@ -166,29 +195,50 @@ Show Keyword where
 
 public export
 kEncode : Keyword -> Nat
-kEncode UnboundName = 0
-kEncode WithMacro = 1
-kEncode WithMacroWrongArgumentCount = 2
-kEncode NonFunctionalKeyword = 3
-kEncode Eval = 4
+kEncode Fail = 0
+kEncode Compose = 1
+kEncode Identity = 2
+kEncode Const = 3
+kEncode Tuple = 4
+kEncode Project = 5
+kEncode Enum = 6
+kEncode Inject = 7
+kEncode Eval = 8
+kEncode Curry = 9
+kEncode Fix = 10
+kEncode Cofix = 11
 
 public export
 kDecode : Nat -> Keyword
-kDecode 0 = UnboundName
-kDecode 1 = WithMacro
-kDecode 2 = WithMacroWrongArgumentCount
-kDecode 3 = NonFunctionalKeyword
-kDecode 4 = Eval
-kDecode _ = UnboundName
+kDecode 0 = Fail
+kDecode 1 = Compose
+kDecode 2 = Identity
+kDecode 3 = Const
+kDecode 4 = Tuple
+kDecode 5 = Project
+kDecode 6 = Enum
+kDecode 7 = Inject
+kDecode 8 = Eval
+kDecode 9 = Curry
+kDecode 10 = Fix
+kDecode 11 = Cofix
+kDecode _ = Fail
 
 export
 kDecodeIsLeftInverse :
   IsLeftInverseOf Computation.kEncode Computation.kDecode
-kDecodeIsLeftInverse UnboundName = Refl
-kDecodeIsLeftInverse WithMacro = Refl
-kDecodeIsLeftInverse WithMacroWrongArgumentCount = Refl
-kDecodeIsLeftInverse NonFunctionalKeyword = Refl
+kDecodeIsLeftInverse Fail = Refl
+kDecodeIsLeftInverse Compose = Refl
+kDecodeIsLeftInverse Identity = Refl
+kDecodeIsLeftInverse Const = Refl
+kDecodeIsLeftInverse Tuple = Refl
+kDecodeIsLeftInverse Project = Refl
+kDecodeIsLeftInverse Enum = Refl
+kDecodeIsLeftInverse Inject = Refl
 kDecodeIsLeftInverse Eval = Refl
+kDecodeIsLeftInverse Curry = Refl
+kDecodeIsLeftInverse Fix = Refl
+kDecodeIsLeftInverse Cofix = Refl
 
 export
 kEncodeIsInjective : IsInjective Computation.kEncode
@@ -324,20 +374,8 @@ Ord NameAtom where
   NAName s < NAName s' = s < s'
 
 public export
-NAUnboundName : NameAtom
-NAUnboundName = NAKeyword UnboundName
-
-public export
-NAWithMacro : NameAtom
-NAWithMacro = NAKeyword WithMacro
-
-public export
-NAWithMacroWrongArgumentCount : NameAtom
-NAWithMacroWrongArgumentCount = NAKeyword WithMacroWrongArgumentCount
-
-public export
-NANonFunctionalKeyword : NameAtom
-NANonFunctionalKeyword = NAKeyword NonFunctionalKeyword
+NAFail : NameAtom
+NAFail = NAKeyword Fail
 
 public export
 NAReflectedKeyword : Keyword -> NameAtom
@@ -388,20 +426,12 @@ Eq NamedSExp using decEqToEq where
   (==) = (==)
 
 public export
-NSUnboundName : NamedSExp
-NSUnboundName = $^ NAUnboundName
+NSFail : NamedSExp
+NSFail = $^ NAFail
 
 public export
-NSWithMacro : NamedSExp
-NSWithMacro = $^ NAWithMacro
-
-public export
-NSWithMacroWrongArgumentCount : NamedSExp
-NSWithMacroWrongArgumentCount = $^ NAWithMacroWrongArgumentCount
-
-public export
-NSNonFunctionalKeyword : NamedSExp
-NSNonFunctionalKeyword = $^ NANonFunctionalKeyword
+ComputableFunction : Type
+ComputableFunction = NamedSList -> NamedSExp
 
 mutual
   public export
@@ -426,10 +456,6 @@ mutual
 public export
 NameBinding : Type
 NameBinding = NamingContext Name NamedSExp
-
-public export
-ComputableFunction : Type
-ComputableFunction = NamedSList -> NamedSExp
 
 public export
 NameInterpretation : Type

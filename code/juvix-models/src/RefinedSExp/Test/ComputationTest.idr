@@ -8,9 +8,9 @@ import public RefinedSExp.Computation
 public export
 computationNotationTest : NamedSExp
 computationNotationTest =
-  NANat 0 $* (NAKeyword WithMacro $* NAString "two" $^^ NANat 3) ::
+  NANat 0 $* (NAKeyword Curry $* NAString "two" $^^ NANat 3) ::
     (NANat 4 $*** (NANat 5 $* (NANat 6 $*** (NAString "seven" $**^ NANat 8)) $:^
-      NAReflectedKeyword WithMacroWrongArgumentCount)) $:^ NANat 10
+      NAReflectedKeyword Cofix)) $:^ NANat 10
 
 public export
 emptyContext : NameBinding
