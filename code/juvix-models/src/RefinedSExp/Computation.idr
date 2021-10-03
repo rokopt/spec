@@ -426,9 +426,12 @@ public export
 DSFail : DSExp
 DSFail = $^ DAFail
 
+-- | A computable function whose termination Idris-2 can prove.
+-- | It still returns "maybe" because it might be partial (its
+-- | domain might not include all of DSExp).
 public export
-ComputableFunction : Type
-ComputableFunction = DSExp -> DSExp
+TerminatingComputableFunction : Type
+TerminatingComputableFunction = DSExp -> Maybe DSExp
 
 mutual
   public export
