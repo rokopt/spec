@@ -1,4 +1,4 @@
-module RefinedSExp.ScopedExp
+module RefinedSExp.Computation
 
 import public Library.FunctionsAndRelations
 import public Library.Decidability
@@ -183,7 +183,7 @@ kDecode _ = UnboundName
 
 export
 kDecodeIsLeftInverse :
-  IsLeftInverseOf ScopedExp.kEncode ScopedExp.kDecode
+  IsLeftInverseOf Computation.kEncode Computation.kDecode
 kDecodeIsLeftInverse UnboundName = Refl
 kDecodeIsLeftInverse WithMacro = Refl
 kDecodeIsLeftInverse WithMacroWrongArgumentCount = Refl
@@ -191,7 +191,7 @@ kDecodeIsLeftInverse NonFunctionalKeyword = Refl
 kDecodeIsLeftInverse Eval = Refl
 
 export
-kEncodeIsInjective : IsInjective ScopedExp.kEncode
+kEncodeIsInjective : IsInjective Computation.kEncode
 kEncodeIsInjective =
   leftInverseImpliesInjective kEncode {g=kDecode} kDecodeIsLeftInverse
 

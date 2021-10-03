@@ -4,7 +4,7 @@ import Library.FunctionsAndRelations
 import Library.Decidability
 import Library.List
 import RefinedSExp.List
-import RefinedSExp.SExp
+import RefinedSExp.PairVariant.SExp
 
 %default total
 

@@ -1,7 +1,7 @@
 module RefinedSExp.Test.RefinementInterpretationTest
 
 import public RefinedSExp.RefinementInterpretation
-import RefinedSExp.Test.SExpTest
+import RefinedSExp.PairVariant.Test.SExpTest
 import Library.Test.TestLibrary
 
 %default total

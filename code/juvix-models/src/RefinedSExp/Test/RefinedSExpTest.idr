@@ -1,7 +1,7 @@
 module RefinedSExp.Test.RefinedSExpTest
 
 import public RefinedSExp.RefinedSExp
-import RefinedSExp.Test.SExpTest
+import RefinedSExp.PairVariant.Test.SExpTest
 import Library.Test.TestLibrary
 import public Data.Vect
 import public Data.Fin

@@ -1,4 +1,4 @@
-module RefinedSExp.SExp
+module RefinedSExp.PairVariant.SExp
 
 import Library.FunctionsAndRelations
 import Library.Decidability

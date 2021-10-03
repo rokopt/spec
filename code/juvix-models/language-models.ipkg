@@ -28,8 +28,8 @@ modules = Library.TypesAndFunctions
     , QCWF.QCWF
     , RefinedSExp.List
     , RefinedSExp.Test.ListTest
-    , RefinedSExp.SExp
-    , RefinedSExp.Test.SExpTest
+    , RefinedSExp.PairVariant.SExp
+    , RefinedSExp.PairVariant.Test.SExpTest
     , RefinedSExp.SExpApplicatives
     , RefinedSExp.Test.SExpApplicativesTest
     , RefinedSExp.RefinedSExp
@@ -42,8 +42,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.AlgebraicSExpTest
     , RefinedSExp.AlgebraicSExpInterpretation
     , RefinedSExp.Test.AlgebraicSExpInterpretationTest
-    , RefinedSExp.ScopedExp
-    , RefinedSExp.Test.ScopedExpTest
+    , RefinedSExp.Computation
+    , RefinedSExp.Test.ComputationTest
     , Datatypes.AlgebraicTypes
     , Datatypes.Test.AlgebraicTypesTest
     , Datatypes.Datatypes

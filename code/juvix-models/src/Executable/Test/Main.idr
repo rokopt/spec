@@ -2,13 +2,13 @@ module Executable.Test.Main
 
 import Library.Test.TestLibrary
 import RefinedSExp.Test.ListTest
-import RefinedSExp.Test.SExpTest
+import RefinedSExp.PairVariant.Test.SExpTest
 import RefinedSExp.Test.SExpApplicativesTest
 import RefinedSExp.Test.RefinedSExpTest
 import RefinedSExp.Test.RefinementInterpretationTest
 import RefinedSExp.Test.AlgebraicSExpTest
 import RefinedSExp.Test.AlgebraicSExpInterpretationTest
-import RefinedSExp.Test.ScopedExpTest
+import RefinedSExp.Test.ComputationTest
 import Datatypes.Test.AlgebraicTypesTest
 import Datatypes.Test.DatatypesTest
 import Datatypes.Test.InductiveDatatypesTest
@@ -43,14 +43,14 @@ export
 partial main : IO ()
 main = do
   RefinedSExp.Test.ListTest.listTests
-  RefinedSExp.Test.SExpTest.sExpTests
+  RefinedSExp.PairVariant.Test.SExpTest.sExpTests
   RefinedSExp.Test.SExpApplicativesTest.sExpApplicativesTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
   RefinedSExp.Test.RefinementInterpretationTest.refinementInterpretationTests
   RefinedSExp.Test.SExpFinTest.sexpFinTests
   RefinedSExp.Test.AlgebraicSExpTest.algebraicSExpTests
   RefinedSExp.Test.AlgebraicSExpInterpretationTest.algebraicSExpInterpretationTests
-  RefinedSExp.Test.ScopedExpTest.scopedExpTests
+  RefinedSExp.Test.ComputationTest.computationTests
   Datatypes.Test.AlgebraicTypesTest.algebraicTypesTests
   Datatypes.Test.DatatypesTest.datatypesTests
   Datatypes.Test.InductiveDatatypesTest.inductiveDatatypesTests
