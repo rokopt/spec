@@ -19,8 +19,8 @@ emptyContext = ClosureMap empty
 export
 partial computationTests : IO ()
 computationTests = do
-  printLn "Begin scopedSExpTests:"
+  printLn "Begin computationTests:"
   printLn $ show computationNotationTest
-  printLn "End computationTests."
   printLn $ "The empty context looks like: " ++ show emptyContext
+  printLn "End computationTests."
   pure ()

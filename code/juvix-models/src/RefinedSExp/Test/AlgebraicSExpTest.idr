@@ -19,7 +19,7 @@ sexpNotationTest =
 export
 algebraicSExpTests : IO ()
 algebraicSExpTests = do
-  printLn "Begin algebraicSExpTests:"
-  printLn $ show sexpNotationTest
-  printLn "End algebraicSExpTests."
+  -- printLn "Begin algebraicSExpTests:"
+  -- printLn $ show sexpNotationTest
+  -- printLn "End algebraicSExpTests."
   pure ()

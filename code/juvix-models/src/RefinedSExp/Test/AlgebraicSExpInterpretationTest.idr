@@ -80,10 +80,10 @@ VectTypeFamily a = (Nat ** flip Vect a)
 export
 algebraicSExpInterpretationTests : IO ()
 algebraicSExpInterpretationTests = do
-  printLn "Begin algebraicSExpInterpretationTests:"
-  printLn $ "stringNat 8 = " ++ (show $ stringNat8)
-  printLn $ "stringNat 8 is " ++ (if isStringNat stringNat8 then "a string nat" else "something else")
-  printLn $ "corruptedStringNat 8 = " ++ (show $ corruptedStringNat8)
-  printLn $ "corruptedStringNat 8 is " ++ (if isStringNat corruptedStringNat8 then "a string nat" else "something else")
-  printLn "End algebraicSExpInterpretationTests."
+  -- printLn "Begin algebraicSExpInterpretationTests:"
+  -- printLn $ "stringNat 8 = " ++ (show $ stringNat8)
+  -- printLn $ "stringNat 8 is " ++ (if isStringNat stringNat8 then "a string nat" else "something else")
+  -- printLn $ "corruptedStringNat 8 = " ++ (show $ corruptedStringNat8)
+  -- printLn $ "corruptedStringNat 8 is " ++ (if isStringNat corruptedStringNat8 then "a string nat" else "something else")
+  -- printLn "End algebraicSExpInterpretationTests."
   pure ()
