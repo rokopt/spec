@@ -335,7 +335,7 @@ data DataAtom : Type where
 public export
 Show DataAtom where
   show (DAKeyword k) = show k
-  show (DAData n) = show n
+  show (DAData d) = show d
 
 public export
 daShow : DataAtom -> String
@@ -343,14 +343,14 @@ daShow = show
 
 public export
 daDecEq : DecEqPred DataAtom
-daDecEq (DAKeyword n) (DAKeyword n') = case decEq n n' of
+daDecEq (DAKeyword k) (DAKeyword k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 daDecEq (DAKeyword _) (DAData _) =
   No $ \eq => case eq of Refl impossible
 daDecEq (DAData _) (DAKeyword _) =
   No $ \eq => case eq of Refl impossible
-daDecEq (DAData s) (DAData s') = case decEq s s' of
+daDecEq (DAData d) (DAData d') = case decEq d d' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -364,10 +364,10 @@ Eq DataAtom using decEqToEq where
 
 public export
 Ord DataAtom where
-  DAKeyword n < DAKeyword n' = n < n'
+  DAKeyword k < DAKeyword k' = k < k'
   DAKeyword _ < DAData _ = True
   DAData _ < DAKeyword _ = False
-  DAData s < DAData s' = s < s'
+  DAData d < DAData d' = d < d'
 
 public export
 DAFail : DataAtom
