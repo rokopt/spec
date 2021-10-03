@@ -8,12 +8,12 @@ import public RefinedSExp.ScopedExp
 public export
 scopedExpNotationTest : NamedSExp
 scopedExpNotationTest =
-  NANat 0 $* (NAKeyword WithNameWrongArguments $* NAString "two" $^^ NANat 3) ::
+  NANat 0 $* (NAKeyword WithMacro $* NAString "two" $^^ NANat 3) ::
     (NANat 4 $*** (NANat 5 $* (NANat 6 $*** (NAString "seven" $**^ NANat 8)) $:^
-      NAReflectedKeyword WithName)) $:^ NANat 10
+      NAReflectedKeyword WithMacroWrongArgumentCount)) $:^ NANat 10
 
 public export
-emptyContext : NSContext
+emptyContext : NameBinding
 emptyContext = ClosureMap empty
 
 export

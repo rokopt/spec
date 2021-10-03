@@ -147,16 +147,18 @@ mutual
 public export
 data Keyword : Type where
   UnboundName : Keyword
-  WithName : Keyword
-  WithNameWrongArguments : Keyword
+  WithMacro : Keyword
+  WithMacroWrongArgumentCount : Keyword
   NonFunctionalKeyword : Keyword
+  Eval : Keyword
 
 public export
 keywordToString : Keyword -> String
 keywordToString UnboundName = "UnboundName"
-keywordToString WithName = "WithName"
-keywordToString WithNameWrongArguments = "WithNameWrongArguments"
+keywordToString WithMacro = "WithMacro"
+keywordToString WithMacroWrongArgumentCount = "WithMacroWrongArgumentCount"
 keywordToString NonFunctionalKeyword = "NonFunctionalKeyword"
+keywordToString Eval = "Eval"
 
 public export
 Show Keyword where
@@ -165,25 +167,28 @@ Show Keyword where
 public export
 kEncode : Keyword -> Nat
 kEncode UnboundName = 0
-kEncode WithName = 1
-kEncode WithNameWrongArguments = 2
+kEncode WithMacro = 1
+kEncode WithMacroWrongArgumentCount = 2
 kEncode NonFunctionalKeyword = 3
+kEncode Eval = 4
 
 public export
 kDecode : Nat -> Keyword
 kDecode 0 = UnboundName
-kDecode 1 = WithName
-kDecode 2 = WithNameWrongArguments
+kDecode 1 = WithMacro
+kDecode 2 = WithMacroWrongArgumentCount
 kDecode 3 = NonFunctionalKeyword
+kDecode 4 = Eval
 kDecode _ = UnboundName
 
 export
 kDecodeIsLeftInverse :
   IsLeftInverseOf ScopedExp.kEncode ScopedExp.kDecode
 kDecodeIsLeftInverse UnboundName = Refl
-kDecodeIsLeftInverse WithName = Refl
-kDecodeIsLeftInverse WithNameWrongArguments = Refl
+kDecodeIsLeftInverse WithMacro = Refl
+kDecodeIsLeftInverse WithMacroWrongArgumentCount = Refl
 kDecodeIsLeftInverse NonFunctionalKeyword = Refl
+kDecodeIsLeftInverse Eval = Refl
 
 export
 kEncodeIsInjective : IsInjective ScopedExp.kEncode
@@ -323,12 +328,12 @@ NAUnboundName : NameAtom
 NAUnboundName = NAKeyword UnboundName
 
 public export
-NAWithName : NameAtom
-NAWithName = NAKeyword WithName
+NAWithMacro : NameAtom
+NAWithMacro = NAKeyword WithMacro
 
 public export
-NAWithNameWrongArguments : NameAtom
-NAWithNameWrongArguments = NAKeyword WithNameWrongArguments
+NAWithMacroWrongArgumentCount : NameAtom
+NAWithMacroWrongArgumentCount = NAKeyword WithMacroWrongArgumentCount
 
 public export
 NANonFunctionalKeyword : NameAtom
@@ -387,12 +392,12 @@ NSUnboundName : NamedSExp
 NSUnboundName = $^ NAUnboundName
 
 public export
-NSWithName : NamedSExp
-NSWithName = $^ NAWithName
+NSWithMacro : NamedSExp
+NSWithMacro = $^ NAWithMacro
 
 public export
-NSWithNameWrongArguments : NamedSExp
-NSWithNameWrongArguments = $^ NAWithNameWrongArguments
+NSWithMacroWrongArgumentCount : NamedSExp
+NSWithMacroWrongArgumentCount = $^ NAWithMacroWrongArgumentCount
 
 public export
 NSNonFunctionalKeyword : NamedSExp
@@ -419,38 +424,13 @@ mutual
     show (NamedContext t c) = "(" ++ show t ++ ", " ++ show c ++ ")"
 
 public export
-NSContext : Type
-NSContext = NamingContext Name NamedSExp
+NameBinding : Type
+NameBinding = NamingContext Name NamedSExp
 
 public export
-metaInterpreterStep :
-  (context : NSContext) ->
-  (name : NameAtom) ->
-  (arguments : NamedSList) ->
-  NamedSExp
-metaInterpreterStep (ClosureMap context) (NAName n) arguments =
-  case lookup n context of
-    Just x => ?metaInterpreterStep_hole_bound_name
-    Nothing => NSUnboundName
-metaInterpreterStep
-  (ClosureMap context) (NAKeyword WithName) [name, definition] =
-    ?metaInterpreterStep_hole_withName
-metaInterpreterStep _ (NAKeyword WithName) _ =
-  NSWithNameWrongArguments
-metaInterpreterStep _ (NAKeyword _) _ = NSNonFunctionalKeyword
-
-{-
+ComputableFunction : Type
+ComputableFunction = NamedSList -> NamedSExp
 
 public export
-NSComputation : Type
-NSComputation = NSContext -> NamedSList -> NamedSExp
-
--- | Interpret an expression as a computation.
-public export
-metaInterpreter : NamedSExp -> NSComputation
-metaInterpreter =
-  fst $ sexpEliminators $ SExpEliminatorArgs
-    metaInterpreterStep
-    []
-    (\_, _ => (::))
--}
+NameInterpretation : Type
+NameInterpretation = NamingContext Name ComputableFunction
