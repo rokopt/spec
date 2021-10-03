@@ -13,7 +13,7 @@ scopedExpNotationTest =
       NAReflectedKeyword WithName)) $:^ NANat 10
 
 public export
-emptyContext : PureNameContext
+emptyContext : NSContext
 emptyContext = ClosureMap empty
 
 export

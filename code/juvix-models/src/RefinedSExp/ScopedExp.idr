@@ -319,6 +319,22 @@ Ord NameAtom where
   NAName s < NAName s' = s < s'
 
 public export
+NAUnboundName : NameAtom
+NAUnboundName = NAKeyword UnboundName
+
+public export
+NAWithName : NameAtom
+NAWithName = NAKeyword WithName
+
+public export
+NAWithNameWrongArguments : NameAtom
+NAWithNameWrongArguments = NAKeyword WithNameWrongArguments
+
+public export
+NANonFunctionalKeyword : NameAtom
+NANonFunctionalKeyword = NAKeyword NonFunctionalKeyword
+
+public export
 NAReflectedKeyword : Keyword -> NameAtom
 NAReflectedKeyword = NAName . NReflectedKeyword
 
@@ -367,20 +383,20 @@ Eq NamedSExp using decEqToEq where
   (==) = (==)
 
 public export
-NPred : Type
-NPred = NamedSExp -> Type
+NSUnboundName : NamedSExp
+NSUnboundName = $^ NAUnboundName
 
 public export
-NLPred : Type
-NLPred = NamedSList -> Type
+NSWithName : NamedSExp
+NSWithName = $^ NAWithName
 
 public export
-NSComputation : Type
-NSComputation = NamedSList -> NamedSExp
+NSWithNameWrongArguments : NamedSExp
+NSWithNameWrongArguments = $^ NAWithNameWrongArguments
 
 public export
-NSCPred : Type
-NSCPred = NSComputation -> Type
+NSNonFunctionalKeyword : NamedSExp
+NSNonFunctionalKeyword = $^ NANonFunctionalKeyword
 
 mutual
   public export
@@ -403,8 +419,38 @@ mutual
     show (NamedContext t c) = "(" ++ show t ++ ", " ++ show c ++ ")"
 
 public export
-PureNameContext : Type
-PureNameContext = NamingContext Name NamedSExp
+NSContext : Type
+NSContext = NamingContext Name NamedSExp
 
 public export
-MetaContext : Type
+metaInterpreterStep :
+  (context : NSContext) ->
+  (name : NameAtom) ->
+  (arguments : NamedSList) ->
+  NamedSExp
+metaInterpreterStep (ClosureMap context) (NAName n) arguments =
+  case lookup n context of
+    Just x => ?metaInterpreterStep_hole_bound_name
+    Nothing => NSUnboundName
+metaInterpreterStep
+  (ClosureMap context) (NAKeyword WithName) [name, definition] =
+    ?metaInterpreterStep_hole_withName
+metaInterpreterStep _ (NAKeyword WithName) _ =
+  NSWithNameWrongArguments
+metaInterpreterStep _ (NAKeyword _) _ = NSNonFunctionalKeyword
+
+{-
+
+public export
+NSComputation : Type
+NSComputation = NSContext -> NamedSList -> NamedSExp
+
+-- | Interpret an expression as a computation.
+public export
+metaInterpreter : NamedSExp -> NSComputation
+metaInterpreter =
+  fst $ sexpEliminators $ SExpEliminatorArgs
+    metaInterpreterStep
+    []
+    (\_, _ => (::))
+-}
