@@ -269,8 +269,9 @@ public export
 Ord Keyword where
   k < k' = kEncode k < kEncode k'
 
--- | Uninterpreted data -- a "type of individuals" for particular use
--- | when _interpreting_ expressions as representing computable functions.
+-- | Data with no structure besides a decidable equality -- a "type of
+-- | individuals" for particular use when _interpreting_ expressions as
+-- | representing computable functions.
 public export
 data Data : Type where
   DReflectedKeyword : Keyword -> Data
@@ -427,7 +428,7 @@ DSFail = $^ DAFail
 
 public export
 ComputableFunction : Type
-ComputableFunction = DSList -> DSExp
+ComputableFunction = DSExp -> DSExp
 
 mutual
   public export
