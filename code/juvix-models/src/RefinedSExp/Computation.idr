@@ -125,13 +125,13 @@ public export
 data Data : Type where
   DReflectedKeyword : Keyword -> Data
   DNat : Nat -> Data
-  CString : String -> Data
+  DString : String -> Data
 
 public export
 Show Data where
   show (DReflectedKeyword k) = "~" ++ keywordToString k
   show (DNat n) = show n
-  show (CString s) = "'" ++ s
+  show (DString s) = "'" ++ s
 
 export
 dDecEq : DecEqPred Data
@@ -140,20 +140,20 @@ dDecEq (DReflectedKeyword k) (DReflectedKeyword k') = case decEq k k' of
   No neq => No $ \eq => case eq of Refl => neq Refl
 dDecEq (DReflectedKeyword _) (DNat _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (DReflectedKeyword _) (CString _) =
+dDecEq (DReflectedKeyword _) (DString _) =
   No $ \eq => case eq of Refl impossible
 dDecEq (DNat _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
 dDecEq (DNat n) (DNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-dDecEq (DNat _) (CString _) =
+dDecEq (DNat _) (DString _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (CString _) (DReflectedKeyword _) =
+dDecEq (DString _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (CString _) (DNat _) =
+dDecEq (DString _) (DNat _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (CString s) (CString s') = case decEq s s' of
+dDecEq (DString s) (DString s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -169,13 +169,13 @@ public export
 Ord Data where
   DReflectedKeyword k < DReflectedKeyword k' = k < k'
   DReflectedKeyword _ < DNat _ = True
-  DReflectedKeyword _ < CString _ = True
+  DReflectedKeyword _ < DString _ = True
   DNat _ < DReflectedKeyword _ = False
   DNat n < DNat n' = n < n'
-  DNat _ < CString _ = True
-  CString _ < DReflectedKeyword _ = False
-  CString _ < DNat _ = False
-  CString s < CString s' = s < s'
+  DNat _ < DString _ = True
+  DString _ < DReflectedKeyword _ = False
+  DString _ < DNat _ = False
+  DString s < DString s' = s < s'
 
 public export
 data ComputeAtom : Type where
@@ -233,7 +233,7 @@ CANat = CAData . DNat
 
 public export
 CAString : String -> ComputeAtom
-CAString = CAData . CString
+CAString = CAData . DString
 
 public export
 CExp : Type
