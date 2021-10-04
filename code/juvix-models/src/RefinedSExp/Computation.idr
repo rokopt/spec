@@ -63,6 +63,9 @@ data Keyword : Type where
   ReflectedAtom : Keyword
   -- | Decidable equality, which includes atom elimination.
   CompareAtoms : Keyword
+  -- | Interpret:  a computable function whose arguments are an
+  -- | S-expression and some arguments.
+  Interpret : Keyword
 
 public export
 keywordToString : Keyword -> String
@@ -80,6 +83,7 @@ keywordToString Fix = "Fix"
 keywordToString Cofix = "Cofix"
 keywordToString ReflectedAtom = "ReflectedAtom"
 keywordToString CompareAtoms = "CompareAtoms"
+keywordToString Interpret = "Interpret"
 
 public export
 Show Keyword where
@@ -101,6 +105,7 @@ kEncode Fix = 10
 kEncode Cofix = 11
 kEncode ReflectedAtom = 12
 kEncode CompareAtoms = 13
+kEncode Interpret = 14
 
 public export
 kDecode : Nat -> Keyword
@@ -118,6 +123,7 @@ kDecode 10 = Fix
 kDecode 11 = Cofix
 kDecode 12 = ReflectedAtom
 kDecode 13 = CompareAtoms
+kDecode 14 = Interpret
 kDecode _ = Fail
 
 export
@@ -137,6 +143,7 @@ kDecodeIsLeftInverse Fix = Refl
 kDecodeIsLeftInverse Cofix = Refl
 kDecodeIsLeftInverse ReflectedAtom = Refl
 kDecodeIsLeftInverse CompareAtoms = Refl
+kDecodeIsLeftInverse Interpret = Refl
 
 export
 kEncodeIsInjective : IsInjective Computation.kEncode
