@@ -175,35 +175,39 @@ mutual
 public export
 record SExpTransformSignature (changeDesc, atom, context : Type) where
   constructor SExpTransformArgs
-  transformOne : SExp atom -> context -> SExpTransformResult changeDesc atom
+  transformOne : SExp atom -> context ->
+    (context, SExpTransformResult changeDesc atom)
 
 public export
 sexpTransformers : {changeDesc, atom, context : Type} ->
   SExpTransformSignature changeDesc atom context ->
-  (SExp atom -> context -> SExpTransformResult changeDesc atom,
-   SList atom -> context -> SListTransformResult changeDesc atom)
+  (SExp atom -> context -> (context, SExpTransformResult changeDesc atom),
+   SList atom -> context -> (context, SListTransformResult changeDesc atom))
 sexpTransformers signature = sexpEliminators $ SExpEliminatorArgs
   (\a, l, result, context => case result context of
-    SListTransformFailed => SExpTransformFailed
-    SListUnchanged => transformOne signature (a $* l) context
-    SListChanged desc l' => SExpChanged desc (a $* l'))
-  (\_ => SListUnchanged)
+    (new_context, SListTransformFailed) => (new_context, SExpTransformFailed)
+    (new_context, SListUnchanged) => transformOne signature (a $* l) new_context
+    (new_context, SListChanged desc l') =>
+      (new_context, SExpChanged desc (a $* l')))
+  (\context => (context, SListUnchanged))
   (\x, l, xResult, lResult, context => case xResult context of
-    SExpTransformFailed => SListTransformFailed
-    SExpUnchanged => case lResult context of
-      SListTransformFailed => SListTransformFailed
-      SListUnchanged => SListUnchanged
-      SListChanged desc l' => SListChanged desc (x :: l')
-    SExpChanged desc x' => SListChanged desc (x' :: l))
+    (new_context, SExpTransformFailed) => (new_context, SListTransformFailed)
+    (new_context, SExpUnchanged) => case lResult new_context of
+      (new_context, SListTransformFailed) => (new_context, SListTransformFailed)
+      (new_context, SListUnchanged) => (new_context, SListUnchanged)
+      (new_context, SListChanged desc l') =>
+        (new_context, SListChanged desc (x :: l'))
+    (new_context, SExpChanged desc x') =>
+      (new_context, SListChanged desc (x' :: l)))
 
 public export
 sexpTransform : {changeDesc, atom, context : Type} ->
   SExpTransformSignature changeDesc atom context ->
-  SExp atom -> context -> SExpTransformResult changeDesc atom
+  SExp atom -> context -> (context, SExpTransformResult changeDesc atom)
 sexpTransform = fst . sexpTransformers
 
 public export
 slistTransform : {changeDesc, atom, context : Type} ->
   SExpTransformSignature changeDesc atom context ->
-  SList atom -> context -> SListTransformResult changeDesc atom
+  SList atom -> context -> (context, SListTransformResult changeDesc atom)
 slistTransform = snd . sexpTransformers

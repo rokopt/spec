@@ -265,11 +265,11 @@ CSFail = $^ CAFail
 public export
 cexpTransform : {changeDesc, context: Type} ->
   SExpTransformSignature changeDesc ComputeAtom context ->
-  CExp -> context -> SExpTransformResult changeDesc ComputeAtom
+  CExp -> context -> (context, SExpTransformResult changeDesc ComputeAtom)
 cexpTransform = sexpTransform
 
 public export
 clistTransform : {changeDesc, context : Type} ->
   SExpTransformSignature changeDesc ComputeAtom context ->
-  CList -> context -> SListTransformResult changeDesc ComputeAtom
+  CList -> context -> (context, SListTransformResult changeDesc ComputeAtom)
 clistTransform = slistTransform
