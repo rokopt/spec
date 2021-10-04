@@ -159,37 +159,41 @@ mutual
 
 mutual
   public export
-  data SExpTransformResult : Type -> Type where
-    SExpTransformFailed : SExpTransformResult atom
-    SExpUnchanged : SExpTransformResult atom
-    SExpChanged : SExp atom -> SExpTransformResult atom
+  data SExpTransformResult : Type -> Type -> Type where
+    SExpTransformFailed : SExpTransformResult changeDesc atom
+    SExpUnchanged : SExpTransformResult changeDesc atom
+    SExpChanged :
+      changeDesc -> SExp atom -> SExpTransformResult changeDesc atom
 
   public export
-  data SListTransformResult : Type -> Type where
-    SListTransformFailed : SListTransformResult atom
-    SListUnchanged : SListTransformResult atom
-    SListChanged : SList atom -> SListTransformResult atom
+  data SListTransformResult : Type -> Type -> Type where
+    SListTransformFailed : SListTransformResult changeDesc atom
+    SListUnchanged : SListTransformResult changeDesc atom
+    SListChanged :
+      changeDesc -> SList atom -> SListTransformResult changeDesc atom
 
 public export
-record SExpandSignature (atom : Type) where
+record SExpandSignature (changeDesc, atom : Type) where
   constructor SExpandArgs
-  expandOne : SExp atom -> SExpTransformResult atom
+  expandOne : SExp atom -> SExpTransformResult changeDesc atom
 
 mutual
   public export
-  sexpExpand : SExpandSignature atom -> SExp atom -> SExpTransformResult atom
+  sexpExpand : SExpandSignature changeDesc atom -> SExp atom ->
+    SExpTransformResult changeDesc atom
   sexpExpand signature (a $* l) = case slistExpand signature l of
     SListTransformFailed => SExpTransformFailed
     SListUnchanged => expandOne signature (a $* l)
-    SListChanged l' => SExpChanged (a $* l')
+    SListChanged desc l' => SExpChanged desc (a $* l')
 
   public export
-  slistExpand : SExpandSignature atom -> SList atom -> SListTransformResult atom
+  slistExpand : SExpandSignature changeDesc atom -> SList atom ->
+    SListTransformResult changeDesc atom
   slistExpand _ [] = SListUnchanged
   slistExpand signature (x :: l) = case sexpExpand signature x of
     SExpTransformFailed => SListTransformFailed
     SExpUnchanged => case slistExpand signature l of
       SListTransformFailed => SListTransformFailed
       SListUnchanged => SListUnchanged
-      SListChanged l' => SListChanged (x :: l')
-    SExpChanged x' => SListChanged (x' :: l)
+      SListChanged desc l' => SListChanged desc (x :: l')
+    SExpChanged desc x' => SListChanged desc (x' :: l)
