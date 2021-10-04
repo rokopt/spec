@@ -329,109 +329,109 @@ Ord Data where
   DString s < DString s' = s < s'
 
 public export
-data DataAtom : Type where
-  DAKeyword : Keyword -> DataAtom
-  DAData : Data -> DataAtom
+data ComputeAtom : Type where
+  CAKeyword : Keyword -> ComputeAtom
+  CAData : Data -> ComputeAtom
 
 public export
-Show DataAtom where
-  show (DAKeyword k) = show k
-  show (DAData d) = show d
+Show ComputeAtom where
+  show (CAKeyword k) = show k
+  show (CAData d) = show d
 
 public export
-daShow : DataAtom -> String
-daShow = show
+caShow : ComputeAtom -> String
+caShow = show
 
 public export
-daDecEq : DecEqPred DataAtom
-daDecEq (DAKeyword k) (DAKeyword k') = case decEq k k' of
+caDecEq : DecEqPred ComputeAtom
+caDecEq (CAKeyword k) (CAKeyword k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-daDecEq (DAKeyword _) (DAData _) =
+caDecEq (CAKeyword _) (CAData _) =
   No $ \eq => case eq of Refl impossible
-daDecEq (DAData _) (DAKeyword _) =
+caDecEq (CAData _) (CAKeyword _) =
   No $ \eq => case eq of Refl impossible
-daDecEq (DAData d) (DAData d') = case decEq d d' of
+caDecEq (CAData d) (CAData d') = case decEq d d' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-DecEq DataAtom where
-  decEq = daDecEq
+DecEq ComputeAtom where
+  decEq = caDecEq
 
 public export
-Eq DataAtom using decEqToEq where
+Eq ComputeAtom using decEqToEq where
   (==) = (==)
 
 public export
-Ord DataAtom where
-  DAKeyword k < DAKeyword k' = k < k'
-  DAKeyword _ < DAData _ = True
-  DAData _ < DAKeyword _ = False
-  DAData d < DAData d' = d < d'
+Ord ComputeAtom where
+  CAKeyword k < CAKeyword k' = k < k'
+  CAKeyword _ < CAData _ = True
+  CAData _ < CAKeyword _ = False
+  CAData d < CAData d' = d < d'
 
 public export
-DAFail : DataAtom
-DAFail = DAKeyword Fail
+CAFail : ComputeAtom
+CAFail = CAKeyword Fail
 
 public export
-DAReflectedKeyword : Keyword -> DataAtom
-DAReflectedKeyword = DAData . DReflectedKeyword
+CAReflectedKeyword : Keyword -> ComputeAtom
+CAReflectedKeyword = CAData . DReflectedKeyword
 
 public export
-DANat : Nat -> DataAtom
-DANat = DAData . DNat
+CANat : Nat -> ComputeAtom
+CANat = CAData . DNat
 
 public export
-DAString : String -> DataAtom
-DAString = DAData . DString
+CAString : String -> ComputeAtom
+CAString = CAData . DString
 
 public export
-DSExp : Type
-DSExp = SExp DataAtom
+CExp : Type
+CExp = SExp ComputeAtom
 
 public export
-DSList : Type
-DSList = SList DataAtom
+CList : Type
+CList = SList ComputeAtom
 
 public export
-Show DSExp where
+Show CExp where
   show = fst (sexpShows show)
 
 public export
-Show DSList where
+Show CList where
   show l = "(" ++ snd (sexpShows show) l ++ ")"
 
 public export
-dsDecEq : DecEqPred DSExp
-dsDecEq = sexpDecEq daDecEq
+dsDecEq : DecEqPred CExp
+dsDecEq = sexpDecEq caDecEq
 
 public export
-dslDecEq : DecEqPred DSList
-dslDecEq = slistDecEq daDecEq
+dslDecEq : DecEqPred CList
+dslDecEq = slistDecEq caDecEq
 
 public export
-DecEq DSExp where
+DecEq CExp where
   decEq = dsDecEq
 
 public export
-DecEq DSList where
+DecEq CList where
   decEq = dslDecEq
 
 public export
-Eq DSExp using decEqToEq where
+Eq CExp using decEqToEq where
   (==) = (==)
 
 public export
-DSFail : DSExp
-DSFail = $^ DAFail
+DSFail : CExp
+DSFail = $^ CAFail
 
 -- | A computable function whose termination Idris-2 can prove.
 -- | It still returns "maybe" because it might be partial (its
--- | domain might not include all of DSExp).
+-- | domain might not include all of CExp).
 public export
 TerminatingComputableFunction : Type
-TerminatingComputableFunction = DSExp -> Maybe DSExp
+TerminatingComputableFunction = CExp -> Maybe CExp
 
 mutual
   public export
