@@ -1,6 +1,7 @@
 module RefinedSExp.Data
 
 import public Library.Decidability
+import public RefinedSExp.SExp
 
 %default total
 
@@ -44,3 +45,19 @@ Ord Data where
   DNat _ < DString _ = True
   DString _ < DNat _ = False
   DString s < DString s' = s < s'
+
+public export
+DExp : Type
+DExp = SExp Data
+
+public export
+DList : Type
+DList = SList Data
+
+public export
+Show DExp where
+  show = fst (sexpShows show)
+
+public export
+Show DList where
+  show l = "(" ++ snd (sexpShows show) l ++ ")"

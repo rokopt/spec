@@ -8,10 +8,6 @@ import public RefinedSExp.Data
 %default total
 
 public export
-Show (SExp Data) where
-  show = fst (sexpShows show)
-
-public export
 emptyContext : NamingContext Data (SExp Data)
 emptyContext = ClosureMap empty
 
