@@ -10,26 +10,71 @@ import public RefinedSExp.Data
 %default total
 
 -- XXX Still to add:
--- intro for SExp : function returning atom and list of functions returning sexp
 -- elim for sexp : atom + list of functions case
--- intro for atom : is this "const"?
 -- elim for atom : decidable equality (case for equal, case for not?)
 -- lambda (introduces de Bruijn index)
 -- var (refers to de Bruijn index)
+-- app (metaprogram execution)
 public export
 data Keyword : Type where
+  -- | Represents failure of a general computable function application.
   Fail : Keyword
+  -- | Composition of general computable functions.
   Compose : Keyword
+  -- | The identity general computable function (which is total).
   Identity : Keyword
+  -- | Polymorphic constant:  the constant general computable function
+  -- | which always returns the parameter it's given.
   Const : Keyword
+  -- | Product introduction for general compuatable functions:  form a function
+  -- | which returns tuples from a tuple of functions (which must have the same
+  -- | domain for this operation to make sense).
   Tuple : Keyword
+  -- | Product elimination for general compuatable functions:  form a function
+  -- | which returns tuples from a tuple of functions (which must have the same
+  -- | domain for this operation to make sense).
   Project : Keyword
-  Case : Keyword
+  -- | Coproduct introduction for general computable functions:  choose one
+  -- | of one or more possible forms.
   Inject : Keyword
+  -- | Coproduct elimination for general computable functions:  form a function
+  -- | which accepts a coproduct and returns a case depending on which of the
+  -- | coproduct's injections is passed in.
+  Case : Keyword
+  -- | The evaluation function associated with exponentials of general
+  -- | computable functions.
   Eval : Keyword
+  -- | The currying function associated with exponentials of general
+  -- | computable functions.
   Curry : Keyword
+  -- | General recursive fixpoint:  treat the input parameter to a function
+  -- | as the function itself.
   Fix : Keyword
+  -- | General recursive cofixpoint.  (XXX Do I need this?)
   Cofix : Keyword
+  -- | Reflection:  atom introduction, forming a constant function which
+  -- | returns a given atom.
+  -- |
+  -- | Given reflected atoms, we can fully reflect using S-expressions as
+  -- | well:  an S-expression is a product, of an atom and a list of
+  -- | S-expressions, and a list is a coproduct, of a constant function
+  -- | ("nil" -- we can use, for example, the constant function returning
+  -- | const!) and a product (of an element and a list).
+  ReflectedAtom : Keyword
+  -- | Decidable equality, which includes atom elimination.
+  CompareAtoms : Keyword
+  -- | Introduce a metavariable into the context.  A metavariable represents
+  -- | a metaprogram.
+  Lambda : Keyword
+  -- | Get a metavariable from the context.  A metavariable always
+  -- | represents a program -- that is, a computable function, which
+  -- | takes in an SList of arguments and returns an SExp.  Hence, the
+  -- | metaprogram is called on with the arguments in the "list" part of
+  -- | the S-expression of which it is the "atom" part.
+  Get : Keyword
+  -- | Apply a general computable function which is parameterized on
+  -- | a metaprogram to a metaprogram.
+  Apply : Keyword
 
 public export
 keywordToString : Keyword -> String
@@ -45,6 +90,11 @@ keywordToString Eval = "Eval"
 keywordToString Curry = "Curry"
 keywordToString Fix = "Fix"
 keywordToString Cofix = "Cofix"
+keywordToString ReflectedAtom = "ReflectedAtom"
+keywordToString CompareAtoms = "CompareAtoms"
+keywordToString Lambda = "Lambda"
+keywordToString Get = "Get"
+keywordToString Apply = "Apply"
 
 public export
 Show Keyword where
@@ -64,6 +114,11 @@ kEncode Eval = 8
 kEncode Curry = 9
 kEncode Fix = 10
 kEncode Cofix = 11
+kEncode ReflectedAtom = 12
+kEncode CompareAtoms = 13
+kEncode Lambda = 14
+kEncode Get = 15
+kEncode Apply = 16
 
 public export
 kDecode : Nat -> Keyword
@@ -79,6 +134,11 @@ kDecode 8 = Eval
 kDecode 9 = Curry
 kDecode 10 = Fix
 kDecode 11 = Cofix
+kDecode 12 = ReflectedAtom
+kDecode 13 = CompareAtoms
+kDecode 14 = Lambda
+kDecode 15 = Get
+kDecode 16 = Apply
 kDecode _ = Fail
 
 export
@@ -96,6 +156,11 @@ kDecodeIsLeftInverse Eval = Refl
 kDecodeIsLeftInverse Curry = Refl
 kDecodeIsLeftInverse Fix = Refl
 kDecodeIsLeftInverse Cofix = Refl
+kDecodeIsLeftInverse ReflectedAtom = Refl
+kDecodeIsLeftInverse CompareAtoms = Refl
+kDecodeIsLeftInverse Lambda = Refl
+kDecodeIsLeftInverse Get = Refl
+kDecodeIsLeftInverse Apply = Refl
 
 export
 kEncodeIsInjective : IsInjective Computation.kEncode
