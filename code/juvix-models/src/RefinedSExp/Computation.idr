@@ -263,13 +263,13 @@ CSFail : CExp
 CSFail = $^ CAFail
 
 public export
-cexpTransform : {changeDesc, context: Type} ->
-  SExpTransformSignature changeDesc ComputeAtom context ->
-  CExp -> context -> (context, SExpTransformResult changeDesc ComputeAtom)
+cexpTransform : {context: Type} ->
+  SExpTransformSignature ComputeAtom context ->
+  CExp -> context -> (context, SExpTransformResult ComputeAtom)
 cexpTransform = sexpTransform
 
 public export
-clistTransform : {changeDesc, context : Type} ->
-  SExpTransformSignature changeDesc ComputeAtom context ->
-  CList -> context -> (context, SListTransformResult changeDesc ComputeAtom)
+clistTransform : {context : Type} ->
+  SExpTransformSignature ComputeAtom context ->
+  CList -> context -> (context, SListTransformResult ComputeAtom)
 clistTransform = slistTransform
