@@ -7,10 +7,6 @@ import public Data.SortedMap
 
 %default total
 
------------------------
----- S-expressions ----
------------------------
-
 mutual
   public export
   data NamingContext : (name, term : Type) -> Type where

@@ -4,160 +4,9 @@ import public Library.FunctionsAndRelations
 import public Library.Decidability
 import public Library.List
 import public Category.ComputableCategories
-import public Data.SortedMap
+import public RefinedSExp.SExp
 
 %default total
-
------------------------
----- S-expressions ----
------------------------
-
--- I continue to waffle over representations.  On the whole
--- I think I like this form with an atom and a list because
--- of the separation that it expresses between composition
--- and evaluation, between functional programming and
--- metaprogramming.  I might want to port some of the
--- machinery from the PairVariant, such as the many instances
--- and the well-founded induction (both performing well-founded
--- induction on S-expressions using their size, and using
--- S-expressions to perform well-founded induction on other
--- structures using the S-expressions' shape).
-
-mutual
-  infixr 7 $*
-  public export
-  data SExp : (name : Type) -> Type where
-    ($*) : name -> SList name -> SExp name
-
-  public export
-  SList : (name : Type) -> Type
-  SList = List . SExp
-
-prefix 11 $^
-public export
-($^) : {name : Type} -> name -> SExp name
-($^) n = n $* []
-
-infixr 7 $^:
-public export
-($^:) : {name : Type} -> name -> SList name -> SList name
-n $^: l = $^ n :: l
-
-prefix 11 $*^
-public export
-($*^) : {name : Type} -> name -> SList name
-($*^) n = n $^: []
-
-prefix 11 $**
-public export
-($**) : {name : Type} -> SExp name -> SList name
-($**) x = x :: []
-
-infixr 7 $***
-public export
-($***) : {name : Type} -> name -> SExp name -> SExp name
-n $*** x = n $* $** x
-
-infixr 7 $:*
-public export
-($:*) : {name : Type} -> SExp name -> SExp name -> SList name
-x $:* x' = x :: $** x'
-
-infixr 7 $:^
-public export
-($:^) : {name : Type} -> SExp name -> name -> SList name
-x $:^ n = x $:* $^ n
-
-infixr 7 $^^
-public export
-($^^) : {name : Type} -> name -> name -> SList name
-n $^^ n' = n $^: $*^ n'
-
-infixr 7 $**^
-public export
-($**^) : {name : Type} -> name -> name -> SExp name
-n $**^ n' = n $* $*^ n'
-
-public export
-SPred : (name : Type) -> Type
-SPred name = SExp name -> Type
-
-public export
-SLPred : (name : Type) -> Type
-SLPred name = SList name -> Type
-
-public export
-record SExpEliminatorSig
-  {name : Type} (0 sp : SPred name) (0 lp : SLPred name)
-  where
-    constructor SExpEliminatorArgs
-    expElim : (n : name) -> (l : SList name) -> lp l -> sp (n $* l)
-    nilElim : lp []
-    consElim : (x : SExp name) -> (l : SList name) ->
-      sp x -> lp l -> lp (x :: l)
-
-mutual
-  public export
-  sexpEliminator :
-    {name : Type} -> {0 sp : SPred name} -> {0 lp : SLPred name} ->
-    (signature : SExpEliminatorSig sp lp) ->
-    SExp name ~> sp
-  sexpEliminator signature (n $* l) =
-    expElim signature n l (slistEliminator signature l)
-
-  public export
-  slistEliminator :
-    {name : Type} -> {0 sp : SPred name} -> {0 lp : SLPred name} ->
-    (signature : SExpEliminatorSig sp lp) ->
-    SList name ~> lp
-  slistEliminator signature [] =
-    nilElim signature
-  slistEliminator signature (x :: l) =
-    consElim signature x l
-      (sexpEliminator signature x) (slistEliminator signature l)
-
-public export
-sexpEliminators :
-  {name : Type} -> {0 sp : SPred name} -> {0 lp : SLPred name} ->
-  (signature : SExpEliminatorSig sp lp) ->
-  (SExp name ~> sp, SList name ~> lp)
-sexpEliminators signature =
-  (sexpEliminator signature, slistEliminator signature)
-
-public export
-sexpShows : {name : Type} -> (showName : name -> String) ->
-  (SExp name -> String, SList name -> String)
-sexpShows {name} showName =
-  sexpEliminators $ SExpEliminatorArgs
-    (\n, l, lString => case l of
-      [] => showName n
-      _ :: _ => "(" ++ showName n ++ " $* " ++ lString ++ ")")
-    ""
-    (\_, l, sx, sl => case l of
-      [] => sx
-      _ :: _ => sx ++ " : " ++ sl)
-
-mutual
-  public export
-  sexpDecEq :
-    {0 name : Type} -> (nEq : DecEqPred name) -> DecEqPred (SExp name)
-  sexpDecEq nEq (n $* l) (n' $* l') =
-    case (nEq n n', slistDecEq nEq l l') of
-      (Yes Refl, Yes Refl) => Yes Refl
-      (No nNeq, _) => No $ \eq => case eq of Refl => nNeq Refl
-      (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
-
-  public export
-  slistDecEq :
-    {0 name : Type} -> (nEq : DecEqPred name) -> DecEqPred (SList name)
-  slistDecEq nEq [] [] = Yes Refl
-  slistDecEq nEq [] (x :: l) = No $ \eq => case eq of Refl impossible
-  slistDecEq nEq (x :: l) [] = No $ \eq => case eq of Refl impossible
-  slistDecEq nEq (x :: l) (x' :: l') =
-    case (sexpDecEq nEq x x', slistDecEq nEq l l') of
-      (Yes Refl, Yes Refl) => Yes Refl
-      (No xNeq, _) => No $ \eq => case eq of Refl => xNeq Refl
-      (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
 
 public export
 data Keyword : Type where
@@ -276,13 +125,13 @@ public export
 data Data : Type where
   DReflectedKeyword : Keyword -> Data
   DNat : Nat -> Data
-  DString : String -> Data
+  CString : String -> Data
 
 public export
 Show Data where
   show (DReflectedKeyword k) = "~" ++ keywordToString k
   show (DNat n) = show n
-  show (DString s) = "'" ++ s
+  show (CString s) = "'" ++ s
 
 export
 dDecEq : DecEqPred Data
@@ -291,20 +140,20 @@ dDecEq (DReflectedKeyword k) (DReflectedKeyword k') = case decEq k k' of
   No neq => No $ \eq => case eq of Refl => neq Refl
 dDecEq (DReflectedKeyword _) (DNat _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (DReflectedKeyword _) (DString _) =
+dDecEq (DReflectedKeyword _) (CString _) =
   No $ \eq => case eq of Refl impossible
 dDecEq (DNat _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
 dDecEq (DNat n) (DNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-dDecEq (DNat _) (DString _) =
+dDecEq (DNat _) (CString _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (DString _) (DReflectedKeyword _) =
+dDecEq (CString _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (DString _) (DNat _) =
+dDecEq (CString _) (DNat _) =
   No $ \eq => case eq of Refl impossible
-dDecEq (DString s) (DString s') = case decEq s s' of
+dDecEq (CString s) (CString s') = case decEq s s' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
@@ -320,13 +169,13 @@ public export
 Ord Data where
   DReflectedKeyword k < DReflectedKeyword k' = k < k'
   DReflectedKeyword _ < DNat _ = True
-  DReflectedKeyword _ < DString _ = True
+  DReflectedKeyword _ < CString _ = True
   DNat _ < DReflectedKeyword _ = False
   DNat n < DNat n' = n < n'
-  DNat _ < DString _ = True
-  DString _ < DReflectedKeyword _ = False
-  DString _ < DNat _ = False
-  DString s < DString s' = s < s'
+  DNat _ < CString _ = True
+  CString _ < DReflectedKeyword _ = False
+  CString _ < DNat _ = False
+  CString s < CString s' = s < s'
 
 public export
 data ComputeAtom : Type where
@@ -384,7 +233,7 @@ CANat = CAData . DNat
 
 public export
 CAString : String -> ComputeAtom
-CAString = CAData . DString
+CAString = CAData . CString
 
 public export
 CExp : Type
@@ -403,52 +252,25 @@ Show CList where
   show l = "(" ++ snd (sexpShows show) l ++ ")"
 
 public export
-dsDecEq : DecEqPred CExp
-dsDecEq = sexpDecEq caDecEq
+csDecEq : DecEqPred CExp
+csDecEq = sexpDecEq caDecEq
 
 public export
-dslDecEq : DecEqPred CList
-dslDecEq = slistDecEq caDecEq
+cslDecEq : DecEqPred CList
+cslDecEq = slistDecEq caDecEq
 
 public export
 DecEq CExp where
-  decEq = dsDecEq
+  decEq = csDecEq
 
 public export
 DecEq CList where
-  decEq = dslDecEq
+  decEq = cslDecEq
 
 public export
 Eq CExp using decEqToEq where
   (==) = (==)
 
 public export
-DSFail : CExp
-DSFail = $^ CAFail
-
--- | A computable function whose termination Idris-2 can prove.
--- | It still returns "maybe" because it might be partial (its
--- | domain might not include all of CExp).
-public export
-TerminatingComputableFunction : Type
-TerminatingComputableFunction = CExp -> Maybe CExp
-
-mutual
-  public export
-  data NamingContext : (name, term : Type) -> Type where
-    ClosureMap : {name, term : Type} ->
-      SortedMap name (Closure name term) -> NamingContext name term
-
-  public export partial -- Show instance
-  (Show name, Show term) => Show (NamingContext name term) where
-    show (ClosureMap m) = show m
-
-  public export
-  record Closure (name, term : Type) where
-    constructor NamedContext
-    closureTerm : term
-    closureContext : NamingContext name term
-
-  public export partial -- Show instance
-  (Show name, Show term) => Show (Closure name term) where
-    show (NamedContext t c) = "(" ++ show t ++ ", " ++ show c ++ ")"
+CSFail : CExp
+CSFail = $^ CAFail
