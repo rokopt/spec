@@ -63,18 +63,6 @@ data Keyword : Type where
   ReflectedAtom : Keyword
   -- | Decidable equality, which includes atom elimination.
   CompareAtoms : Keyword
-  -- | Introduce a metavariable into the context.  A metavariable represents
-  -- | a metaprogram.
-  Lambda : Keyword
-  -- | Get a metavariable from the context.  A metavariable always
-  -- | represents a program -- that is, a computable function, which
-  -- | takes in an SList of arguments and returns an SExp.  Hence, the
-  -- | metaprogram is called on with the arguments in the "list" part of
-  -- | the S-expression of which it is the "atom" part.
-  Get : Keyword
-  -- | Apply a general computable function which is parameterized on
-  -- | a metaprogram to a metaprogram.
-  Apply : Keyword
 
 public export
 keywordToString : Keyword -> String
@@ -92,9 +80,6 @@ keywordToString Fix = "Fix"
 keywordToString Cofix = "Cofix"
 keywordToString ReflectedAtom = "ReflectedAtom"
 keywordToString CompareAtoms = "CompareAtoms"
-keywordToString Lambda = "Lambda"
-keywordToString Get = "Get"
-keywordToString Apply = "Apply"
 
 public export
 Show Keyword where
@@ -116,9 +101,6 @@ kEncode Fix = 10
 kEncode Cofix = 11
 kEncode ReflectedAtom = 12
 kEncode CompareAtoms = 13
-kEncode Lambda = 14
-kEncode Get = 15
-kEncode Apply = 16
 
 public export
 kDecode : Nat -> Keyword
@@ -136,9 +118,6 @@ kDecode 10 = Fix
 kDecode 11 = Cofix
 kDecode 12 = ReflectedAtom
 kDecode 13 = CompareAtoms
-kDecode 14 = Lambda
-kDecode 15 = Get
-kDecode 16 = Apply
 kDecode _ = Fail
 
 export
@@ -158,9 +137,6 @@ kDecodeIsLeftInverse Fix = Refl
 kDecodeIsLeftInverse Cofix = Refl
 kDecodeIsLeftInverse ReflectedAtom = Refl
 kDecodeIsLeftInverse CompareAtoms = Refl
-kDecodeIsLeftInverse Lambda = Refl
-kDecodeIsLeftInverse Get = Refl
-kDecodeIsLeftInverse Apply = Refl
 
 export
 kEncodeIsInjective : IsInjective Computation.kEncode
