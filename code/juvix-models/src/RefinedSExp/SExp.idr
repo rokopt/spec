@@ -156,3 +156,40 @@ mutual
       (Yes Refl, Yes Refl) => Yes Refl
       (No xNeq, _) => No $ \eq => case eq of Refl => xNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
+
+mutual
+  public export
+  data SExpTransformResult : Type -> Type where
+    SExpTransformFailed : SExpTransformResult atom
+    SExpUnchanged : SExpTransformResult atom
+    SExpChanged : SExp atom -> SExpTransformResult atom
+
+  public export
+  data SListTransformResult : Type -> Type where
+    SListTransformFailed : SListTransformResult atom
+    SListUnchanged : SListTransformResult atom
+    SListChanged : SList atom -> SListTransformResult atom
+
+public export
+record SExpandSignature (atom : Type) where
+  constructor SExpandArgs
+  expandOne : SExp atom -> SExpTransformResult atom
+
+mutual
+  public export
+  sexpExpand : SExpandSignature atom -> SExp atom -> SExpTransformResult atom
+  sexpExpand signature (a $* l) = case slistExpand signature l of
+    SListTransformFailed => SExpTransformFailed
+    SListUnchanged => expandOne signature (a $* l)
+    SListChanged l' => SExpChanged (a $* l')
+
+  public export
+  slistExpand : SExpandSignature atom -> SList atom -> SListTransformResult atom
+  slistExpand _ [] = SListUnchanged
+  slistExpand signature (x :: l) = case sexpExpand signature x of
+    SExpTransformFailed => SListTransformFailed
+    SExpUnchanged => case slistExpand signature l of
+      SListTransformFailed => SListTransformFailed
+      SListUnchanged => SListUnchanged
+      SListChanged l' => SListChanged (x :: l')
+    SExpChanged x' => SListChanged (x' :: l)
