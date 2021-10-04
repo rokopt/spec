@@ -262,39 +262,14 @@ public export
 CSFail : CExp
 CSFail = $^ CAFail
 
-mutual
-  public export
-  data CExpandResult : Type where
-    CExpandFailed : CExpandResult
-    CExpAlreadyExpanded : CExpandResult
-    CExpExpanded : CExp -> CExpandResult
-
-  public export
-  data CListExpandResult : Type where
-    CListExpandFailed : CListExpandResult
-    CListAlreadyExpanded : CListExpandResult
-    CListExpanded : CList -> CListExpandResult
+public export
+cexpTransform : {changeDesc : Type} ->
+  SExpTransformSignature changeDesc ComputeAtom ->
+  CExp -> SExpTransformResult changeDesc ComputeAtom
+cexpTransform = sexpTransform
 
 public export
-record CExpandSignature where
-  constructor CExpandArgs
-  expandOne : CExp -> CExpandResult
-
-mutual
-  public export
-  cexpExpand : CExpandSignature -> CExp -> CExpandResult
-  cexpExpand signature (a $* l) = case clistExpand signature l of
-    CListExpandFailed => CExpandFailed
-    CListAlreadyExpanded => expandOne signature (a $* l)
-    CListExpanded l' => CExpExpanded (a $* l')
-
-  public export
-  clistExpand : CExpandSignature -> CList -> CListExpandResult
-  clistExpand _ [] = CListAlreadyExpanded
-  clistExpand signature (x :: l) = case cexpExpand signature x of
-    CExpandFailed => CListExpandFailed
-    CExpAlreadyExpanded => case clistExpand signature l of
-      CListExpandFailed => CListExpandFailed
-      CListAlreadyExpanded => CListAlreadyExpanded
-      CListExpanded l' => CListExpanded (x :: l')
-    CExpExpanded x' => CListExpanded (x' :: l)
+clistTransform : {changeDesc : Type} ->
+  SExpTransformSignature changeDesc ComputeAtom ->
+  CList -> SListTransformResult changeDesc ComputeAtom
+clistTransform = slistTransform

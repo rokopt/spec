@@ -198,12 +198,12 @@ sexpTransformers signature = sexpEliminators $ SExpEliminatorArgs
 
 public export
 sexpTransform : {changeDesc, atom : Type} ->
-  SExpTransformSignature changeDesc atom -> SExp atom ->
-  SExpTransformResult changeDesc atom
+  SExpTransformSignature changeDesc atom ->
+  SExp atom -> SExpTransformResult changeDesc atom
 sexpTransform = fst . sexpTransformers
 
 public export
 slistTransform : {changeDesc, atom : Type} ->
-  SExpTransformSignature changeDesc atom -> SExp atom ->
-  SExpTransformResult changeDesc atom
-slistTransform = fst . sexpTransformers
+  SExpTransformSignature changeDesc atom ->
+  SList atom -> SListTransformResult changeDesc atom
+slistTransform = snd . sexpTransformers
