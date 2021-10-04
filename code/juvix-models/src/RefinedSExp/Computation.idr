@@ -9,12 +9,6 @@ import public RefinedSExp.Data
 
 %default total
 
--- XXX Still to add:
--- elim for sexp : atom + list of functions case
--- elim for atom : decidable equality (case for equal, case for not?)
--- lambda (introduces de Bruijn index)
--- var (refers to de Bruijn index)
--- app (metaprogram execution)
 public export
 data Keyword : Type where
   -- | Represents failure of a general computable function application.
@@ -50,7 +44,7 @@ data Keyword : Type where
   -- | General recursive fixpoint:  treat the input parameter to a function
   -- | as the function itself.
   Fix : Keyword
-  -- | General recursive cofixpoint.  (XXX Do I need this?)
+  -- | General recursive cofixpoint.
   Cofix : Keyword
   -- | Reflection:  atom introduction, forming a constant function which
   -- | returns a given atom.
@@ -267,3 +261,40 @@ Eq CExp using decEqToEq where
 public export
 CSFail : CExp
 CSFail = $^ CAFail
+
+mutual
+  public export
+  data CExpandResult : Type where
+    CExpandFailed : CExpandResult
+    CExpAlreadyExpanded : CExpandResult
+    CExpExpanded : CExp -> CExpandResult
+
+  public export
+  data CListExpandResult : Type where
+    CListExpandFailed : CListExpandResult
+    CListAlreadyExpanded : CListExpandResult
+    CListExpanded : CList -> CListExpandResult
+
+public export
+record CExpandSignature where
+  constructor CExpandArgs
+  expandOne : CExp -> CExpandResult
+
+mutual
+  public export
+  cexpExpand : CExpandSignature -> CExp -> CExpandResult
+  cexpExpand signature (a $* l) = case clistExpand signature l of
+    CListExpandFailed => CExpandFailed
+    CListAlreadyExpanded => expandOne signature (a $* l)
+    CListExpanded l' => CExpExpanded (a $* l')
+
+  public export
+  clistExpand : CExpandSignature -> CList -> CListExpandResult
+  clistExpand _ [] = CListAlreadyExpanded
+  clistExpand signature (x :: l) = case cexpExpand signature x of
+    CExpandFailed => CListExpandFailed
+    CExpAlreadyExpanded => case clistExpand signature l of
+      CListExpandFailed => CListExpandFailed
+      CListAlreadyExpanded => CListAlreadyExpanded
+      CListExpanded l' => CListExpanded (x :: l')
+    CExpExpanded x' => CListExpanded (x' :: l)
