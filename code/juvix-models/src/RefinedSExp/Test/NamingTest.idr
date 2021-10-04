@@ -2,12 +2,17 @@ module RefinedSExp.Test.NamingTest
 
 import public Library.Test.TestLibrary
 import public RefinedSExp.Naming
-import public RefinedSExp.Computation
+import public RefinedSExp.SExp
+import public RefinedSExp.Data
 
 %default total
 
 public export
-emptyContext : NamingContext Data CExp
+Show (SExp Data) where
+  show = fst (sexpShows show)
+
+public export
+emptyContext : NamingContext Data (SExp Data)
 emptyContext = ClosureMap empty
 
 export

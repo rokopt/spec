@@ -27,6 +27,7 @@ modules = Library.TypesAndFunctions
     , QCWF.CWF
     , QCWF.QCWF
     , RefinedSExp.List
+    , RefinedSExp.Data
     , RefinedSExp.Test.ListTest
     , RefinedSExp.PairVariant.SExp
     , RefinedSExp.PairVariant.Test.SExpTest
