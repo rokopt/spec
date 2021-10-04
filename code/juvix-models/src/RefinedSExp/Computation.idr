@@ -261,15 +261,3 @@ Eq CExp using decEqToEq where
 public export
 CSFail : CExp
 CSFail = $^ CAFail
-
-public export
-cexpTransform : {context: Type} ->
-  SExpTransformSignature ComputeAtom context ->
-  CExp -> context -> (context, SExpTransformResult ComputeAtom)
-cexpTransform = sexpTransform
-
-public export
-clistTransform : {context : Type} ->
-  SExpTransformSignature ComputeAtom context ->
-  CList -> context -> (context, SListTransformResult ComputeAtom)
-clistTransform = slistTransform

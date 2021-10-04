@@ -158,53 +158,24 @@ mutual
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
 
 mutual
-  public export
-  data SExpTransformResult : Type -> Type where
-    SExpTransformFailed : SExpTransformResult atom
-    SExpUnchanged : SExpTransformResult atom
-    SExpChanged : SExp atom -> SExpTransformResult atom
+  data SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom where
+    SExpAndList : {pred : SPred atom} -> pred (a $* l) -> SListForAll pred l ->
+      SExpForAll pred (a $* l)
 
-  public export
-  data SListTransformResult : Type -> Type where
-    SListTransformFailed : SListTransformResult atom
-    SListUnchanged : SListTransformResult atom
-    SListChanged : SList atom -> SListTransformResult atom
+  data SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom where
+    SForAllNil : {pred : SPred atom} -> SListForAll pred []
+    SForAllCons : {pred : SPred atom} ->
+      SExpForAll pred x -> SListForAll pred l ->
+      SListForAll pred (x :: l)
 
-public export
-record SExpTransformSignature (atom, context : Type) where
-  constructor SExpTransformArgs
-  transformOne : SExp atom -> context -> (context, SExpTransformResult atom)
+mutual
+  data SExpExists : {0 atom : Type} -> SPred atom -> SPred atom where
+    SExpThis : {pred : SPred atom} -> pred x -> SExpExists pred x
+    SExpInList : {pred : SPred atom} -> SListExists pred l ->
+      SExpExists pred (x $* l)
 
-public export
-sexpTransformers : {atom, context : Type} ->
-  SExpTransformSignature atom context ->
-  (SExp atom -> context -> (context, SExpTransformResult atom),
-   SList atom -> context -> (context, SListTransformResult atom))
-sexpTransformers signature = sexpEliminators $ SExpEliminatorArgs
-  (\a, l, result, context => case result context of
-    (new_context, SListTransformFailed) => (new_context, SExpTransformFailed)
-    (new_context, SListUnchanged) => transformOne signature (a $* l) new_context
-    (new_context, SListChanged l') =>
-      (new_context, SExpChanged (a $* l')))
-  (\context => (context, SListUnchanged))
-  (\x, l, xResult, lResult, context => case xResult context of
-    (new_context, SExpTransformFailed) => (new_context, SListTransformFailed)
-    (new_context, SExpUnchanged) => case lResult new_context of
-      (new_context, SListTransformFailed) => (new_context, SListTransformFailed)
-      (new_context, SListUnchanged) => (new_context, SListUnchanged)
-      (new_context, SListChanged l') =>
-        (new_context, SListChanged (x :: l'))
-    (new_context, SExpChanged x') =>
-      (new_context, SListChanged (x' :: l)))
-
-public export
-sexpTransform : {atom, context : Type} ->
-  SExpTransformSignature atom context ->
-  SExp atom -> context -> (context, SExpTransformResult atom)
-sexpTransform = fst . sexpTransformers
-
-public export
-slistTransform : {atom, context : Type} ->
-  SExpTransformSignature atom context ->
-  SList atom -> context -> (context, SListTransformResult atom)
-slistTransform = snd . sexpTransformers
+  data SListExists : {0 atom : Type} -> SPred atom -> SLPred atom where
+    SExpHead : {pred : SPred atom} -> SExpExists pred x ->
+      SListExists pred (x :: l)
+    SExpTail : {pred : SPred atom} -> SListExists pred l ->
+      SListExists pred (x :: l)
