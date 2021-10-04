@@ -10,7 +10,7 @@ computationNotationTest : CExp
 computationNotationTest =
   CANat 0 $* (CAKeyword Curry $* CAString "two" $^^ CANat 3) ::
     (CANat 4 $*** (CANat 5 $* (CANat 6 $*** (CAString "seven" $**^ CANat 8)) $:^
-      CAReflectedKeyword Cofix)) $:^ CANat 10
+      CAKeyword Cofix)) $:^ CANat 10
 
 export
 computationTests : IO ()

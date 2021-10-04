@@ -8,6 +8,13 @@ import public RefinedSExp.SExp
 
 %default total
 
+-- XXX Still to add:
+-- intro for SExp : function returning atom and list of functions returning sexp
+-- elim for sexp : atom + list of functions case
+-- intro for atom : is this "const"?
+-- elim for atom : decidable equality (case for equal, case for not?)
+-- lambda (introduces de Bruijn index)
+-- var (refers to de Bruijn index)
 public export
 data Keyword : Type where
   Fail : Keyword
@@ -16,7 +23,7 @@ data Keyword : Type where
   Const : Keyword
   Tuple : Keyword
   Project : Keyword
-  Enum : Keyword
+  Case : Keyword
   Inject : Keyword
   Eval : Keyword
   Curry : Keyword
@@ -31,7 +38,7 @@ keywordToString Identity = "Identity"
 keywordToString Const = "Const"
 keywordToString Tuple = "Tuple"
 keywordToString Project = "Project"
-keywordToString Enum = "Enum"
+keywordToString Case = "Case"
 keywordToString Inject = "Inject"
 keywordToString Eval = "Eval"
 keywordToString Curry = "Curry"
@@ -50,7 +57,7 @@ kEncode Identity = 2
 kEncode Const = 3
 kEncode Tuple = 4
 kEncode Project = 5
-kEncode Enum = 6
+kEncode Case = 6
 kEncode Inject = 7
 kEncode Eval = 8
 kEncode Curry = 9
@@ -65,7 +72,7 @@ kDecode 2 = Identity
 kDecode 3 = Const
 kDecode 4 = Tuple
 kDecode 5 = Project
-kDecode 6 = Enum
+kDecode 6 = Case
 kDecode 7 = Inject
 kDecode 8 = Eval
 kDecode 9 = Curry
@@ -82,7 +89,7 @@ kDecodeIsLeftInverse Identity = Refl
 kDecodeIsLeftInverse Const = Refl
 kDecodeIsLeftInverse Tuple = Refl
 kDecodeIsLeftInverse Project = Refl
-kDecodeIsLeftInverse Enum = Refl
+kDecodeIsLeftInverse Case = Refl
 kDecodeIsLeftInverse Inject = Refl
 kDecodeIsLeftInverse Eval = Refl
 kDecodeIsLeftInverse Curry = Refl
@@ -123,33 +130,20 @@ Ord Keyword where
 -- | representing computable functions.
 public export
 data Data : Type where
-  DReflectedKeyword : Keyword -> Data
   DNat : Nat -> Data
   DString : String -> Data
 
 public export
 Show Data where
-  show (DReflectedKeyword k) = "~" ++ keywordToString k
   show (DNat n) = show n
   show (DString s) = "'" ++ s
 
 export
 dDecEq : DecEqPred Data
-dDecEq (DReflectedKeyword k) (DReflectedKeyword k') = case decEq k k' of
-  Yes Refl => Yes Refl
-  No neq => No $ \eq => case eq of Refl => neq Refl
-dDecEq (DReflectedKeyword _) (DNat _) =
-  No $ \eq => case eq of Refl impossible
-dDecEq (DReflectedKeyword _) (DString _) =
-  No $ \eq => case eq of Refl impossible
-dDecEq (DNat _) (DReflectedKeyword _) =
-  No $ \eq => case eq of Refl impossible
 dDecEq (DNat n) (DNat n') = case decEq n n' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 dDecEq (DNat _) (DString _) =
-  No $ \eq => case eq of Refl impossible
-dDecEq (DString _) (DReflectedKeyword _) =
   No $ \eq => case eq of Refl impossible
 dDecEq (DString _) (DNat _) =
   No $ \eq => case eq of Refl impossible
@@ -167,13 +161,8 @@ Eq Data using decEqToEq where
 
 public export
 Ord Data where
-  DReflectedKeyword k < DReflectedKeyword k' = k < k'
-  DReflectedKeyword _ < DNat _ = True
-  DReflectedKeyword _ < DString _ = True
-  DNat _ < DReflectedKeyword _ = False
   DNat n < DNat n' = n < n'
   DNat _ < DString _ = True
-  DString _ < DReflectedKeyword _ = False
   DString _ < DNat _ = False
   DString s < DString s' = s < s'
 
@@ -222,10 +211,6 @@ Ord ComputeAtom where
 public export
 CAFail : ComputeAtom
 CAFail = CAKeyword Fail
-
-public export
-CAReflectedKeyword : Keyword -> ComputeAtom
-CAReflectedKeyword = CAData . DReflectedKeyword
 
 public export
 CANat : Nat -> ComputeAtom
