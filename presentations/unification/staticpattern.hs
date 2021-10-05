@@ -148,7 +148,7 @@ parseTerm =
   <|> foldl1 (:@:) <$> Pa.many1 aterm
  where
   aterm =
-        tok "(" *> parseTerm <* tok ")"
+         tuple
     <|>  Base      <$> base
     <|> (Meta  . M <$> (Pa.char '?' *> ident) <?> "metavariable")
     <|> (Bound . V <$> ident                  <?> "bound variable")
@@ -158,6 +158,7 @@ parseTerm =
     <|> Bool False <$ word "false"
     <|> Nil        <$ word "nil"
     <|> Cons       <$ word "cons"
+  tuple = tok "(" *> Pa.chainr1 parseTerm ((:&:) <$ tok ",") <* tok ")"
 
 parseProblem :: Pa.Parser Problem
 parseProblem = do
@@ -204,7 +205,9 @@ instance Pretty a => Pretty (Term' a) where
     f :@@: [] -> ppr f
     f :@@: ss -> PP.maybeParens (d > 9) $
       PP.sep [ppr f, PP.sep $ map (ppPrec 10) ss]
-    s :&: t -> PP.parens $ PP.sep [ppr s, ppr t]
+    s :&: t -> PP.parens $ PP.sep $ PP.punctuate "," $ map ppr $ s : getPairs t
+      where getPairs (s :&: t) = s : getPairs t
+            getPairs t         = [t]
     Fst t -> PP.maybeParens (d > 9) $
       PP.sep ["fst", ppPrec 10 t]
     Snd t -> PP.maybeParens (d > 9) $

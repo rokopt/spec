@@ -304,7 +304,7 @@ algorithm taken from <span class="citation" data-cites="dcpl">Turbak &amp; Giffo
 <h2>complexity</h2>
 <ul>
 <li><p>pure implementation is <span class="math inline">\(\mathcal{O}(n^2)\)</span>:<br />
-<code>… = unifyLoop (𝒃𝒊𝒏𝒅 α b σ) (𝒎𝒔𝒖𝒃𝒔𝒕𝑷𝒓𝒐𝒃𝒔 α b ps)</code></p></li>
+<code>… = unifyLoop (<u>bind</u> α b σ) (<u>substProbs</u> α b ps)</code></p></li>
 <li><p><code>ST</code> based implementation that updates metas in-place is <span class="math inline">\(\mathcal{O}(n)\)</span></p></li>
 </ul>
 <aside class="notes">

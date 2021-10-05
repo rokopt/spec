@@ -275,7 +275,7 @@ algorithm taken from @dcpl
 ## complexity
 
 - pure implementation is $\mathcal{O}(n^2)$: \
-  `… = unifyLoop (𝒃𝒊𝒏𝒅 α b σ) (𝒎𝒔𝒖𝒃𝒔𝒕𝑷𝒓𝒐𝒃𝒔 α b ps)`
+  <code>… = unifyLoop (<u>bind</u> α b σ) (<u>substProbs</u> α b ps)</code>
 
 - `ST` based implementation that updates metas in-place
   is $\mathcal{O}(n)$
