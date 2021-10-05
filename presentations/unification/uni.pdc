@@ -1,0 +1,387 @@
+---
+title: unification
+
+theme: night
+header-includes: <link rel=stylesheet href=style-extra.css>
+history: true
+
+bibliography: uni.bib
+citation-style: apa-single-spaced
+...
+
+
+# what is unification?
+
+:::squish
+(from @dcpl [pp. 781–787]) \
+(or TAPL (pp. 327–329)) \
+(or any other textbook, wikipedia, etc)
+:::
+
+:::notes
+- @dcpl = "design concepts in programming languages"
+- the description in tapl is fine just a little less detailed
+:::
+
+
+## substitutions
+
+:::defs
+$$
+\newcommand\T\mathbf
+$$
+:::
+
+- a *metavariable* $α, β, \dotsc$ is a hole in a type
+  to be filled in by unification
+
+- a *substitution* $σ, θ$ is a map from metavariables to types, e.g.
+  $\{ α \mapsto \T{Nat}, β \mapsto (\T{List} \: γ \to \T{Bool}) \}$
+
+- applying the substitution $σ$ to $A$ is written $A\,σ$
+
+- substitutions can be composed $σ;θ$ \
+  $A(σ;θ) = (A\,σ)θ$
+
+:::notes
+- a metavariable is any variable made up by the compiler really
+- contrasting with variables from the actual program
+- these are more properly "unification variables"
+- .
+- the types can also contain holes
+- .
+- it's also written a lot of other ways admittedly.
+  $A[σ]$, $σ\,A$, $σ(A)$, ...
+- .
+- composition $σ;θ$ is like do $σ$ first, then $θ$ on the result
+- if you apply composition prefix like $σ\,A$ then you probably write
+  composition like $θ∘σ$ (with the substs the other way round) too
+:::
+
+
+## unification problems
+
+- a unification problem $P$ is a set of wanted equations
+  $A \doteq B$ between types containing metavariables
+
+- the goal of unification is to produce a single substitution $σ$
+  (a *unifier*) where
+  $A_i\,σ = B_i\,σ$ for each equation $A_i \doteq B_i$
+  in the original problem
+
+:::notes
+- for some suitable definition of "="
+- we want $αβη$ obviously. so we'll do unification on normalised terms
+:::
+
+
+## most general unifiers
+
+- there's likely more than one unifier for a problem
+  - $\{\T{List} \: α \doteq \T{List} \: β\}$ is solved by
+    $σ = \{α \mapsto β\}$ but also
+    $θ = \{α \mapsto \T{Nat}, β \mapsto \T{Nat}\}$, ...
+
+- a *most general unifier* or mgu for $P$ is a $σ$ where
+  - for any **other** unifier $θ$ for $P$,
+  - $θ$ is equal to $(σ;θ')$ for some $θ'$
+
+- in this example, $θ = σ; \{β \mapsto \T{Nat}\}$
+
+:::notes
+- mgus are unique **up to renaming of metas** as well as regular $α$
+- basically an mgu is a unifier that doesn't make any arbitrary decisions
+:::
+
+
+# what's unification for anyway?
+
+## implicit arguments
+
+:::defs
+$$
+\newcommand\F{\mathsf}
+$$
+:::
+
+:::incremental
+- $\F{const} \: \T{true} : \T{Nat} \to \_$ \
+  [($\F{const} : \{A, B : \star\} \to A \to B \to A$)]{.squish}
+
+- $\F{const} \: \{A=α, B=β\} \: \T{true} : \T{Nat} \to γ$ \
+  [($\F{const} \: \{A=α, B=β\} : α \to β \to α$)]{.squish}
+
+- $\{α \doteq \T{Bool}, (β \to α) \doteq (\T{Nat} \to γ)\}$
+
+- :sparkles: :sparkles: :sparkles: :sparkles:
+
+- $\{α \mapsto \T{Bool}, β \mapsto \T{Nat}, γ \mapsto \T{Bool}\}$
+
+- $\F{const} \: \{A=\T{Bool}, B=\T{Nat}\} \: \T{true} : \T{Nat} \to \T{Bool}$
+:::
+
+:::notes
+(in this case we also want the solution to have no metas left over)
+
+1. we want to fill in the implicits for `const true` in a context where it's
+   type is expected to be `Nat -> _` (where `_` is unknown yet)
+2. fill in the implicit arguments and `_`s with a fresh meta each
+3. match up the types of the given argument with the type of const after step 1
+4. some magic happens...
+5. ...and we end up with a substitution...
+6. ...which we can use to fill in the metas in the original term
+:::
+
+
+## coverage checking
+
+:::defs
+$$
+\newcommand\K{\mathtt}
+$$
+:::
+
+easier to describe interactively
+
+[:page_facing_up: so.idr](so.idr)
+
+
+:::notes
+- `So b` is only inhabited when `b` is defined
+  so it's a way to enforce preconditions
+  - [uncomment `bad`, `\r`, get a type error]
+  - [`\a` on safeDiv; `\t` on rhs]
+- to make the type of `prf` reduce we have to match on `y /= 0`
+  - [`\w`, fill with `y /= 0`, rename `with_pat` to `y_not_0`, `\t` on rhs]
+- now the argument to `So` is just a variable so we can match on it
+  - [`\c` on `y_not_0`, `\t` on `False` case's rhs]
+- `prf` has type `So False` here
+  - idris tries to unify `So False` with the result of all of `So`'s
+    constructors. in this case just `Oh`. and it gets a definite failure
+  - so we can delete this clause entirely and the function is still accepted as
+    total [delete it, `\r`]
+  - now we only have a situation where the precondition is satisfied
+    and we can match on the proof \
+    [`\c` on `prf`] \
+    and call ``x `div` y`` \
+    [fill it in, `\r`]
+:::
+
+
+## dependent pattern matching
+
+[:page_facing_up: vec.idr](vec.idr)
+
+:::notes
+- a `Vec` is a list with its length in its type
+- a `Fin n` represents the natural numbers less than `n`
+  - `Z` is an element of any `Fin` at least 1
+  - `S` takes an element of the previous set
+  - so each one has one more element than the last
+- since their sizes line up, we can use `Fin n` to index into a `Vec n a`
+- `n` is usually implicit, but i made it visible here to see what happens to it.
+  also, look, a usage
+- [`\c` on `i`, rename `x` to `i`] \
+  when you match on the fin, the return index of each constructor is unified
+  with `n`. in both cases you get an `S` so the first argument also changes
+- [`\t` on first rhs] \
+  this has also changed the type of `xs`, since it contained `n`.
+  now the only possible pattern is `(::)` \
+  [`\c` on each `xs`]
+- so you'll never fall off the end of the list
+:::
+
+
+
+# in summary
+
+-----
+
+- we want an algorithm that can take any two juvix terms with holes
+  and find an mgu for them if one exists
+
+. . .
+
+- @undecidable :speech_balloon: you can't lol
+
+- ok, in that case we want to carve out a sublanguage where we **do** have
+  that. what are our options
+
+:::notes
+- @undecidable says specifically that unification of formulas of
+  second- (or higher-)order logic is undecidable
+- (second order logic is where you can have function variables)
+- so this means that λ term unification also is, if we allow
+  metavariables to have arguments
+:::
+
+-----
+
+:::incremental
+- first-order unification
+
+- static pattern unification
+
+- :star:dynamic:star: pattern unification
+:::
+
+:::notes
+- first order unification is easy
+- static pat unification is... also pretty easy
+- dynamic pat unification is where it gets hard
+:::
+
+
+# first-order unification
+
+## first-order variables
+
+- metavariables cannot be applied to arguments
+
+- ✓ $\T{List} \: α \quad α \to \T{Bool} \quad (x : α) \to β \to P \: x$
+  - (but $β$'s solution won't contain $x$)
+
+- ✗ $α \: \T{Int} \quad (x : ℕ) \to β \: x$
+
+-----
+
+## example
+
+:::defs
+$$
+\newcommand\OR{\mathrel|}
+$$
+:::
+
+the types of STLC with naturals, booleans, and lists
+
+$$
+S,T \Coloneqq \T{Nat} \OR \T{Bool} \OR \T{List}\:T \OR S \to T \OR α
+$$
+
+:::squish
+[:page_facing_up: firstorder.hs](firstorder.hs) \
+algorithm taken from @dcpl
+:::
+
+:::notes
+- TAPL has a unification algorithm on p.327
+- but i found the way it's presented here a little clearer
+- the example before was
+  $$\{α \doteq \T{Bool}, (β \to α) \doteq (\T{Nat} \to γ)\}$$
+:::
+
+
+## complexity
+
+- pure implementation is $\mathcal{O}(n^2)$: \
+  `… = unifyLoop (𝒃𝒊𝒏𝒅 α b σ) (𝒎𝒔𝒖𝒃𝒔𝒕𝑷𝒓𝒐𝒃𝒔 α b ps)`
+
+- `ST` based implementation that updates metas in-place
+  is $\mathcal{O}(n)$
+
+:::notes
+- `bind` traverses the solution so far to substitute occurrences of `α`
+- same with `msubstProbs` and the outstanding problems
+- both are linear in data bounded by the input,
+  so overall the algorithm is quadratic
+:::
+
+
+# pattern unification
+
+## patterns
+
+- a *pattern* is a term $t$ in normal form,
+  where all metavariables are heads of applications to spines of
+  **distinct** possibly-$η$-expanded bound variables [@nipkow]
+
+- ✓ $C \: α \: β \: γ \quad
+     λx. C \: x \quad
+     λx. α \: (λz. x \: z) \quad
+     λx \, y. α \: y \: x$
+
+- ✗ $α \: C \quad
+     λx. α \: x \: x \quad
+     λx. α \: (α \: x)$
+
+:::notes
+- $C$ is a constructor
+- examples:
+  1. first-order exprs are patterns because the metas
+     aren't applied to anything at all
+  2. no metas no problem
+  3. innermost thing is $η$-expansion of $x$
+  4. order unimportant
+- non-examples:
+  1. applied to a constructor
+  2. non-distinct
+  3. not a variable
+- if record types have $η$ (and they probably will)
+  then projections are also patterns,
+  and a record is $η$-equivalent to its projections,
+  so then a record is a pattern if all its fields are
+:::
+
+
+## static or dynamic
+
+- *static* pattern unification [@nipkow] fails immediately
+  if any of the problems are not first-order or a pattern
+
+- *dynamic* pattern unification [@tut] instead marks that
+  problem as blocked, because it may be possible to solve
+  it later e.g. when some other variables have been solved
+
+. . .
+
+- $α \: x \: x \doteq β \: x$ can't be solved right away
+- but if later $β \mapsto λ\,\_. C$, \
+  $α \: x \: x \doteq C$ can be also be solved \
+  with $α \mapsto λ\,\_\,\_. C$
+
+:::notes
+- this example works because dpu also prunes the
+  bound variables which do not occur in both sides,
+  so the nonlinearity of $α$ is removed
+:::
+
+## static
+
+<img src=spu.svg width=100%>
+
+## example (static)
+
+$$
+s, t, A, B \Coloneqq α \OR x \OR λx. t \OR s \: t
+           \OR (s, t) \OR \T{fst} \: s \OR \T{snd} \: s
+$$
+
+:::squish
+[:page_facing_up: staticpattern.hs](staticpattern.hs) \
+algorithm taken from @nipkow
+:::
+
+## dynamic
+
+- it's very complicated
+- please read @tut, sorry
+  - and the erratum!!!
+- but the actual unification algorithm is the same
+- adds a queue of blocked problems, bound variable pruning,
+  some infrastructure to ensure it produces well-typed solutions
+
+# conclusion
+
+-----
+
+- unification is actually not as hard as you might think
+
+- unless you do dynamic pattern unification, then it's harder
+
+- but we can work our way up gradually
+
+- and work from the actual haskell source code that they provide
+
+
+## references
