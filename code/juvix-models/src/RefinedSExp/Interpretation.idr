@@ -24,6 +24,9 @@ mutual
     CAKeyword Eval $* [f, CAKeyword Eval $* [CAKeyword Compose $* fs', x]]
 
 -- | A single (small) step of the CExp interpreter.
+-- | The boolean part of the return value indicates whether anything changed.
+-- | (If not, then the term is fully evaluated, meaning that there are no
+-- | instances of "Eval" in it.)
 mutual
   public export
   cexpInterpretStep : CExp -> (Bool, CExp)
