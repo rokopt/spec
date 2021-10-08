@@ -32,7 +32,6 @@ mutual
     (False, _) => case cexpInterpretStep x of
       (True, x') => (True, CAKeyword Eval $* [f, x'])
       (False, _) => (True, cexpEval f x)
-
   cexpInterpretStep (CAKeyword Eval $* _) = (True, CSFail)
   cexpInterpretStep (a $* l) = case clistInterpretStep l of
     (True, l') => (True, a $* l')
