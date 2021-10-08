@@ -27,11 +27,16 @@ mutual
 mutual
   public export
   cexpInterpretStep : CExp -> (Bool, CExp)
-  cexpInterpretStep (CAKeyword Eval $* [f, x]) = (True, cexpEval f x)
+  cexpInterpretStep (CAKeyword Eval $* [f, x]) = case cexpInterpretStep f of
+    (True, f') => (True, CAKeyword Eval $* [f', x])
+    (False, _) => case cexpInterpretStep x of
+      (True, x') => (True, CAKeyword Eval $* [f, x'])
+      (False, _) => (True, cexpEval f x)
+
   cexpInterpretStep (CAKeyword Eval $* _) = (True, CSFail)
-  cexpInterpretStep (k $* l) = case clistInterpretStep l of
-    (True, l') => (True, k $* l')
-    (False, _) => (False, k $* l)
+  cexpInterpretStep (a $* l) = case clistInterpretStep l of
+    (True, l') => (True, a $* l')
+    (False, _) => (False, a $* l)
 
   public export
   clistInterpretStep : CList -> (Bool, CList)
