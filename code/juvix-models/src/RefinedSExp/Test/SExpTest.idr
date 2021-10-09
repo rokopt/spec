@@ -11,7 +11,7 @@ sexpNotationTest : DExp
 sexpNotationTest =
   DNat 0 $* (DString ":Curry" $* DString "two" $^^ DNat 3) ::
     (DNat 4 $*** (DNat 5 $* (DNat 6 $*** (DString "seven" $**^ DNat 8)) $:^
-      DString "~Cofix")) $:^ DNat 10
+      DString "~Turing")) $:^ DNat 10
 
 export
 sexpTests : IO ()
