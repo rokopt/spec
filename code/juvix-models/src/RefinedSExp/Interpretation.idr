@@ -7,7 +7,8 @@ import public RefinedSExp.Computation
 
 %default total
 
--- | A single function application.
+-- | A single function application, on two fully-evaluated terms (that
+-- | full sub-evaluation is the caller's responsibility to guarantee).
 mutual
   public export
   cexpEval : (f, x : CExp) -> CExp
@@ -15,13 +16,15 @@ mutual
   cexpEval (CAKeyword Compose $* fs) x = cCompositionEval fs x
   cexpEval (CAKeyword Identity $* []) x = x
   cexpEval (CAKeyword Identity $* _ :: _) x = CSFail
+  cexpEval (CAKeyword Const $* [c]) _ = c
+  cexpEval (CAKeyword Const $* _) _ = CSFail
   cexpEval _ _ = ?cexpEval_hole
 
   public export
   cCompositionEval : (fs : CList) -> (x : CExp) -> CExp
   cCompositionEval [] x = x
   cCompositionEval (f :: fs') x =
-    CAKeyword Eval $* [f, CAKeyword Eval $* [CAKeyword Compose $* fs', x]]
+    CAKeyword Liskov $* [f, CAKeyword Liskov $* [CAKeyword Compose $* fs', x]]
 
 -- | A single (small) step of the CExp interpreter.
 -- | The boolean part of the return value indicates whether anything changed.
@@ -30,12 +33,12 @@ mutual
 mutual
   public export
   cexpInterpretStep : CExp -> (Bool, CExp)
-  cexpInterpretStep (CAKeyword Eval $* [f, x]) = case cexpInterpretStep f of
-    (True, f') => (True, CAKeyword Eval $* [f', x])
+  cexpInterpretStep (CAKeyword Liskov $* [f, x]) = case cexpInterpretStep f of
+    (True, f') => (True, CAKeyword Liskov $* [f', x])
     (False, _) => case cexpInterpretStep x of
-      (True, x') => (True, CAKeyword Eval $* [f, x'])
+      (True, x') => (True, CAKeyword Liskov $* [f, x'])
       (False, _) => (True, cexpEval f x)
-  cexpInterpretStep (CAKeyword Eval $* _) = (True, CSFail)
+  cexpInterpretStep (CAKeyword Liskov $* _) = (True, CSFail)
   cexpInterpretStep (a $* l) = case clistInterpretStep l of
     (True, l') => (True, a $* l')
     (False, _) => (False, a $* l)
