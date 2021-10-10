@@ -110,12 +110,13 @@ import public RefinedSExp.Data
 -- |    universality and uniqueness, together with its being defined solely
 -- |    in terms of combinators whose semantics have been well-known and
 -- |    unambiguously, formally defined for over sixty years (there's no new
--- |    math here!), and together with the provable ability of Turing machines
--- |    to define all programming languages, and of Gödel-incomplete (i.e.
--- |    reflective) metalogics to check alleged proofs in all logics, mean that
--- |    there is no alternative as to how to define it, and no possibility of
--- |    needing to extend the language in order to allow it to define anything
--- |    further (assuming that computers are only ever able to execute those
+-- |    math here!  Just possibly-new software architecture), and together with
+-- |    the provable ability of Turing machines to define all programming
+-- |    languages, and of Gödel-incomplete (i.e. reflective) metalogics to
+-- |    check alleged proofs in all logics, mean that there is no alternative as
+-- |    to how to define it, and no possibility of needing to extend the
+-- |    language in order to allow define anything further to be defined _in_
+-- |    it (assuming that computers are only ever able to execute those
 -- |    functions that we currently know as "computable", i.e., those executable
 -- |    by Turing machines).  All further Geb development can provably _only_ be
 -- |    in libraries written in Geb; the language itself is provably
