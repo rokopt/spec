@@ -104,8 +104,8 @@ import public RefinedSExp.Data
 -- |  - Possibly a topos, although this is unproven (if so, then its internal
 -- |    logic is inconsistent -- but the sub-categories of it which contain
 -- |    only total computable functions, if there are any (if not, then
--- |    even the weak Robinson arithmetic is inconsistent), have consistent
--- |    internal logics)
+-- |    even a very weak (possibly Robinson) arithmetic is inconsistent), have
+-- |    consistent internal logics)
 -- |  - "Production-ready" upon initial release:  its category-theoretical
 -- |    universality and uniqueness, together with its being defined solely
 -- |    in terms of combinators whose semantics have been well-known and
