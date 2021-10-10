@@ -9,6 +9,25 @@ import public RefinedSExp.Data
 
 %default total
 
+-- | Atoms representing the built-in morphisms of the Geb language, which is:
+-- |  - A Lisp variant, in that it includes what Lisp calls `quote` and `eval`
+-- |    as primitives
+-- |  - Point-free, like Backus's FP, to avoid having to define how names and
+-- |    contexts should be implemented, most importantly in the context of
+-- |    metaprogramming
+-- |  - Category-theoretical; its semantics are defined operationally by
+-- |    small-step interpretation of its S-expressions as general (i.e.
+-- |    potentially partial, potentially non-terminating) computable functions
+-- |    from its own S-expressions to its S-expressions.  Its atoms therefore
+-- |    include both atoms representing morphisms in the one-object category of
+-- |    general computable functions, and atoms representing elements of the
+-- |    set of all S-expressions, using which its semantics may be defined.
+-- |    The interpretation of an S-expression which itself represents an
+-- |    interpretation, i.e., an element of the set of all expressions as
+-- |    opposed to a morphism on computable functions on S-expressions, is a
+-- |    computable function which fails on all inputs.  (In programming terms,
+-- |    interpreting an S-expression that does not represent a morphism is an
+-- |    attempt to execute something which is not a function.)
 public export
 data Keyword : Type where
   -- | Represents failure of a general computable function application.
@@ -41,7 +60,7 @@ data Keyword : Type where
 
   -- | The evaluation function associated with exponentials of general
   -- | computable functions.  It is named after Liskov because it is
-  -- | interpreted as substitution.  It is known as "eval" in the category
+  -- | implemented as substitution.  It is known as "eval" in the category
   -- | theory of exponential objects, but we use a different name to avoid
   -- | confusion with the "eval" of Lisp, which we call "Turing".
   Liskov : Keyword
