@@ -172,10 +172,6 @@ data Keyword : Type where
   -- | This combinator can be viewed as metaprogramming elimination.
   Turing : Keyword
 
-  -- | General recursive cofixpoint.  Whether this is useful, or whether it can
-  -- | be implemented in terms of Turing, as Fix can, I'm not sure.
-  -- XXX Cofix : Keyword
-
   -- | Reflection:  S-expression introduction, which takes a function which
   -- | returns an atom and a list of functions which return S-expressions
   -- | and produces a function which returns an S-expression.
@@ -203,7 +199,6 @@ keywordToString Inject = "Inject"
 keywordToString Liskov = "Liskov"
 keywordToString Curry = "Curry"
 keywordToString Turing = "Turing"
--- keywordToString Cofix = "Cofix"
 keywordToString Gödel = "Gödel"
 keywordToString TestEqual = "TestEqual"
 
@@ -224,9 +219,8 @@ kEncode Inject = 7
 kEncode Liskov = 8
 kEncode Curry = 9
 kEncode Turing = 10
--- kEncode Cofix = 11
-kEncode Gödel = 12
-kEncode TestEqual = 13
+kEncode Gödel = 11
+kEncode TestEqual = 12
 
 public export
 kDecode : Nat -> Keyword
@@ -241,9 +235,8 @@ kDecode 7 = Inject
 kDecode 8 = Liskov
 kDecode 9 = Curry
 kDecode 10 = Turing
--- kDecode 11 = Cofix
-kDecode 12 = Gödel
-kDecode 13 = TestEqual
+kDecode 11 = Gödel
+kDecode 12 = TestEqual
 kDecode _ = Fail
 
 export
@@ -260,7 +253,6 @@ kDecodeIsLeftInverse Inject = Refl
 kDecodeIsLeftInverse Liskov = Refl
 kDecodeIsLeftInverse Curry = Refl
 kDecodeIsLeftInverse Turing = Refl
--- kDecodeIsLeftInverse Cofix = Refl
 kDecodeIsLeftInverse Gödel = Refl
 kDecodeIsLeftInverse TestEqual = Refl
 
