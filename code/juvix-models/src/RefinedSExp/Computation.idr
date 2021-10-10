@@ -302,10 +302,6 @@ data InterpretationAtom : Type where
   -- | computable function to an S-expression outside of its domain.
   Failure : InterpretationAtom
 
-  -- | Function application, which we perform only in the context of
-  -- | interpretation.
-  Apply : InterpretationAtom
-
   -- | The interpretation of a product.
   Record : InterpretationAtom
 
@@ -315,7 +311,6 @@ data InterpretationAtom : Type where
 public export
 interpretationToString : InterpretationAtom -> String
 interpretationToString Failure = "Failure"
-interpretationToString Apply = "Apply"
 interpretationToString Record = "Record"
 interpretationToString Constructor = "Constructor"
 
@@ -326,23 +321,20 @@ Show InterpretationAtom where
 public export
 iEncode : InterpretationAtom -> Nat
 iEncode Failure = 0
-iEncode Apply = 1
-iEncode Record = 2
-iEncode Constructor = 3
+iEncode Record = 1
+iEncode Constructor = 2
 
 public export
 iDecode : Nat -> InterpretationAtom
 iDecode 0 = Failure
-iDecode 1 = Apply
-iDecode 2 = Record
-iDecode 3 = Constructor
+iDecode 1 = Record
+iDecode 2 = Constructor
 iDecode _ = Failure
 
 export
 iDecodeIsLeftInverse :
   IsLeftInverseOf Computation.iEncode Computation.iDecode
 iDecodeIsLeftInverse Failure = Refl
-iDecodeIsLeftInverse Apply = Refl
 iDecodeIsLeftInverse Record = Refl
 iDecodeIsLeftInverse Constructor = Refl
 
