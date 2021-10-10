@@ -24,90 +24,90 @@ import public Library.List
 mutual
   infixr 7 $*
   public export
-  data SExp : (name : Type) -> Type where
-    ($*) : name -> SList name -> SExp name
+  data SExp : (atom : Type) -> Type where
+    ($*) : atom -> SList atom -> SExp atom
 
   public export
-  SList : (name : Type) -> Type
+  SList : (atom : Type) -> Type
   SList = List . SExp
 
 prefix 11 $^
 public export
-($^) : {name : Type} -> name -> SExp name
-($^) n = n $* []
+($^) : {atom : Type} -> atom -> SExp atom
+($^) a = a $* []
 
 infixr 7 $^:
 public export
-($^:) : {name : Type} -> name -> SList name -> SList name
-n $^: l = $^ n :: l
+($^:) : {atom : Type} -> atom -> SList atom -> SList atom
+a $^: l = $^ a :: l
 
 prefix 11 $*^
 public export
-($*^) : {name : Type} -> name -> SList name
-($*^) n = n $^: []
+($*^) : {atom : Type} -> atom -> SList atom
+($*^) a = a $^: []
 
 prefix 11 $**
 public export
-($**) : {name : Type} -> SExp name -> SList name
+($**) : {atom : Type} -> SExp atom -> SList atom
 ($**) x = x :: []
 
 infixr 7 $***
 public export
-($***) : {name : Type} -> name -> SExp name -> SExp name
-n $*** x = n $* $** x
+($***) : {atom : Type} -> atom -> SExp atom -> SExp atom
+a $*** x = a $* $** x
 
 infixr 7 $:*
 public export
-($:*) : {name : Type} -> SExp name -> SExp name -> SList name
+($:*) : {atom : Type} -> SExp atom -> SExp atom -> SList atom
 x $:* x' = x :: $** x'
 
 infixr 7 $:^
 public export
-($:^) : {name : Type} -> SExp name -> name -> SList name
-x $:^ n = x $:* $^ n
+($:^) : {atom : Type} -> SExp atom -> atom -> SList atom
+x $:^ a = x $:* $^ a
 
 infixr 7 $^^
 public export
-($^^) : {name : Type} -> name -> name -> SList name
-n $^^ n' = n $^: $*^ n'
+($^^) : {atom : Type} -> atom -> atom -> SList atom
+a $^^ a' = a $^: $*^ a'
 
 infixr 7 $**^
 public export
-($**^) : {name : Type} -> name -> name -> SExp name
-n $**^ n' = n $* $*^ n'
+($**^) : {atom : Type} -> atom -> atom -> SExp atom
+a $**^ a' = a $* $*^ a'
 
 public export
-SPred : (name : Type) -> Type
-SPred name = SExp name -> Type
+SPred : (atom : Type) -> Type
+SPred atom = SExp atom -> Type
 
 public export
-SLPred : (name : Type) -> Type
-SLPred name = SList name -> Type
+SLPred : (atom : Type) -> Type
+SLPred atom = SList atom -> Type
 
 public export
 record SExpEliminatorSig
-  {name : Type} (0 sp : SPred name) (0 lp : SLPred name)
+  {atom : Type} (0 sp : SPred atom) (0 lp : SLPred atom)
   where
     constructor SExpEliminatorArgs
-    expElim : (n : name) -> (l : SList name) -> lp l -> sp (n $* l)
+    expElim : (a : atom) -> (l : SList atom) -> lp l -> sp (a $* l)
     nilElim : lp []
-    consElim : (x : SExp name) -> (l : SList name) ->
+    consElim : (x : SExp atom) -> (l : SList atom) ->
       sp x -> lp l -> lp (x :: l)
 
 mutual
   public export
   sexpEliminator :
-    {name : Type} -> {0 sp : SPred name} -> {0 lp : SLPred name} ->
+    {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
     (signature : SExpEliminatorSig sp lp) ->
-    SExp name ~> sp
-  sexpEliminator signature (n $* l) =
-    expElim signature n l (slistEliminator signature l)
+    SExp atom ~> sp
+  sexpEliminator signature (a $* l) =
+    expElim signature a l (slistEliminator signature l)
 
   public export
   slistEliminator :
-    {name : Type} -> {0 sp : SPred name} -> {0 lp : SLPred name} ->
+    {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
     (signature : SExpEliminatorSig sp lp) ->
-    SList name ~> lp
+    SList atom ~> lp
   slistEliminator signature [] =
     nilElim signature
   slistEliminator signature (x :: l) =
@@ -116,20 +116,20 @@ mutual
 
 public export
 sexpEliminators :
-  {name : Type} -> {0 sp : SPred name} -> {0 lp : SLPred name} ->
+  {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
   (signature : SExpEliminatorSig sp lp) ->
-  (SExp name ~> sp, SList name ~> lp)
+  (SExp atom ~> sp, SList atom ~> lp)
 sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
 public export
-sexpShows : {name : Type} -> (showName : name -> String) ->
-  (SExp name -> String, SList name -> String)
-sexpShows {name} showName =
+sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
+  (SExp atom -> String, SList atom -> String)
+sexpShows {atom} showAtom =
   sexpEliminators $ SExpEliminatorArgs
-    (\n, l, lString => case l of
-      [] => showName n
-      _ :: _ => "(" ++ showName n ++ " $* " ++ lString ++ ")")
+    (\a, l, lString => case l of
+      [] => showAtom a
+      _ :: _ => "(" ++ showAtom a ++ " $* " ++ lString ++ ")")
     ""
     (\_, l, sx, sl => case l of
       [] => sx
@@ -138,21 +138,21 @@ sexpShows {name} showName =
 mutual
   public export
   sexpDecEq :
-    {0 name : Type} -> (nEq : DecEqPred name) -> DecEqPred (SExp name)
-  sexpDecEq nEq (n $* l) (n' $* l') =
-    case (nEq n n', slistDecEq nEq l l') of
+    {0 atom : Type} -> (aEq : DecEqPred atom) -> DecEqPred (SExp atom)
+  sexpDecEq aEq (a $* l) (a' $* l') =
+    case (aEq a a', slistDecEq aEq l l') of
       (Yes Refl, Yes Refl) => Yes Refl
-      (No nNeq, _) => No $ \eq => case eq of Refl => nNeq Refl
+      (No aNeq, _) => No $ \eq => case eq of Refl => aNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
 
   public export
   slistDecEq :
-    {0 name : Type} -> (nEq : DecEqPred name) -> DecEqPred (SList name)
-  slistDecEq nEq [] [] = Yes Refl
-  slistDecEq nEq [] (x :: l) = No $ \eq => case eq of Refl impossible
-  slistDecEq nEq (x :: l) [] = No $ \eq => case eq of Refl impossible
-  slistDecEq nEq (x :: l) (x' :: l') =
-    case (sexpDecEq nEq x x', slistDecEq nEq l l') of
+    {0 atom : Type} -> (aEq : DecEqPred atom) -> DecEqPred (SList atom)
+  slistDecEq aEq [] [] = Yes Refl
+  slistDecEq aEq [] (x :: l) = No $ \eq => case eq of Refl impossible
+  slistDecEq aEq (x :: l) [] = No $ \eq => case eq of Refl impossible
+  slistDecEq aEq (x :: l) (x' :: l') =
+    case (sexpDecEq aEq x x', slistDecEq aEq l l') of
       (Yes Refl, Yes Refl) => Yes Refl
       (No xNeq, _) => No $ \eq => case eq of Refl => xNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
