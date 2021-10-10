@@ -378,11 +378,13 @@ Ord InterpretationAtom where
 public export
 data ComputeAtom : Type where
   CAKeyword : Keyword -> ComputeAtom
+  CAInterpretation : InterpretationAtom -> ComputeAtom
   CAData : Data -> ComputeAtom
 
 public export
 Show ComputeAtom where
   show (CAKeyword k) = show k
+  show (CAInterpretation i) = show i
   show (CAData d) = show d
 
 public export
@@ -394,9 +396,20 @@ caDecEq : DecEqPred ComputeAtom
 caDecEq (CAKeyword k) (CAKeyword k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
+caDecEq (CAKeyword _) (CAInterpretation _) =
+  No $ \eq => case eq of Refl impossible
 caDecEq (CAKeyword _) (CAData _) =
   No $ \eq => case eq of Refl impossible
+caDecEq (CAInterpretation _) (CAKeyword _) =
+  No $ \eq => case eq of Refl impossible
+caDecEq (CAInterpretation i) (CAInterpretation i') = case decEq i i' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+caDecEq (CAInterpretation _) (CAData _) =
+  No $ \eq => case eq of Refl impossible
 caDecEq (CAData _) (CAKeyword _) =
+  No $ \eq => case eq of Refl impossible
+caDecEq (CAData _) (CAInterpretation _) =
   No $ \eq => case eq of Refl impossible
 caDecEq (CAData d) (CAData d') = case decEq d d' of
   Yes Refl => Yes Refl
@@ -413,8 +426,13 @@ Eq ComputeAtom using decEqToEq where
 public export
 Ord ComputeAtom where
   CAKeyword k < CAKeyword k' = k < k'
+  CAKeyword _ < CAInterpretation _ = True
   CAKeyword _ < CAData _ = True
+  CAInterpretation _ < CAKeyword _ = False
+  CAInterpretation i < CAInterpretation i' = i < i'
+  CAInterpretation _ < CAData _ = True
   CAData _ < CAKeyword _ = False
+  CAData _ < CAInterpretation _ = False
   CAData d < CAData d' = d < d'
 
 public export
