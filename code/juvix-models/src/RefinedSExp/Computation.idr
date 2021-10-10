@@ -10,11 +10,16 @@ import public RefinedSExp.Data
 %default total
 
 -- | Atoms representing the built-in morphisms of the Geb language, which is:
+-- |
+-- |  - Named as an homage to Hofstadter's _Gödel, Escher, Bach_
 -- |  - A Lisp variant, in that it includes what Lisp calls `quote` and `eval`
 -- |    as primitives
 -- |  - Point-free, like Backus's FP, to avoid having to define how names and
 -- |    contexts should be implemented, most importantly in the context of
--- |    metaprogramming
+-- |    metaprogramming (its built-in constructs are all combinators, not
+-- |    lambdas, although names, contexts, and lambdas could all be defined in
+-- |    terms of its primitive combinators, each in many different ways suitable
+-- |    to different programming languages)
 -- |  - Category-theoretical; its semantics are defined operationally by
 -- |    small-step interpretation of its S-expressions as general (i.e.
 -- |    potentially partial, potentially non-terminating) computable functions
@@ -28,6 +33,95 @@ import public RefinedSExp.Data
 -- |    computable function which fails on all inputs.  (In programming terms,
 -- |    interpreting an S-expression that does not represent a morphism is an
 -- |    attempt to execute something which is not a function.)
+-- |  - A Turing machine, when the Turing operator (which is what Geb calls
+-- |    its equivalent of Lisp's `eval`) is used without restrictions, or
+-- |    with some restrictions but not enough to prevent the construction of
+-- |    all general computable functions (including the partial and
+-- |    non-terminating ones)
+-- |  - A minimal metalogic -- just enough to be subject to Gödel's
+-- |    incompleteness theorems -- when the Turing operator is not used at all.
+-- |    It is possible, although unproven, that in this form it is equivalent
+-- |    to Robinson arithmetic.
+-- |  - A "potentially consistent metalogic" -- we can never refer to a
+-- |    as absolutely consistent, in light of Gödel's results -- when the Turing
+-- |    operator may be used, but only with restrictions which prevent any
+-- |    S-expressions from being interpreted as non-total computable functions
+-- |    (if the metalogic really is consistent, which, again, can not be
+-- |    proven absolutely -- so we should say that all of its S-expressions
+-- |    are interpreted as non-total computable functions _as far as anyone
+-- |    knows_).  A given restriction of the Turing operator is known as the
+-- |    type system -- type-checking an S-expression is equivalent to
+-- |    claiming that all well-typed S-expressions are interpreted as total
+-- |    computable functions.
+-- |  - In light of the previous three points, a super-category of all
+-- |    metalogics and programming languages (we are referring to a logic
+-- |    strong enough to be subject to Gödel's incompleteness theorems, and
+-- |    therefore to reflect and check typing derivations of other logics and
+-- |    languages, including itself, as a "metalogic"), although it is itself,
+-- |    as a complete category, unityped, in that its only object is that of
+-- |    S-expressions (as Harper points out, "unityped" and "untyped" are
+-- |    equivalent; in programming we also call this "dynamically typed")
+-- |  - A category-theoretically unique construction, and therefore not only _a_
+-- |    super-category of all metalogics and programming languages, but the
+-- |    _only_ such super-category, up to isomorphism
+-- |  - In light of the previous two points, a potential universal
+-- |    "intermediate representation", or "open protocol description", for
+-- |    all programming languages and metalogics, with which individual
+-- |    compilers (and mathematical papers) could unambiguously and universally
+-- |    define type systems for both potentially consistent metalogics and
+-- |    programming languages and for Turing machines (which are inconsistent
+-- |    when viewed as logics), unambiguously define notions of correct
+-- |    transformations within and across metalogics and programming languages,
+-- |    and unambiguously share definitions of metalogics and programming
+-- |    languages with other compilers (and mathematical papers), in a way
+-- |    which it itself can verify (in the sense of type-checking completely
+-- |    enumerated alleged typing derivations), including the definition of
+-- |    Geb itself.  As an open protocol description, it could also function
+-- |    as a bridge between theorem provers / proof assistants / SMT solvers and
+-- |    metalogics / programming languages:  defining the semantics of a
+-- |    language or logic as a functor to a sub-category of Geb would allow
+-- |    different theorem provers to prove results about it without requiring
+-- |    any code to connect the specific language or logic to the specific proof
+-- |    assistant
+-- |  - Also in light of previous points, a potential component of compiler
+-- |    architecture which allows as much of the compiler code as is possible
+-- |    and efficient to be written in terms of category-theoretically unique
+-- |    universal constructions, and therefore to be verified independently of
+-- |    the specific type theory or theories (programming languages) which the
+-- |    compiler is able to typecheck and compile.
+-- |  - In light of the previous point, such a compiler architecture could also
+-- |    be developed into a shared library usable by _all_ compilers which
+-- |    adopt that architecture, allowing new programming languages to be
+-- |    defined using that library, inheriting whichever concepts, constructs,
+-- |    and theorems that its author wishes it to, and requiring the author
+-- |    to write new code only for the concepts which distinguish the new
+-- |    language from existing languages
+-- |  - In light of its potential use as an open protocol, and a shared
+-- |    "intermediate representation", a potential language for a shared library
+-- |    of all formalizable knowledge -- a sort of symbolic Wikipedia -- whose
+-- |    code could be checked by theorem provers and compiled directly into
+-- |    executable programs
+-- |  - Possibly a topos, although this is unproven (if so, then its internal
+-- |    logic is inconsistent -- but the sub-categories of it which contain
+-- |    only total computable functions, if there are any (if not, then
+-- |    even the weak Robinson arithmetic is inconsistent), have consistent
+-- |    internal logics)
+-- |  - "Production-ready" upon initial release:  its category-theoretical
+-- |    universality and uniqueness, together with its being defined solely
+-- |    in terms of combinators whose semantics have been well-known and
+-- |    unambiguously, formally defined for over sixty years (there's no new
+-- |    math here!), and together with the provable ability of Turing machines
+-- |    to define all programming languages, and of Gödel-incomplete (i.e.
+-- |    reflective) metalogics to check alleged proofs in all logics, mean that
+-- |    there is no alternative as to how to define it, and no possibility of
+-- |    needing to extend the language in order to allow it to define anything
+-- |    further (assuming that computers are only ever able to execute those
+-- |    functions that we currently know as "computable", i.e., those executable
+-- |    by Turing machines).  All further Geb development can provably _only_ be
+-- |    in libraries written in Geb; the language itself is provably
+-- |    unchangeable.  (Any extension would no longer be category-theoretically
+-- |    unique, and any restriction would either no longer be
+-- |    category-theoretically unique or would no longer be a Turing machine.)
 public export
 data Keyword : Type where
   -- | Represents failure of a general computable function application.
