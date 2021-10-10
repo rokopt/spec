@@ -110,8 +110,8 @@ import public RefinedSExp.Data
 -- |    universality and uniqueness, together with its being defined solely
 -- |    in terms of combinators whose semantics have been well-known and
 -- |    unambiguously, formally defined for over sixty years (there's no new
--- |    math here!  Just possibly-new software architecture), and together with
--- |    the provable ability of Turing machines to define all programming
+-- |    math here!  Just a possibly-new software representation), and together
+-- |    with the provable ability of Turing machines to define all programming
 -- |    languages, and of Gödel-incomplete (i.e. reflective) metalogics to
 -- |    check alleged proofs in all logics, mean that there is no alternative as
 -- |    to how to define it, and no possibility of needing to extend the
@@ -172,9 +172,10 @@ data Keyword : Type where
   -- | This combinator can be viewed as metaprogramming elimination.
   Turing : Keyword
 
-  -- | General recursive cofixpoint.  Is this useful?  or can it
-  -- | be implemented in terms of Turing, as Fix can?  I suspect so.
+  -- | General recursive cofixpoint.  Whether this is useful, or whether it can
+  -- | be implemented in terms of Turing, as Fix can, I'm not sure.
   -- XXX Cofix : Keyword
+
   -- | Reflection:  S-expression introduction, which takes a function which
   -- | returns an atom and a list of functions which return S-expressions
   -- | and produces a function which returns an S-expression.
@@ -188,12 +189,6 @@ data Keyword : Type where
 
   -- | Introduce a constant-valued function.
   Const : Keyword
-
-  -- | The interpretation of a product.
-  Record : Keyword
-
-  -- | The interpretation of a coproduct.
-  Constructor : Keyword
 
 public export
 keywordToString : Keyword -> String
@@ -211,8 +206,6 @@ keywordToString Turing = "Turing"
 -- keywordToString Cofix = "Cofix"
 keywordToString Gödel = "Gödel"
 keywordToString TestEqual = "TestEqual"
-keywordToString Record = "Record"
-keywordToString Constructor = "Constructor"
 
 public export
 Show Keyword where
@@ -234,8 +227,6 @@ kEncode Turing = 10
 -- kEncode Cofix = 11
 kEncode Gödel = 12
 kEncode TestEqual = 13
-kEncode Record = 15
-kEncode Constructor = 16
 
 public export
 kDecode : Nat -> Keyword
@@ -253,8 +244,6 @@ kDecode 10 = Turing
 -- kDecode 11 = Cofix
 kDecode 12 = Gödel
 kDecode 13 = TestEqual
-kDecode 15 = Record
-kDecode 16 = Constructor
 kDecode _ = Fail
 
 export
@@ -274,8 +263,6 @@ kDecodeIsLeftInverse Turing = Refl
 -- kDecodeIsLeftInverse Cofix = Refl
 kDecodeIsLeftInverse Gödel = Refl
 kDecodeIsLeftInverse TestEqual = Refl
-kDecodeIsLeftInverse Record = Refl
-kDecodeIsLeftInverse Constructor = Refl
 
 export
 kEncodeIsInjective : IsInjective Computation.kEncode
@@ -305,6 +292,88 @@ Eq Keyword using decEqToEq where
 public export
 Ord Keyword where
   k < k' = kEncode k < kEncode k'
+
+-- | Atoms from which are constructed the elements of the set of S-expressions
+-- | which we interpret as the domain and the codomain of general computable
+-- | functions when defining Geb's semantics by interpretation.
+public export
+data InterpretationAtom : Type where
+  -- | The interpretation of the failure of the application of a partial
+  -- | computable function to an S-expression outside of its domain.
+  Failure : InterpretationAtom
+
+  -- | Function application, which we perform only in the context of
+  -- | interpretation.
+  Apply : InterpretationAtom
+
+  -- | The interpretation of a product.
+  Record : InterpretationAtom
+
+  -- | The interpretation of a coproduct.
+  Constructor : InterpretationAtom
+
+public export
+interpretationToString : InterpretationAtom -> String
+interpretationToString Failure = "Failure"
+interpretationToString Apply = "Apply"
+interpretationToString Record = "Record"
+interpretationToString Constructor = "Constructor"
+
+public export
+Show InterpretationAtom where
+  show i = "*" ++ interpretationToString i
+
+public export
+iEncode : InterpretationAtom -> Nat
+iEncode Failure = 0
+iEncode Apply = 1
+iEncode Record = 2
+iEncode Constructor = 3
+
+public export
+iDecode : Nat -> InterpretationAtom
+iDecode 0 = Failure
+iDecode 1 = Apply
+iDecode 2 = Record
+iDecode 3 = Constructor
+iDecode _ = Failure
+
+export
+iDecodeIsLeftInverse :
+  IsLeftInverseOf Computation.iEncode Computation.iDecode
+iDecodeIsLeftInverse Failure = Refl
+iDecodeIsLeftInverse Apply = Refl
+iDecodeIsLeftInverse Record = Refl
+iDecodeIsLeftInverse Constructor = Refl
+
+export
+iEncodeIsInjective : IsInjective Computation.iEncode
+iEncodeIsInjective =
+  leftInverseImpliesInjective iEncode {g=iDecode} iDecodeIsLeftInverse
+
+public export
+IInjection : Injection InterpretationAtom Nat
+IInjection = (iEncode ** iEncodeIsInjective)
+
+public export
+ICountable : Countable
+ICountable = (InterpretationAtom ** IInjection)
+
+public export
+iDecEq : DecEqPred InterpretationAtom
+iDecEq = countableEq ICountable
+
+public export
+DecEq InterpretationAtom where
+  decEq = iDecEq
+
+public export
+Eq InterpretationAtom using decEqToEq where
+  (==) = (==)
+
+public export
+Ord InterpretationAtom where
+  i < i' = iEncode i < iEncode i'
 
 public export
 data ComputeAtom : Type where
