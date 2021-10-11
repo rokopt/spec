@@ -12,22 +12,22 @@ import public RefinedSExp.Computation
 mutual
   public export
   cexpApply : (f, x : CExp) -> CExp
-  cexpApply (CAKeyword Fail $* _) _ = CSFail
-  cexpApply (CAKeyword Compose $* fs) x = cCompositionEval fs x
-  cexpApply (CAKeyword Identity $* []) x = x
-  cexpApply (CAKeyword Identity $* _ :: _) x = CSFail
-  cexpApply (CAKeyword Const $* [_]) (CAKeyword Fail $* _) = CSFail
-  cexpApply (CAKeyword Const $* [c]) _ = c
-  cexpApply (CAKeyword Const $* _) _ = CSFail
+  cexpApply (CAMorphism Fail $* _) _ = CSFail
+  cexpApply (CAMorphism Compose $* fs) x = cCompositionApply fs x
+  cexpApply (CAMorphism Identity $* []) x = x
+  cexpApply (CAMorphism Identity $* _ :: _) x = CSFail
+  cexpApply (CAMorphism Const $* [_]) (CAMorphism Fail $* _) = CSFail
+  cexpApply (CAMorphism Const $* [c]) _ = c
+  cexpApply (CAMorphism Const $* _) _ = CSFail
   cexpApply (CAInterpretation _ $* _) _ = CSFail
   cexpApply (CAData _ $* _) _ = CSFail
   cexpApply _ _ = ?cexpApply_hole
 
   public export
-  cCompositionEval : (fs : CList) -> (x : CExp) -> CExp
-  cCompositionEval [] x = x
-  cCompositionEval (f :: fs') x =
-    CAKeyword Liskov $* [f, CAKeyword Liskov $* [CAKeyword Compose $* fs', x]]
+  cCompositionApply : (fs : CList) -> (x : CExp) -> CExp
+  cCompositionApply [] x = x
+  cCompositionApply (f :: fs') x =
+    CAMorphism Liskov $* [f, CAMorphism Liskov $* [CAMorphism Compose $* fs', x]]
 
 -- | A single (small) step of the CExp interpreter.
 -- | The boolean part of the return value indicates whether anything changed.
@@ -36,12 +36,12 @@ mutual
 mutual
   public export
   cexpInterpretStep : CExp -> (Bool, CExp)
-  cexpInterpretStep (CAKeyword Liskov $* [f, x]) = case cexpInterpretStep f of
-    (True, f') => (True, CAKeyword Liskov $* [f', x])
+  cexpInterpretStep (CAMorphism Liskov $* [f, x]) = case cexpInterpretStep f of
+    (True, f') => (True, CAMorphism Liskov $* [f', x])
     (False, _) => case cexpInterpretStep x of
-      (True, x') => (True, CAKeyword Liskov $* [f, x'])
+      (True, x') => (True, CAMorphism Liskov $* [f, x'])
       (False, _) => (True, cexpApply f x)
-  cexpInterpretStep (CAKeyword Liskov $* _) = (True, CSFail)
+  cexpInterpretStep (CAMorphism Liskov $* _) = (True, CSFail)
   cexpInterpretStep (a $* l) = case clistInterpretStep l of
     (True, l') => (True, a $* l')
     (False, _) => (False, a $* l)

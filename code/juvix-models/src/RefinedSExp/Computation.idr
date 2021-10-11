@@ -23,7 +23,7 @@ import public RefinedSExp.Data
 -- |  - Category-theoretical; its semantics are defined operationally by
 -- |    small-step interpretation of its S-expressions as general (i.e.
 -- |    potentially partial, potentially non-terminating) computable functions
--- |    from its own S-expressions to its S-expressions.  Its atoms therefore
+-- |    from S-expressions to S-expressions.  Its atoms therefore
 -- |    include both atoms representing morphisms in the one-object category of
 -- |    general computable functions, and atoms representing elements of the
 -- |    set of all S-expressions, using which its semantics may be defined.
@@ -124,45 +124,45 @@ import public RefinedSExp.Data
 -- |    unique, and any restriction would either no longer be
 -- |    category-theoretically unique or would no longer be a Turing machine.)
 public export
-data Keyword : Type where
+data Morphism : Type where
   -- | Represents failure of a general computable function application.
-  Fail : Keyword
+  Fail : Morphism
 
   -- | Composition of general computable functions.
-  Compose : Keyword
+  Compose : Morphism
 
   -- | The identity general computable function (which is total).
-  Identity : Keyword
+  Identity : Morphism
 
   -- | Product introduction for general compuatable functions:  form a function
   -- | which returns tuples from a tuple of functions (which must have the same
   -- | domain for this operation to make sense).
-  MakeTuple : Keyword
+  MakeTuple : Morphism
 
   -- | Product elimination for general computable functions:  form a function
   -- | which returns tuples from a tuple of functions (which must have the same
   -- | domain for this operation to make sense).
-  Project : Keyword
+  Project : Morphism
 
   -- | Coproduct introduction for general computable functions:  choose one
   -- | of one or more possible forms.
-  Inject : Keyword
+  Inject : Morphism
 
   -- | Coproduct elimination for general computable functions:  form a function
   -- | which accepts a coproduct and returns a case depending on which of the
   -- | coproduct's injections is passed in.
-  Case : Keyword
+  Case : Morphism
 
   -- | The evaluation function associated with exponentials of general
   -- | computable functions.  It is named after Liskov because it is
   -- | implemented as substitution.  It is known as "eval" in the category
   -- | theory of exponential objects, but we use a different name to avoid
   -- | confusion with the "eval" of Lisp, which we call "Turing".
-  Liskov : Keyword
+  Liskov : Morphism
 
   -- | The currying function associated with exponentials of general
   -- | computable functions.  It is the right adjoint to Liskov.
-  Curry : Keyword
+  Curry : Morphism
 
   -- | The combinator which gives us unconstrained general recursion:
   -- | we name it after Turing; it is the "eval" of Lisp, but we wish
@@ -170,120 +170,120 @@ data Keyword : Type where
   -- | exponential objects (which we call "Liskov").
   -- |
   -- | This combinator can be viewed as metaprogramming elimination.
-  Turing : Keyword
+  Turing : Morphism
 
   -- | Reflection:  S-expression introduction, which takes a function which
   -- | returns an atom and a list of functions which return S-expressions
   -- | and produces a function which returns an S-expression.
   -- |
   -- | This combinator can be viewed as metaprogramming introduction.
-  Gödel : Keyword
+  Gödel : Morphism
 
   -- | Decidable equality on S-expressions, which includes atom elimination.
   -- | This combinator could be viewed as constant elimination.
-  TestEqual : Keyword
+  TestEqual : Morphism
 
   -- | Introduce a constant-valued function.
-  Const : Keyword
+  Const : Morphism
 
 public export
-keywordToString : Keyword -> String
-keywordToString Fail = "Fail"
-keywordToString Compose = "Compose"
-keywordToString Identity = "Identity"
-keywordToString Const = "Const"
-keywordToString MakeTuple = "MakeTuple"
-keywordToString Project = "Project"
-keywordToString Case = "Case"
-keywordToString Inject = "Inject"
-keywordToString Liskov = "Liskov"
-keywordToString Curry = "Curry"
-keywordToString Turing = "Turing"
-keywordToString Gödel = "Gödel"
-keywordToString TestEqual = "TestEqual"
+morphismToString : Morphism -> String
+morphismToString Fail = "Fail"
+morphismToString Compose = "Compose"
+morphismToString Identity = "Identity"
+morphismToString Const = "Const"
+morphismToString MakeTuple = "MakeTuple"
+morphismToString Project = "Project"
+morphismToString Case = "Case"
+morphismToString Inject = "Inject"
+morphismToString Liskov = "Liskov"
+morphismToString Curry = "Curry"
+morphismToString Turing = "Turing"
+morphismToString Gödel = "Gödel"
+morphismToString TestEqual = "TestEqual"
 
 public export
-Show Keyword where
-  show k = ":" ++ keywordToString k
+Show Morphism where
+  show m = ":" ++ morphismToString m
 
 public export
-kEncode : Keyword -> Nat
-kEncode Fail = 0
-kEncode Compose = 1
-kEncode Identity = 2
-kEncode Const = 3
-kEncode MakeTuple = 4
-kEncode Project = 5
-kEncode Case = 6
-kEncode Inject = 7
-kEncode Liskov = 8
-kEncode Curry = 9
-kEncode Turing = 10
-kEncode Gödel = 11
-kEncode TestEqual = 12
+mEncode : Morphism -> Nat
+mEncode Fail = 0
+mEncode Compose = 1
+mEncode Identity = 2
+mEncode Const = 3
+mEncode MakeTuple = 4
+mEncode Project = 5
+mEncode Case = 6
+mEncode Inject = 7
+mEncode Liskov = 8
+mEncode Curry = 9
+mEncode Turing = 10
+mEncode Gödel = 11
+mEncode TestEqual = 12
 
 public export
-kDecode : Nat -> Keyword
-kDecode 0 = Fail
-kDecode 1 = Compose
-kDecode 2 = Identity
-kDecode 3 = Const
-kDecode 4 = MakeTuple
-kDecode 5 = Project
-kDecode 6 = Case
-kDecode 7 = Inject
-kDecode 8 = Liskov
-kDecode 9 = Curry
-kDecode 10 = Turing
-kDecode 11 = Gödel
-kDecode 12 = TestEqual
-kDecode _ = Fail
+mDecode : Nat -> Morphism
+mDecode 0 = Fail
+mDecode 1 = Compose
+mDecode 2 = Identity
+mDecode 3 = Const
+mDecode 4 = MakeTuple
+mDecode 5 = Project
+mDecode 6 = Case
+mDecode 7 = Inject
+mDecode 8 = Liskov
+mDecode 9 = Curry
+mDecode 10 = Turing
+mDecode 11 = Gödel
+mDecode 12 = TestEqual
+mDecode _ = Fail
 
 export
-kDecodeIsLeftInverse :
-  IsLeftInverseOf Computation.kEncode Computation.kDecode
-kDecodeIsLeftInverse Fail = Refl
-kDecodeIsLeftInverse Compose = Refl
-kDecodeIsLeftInverse Identity = Refl
-kDecodeIsLeftInverse Const = Refl
-kDecodeIsLeftInverse MakeTuple = Refl
-kDecodeIsLeftInverse Project = Refl
-kDecodeIsLeftInverse Case = Refl
-kDecodeIsLeftInverse Inject = Refl
-kDecodeIsLeftInverse Liskov = Refl
-kDecodeIsLeftInverse Curry = Refl
-kDecodeIsLeftInverse Turing = Refl
-kDecodeIsLeftInverse Gödel = Refl
-kDecodeIsLeftInverse TestEqual = Refl
+mDecodeIsLeftInverse :
+  IsLeftInverseOf Computation.mEncode Computation.mDecode
+mDecodeIsLeftInverse Fail = Refl
+mDecodeIsLeftInverse Compose = Refl
+mDecodeIsLeftInverse Identity = Refl
+mDecodeIsLeftInverse Const = Refl
+mDecodeIsLeftInverse MakeTuple = Refl
+mDecodeIsLeftInverse Project = Refl
+mDecodeIsLeftInverse Case = Refl
+mDecodeIsLeftInverse Inject = Refl
+mDecodeIsLeftInverse Liskov = Refl
+mDecodeIsLeftInverse Curry = Refl
+mDecodeIsLeftInverse Turing = Refl
+mDecodeIsLeftInverse Gödel = Refl
+mDecodeIsLeftInverse TestEqual = Refl
 
 export
-kEncodeIsInjective : IsInjective Computation.kEncode
-kEncodeIsInjective =
-  leftInverseImpliesInjective kEncode {g=kDecode} kDecodeIsLeftInverse
+mEncodeIsInjective : IsInjective Computation.mEncode
+mEncodeIsInjective =
+  leftInverseImpliesInjective mEncode {g=mDecode} mDecodeIsLeftInverse
 
 public export
-KInjection : Injection Keyword Nat
-KInjection = (kEncode ** kEncodeIsInjective)
+MInjection : Injection Morphism Nat
+MInjection = (mEncode ** mEncodeIsInjective)
 
 public export
-KCountable : Countable
-KCountable = (Keyword ** KInjection)
+MCountable : Countable
+MCountable = (Morphism ** MInjection)
 
 public export
-kDecEq : DecEqPred Keyword
-kDecEq = countableEq KCountable
+mDecEq : DecEqPred Morphism
+mDecEq = countableEq MCountable
 
 public export
-DecEq Keyword where
-  decEq = kDecEq
+DecEq Morphism where
+  decEq = mDecEq
 
 public export
-Eq Keyword using decEqToEq where
+Eq Morphism using decEqToEq where
   (==) = (==)
 
 public export
-Ord Keyword where
-  k < k' = kEncode k < kEncode k'
+Ord Morphism where
+  m < m' = mEncode m < mEncode m'
 
 -- | Atoms from which are constructed the elements of the set of S-expressions
 -- | which we interpret as the domain and the codomain of general computable
@@ -361,13 +361,13 @@ Ord InterpretationAtom where
 
 public export
 data ComputeAtom : Type where
-  CAKeyword : Keyword -> ComputeAtom
+  CAMorphism : Morphism -> ComputeAtom
   CAInterpretation : InterpretationAtom -> ComputeAtom
   CAData : Data -> ComputeAtom
 
 public export
 Show ComputeAtom where
-  show (CAKeyword k) = show k
+  show (CAMorphism k) = show k
   show (CAInterpretation i) = show i
   show (CAData d) = show d
 
@@ -377,21 +377,21 @@ caShow = show
 
 public export
 caDecEq : DecEqPred ComputeAtom
-caDecEq (CAKeyword k) (CAKeyword k') = case decEq k k' of
+caDecEq (CAMorphism k) (CAMorphism k') = case decEq k k' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-caDecEq (CAKeyword _) (CAInterpretation _) =
+caDecEq (CAMorphism _) (CAInterpretation _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAKeyword _) (CAData _) =
+caDecEq (CAMorphism _) (CAData _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAInterpretation _) (CAKeyword _) =
+caDecEq (CAInterpretation _) (CAMorphism _) =
   No $ \eq => case eq of Refl impossible
 caDecEq (CAInterpretation i) (CAInterpretation i') = case decEq i i' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 caDecEq (CAInterpretation _) (CAData _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAData _) (CAKeyword _) =
+caDecEq (CAData _) (CAMorphism _) =
   No $ \eq => case eq of Refl impossible
 caDecEq (CAData _) (CAInterpretation _) =
   No $ \eq => case eq of Refl impossible
@@ -409,19 +409,19 @@ Eq ComputeAtom using decEqToEq where
 
 public export
 Ord ComputeAtom where
-  CAKeyword k < CAKeyword k' = k < k'
-  CAKeyword _ < CAInterpretation _ = True
-  CAKeyword _ < CAData _ = True
-  CAInterpretation _ < CAKeyword _ = False
+  CAMorphism k < CAMorphism k' = k < k'
+  CAMorphism _ < CAInterpretation _ = True
+  CAMorphism _ < CAData _ = True
+  CAInterpretation _ < CAMorphism _ = False
   CAInterpretation i < CAInterpretation i' = i < i'
   CAInterpretation _ < CAData _ = True
-  CAData _ < CAKeyword _ = False
+  CAData _ < CAMorphism _ = False
   CAData _ < CAInterpretation _ = False
   CAData d < CAData d' = d < d'
 
 public export
 CAFail : ComputeAtom
-CAFail = CAKeyword Fail
+CAFail = CAMorphism Fail
 
 public export
 CANat : Nat -> ComputeAtom
