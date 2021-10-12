@@ -12,13 +12,14 @@ import public RefinedSExp.Computation
 mutual
   public export
   cexpApply : (f, x : CExp) -> CExp
-  cexpApply (CAMorphism Fail $* _) _ = CSFail
-  cexpApply (CAMorphism Compose $* fs) x = cCompositionApply fs x
-  cexpApply (CAMorphism Identity $* []) x = x
-  cexpApply (CAMorphism Identity $* _ :: _) x = CSFail
-  cexpApply (CAMorphism Const $* [_]) (CAMorphism Fail $* _) = CSFail
-  cexpApply (CAMorphism Const $* [c]) _ = c
-  cexpApply (CAMorphism Const $* _) _ = CSFail
+  cexpApply (CAReflectedMorphism Fail $* _) _ = CSFail
+  cexpApply (CAReflectedMorphism Compose $* fs) x = cCompositionApply fs x
+  cexpApply (CAReflectedMorphism Identity $* []) x = x
+  cexpApply (CAReflectedMorphism Identity $* _ :: _) x = CSFail
+  cexpApply (CAReflectedMorphism Const $* [_]) (CAReflectedMorphism Fail $* _) =
+    CSFail
+  cexpApply (CAReflectedMorphism Const $* [c]) _ = c
+  cexpApply (CAReflectedMorphism Const $* _) _ = CSFail
   cexpApply (CAInterpretation _ $* _) _ = CSFail
   cexpApply (CAData _ $* _) _ = CSFail
   cexpApply _ _ = ?cexpApply_hole
@@ -27,7 +28,8 @@ mutual
   cCompositionApply : (fs : CList) -> (x : CExp) -> CExp
   cCompositionApply [] x = x
   cCompositionApply (f :: fs') x =
-    CAMorphism Liskov $* [f, CAMorphism Liskov $* [CAMorphism Compose $* fs', x]]
+    CAReflectedMorphism Liskov $* [f, CAReflectedMorphism Liskov $*
+      [CAReflectedMorphism Compose $* fs', x]]
 
 -- | A single (small) step of the CExp interpreter.
 -- | The boolean part of the return value indicates whether anything changed.
@@ -36,12 +38,13 @@ mutual
 mutual
   public export
   cexpInterpretStep : CExp -> (Bool, CExp)
-  cexpInterpretStep (CAMorphism Liskov $* [f, x]) = case cexpInterpretStep f of
-    (True, f') => (True, CAMorphism Liskov $* [f', x])
-    (False, _) => case cexpInterpretStep x of
-      (True, x') => (True, CAMorphism Liskov $* [f, x'])
-      (False, _) => (True, cexpApply f x)
-  cexpInterpretStep (CAMorphism Liskov $* _) = (True, CSFail)
+  cexpInterpretStep (CAReflectedMorphism Liskov $* [f, x]) =
+    case cexpInterpretStep f of
+      (True, f') => (True, CAReflectedMorphism Liskov $* [f', x])
+      (False, _) => case cexpInterpretStep x of
+        (True, x') => (True, CAReflectedMorphism Liskov $* [f, x'])
+        (False, _) => (True, cexpApply f x)
+  cexpInterpretStep (CAReflectedMorphism Liskov $* _) = (True, CSFail)
   cexpInterpretStep (a $* l) = case clistInterpretStep l of
     (True, l') => (True, a $* l')
     (False, _) => (False, a $* l)

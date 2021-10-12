@@ -285,6 +285,42 @@ public export
 Ord Morphism where
   m < m' = mEncode m < mEncode m'
 
+public export
+MExp : Type
+MExp = SExp Morphism
+
+public export
+MList : Type
+MList = SList Morphism
+
+public export
+Show MExp where
+  show = fst (sexpShows show)
+
+public export
+Show MList where
+  show l = "(" ++ snd (sexpShows show) l ++ ")"
+
+public export
+msDecEq : DecEqPred MExp
+msDecEq = sexpDecEq mDecEq
+
+public export
+mslDecEq : DecEqPred MList
+mslDecEq = slistDecEq mDecEq
+
+public export
+DecEq MExp where
+  decEq = msDecEq
+
+public export
+DecEq MList where
+  decEq = mslDecEq
+
+public export
+Eq MExp using decEqToEq where
+  (==) = (==)
+
 -- | Atoms from which are constructed the elements of the set of S-expressions
 -- | which we interpret as the domain and the codomain of general computable
 -- | functions when defining Geb's semantics by interpretation.
@@ -361,13 +397,13 @@ Ord InterpretationAtom where
 
 public export
 data ComputeAtom : Type where
-  CAMorphism : Morphism -> ComputeAtom
+  CAReflectedMorphism : Morphism -> ComputeAtom
   CAInterpretation : InterpretationAtom -> ComputeAtom
   CAData : Data -> ComputeAtom
 
 public export
 Show ComputeAtom where
-  show (CAMorphism k) = show k
+  show (CAReflectedMorphism m) = show m
   show (CAInterpretation i) = show i
   show (CAData d) = show d
 
@@ -377,21 +413,21 @@ caShow = show
 
 public export
 caDecEq : DecEqPred ComputeAtom
-caDecEq (CAMorphism k) (CAMorphism k') = case decEq k k' of
+caDecEq (CAReflectedMorphism m) (CAReflectedMorphism m') = case decEq m m' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-caDecEq (CAMorphism _) (CAInterpretation _) =
+caDecEq (CAReflectedMorphism _) (CAInterpretation _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAMorphism _) (CAData _) =
+caDecEq (CAReflectedMorphism _) (CAData _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAInterpretation _) (CAMorphism _) =
+caDecEq (CAInterpretation _) (CAReflectedMorphism _) =
   No $ \eq => case eq of Refl impossible
 caDecEq (CAInterpretation i) (CAInterpretation i') = case decEq i i' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 caDecEq (CAInterpretation _) (CAData _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAData _) (CAMorphism _) =
+caDecEq (CAData _) (CAReflectedMorphism _) =
   No $ \eq => case eq of Refl impossible
 caDecEq (CAData _) (CAInterpretation _) =
   No $ \eq => case eq of Refl impossible
@@ -409,19 +445,19 @@ Eq ComputeAtom using decEqToEq where
 
 public export
 Ord ComputeAtom where
-  CAMorphism k < CAMorphism k' = k < k'
-  CAMorphism _ < CAInterpretation _ = True
-  CAMorphism _ < CAData _ = True
-  CAInterpretation _ < CAMorphism _ = False
+  CAReflectedMorphism m < CAReflectedMorphism m' = m < m'
+  CAReflectedMorphism _ < CAInterpretation _ = True
+  CAReflectedMorphism _ < CAData _ = True
+  CAInterpretation _ < CAReflectedMorphism _ = False
   CAInterpretation i < CAInterpretation i' = i < i'
   CAInterpretation _ < CAData _ = True
-  CAData _ < CAMorphism _ = False
+  CAData _ < CAReflectedMorphism _ = False
   CAData _ < CAInterpretation _ = False
   CAData d < CAData d' = d < d'
 
 public export
 CAFail : ComputeAtom
-CAFail = CAMorphism Fail
+CAFail = CAReflectedMorphism Fail
 
 public export
 CANat : Nat -> ComputeAtom
