@@ -6,11 +6,11 @@ import public RefinedSExp.Computation
 %default total
 
 public export
-computationNotationTest : CExp
+computationNotationTest : EExp
 computationNotationTest =
-  CANat 0 $* (CAReflectedMorphism Curry $* CAString "two" $^^ CANat 3) ::
-    (CANat 4 $*** (CANat 5 $* (CANat 6 $*** (CAString "seven" $**^ CANat 8)) $:^
-      CAReflectedMorphism Turing)) $:^ CAInterpretation Record
+  EANat 0 $* (EAReflectedMorphism Curry $* EAString "two" $^^ EANat 3) ::
+    (EANat 4 $*** (EANat 5 $* (EANat 6 $*** (EAString "seven" $**^ EANat 8)) $:^
+      EAReflectedMorphism Turing)) $:^ EAInterpretation Record
 
 export
 computationTests : IO ()

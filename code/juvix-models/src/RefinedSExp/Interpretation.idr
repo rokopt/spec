@@ -11,59 +11,59 @@ import public RefinedSExp.Computation
 -- | full sub-evaluation is the caller's responsibility to guarantee).
 mutual
   public export
-  cexpApply : (f, x : CExp) -> CExp
-  cexpApply (CAReflectedMorphism Fail $* _) _ = CSFail
-  cexpApply (CAReflectedMorphism Compose $* fs) x = cCompositionApply fs x
-  cexpApply (CAReflectedMorphism Identity $* []) x = x
-  cexpApply (CAReflectedMorphism Identity $* _ :: _) x = CSFail
-  cexpApply (CAReflectedMorphism Const $* [_]) (CAReflectedMorphism Fail $* _) =
+  eexpApply : (f, x : EExp) -> EExp
+  eexpApply (EAReflectedMorphism Fail $* _) _ = CSFail
+  eexpApply (EAReflectedMorphism Compose $* fs) x = eCompositionApply fs x
+  eexpApply (EAReflectedMorphism Identity $* []) x = x
+  eexpApply (EAReflectedMorphism Identity $* _ :: _) x = CSFail
+  eexpApply (EAReflectedMorphism Const $* [_]) (EAReflectedMorphism Fail $* _) =
     CSFail
-  cexpApply (CAReflectedMorphism Const $* [c]) _ = c
-  cexpApply (CAReflectedMorphism Const $* _) _ = CSFail
-  cexpApply (CAInterpretation _ $* _) _ = CSFail
-  cexpApply (CAData _ $* _) _ = CSFail
-  cexpApply _ _ = ?cexpApply_hole
+  eexpApply (EAReflectedMorphism Const $* [c]) _ = c
+  eexpApply (EAReflectedMorphism Const $* _) _ = CSFail
+  eexpApply (EAInterpretation _ $* _) _ = CSFail
+  eexpApply (EAData _ $* _) _ = CSFail
+  eexpApply _ _ = ?eexpApply_hole
 
   public export
-  cCompositionApply : (fs : CList) -> (x : CExp) -> CExp
-  cCompositionApply [] x = x
-  cCompositionApply (f :: fs') x =
-    CAReflectedMorphism Liskov $* [f, CAReflectedMorphism Liskov $*
-      [CAReflectedMorphism Compose $* fs', x]]
+  eCompositionApply : (fs : EList) -> (x : EExp) -> EExp
+  eCompositionApply [] x = x
+  eCompositionApply (f :: fs') x =
+    EAReflectedMorphism Liskov $* [f, EAReflectedMorphism Liskov $*
+      [EAReflectedMorphism Compose $* fs', x]]
 
--- | A single (small) step of the CExp interpreter.
+-- | A single (small) step of the EExp interpreter.
 -- | The boolean part of the return value indicates whether anything changed.
 -- | (If not, then the term is fully evaluated, meaning that there are no
 -- | instances of "Eval" in it.)
 mutual
   public export
-  cexpInterpretStep : CExp -> (Bool, CExp)
-  cexpInterpretStep (CAReflectedMorphism Liskov $* [f, x]) =
-    case cexpInterpretStep f of
-      (True, f') => (True, CAReflectedMorphism Liskov $* [f', x])
-      (False, _) => case cexpInterpretStep x of
-        (True, x') => (True, CAReflectedMorphism Liskov $* [f, x'])
-        (False, _) => (True, cexpApply f x)
-  cexpInterpretStep (CAReflectedMorphism Liskov $* _) = (True, CSFail)
-  cexpInterpretStep (a $* l) = case clistInterpretStep l of
+  eexpInterpretStep : EExp -> (Bool, EExp)
+  eexpInterpretStep (EAReflectedMorphism Liskov $* [f, x]) =
+    case eexpInterpretStep f of
+      (True, f') => (True, EAReflectedMorphism Liskov $* [f', x])
+      (False, _) => case eexpInterpretStep x of
+        (True, x') => (True, EAReflectedMorphism Liskov $* [f, x'])
+        (False, _) => (True, eexpApply f x)
+  eexpInterpretStep (EAReflectedMorphism Liskov $* _) = (True, CSFail)
+  eexpInterpretStep (a $* l) = case elistInterpretStep l of
     (True, l') => (True, a $* l')
     (False, _) => (False, a $* l)
 
   public export
-  clistInterpretStep : CList -> (Bool, CList)
-  clistInterpretStep [] = (False, [])
-  clistInterpretStep (x :: l) = case cexpInterpretStep x of
+  elistInterpretStep : EList -> (Bool, EList)
+  elistInterpretStep [] = (False, [])
+  elistInterpretStep (x :: l) = case eexpInterpretStep x of
     (True, x') => (True, x' :: l)
-    (False, _) => case clistInterpretStep l of
+    (False, _) => case elistInterpretStep l of
       (True, l') => (True, x :: l')
       (False, _) => (False, x :: l)
 
 -- | A computable function whose termination Idris-2 can prove.
 -- | It still returns "maybe" because it might be partial (its
--- | domain might not include all of CExp).
+-- | domain might not include all of EExp).
 public export
 TerminatingComputableFunction : Type
-TerminatingComputableFunction = CExp -> Maybe CExp
+TerminatingComputableFunction = EExp -> Maybe EExp
 
 -- | When composing computable functions, any failure of the computation
 -- | of any argument of the first function application must produce a
@@ -78,11 +78,11 @@ public export
 -- | (its domain is all S-expressions and it terminates on all inputs).
 public export
 IsTotal : TerminatingComputableFunction -> Type
-IsTotal f = (x : CExp) -> IsJust $ f x
+IsTotal f = (x : EExp) -> IsJust $ f x
 
 public export
 TotalComputableFunction : Type
-TotalComputableFunction = CExp -> CExp
+TotalComputableFunction = EExp -> EExp
 
 public export
 toTotal :
@@ -93,4 +93,4 @@ toTotal isTotal x = IsJustElim $ isTotal x
 infixl 1 #~~
 public export
 (#~~) : TerminatingComputableFunction -> TerminatingComputableFunction -> Type
-f #~~ g = ((x : CExp) -> f x = g x)
+f #~~ g = ((x : EExp) -> f x = g x)

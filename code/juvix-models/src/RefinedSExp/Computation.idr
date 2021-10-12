@@ -124,45 +124,45 @@ import public RefinedSExp.Data
 -- |    unique, and any restriction would either no longer be
 -- |    category-theoretically unique or would no longer be a Turing machine.)
 public export
-data Morphism : Type where
+data MorphismAtom : Type where
   -- | Represents failure of a general computable function application.
-  Fail : Morphism
+  Fail : MorphismAtom
 
   -- | Composition of general computable functions.
-  Compose : Morphism
+  Compose : MorphismAtom
 
   -- | The identity general computable function (which is total).
-  Identity : Morphism
+  Identity : MorphismAtom
 
   -- | Product introduction for general compuatable functions:  form a function
   -- | which returns tuples from a tuple of functions (which must have the same
   -- | domain for this operation to make sense).
-  MakeTuple : Morphism
+  MakeTuple : MorphismAtom
 
   -- | Product elimination for general computable functions:  form a function
   -- | which returns tuples from a tuple of functions (which must have the same
   -- | domain for this operation to make sense).
-  Project : Morphism
+  Project : MorphismAtom
 
   -- | Coproduct introduction for general computable functions:  choose one
   -- | of one or more possible forms.
-  Inject : Morphism
+  Inject : MorphismAtom
 
   -- | Coproduct elimination for general computable functions:  form a function
   -- | which accepts a coproduct and returns a case depending on which of the
   -- | coproduct's injections is passed in.
-  Case : Morphism
+  Case : MorphismAtom
 
   -- | The evaluation function associated with exponentials of general
   -- | computable functions.  It is named after Liskov because it is
   -- | implemented as substitution.  It is known as "eval" in the category
   -- | theory of exponential objects, but we use a different name to avoid
   -- | confusion with the "eval" of Lisp, which we call "Turing".
-  Liskov : Morphism
+  Liskov : MorphismAtom
 
   -- | The currying function associated with exponentials of general
   -- | computable functions.  It is the right adjoint to Liskov.
-  Curry : Morphism
+  Curry : MorphismAtom
 
   -- | The combinator which gives us unconstrained general recursion:
   -- | we name it after Turing; it is the "eval" of Lisp, but we wish
@@ -170,24 +170,24 @@ data Morphism : Type where
   -- | exponential objects (which we call "Liskov").
   -- |
   -- | This combinator can be viewed as metaprogramming elimination.
-  Turing : Morphism
+  Turing : MorphismAtom
 
   -- | Reflection:  S-expression introduction, which takes a function which
   -- | returns an atom and a list of functions which return S-expressions
   -- | and produces a function which returns an S-expression.
   -- |
   -- | This combinator can be viewed as metaprogramming introduction.
-  Gödel : Morphism
+  Gödel : MorphismAtom
 
   -- | Decidable equality on S-expressions, which includes atom elimination.
   -- | This combinator could be viewed as constant elimination.
-  TestEqual : Morphism
+  TestEqual : MorphismAtom
 
   -- | Introduce a constant-valued function.
-  Const : Morphism
+  Const : MorphismAtom
 
 public export
-morphismToString : Morphism -> String
+morphismToString : MorphismAtom -> String
 morphismToString Fail = "Fail"
 morphismToString Compose = "Compose"
 morphismToString Identity = "Identity"
@@ -203,11 +203,11 @@ morphismToString Gödel = "Gödel"
 morphismToString TestEqual = "TestEqual"
 
 public export
-Show Morphism where
+Show MorphismAtom where
   show m = ":" ++ morphismToString m
 
 public export
-mEncode : Morphism -> Nat
+mEncode : MorphismAtom -> Nat
 mEncode Fail = 0
 mEncode Compose = 1
 mEncode Identity = 2
@@ -223,7 +223,7 @@ mEncode Gödel = 11
 mEncode TestEqual = 12
 
 public export
-mDecode : Nat -> Morphism
+mDecode : Nat -> MorphismAtom
 mDecode 0 = Fail
 mDecode 1 = Compose
 mDecode 2 = Identity
@@ -262,36 +262,36 @@ mEncodeIsInjective =
   leftInverseImpliesInjective mEncode {g=mDecode} mDecodeIsLeftInverse
 
 public export
-MInjection : Injection Morphism Nat
+MInjection : Injection MorphismAtom Nat
 MInjection = (mEncode ** mEncodeIsInjective)
 
 public export
 MCountable : Countable
-MCountable = (Morphism ** MInjection)
+MCountable = (MorphismAtom ** MInjection)
 
 public export
-mDecEq : DecEqPred Morphism
+mDecEq : DecEqPred MorphismAtom
 mDecEq = countableEq MCountable
 
 public export
-DecEq Morphism where
+DecEq MorphismAtom where
   decEq = mDecEq
 
 public export
-Eq Morphism using decEqToEq where
+Eq MorphismAtom using decEqToEq where
   (==) = (==)
 
 public export
-Ord Morphism where
+Ord MorphismAtom where
   m < m' = mEncode m < mEncode m'
 
 public export
 MExp : Type
-MExp = SExp Morphism
+MExp = SExp MorphismAtom
 
 public export
 MList : Type
-MList = SList Morphism
+MList = SList MorphismAtom
 
 public export
 Show MExp where
@@ -396,113 +396,114 @@ Ord InterpretationAtom where
   i < i' = iEncode i < iEncode i'
 
 public export
-data ComputeAtom : Type where
-  CAReflectedMorphism : Morphism -> ComputeAtom
-  CAInterpretation : InterpretationAtom -> ComputeAtom
-  CAData : Data -> ComputeAtom
+data ExtendedAtom : Type where
+  EAReflectedMorphism : MorphismAtom -> ExtendedAtom
+  EAInterpretation : InterpretationAtom -> ExtendedAtom
+  EAData : Data -> ExtendedAtom
 
 public export
-Show ComputeAtom where
-  show (CAReflectedMorphism m) = show m
-  show (CAInterpretation i) = show i
-  show (CAData d) = show d
+Show ExtendedAtom where
+  show (EAReflectedMorphism m) = show m
+  show (EAInterpretation i) = show i
+  show (EAData d) = show d
 
 public export
-caShow : ComputeAtom -> String
-caShow = show
+eaShow : ExtendedAtom -> String
+eaShow = show
 
 public export
-caDecEq : DecEqPred ComputeAtom
-caDecEq (CAReflectedMorphism m) (CAReflectedMorphism m') = case decEq m m' of
+eaDecEq : DecEqPred ExtendedAtom
+eaDecEq (EAReflectedMorphism m) (EAReflectedMorphism m') =
+  case decEq m m' of
+    Yes Refl => Yes Refl
+    No neq => No $ \eq => case eq of Refl => neq Refl
+eaDecEq (EAReflectedMorphism _) (EAInterpretation _) =
+  No $ \eq => case eq of Refl impossible
+eaDecEq (EAReflectedMorphism _) (EAData _) =
+  No $ \eq => case eq of Refl impossible
+eaDecEq (EAInterpretation _) (EAReflectedMorphism _) =
+  No $ \eq => case eq of Refl impossible
+eaDecEq (EAInterpretation i) (EAInterpretation i') = case decEq i i' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
-caDecEq (CAReflectedMorphism _) (CAInterpretation _) =
+eaDecEq (EAInterpretation _) (EAData _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAReflectedMorphism _) (CAData _) =
+eaDecEq (EAData _) (EAReflectedMorphism _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAInterpretation _) (CAReflectedMorphism _) =
+eaDecEq (EAData _) (EAInterpretation _) =
   No $ \eq => case eq of Refl impossible
-caDecEq (CAInterpretation i) (CAInterpretation i') = case decEq i i' of
-  Yes Refl => Yes Refl
-  No neq => No $ \eq => case eq of Refl => neq Refl
-caDecEq (CAInterpretation _) (CAData _) =
-  No $ \eq => case eq of Refl impossible
-caDecEq (CAData _) (CAReflectedMorphism _) =
-  No $ \eq => case eq of Refl impossible
-caDecEq (CAData _) (CAInterpretation _) =
-  No $ \eq => case eq of Refl impossible
-caDecEq (CAData d) (CAData d') = case decEq d d' of
+eaDecEq (EAData d) (EAData d') = case decEq d d' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-DecEq ComputeAtom where
-  decEq = caDecEq
+DecEq ExtendedAtom where
+  decEq = eaDecEq
 
 public export
-Eq ComputeAtom using decEqToEq where
+Eq ExtendedAtom using decEqToEq where
   (==) = (==)
 
 public export
-Ord ComputeAtom where
-  CAReflectedMorphism m < CAReflectedMorphism m' = m < m'
-  CAReflectedMorphism _ < CAInterpretation _ = True
-  CAReflectedMorphism _ < CAData _ = True
-  CAInterpretation _ < CAReflectedMorphism _ = False
-  CAInterpretation i < CAInterpretation i' = i < i'
-  CAInterpretation _ < CAData _ = True
-  CAData _ < CAReflectedMorphism _ = False
-  CAData _ < CAInterpretation _ = False
-  CAData d < CAData d' = d < d'
+Ord ExtendedAtom where
+  EAReflectedMorphism m < EAReflectedMorphism m' = m < m'
+  EAReflectedMorphism _ < EAInterpretation _ = True
+  EAReflectedMorphism _ < EAData _ = True
+  EAInterpretation _ < EAReflectedMorphism _ = False
+  EAInterpretation i < EAInterpretation i' = i < i'
+  EAInterpretation _ < EAData _ = True
+  EAData _ < EAReflectedMorphism _ = False
+  EAData _ < EAInterpretation _ = False
+  EAData d < EAData d' = d < d'
 
 public export
-CAFail : ComputeAtom
-CAFail = CAReflectedMorphism Fail
+EAFail : ExtendedAtom
+EAFail = EAReflectedMorphism Fail
 
 public export
-CANat : Nat -> ComputeAtom
-CANat = CAData . DNat
+EANat : Nat -> ExtendedAtom
+EANat = EAData . DNat
 
 public export
-CAString : String -> ComputeAtom
-CAString = CAData . DString
+EAString : String -> ExtendedAtom
+EAString = EAData . DString
 
 public export
-CExp : Type
-CExp = SExp ComputeAtom
+EExp : Type
+EExp = SExp ExtendedAtom
 
 public export
-CList : Type
-CList = SList ComputeAtom
+EList : Type
+EList = SList ExtendedAtom
 
 public export
-Show CExp where
+Show EExp where
   show = fst (sexpShows show)
 
 public export
-Show CList where
+Show EList where
   show l = "(" ++ snd (sexpShows show) l ++ ")"
 
 public export
-csDecEq : DecEqPred CExp
-csDecEq = sexpDecEq caDecEq
+esDecEq : DecEqPred EExp
+esDecEq = sexpDecEq eaDecEq
 
 public export
-cslDecEq : DecEqPred CList
-cslDecEq = slistDecEq caDecEq
+eslDecEq : DecEqPred EList
+eslDecEq = slistDecEq eaDecEq
 
 public export
-DecEq CExp where
-  decEq = csDecEq
+DecEq EExp where
+  decEq = esDecEq
 
 public export
-DecEq CList where
-  decEq = cslDecEq
+DecEq EList where
+  decEq = eslDecEq
 
 public export
-Eq CExp using decEqToEq where
+Eq EExp using decEqToEq where
   (==) = (==)
 
 public export
-CSFail : CExp
-CSFail = $^ CAFail
+CSFail : EExp
+CSFail = $^ EAFail
