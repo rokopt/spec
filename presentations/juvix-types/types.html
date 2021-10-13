@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>juvix’s type system</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/reset.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/theme/night.css" id="theme">
+  <link rel=stylesheet href=style-extra.css>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">juvix’s type system</h1>
+</section>
+
+<section>
+<section id="usages" class="title-slide slide level1">
+<h1>usages</h1>
+
+</section>
+<section id="usage-basics" class="slide level2">
+<h2>usage basics</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\OR{\mathrel|}
+\newcommand\ORR{\mathrel{\mathrlap{\mkern9mu|}{\hphantom\Coloneqq}}}
+\]</span></p>
+</div>
+<ul>
+<li>currently usages are either natural numbers or <span class="math inline">\(ω\)</span> (“any”)</li>
+<li>a numeric usage is an exact quantity (rather than an upper bound)</li>
+</ul>
+<p><span class="math display">\[π, ρ, σ, ζ \Coloneqq n \OR ω \quad (n \in \mathbb{N})\]</span></p>
+</section>
+<section id="operations" class="slide level2">
+<h2>operations</h2>
+<ul>
+<li>usages form a semiring</li>
+</ul>
+<p><span class="math display">\[
+\begin{gathered}
+ω + π = ω = π + ω \\[0.5em]
+0 \, m = 0 = 0 \, n \\
+ω \, π = ω = π \, ω \quad (n \ne 0)
+\end{gathered}
+\]</span></p>
+</section>
+<section id="subtraction" class="slide level2">
+<h2>subtraction</h2>
+<p>(inspired by <span class="citation" data-cites="leftovers">Allais (2018)</span>)</p>
+<ul>
+<li>in fact usages are <em>almost</em> a ring, but with no negatives, subtraction is partial</li>
+</ul>
+<p><span class="math display">\[
+\begin{gathered}
+ω - π = ω \quad \text{(including $ω - ω$)} \\
+m - n = \mathord⊥ \quad \text{ if } m &lt; n
+\end{gathered}
+\]</span></p>
+</section>
+<section id="emptiness" class="slide level2">
+<h2>emptiness</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Rule[3]{
+  \frac{\begin{gathered}#2\end{gathered}}{#3}\:[\textsf{#1}]
+}
+\newcommand\Empty{\: \mathbf{empty}}
+\]</span></p>
+</div>
+<ul>
+<li>if we’re tracking usages exactly, then it should have zero left when it goes out of scope</li>
+<li>otherwise it stays <span class="math inline">\(ω\)</span> the whole time so that counts as “empty” too</li>
+<li>in rules, usages are called <span class="math inline">\(ζ\)</span> when they should be empty</li>
+</ul>
+<p><span class="math display">\[
+\Rule{e-zero}{}{0 \Empty} \qquad
+\Rule{e-any}{}{ω \Empty}
+\]</span></p>
+</section></section>
+<section>
+<section id="current-types" class="title-slide slide level1">
+<h1>current types</h1>
+
+</section>
+<section id="type-rules-most-of-them" class="slide level2">
+<h2>type rules (most of them)</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Ty[4]{
+  \IN{\begin{smallmatrix}#1\\#2\end{smallmatrix}} ⊢ #3 ⊣ \OUT{#4}
+}
+\newcommand\TyZ[2]{\IN{#1} ⊢_0 #2}
+\newcommand\IN{\textcolor{Apricot}}
+\newcommand\OUT{\textcolor{SpringGreen}}
+\newcommand\SYN{\textcolor{Lavender}{⇒}}
+\newcommand\CHK{\textcolor{SkyBlue}{⇐}}
+\newcommand\Syn[3]{\IN{#1} · \IN{#2} \SYN \OUT{#3}}
+\newcommand\Chk[3]{\IN{#1} · \IN{#2} \CHK \IN{#3}}
+\newcommand\ChkZ[2]{\IN{#1} \CHK \IN{#2}}
+\]</span></p>
+</div>
+<p><span class="math display">\[
+\begin{aligned}
+ A, B, C, s, t &amp; \Coloneqq e \OR \dotsb   &amp; \text{terms} \\
+          e, f &amp; \Coloneqq \dotsb         &amp; \text{eliminations} \\[.5em]
+             Γ &amp; \Coloneqq • \OR Γ, x : A &amp; \text{type contexts} \\
+             Θ &amp; \Coloneqq • \OR Θ, π · x &amp; \text{usage contexts} \\[.5em]
+   \mathcal{J} &amp; \Coloneqq \Ty{Γ}{Θ}{\Chk σ t A}{Θ&#39;}
+                                          &amp; \text{judgements} \\
+               &amp; \ORR \Ty{Γ}{Θ}{\Syn σ e A}{Θ&#39;} \\
+               &amp; \ORR \IN ζ \Empty
+\end{aligned}
+\]</span></p>
+<ul>
+<li>orange is input, green is output</li>
+<li><span class="math inline">\(\CHK\)</span> is checking, <span class="math inline">\(\SYN\)</span> is synthesis</li>
+<li><span class="math inline">\(\TyZ{\IN Γ}{\ChkZ s A}\)</span> is an abbreviation for <span class="math inline">\(\Ty{\IN Γ}{\IN Θ}{\Chk 0 s A}{\OUT Θ}\)</span> for some (irrelevant) <span class="math inline">\(Θ\)</span></li>
+</ul>
+<aside class="notes">
+<ul>
+<li>terms are constructions, which can be checked against an input type (<span class="math inline">\(\CHK\)</span>)</li>
+<li>eliminations are spines of eliminators (application, projection, etc) applied to a stuck term like a variable (<span class="math inline">\(\SYN\)</span>)</li>
+</ul>
+</aside>
+</section>
+<section id="universes-variables" class="slide level2">
+<h2>universes, variables</h2>
+<p><span class="math display">\[
+\begin{gathered}
+\begin{aligned}
+i &amp;\in \mathbb{N} \\
+A &amp;\Coloneqq \dotsb \OR \star_i \OR x
+\end{aligned} \\[1em]
+%
+\Rule{star}{\IN i &lt; \IN j}{\TyZ{Γ}{\ChkZ{\star_i}{\star_j}}} \\[.5em]
+\Rule{var}{}{
+  \Ty{Γ₁, &amp; x : A, &amp; Γ₂}{Θ₁, &amp; π · x, &amp; Θ₂}{\Syn σ x A}{Θ₁, π-σ, Θ₂}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="primitives" class="slide level2">
+<h2>primitives</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\M{\mathbfsf}
+\]</span></p>
+</div>
+<ul>
+<li><span class="math inline">\(P\)</span> ranges over primitive types, <span class="math inline">\(p\)</span> over primitive values</li>
+<li><span class="math inline">\(\M{hasType}\)</span> and <span class="math inline">\(\M{arity}\)</span> are defined by the parameterisation</li>
+</ul>
+<p><span class="math display">\[
+\begin{aligned}
+t &amp;\Coloneqq \dotsb \OR P \OR p
+\end{aligned}
+\]</span></p>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{prim}{\M{hasType}(\IN p, \IN A)}{
+  \Ty{Γ}{Θ}{\Chk σ p A}{Θ}
+}
+\\[1em]
+\Rule{primty}{\M{arity}(\IN P) = \OUT k}{
+  \TyZ{Γ}{\ChkZ{P}{\underbrace{\star_0 \to \dotsb}_k \to \star_0}}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="function-dependent-pair-types" class="slide level2">
+<h2>function &amp; [dependent] pair types</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Pair[1]{\langle #1 \rangle}
+\]</span></p>
+</div>
+<p><span class="math display">\[
+\begin{gathered}
+A \Coloneqq \dotsb \OR Π(π·x: A). B \OR λx. t \OR \Pair{s, t} \\[1em]
+%
+\Rule{fun}{%
+  \TyZ{Γ}{\ChkZ{A}{\star_i}} \qquad
+  \TyZ{Γ, x: A}{\ChkZ{B}{\star_i}}
+}{
+  \TyZ{Γ}{\ChkZ{Π(π·x: A). B}{\star_i}}
+}\\[1em]
+\Rule{pair}{%
+  \TyZ{Γ}{\ChkZ{A}{\star_i}} \qquad
+  \TyZ{Γ, x: A}{\ChkZ{B}{\star_i}}
+}{
+  \TyZ{Γ}{\ChkZ{Σ(π·x: A). B}{\star_i}}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="abstraction-application" class="slide level2">
+<h2>abstraction, application</h2>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{abs}{%
+  \Ty{Γ, &amp; x: A}{Θ, &amp; σπ·x}{\Chk σ t B}{Θ&#39;, ζ·x} \qquad
+  \IN ζ \: \Empty
+}{%
+  \Ty{Γ}{Θ}{\Chk{σ}{λx. t}{Π(π·x: A). B}}{Θ&#39;}%
+}\\[1em]
+\Rule{app}{%
+  \Ty{Γ}{Θ}{\Syn{σ}{f}{Π(π·x: A). B}}{Θ&#39;} \\
+  \Ty{Γ}{Θ&#39;}{\Chk{σπ}{s}{A}}{Θ&#39;&#39;}%
+}{%
+  \Ty{Γ}{Θ}{\Syn{σ}{f \: s}{B[x \coloneqq s]}}{Θ&#39;&#39;}%
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="dependent-pair-construction" class="slide level2">
+<h2>dependent pair construction</h2>
+<p><span class="math display">\[
+\Rule{cons}{
+  \Ty{Γ}{Θ}{\Chk{σ}{s}{A}}{Θ&#39;} \\
+  \Ty{Γ}{Θ&#39;}{\Chk{σ}{t}{B[x \coloneqq s]}}{Θ&#39;&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Pair{s,t}}{Σ(x: A). B}}{Θ&#39;&#39;}
+}
+\]</span></p>
+<p>(no builtin eliminator for <span class="math inline">\(Σ\)</span> at the moment)</p>
+</section>
+<section id="categorical-product" class="slide level2">
+<h2>categorical product</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\CPair[1]{⟪#1⟫}
+\newcommand\K\mathsf
+\newcommand\Fst[1]{\K{fst}_{#1}\:}
+\newcommand\Snd[1]{\K{snd}_{#1}\:}
+\]</span></p>
+</div>
+<p><span class="math display">\[
+A, t \Coloneqq \dotsb \OR A \times B \OR \CPair{s,t} \OR \Fst{B} s \OR \Snd{A} s
+\]</span></p>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{cpair}{
+  \TyZ{Γ}{\ChkZ{A}{\star_i}} \qquad
+  \TyZ{Γ}{\ChkZ{B}{\star_i}}
+}{
+  \TyZ{Γ}{\ChkZ{A \times B}{\star_i}}
+}
+\\[1em]
+\Rule{ccons}{
+  \Ty{Γ}{Θ}{\Chk{σ}{s}{A}}{Θ&#39;} \qquad
+  \Ty{Γ}{Θ&#39;}{\Chk{σ}{t}{B}}{Θ&#39;&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\CPair{s,t}}{A \times B}}{Θ&#39;&#39;}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="categorical-product-projections" class="slide level2">
+<h2>categorical product projections</h2>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{cfst}{
+  \Ty{Γ}{Θ}{\ChkZ{B}{\star_i}}{Θ} \qquad
+  \Ty{Γ}{Θ}{\Chk{σ}{s}{A \times B}}{Θ&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Fst{B} s}{A}}{Θ&#39;}
+}
+\\[1em]
+\Rule{csnd}{
+  \Ty{Γ}{Θ}{\ChkZ{A}{\star_i}}{Θ} \qquad
+  \Ty{Γ}{Θ}{\Chk{σ}{s}{A \times B}}{Θ&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Snd{A} s}{B}}{Θ&#39;}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="categorical-coproduct-construction" class="slide level2">
+<h2>categorical coproduct construction</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Inl{\K{inl}\:}
+\newcommand\Inr{\K{inr}\:}
+\newcommand\Case[1]{\K{case}_{#1}\:}
+\]</span></p>
+</div>
+<p><span class="math display">\[
+A, t \Coloneqq \dotsb \OR A+B \OR \Inl s \OR \Inr t
+  \OR \Case{A+B} s \: t_1 \: t_2
+\]</span></p>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{csum}{
+  \TyZ{Γ}{\ChkZ{A}{\star_i}} \qquad
+  \TyZ{Γ}{\ChkZ{B}{\star_i}}
+}{
+  \TyZ{Γ}{\ChkZ{A + B}{\star_i}}
+}
+\\[1em]
+\Rule{cinl}{
+  \Ty{Γ}{Θ}{\Chk{σ}{s}{A}}{Θ&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Inl s}{A + B}}{Θ&#39;}
+}
+\\[1em]
+\Rule{cinr}{
+  \Ty{Γ}{Θ}{\Chk{σ}{t}{B}}{Θ&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Inr t}{A + B}}{Θ&#39;}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="categorical-coproduct-elimination" class="slide level2">
+<h2>categorical coproduct elimination</h2>
+<p><span class="math display">\[
+\Rule{ccase}{
+  \TyZ{Γ}{\ChkZ{A}{\star_i}} \qquad
+  \TyZ{Γ}{\ChkZ{B}{\star_i}} \qquad
+  \Ty{Γ}{Θ}{\Chk{σ}{s}{A+B}}{Θ&#39;} \\
+  \Ty{Γ}{Θ&#39;}{\Chk{σ}{t_1}{A →_π C}}{Θ&#39;&#39;} \qquad
+  \Ty{Γ}{Θ&#39;}{\Chk{σ}{t_2}{B →_π C}}{Θ&#39;&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Case{A+B} s \: t_1 \: t_2}{C}}{Θ&#39;&#39;}
+}
+\]</span></p>
+<ul>
+<li>both branches <span class="math inline">\(t_1,t_2\)</span> have to have the same usage input/output because only one of them is used</li>
+</ul>
+</section>
+<section id="local-binding" class="slide level2">
+<h2>local binding</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Let{\K{let}\:}
+\newcommand\In{\:\K{in}\:}
+\]</span></p>
+</div>
+<p><span class="math display">\[
+t \Coloneqq \dotsb \OR \Let π · x = e \In t
+\]</span></p>
+<p><span class="math display">\[
+\Rule{let}{
+  \Ty{Γ}{Θ}{\Syn{σπ}{e}{B}}{Θ&#39;} \\
+  \Ty{Γ,&amp;x:A}{Θ&#39;,&amp;π·x}{\Chk{σ}{t}{A}}{Θ&#39;&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{(\Let π · x = e \In t)}{A}}{Θ&#39;&#39;}
+}
+\]</span></p>
+</section>
+<section id="subtyping" class="slide level2">
+<h2>subtyping</h2>
+<p><span class="math display">\[
+\mathcal{J} \Coloneqq \dotsb \OR \IN π \preceq \IN ρ \OR \IN s &lt;: \IN t
+\]</span></p>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{sub-refl}{}{\IN π \preceq \IN π} \qquad
+\Rule{sub-any}{}{\IN π \preceq \IN ω} \\[1em]
+\Rule{sub-star}{\IN i \le \IN j}{\IN{\star_i} &lt;: \IN{\star_j}} \\[.5em]
+\Rule{sub-pi}{
+  \IN{π₁} \preceq \IN{π₂} \qquad
+  \IN{A₂} &lt;: \IN{A₁} \qquad
+  \IN{B₁} &lt;: \IN{B₂}
+}{
+  \IN{Π(π₁ · x: A₁). B₁} &lt;: \IN{Π(π₂ · x: A₂). B₂}
+} \\[1em]
+\Rule{sub-sig}{
+  \IN{π₁} \preceq \IN{π₂} \qquad
+  \IN{A₁} &lt;: \IN{A₂} \qquad
+  \IN{B₁} &lt;: \IN{B₂}
+}{
+  \IN{Σ(π₁ · x: A₁). B₁} &lt;: \IN{Σ(π₂ · x: A₂). B₂}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="applying-subtyping" class="slide level2">
+<h2>applying subtyping</h2>
+<p><span class="math display">\[
+\Rule{sub}{%
+  \Ty{Γ}{Θ}{\Syn σ e A}{Θ&#39;} \qquad
+  \IN A &lt;: \IN{A&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk σ e {A&#39;}}{Θ&#39;}
+}
+\]</span></p>
+</section></section>
+<section>
+<section id="future-directions" class="title-slide slide level1">
+<h1>future directions</h1>
+
+</section>
+<section id="records" class="slide level2">
+<h2>records</h2>
+<ul>
+<li>we have already gone through the typing rules for these recently<br />
+(<a href="https://raw.githubusercontent.com/anoma/juvix/8f760f1e11edee7f523bb022f3673ab1b482693a/doc/records/records.html"><code>#927:doc/records/records.html</code></a>)</li>
+<li>nested lookups still TODO but otherwise probably ready?</li>
+<li>can replace <span class="math inline">\(Σ\)</span>, <span class="math inline">\(\times\)</span>, <span class="math inline">\(\K{UnitTy}\)</span>, <span class="math inline">\(\square\)</span></li>
+</ul>
+<aside class="notes">
+<p>i dont know how to make github actually render the html, sorry. the pandoc version uses features that aren’t in gfm</p>
+</aside>
+</section>
+<section id="first-class-usages" class="slide level2">
+<h2>first class usages</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Usage{\K{Usage}}
+\newcommand\Any{\K{Any}}
+\]</span></p>
+</div>
+<ul>
+<li>new builtins:
+<ul>
+<li><span class="math inline">\(\Usage: \star_0\)</span></li>
+<li><span class="math inline">\(0, 1, \dotsc, \Any : \Usage\)</span></li>
+<li><span class="math inline">\(\mathord+, \mathord· : \Usage →_1 \Usage →_1 \Usage\)</span></li>
+</ul></li>
+<li>no eliminator; usages are totally opaque</li>
+<li>can compute with them by representing them as e.g. <code>Maybe Nat</code> and interpreting them to actual <span class="math inline">\(\Usage\)</span> values just before use</li>
+<li>the ring equations that arise can be solved automatically</li>
+</ul>
+<p><span class="math display">\[
+\Rule{fun}{
+  \TyZ{Γ}{\ChkZ{π}{\Usage}} \qquad
+  \TyZ{Γ}{\ChkZ{A}{\star_i}} \qquad
+  \TyZ{Γ, x: A}{\ChkZ{B}{\star_i}}
+}{
+  \TyZ{Γ}{\ChkZ{Π(π·x: A). B}{\star_i}}
+}
+\]</span></p>
+</section>
+<section id="move-coproduct-eliminator-to-elimination-category" class="slide level2">
+<h2>move coproduct eliminator to elimination category</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\CaseE[1]{\K{case}_{#1}\:}
+\]</span></p>
+</div>
+<ul>
+<li><span class="math inline">\(\K{case}\)</span> can be moved to <code>Elim</code></li>
+<li>its return type will need to be given but it can also become dependent</li>
+</ul>
+<p><span class="math display">\[
+\Rule{case}{
+  \TyZ{Γ, x: A+B}{\ChkZ{C}{\star_i}} \\
+  \Ty{Γ}{Θ}{\Syn{σ}{e}{A+B}}{Θ&#39;} \\
+  \Ty{Γ,&amp; y: A}{Θ&#39;,&amp; 1·y}{\Chk{σ}{t₁}{C[x \coloneqq \Inl y]}}{Θ&#39;&#39;, ζ·x} \\
+  \Ty{Γ,&amp; y: B}{Θ&#39;,&amp; 1·y}{\Chk{σ}{t₂}{C[x \coloneqq \Inr y]}}{Θ&#39;&#39;, ζ·x} \\
+  \IN ζ \Empty
+}{
+  \Ty{Γ}{Θ}{\Syn{σ}{\CaseE{x.C} e \: (y. t₁) \: (y. t₂)}{C[x \coloneqq e]}}{Θ&#39;&#39;}
+}
+\]</span></p>
+</section>
+<section id="packing-up-usages" class="slide level2">
+<h2>packing up usages</h2>
+<div class="defs">
+<p><span class="math display">\[
+\newcommand\Box[1]{\square_{#1}\:}
+\newcommand\Pack{\K{pack}\:}
+\newcommand\Unpack[1]{\K{unpack}_{#1}\:}
+\]</span></p>
+</div>
+<ul>
+<li>(in case we end up rejecting records)</li>
+<li><span class="math inline">\(\Box π A\)</span> packs up <span class="math inline">\(π\)</span> uses of an <span class="math inline">\(A\)</span> into a single value</li>
+</ul>
+<p><span class="math display">\[
+\begin{gathered}
+\Rule{box}{
+  (\TyZ{Γ}{\ChkZ{π}{\Usage}}) \qquad
+  \TyZ{Γ}{\ChkZ{A}{\star_i}}
+}{
+  \TyZ{Γ}{\ChkZ{\Box π A}{\star_i}}
+}
+\\[1em]
+\Rule{pack}{
+  \Ty{Γ}{Θ}{\Chk{σπ}{s}{A}}{Θ&#39;}
+}{
+  \Ty{Γ}{Θ}{\Chk{σ}{\Pack s}{\Box π A}}{Θ&#39;}
+}
+\\[1em]
+\Rule{unpack}{
+  \TyZ{Γ, x: A}{\ChkZ{B}{\star_i}} \qquad
+  \Ty{Γ}{Θ}{\Syn{σ}{e}{\Box π A}}{Θ&#39;} \\
+  \Ty{Γ,&amp; y: A}{Θ&#39;,&amp; π · y}{\Chk{σ}{t}{B[x \coloneqq \Pack y]}}{Θ&#39;&#39;, ζ·y} \qquad
+  \IN ζ \Empty
+}{
+  \Ty{Γ}{Θ}{\Syn{σ}{\Unpack{x.B} x = e \In t}{B[x \coloneqq e]}}{Θ&#39;&#39;}
+}
+\end{gathered}
+\]</span></p>
+</section>
+<section id="effects" class="slide level2">
+<h2>effects????</h2>
+<p>?????????????????</p>
+</section>
+<section id="references" class="slide level2 unnumbered">
+<h2 class="unnumbered">references</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<div id="ref-leftovers" class="csl-entry" role="doc-biblioentry">
+Allais, G. (2018). Typing with leftovers. <em>23rd International Conference on Types for Proofs and Programs (TYPES 2017)</em>, <em>104</em>, 1:1–1:22. <a href="http://drops.dagstuhl.de/opus/volltexte/2018/10049">http://drops.dagstuhl.de/opus/volltexte/2018/10049</a>
+</div>
+<div id="ref-qtt" class="csl-entry" role="doc-biblioentry">
+Atkey, R. (2018). Syntax and semantics of quantitative type theory. <em>33rd Annual <span>ACM/IEEE</span> Symposium on Logic in Computer Science</em>, 56–65. <a href="https://bentnib.org/quantitative-type-theory.pdf">https://bentnib.org/quantitative-type-theory.pdf</a>
+</div>
+</div>
+</section></section>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/reveal.js@^4//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="https://unpkg.com/reveal.js@^4//plugin/notes/notes.js"></script>
+  <script src="https://unpkg.com/reveal.js@^4//plugin/search/search.js"></script>
+  <script src="https://unpkg.com/reveal.js@^4//plugin/zoom/zoom.js"></script>
+  <script src="https://unpkg.com/reveal.js@^4//plugin/math/math.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: false,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'slide',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
