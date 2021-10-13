@@ -406,12 +406,12 @@ $$
 
 ## records
 
-- we have already gone through the typing rules for these recently \
-  ([`#927:doc/records/records.html`][rec])
+- we have already gone through the typing rules for these recently; \
+  [now rendered on hackmd][rec]
 - nested lookups still TODO but otherwise probably ready?
 - can replace $Σ$, $\times$, $\K{UnitTy}$, $\square$
 
-[rec]: https://raw.githubusercontent.com/anoma/juvix/8f760f1e11edee7f523bb022f3673ab1b482693a/doc/records/records.html
+[rec]: https://hackmd.io/jXLWRzObS8SU9-c1ukEosA
 
 :::notes
 i dont know how to make github actually render the html, sorry.
