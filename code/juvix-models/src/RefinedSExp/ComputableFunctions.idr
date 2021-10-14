@@ -432,19 +432,21 @@ interpretSubstitutionMorphism
      interpretSubstitutionMorphism rightMorphism domainTerm)
 interpretSubstitutionMorphism
   (SProductElimLeft leftType rightType) pairTerm =
-    ?interpretSubstitutionMorphism_hole_product_elim_left
+    fst pairTerm
 interpretSubstitutionMorphism
   (SProductElimRight leftType rightType) pairTerm =
-    ?interpretSubstitutionMorphism_hole_product_elim_right
+    snd pairTerm
 interpretSubstitutionMorphism
   (SCoproductIntroLeft leftType rightType) leftTerm =
-    ?interpretSubstitutionMorphism_hole_coproduct_intro_left
+    Left leftTerm
 interpretSubstitutionMorphism
   (SCoproductIntroRight leftType rightType) rightTerm =
-    ?interpretSubstitutionMorphism_hole_coproduct_intro_right
+    Right rightTerm
 interpretSubstitutionMorphism
-  (SCoproductElim leftMorphism rightMorphism) codomainTerm =
-    ?interpretSubstitutionMorphism_coproduct_elim
+  (SCoproductElim leftMorphism rightMorphism) eitherTerm =
+    case eitherTerm of
+      Left leftTerm => interpretSubstitutionMorphism leftMorphism leftTerm
+      Right rightTerm => interpretSubstitutionMorphism rightMorphism rightTerm
 
 public export
 interpretSubstitutionTerm :
@@ -456,9 +458,9 @@ interpretSubstitutionTerm SUnitTerm = ()
 interpretSubstitutionTerm (SPair leftTerm rightTerm) =
   (interpretSubstitutionTerm leftTerm, interpretSubstitutionTerm rightTerm)
 interpretSubstitutionTerm (SLeft leftTerm) =
-  ?interpretSubstitutionTerm_hole_left
+  Left $ interpretSubstitutionTerm leftTerm
 interpretSubstitutionTerm (SRight rightTerm) =
-  ?interpretSubstitutionTerm_hole_right
+  Right $ interpretSubstitutionTerm rightTerm
 
 -----------------------------------------------------
 ---- Term reduction in the substitutive category ----
