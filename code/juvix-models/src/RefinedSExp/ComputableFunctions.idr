@@ -55,6 +55,12 @@ data ComputableAtom : Type where
   CASLeft : ComputableAtom
   CASRight : ComputableAtom
 
+  -- | The identity morphism for a given object.
+  CASIdentity : ComputableAtom
+
+  -- | Composition of morphisms.
+  CASCompose : ComputableAtom
+
 public export
 computableAtomToString : ComputableAtom -> String
 computableAtomToString CASVoid = "SVoid"
@@ -73,6 +79,8 @@ computableAtomToString CASCoproductIntroRight = "SCoproductIntroRight"
 computableAtomToString CASCoproductElim = "SCoproductElim"
 computableAtomToString CASLeft = "SLeft"
 computableAtomToString CASRight = "SRight"
+computableAtomToString CASIdentity = "SIdentity"
+computableAtomToString CASCompose = "SCompose"
 
 public export
 Show ComputableAtom where
@@ -96,6 +104,8 @@ caEncode CASCoproductIntroRight = 12
 caEncode CASCoproductElim = 13
 caEncode CASLeft = 14
 caEncode CASRight = 15
+caEncode CASIdentity = 16
+caEncode CASCompose = 17
 
 public export
 caDecode : Nat -> ComputableAtom
@@ -115,6 +125,8 @@ caDecode 12 = CASCoproductIntroRight
 caDecode 13 = CASCoproductElim
 caDecode 14 = CASLeft
 caDecode 15 = CASRight
+caDecode 16 = CASIdentity
+caDecode 17 = CASCompose
 caDecode _ = CASVoid
 
 export
@@ -136,6 +148,8 @@ caDecodeIsLeftInverse CASCoproductIntroRight = Refl
 caDecodeIsLeftInverse CASCoproductElim = Refl
 caDecodeIsLeftInverse CASLeft = Refl
 caDecodeIsLeftInverse CASRight = Refl
+caDecodeIsLeftInverse CASIdentity = Refl
+caDecodeIsLeftInverse CASCompose = Refl
 
 export
 caEncodeIsInjective : IsInjective ComputableFunctions.caEncode
@@ -222,6 +236,16 @@ data SubstitutionMorphism : (representation : ComputableExp) ->
   (domain : SubstitutionType domainRep) ->
   (codomain : SubstitutionType codomainRep) ->
   Type where
+    SIdentity : {objectRep : ComputableExp} ->
+      (object : SubstitutionType objectRep) ->
+      SubstitutionMorphism (CASIdentity $* [objectRep]) object object
+    SCompose : {aRep, bRep, cRep, leftRep, rightRep : ComputableExp} ->
+      {a : SubstitutionType aRep} ->
+      {b : SubstitutionType bRep} ->
+      {c : SubstitutionType cRep} ->
+      SubstitutionMorphism leftRep b c ->
+      SubstitutionMorphism rightRep a b ->
+      SubstitutionMorphism (CASCompose $* [leftRep, rightRep]) a c
     SFromVoid : {codomainRep : ComputableExp} ->
       (codomain : SubstitutionType codomainRep) ->
       SubstitutionMorphism (CASFromVoid $* [codomainRep]) SVoid codomain
@@ -382,6 +406,8 @@ checkSubstitutionMorphismComplete (SCoproductIntroRight leftType rightType) =
   ?checkSubstitutionMorphismComplete_hole_coproduct_intro_right
 checkSubstitutionMorphismComplete (SCoproductElim leftMorphism rightMorphism) =
   ?checkSubstitutionMorphismComplete_hole_coproduct_elim
+checkSubstitutionMorphismComplete _ =
+  ?checkSubstitutionMorphismComplete_hole_other
 
 public export
 checkSubstitutionTerm : (representation : ComputableExp) ->
@@ -461,6 +487,8 @@ interpretSubstitutionMorphism
     case eitherTerm of
       Left leftTerm => interpretSubstitutionMorphism leftMorphism leftTerm
       Right rightTerm => interpretSubstitutionMorphism rightMorphism rightTerm
+interpretSubstitutionMorphism _ _ =
+  ?interpretSubstitutionMorphism_hole_other
 
 public export
 interpretSubstitutionTerm :
