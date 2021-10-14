@@ -912,3 +912,14 @@ sexpLessThan eq lt (x $. y) (x' $. y') =
 public export
 Ord atom => Ord (SExp atom) where
   (<) = sexpLessThan (==) (<)
+
+public export
+sexpShow : {0 atom : Type} -> (showAtom : atom -> String) -> SExp atom -> String
+sexpShow showAtom ($: a) =
+  "($: " ++ showAtom a ++ ")"
+sexpShow showAtom (x $. x') =
+  "(" ++ sexpShow showAtom x ++ ", " ++ sexpShow showAtom x' ++ ")"
+
+public export
+Show atom => Show (SExp atom) where
+  show = sexpShow show
