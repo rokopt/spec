@@ -12,51 +12,77 @@ import public RefinedSExp.Computation
 mutual
   public export
   eexpApply : (f, x : EExp) -> EExp
-  eexpApply (EAReflectedMorphism Fail $* _) _ = CSFail
-  eexpApply (EAReflectedMorphism Compose $* fs) x = eCompositionApply fs x
-  eexpApply (EAReflectedMorphism Identity $* []) x = x
-  eexpApply (EAReflectedMorphism Identity $* _ :: _) x = CSFail
-  eexpApply (EAReflectedMorphism Const $* [_]) (EAReflectedMorphism Fail $* _) =
-    CSFail
-  eexpApply (EAReflectedMorphism Const $* [c]) _ = c
-  eexpApply (EAReflectedMorphism Const $* _) _ = CSFail
-  eexpApply (EAInterpretation _ $* _) _ = CSFail
-  eexpApply (EAData _ $* _) _ = CSFail
-  eexpApply _ _ = ?eexpApply_hole
+  eexpApply (EAMorphism Fail $* _) _ = ESFail
+  eexpApply (EAMorphism Compose $* fs) x = eCompositionApply fs x
+  eexpApply (EAMorphism Identity $* []) x = x
+  eexpApply (EAMorphism Identity $* _ :: _) x = ESFail
+  eexpApply (EAMorphism Const $* [_]) (EAMorphism Fail $* _) =
+    ESFail
+  eexpApply (EAMorphism Const $* [c]) _ = c
+  eexpApply (EAMorphism Const $* _) _ = ESFail
+  eexpApply (EAMorphism MakeTuple $* l) x =
+    EAInterpretation Record $* eMakeTupleApply l x
+  eexpApply (EAMorphism Project $* [EAData (DNat n) $* []])
+    (EAInterpretation Record $* fields) =
+      case indexElem n fields of
+        Just (field ** _) => field
+        Nothing => ESFail
+  eexpApply (EAMorphism Project $* _) _ = ESFail
+  eexpApply (EAMorphism Inject $* ([EAData (DNat n) $* [], f])) x =
+    EAInterpretation Constructor $*
+      [EAData (DNat n) $* [], EAMorphism Liskov $* [f, x]]
+  eexpApply (EAMorphism Inject $* _) _ = ESFail
+  eexpApply (EAMorphism Case $* []) _ = ESFail
+  eexpApply (EAMorphism Case $* cases)
+    (EAInterpretation Constructor $* [EAData (DNat n) $* [x]]) =
+      case indexElem n cases of
+        Just (f ** _) => EAMorphism Liskov $* [f, x]
+        Nothing => ESFail
+  eexpApply (EAMorphism Case $* _) _ = ESFail
+  eexpApply (EAMorphism Liskov $* [f, a]) x = ?liskov_hole
+  eexpApply (EAMorphism Liskov $* _) _ = ESFail
+  eexpApply (EAMorphism Curry $* [f, a]) x = ?curry_hole
+  eexpApply (EAMorphism Curry $* _) _ = ESFail
+  eexpApply (EAMorphism Turing $* [f, a]) x = ?turing_hole
+  eexpApply (EAMorphism Turing $* _) _ = ESFail
+  eexpApply (EAMorphism Gödel $* (a :: fs)) x = ?gödel_hole
+  eexpApply (EAMorphism Gödel $* _) _ = ESFail
+  eexpApply (EAMorphism TestEqual $* [s, s', t, f]) x = ?testequal_hole
+  eexpApply (EAMorphism TestEqual $* _) _ = ESFail
+  eexpApply (EAInterpretation _ $* _) _ = ESFail
+  eexpApply (EAData _ $* _) _ = ESFail
 
   public export
   eCompositionApply : (fs : EList) -> (x : EExp) -> EExp
   eCompositionApply [] x = x
   eCompositionApply (f :: fs') x =
-    EAReflectedMorphism Liskov $* [f, EAReflectedMorphism Liskov $*
-      [EAReflectedMorphism Compose $* fs', x]]
+    EAMorphism Liskov $* [f, EAMorphism Liskov $*
+      [EAMorphism Compose $* fs', x]]
 
--- | A single (small) step of the EExp interpreter.
--- | The boolean part of the return value indicates whether anything changed.
--- | (If not, then the term is fully evaluated, meaning that there are no
--- | instances of "Eval" in it.)
-mutual
   public export
-  eexpInterpretStep : EExp -> (Bool, EExp)
-  eexpInterpretStep (EAReflectedMorphism Liskov $* [f, x]) =
-    case eexpInterpretStep f of
-      (True, f') => (True, EAReflectedMorphism Liskov $* [f', x])
-      (False, _) => case eexpInterpretStep x of
-        (True, x') => (True, EAReflectedMorphism Liskov $* [f, x'])
-        (False, _) => (True, eexpApply f x)
-  eexpInterpretStep (EAReflectedMorphism Liskov $* _) = (True, CSFail)
+  eMakeTupleApply : (fs : EList) -> (x : EExp) -> EList
+  eMakeTupleApply [] _ = []
+  eMakeTupleApply (f :: fs) x =
+    (EAMorphism Liskov $* [f, x]) :: eMakeTupleApply fs x
+
+  public export
+  eexpReduceOne : ExtendedAtom -> EList -> Maybe EExp
+  eexpReduceOne = ?eexpReduceOne_hole
+
+  public export
+  eexpInterpretStep : EExp -> Maybe EExp
   eexpInterpretStep (a $* l) = case elistInterpretStep l of
-    (True, l') => (True, a $* l')
-    (False, _) => (False, a $* l)
+    Just l' => Just (a $* l')
+    Nothing => eexpReduceOne a l
 
   public export
-  elistInterpretStep : EList -> (Bool, EList)
-  elistInterpretStep [] = (False, [])
+  elistInterpretStep : EList -> Maybe EList
+  elistInterpretStep [] = Nothing
   elistInterpretStep (x :: l) = case eexpInterpretStep x of
-    (True, x') => (True, x' :: l)
-    (False, _) => case elistInterpretStep l of
-      (True, l') => (True, x :: l')
-      (False, _) => (False, x :: l)
+    Just x' => Just (x' :: l)
+    Nothing => case elistInterpretStep l of
+      Just l' => Just (x :: l')
+      Nothing => Nothing
 
 -- | A computable function whose termination Idris-2 can prove.
 -- | It still returns "maybe" because it might be partial (its

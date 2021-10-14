@@ -134,14 +134,16 @@ data MorphismAtom : Type where
   -- | The identity general computable function (which is total).
   Identity : MorphismAtom
 
+  -- | Introduce a constant-valued function.
+  Const : MorphismAtom
+
   -- | Product introduction for general compuatable functions:  form a function
   -- | which returns tuples from a tuple of functions (which must have the same
   -- | domain for this operation to make sense).
   MakeTuple : MorphismAtom
 
-  -- | Product elimination for general computable functions:  form a function
-  -- | which returns tuples from a tuple of functions (which must have the same
-  -- | domain for this operation to make sense).
+  -- | Product elimination for general computable functions:  select a
+  -- | function from a tuple of functions.
   Project : MorphismAtom
 
   -- | Coproduct introduction for general computable functions:  choose one
@@ -182,9 +184,6 @@ data MorphismAtom : Type where
   -- | Decidable equality on S-expressions, which includes atom elimination.
   -- | This combinator could be viewed as constant elimination.
   TestEqual : MorphismAtom
-
-  -- | Introduce a constant-valued function.
-  Const : MorphismAtom
 
 public export
 morphismToString : MorphismAtom -> String
@@ -330,6 +329,9 @@ data InterpretationAtom : Type where
   -- | computable function to an S-expression outside of its domain.
   Failure : InterpretationAtom
 
+  -- | Apply a function to an argument.
+  Apply : InterpretationAtom
+
   -- | The interpretation of a product.
   Record : InterpretationAtom
 
@@ -339,6 +341,7 @@ data InterpretationAtom : Type where
 public export
 interpretationToString : InterpretationAtom -> String
 interpretationToString Failure = "Failure"
+interpretationToString Apply = "Apply"
 interpretationToString Record = "Record"
 interpretationToString Constructor = "Constructor"
 
@@ -349,20 +352,23 @@ Show InterpretationAtom where
 public export
 iEncode : InterpretationAtom -> Nat
 iEncode Failure = 0
-iEncode Record = 1
-iEncode Constructor = 2
+iEncode Apply = 1
+iEncode Record = 2
+iEncode Constructor = 3
 
 public export
 iDecode : Nat -> InterpretationAtom
 iDecode 0 = Failure
-iDecode 1 = Record
-iDecode 2 = Constructor
+iDecode 1 = Apply
+iDecode 2 = Record
+iDecode 3 = Constructor
 iDecode _ = Failure
 
 export
 iDecodeIsLeftInverse :
   IsLeftInverseOf Computation.iEncode Computation.iDecode
 iDecodeIsLeftInverse Failure = Refl
+iDecodeIsLeftInverse Apply = Refl
 iDecodeIsLeftInverse Record = Refl
 iDecodeIsLeftInverse Constructor = Refl
 
@@ -397,13 +403,13 @@ Ord InterpretationAtom where
 
 public export
 data ExtendedAtom : Type where
-  EAReflectedMorphism : MorphismAtom -> ExtendedAtom
+  EAMorphism : MorphismAtom -> ExtendedAtom
   EAInterpretation : InterpretationAtom -> ExtendedAtom
   EAData : Data -> ExtendedAtom
 
 public export
 Show ExtendedAtom where
-  show (EAReflectedMorphism m) = show m
+  show (EAMorphism m) = show m
   show (EAInterpretation i) = show i
   show (EAData d) = show d
 
@@ -413,22 +419,22 @@ eaShow = show
 
 public export
 eaDecEq : DecEqPred ExtendedAtom
-eaDecEq (EAReflectedMorphism m) (EAReflectedMorphism m') =
+eaDecEq (EAMorphism m) (EAMorphism m') =
   case decEq m m' of
     Yes Refl => Yes Refl
     No neq => No $ \eq => case eq of Refl => neq Refl
-eaDecEq (EAReflectedMorphism _) (EAInterpretation _) =
+eaDecEq (EAMorphism _) (EAInterpretation _) =
   No $ \eq => case eq of Refl impossible
-eaDecEq (EAReflectedMorphism _) (EAData _) =
+eaDecEq (EAMorphism _) (EAData _) =
   No $ \eq => case eq of Refl impossible
-eaDecEq (EAInterpretation _) (EAReflectedMorphism _) =
+eaDecEq (EAInterpretation _) (EAMorphism _) =
   No $ \eq => case eq of Refl impossible
 eaDecEq (EAInterpretation i) (EAInterpretation i') = case decEq i i' of
   Yes Refl => Yes Refl
   No neq => No $ \eq => case eq of Refl => neq Refl
 eaDecEq (EAInterpretation _) (EAData _) =
   No $ \eq => case eq of Refl impossible
-eaDecEq (EAData _) (EAReflectedMorphism _) =
+eaDecEq (EAData _) (EAMorphism _) =
   No $ \eq => case eq of Refl impossible
 eaDecEq (EAData _) (EAInterpretation _) =
   No $ \eq => case eq of Refl impossible
@@ -446,19 +452,19 @@ Eq ExtendedAtom using decEqToEq where
 
 public export
 Ord ExtendedAtom where
-  EAReflectedMorphism m < EAReflectedMorphism m' = m < m'
-  EAReflectedMorphism _ < EAInterpretation _ = True
-  EAReflectedMorphism _ < EAData _ = True
-  EAInterpretation _ < EAReflectedMorphism _ = False
+  EAMorphism m < EAMorphism m' = m < m'
+  EAMorphism _ < EAInterpretation _ = True
+  EAMorphism _ < EAData _ = True
+  EAInterpretation _ < EAMorphism _ = False
   EAInterpretation i < EAInterpretation i' = i < i'
   EAInterpretation _ < EAData _ = True
-  EAData _ < EAReflectedMorphism _ = False
+  EAData _ < EAMorphism _ = False
   EAData _ < EAInterpretation _ = False
   EAData d < EAData d' = d < d'
 
 public export
 EAFail : ExtendedAtom
-EAFail = EAReflectedMorphism Fail
+EAFail = EAMorphism Fail
 
 public export
 EANat : Nat -> ExtendedAtom
@@ -505,5 +511,5 @@ Eq EExp using decEqToEq where
   (==) = (==)
 
 public export
-CSFail : EExp
-CSFail = $^ EAFail
+ESFail : EExp
+ESFail = $^ EAFail

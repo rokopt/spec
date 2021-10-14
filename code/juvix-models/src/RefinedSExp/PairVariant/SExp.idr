@@ -863,3 +863,52 @@ sexpWellFoundedInduction :
   a ~> P
 sexpWellFoundedInduction {atom} {a} step x =
   sexpAccessInduction step x (sexpShapeAccessible x)
+
+public export
+sexpDecEq : {0 atom : Type} -> (deq : DecEqPred atom) -> (x, x' : SExp atom) ->
+  Dec (x = x')
+sexpDecEq deq ($: a) ($: a') = case deq a a' of
+  Yes Refl => Yes Refl
+  No neq => No $ \eq => case eq of Refl => neq Refl
+sexpDecEq _ ($: a) (x $. x') = No $ \eq => case eq of Refl impossible
+sexpDecEq _ (x $. x') ($: a) = No $ \eq => case eq of Refl impossible
+sexpDecEq deq (x $. y) (x' $. y') =
+  case (sexpDecEq deq x x', sexpDecEq deq y y') of
+    (Yes Refl, Yes Refl) => Yes Refl
+    (No neq, _) => No $ \eq => case eq of Refl => neq Refl
+    (_, No neq) => No $ \eq => case eq of Refl => neq Refl
+
+public export
+DecEq atom => DecEq (SExp atom) where
+  decEq = sexpDecEq decEq
+
+public export
+sexpEq : {0 atom : Type} -> (eq : atom -> atom -> Bool) ->
+  (x, x' : SExp atom) -> Bool
+sexpEq eq ($: a) ($: a') = eq a a'
+sexpEq _ ($: a) (x $. x') = False
+sexpEq _ (x $. x') ($: a) = False
+sexpEq eq (x $. y) (x' $. y') = sexpEq eq x x' && sexpEq eq y y'
+
+public export
+Eq atom => Eq (SExp atom) where
+  (==) = sexpEq (==)
+
+public export
+sexpLessThan : {0 atom : Type} -> (eq, lt : atom -> atom -> Bool) ->
+  (x, x' : SExp atom) -> Bool
+sexpLessThan eq lt ($: a) ($: a') = lt a a'
+sexpLessThan _ _ ($: a) (x $. x') = True
+sexpLessThan _ _ (x $. x') ($: a) = False
+sexpLessThan eq lt (x $. y) (x' $. y') =
+  if sexpLessThan eq lt x x' then
+    True
+  else
+    if sexpEq eq x x' then
+      sexpLessThan eq lt y y'
+    else
+      False
+
+public export
+Ord atom => Ord (SExp atom) where
+  (<) = sexpLessThan (==) (<)
