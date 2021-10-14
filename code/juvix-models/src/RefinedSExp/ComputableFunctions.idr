@@ -389,7 +389,21 @@ checkSubstitutionTerm : (representation : ComputableExp) ->
   Maybe (SubstitutionTerm representation type)
 checkSubstitutionTerm (CASUnitTerm $* []) SUnit = Just SUnitTerm
 checkSubstitutionTerm (CASPair $* [leftTermRep, rightTermRep])
-  (SProduct leftType rightType) = ?checkSubstitutionTerm_hole
+  (SProduct leftType rightType) =
+    case (checkSubstitutionTerm leftTermRep leftType,
+          checkSubstitutionTerm rightTermRep rightType) of
+      (Just leftTerm, Just rightTerm) => Just (SPair leftTerm rightTerm)
+      _ => Nothing
+checkSubstitutionTerm (CASLeft $* [leftTermRep])
+  (SCoproduct leftType rightType) =
+    case checkSubstitutionTerm leftTermRep leftType of
+      Just leftTerm => Just (SLeft leftTerm)
+      _ => Nothing
+checkSubstitutionTerm (CASRight $* [rightTermRep])
+  (SCoproduct leftType rightType) =
+    case checkSubstitutionTerm rightTermRep rightType of
+      Just rightTerm => Just (SRight rightTerm)
+      _ => Nothing
 checkSubstitutionTerm _ _ = Nothing
 
 public export
