@@ -299,7 +299,7 @@ data SubstitutionTerm : (representation : ComputableExp) ->
       SubstitutionTerm (CASLeft $* [leftTermRep])
         (SCoproduct leftType rightType)
     SRight :
-      {leftTypeRep, rightTypeRep, leftTermRep : ComputableExp} ->
+      {leftTypeRep, rightTypeRep, rightTermRep : ComputableExp} ->
       {leftType : SubstitutionType leftTypeRep} ->
       {rightType : SubstitutionType rightTypeRep} ->
       SubstitutionTerm rightTermRep rightType ->
@@ -474,9 +474,9 @@ bigStepSubstitution SUnitTerm = SUnitTerm
 bigStepSubstitution (SPair leftTerm rightTerm) =
   SPair (bigStepSubstitution leftTerm) (bigStepSubstitution rightTerm)
 bigStepSubstitution (SLeft leftTerm) =
-  ?bigStepSubstitution_hole_left
+  SLeft (bigStepSubstitution leftTerm)
 bigStepSubstitution (SRight rightTerm) =
-  ?bigStepSubstitution_hole_right
+  SRight (bigStepSubstitution rightTerm)
 
 public export
 bigStepSubstitutionCorrect : {representation, typeRep : ComputableExp} ->
@@ -516,11 +516,19 @@ smallStepSubstitution : {representation, typeRep : ComputableExp} ->
   Maybe (SubstitutionTerm representation type)
 smallStepSubstitution SUnitTerm = Nothing
 smallStepSubstitution (SPair leftTerm rightTerm) =
-  ?smallStepSubstitution_hole_pair
+  case smallStepSubstitution leftTerm of
+    Just leftReduced => Just $ SPair leftReduced rightTerm
+    Nothing => case smallStepSubstitution rightTerm of
+      Just rightReduced => Just $ SPair leftTerm rightReduced
+      Nothing => Nothing
 smallStepSubstitution (SLeft leftTerm) =
-  ?smallStepSubstitution_hole_left
+  case smallStepSubstitution leftTerm of
+    Just leftReduced => Just $ SLeft leftReduced
+    Nothing => Nothing
 smallStepSubstitution (SRight rightTerm) =
-  ?smallStepSubstitution_hole_right
+  case smallStepSubstitution rightTerm of
+    Just rightReduced => Just $ SRight rightReduced
+    Nothing => Nothing
 
 public export
 smallStepSubstitutionCorrect : {representation, typeRep : ComputableExp} ->
