@@ -31,8 +31,8 @@ modules = Library.TypesAndFunctions
     , RefinedSExp.Test.ListTest
     , RefinedSExp.PairVariant.SExp
     , RefinedSExp.PairVariant.Test.SExpTest
-    , RefinedSExp.PairVariant.ComputableFunctions
-    , RefinedSExp.PairVariant.Test.ComputableFunctionsTest
+    , RefinedSExp.ComputableFunctions
+    , RefinedSExp.Test.ComputableFunctionsTest
     , RefinedSExp.SExpApplicatives
     , RefinedSExp.Test.SExpApplicativesTest
     , RefinedSExp.RefinedSExp

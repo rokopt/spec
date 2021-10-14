@@ -1,9 +1,8 @@
-module RefinedSExp.PairVariant.Test.ComputableFunctionsTest
+module RefinedSExp.Test.ComputableFunctionsTest
 
-import public RefinedSExp.PairVariant.SExp
-import public RefinedSExp.PairVariant.ComputableFunctions
+import public RefinedSExp.SExp
+import public RefinedSExp.ComputableFunctions
 import public Library.Test.TestLibrary
-import public RefinedSExp.Data
 
 export
 computableFunctionsTests : IO ()

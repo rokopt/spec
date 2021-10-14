@@ -3,7 +3,7 @@ module Executable.Test.Main
 import Library.Test.TestLibrary
 import RefinedSExp.Test.ListTest
 import RefinedSExp.PairVariant.Test.SExpTest
-import RefinedSExp.PairVariant.Test.ComputableFunctionsTest
+import RefinedSExp.Test.ComputableFunctionsTest
 import RefinedSExp.Test.SExpApplicativesTest
 import RefinedSExp.Test.RefinedSExpTest
 import RefinedSExp.Test.RefinementInterpretationTest
@@ -48,7 +48,7 @@ partial main : IO ()
 main = do
   RefinedSExp.Test.ListTest.listTests
   RefinedSExp.PairVariant.Test.SExpTest.sExpTests
-  RefinedSExp.PairVariant.Test.ComputableFunctionsTest.computableFunctionsTests
+  RefinedSExp.Test.ComputableFunctionsTest.computableFunctionsTests
   RefinedSExp.Test.SExpApplicativesTest.sExpApplicativesTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
   RefinedSExp.Test.RefinementInterpretationTest.refinementInterpretationTests
