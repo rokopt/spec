@@ -16,9 +16,13 @@ data ComputableAtom : Type where
   -- | The initial object of the Substitution category (type system).
   CASVoid : ComputableAtom
 
+  -- | The unique morphism from the initial object.
+  CASFromVoid : ComputableAtom
+
 public export
 computableAtomToString : ComputableAtom -> String
 computableAtomToString CASVoid = "SVoid"
+computableAtomToString CASFromVoid = "SFromVoid"
 
 public export
 Show ComputableAtom where
@@ -27,16 +31,19 @@ Show ComputableAtom where
 public export
 caEncode : ComputableAtom -> Nat
 caEncode CASVoid = 0
+caEncode CASFromVoid = 1
 
 public export
 caDecode : Nat -> ComputableAtom
 caDecode 0 = CASVoid
+caDecode 1 = CASFromVoid
 caDecode _ = CASVoid
 
 export
 caDecodeIsLeftInverse :
   IsLeftInverseOf ComputableFunctions.caEncode ComputableFunctions.caDecode
 caDecodeIsLeftInverse CASVoid = Refl
+caDecodeIsLeftInverse CASFromVoid = Refl
 
 export
 caEncodeIsInjective : IsInjective ComputableFunctions.caEncode
@@ -108,7 +115,7 @@ Eq ComputableExp using decEqToEq where
 ------------------------------------------------
 public export
 data SubstitutionType : (representation : ComputableExp) -> Type where
-  SVoid : SubstitutionType ($^ CASVoid)
+    SVoid : SubstitutionType ($^ CASVoid)
 
 public export
 data SubstitutionMorphism : (representation : ComputableExp) ->
@@ -116,6 +123,9 @@ data SubstitutionMorphism : (representation : ComputableExp) ->
   (domain : SubstitutionType domainRep) ->
   (codomain : SubstitutionType codomainRep) ->
   Type where
+    SFromVoid : {codomainRep : ComputableExp} ->
+      (codomain : SubstitutionType codomainRep) ->
+      SubstitutionMorphism (CASFromVoid $* [codomainRep]) SVoid codomain
 
 public export
 data SubstitutionTerm : (representation : ComputableExp) ->
@@ -139,6 +149,11 @@ checkSubstitutionMorphism : (representation : ComputableExp) ->
   (domain : SubstitutionType domainRep) ->
   (codomain : SubstitutionType codomainRep) ->
   Maybe (SubstitutionMorphism representation domain codomain)
+checkSubstitutionMorphism
+  (CASFromVoid $* [codomainRep']) {codomainRep} SVoid codomain =
+    case decEq codomainRep' codomainRep of
+      Yes Refl => Just (SFromVoid codomain)
+      No _ => Nothing
 checkSubstitutionMorphism _ _ _ = Nothing
 
 public export
@@ -149,7 +164,10 @@ checkSubstitutionMorphismComplete :
   (morphism : SubstitutionMorphism representation domain codomain) ->
   checkSubstitutionMorphism representation domain codomain =
     Just morphism
-checkSubstitutionMorphismComplete _ impossible
+checkSubstitutionMorphismComplete {codomainRep}
+  (SFromVoid {codomainRep} codomain) with (decEqRefl decEq codomainRep)
+    checkSubstitutionMorphismComplete {codomainRep}
+      (SFromVoid {codomainRep} codomain) | eq = rewrite eq in Refl
 
 public export
 checkSubstitutionTerm : (representation : ComputableExp) ->
@@ -178,7 +196,7 @@ interpretSubstitutionMorphism :
   {codomain : SubstitutionType codomainRep} ->
   SubstitutionMorphism representation domain codomain ->
   interpretSubstitutionType domain -> interpretSubstitutionType codomain
-interpretSubstitutionMorphism _ impossible
+interpretSubstitutionMorphism (SFromVoid codomain) v = void v
 
 public export
 interpretSubstitutionTerm :
