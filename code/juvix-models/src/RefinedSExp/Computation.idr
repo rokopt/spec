@@ -134,72 +134,63 @@ data MorphismAtom : Type where
   -- | The identity general computable function (which is total).
   Identity : MorphismAtom
 
-  -- | Introduce a constant-valued function.
-  Const : MorphismAtom
-
-  -- | Product introduction for general compuatable functions:  form a function
+  -- | Product introduction for general computable functions:  form a function
   -- | which returns tuples from a tuple of functions (which must have the same
   -- | domain for this operation to make sense).
-  MakeTuple : MorphismAtom
+  ProductIntro : MorphismAtom
 
   -- | Product elimination for general computable functions:  select a
-  -- | function from a tuple of functions.
-  Project : MorphismAtom
+  -- | function from a tuple of functions.  Also known as projection.
+  ProductElimLeft : MorphismAtom
+  ProductElimRight : MorphismAtom
 
   -- | Coproduct introduction for general computable functions:  choose one
-  -- | of one or more possible forms.
-  Inject : MorphismAtom
+  -- | of one or more possible forms.  Also known as injection.
+  CoproductIntroLeft : MorphismAtom
+  CoproductIntroRight : MorphismAtom
 
   -- | Coproduct elimination for general computable functions:  form a function
   -- | which accepts a coproduct and returns a case depending on which of the
-  -- | coproduct's injections is passed in.
-  Case : MorphismAtom
+  -- | coproduct's injections is passed in.  Can be viewed as a case statement.
+  CoproductElim : MorphismAtom
 
-  -- | The evaluation function associated with exponentials of general
-  -- | computable functions.  It is named after Liskov because it is
-  -- | implemented as substitution.  It is known as "eval" in the category
-  -- | theory of exponential objects, but we use a different name to avoid
-  -- | confusion with the "eval" of Lisp, which we call "Turing".
-  Liskov : MorphismAtom
+  -- | A const-atom-valued function.  This is atom introduction.
+  AtomConst : MorphismAtom
 
-  -- | The currying function associated with exponentials of general
-  -- | computable functions.  It is the right adjoint to Liskov.
-  Curry : MorphismAtom
+  -- | Decidable equality on atoms.
+  -- | This combinator can be viewed as atom elimination.
+  AtomTest : MorphismAtom
+
+  -- | Reflection: introduce an S-expression-valued-function from an
+  -- | atom-valued function and a product-of-S-expressions-valued function.
+  -- |
+  -- | This can be viewed as metaprogramming introduction.  It can be viewed as
+  -- | a combinator form of the "quote" of Lisp.
+  Gödel : MorphismAtom
 
   -- | The combinator which gives us unconstrained general recursion:
   -- | we name it after Turing; it is the "eval" of Lisp, but we wish
   -- | to avoid confusion with the "eval" of the category theory of
-  -- | exponential objects (which we call "Liskov").
+  -- | exponential objects.
   -- |
   -- | This combinator can be viewed as metaprogramming elimination.
   Turing : MorphismAtom
-
-  -- | Reflection:  S-expression introduction, which takes a function which
-  -- | returns an atom and a list of functions which return S-expressions
-  -- | and produces a function which returns an S-expression.
-  -- |
-  -- | This combinator can be viewed as metaprogramming introduction.
-  Gödel : MorphismAtom
-
-  -- | Decidable equality on S-expressions, which includes atom elimination.
-  -- | This combinator could be viewed as constant elimination.
-  TestEqual : MorphismAtom
 
 public export
 morphismToString : MorphismAtom -> String
 morphismToString Fail = "Fail"
 morphismToString Compose = "Compose"
 morphismToString Identity = "Identity"
-morphismToString Const = "Const"
-morphismToString MakeTuple = "MakeTuple"
-morphismToString Project = "Project"
-morphismToString Case = "Case"
-morphismToString Inject = "Inject"
-morphismToString Liskov = "Liskov"
-morphismToString Curry = "Curry"
-morphismToString Turing = "Turing"
+morphismToString ProductIntro = "ProductIntro"
+morphismToString ProductElimLeft = "ProductElimLeft"
+morphismToString ProductElimRight = "ProductElimRight"
+morphismToString CoproductIntroLeft = "CoproductIntroLeft"
+morphismToString CoproductIntroRight = "CoproductIntroRight"
+morphismToString CoproductElim = "CoproductElim"
+morphismToString AtomConst = "AtomConst"
+morphismToString AtomTest = "AtomTest"
 morphismToString Gödel = "Gödel"
-morphismToString TestEqual = "TestEqual"
+morphismToString Turing = "Turing"
 
 public export
 Show MorphismAtom where
@@ -210,32 +201,32 @@ mEncode : MorphismAtom -> Nat
 mEncode Fail = 0
 mEncode Compose = 1
 mEncode Identity = 2
-mEncode Const = 3
-mEncode MakeTuple = 4
-mEncode Project = 5
-mEncode Case = 6
-mEncode Inject = 7
-mEncode Liskov = 8
-mEncode Curry = 9
-mEncode Turing = 10
+mEncode ProductIntro = 3
+mEncode ProductElimLeft = 4
+mEncode ProductElimRight = 5
+mEncode CoproductIntroLeft = 6
+mEncode CoproductIntroRight = 7
+mEncode CoproductElim = 8
+mEncode AtomConst = 9
+mEncode AtomTest = 10
 mEncode Gödel = 11
-mEncode TestEqual = 12
+mEncode Turing = 12
 
 public export
 mDecode : Nat -> MorphismAtom
 mDecode 0 = Fail
 mDecode 1 = Compose
 mDecode 2 = Identity
-mDecode 3 = Const
-mDecode 4 = MakeTuple
-mDecode 5 = Project
-mDecode 6 = Case
-mDecode 7 = Inject
-mDecode 8 = Liskov
-mDecode 9 = Curry
-mDecode 10 = Turing
+mDecode 3 = ProductIntro
+mDecode 4 = ProductElimLeft
+mDecode 5 = ProductElimRight
+mDecode 6 = CoproductIntroLeft
+mDecode 7 = CoproductIntroRight
+mDecode 8 = CoproductElim
+mDecode 9 = AtomConst
+mDecode 10 = AtomTest
 mDecode 11 = Gödel
-mDecode 12 = TestEqual
+mDecode 12 = Turing
 mDecode _ = Fail
 
 export
@@ -244,16 +235,16 @@ mDecodeIsLeftInverse :
 mDecodeIsLeftInverse Fail = Refl
 mDecodeIsLeftInverse Compose = Refl
 mDecodeIsLeftInverse Identity = Refl
-mDecodeIsLeftInverse Const = Refl
-mDecodeIsLeftInverse MakeTuple = Refl
-mDecodeIsLeftInverse Project = Refl
-mDecodeIsLeftInverse Case = Refl
-mDecodeIsLeftInverse Inject = Refl
-mDecodeIsLeftInverse Liskov = Refl
-mDecodeIsLeftInverse Curry = Refl
-mDecodeIsLeftInverse Turing = Refl
+mDecodeIsLeftInverse ProductIntro = Refl
+mDecodeIsLeftInverse ProductElimLeft = Refl
+mDecodeIsLeftInverse ProductElimRight = Refl
+mDecodeIsLeftInverse CoproductIntroLeft = Refl
+mDecodeIsLeftInverse CoproductIntroRight = Refl
+mDecodeIsLeftInverse CoproductElim = Refl
+mDecodeIsLeftInverse AtomConst = Refl
+mDecodeIsLeftInverse AtomTest = Refl
 mDecodeIsLeftInverse Gödel = Refl
-mDecodeIsLeftInverse TestEqual = Refl
+mDecodeIsLeftInverse Turing = Refl
 
 export
 mEncodeIsInjective : IsInjective Computation.mEncode
@@ -333,17 +324,23 @@ data InterpretationAtom : Type where
   Apply : InterpretationAtom
 
   -- | The interpretation of a product.
-  Record : InterpretationAtom
+  Pair : InterpretationAtom
 
   -- | The interpretation of a coproduct.
-  Constructor : InterpretationAtom
+  ILeft : InterpretationAtom
+  IRight : InterpretationAtom
+
+  -- | The interpretation of an S-expression.
+  ReflectedSExp : InterpretationAtom
 
 public export
 interpretationToString : InterpretationAtom -> String
 interpretationToString Failure = "Failure"
 interpretationToString Apply = "Apply"
-interpretationToString Record = "Record"
-interpretationToString Constructor = "Constructor"
+interpretationToString Pair = "Pair"
+interpretationToString ILeft = "ILeft"
+interpretationToString IRight = "IRight"
+interpretationToString ReflectedSExp = "ReflectedSExp"
 
 public export
 Show InterpretationAtom where
@@ -353,15 +350,19 @@ public export
 iEncode : InterpretationAtom -> Nat
 iEncode Failure = 0
 iEncode Apply = 1
-iEncode Record = 2
-iEncode Constructor = 3
+iEncode Pair = 2
+iEncode ILeft = 3
+iEncode IRight = 4
+iEncode ReflectedSExp = 5
 
 public export
 iDecode : Nat -> InterpretationAtom
 iDecode 0 = Failure
 iDecode 1 = Apply
-iDecode 2 = Record
-iDecode 3 = Constructor
+iDecode 2 = Pair
+iDecode 3 = ILeft
+iDecode 4 = IRight
+iDecode 5 = ReflectedSExp
 iDecode _ = Failure
 
 export
@@ -369,8 +370,10 @@ iDecodeIsLeftInverse :
   IsLeftInverseOf Computation.iEncode Computation.iDecode
 iDecodeIsLeftInverse Failure = Refl
 iDecodeIsLeftInverse Apply = Refl
-iDecodeIsLeftInverse Record = Refl
-iDecodeIsLeftInverse Constructor = Refl
+iDecodeIsLeftInverse Pair = Refl
+iDecodeIsLeftInverse ILeft = Refl
+iDecodeIsLeftInverse IRight = Refl
+iDecodeIsLeftInverse ReflectedSExp = Refl
 
 export
 iEncodeIsInjective : IsInjective Computation.iEncode
@@ -467,6 +470,10 @@ EAFail : ExtendedAtom
 EAFail = EAMorphism Fail
 
 public export
+EAFailure : ExtendedAtom
+EAFailure = EAInterpretation Failure
+
+public export
 EANat : Nat -> ExtendedAtom
 EANat = EAData . DNat
 
@@ -510,6 +517,40 @@ public export
 Eq EExp using decEqToEq where
   (==) = (==)
 
+mutual
+  public export
+  MExpToEExp : MExp -> EExp
+  MExpToEExp (a $* l) = EAMorphism a $* MListToEList l
+
+  public export
+  MListToEList : MList -> EList
+  MListToEList [] = []
+  MListToEList (x :: xs) = MExpToEExp x :: MListToEList xs
+
 public export
 ESFail : EExp
 ESFail = $^ EAFail
+
+public export
+ESFailure : EExp
+ESFailure = $^ EAFailure
+
+public export
+ESApply : EExp -> EExp -> EExp
+ESApply f x = EAInterpretation Apply $* [f, x]
+
+public export
+ESPair : EExp -> EExp -> EExp
+ESPair x y = EAInterpretation Pair $* [x, y]
+
+public export
+ESReflected : EExp -> EExp
+ESReflected x = EAInterpretation ReflectedSExp $* [x]
+
+public export
+ESNat : Nat -> EExp
+ESNat = ($^) . EANat
+
+public export
+ESString : String -> EExp
+ESString = ($^) . EAString
