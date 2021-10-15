@@ -61,6 +61,45 @@ data ComputableAtom : Type where
   -- | Composition of morphisms.
   CASCompose : ComputableAtom
 
+  -- | The type of atoms in the substitution category.
+  AtomType : ComputableAtom
+
+  -- | Atom introduction in the substitution category.
+  AtomIntro : ComputableAtom
+
+  -- | Atom elimination:  a decidable equality test.
+  AtomElim : ComputableAtom
+
+  -- | Terms in the interpretation of the atom type.
+  AtomTerm : ComputableAtom
+
+  -- | Terms in the interpretation of the list type.
+  SListTermNil : ComputableAtom
+  SListTermCons : ComputableAtom
+
+  -- | Terms in the interpretation of the expression type.
+  SExpTerm : ComputableAtom
+
+  -- | The type of SList in the substitution category.
+  SListType : ComputableAtom
+
+  -- | SList introduction.
+  SListIntroNil : ComputableAtom
+  SListIntroCons : ComputableAtom
+
+  -- | SList elimination.  Takes two cases, nil and cons.
+  SListElim : ComputableAtom
+
+  -- | The type of SExp in the substitution category.
+  SExpType : ComputableAtom
+
+  -- | SExp introduction.  Takes a pair of atom and list.
+  SExpIntro : ComputableAtom
+
+  -- | SExp elimination.  Takes a function whose parameter is a pair of atom
+  -- | and list.
+  SExpElim : ComputableAtom
+
 public export
 computableAtomToString : ComputableAtom -> String
 computableAtomToString CASVoid = "SVoid"
@@ -81,6 +120,20 @@ computableAtomToString CASLeft = "SLeft"
 computableAtomToString CASRight = "SRight"
 computableAtomToString CASIdentity = "SIdentity"
 computableAtomToString CASCompose = "SCompose"
+computableAtomToString AtomType = "AtomType"
+computableAtomToString AtomIntro = "AtomIntro"
+computableAtomToString AtomElim = "AtomElim"
+computableAtomToString SListType = "SListType"
+computableAtomToString SListIntroNil = "SListIntroNil"
+computableAtomToString SListIntroCons = "SListIntroCons"
+computableAtomToString SListElim = "SListElim"
+computableAtomToString SExpType = "SExpType"
+computableAtomToString SExpIntro = "SExpIntro"
+computableAtomToString SExpElim = "SExpElim"
+computableAtomToString AtomTerm = "AtomTerm"
+computableAtomToString SListTermNil = "SListTermNil"
+computableAtomToString SListTermCons = "SListTermCons"
+computableAtomToString SExpTerm = "SExpTerm"
 
 public export
 Show ComputableAtom where
@@ -106,6 +159,20 @@ caEncode CASLeft = 14
 caEncode CASRight = 15
 caEncode CASIdentity = 16
 caEncode CASCompose = 17
+caEncode AtomType = 18
+caEncode AtomIntro = 19
+caEncode AtomElim = 20
+caEncode SListType = 21
+caEncode SListIntroNil = 22
+caEncode SListIntroCons = 23
+caEncode SListElim = 24
+caEncode SExpType = 25
+caEncode SExpIntro = 26
+caEncode SExpElim = 27
+caEncode AtomTerm = 28
+caEncode SListTermNil = 29
+caEncode SListTermCons = 30
+caEncode SExpTerm = 31
 
 public export
 caDecode : Nat -> ComputableAtom
@@ -127,6 +194,20 @@ caDecode 14 = CASLeft
 caDecode 15 = CASRight
 caDecode 16 = CASIdentity
 caDecode 17 = CASCompose
+caDecode 18 = AtomType
+caDecode 19 = AtomIntro
+caDecode 20 = AtomElim
+caDecode 21 = SListType
+caDecode 22 = SListIntroNil
+caDecode 23 = SListIntroCons
+caDecode 24 = SListElim
+caDecode 25 = SExpType
+caDecode 26 = SExpIntro
+caDecode 27 = SExpElim
+caDecode 28 = AtomTerm
+caDecode 29 = SListTermNil
+caDecode 30 = SListTermCons
+caDecode 31 = SExpTerm
 caDecode _ = CASVoid
 
 export
@@ -150,6 +231,20 @@ caDecodeIsLeftInverse CASLeft = Refl
 caDecodeIsLeftInverse CASRight = Refl
 caDecodeIsLeftInverse CASIdentity = Refl
 caDecodeIsLeftInverse CASCompose = Refl
+caDecodeIsLeftInverse AtomType = Refl
+caDecodeIsLeftInverse AtomIntro = Refl
+caDecodeIsLeftInverse AtomElim = Refl
+caDecodeIsLeftInverse SListType = Refl
+caDecodeIsLeftInverse SListIntroNil = Refl
+caDecodeIsLeftInverse SListIntroCons = Refl
+caDecodeIsLeftInverse SListElim = Refl
+caDecodeIsLeftInverse SExpType = Refl
+caDecodeIsLeftInverse SExpIntro = Refl
+caDecodeIsLeftInverse SExpElim = Refl
+caDecodeIsLeftInverse AtomTerm = Refl
+caDecodeIsLeftInverse SListTermNil = Refl
+caDecodeIsLeftInverse SListTermCons = Refl
+caDecodeIsLeftInverse SExpTerm = Refl
 
 export
 caEncodeIsInjective : IsInjective ComputableFunctions.caEncode
