@@ -158,6 +158,22 @@ mutual
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
 
 mutual
+  public export
+  sexpLessThan : {0 atom : Type} -> (aLessThan : atom -> atom -> Bool) ->
+    SExp atom -> SExp atom -> Bool
+  sexpLessThan aLessThan (a $* l) (a' $* l') =
+    if (aLessThan a a') then True else slistLessThan aLessThan l l'
+
+  public export
+  slistLessThan : {0 atom : Type} -> (aLessThan : atom -> atom -> Bool) ->
+    SList atom -> SList atom -> Bool
+  slistLessThan _ [] [] = False
+  slistLessThan _ [] (_ :: _) = True
+  slistLessThan _ (_ :: _) [] = False
+  slistLessThan aLessThan (x :: l) (x' :: l') =
+    if (sexpLessThan aLessThan x x') then True else slistLessThan aLessThan l l'
+
+mutual
   data SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom where
     SExpAndList : {pred : SPred atom} -> pred (a $* l) -> SListForAll pred l ->
       SExpForAll pred (a $* l)

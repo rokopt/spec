@@ -216,6 +216,14 @@ public export
 Eq ComputableExp using decEqToEq where
   (==) = (==)
 
+public export
+Ord ComputableExp where
+  (<) = sexpLessThan (<)
+
+public export
+Ord ComputableList where
+  (<) = slistLessThan (<)
+
 ------------------------------------------------
 ---- The category of substitutive functions ----
 ------------------------------------------------
