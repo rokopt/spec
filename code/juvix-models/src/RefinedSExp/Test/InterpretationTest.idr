@@ -35,6 +35,18 @@ testElimRight : EExp
 testElimRight = ESApply (EAMorphism ProductElimRight $* []) testTerm
 
 export
+rightThenLeft : EExp
+rightThenLeft = EAMorphism Compose $*
+  [EAMorphism ProductElimLeft $* [], EAMorphism ProductElimRight $* []]
+
+export deeperTestTerm : EExp
+deeperTestTerm = EAInterpretation Pair $* [ESString "b", testTerm]
+
+export
+testRightThenLeft : EExp
+testRightThenLeft = ESApply rightThenLeft deeperTestTerm
+
+export
 interpretationTests : IO ()
 interpretationTests = do
   printLn "Beginning interpretationTests."
@@ -61,5 +73,14 @@ interpretationTests = do
     show (eexpInterpretSteps 4 testElimLeft))
   printLn ("two steps on testElimRight = " ++
     show (eexpInterpretSteps 2 testElimRight))
+  printLn ("testRightThenLeft = " ++ show testRightThenLeft)
+  printLn ("one step on testRightThenLeft = " ++
+    show (eexpInterpretStep testRightThenLeft))
+  printLn ("two steps on testRightThenLeft = " ++
+    show (eexpInterpretSteps 2 testRightThenLeft))
+  printLn ("three steps on testRightThenLeft = " ++
+    show (eexpInterpretSteps 3 testRightThenLeft))
+  printLn ("four steps on testRightThenLeft = " ++
+    show (eexpInterpretSteps 4 testRightThenLeft))
   printLn "Done with interpretationTests."
   pure ()
