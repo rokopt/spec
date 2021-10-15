@@ -464,6 +464,10 @@ interpretSubstitutionMorphism :
   {codomain : SubstitutionType codomainRep} ->
   SubstitutionMorphism representation domain codomain ->
   interpretSubstitutionType domain -> interpretSubstitutionType codomain
+interpretSubstitutionMorphism (SIdentity type) x = x
+interpretSubstitutionMorphism (SCompose leftMorphism rightMorphism) x =
+  interpretSubstitutionMorphism leftMorphism (
+    interpretSubstitutionMorphism rightMorphism x)
 interpretSubstitutionMorphism (SFromVoid codomain) v = void v
 interpretSubstitutionMorphism (SToUnit domain) _ = ()
 interpretSubstitutionMorphism
@@ -487,8 +491,6 @@ interpretSubstitutionMorphism
     case eitherTerm of
       Left leftTerm => interpretSubstitutionMorphism leftMorphism leftTerm
       Right rightTerm => interpretSubstitutionMorphism rightMorphism rightTerm
-interpretSubstitutionMorphism _ _ =
-  ?interpretSubstitutionMorphism_hole_other
 
 public export
 interpretSubstitutionTerm :
