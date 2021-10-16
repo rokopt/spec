@@ -1,7 +1,7 @@
 module Executable.Test.Main
 
 import Library.Test.TestLibrary
-import Geb.Test.AlgebraicReflectionTest
+import Geb.Test.GebTest
 import RefinedSExp.Test.ListTest
 import RefinedSExp.PairVariant.Test.SExpTest
 import RefinedSExp.Test.ComputableFunctionsTest
@@ -47,7 +47,7 @@ import ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
 export
 partial main : IO ()
 main = do
-  Geb.Test.AlgebraicReflectionTest.algebraicReflectionTests
+  Geb.Test.GebTest.gebTests
   {-
   RefinedSExp.Test.ListTest.listTests
   RefinedSExp.PairVariant.Test.SExpTest.sExpTests

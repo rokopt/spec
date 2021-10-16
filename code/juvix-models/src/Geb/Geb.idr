@@ -1,4 +1,4 @@
-module Geb.AlgebraicReflection
+module Geb.Geb
 
 import Library.FunctionsAndRelations
 import Library.Decidability
