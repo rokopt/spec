@@ -222,15 +222,68 @@ interpretMinimalMorphism :
   interpretMinimalObject (minimalMorphismDomain r) ->
   interpretMinimalObject (minimalMorphismCodomain r)
 interpretMinimalMorphism
-  {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) x = ?interpretMinimalMorphism_hole_frominitial
+  {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) x =
+    ?interpretMinimalMorphism_hole_frominitial
 interpretMinimalMorphism
-  {r=(ToTerminalRep domainRep)} (MinimalToTerminal _) x = ?interpretMinimalMorphism_hole_toterminal
+  {r=(ToTerminalRep domainRep)} (MinimalToTerminal _) x =
+    ?interpretMinimalMorphism_hole_toterminal
 
 public export
 interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
   interpretMinimalObject (minimalMorphismDomain r) ->
   interpretMinimalObject (minimalMorphismCodomain r)
 interpretMinimalMorphismRep r = interpretMinimalMorphism (minimalMorphism r)
+
+-----------------------------------
+---- Correctness of reflection ----
+-----------------------------------
+
+public export
+minimalObjectQuote : {r : MinimalObjectRep} -> MinimalObject r ->
+  interpretMinimalObject Expression
+minimalObjectQuote o = ?minimalObjectReflection_hole
+
+public export
+minimalObjectUnquote : interpretMinimalObject Expression ->
+  (r : MinimalObjectRep ** MinimalObject r)
+minimalObjectUnquote x = ?minimalObjectUnquote_hole
+
+export
+minimalObjectUnquoteQuoteCorrect :
+  {r : MinimalObjectRep} -> (o : MinimalObject r) ->
+  minimalObjectUnquote (minimalObjectQuote o) = (r ** o)
+minimalObjectUnquoteQuoteCorrect {r} o = ?minimalObjectUnquoteQuoteCorrect_hole
+
+export
+minimalObjectQuoteUnquoteCorrect : (x : interpretMinimalObject Expression) ->
+  minimalObjectQuote (snd (minimalObjectUnquote x)) = x
+minimalObjectQuoteUnquoteCorrect x = ?minimalObjectQuoteUnquoteCorrect_hole
+
+public export
+minimalMorphismQuote : {r : MinimalMorphismRep} ->
+  MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r) ->
+  interpretMinimalObject Expression
+minimalMorphismQuote m = ?minimalMorphismReflection_hole
+
+public export
+minimalMorphismUnquote : interpretMinimalObject Expression ->
+  (r : MinimalMorphismRep ** MinimalMorphism r
+    (minimalMorphismDomain r) (minimalMorphismCodomain r))
+minimalMorphismUnquote x = ?minimalMorphismUnquote_hole
+
+export
+minimalMorphismUnquoteQuoteCorrect :
+  {r : MinimalMorphismRep} ->
+  (m: MinimalMorphism r
+    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
+  minimalMorphismUnquote (minimalMorphismQuote m) = (r ** m)
+minimalMorphismUnquoteQuoteCorrect {r} m =
+  ?minimalMorphismUnquoteQuoteCorrect_hole
+
+export
+minimalMorphismQuoteUnquoteCorrect : (x : interpretMinimalObject Expression) ->
+  minimalMorphismQuote (snd (minimalMorphismUnquote x)) = x
+minimalMorphismQuoteUnquoteCorrect x = ?minimalMorphismQuoteUnquoteCorrect_hole
 
 ------------------------------------------------------------
 ---- Term reduction in the minimal programming language ----
