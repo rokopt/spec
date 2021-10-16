@@ -151,27 +151,33 @@ public export
 minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
 minimalMorphismRepCodomain _ impossible
 
+public export
+minimalMorphismDomain :
+  (r : MinimalMorphismRep) -> MinimalObject (minimalMorphismRepDomain r)
+minimalMorphismDomain r = minimalObject (minimalMorphismRepDomain r)
+
+public export
+minimalMorphismCodomain :
+  (r : MinimalMorphismRep) -> MinimalObject (minimalMorphismRepCodomain r)
+minimalMorphismCodomain r = minimalObject (minimalMorphismRepCodomain r)
+
 -- | Translate a representation to a minimal morphism.
 public export
 minimalMorphism : (r : MinimalMorphismRep) ->
-  MinimalMorphism r
-    (minimalObject (minimalMorphismRepDomain r))
-    (minimalObject (minimalMorphismRepCodomain r))
+  MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r)
 minimalMorphism _ impossible
 
 public export
 minimalMorphismRepCorrect : {r : MinimalMorphismRep} ->
   (m : MinimalMorphism r
-    (minimalObject (minimalMorphismRepDomain r))
-    (minimalObject (minimalMorphismRepCodomain r))) ->
+    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
   minimalMorphism r = m
 minimalMorphismRepCorrect _ impossible
 
 public export
 minimalMorphismUnique : {r : MinimalMorphismRep} ->
-  (m, m' : MinimalMorphism r
-    (minimalObject (minimalMorphismRepDomain r))
-    (minimalObject (minimalMorphismRepCodomain r))) ->
+  (m, m': MinimalMorphism r
+    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
   m = m'
 minimalMorphismUnique m m' =
   trans (sym $ minimalMorphismRepCorrect m) (minimalMorphismRepCorrect m')
@@ -179,6 +185,7 @@ minimalMorphismUnique m m' =
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
 -----------------------------------------------------------------------------
+
 public export
 interpretMinimalObject : {r : MinimalObjectRep} -> MinimalObject r -> Type
 interpretMinimalObject Initial = Void
@@ -188,6 +195,15 @@ interpretMinimalObject (Product o o') =
 interpretMinimalObject (Coproduct o o') =
   Either (interpretMinimalObject o) (interpretMinimalObject o')
 interpretMinimalObject Expression = MinimalExpressionRep
+
+public export
+interpretMinimalMorphism :
+  {r : MinimalMorphismRep} ->
+  (m: MinimalMorphism r
+    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
+  interpretMinimalObject (minimalMorphismDomain r) ->
+  interpretMinimalObject (minimalMorphismCodomain r)
+interpretMinimalMorphism m impossible
 
 --------------------------------------------
 ---- S-expression representation of Geb ----
@@ -473,10 +489,8 @@ gebMinimalMorphismRepRepresentationComplete _ impossible
 
 public export
 gebExpToMinimalMorphism :
-  GebSExp -> Maybe (r : MinimalMorphismRep **
-    MinimalMorphism r
-      (minimalObject (minimalMorphismRepDomain r))
-      (minimalObject (minimalMorphismRepCodomain r)))
+  GebSExp ->Maybe (r : MinimalMorphismRep **
+    MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r))
 gebExpToMinimalMorphism x = case gebExpToMinimalMorphismRep x of
   Just r => Just (r ** minimalMorphism r)
   Nothing => Nothing
@@ -485,8 +499,7 @@ public export
 gebMinimalMorphismRepresentationComplete :
   {r : MinimalMorphismRep} ->
   (m : MinimalMorphism r
-    (minimalObject (minimalMorphismRepDomain r))
-    (minimalObject (minimalMorphismRepCodomain r))) ->
+    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
   gebExpToMinimalMorphism (gebMinimalMorphismRepToExp r) = Just (r ** m)
 gebMinimalMorphismRepresentationComplete {r} m impossible
   {-
