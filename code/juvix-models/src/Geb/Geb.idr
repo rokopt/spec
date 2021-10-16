@@ -85,6 +85,8 @@ data MinimalObjectRep : Type where
 
 public export
 data MinimalMorphismRep : Type where
+  FromInitialRep : MinimalObjectRep -> MinimalMorphismRep
+  ToTerminalRep : MinimalObjectRep -> MinimalMorphismRep
 
 public export
 data MinimalExpressionRep : Type where
@@ -142,14 +144,22 @@ data MinimalMorphism :
   (domain : MinimalObject domainRep) ->
   (codomain : MinimalObject codomainRep) ->
   Type where
+    MinimalFromInitial : (codomainRep : MinimalObjectRep) ->
+      MinimalMorphism
+        (FromInitialRep codomainRep) Initial (minimalObject codomainRep)
+    MinimalToTerminal : (domainRep : MinimalObjectRep) ->
+      MinimalMorphism
+        (ToTerminalRep domainRep) (minimalObject domainRep) Terminal
 
 public export
 minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
-minimalMorphismRepDomain _ impossible
+minimalMorphismRepDomain (FromInitialRep _) = InitialRep
+minimalMorphismRepDomain (ToTerminalRep domain) = domain
 
 public export
 minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
-minimalMorphismRepCodomain _ impossible
+minimalMorphismRepCodomain (FromInitialRep codomain) = codomain
+minimalMorphismRepCodomain (ToTerminalRep _) = TerminalRep
 
 public export
 minimalMorphismDomain :
@@ -165,14 +175,18 @@ minimalMorphismCodomain r = minimalObject (minimalMorphismRepCodomain r)
 public export
 minimalMorphism : (r : MinimalMorphismRep) ->
   MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r)
-minimalMorphism _ impossible
+minimalMorphism (FromInitialRep codomain) = MinimalFromInitial codomain
+minimalMorphism (ToTerminalRep domain) = MinimalToTerminal domain
 
 public export
 minimalMorphismRepCorrect : {r : MinimalMorphismRep} ->
   (m : MinimalMorphism r
     (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
   minimalMorphism r = m
-minimalMorphismRepCorrect _ impossible
+minimalMorphismRepCorrect
+  {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) = Refl
+minimalMorphismRepCorrect
+  {r=(ToTerminalRep domainRep)} (MinimalToTerminal _) = Refl
 
 public export
 minimalMorphismUnique : {r : MinimalMorphismRep} ->
@@ -207,7 +221,10 @@ interpretMinimalMorphism :
     (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
   interpretMinimalObject (minimalMorphismDomain r) ->
   interpretMinimalObject (minimalMorphismCodomain r)
-interpretMinimalMorphism m impossible
+interpretMinimalMorphism
+  {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) x = ?interpretMinimalMorphism_hole_frominitial
+interpretMinimalMorphism
+  {r=(ToTerminalRep domainRep)} (MinimalToTerminal _) x = ?interpretMinimalMorphism_hole_toterminal
 
 public export
 interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
@@ -229,10 +246,28 @@ public export
 data MinimalTerm : MinimalExpressionRep -> Type where
   FullyEvaluatedTerm : (r : MinimalObjectRep) ->
     interpretMinimalObjectRep r -> MinimalTerm (MinimalObjectExp r)
+  MorphismTerm : (r : MinimalMorphismRep) ->
+    MinimalMorphism r
+      (minimalMorphismDomain r) (minimalMorphismCodomain r) ->
+    MinimalTerm (MinimalMorphismExp r)
   Application : (r : MinimalMorphismRep) ->
     MinimalTerm (MinimalMorphismExp r) ->
     MinimalTerm (MinimalObjectExp (minimalMorphismRepDomain r)) ->
     MinimalTerm (MinimalObjectExp (minimalMorphismRepCodomain r))
+
+public export
+minimalTermObjectRep : {r : MinimalExpressionRep} ->
+  MinimalTerm r -> MinimalObjectRep
+minimalTermObjectRep {r} t = ?minimalTermObjectRep_hole
+
+public export
+interpretMinimalTermType : {r : MinimalExpressionRep} -> MinimalTerm r -> Type
+interpretMinimalTermType {r} t = ?interpretMinimalTermType_hole
+
+public export
+interpretMinimalTerm : {r : MinimalExpressionRep} -> (t : MinimalTerm r) ->
+  interpretMinimalTermType {r} t
+interpretMinimalTerm {r} t = ?interpretMinimalTerm_hole
 
 --------------------------------------------
 ---- S-expression representation of Geb ----
@@ -265,12 +300,15 @@ data GebAtom : Type where
   GAMorphism : GebAtom
 
   -- | Morphisms common to all programming languages.
+  GAFromInitial : GebAtom
+  GAToTerminal : GebAtom
 
   -- | The notion of a term of any programming language.
   GATerm : GebAtom
 
   -- | Terms common to all programming languages.
   GAEvaluatedTerm : GebAtom
+  GAMorphismTerm : GebAtom
   GAApplication : GebAtom
 
 public export
@@ -286,7 +324,10 @@ gaEncode GAExpression = 7
 gaEncode GAMorphism = 8
 gaEncode GATerm = 9
 gaEncode GAEvaluatedTerm = 10
-gaEncode GAApplication = 11
+gaEncode GAMorphismTerm = 11
+gaEncode GAApplication = 12
+gaEncode GAFromInitial = 13
+gaEncode GAToTerminal = 14
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -301,7 +342,10 @@ gaDecode 7 = Just GAExpression
 gaDecode 8 = Just GAMorphism
 gaDecode 9 = Just GATerm
 gaDecode 10 = Just GAEvaluatedTerm
-gaDecode 11 = Just GAApplication
+gaDecode 11 = Just GAMorphismTerm
+gaDecode 12 = Just GAApplication
+gaDecode 13 = Just GAFromInitial
+gaDecode 14 = Just GAToTerminal
 gaDecode _ = Nothing
 
 export
@@ -317,7 +361,10 @@ gaDecodeEncodeIsJust GAExpression = Refl
 gaDecodeEncodeIsJust GAMorphism = Refl
 gaDecodeEncodeIsJust GATerm = Refl
 gaDecodeEncodeIsJust GAEvaluatedTerm = Refl
+gaDecodeEncodeIsJust GAMorphismTerm = Refl
 gaDecodeEncodeIsJust GAApplication = Refl
+gaDecodeEncodeIsJust GAFromInitial = Refl
+gaDecodeEncodeIsJust GAToTerminal = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -332,7 +379,10 @@ gebAtomToString GAExpression = "Expression"
 gebAtomToString GAMorphism = "Morphism"
 gebAtomToString GATerm = "Term"
 gebAtomToString GAEvaluatedTerm = "EvaluatedTerm"
+gebAtomToString GAMorphismTerm = "MorphismTerm"
 gebAtomToString GAApplication = "Application"
+gebAtomToString GAFromInitial = "FromInitial"
+gebAtomToString GAToTerminal = "ToTerminal"
 
 public export
 Show GebAtom where
@@ -528,16 +578,30 @@ gebMinimalObjectRepresentationComplete {r} o =
 
 public export
 gebMinimalMorphismRepToExp : MinimalMorphismRep -> GebSExp
-gebMinimalMorphismRepToExp _ impossible
+gebMinimalMorphismRepToExp (FromInitialRep codomainRep) =
+  GAFromInitial $* [gebMinimalObjectRepToExp codomainRep]
+gebMinimalMorphismRepToExp (ToTerminalRep domainRep) =
+  GAToTerminal $* [gebMinimalObjectRepToExp domainRep]
 
 public export
 gebExpToMinimalMorphismRep : GebSExp -> Maybe MinimalMorphismRep
+gebExpToMinimalMorphismRep (GAFromInitial $* [codomainExp]) =
+  case gebExpToMinimalObjectRep codomainExp of
+    Just codomainRep => Just $ FromInitialRep codomainRep
+    _ => Nothing
+gebExpToMinimalMorphismRep (GAToTerminal $* [domainExp]) =
+  case gebExpToMinimalObjectRep domainExp of
+    Just domainRep => Just $ ToTerminalRep domainRep
+    _ => Nothing
 gebExpToMinimalMorphismRep _ = Nothing
 
 public export
 gebMinimalMorphismRepRepresentationComplete : (r : MinimalMorphismRep) ->
   gebExpToMinimalMorphismRep (gebMinimalMorphismRepToExp r) = Just r
-gebMinimalMorphismRepRepresentationComplete _ impossible
+gebMinimalMorphismRepRepresentationComplete (FromInitialRep codomainRep) =
+  ?gebMinimalMorphismRepRepresentationComplete_hole_frominitial
+gebMinimalMorphismRepRepresentationComplete (ToTerminalRep domainRep) =
+  ?gebMinimalMorphismRepRepresentationComplete_hole_toterminal
 
 public export
 gebExpToMinimalMorphism :
@@ -553,12 +617,10 @@ gebMinimalMorphismRepresentationComplete :
   (m : MinimalMorphism r
     (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
   gebExpToMinimalMorphism (gebMinimalMorphismRepToExp r) = Just (r ** m)
-gebMinimalMorphismRepresentationComplete {r} m impossible
-  {-
+gebMinimalMorphismRepresentationComplete {r} m =
   rewrite gebMinimalMorphismRepRepresentationComplete r in
   rewrite minimalMorphismRepCorrect m in
   Refl
-  -}
 
 public export
 gebMinimalTermToExp : {r : MinimalExpressionRep} -> MinimalTerm r -> GebSExp
