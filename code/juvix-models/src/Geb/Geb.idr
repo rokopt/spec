@@ -197,6 +197,10 @@ interpretMinimalObject (Coproduct o o') =
 interpretMinimalObject Expression = MinimalExpressionRep
 
 public export
+interpretMinimalObjectRep : MinimalObjectRep -> Type
+interpretMinimalObjectRep r = interpretMinimalObject (minimalObject r)
+
+public export
 interpretMinimalMorphism :
   {r : MinimalMorphismRep} ->
   (m: MinimalMorphism r
@@ -204,6 +208,31 @@ interpretMinimalMorphism :
   interpretMinimalObject (minimalMorphismDomain r) ->
   interpretMinimalObject (minimalMorphismCodomain r)
 interpretMinimalMorphism m impossible
+
+public export
+interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
+  interpretMinimalObject (minimalMorphismDomain r) ->
+  interpretMinimalObject (minimalMorphismCodomain r)
+interpretMinimalMorphismRep r = interpretMinimalMorphism (minimalMorphism r)
+
+------------------------------------------------------------
+---- Term reduction in the minimal programming language ----
+------------------------------------------------------------
+
+-- | Terms are used to define operational semantics for the category-theoretical
+-- | representations of programming languages.  We have a well-typed
+-- | representation of terms in Idris defined by the interpretation of objects
+-- | as types -- together with the notion of function application, which we
+-- | do not have in the category-theoretical representation.
+
+public export
+data MinimalTerm : MinimalExpressionRep -> Type where
+  FullyEvaluatedTerm : (r : MinimalObjectRep) ->
+    interpretMinimalObjectRep r -> MinimalTerm (MinimalObjectExp r)
+  Application : (r : MinimalMorphismRep) ->
+    MinimalTerm (MinimalMorphismExp r) ->
+    MinimalTerm (MinimalObjectExp (minimalMorphismRepDomain r)) ->
+    MinimalTerm (MinimalObjectExp (minimalMorphismRepCodomain r))
 
 --------------------------------------------
 ---- S-expression representation of Geb ----
@@ -237,6 +266,13 @@ data GebAtom : Type where
 
   -- | Morphisms common to all programming languages.
 
+  -- | The notion of a term of any programming language.
+  GATerm : GebAtom
+
+  -- | Terms common to all programming languages.
+  GAEvaluatedTerm : GebAtom
+  GAApplication : GebAtom
+
 public export
 gaEncode : GebAtom -> Nat
 gaEncode GALanguage = 0
@@ -248,6 +284,9 @@ gaEncode GAProduct = 5
 gaEncode GACoproduct = 6
 gaEncode GAExpression = 7
 gaEncode GAMorphism = 8
+gaEncode GATerm = 9
+gaEncode GAEvaluatedTerm = 10
+gaEncode GAApplication = 11
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -260,6 +299,9 @@ gaDecode 5 = Just GAProduct
 gaDecode 6 = Just GACoproduct
 gaDecode 7 = Just GAExpression
 gaDecode 8 = Just GAMorphism
+gaDecode 9 = Just GATerm
+gaDecode 10 = Just GAEvaluatedTerm
+gaDecode 11 = Just GAApplication
 gaDecode _ = Nothing
 
 export
@@ -273,6 +315,9 @@ gaDecodeEncodeIsJust GAProduct = Refl
 gaDecodeEncodeIsJust GACoproduct = Refl
 gaDecodeEncodeIsJust GAExpression = Refl
 gaDecodeEncodeIsJust GAMorphism = Refl
+gaDecodeEncodeIsJust GATerm = Refl
+gaDecodeEncodeIsJust GAEvaluatedTerm = Refl
+gaDecodeEncodeIsJust GAApplication = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -285,6 +330,9 @@ gebAtomToString GAProduct = "Product"
 gebAtomToString GACoproduct = "Coproduct"
 gebAtomToString GAExpression = "Expression"
 gebAtomToString GAMorphism = "Morphism"
+gebAtomToString GATerm = "Term"
+gebAtomToString GAEvaluatedTerm = "EvaluatedTerm"
+gebAtomToString GAApplication = "Application"
 
 public export
 Show GebAtom where
@@ -369,18 +417,21 @@ data GebExpressionClass : Type where
   LanguageClass : GebExpressionClass
   ObjectClass : GebExpressionClass
   MorphismClass : GebExpressionClass
+  TermClass : GebExpressionClass
 
 public export
 gebClassToExp : GebExpressionClass -> GebSExp
 gebClassToExp LanguageClass = $^ GALanguage
 gebClassToExp ObjectClass = $^ GAObject
 gebClassToExp MorphismClass = $^ GAMorphism
+gebClassToExp TermClass = $^ GATerm
 
 public export
 gebExpToClass : GebSExp -> Maybe GebExpressionClass
 gebExpToClass (GALanguage $* []) = Just LanguageClass
 gebExpToClass (GAObject $* []) = Just ObjectClass
 gebExpToClass (GAMorphism $* []) = Just MorphismClass
+gebExpToClass (GATerm $* []) = Just TermClass
 gebExpToClass _ = Nothing
 
 export
@@ -389,6 +440,7 @@ gebExpressionClassRepresentationComplete :
 gebExpressionClassRepresentationComplete LanguageClass = Refl
 gebExpressionClassRepresentationComplete ObjectClass = Refl
 gebExpressionClassRepresentationComplete MorphismClass = Refl
+gebExpressionClassRepresentationComplete TermClass = Refl
 
 public export
 gebLanguageRepToExp : LanguageRep -> GebSExp
@@ -489,7 +541,7 @@ gebMinimalMorphismRepRepresentationComplete _ impossible
 
 public export
 gebExpToMinimalMorphism :
-  GebSExp ->Maybe (r : MinimalMorphismRep **
+  GebSExp -> Maybe (r : MinimalMorphismRep **
     MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r))
 gebExpToMinimalMorphism x = case gebExpToMinimalMorphismRep x of
   Just r => Just (r ** minimalMorphism r)
@@ -507,3 +559,19 @@ gebMinimalMorphismRepresentationComplete {r} m impossible
   rewrite minimalMorphismRepCorrect m in
   Refl
   -}
+
+public export
+gebMinimalTermToExp : {r : MinimalExpressionRep} -> MinimalTerm r -> GebSExp
+gebMinimalTermToExp t = ?gebMinimalTermToExp_hole
+
+public export
+gebExpToMinimalTerm :
+  GebSExp -> Maybe (r : MinimalExpressionRep ** MinimalTerm r)
+gebExpToMinimalTerm x = ?gebExpToMinimalTerm_hole
+
+public export
+gebMinimalTermRepresentationComplete :
+  {r : MinimalExpressionRep} -> (t : MinimalTerm r) ->
+  gebExpToMinimalTerm (gebMinimalTermToExp {r} t) = Just (r ** t)
+gebMinimalTermRepresentationComplete t =
+  ?gebMinimalTermRepresentationComplete_hole
