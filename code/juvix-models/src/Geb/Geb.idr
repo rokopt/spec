@@ -29,8 +29,13 @@ import RefinedSExp.SExp
 -- | what is required for Gödel's incompleteness theorems to apply.  There is
 -- | also a maximal programming language:  the universal Turing machine,
 -- | with non-terminating and partial functions.
+
 public export
-data Language : Type where
+data LanguageRep : Type where
+  MinimalRep : LanguageRep
+
+public export
+data Language : LanguageRep -> Type where
   -- | The minimal programming language required for Gödel's incompleteness
   -- | theorems to apply.  We treat this abstractly, as a category with
   -- | an initial object, a terminal object, finite products and coproducts,
@@ -40,7 +45,57 @@ data Language : Type where
   -- | equality gives us the ability to perform substitution, which in turn
   -- | allows us to represent function application -- the fundamental
   -- | computation in any programming language.
-  Minimal : Language
+  Minimal : Language MinimalRep
+
+public export
+language : (r : LanguageRep) -> Language r
+language MinimalRep = Minimal
+
+-------------------------
+---- Minimal objects ----
+-------------------------
+
+-- | Every programming language (using the Geb definition) has an initial
+-- | object, a terminal object, finite products and coproducts, an object
+-- | which we interpret as the type of representations of the language's
+-- | objects and morphisms, and a decidable equality on those
+-- | representations.  This is enough to perform substitution on
+-- | representations.
+-- |
+-- | Note that we are _not_ assuming exponential objects yet -- for example,
+-- | the minimal language does not have any first-class functions, and
+-- | primitive recursion has only first-order functions.
+
+-- | Well-typed representations of common objects.
+public export
+data MinimalObjectRep : Type where
+  InitialRep : MinimalObjectRep
+  TerminalRep : MinimalObjectRep
+  ProductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
+  CoproductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
+  ExpressionRep : MinimalObjectRep
+
+-- | Minimal objects, indexed by their representations.
+public export
+data MinimalObject : MinimalObjectRep -> Type where
+  Initial : MinimalObject InitialRep
+  Terminal : MinimalObject TerminalRep
+  Product : {r, r' : MinimalObjectRep} ->
+    MinimalObject r -> MinimalObject r' -> MinimalObject (ProductRep r r')
+  Coproduct : {r, r' : MinimalObjectRep} ->
+    MinimalObject r -> MinimalObject r' -> MinimalObject (CoproductRep r r')
+  Expression : MinimalObject ExpressionRep
+
+-- | Translate a representation to a minimal object.
+public export
+minimalObject : (r : MinimalObjectRep) -> MinimalObject r
+minimalObject InitialRep = Initial
+minimalObject TerminalRep = Terminal
+minimalObject (ProductRep o o') =
+  Product (minimalObject o) (minimalObject o')
+minimalObject (CoproductRep o o') =
+  Coproduct (minimalObject o) (minimalObject o')
+minimalObject ExpressionRep = Expression
 
 --------------------------------------------
 ---- S-expression representation of Geb ----
@@ -59,26 +114,60 @@ data GebAtom : Type where
   -- | The minimal programming language.
   GAMinimal : GebAtom
 
+  -- | The notion of an object of any programming language.
+  GAObject : GebAtom
+
+  -- | Objects common to all programming languages.
+  GAInitial : GebAtom
+  GATerminal : GebAtom
+  GAProduct : GebAtom
+  GACoproduct : GebAtom
+  GAExpression : GebAtom
+
 public export
 gaEncode : GebAtom -> Nat
 gaEncode GALanguage = 0
 gaEncode GAMinimal = 1
+gaEncode GAObject = 2
+gaEncode GAInitial = 3
+gaEncode GATerminal = 4
+gaEncode GAProduct = 5
+gaEncode GACoproduct = 6
+gaEncode GAExpression = 7
 
 public export
 gaDecode : Nat -> Maybe GebAtom
 gaDecode 0 = Just GALanguage
 gaDecode 1 = Just GAMinimal
+gaDecode 2 = Just GAObject
+gaDecode 3 = Just GAInitial
+gaDecode 4 = Just GATerminal
+gaDecode 5 = Just GAProduct
+gaDecode 6 = Just GACoproduct
+gaDecode 7 = Just GAExpression
 gaDecode _ = Nothing
 
 export
 gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
 gaDecodeEncodeIsJust GALanguage = Refl
 gaDecodeEncodeIsJust GAMinimal = Refl
+gaDecodeEncodeIsJust GAObject = Refl
+gaDecodeEncodeIsJust GAInitial = Refl
+gaDecodeEncodeIsJust GATerminal = Refl
+gaDecodeEncodeIsJust GAProduct = Refl
+gaDecodeEncodeIsJust GACoproduct = Refl
+gaDecodeEncodeIsJust GAExpression = Refl
 
 public export
 gebAtomToString : GebAtom -> String
 gebAtomToString GALanguage = "Language"
 gebAtomToString GAMinimal = "Minimal"
+gebAtomToString GAObject = "Object"
+gebAtomToString GAInitial = "Initial"
+gebAtomToString GATerminal = "Terminal"
+gebAtomToString GAProduct = "Product"
+gebAtomToString GACoproduct = "Coproduct"
+gebAtomToString GAExpression = "Expression"
 
 public export
 Show GebAtom where
@@ -154,34 +243,82 @@ public export
 Ord GebSList where
   (<) = slistLessThan (<)
 
+----------------------------------------------------------------------------
+---- Translation between (well-typed) Geb expressions and S-expressions ----
+----------------------------------------------------------------------------
+
 public export
 data GebExpressionClass : Type where
   LanguageClass : GebExpressionClass
+  ObjectClass : GebExpressionClass
 
 public export
 gebClassToExp : GebExpressionClass -> GebSExp
 gebClassToExp LanguageClass = $^ GALanguage
+gebClassToExp ObjectClass = $^ GAObject
 
 public export
 gebExpToClass : GebSExp -> Maybe GebExpressionClass
 gebExpToClass (GALanguage $* []) = Just LanguageClass
+gebExpToClass (GAObject $* []) = Just ObjectClass
 gebExpToClass _ = Nothing
 
 export
 gebExpressionClassRepresentationComplete :
   (c : GebExpressionClass) -> gebExpToClass (gebClassToExp c) = Just c
 gebExpressionClassRepresentationComplete LanguageClass = Refl
+gebExpressionClassRepresentationComplete ObjectClass = Refl
 
 public export
-gebLanguageToExp : Language -> GebSExp
-gebLanguageToExp Minimal = $^ GAMinimal
+gebLanguageRepToExp : LanguageRep -> GebSExp
+gebLanguageRepToExp _ = ?gebLanguageRepToExp_hole
 
 public export
-gebExpToLanguage : GebSExp -> Maybe Language
-gebExpToLanguage (GAMinimal $* []) = Just Minimal
-gebExpToLanguage _ = Nothing
+gebExpToLanguageRep : GebSExp -> Maybe LanguageRep
+gebExpToLanguageRep _ = ?gebExpToLanguageRep_hole
 
-export
-gebLanguageRepresentationComplete :
-  (l : Language) -> gebExpToLanguage (gebLanguageToExp l) = Just l
-gebLanguageRepresentationComplete Minimal = Refl
+public export
+gebLanguageRepRepresentationComplete : (r : LanguageRep) ->
+  gebExpToLanguageRep (gebLanguageRepToExp r) = Just r
+gebLanguageRepRepresentationComplete _ =
+  ?gebLanguageRepRepresentationComplete_hole
+
+public export
+gebExpToLanguage : GebSExp -> Maybe (r : LanguageRep ** Language r)
+gebExpToLanguage x = case gebExpToLanguageRep x of
+  Just r => Just (r ** language r)
+  Nothing => Nothing
+
+public export
+gebLanguageRepresentationComplete : {r : LanguageRep} -> (l : Language r) ->
+  gebExpToLanguage (gebLanguageRepToExp r) = Just (r ** l)
+gebLanguageRepresentationComplete {r} l =
+  ?gebLanguageRepresentationComplete_hole
+
+public export
+gebMinimalObjectRepToExp : MinimalObjectRep -> GebSExp
+gebMinimalObjectRepToExp _ = ?gebMinimalObjectToExp_hole
+
+public export
+gebExpToMinimalObjectRep : GebSExp -> Maybe MinimalObjectRep
+gebExpToMinimalObjectRep _ = ?gebExpToMinimalObjectRep_hole
+
+public export
+gebMinimalObjectRepRepresentationComplete : (r : MinimalObjectRep) ->
+  gebExpToMinimalObjectRep (gebMinimalObjectRepToExp r) = Just r
+gebMinimalObjectRepRepresentationComplete _ =
+  ?gebMinimalObjectRepRepresentationComplete_hole
+
+public export
+gebExpToMinimalObject :
+  GebSExp -> Maybe (r : MinimalObjectRep ** MinimalObject r)
+gebExpToMinimalObject x = case gebExpToMinimalObjectRep x of
+  Just r => Just (r ** minimalObject r)
+  Nothing => Nothing
+
+public export
+gebMinimalObjectRepresentationComplete :
+  {r : MinimalObjectRep} -> (o : MinimalObject r) ->
+  gebExpToMinimalObject (gebMinimalObjectRepToExp r) = Just (r ** o)
+gebMinimalObjectRepresentationComplete {r} o =
+  ?gebMinimalObjectRepresentationComplete_hole
