@@ -1,7 +1,9 @@
 module Geb.Geb
 
 import Library.FunctionsAndRelations
+import RefinedSExp.SExp
 import Library.Decidability
+import RefinedSExp.SExp
 
 %default total
 
@@ -39,3 +41,147 @@ data Language : Type where
   -- | allows us to represent function application -- the fundamental
   -- | computation in any programming language.
   Minimal : Language
+
+--------------------------------------------
+---- S-expression representation of Geb ----
+--------------------------------------------
+
+-- | Having a representation of all Geb expressions as S-expressions allows
+-- | us to define, check, and interpret them in uniform ways, without having
+-- | to use custom ADTs in different metalanguages (where in this case
+-- | "metalanguages" refers to programming languages in which we might interpret
+-- | Geb expressions, such as Haskell, Rust, or Juvix).
+public export
+data GebAtom : Type where
+  -- | The notion of a language itself.
+  GALanguage : GebAtom
+
+  -- | The minimal programming language.
+  GAMinimal : GebAtom
+
+public export
+gaEncode : GebAtom -> Nat
+gaEncode GALanguage = 0
+gaEncode GAMinimal = 1
+
+public export
+gaDecode : Nat -> Maybe GebAtom
+gaDecode 0 = Just GALanguage
+gaDecode 1 = Just GAMinimal
+gaDecode _ = Nothing
+
+export
+gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
+gaDecodeEncodeIsJust GALanguage = Refl
+gaDecodeEncodeIsJust GAMinimal = Refl
+
+public export
+gebAtomToString : GebAtom -> String
+gebAtomToString GALanguage = "Language"
+gebAtomToString GAMinimal = "Minimal"
+
+public export
+Show GebAtom where
+  show a = ":" ++ gebAtomToString a
+
+public export
+gaEq : GebAtom -> GebAtom -> Bool
+gaEq a a' = gaEncode a == gaEncode a'
+
+public export
+Eq GebAtom where
+  (==) = gaEq
+
+public export
+Ord GebAtom where
+  a < a' = gaEncode a < gaEncode a'
+
+export
+gaDecEq : (a, a' : GebAtom) -> Dec (a = a')
+gaDecEq a a' with (decEq (gaEncode a) (gaEncode a'))
+  gaDecEq a a' | Yes eq = Yes $
+    justInjective $
+      trans
+        (sym (gaDecodeEncodeIsJust a))
+        (trans (cong gaDecode eq) (gaDecodeEncodeIsJust a'))
+  gaDecEq a a' | No neq = No $ \aeq => neq $ cong gaEncode aeq
+
+public export
+DecEq GebAtom where
+  decEq = gaDecEq
+
+public export
+GebSExp : Type
+GebSExp = SExp GebAtom
+
+public export
+GebSList : Type
+GebSList = SList GebAtom
+
+public export
+Show GebSExp where
+  show = fst (sexpShows show)
+
+public export
+Show GebSList where
+  show l = "(" ++ snd (sexpShows show) l ++ ")"
+
+public export
+gsDecEq : DecEqPred GebSExp
+gsDecEq = sexpDecEq gaDecEq
+
+public export
+gslDecEq : DecEqPred GebSList
+gslDecEq = slistDecEq gaDecEq
+
+public export
+DecEq GebSExp where
+  decEq = gsDecEq
+
+public export
+DecEq GebSList where
+  decEq = gslDecEq
+
+public export
+Eq GebSExp using decEqToEq where
+  (==) = (==)
+
+public export
+Ord GebSExp where
+  (<) = sexpLessThan (<)
+
+public export
+Ord GebSList where
+  (<) = slistLessThan (<)
+
+public export
+data GebExpressionClass : Type where
+  LanguageClass : GebExpressionClass
+
+public export
+gebClassToExp : GebExpressionClass -> GebSExp
+gebClassToExp LanguageClass = $^ GALanguage
+
+public export
+gebExpToClass : GebSExp -> Maybe GebExpressionClass
+gebExpToClass (GALanguage $* []) = Just LanguageClass
+gebExpToClass _ = Nothing
+
+export
+gebExpressionClassRepresentationComplete :
+  (c : GebExpressionClass) -> gebExpToClass (gebClassToExp c) = Just c
+gebExpressionClassRepresentationComplete LanguageClass = Refl
+
+public export
+gebLanguageToExp : Language -> GebSExp
+gebLanguageToExp Minimal = $^ GAMinimal
+
+public export
+gebExpToLanguage : GebSExp -> Maybe Language
+gebExpToLanguage (GAMinimal $* []) = Just Minimal
+gebExpToLanguage _ = Nothing
+
+export
+gebLanguageRepresentationComplete :
+  (l : Language) -> gebExpToLanguage (gebLanguageToExp l) = Just l
+gebLanguageRepresentationComplete Minimal = Refl
