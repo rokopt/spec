@@ -139,17 +139,11 @@ minimalObjectUnique o o' =
 -- | Minimal morphisms, indexed by their representations, as well as
 -- | by their domains and codomains.
 public export
-data MinimalMorphism :
-  MinimalMorphismRep -> {domainRep, codomainRep : MinimalObjectRep} ->
-  (domain : MinimalObject domainRep) ->
-  (codomain : MinimalObject codomainRep) ->
-  Type where
-    MinimalFromInitial : (codomainRep : MinimalObjectRep) ->
-      MinimalMorphism
-        (FromInitialRep codomainRep) Initial (minimalObject codomainRep)
-    MinimalToTerminal : (domainRep : MinimalObjectRep) ->
-      MinimalMorphism
-        (ToTerminalRep domainRep) (minimalObject domainRep) Terminal
+data MinimalMorphism : MinimalMorphismRep -> Type where
+  MinimalFromInitial : (codomainRep : MinimalObjectRep) ->
+    MinimalMorphism (FromInitialRep codomainRep)
+  MinimalToTerminal : (domainRep : MinimalObjectRep) ->
+    MinimalMorphism (ToTerminalRep domainRep)
 
 public export
 minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
@@ -173,16 +167,13 @@ minimalMorphismCodomain r = minimalObject (minimalMorphismRepCodomain r)
 
 -- | Translate a representation to a minimal morphism.
 public export
-minimalMorphism : (r : MinimalMorphismRep) ->
-  MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r)
+minimalMorphism : (r : MinimalMorphismRep) -> MinimalMorphism r
 minimalMorphism (FromInitialRep codomain) = MinimalFromInitial codomain
 minimalMorphism (ToTerminalRep domain) = MinimalToTerminal domain
 
 public export
 minimalMorphismRepCorrect : {r : MinimalMorphismRep} ->
-  (m : MinimalMorphism r
-    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
-  minimalMorphism r = m
+  (m : MinimalMorphism r) -> minimalMorphism r = m
 minimalMorphismRepCorrect
   {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) = Refl
 minimalMorphismRepCorrect
@@ -190,9 +181,7 @@ minimalMorphismRepCorrect
 
 public export
 minimalMorphismUnique : {r : MinimalMorphismRep} ->
-  (m, m': MinimalMorphism r
-    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
-  m = m'
+  (m, m': MinimalMorphism r) -> m = m'
 minimalMorphismUnique m m' =
   trans (sym $ minimalMorphismRepCorrect m) (minimalMorphismRepCorrect m')
 
@@ -216,9 +205,7 @@ interpretMinimalObjectRep r = interpretMinimalObject (minimalObject r)
 
 public export
 interpretMinimalMorphism :
-  {r : MinimalMorphismRep} ->
-  (m: MinimalMorphism r
-    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
+  {r : MinimalMorphismRep} -> (m: MinimalMorphism r) ->
   interpretMinimalObject (minimalMorphismDomain r) ->
   interpretMinimalObject (minimalMorphismCodomain r)
 interpretMinimalMorphism
@@ -261,21 +248,18 @@ minimalObjectQuoteUnquoteCorrect x = ?minimalObjectQuoteUnquoteCorrect_hole
 
 public export
 minimalMorphismQuote : {r : MinimalMorphismRep} ->
-  MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r) ->
-  interpretMinimalObject Expression
+  MinimalMorphism r -> interpretMinimalObject Expression
 minimalMorphismQuote m = ?minimalMorphismReflection_hole
 
 public export
 minimalMorphismUnquote : interpretMinimalObject Expression ->
-  (r : MinimalMorphismRep ** MinimalMorphism r
-    (minimalMorphismDomain r) (minimalMorphismCodomain r))
+  (r : MinimalMorphismRep ** MinimalMorphism r)
 minimalMorphismUnquote x = ?minimalMorphismUnquote_hole
 
 export
 minimalMorphismUnquoteQuoteCorrect :
   {r : MinimalMorphismRep} ->
-  (m: MinimalMorphism r
-    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
+  (m: MinimalMorphism r) ->
   minimalMorphismUnquote (minimalMorphismQuote m) = (r ** m)
 minimalMorphismUnquoteQuoteCorrect {r} m =
   ?minimalMorphismUnquoteQuoteCorrect_hole
@@ -300,9 +284,7 @@ data MinimalTerm : MinimalExpressionRep -> Type where
   FullyEvaluatedTerm : (r : MinimalObjectRep) ->
     interpretMinimalObjectRep r -> MinimalTerm (MinimalObjectExp r)
   MorphismTerm : (r : MinimalMorphismRep) ->
-    MinimalMorphism r
-      (minimalMorphismDomain r) (minimalMorphismCodomain r) ->
-    MinimalTerm (MinimalMorphismExp r)
+    MinimalMorphism r -> MinimalTerm (MinimalMorphismExp r)
   Application : (r : MinimalMorphismRep) ->
     MinimalTerm (MinimalMorphismExp r) ->
     MinimalTerm (MinimalObjectExp (minimalMorphismRepDomain r)) ->
@@ -658,17 +640,14 @@ gebMinimalMorphismRepRepresentationComplete (ToTerminalRep domainRep) =
 
 public export
 gebExpToMinimalMorphism :
-  GebSExp -> Maybe (r : MinimalMorphismRep **
-    MinimalMorphism r (minimalMorphismDomain r) (minimalMorphismCodomain r))
+  GebSExp -> Maybe (r : MinimalMorphismRep ** MinimalMorphism r)
 gebExpToMinimalMorphism x = case gebExpToMinimalMorphismRep x of
   Just r => Just (r ** minimalMorphism r)
   Nothing => Nothing
 
 public export
 gebMinimalMorphismRepresentationComplete :
-  {r : MinimalMorphismRep} ->
-  (m : MinimalMorphism r
-    (minimalMorphismDomain r) (minimalMorphismCodomain r)) ->
+  {r : MinimalMorphismRep} -> (m : MinimalMorphism r) ->
   gebExpToMinimalMorphism (gebMinimalMorphismRepToExp r) = Just (r ** m)
 gebMinimalMorphismRepresentationComplete {r} m =
   rewrite gebMinimalMorphismRepRepresentationComplete r in
