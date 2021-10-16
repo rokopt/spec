@@ -83,6 +83,14 @@ data MinimalObjectRep : Type where
   CoproductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
   ExpressionRep : MinimalObjectRep
 
+public export
+data MinimalMorphismRep : Type where
+
+public export
+data MinimalExpressionRep : Type where
+  MinimalObjectExp : MinimalObjectRep -> MinimalExpressionRep
+  MinimalMorphismExp : MinimalMorphismRep -> MinimalExpressionRep
+
 -- | Minimal objects, indexed by their representations.
 public export
 data MinimalObject : MinimalObjectRep -> Type where
@@ -126,6 +134,61 @@ minimalObjectUnique : {r : MinimalObjectRep} -> (o, o' : MinimalObject r) ->
 minimalObjectUnique o o' =
   trans (sym $ minimalObjectRepCorrect o) (minimalObjectRepCorrect o')
 
+-- | Minimal morphisms, indexed by their representations, as well as
+-- | by their domains and codomains.
+public export
+data MinimalMorphism :
+  MinimalMorphismRep -> {domainRep, codomainRep : MinimalObjectRep} ->
+  (domain : MinimalObject domainRep) ->
+  (codomain : MinimalObject codomainRep) ->
+  Type where
+
+public export
+minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
+minimalMorphismRepDomain _ impossible
+
+public export
+minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
+minimalMorphismRepCodomain _ impossible
+
+-- | Translate a representation to a minimal morphism.
+public export
+minimalMorphism : (r : MinimalMorphismRep) ->
+  MinimalMorphism r
+    (minimalObject (minimalMorphismRepDomain r))
+    (minimalObject (minimalMorphismRepCodomain r))
+minimalMorphism _ impossible
+
+public export
+minimalMorphismRepCorrect : {r : MinimalMorphismRep} ->
+  (m : MinimalMorphism r
+    (minimalObject (minimalMorphismRepDomain r))
+    (minimalObject (minimalMorphismRepCodomain r))) ->
+  minimalMorphism r = m
+minimalMorphismRepCorrect _ impossible
+
+public export
+minimalMorphismUnique : {r : MinimalMorphismRep} ->
+  (m, m' : MinimalMorphism r
+    (minimalObject (minimalMorphismRepDomain r))
+    (minimalObject (minimalMorphismRepCodomain r))) ->
+  m = m'
+minimalMorphismUnique m m' =
+  trans (sym $ minimalMorphismRepCorrect m) (minimalMorphismRepCorrect m')
+
+-----------------------------------------------------------------------------
+---- The interpretation into Idris-2 of the minimal programming language ----
+-----------------------------------------------------------------------------
+public export
+interpretMinimalObject : {r : MinimalObjectRep} -> MinimalObject r -> Type
+interpretMinimalObject Initial = Void
+interpretMinimalObject Terminal = ()
+interpretMinimalObject (Product o o') =
+  (interpretMinimalObject o, interpretMinimalObject o')
+interpretMinimalObject (Coproduct o o') =
+  Either (interpretMinimalObject o) (interpretMinimalObject o')
+interpretMinimalObject Expression = MinimalExpressionRep
+
 --------------------------------------------
 ---- S-expression representation of Geb ----
 --------------------------------------------
@@ -153,6 +216,11 @@ data GebAtom : Type where
   GACoproduct : GebAtom
   GAExpression : GebAtom
 
+  -- | The notion of a morphism of any programming language.
+  GAMorphism : GebAtom
+
+  -- | Morphisms common to all programming languages.
+
 public export
 gaEncode : GebAtom -> Nat
 gaEncode GALanguage = 0
@@ -163,6 +231,7 @@ gaEncode GATerminal = 4
 gaEncode GAProduct = 5
 gaEncode GACoproduct = 6
 gaEncode GAExpression = 7
+gaEncode GAMorphism = 8
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -174,6 +243,7 @@ gaDecode 4 = Just GATerminal
 gaDecode 5 = Just GAProduct
 gaDecode 6 = Just GACoproduct
 gaDecode 7 = Just GAExpression
+gaDecode 8 = Just GAMorphism
 gaDecode _ = Nothing
 
 export
@@ -186,6 +256,7 @@ gaDecodeEncodeIsJust GATerminal = Refl
 gaDecodeEncodeIsJust GAProduct = Refl
 gaDecodeEncodeIsJust GACoproduct = Refl
 gaDecodeEncodeIsJust GAExpression = Refl
+gaDecodeEncodeIsJust GAMorphism = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -197,6 +268,7 @@ gebAtomToString GATerminal = "Terminal"
 gebAtomToString GAProduct = "Product"
 gebAtomToString GACoproduct = "Coproduct"
 gebAtomToString GAExpression = "Expression"
+gebAtomToString GAMorphism = "Morphism"
 
 public export
 Show GebAtom where
@@ -280,16 +352,19 @@ public export
 data GebExpressionClass : Type where
   LanguageClass : GebExpressionClass
   ObjectClass : GebExpressionClass
+  MorphismClass : GebExpressionClass
 
 public export
 gebClassToExp : GebExpressionClass -> GebSExp
 gebClassToExp LanguageClass = $^ GALanguage
 gebClassToExp ObjectClass = $^ GAObject
+gebClassToExp MorphismClass = $^ GAMorphism
 
 public export
 gebExpToClass : GebSExp -> Maybe GebExpressionClass
 gebExpToClass (GALanguage $* []) = Just LanguageClass
 gebExpToClass (GAObject $* []) = Just ObjectClass
+gebExpToClass (GAMorphism $* []) = Just MorphismClass
 gebExpToClass _ = Nothing
 
 export
@@ -297,6 +372,7 @@ gebExpressionClassRepresentationComplete :
   (c : GebExpressionClass) -> gebExpToClass (gebClassToExp c) = Just c
 gebExpressionClassRepresentationComplete LanguageClass = Refl
 gebExpressionClassRepresentationComplete ObjectClass = Refl
+gebExpressionClassRepresentationComplete MorphismClass = Refl
 
 public export
 gebLanguageRepToExp : LanguageRep -> GebSExp
@@ -381,3 +457,40 @@ gebMinimalObjectRepresentationComplete {r} o =
   rewrite gebMinimalObjectRepRepresentationComplete r in
   rewrite minimalObjectRepCorrect o in
   Refl
+
+public export
+gebMinimalMorphismRepToExp : MinimalMorphismRep -> GebSExp
+gebMinimalMorphismRepToExp _ impossible
+
+public export
+gebExpToMinimalMorphismRep : GebSExp -> Maybe MinimalMorphismRep
+gebExpToMinimalMorphismRep _ = Nothing
+
+public export
+gebMinimalMorphismRepRepresentationComplete : (r : MinimalMorphismRep) ->
+  gebExpToMinimalMorphismRep (gebMinimalMorphismRepToExp r) = Just r
+gebMinimalMorphismRepRepresentationComplete _ impossible
+
+public export
+gebExpToMinimalMorphism :
+  GebSExp -> Maybe (r : MinimalMorphismRep **
+    MinimalMorphism r
+      (minimalObject (minimalMorphismRepDomain r))
+      (minimalObject (minimalMorphismRepCodomain r)))
+gebExpToMinimalMorphism x = case gebExpToMinimalMorphismRep x of
+  Just r => Just (r ** minimalMorphism r)
+  Nothing => Nothing
+
+public export
+gebMinimalMorphismRepresentationComplete :
+  {r : MinimalMorphismRep} ->
+  (m : MinimalMorphism r
+    (minimalObject (minimalMorphismRepDomain r))
+    (minimalObject (minimalMorphismRepCodomain r))) ->
+  gebExpToMinimalMorphism (gebMinimalMorphismRepToExp r) = Just (r ** m)
+gebMinimalMorphismRepresentationComplete {r} m impossible
+  {-
+  rewrite gebMinimalMorphismRepRepresentationComplete r in
+  rewrite minimalMorphismRepCorrect m in
+  Refl
+  -}
