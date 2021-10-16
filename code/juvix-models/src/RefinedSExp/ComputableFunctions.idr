@@ -332,6 +332,9 @@ data SubstitutionType : (representation : ComputableExp) -> Type where
     SCoproduct : {leftRep, rightRep : ComputableExp} ->
       SubstitutionType leftRep -> SubstitutionType rightRep ->
       SubstitutionType (CASCoproduct $* [leftRep, rightRep])
+    SAtomObject : SubstitutionType ($^ AtomType)
+    SListObject : SubstitutionType ($^ SListType)
+    SExpObject : SubstitutionType ($^ SExpType)
 
 public export
 data SubstitutionMorphism : (representation : ComputableExp) ->
@@ -405,6 +408,21 @@ data SubstitutionMorphism : (representation : ComputableExp) ->
       SubstitutionMorphism
         (CASCoproductElim $* [leftMorphismRep, rightMorphismRep])
         (SCoproduct domainLeft domainRight) codomain
+    SAtomIntro : (atom : ComputableAtom) -> {domainRep : ComputableExp} ->
+      (domain : SubstitutionType domainRep) ->
+      SubstitutionMorphism (AtomIntro $* [$^ atom]) domain SAtomObject
+    SAtomElim :
+      {atomRep, atomRep', domainRep, codomainRep, eqRep, neqRep :
+        ComputableExp} ->
+      {domain : SubstitutionType domainRep} ->
+      {codomain : SubstitutionType codomainRep} ->
+      (atom : SubstitutionMorphism atomRep domain SAtomObject) ->
+      (atom' : SubstitutionMorphism atomRep' domain SAtomObject) ->
+      (eq : SubstitutionMorphism eqRep domain codomain) ->
+      (neq : SubstitutionMorphism neqRep domain codomain) ->
+      SubstitutionMorphism
+        (AtomElim $* [atomRep, atomRep', domainRep, codomainRep, eqRep, neqRep])
+        domain codomain
 
 public export
 data SubstitutionTerm : (representation : ComputableExp) ->
@@ -432,6 +450,8 @@ data SubstitutionTerm : (representation : ComputableExp) ->
       SubstitutionTerm rightTermRep rightType ->
       SubstitutionTerm (CASRight $* [rightTermRep])
         (SCoproduct leftType rightType)
+    SAtom : (atom : ComputableAtom) ->
+      SubstitutionTerm (AtomTerm $* [$^ atom]) SAtomObject
 
 public export
 checkSubstitutionType : (representation : ComputableExp) ->
@@ -462,6 +482,7 @@ checkSubstitutionTypeComplete (SCoproduct leftType rightType) =
   rewrite (checkSubstitutionTypeComplete leftType) in
   rewrite (checkSubstitutionTypeComplete rightType) in
   Refl
+checkSubstitutionTypeComplete _ = ?checkSubstitutionTypeComplete_hole
 
 public export
 checkSubstitutionMorphism : (representation : ComputableExp) ->
@@ -546,6 +567,7 @@ checkSubstitutionTermComplete (SLeft leftTerm) =
   ?checkSubstitutionTermComplete_hole_left
 checkSubstitutionTermComplete (SRight rightTerm) =
   ?checkSubstitutionTermComplete_hole_right
+checkSubstitutionTermComplete _ = ?checkSubstitutionTermComplete_hole
 
 ----------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the substitutive category ----
@@ -559,6 +581,7 @@ interpretSubstitutionType (SProduct left right) =
   (interpretSubstitutionType left, interpretSubstitutionType right)
 interpretSubstitutionType (SCoproduct left right) =
   Either (interpretSubstitutionType left) (interpretSubstitutionType right)
+interpretSubstitutionType _ = ?interpretSubstitutionType_hole
 
 public export
 interpretSubstitutionMorphism :
@@ -594,6 +617,7 @@ interpretSubstitutionMorphism
     case eitherTerm of
       Left leftTerm => interpretSubstitutionMorphism leftMorphism leftTerm
       Right rightTerm => interpretSubstitutionMorphism rightMorphism rightTerm
+interpretSubstitutionMorphism _ _ = ?checkSubstitutionMorphismComplete_hole
 
 public export
 interpretSubstitutionTerm :
@@ -608,6 +632,7 @@ interpretSubstitutionTerm (SLeft leftTerm) =
   Left $ interpretSubstitutionTerm leftTerm
 interpretSubstitutionTerm (SRight rightTerm) =
   Right $ interpretSubstitutionTerm rightTerm
+interpretSubstitutionTerm _ = ?interpretSubstitutionTerm_hole
 
 -----------------------------------------------------
 ---- Term reduction in the substitutive category ----
@@ -624,6 +649,7 @@ bigStepSubstitution (SLeft leftTerm) =
   SLeft (bigStepSubstitution leftTerm)
 bigStepSubstitution (SRight rightTerm) =
   SRight (bigStepSubstitution rightTerm)
+bigStepSubstitution _ = ?bigStepSubstitution_hole
 
 public export
 bigStepSubstitutionCorrect : {representation, typeRep : ComputableExp} ->
@@ -640,6 +666,7 @@ bigStepSubstitutionCorrect (SLeft leftTerm) =
   ?bigStepSubstitutionCorrect_hole_left
 bigStepSubstitutionCorrect (SRight rightTerm) =
   ?bigStepSubstitutionCorrect_hole_right
+bigStepSubstitutionCorrect _ = ?bigStepSubstitutionCorrect_hole
 
 public export
 bigStepSubstitutionIdempotent : {representation, typeRep : ComputableExp} ->
@@ -655,6 +682,7 @@ bigStepSubstitutionIdempotent (SLeft leftTerm) =
   ?bigStepSubstitutionIdempotent_hole_left
 bigStepSubstitutionIdempotent (SRight rightTerm) =
   ?bigStepSubstitutionIdempotent_hole_right
+bigStepSubstitutionIdempotent _ = ?bigStepSubstitutionIdempotent_hole
 
 public export
 smallStepSubstitution : {representation, typeRep : ComputableExp} ->
@@ -676,6 +704,7 @@ smallStepSubstitution (SRight rightTerm) =
   case smallStepSubstitution rightTerm of
     Just rightReduced => Just $ SRight rightReduced
     Nothing => Nothing
+smallStepSubstitution _ = ?smallStepSubstitution_hole
 
 public export
 smallStepSubstitutionCorrect : {representation, typeRep : ComputableExp} ->
@@ -694,6 +723,7 @@ smallStepSubstitutionCorrect
 smallStepSubstitutionCorrect
   (SRight rightTerm) _ just =
     ?smallStepSubstitutionCorrect_hole_right
+smallStepSubstitutionCorrect _ _ _ = ?smallStepSubstitutionCorrect_hole
 
 public export
 bigStepSubstitutionComplete : {representation, typeRep : ComputableExp} ->
@@ -707,3 +737,4 @@ bigStepSubstitutionComplete (SLeft leftTerm) =
   ?bigStepSubstitutionComplete_hole_left
 bigStepSubstitutionComplete (SRight rightTerm) =
   ?bigStepSubstitutionComplete_hole_right
+bigStepSubstitutionComplete _ = ?bigStepSubstitutionComplete_hole
