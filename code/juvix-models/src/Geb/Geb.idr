@@ -51,6 +51,14 @@ public export
 language : (r : LanguageRep) -> Language r
 language MinimalRep = Minimal
 
+public export
+languageRepCorrect : {r : LanguageRep} -> (l : Language r) -> language r = l
+languageRepCorrect Minimal = Refl
+
+public export
+languageUnique : {r : LanguageRep} -> (l, l' : Language r) -> l = l'
+languageUnique l l' = trans (sym $ languageRepCorrect l) (languageRepCorrect l')
+
 -------------------------
 ---- Minimal objects ----
 -------------------------
@@ -96,6 +104,27 @@ minimalObject (ProductRep o o') =
 minimalObject (CoproductRep o o') =
   Coproduct (minimalObject o) (minimalObject o')
 minimalObject ExpressionRep = Expression
+
+public export
+minimalObjectRepCorrect : {r : MinimalObjectRep} -> (o : MinimalObject r) ->
+  minimalObject r = o
+minimalObjectRepCorrect Initial = Refl
+minimalObjectRepCorrect Terminal = Refl
+minimalObjectRepCorrect (Product o o') =
+  rewrite minimalObjectRepCorrect o in
+  rewrite minimalObjectRepCorrect o' in
+  Refl
+minimalObjectRepCorrect (Coproduct o o') =
+  rewrite minimalObjectRepCorrect o in
+  rewrite minimalObjectRepCorrect o' in
+  Refl
+minimalObjectRepCorrect Expression = Refl
+
+public export
+minimalObjectUnique : {r : MinimalObjectRep} -> (o, o' : MinimalObject r) ->
+  o = o'
+minimalObjectUnique o o' =
+  trans (sym $ minimalObjectRepCorrect o) (minimalObjectRepCorrect o')
 
 --------------------------------------------
 ---- S-expression representation of Geb ----
@@ -271,17 +300,17 @@ gebExpressionClassRepresentationComplete ObjectClass = Refl
 
 public export
 gebLanguageRepToExp : LanguageRep -> GebSExp
-gebLanguageRepToExp _ = ?gebLanguageRepToExp_hole
+gebLanguageRepToExp MinimalRep = $^ GAMinimal
 
 public export
 gebExpToLanguageRep : GebSExp -> Maybe LanguageRep
-gebExpToLanguageRep _ = ?gebExpToLanguageRep_hole
+gebExpToLanguageRep (GAMinimal $* []) = Just MinimalRep
+gebExpToLanguageRep _ = Nothing
 
 public export
 gebLanguageRepRepresentationComplete : (r : LanguageRep) ->
   gebExpToLanguageRep (gebLanguageRepToExp r) = Just r
-gebLanguageRepRepresentationComplete _ =
-  ?gebLanguageRepRepresentationComplete_hole
+gebLanguageRepRepresentationComplete MinimalRep = Refl
 
 public export
 gebExpToLanguage : GebSExp -> Maybe (r : LanguageRep ** Language r)
@@ -293,21 +322,49 @@ public export
 gebLanguageRepresentationComplete : {r : LanguageRep} -> (l : Language r) ->
   gebExpToLanguage (gebLanguageRepToExp r) = Just (r ** l)
 gebLanguageRepresentationComplete {r} l =
-  ?gebLanguageRepresentationComplete_hole
+  rewrite gebLanguageRepRepresentationComplete r in
+  rewrite languageRepCorrect l in
+  Refl
 
 public export
 gebMinimalObjectRepToExp : MinimalObjectRep -> GebSExp
-gebMinimalObjectRepToExp _ = ?gebMinimalObjectToExp_hole
+gebMinimalObjectRepToExp InitialRep = $^ GAInitial
+gebMinimalObjectRepToExp TerminalRep = $^ GATerminal
+gebMinimalObjectRepToExp (ProductRep r r') =
+  GAProduct $* [gebMinimalObjectRepToExp r, gebMinimalObjectRepToExp r']
+gebMinimalObjectRepToExp (CoproductRep r r') =
+  GACoproduct $* [gebMinimalObjectRepToExp r, gebMinimalObjectRepToExp r']
+gebMinimalObjectRepToExp ExpressionRep = $^ GAExpression
 
 public export
 gebExpToMinimalObjectRep : GebSExp -> Maybe MinimalObjectRep
-gebExpToMinimalObjectRep _ = ?gebExpToMinimalObjectRep_hole
+gebExpToMinimalObjectRep (GAInitial $* []) = Just InitialRep
+gebExpToMinimalObjectRep (GATerminal $* []) = Just TerminalRep
+gebExpToMinimalObjectRep (GAProduct $* [r, r']) =
+  case (gebExpToMinimalObjectRep r, gebExpToMinimalObjectRep r') of
+    (Just o, Just o') => Just $ ProductRep o o'
+    _ => Nothing
+gebExpToMinimalObjectRep (GACoproduct $* [r, r']) =
+  case (gebExpToMinimalObjectRep r, gebExpToMinimalObjectRep r') of
+    (Just o, Just o') => Just $ CoproductRep o o'
+    _ => Nothing
+gebExpToMinimalObjectRep (GAExpression $* []) = Just ExpressionRep
+gebExpToMinimalObjectRep _ = Nothing
 
 public export
 gebMinimalObjectRepRepresentationComplete : (r : MinimalObjectRep) ->
   gebExpToMinimalObjectRep (gebMinimalObjectRepToExp r) = Just r
-gebMinimalObjectRepRepresentationComplete _ =
-  ?gebMinimalObjectRepRepresentationComplete_hole
+gebMinimalObjectRepRepresentationComplete InitialRep = Refl
+gebMinimalObjectRepRepresentationComplete TerminalRep = Refl
+gebMinimalObjectRepRepresentationComplete (ProductRep r r') =
+  rewrite gebMinimalObjectRepRepresentationComplete r in
+  rewrite gebMinimalObjectRepRepresentationComplete r' in
+  Refl
+gebMinimalObjectRepRepresentationComplete (CoproductRep r r') =
+  rewrite gebMinimalObjectRepRepresentationComplete r in
+  rewrite gebMinimalObjectRepRepresentationComplete r' in
+  Refl
+gebMinimalObjectRepRepresentationComplete ExpressionRep = Refl
 
 public export
 gebExpToMinimalObject :
@@ -321,4 +378,6 @@ gebMinimalObjectRepresentationComplete :
   {r : MinimalObjectRep} -> (o : MinimalObject r) ->
   gebExpToMinimalObject (gebMinimalObjectRepToExp r) = Just (r ** o)
 gebMinimalObjectRepresentationComplete {r} o =
-  ?gebMinimalObjectRepresentationComplete_hole
+  rewrite gebMinimalObjectRepRepresentationComplete r in
+  rewrite minimalObjectRepCorrect o in
+  Refl
