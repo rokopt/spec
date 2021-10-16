@@ -7,6 +7,8 @@ modules = Library.TypesAndFunctions
     , IdrisSTL.Semiring
     , External.IntegerSquareRoot
     , Library.Decidability
+    , Geb.AlgebraicReflection
+    , Geb.Test.AlgebraicReflectionTest
     , Category.Category
     , Library.List
     , Theories.SimplyTypedLambdaCalculus
