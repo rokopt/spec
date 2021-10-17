@@ -589,6 +589,45 @@ minimalMorphismQuoteUnquoteCorrect :
   minimalMorphismQuote (minimalMorphismUnquote x) = x
 minimalMorphismQuoteUnquoteCorrect x = ?minimalMorphismQuoteUnquoteCorrect_hole
 
+------------------------------------------------------
+---- Morphism transformations ("compiler passes") ----
+------------------------------------------------------
+
+public export
+MinimalMorphismTransform : Type
+MinimalMorphismTransform = MinimalMorphismRep -> MinimalMorphismRep
+
+-- | A correct morphism transformation preserves the morphism's domain.
+public export
+MinimalMorphismTransformDomainCorrect : MinimalMorphismTransform -> Type
+MinimalMorphismTransformDomainCorrect transform = (m : MinimalMorphismRep) ->
+  interpretMinimalMorphismDomain (transform m) =
+    interpretMinimalMorphismDomain m
+
+-- | A correct morphism transformation preserves the morphism's codomain.
+public export
+MinimalMorphismTransformCodomainCorrect : MinimalMorphismTransform -> Type
+MinimalMorphismTransformCodomainCorrect transform = (m : MinimalMorphismRep) ->
+  interpretMinimalMorphismCodomain (transform m) =
+    interpretMinimalMorphismCodomain m
+
+-- | A correct morphism transformation preserves extensional equality.
+public export
+MinimalMorphismTransformCorrect : (transform : MinimalMorphismTransform) ->
+  (domainTransformCorrect :
+    MinimalMorphismTransformDomainCorrect transform) ->
+  (codomainTransformCorrect :
+    MinimalMorphismTransformCodomainCorrect transform) ->
+  Type
+MinimalMorphismTransformCorrect
+  transform domainTransformCorrect codomainTransformCorrect =
+    (m : MinimalMorphismRep) ->
+    (x : interpretMinimalMorphismDomain m) ->
+      (rewrite sym (codomainTransformCorrect m) in
+       interpretMinimalMorphismRep (transform m)
+         (rewrite domainTransformCorrect m in x)) =
+       interpretMinimalMorphismRep m x
+
 ------------------------------------------------------------
 ---- Term reduction in the minimal programming language ----
 ------------------------------------------------------------
@@ -661,38 +700,3 @@ minimalMorphismToTerm : (m : MinimalMorphismRep) ->
       (minimalMorphismRepDomain m)
       (minimalMorphismRepCodomain m)
 minimalMorphismToTerm m = FullyEvaluatedTerm $ UnappliedMorphismTerm m
-
-public export
-MinimalMorphismTransform : Type
-MinimalMorphismTransform = MinimalMorphismRep -> MinimalMorphismRep
-
--- | A correct morphism transformation preserves the morphism's domain.
-public export
-MinimalMorphismTransformDomainCorrect : MinimalMorphismTransform -> Type
-MinimalMorphismTransformDomainCorrect transform = (m : MinimalMorphismRep) ->
-  interpretMinimalMorphismDomain (transform m) =
-    interpretMinimalMorphismDomain m
-
--- | A correct morphism transformation preserves the morphism's codomain.
-public export
-MinimalMorphismTransformCodomainCorrect : MinimalMorphismTransform -> Type
-MinimalMorphismTransformCodomainCorrect transform = (m : MinimalMorphismRep) ->
-  interpretMinimalMorphismCodomain (transform m) =
-    interpretMinimalMorphismCodomain m
-
--- | A correct morphism transformation preserves extensional equality.
-public export
-MinimalMorphismTransformCorrect : (transform : MinimalMorphismTransform) ->
-  (domainTransformCorrect :
-    MinimalMorphismTransformDomainCorrect transform) ->
-  (codomainTransformCorrect :
-    MinimalMorphismTransformCodomainCorrect transform) ->
-  Type
-MinimalMorphismTransformCorrect
-  transform domainTransformCorrect codomainTransformCorrect =
-    (m : MinimalMorphismRep) ->
-    (x : interpretMinimalMorphismDomain m) ->
-      (rewrite sym (codomainTransformCorrect m) in
-       interpretMinimalMorphismRep (transform m)
-         (rewrite domainTransformCorrect m in x)) =
-       interpretMinimalMorphismRep m x
