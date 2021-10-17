@@ -446,6 +446,10 @@ gebExpressionClassRepresentationComplete MorphismClass = Refl
 gebExpressionClassRepresentationComplete TermClass = Refl
 
 public export
+Show GebExpressionClass where
+  show c = show (gebClassToExp c)
+
+public export
 gebLanguageRepToExp : LanguageRep -> GebSExp
 gebLanguageRepToExp MinimalRep = $^ GAMinimal
 
@@ -458,6 +462,10 @@ public export
 gebLanguageRepRepresentationComplete : (r : LanguageRep) ->
   gebExpToLanguageRep (gebLanguageRepToExp r) = Just r
 gebLanguageRepRepresentationComplete MinimalRep = Refl
+
+public export
+Show LanguageRep where
+  show l = show (gebLanguageRepToExp l)
 
 public export
 gebMinimalObjectRepToExp : MinimalObjectRep -> GebSExp
@@ -500,6 +508,10 @@ gebMinimalObjectRepRepresentationComplete (CoproductRep r r') =
 gebMinimalObjectRepRepresentationComplete ExpressionRep = Refl
 
 public export
+Show MinimalObjectRep where
+  show o = show (gebMinimalObjectRepToExp o)
+
+public export
 gebMinimalMorphismRepToExp : MinimalMorphismRep -> GebSExp
 gebMinimalMorphismRepToExp (IdentityRep objectRep) =
   GAIdentity $* [gebMinimalObjectRepToExp objectRep]
@@ -535,6 +547,10 @@ gebMinimalMorphismRepRepresentationComplete (ToTerminalRep domainRep) =
   ?gebMinimalMorphismRepRepresentationComplete_hole_toterminal
 
 public export
+Show MinimalMorphismRep where
+  show m = show (gebMinimalMorphismRepToExp m)
+
+public export
 gebMinimalTermToExp : {r : MinimalExpressionRep} -> MinimalTerm r -> GebSExp
 gebMinimalTermToExp t = ?gebMinimalTermToExp_hole
 
@@ -549,3 +565,7 @@ gebMinimalTermRepresentationComplete :
   gebExpToMinimalTerm (gebMinimalTermToExp {r} t) = Just (r ** t)
 gebMinimalTermRepresentationComplete t =
   ?gebMinimalTermRepresentationComplete_hole
+
+public export
+(r : MinimalExpressionRep) => Show (MinimalTerm r) where
+  show t = show (gebMinimalTermToExp t)
