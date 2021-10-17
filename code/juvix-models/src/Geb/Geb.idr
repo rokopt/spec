@@ -292,21 +292,21 @@ Show GebExpressionClass where
 -- | codomains, input-output behavior, and the effects of functions.
 public export
 data Language : Type where
-  MinimalRep : Language
+  MinimalLanguage : Language
 
 public export
 gebLanguageToExp : Language -> GebSExp
-gebLanguageToExp MinimalRep = $^ GAMinimal
+gebLanguageToExp MinimalLanguage = $^ GAMinimal
 
 public export
 gebExpToLanguage : GebSExp -> Maybe Language
-gebExpToLanguage (GAMinimal $* []) = Just MinimalRep
+gebExpToLanguage (GAMinimal $* []) = Just MinimalLanguage
 gebExpToLanguage _ = Nothing
 
 public export
 gebLanguageRepresentationComplete : (r : Language) ->
   gebExpToLanguage (gebLanguageToExp r) = Just r
-gebLanguageRepresentationComplete MinimalRep = Refl
+gebLanguageRepresentationComplete MinimalLanguage = Refl
 
 public export
 Show Language where
