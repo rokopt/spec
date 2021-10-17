@@ -415,6 +415,22 @@ mutual
       MinimalMorphism
     CoproductIntroLeft : (a, b : MinimalObject) -> MinimalMorphism
     CoproductIntroRight : (a, b : MinimalObject) -> MinimalMorphism
+    ExpressionIntro : MinimalExpression -> MinimalMorphism
+    ExpressionElim : (exp, exp', eqCase, neqCase : MinimalMorphism) ->
+      {auto expDomainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
+        (minimalMorphismDomain exp) (minimalMorphismDomain exp')} ->
+      {auto eqDomainMatches : AreDecEq Geb.Geb.minimalObjectDecEq
+        (minimalMorphismDomain exp) (minimalMorphismDomain eqCase)} ->
+      {auto neqDomainMatches : AreDecEq Geb.Geb.minimalObjectDecEq
+        (minimalMorphismDomain exp) (minimalMorphismDomain neqCase)} ->
+      {auto eqCodomainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
+        (minimalMorphismCodomain eqCase) (minimalMorphismCodomain neqCase)} ->
+      MinimalMorphism
+
+  public export
+  data MinimalExpression : Type where
+    MinimalObjectExp : MinimalObject -> MinimalExpression
+    MinimalMorphismExp : MinimalMorphism -> MinimalExpression
 
   public export
   minimalMorphismDomain : MinimalMorphism -> MinimalObject
@@ -517,11 +533,6 @@ mutual
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
 -----------------------------------------------------------------------------
-
-public export
-data MinimalExpression : Type where
-  MinimalObjectExp : MinimalObject -> MinimalExpression
-  MinimalMorphismExp : MinimalMorphism -> MinimalExpression
 
 public export
 interpretMinimalObject : MinimalObject -> Type
