@@ -5,6 +5,7 @@ import RefinedSExp.SExp
 import Library.Decidability
 import RefinedSExp.SExp
 import Data.SortedSet
+import Data.SortedMap
 
 %default total
 
@@ -222,6 +223,14 @@ GebSet = SortedSet GebSExp
 public export
 gebSet : GebSList -> GebSet
 gebSet = fromList
+
+public export
+GebMap : Type
+GebMap = SortedMap GebAtom GebSList
+
+public export
+gebMap : List (GebAtom, GebSList) -> GebMap
+gebMap = fromList
 
 -- | One of the concepts for which we have an S-expression representation is
 -- | the class of S-expression itself -- whether an S-expression represents
