@@ -272,30 +272,35 @@ minimalMorphismQuoteUnquoteCorrect x = ?minimalMorphismQuoteUnquoteCorrect_hole
 -- | do not have in the category-theoretical representation.
 
 public export
-data MinimalTerm : MinimalExpressionRep -> Type where
-  FullyEvaluatedTerm : (r : MinimalObjectRep) ->
-    interpretMinimalObjectRep r -> MinimalTerm (MinimalObjectExp r)
-  MorphismTerm :
-    (r : MinimalMorphismRep) -> MinimalTerm (MinimalMorphismExp r)
-  Application : (r : MinimalMorphismRep) ->
-    MinimalTerm (MinimalObjectExp (minimalMorphismRepDomain r)) ->
-    MinimalTerm (MinimalObjectExp (minimalMorphismRepCodomain r))
+data MinimalTermType : Type where
+  MinimalTypeTerm : (type : MinimalObjectRep) -> MinimalTermType
+  MinimalMorphismTerm : (domain, codomain : MinimalObjectRep) -> MinimalTermType
 
 public export
-minimalTermObjectRep : {r : MinimalExpressionRep} ->
-  MinimalTerm r -> MinimalObjectRep
-minimalTermObjectRep {r} t = ?minimalTermObjectRep_hole
+data MinimalTerm : MinimalTermType -> Type where
+  FullyEvaluatedTerm : (o : MinimalObjectRep) ->
+    interpretMinimalObjectRep o -> MinimalTerm (MinimalTypeTerm o)
+  Application : {domain, codomain : MinimalObjectRep} ->
+    MinimalTerm (MinimalMorphismTerm domain codomain) ->
+    MinimalTerm (MinimalTypeTerm domain) ->
+    MinimalTerm (MinimalTypeTerm codomain)
 
 public export
-interpretMinimalTermType : {r : MinimalExpressionRep} -> MinimalTerm r -> Type
-interpretMinimalTermType (FullyEvaluatedTerm r _) = interpretMinimalObjectRep r
-interpretMinimalTermType (MorphismTerm m) = interpretMinimalMorphismType m
-interpretMinimalTermType (Application m _) = interpretMinimalMorphismCodomain m
+interpretMinimalTermType : MinimalTermType -> Type
+interpretMinimalTermType type = ?interpretMinimalTermType_hole
 
 public export
-interpretMinimalTerm : {r : MinimalExpressionRep} -> (t : MinimalTerm r) ->
-  interpretMinimalTermType {r} t
-interpretMinimalTerm {r} t = ?interpretMinimalTerm_hole
+interpretMinimalTerm : {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  interpretMinimalTermType type
+interpretMinimalTerm {type} term = ?interpretMinimalTerm_hole
+
+public export
+minimalMorphismToTerm : (m : MinimalMorphismRep) ->
+  MinimalTerm $
+    MinimalMorphismTerm
+      (minimalMorphismRepDomain m)
+      (minimalMorphismRepCodomain m)
+minimalMorphismToTerm m = ?minimalMorphismToTerm_hole
 
 --------------------------------------------
 ---- S-expression representation of Geb ----
@@ -636,21 +641,21 @@ Show MinimalMorphismRep where
   show m = show (gebMinimalMorphismRepToExp m)
 
 public export
-gebMinimalTermToExp : {r : MinimalExpressionRep} -> MinimalTerm r -> GebSExp
+gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
 gebMinimalTermToExp t = ?gebMinimalTermToExp_hole
 
 public export
 gebExpToMinimalTerm :
-  GebSExp -> Maybe (r : MinimalExpressionRep ** MinimalTerm r)
+  GebSExp -> Maybe (type : MinimalTermType ** MinimalTerm type)
 gebExpToMinimalTerm x = ?gebExpToMinimalTerm_hole
 
 public export
 gebMinimalTermRepresentationComplete :
-  {r : MinimalExpressionRep} -> (t : MinimalTerm r) ->
-  gebExpToMinimalTerm (gebMinimalTermToExp {r} t) = Just (r ** t)
-gebMinimalTermRepresentationComplete t =
+  {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  gebExpToMinimalTerm (gebMinimalTermToExp {type} term) = Just (type ** term)
+gebMinimalTermRepresentationComplete term =
   ?gebMinimalTermRepresentationComplete_hole
 
 public export
-(r : MinimalExpressionRep) => Show (MinimalTerm r) where
-  show t = show (gebMinimalTermToExp t)
+(type : MinimalTermType) => Show (MinimalTerm type) where
+  show term = show (gebMinimalTermToExp term)
