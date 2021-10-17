@@ -4,6 +4,7 @@ import Library.FunctionsAndRelations
 import RefinedSExp.SExp
 import Library.Decidability
 import RefinedSExp.SExp
+import Data.SortedSet
 
 %default total
 
@@ -213,6 +214,14 @@ Ord GebSExp where
 public export
 Ord GebSList where
   (<) = slistLessThan (<)
+
+public export
+GebSet : Type
+GebSet = SortedSet GebSExp
+
+public export
+gebSet : GebSList -> GebSet
+gebSet = fromList
 
 -- | One of the concepts for which we have an S-expression representation is
 -- | the class of S-expression itself -- whether an S-expression represents
