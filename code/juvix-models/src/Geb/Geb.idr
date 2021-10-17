@@ -17,7 +17,10 @@ import RefinedSExp.SExp
 -- | express metalogic; we could also say that it can reflect itself, in that
 -- | it can define functions on its own expressions.  (So perhaps we might
 -- | say something like "computable metacategory" rather than "programming
--- | language".)
+-- | language".)  A combination of products, coproducts, and decidable
+-- | equality gives us the ability to perform substitution, which in turn
+-- | allows us to represent function application -- the fundamental
+-- | computation in any programming language.
 -- |
 -- | A language is unsuitable as a metalogic if it is inconsistent -- if its
 -- | operational semantics allow non-termination, or if it has any partial
@@ -29,35 +32,9 @@ import RefinedSExp.SExp
 -- | what is required for Gödel's incompleteness theorems to apply.  There is
 -- | also a maximal programming language:  the universal Turing machine,
 -- | with non-terminating and partial functions.
-
 public export
 data LanguageRep : Type where
   MinimalRep : LanguageRep
-
-public export
-data Language : LanguageRep -> Type where
-  -- | The minimal programming language required for Gödel's incompleteness
-  -- | theorems to apply.  We treat this abstractly, as a category with
-  -- | an initial object, a terminal object, finite products and coproducts,
-  -- | an object which we interpret as the type of representations of the
-  -- | language's objects and morphisms, and a decidable equality on those
-  -- | representations.  The combination of products, coproducts, and decidable
-  -- | equality gives us the ability to perform substitution, which in turn
-  -- | allows us to represent function application -- the fundamental
-  -- | computation in any programming language.
-  Minimal : Language MinimalRep
-
-public export
-language : (r : LanguageRep) -> Language r
-language MinimalRep = Minimal
-
-public export
-languageRepCorrect : {r : LanguageRep} -> (l : Language r) -> language r = l
-languageRepCorrect Minimal = Refl
-
-public export
-languageUnique : {r : LanguageRep} -> (l, l' : Language r) -> l = l'
-languageUnique l l' = trans (sym $ languageRepCorrect l) (languageRepCorrect l')
 
 -------------------------
 ---- Minimal objects ----
@@ -536,20 +513,6 @@ public export
 gebLanguageRepRepresentationComplete : (r : LanguageRep) ->
   gebExpToLanguageRep (gebLanguageRepToExp r) = Just r
 gebLanguageRepRepresentationComplete MinimalRep = Refl
-
-public export
-gebExpToLanguage : GebSExp -> Maybe (r : LanguageRep ** Language r)
-gebExpToLanguage x = case gebExpToLanguageRep x of
-  Just r => Just (r ** language r)
-  Nothing => Nothing
-
-public export
-gebLanguageRepresentationComplete : {r : LanguageRep} -> (l : Language r) ->
-  gebExpToLanguage (gebLanguageRepToExp r) = Just (r ** l)
-gebLanguageRepresentationComplete {r} l =
-  rewrite gebLanguageRepRepresentationComplete r in
-  rewrite languageRepCorrect l in
-  Refl
 
 public export
 gebMinimalObjectRepToExp : MinimalObjectRep -> GebSExp
