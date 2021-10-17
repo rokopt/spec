@@ -291,26 +291,26 @@ Show GebExpressionClass where
 -- | S-expressions, and the types are specifications of the domains,
 -- | codomains, input-output behavior, and the effects of functions.
 public export
-data LanguageRep : Type where
-  MinimalRep : LanguageRep
+data Language : Type where
+  MinimalRep : Language
 
 public export
-gebLanguageRepToExp : LanguageRep -> GebSExp
-gebLanguageRepToExp MinimalRep = $^ GAMinimal
+gebLanguageToExp : Language -> GebSExp
+gebLanguageToExp MinimalRep = $^ GAMinimal
 
 public export
-gebExpToLanguageRep : GebSExp -> Maybe LanguageRep
-gebExpToLanguageRep (GAMinimal $* []) = Just MinimalRep
-gebExpToLanguageRep _ = Nothing
+gebExpToLanguage : GebSExp -> Maybe Language
+gebExpToLanguage (GAMinimal $* []) = Just MinimalRep
+gebExpToLanguage _ = Nothing
 
 public export
-gebLanguageRepRepresentationComplete : (r : LanguageRep) ->
-  gebExpToLanguageRep (gebLanguageRepToExp r) = Just r
-gebLanguageRepRepresentationComplete MinimalRep = Refl
+gebLanguageRepresentationComplete : (r : Language) ->
+  gebExpToLanguage (gebLanguageToExp r) = Just r
+gebLanguageRepresentationComplete MinimalRep = Refl
 
 public export
-Show LanguageRep where
-  show l = show (gebLanguageRepToExp l)
+Show Language where
+  show l = show (gebLanguageToExp l)
 
 -------------------------
 ---- Minimal objects ----
