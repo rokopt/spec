@@ -204,10 +204,24 @@ interpretMinimalObjectRep : MinimalObjectRep -> Type
 interpretMinimalObjectRep r = interpretMinimalObject (minimalObject r)
 
 public export
+interpretMinimalMorphismDomain : MinimalMorphismRep -> Type
+interpretMinimalMorphismDomain r =
+  interpretMinimalObject (minimalMorphismDomain r)
+
+public export
+interpretMinimalMorphismCodomain : MinimalMorphismRep -> Type
+interpretMinimalMorphismCodomain r =
+  interpretMinimalObject (minimalMorphismCodomain r)
+
+public export
+interpretMinimalMorphismType : MinimalMorphismRep -> Type
+interpretMinimalMorphismType r =
+  interpretMinimalMorphismDomain r -> interpretMinimalMorphismCodomain r
+
+public export
 interpretMinimalMorphism :
   {r : MinimalMorphismRep} -> (m: MinimalMorphism r) ->
-  interpretMinimalObject (minimalMorphismDomain r) ->
-  interpretMinimalObject (minimalMorphismCodomain r)
+  interpretMinimalMorphismType r
 interpretMinimalMorphism
   {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) x =
     ?interpretMinimalMorphism_hole_frominitial
@@ -283,10 +297,9 @@ public export
 data MinimalTerm : MinimalExpressionRep -> Type where
   FullyEvaluatedTerm : (r : MinimalObjectRep) ->
     interpretMinimalObjectRep r -> MinimalTerm (MinimalObjectExp r)
-  MorphismTerm : (r : MinimalMorphismRep) ->
-    MinimalMorphism r -> MinimalTerm (MinimalMorphismExp r)
+  MorphismTerm :
+    (r : MinimalMorphismRep) -> MinimalTerm (MinimalMorphismExp r)
   Application : (r : MinimalMorphismRep) ->
-    MinimalTerm (MinimalMorphismExp r) ->
     MinimalTerm (MinimalObjectExp (minimalMorphismRepDomain r)) ->
     MinimalTerm (MinimalObjectExp (minimalMorphismRepCodomain r))
 
@@ -297,7 +310,9 @@ minimalTermObjectRep {r} t = ?minimalTermObjectRep_hole
 
 public export
 interpretMinimalTermType : {r : MinimalExpressionRep} -> MinimalTerm r -> Type
-interpretMinimalTermType {r} t = ?interpretMinimalTermType_hole
+interpretMinimalTermType (FullyEvaluatedTerm r _) = interpretMinimalObjectRep r
+interpretMinimalTermType (MorphismTerm m) = interpretMinimalMorphismType m
+interpretMinimalTermType (Application m _) = interpretMinimalMorphismCodomain m
 
 public export
 interpretMinimalTerm : {r : MinimalExpressionRep} -> (t : MinimalTerm r) ->
