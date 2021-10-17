@@ -445,7 +445,6 @@ mutual
               Just $ ComposeRep gRep fRep
                 {composable=(
                     rewrite composable in
-                    let d = decEqRefl minimalObjectRepDecEq (minimalMorphismRepDomain gRep) in
                     DecEqReturnsYes {deq=minimalObjectRepDecEq} $
                       decEqRefl minimalObjectRepDecEq
                         (minimalMorphismRepDomain gRep))}
