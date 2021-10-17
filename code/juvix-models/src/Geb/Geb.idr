@@ -700,3 +700,61 @@ minimalMorphismToTerm : (m : MinimalMorphismRep) ->
       (minimalMorphismRepDomain m)
       (minimalMorphismRepCodomain m)
 minimalMorphismToTerm m = FullyEvaluatedTerm $ UnappliedMorphismTerm m
+
+public export
+bigStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
+  MinimalFullyAppliedTerm type
+bigStepMinimalTermReduction {type} term = ?bigStepMinimalTermReduction_hole
+
+public export
+bigStepMinimalTermReductionCorrect :
+  {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  interpretMinimalTerm (FullyEvaluatedTerm (bigStepMinimalTermReduction term)) =
+    interpretMinimalTerm term
+bigStepMinimalTermReductionCorrect {type} term =
+  ?bigStepMinimalTermReductionCorrect_hole
+
+public export
+smallStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
+  Either (MinimalFullyAppliedTerm type) (MinimalTerm type)
+smallStepMinimalTermReduction {type} term = ?smallStepMinimalTermReduction_hole
+
+public export
+data SmallStepMinimalTermReductionCompletes : {type : MinimalTermType} ->
+  (term : MinimalTerm type) -> (reduced : MinimalFullyAppliedTerm type) -> Type
+  where
+    SmallStepMinimalReductionLastStep : {type : MinimalTermType} ->
+      {term : MinimalTerm type} -> {reduced : MinimalFullyAppliedTerm type} ->
+      smallStepMinimalTermReduction term = Left reduced ->
+      SmallStepMinimalTermReductionCompletes term reduced
+    SmallStepMinimalReductionPreviousStep : {type : MinimalTermType} ->
+      {term, intermediateTerm : MinimalTerm type} ->
+      {reduced : MinimalFullyAppliedTerm type} ->
+      smallStepMinimalTermReduction term = Right intermediateTerm ->
+      SmallStepMinimalTermReductionCompletes intermediateTerm reduced ->
+      SmallStepMinimalTermReductionCompletes term reduced
+
+public export
+smallStepMinimalTermReductionCompletes :
+  {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  DPair
+    (MinimalFullyAppliedTerm type)
+    (SmallStepMinimalTermReductionCompletes term)
+smallStepMinimalTermReductionCompletes {type} term =
+  ?smallStepMinimalTermReductionCompletes_hole
+
+public export
+smallStepMinimalTermReductionCorrect :
+  {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  interpretMinimalTerm (FullyEvaluatedTerm
+    (fst (smallStepMinimalTermReductionCompletes term))) =
+      interpretMinimalTerm term
+smallStepMinimalTermReductionCorrect {type} term =
+  ?smallStepMinimalTermReductionCorrect_hole
+
+public export
+minimalTermReductionsConsistent :
+  {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  bigStepMinimalTermReduction term =
+    snd (smallStepMinimalTermReductionCompletes term)
+minimalTermReductionsConsistent term = ?minimalTermReductionsConsistent_hole
