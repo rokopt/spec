@@ -71,6 +71,34 @@ decEqReflYes {deq} {x} with (decEqRefl deq x)
   decEqReflYes {deq} {x} | eq = rewrite eq in Refl
 
 public export
+data AreDecEq : {a : Type} -> (deq : DecEqPred a) -> (x, x' : a) -> Type where
+  DecEqReturnsYes : {a : Type} -> {deq : DecEqPred a} -> {x, x' : a} ->
+    {eq : x = x'} -> deq x x' = Yes eq -> AreDecEq deq x x'
+
+public export
+AreDecEqExtract : {a : Type} -> {deq : DecEqPred a} -> {x, x' : a} ->
+  AreDecEq deq x x' -> x = x'
+AreDecEqExtract (DecEqReturnsYes {eq} _) = eq
+
+export
+encodingDecEq : {a, b : Type} ->
+  (encode : a -> b) -> (decode : b -> Maybe a) ->
+  (encodingIsCorrect : (x : a) -> decode (encode x) = Just x) ->
+  (bDecEq : DecEqPred b) ->
+  DecEqPred a
+encodingDecEq encode decode encodingIsCorrect bDecEq x x' with
+  (bDecEq (encode x) (encode x'))
+    encodingDecEq encode decode encodingIsCorrect bDecEq x x' | Yes eq = Yes $
+      justInjective $
+        trans
+          (sym (encodingIsCorrect x))
+          (trans
+            (cong decode eq)
+            (encodingIsCorrect x'))
+    encodingDecEq encode decode encodingIsCorrect bDecEq x x' | No neq =
+      No $ \xeq => neq $ cong encode xeq
+
+public export
 DecidableType : Type
 DecidableType = DPair Type DecEqPred
 
@@ -351,6 +379,13 @@ rewrite_uip : {a : Type} -> {x, y : a} ->
   {eq, eq' : x = y} ->
   f eq = f eq'
 rewrite_uip {eq} {eq'} = rewrite (uip eq eq') in Refl
+
+export
+AreDecEqUnique : {a : Type} -> {deq : DecEqPred a} -> {x, x' : a} ->
+  (eq, eq' : AreDecEq deq x x') -> eq = eq'
+AreDecEqUnique
+  (DecEqReturnsYes {eq=Refl} yes) (DecEqReturnsYes {eq=Refl} yes') =
+    cong DecEqReturnsYes (uip yes yes')
 
 public export
 IsYesUnique : {type : Type} -> {dec : Dec type} -> (yes, yes' : IsYes dec) ->

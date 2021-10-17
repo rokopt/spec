@@ -380,26 +380,26 @@ public export
 Show MinimalObjectRep where
   show o = show (gebMinimalObjectRepToExp o)
 
+export
+minimalObjectRepDecEq : DecEqPred MinimalObjectRep
+minimalObjectRepDecEq =
+  encodingDecEq
+    gebMinimalObjectRepToExp
+    gebExpToMinimalObjectRep
+    gebMinimalObjectRepRepresentationComplete
+    decEq
+
 public export
 DecEq MinimalObjectRep where
-  decEq o o' with
-    (decEq (gebMinimalObjectRepToExp o) (gebMinimalObjectRepToExp o'))
-      decEq o o' | Yes eq = Yes $
-        justInjective $
-          trans
-            (sym (gebMinimalObjectRepRepresentationComplete o))
-            (trans
-              (cong gebExpToMinimalObjectRep eq)
-              (gebMinimalObjectRepRepresentationComplete o'))
-      decEq o o' | No neq = No $ \oeq => neq $ cong gebMinimalObjectRepToExp oeq
+  decEq = minimalObjectRepDecEq
 
 mutual
   public export
   data MinimalMorphismRep : Type where
     IdentityRep : MinimalObjectRep -> MinimalMorphismRep
     ComposeRep : (g, f : MinimalMorphismRep) ->
-      {auto composable :
-        minimalMorphismRepCodomain f = minimalMorphismRepDomain g} ->
+      {auto composable : AreDecEq Geb.Geb.minimalObjectRepDecEq
+        (minimalMorphismRepCodomain f) (minimalMorphismRepDomain g)} ->
       MinimalMorphismRep
     FromInitialRep : MinimalObjectRep -> MinimalMorphismRep
     ToTerminalRep : MinimalObjectRep -> MinimalMorphismRep
@@ -417,6 +417,25 @@ mutual
 
   public export
   gebExpToMinimalMorphismRep : GebSExp -> Maybe MinimalMorphismRep
+  gebExpToMinimalMorphismRep (GAIdentity $* [objectExp]) =
+    case gebExpToMinimalObjectRep objectExp of
+      Just objectRep => Just $ IdentityRep objectRep
+      _ => Nothing
+  gebExpToMinimalMorphismRep (GACompose $* [gExp, fExp]) =
+    case (gebExpToMinimalMorphismRep gExp, gebExpToMinimalMorphismRep fExp) of
+      (Just gRep, Just fRep) =>
+        case (minimalObjectRepDecEq
+          (minimalMorphismRepCodomain fRep) (minimalMorphismRepDomain gRep)) of
+            Yes composable =>
+              Just $ ComposeRep gRep fRep
+                {composable=(
+                    rewrite composable in
+                    let d = decEqRefl minimalObjectRepDecEq (minimalMorphismRepDomain gRep) in
+                    DecEqReturnsYes {deq=minimalObjectRepDecEq} $
+                      decEqRefl minimalObjectRepDecEq
+                        (minimalMorphismRepDomain gRep))}
+            No _ => Nothing
+      _ => Nothing
   gebExpToMinimalMorphismRep (GAFromInitial $* [codomainExp]) =
     case gebExpToMinimalObjectRep codomainExp of
       Just codomainRep => Just $ FromInitialRep codomainRep
@@ -431,31 +450,38 @@ mutual
   gebMinimalMorphismRepRepresentationComplete : (r : MinimalMorphismRep) ->
     gebExpToMinimalMorphismRep (gebMinimalMorphismRepToExp r) = Just r
   gebMinimalMorphismRepRepresentationComplete (IdentityRep objectRep) =
-    ?gebMinimalMorphismRepRepresentationComplete_hole_identity
-  gebMinimalMorphismRepRepresentationComplete (ComposeRep g f) =
-    ?gebMinimalMorphismRepRepresentationComplete_hole_compose
+    rewrite gebMinimalObjectRepRepresentationComplete objectRep in
+    Refl
+  gebMinimalMorphismRepRepresentationComplete (ComposeRep g f {composable}) =
+    rewrite gebMinimalMorphismRepRepresentationComplete g in
+    rewrite gebMinimalMorphismRepRepresentationComplete f in
+    rewrite AreDecEqExtract composable in
+    rewrite decEqRefl minimalObjectRepDecEq (minimalMorphismRepDomain g) in
+    rewrite AreDecEqUnique composable _ in
+    Refl
   gebMinimalMorphismRepRepresentationComplete (FromInitialRep codomainRep) =
-    ?gebMinimalMorphismRepRepresentationComplete_hole_frominitial
+    rewrite gebMinimalObjectRepRepresentationComplete codomainRep in
+    Refl
   gebMinimalMorphismRepRepresentationComplete (ToTerminalRep domainRep) =
-    ?gebMinimalMorphismRepRepresentationComplete_hole_toterminal
+    rewrite gebMinimalObjectRepRepresentationComplete domainRep in
+    Refl
 
   public export
   Show MinimalMorphismRep where
     show m = show (gebMinimalMorphismRepToExp m)
 
+  export
+  minimalMorphismRepDecEq : DecEqPred MinimalMorphismRep
+  minimalMorphismRepDecEq =
+    encodingDecEq
+      gebMinimalMorphismRepToExp
+      gebExpToMinimalMorphismRep
+      gebMinimalMorphismRepRepresentationComplete
+      decEq
+
   public export
   DecEq MinimalMorphismRep where
-    decEq o o' with
-      (decEq (gebMinimalMorphismRepToExp o) (gebMinimalMorphismRepToExp o'))
-        decEq o o' | Yes eq = Yes $
-          justInjective $
-            trans
-              (sym (gebMinimalMorphismRepRepresentationComplete o))
-              (trans
-                (cong gebExpToMinimalMorphismRep eq)
-                (gebMinimalMorphismRepRepresentationComplete o'))
-        decEq o o' | No neq = No $ \oeq =>
-          neq $ cong gebMinimalMorphismRepToExp oeq
+    decEq = minimalMorphismRepDecEq
 
   public export
   minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
@@ -510,8 +536,9 @@ interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
   interpretMinimalMorphismType r
 interpretMinimalMorphismRep (IdentityRep o) x = x
 interpretMinimalMorphismRep (ComposeRep g f {composable}) x =
-  interpretMinimalMorphismRep g
-    (rewrite sym composable in interpretMinimalMorphismRep f x)
+  interpretMinimalMorphismRep g $
+    replace {p=interpretMinimalObjectRep} (AreDecEqExtract composable) $
+      interpretMinimalMorphismRep f x
 interpretMinimalMorphismRep (FromInitialRep _) x = void x
 interpretMinimalMorphismRep (ToTerminalRep _) _ = ()
 
