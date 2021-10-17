@@ -623,34 +623,36 @@ mutual
       MinimalTerm (MinimalTypeTerm domain) ->
       MinimalTerm (MinimalTypeTerm codomain)
 
-public export
-gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
-gebMinimalTermToExp t = ?gebMinimalTermToExp_hole
+mutual
+  public export
+  gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
+  gebMinimalTermToExp t = ?gebMinimalTermToExp_hole
 
-public export
-gebExpToMinimalTerm :
-  GebSExp -> Maybe (type : MinimalTermType ** MinimalTerm type)
-gebExpToMinimalTerm x = ?gebExpToMinimalTerm_hole
+  public export
+  gebExpToMinimalTerm :
+    GebSExp -> Maybe (type : MinimalTermType ** MinimalTerm type)
+  gebExpToMinimalTerm x = ?gebExpToMinimalTerm_hole
 
-public export
-gebMinimalTermRepresentationComplete :
-  {type : MinimalTermType} -> (term : MinimalTerm type) ->
-  gebExpToMinimalTerm (gebMinimalTermToExp {type} term) = Just (type ** term)
-gebMinimalTermRepresentationComplete term =
-  ?gebMinimalTermRepresentationComplete_hole
+  public export
+  gebMinimalTermRepresentationComplete :
+    {type : MinimalTermType} -> (term : MinimalTerm type) ->
+    gebExpToMinimalTerm (gebMinimalTermToExp {type} term) = Just (type ** term)
+  gebMinimalTermRepresentationComplete term =
+    ?gebMinimalTermRepresentationComplete_hole
 
 public export
 (type : MinimalTermType) => Show (MinimalTerm type) where
   show term = show (gebMinimalTermToExp term)
 
-public export
-interpretMinimalTermType : MinimalTermType -> Type
-interpretMinimalTermType type = ?interpretMinimalTermType_hole
+mutual
+  public export
+  interpretMinimalTermType : MinimalTermType -> Type
+  interpretMinimalTermType type = ?interpretMinimalTermType_hole
 
-public export
-interpretMinimalTerm : {type : MinimalTermType} -> (term : MinimalTerm type) ->
-  interpretMinimalTermType type
-interpretMinimalTerm {type} term = ?interpretMinimalTerm_hole
+  public export
+  interpretMinimalTerm : {type : MinimalTermType} ->
+    (term : MinimalTerm type) -> interpretMinimalTermType type
+  interpretMinimalTerm {type} term = ?interpretMinimalTerm_hole
 
 public export
 minimalMorphismToTerm : (m : MinimalMorphismRep) ->
@@ -664,18 +666,21 @@ public export
 MinimalMorphismTransform : Type
 MinimalMorphismTransform = MinimalMorphismRep -> MinimalMorphismRep
 
+-- | A correct morphism transformation preserves the morphism's domain.
 public export
 MinimalMorphismTransformDomainCorrect : MinimalMorphismTransform -> Type
 MinimalMorphismTransformDomainCorrect transform = (m : MinimalMorphismRep) ->
   interpretMinimalMorphismDomain (transform m) =
     interpretMinimalMorphismDomain m
 
+-- | A correct morphism transformation preserves the morphism's codomain.
 public export
 MinimalMorphismTransformCodomainCorrect : MinimalMorphismTransform -> Type
 MinimalMorphismTransformCodomainCorrect transform = (m : MinimalMorphismRep) ->
   interpretMinimalMorphismCodomain (transform m) =
     interpretMinimalMorphismCodomain m
 
+-- | A correct morphism transformation preserves extensional equality.
 public export
 MinimalMorphismTransformCorrect : (transform : MinimalMorphismTransform) ->
   (domainTransformCorrect :
