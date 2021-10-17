@@ -604,14 +604,24 @@ data MinimalTermType : Type where
   MinimalTypeTerm : (type : MinimalObjectRep) -> MinimalTermType
   MinimalMorphismTerm : (domain, codomain : MinimalObjectRep) -> MinimalTermType
 
-public export
-data MinimalTerm : MinimalTermType -> Type where
-  FullyEvaluatedTerm : (o : MinimalObjectRep) ->
-    interpretMinimalObjectRep o -> MinimalTerm (MinimalTypeTerm o)
-  Application : {domain, codomain : MinimalObjectRep} ->
-    MinimalTerm (MinimalMorphismTerm domain codomain) ->
-    MinimalTerm (MinimalTypeTerm domain) ->
-    MinimalTerm (MinimalTypeTerm codomain)
+mutual
+  public export
+  data MinimalFullyAppliedTerm : MinimalTermType -> Type where
+    UnappliedMorphismTerm : (morphism : MinimalMorphismRep) ->
+      MinimalFullyAppliedTerm $
+        MinimalMorphismTerm
+          (minimalMorphismRepDomain morphism)
+          (minimalMorphismRepCodomain morphism)
+    UnitTerm : MinimalFullyAppliedTerm $ MinimalTypeTerm TerminalRep
+
+  public export
+  data MinimalTerm : MinimalTermType -> Type where
+    FullyEvaluatedTerm : {type : MinimalTermType} ->
+      MinimalFullyAppliedTerm type -> MinimalTerm type
+    Application : {domain, codomain : MinimalObjectRep} ->
+      MinimalTerm (MinimalMorphismTerm domain codomain) ->
+      MinimalTerm (MinimalTypeTerm domain) ->
+      MinimalTerm (MinimalTypeTerm codomain)
 
 public export
 gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
@@ -648,4 +658,36 @@ minimalMorphismToTerm : (m : MinimalMorphismRep) ->
     MinimalMorphismTerm
       (minimalMorphismRepDomain m)
       (minimalMorphismRepCodomain m)
-minimalMorphismToTerm m = ?minimalMorphismToTerm_hole
+minimalMorphismToTerm m = FullyEvaluatedTerm $ UnappliedMorphismTerm m
+
+public export
+MinimalMorphismTransform : Type
+MinimalMorphismTransform = MinimalMorphismRep -> MinimalMorphismRep
+
+public export
+MinimalMorphismTransformDomainCorrect : MinimalMorphismTransform -> Type
+MinimalMorphismTransformDomainCorrect transform = (m : MinimalMorphismRep) ->
+  interpretMinimalMorphismDomain (transform m) =
+    interpretMinimalMorphismDomain m
+
+public export
+MinimalMorphismTransformCodomainCorrect : MinimalMorphismTransform -> Type
+MinimalMorphismTransformCodomainCorrect transform = (m : MinimalMorphismRep) ->
+  interpretMinimalMorphismCodomain (transform m) =
+    interpretMinimalMorphismCodomain m
+
+public export
+MinimalMorphismTransformCorrect : (transform : MinimalMorphismTransform) ->
+  (domainTransformCorrect :
+    MinimalMorphismTransformDomainCorrect transform) ->
+  (codomainTransformCorrect :
+    MinimalMorphismTransformCodomainCorrect transform) ->
+  Type
+MinimalMorphismTransformCorrect
+  transform domainTransformCorrect codomainTransformCorrect =
+    (m : MinimalMorphismRep) ->
+    (x : interpretMinimalMorphismDomain m) ->
+      (rewrite sym (codomainTransformCorrect m) in
+       interpretMinimalMorphismRep (transform m)
+         (rewrite domainTransformCorrect m in x)) =
+       interpretMinimalMorphismRep m x
