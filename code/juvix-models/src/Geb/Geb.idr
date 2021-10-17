@@ -7,301 +7,6 @@ import RefinedSExp.SExp
 
 %default total
 
--- | A "Language" (short in this case for "programming language") is a category
--- | which is capable of performing computation and can be defined solely by
--- | computation.  It can be viewed as having morphisms which represent
--- | computable functions with computably-representable effects.
--- |
--- | By "capable of performing computation", we mean that Gödel's
--- | incompleteness theorems apply to the category.  In other words, it can
--- | express metalogic; we could also say that it can reflect itself, in that
--- | it can define functions on its own expressions.  (So perhaps we might
--- | say something like "computable metacategory" rather than "programming
--- | language".)  A combination of products, coproducts, and decidable
--- | equality gives us the ability to perform substitution, which in turn
--- | allows us to represent function application -- the fundamental
--- | computation in any programming language.
--- |
--- | A language is unsuitable as a metalogic if it is inconsistent -- if its
--- | operational semantics allow non-termination, or if it has any partial
--- | functions.  Of course, one consequence of Gödel's incompleteness theorems
--- | is that we can never be sure that there _are_ any languages that are
--- | suitable as metalogics in that sense!
--- |
--- | So there is a minimal programming language, with this definition:  just
--- | what is required for Gödel's incompleteness theorems to apply.  There is
--- | also a maximal programming language:  the universal Turing machine,
--- | with non-terminating and partial functions.
-public export
-data LanguageRep : Type where
-  MinimalRep : LanguageRep
-
--------------------------
----- Minimal objects ----
--------------------------
-
--- | Every programming language (using the Geb definition) has an initial
--- | object, a terminal object, finite products and coproducts, an object
--- | which we interpret as the type of representations of the language's
--- | objects and morphisms, and a decidable equality on those
--- | representations.  This is enough to perform substitution on
--- | representations.
--- |
--- | Note that we are _not_ assuming exponential objects yet -- for example,
--- | the minimal language does not have any first-class functions, and
--- | primitive recursion has only first-order functions.
-
--- | Well-typed representations of common objects.
-public export
-data MinimalObjectRep : Type where
-  InitialRep : MinimalObjectRep
-  TerminalRep : MinimalObjectRep
-  ProductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
-  CoproductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
-  ExpressionRep : MinimalObjectRep
-
-public export
-DecEq MinimalObjectRep where
-  decEq InitialRep InitialRep = Yes Refl
-  decEq InitialRep TerminalRep = No $ \eq => case eq of Refl impossible
-  decEq InitialRep (ProductRep _ _) = No $ \eq => case eq of Refl impossible
-  decEq InitialRep (CoproductRep _ _) = No $ \eq => case eq of Refl impossible
-  decEq InitialRep ExpressionRep = No $ \eq => case eq of Refl impossible
-  decEq TerminalRep InitialRep = No $ \eq => case eq of Refl impossible
-  decEq TerminalRep TerminalRep = Yes Refl
-  decEq TerminalRep (ProductRep _ _) = No $ \eq => case eq of Refl impossible
-  decEq TerminalRep (CoproductRep _ _) = No $ \eq => case eq of Refl impossible
-  decEq TerminalRep ExpressionRep = No $ \eq => case eq of Refl impossible
-  decEq (ProductRep _ _) InitialRep = No $ \eq => case eq of Refl impossible
-  decEq (ProductRep _ _) TerminalRep = No $ \eq => case eq of Refl impossible
-  decEq (ProductRep l r) (ProductRep l' r') =
-    case (decEq l l', decEq r r') of
-      (Yes Refl, Yes Refl) => Yes Refl
-      (No neq, _) => No $ \eq => case eq of Refl => void (neq Refl)
-      (_, No neq) => No $ \eq => case eq of Refl => void (neq Refl)
-  decEq (ProductRep _ _) (CoproductRep _ _) =
-    No $ \eq => case eq of Refl impossible
-  decEq (ProductRep _ _) ExpressionRep = No $ \eq => case eq of Refl impossible
-  decEq (CoproductRep _ _) InitialRep = No $ \eq => case eq of Refl impossible
-  decEq (CoproductRep _ _) TerminalRep = No $ \eq => case eq of Refl impossible
-  decEq (CoproductRep _ _) (ProductRep _ _) =
-    No $ \eq => case eq of Refl impossible
-  decEq (CoproductRep l r) (CoproductRep l' r') =
-    case (decEq l l', decEq r r') of
-      (Yes Refl, Yes Refl) => Yes Refl
-      (No neq, _) => No $ \eq => case eq of Refl => void (neq Refl)
-      (_, No neq) => No $ \eq => case eq of Refl => void (neq Refl)
-  decEq (CoproductRep _ _) ExpressionRep =
-    No $ \eq => case eq of Refl impossible
-  decEq ExpressionRep InitialRep = No $ \eq => case eq of Refl impossible
-  decEq ExpressionRep TerminalRep = No $ \eq => case eq of Refl impossible
-  decEq ExpressionRep (ProductRep _ _) = No $ \eq => case eq of Refl impossible
-  decEq ExpressionRep (CoproductRep _ _) =
-    No $ \eq => case eq of Refl impossible
-  decEq ExpressionRep ExpressionRep = Yes Refl
-
-mutual
-  public export
-  data MinimalMorphismRep : Type where
-    IdentityRep : MinimalObjectRep -> MinimalMorphismRep
-    ComposeRep : (g, f : MinimalMorphismRep) ->
-      {auto composable :
-        minimalMorphismRepCodomain f = minimalMorphismRepDomain g} ->
-      MinimalMorphismRep
-    FromInitialRep : MinimalObjectRep -> MinimalMorphismRep
-    ToTerminalRep : MinimalObjectRep -> MinimalMorphismRep
-
-  public export
-  minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
-  minimalMorphismRepDomain (IdentityRep objectRep) = objectRep
-  minimalMorphismRepDomain (ComposeRep g f) = minimalMorphismRepDomain f
-  minimalMorphismRepDomain (FromInitialRep _) = InitialRep
-  minimalMorphismRepDomain (ToTerminalRep domain) = domain
-
-  public export
-  minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
-  minimalMorphismRepCodomain (IdentityRep objectRep) = objectRep
-  minimalMorphismRepCodomain (ComposeRep g f) = minimalMorphismRepCodomain g
-  minimalMorphismRepCodomain (FromInitialRep codomain) = codomain
-  minimalMorphismRepCodomain (ToTerminalRep _) = TerminalRep
-
-  public export
-  DecEq MinimalMorphismRep where
-    decEq (IdentityRep o) (IdentityRep o') = case (decEq o o') of
-      Yes Refl => Yes Refl
-      No neq => No $ \eq => case eq of Refl => void (neq Refl)
-    decEq (IdentityRep _) (ComposeRep _ _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (IdentityRep _) (FromInitialRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (IdentityRep _) (ToTerminalRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (ComposeRep _ _) (IdentityRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq
-      (ComposeRep g f {composable})
-      (ComposeRep g' f' {composable=composable'}) =
-        case (decEq g g', decEq f f') of
-          (Yes Refl, Yes Refl) => Yes ?composable_eq_hole
-          (No neq, _) => No $ \eq => case eq of Refl => void (neq Refl)
-          (_, No neq) => No $ \eq => case eq of Refl => void (neq Refl)
-    decEq (ComposeRep _ _) (FromInitialRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (ComposeRep _ _) (ToTerminalRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (FromInitialRep _) (IdentityRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (FromInitialRep _) (ComposeRep _ _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (FromInitialRep codomain) (FromInitialRep codomain') =
-      case (decEq codomain codomain') of
-        Yes Refl => Yes Refl
-        No neq => No $ \eq => case eq of Refl => void (neq Refl)
-    decEq (FromInitialRep _) (ToTerminalRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (ToTerminalRep _) (IdentityRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (ToTerminalRep _) (ComposeRep _ _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (ToTerminalRep _) (FromInitialRep _) =
-      No $ \eq => case eq of Refl impossible
-    decEq (ToTerminalRep domain) (ToTerminalRep domain') =
-      case (decEq domain domain') of
-        Yes Refl => Yes Refl
-        No neq => No $ \eq => case eq of Refl => void (neq Refl)
-
------------------------------------------------------------------------------
----- The interpretation into Idris-2 of the minimal programming language ----
------------------------------------------------------------------------------
-
-public export
-data MinimalExpressionRep : Type where
-  MinimalObjectExp : MinimalObjectRep -> MinimalExpressionRep
-  MinimalMorphismExp : MinimalMorphismRep -> MinimalExpressionRep
-
-public export
-interpretMinimalObjectRep : MinimalObjectRep -> Type
-interpretMinimalObjectRep InitialRep = Void
-interpretMinimalObjectRep TerminalRep = ()
-interpretMinimalObjectRep (ProductRep r r') =
-  (interpretMinimalObjectRep r, interpretMinimalObjectRep r')
-interpretMinimalObjectRep (CoproductRep r r') =
-  Either (interpretMinimalObjectRep r) (interpretMinimalObjectRep r')
-interpretMinimalObjectRep ExpressionRep = MinimalExpressionRep
-
-public export
-interpretMinimalMorphismDomain : MinimalMorphismRep -> Type
-interpretMinimalMorphismDomain r =
-  interpretMinimalObjectRep (minimalMorphismRepDomain r)
-
-public export
-interpretMinimalMorphismCodomain : MinimalMorphismRep -> Type
-interpretMinimalMorphismCodomain r =
-  interpretMinimalObjectRep (minimalMorphismRepCodomain r)
-
-public export
-interpretMinimalMorphismType : MinimalMorphismRep -> Type
-interpretMinimalMorphismType r =
-  interpretMinimalMorphismDomain r -> interpretMinimalMorphismCodomain r
-
-public export
-interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
-  interpretMinimalMorphismType r
-interpretMinimalMorphismRep (IdentityRep o) x = x
-interpretMinimalMorphismRep (ComposeRep g f {composable}) x =
-  interpretMinimalMorphismRep g
-    (rewrite sym composable in interpretMinimalMorphismRep f x)
-interpretMinimalMorphismRep (FromInitialRep _) x = void x
-interpretMinimalMorphismRep (ToTerminalRep _) _ = ()
-
------------------------------------
----- Correctness of reflection ----
------------------------------------
-
-public export
-minimalObjectQuote :
-  MinimalObjectRep -> interpretMinimalObjectRep ExpressionRep
-minimalObjectQuote o = ?minimalObjectReflection_hole
-
-public export
-minimalObjectUnquote :
-  interpretMinimalObjectRep ExpressionRep -> MinimalObjectRep
-minimalObjectUnquote x = ?minimalObjectUnquote_hole
-
-export
-minimalObjectUnquoteQuoteCorrect :
-  (r : MinimalObjectRep) -> minimalObjectUnquote (minimalObjectQuote r) = r
-minimalObjectUnquoteQuoteCorrect r = ?minimalObjectUnquoteQuoteCorrect_hole
-
-export
-minimalObjectQuoteUnquoteCorrect :
-  (x : interpretMinimalObjectRep ExpressionRep) ->
-  minimalObjectQuote (minimalObjectUnquote x) = x
-minimalObjectQuoteUnquoteCorrect x = ?minimalObjectQuoteUnquoteCorrect_hole
-
-public export
-minimalMorphismQuote :
-  MinimalMorphismRep -> interpretMinimalObjectRep ExpressionRep
-minimalMorphismQuote m = ?minimalMorphismReflection_hole
-
-public export
-minimalMorphismUnquote : interpretMinimalObjectRep ExpressionRep ->
-  MinimalMorphismRep
-minimalMorphismUnquote x = ?minimalMorphismUnquote_hole
-
-export
-minimalMorphismUnquoteQuoteCorrect : (r : MinimalMorphismRep) ->
-  minimalMorphismUnquote (minimalMorphismQuote r) = r
-minimalMorphismUnquoteQuoteCorrect r =
-  ?minimalMorphismUnquoteQuoteCorrect_hole
-
-export
-minimalMorphismQuoteUnquoteCorrect :
-  (x : interpretMinimalObjectRep ExpressionRep) ->
-  minimalMorphismQuote (minimalMorphismUnquote x) = x
-minimalMorphismQuoteUnquoteCorrect x = ?minimalMorphismQuoteUnquoteCorrect_hole
-
-------------------------------------------------------------
----- Term reduction in the minimal programming language ----
-------------------------------------------------------------
-
--- | Terms are used to define operational semantics for the category-theoretical
--- | representations of programming languages.  We have a well-typed
--- | representation of terms in Idris defined by the interpretation of objects
--- | as types -- together with the notion of function application, which we
--- | do not have in the category-theoretical representation.
-
-public export
-data MinimalTermType : Type where
-  MinimalTypeTerm : (type : MinimalObjectRep) -> MinimalTermType
-  MinimalMorphismTerm : (domain, codomain : MinimalObjectRep) -> MinimalTermType
-
-public export
-data MinimalTerm : MinimalTermType -> Type where
-  FullyEvaluatedTerm : (o : MinimalObjectRep) ->
-    interpretMinimalObjectRep o -> MinimalTerm (MinimalTypeTerm o)
-  Application : {domain, codomain : MinimalObjectRep} ->
-    MinimalTerm (MinimalMorphismTerm domain codomain) ->
-    MinimalTerm (MinimalTypeTerm domain) ->
-    MinimalTerm (MinimalTypeTerm codomain)
-
-public export
-interpretMinimalTermType : MinimalTermType -> Type
-interpretMinimalTermType type = ?interpretMinimalTermType_hole
-
-public export
-interpretMinimalTerm : {type : MinimalTermType} -> (term : MinimalTerm type) ->
-  interpretMinimalTermType type
-interpretMinimalTerm {type} term = ?interpretMinimalTerm_hole
-
-public export
-minimalMorphismToTerm : (m : MinimalMorphismRep) ->
-  MinimalTerm $
-    MinimalMorphismTerm
-      (minimalMorphismRepDomain m)
-      (minimalMorphismRepCodomain m)
-minimalMorphismToTerm m = ?minimalMorphismToTerm_hole
-
 --------------------------------------------
 ---- S-expression representation of Geb ----
 --------------------------------------------
@@ -310,7 +15,15 @@ minimalMorphismToTerm m = ?minimalMorphismToTerm_hole
 -- | us to define, check, and interpret them in uniform ways, without having
 -- | to use custom ADTs in different metalanguages (where in this case
 -- | "metalanguages" refers to programming languages in which we might interpret
--- | Geb expressions, such as Haskell, Rust, or Juvix).
+-- |
+-- | We begin with this definition even though it might not be clear before
+-- | programming languages have been defined below, because we will use the
+-- | existence of an S-expression representation to define some functions
+-- | (such as decidable equalities and Show instances) below.  These reflect
+-- | the reasons for having an S-expression representation of types (objects),
+-- | functions (morphisms), and terms (operational semantics given by
+-- | interpretation of morphisms as computable functions with effects) within
+-- | a compiler.
 public export
 data GebAtom : Type where
   -- | The notion of a language itself.
@@ -501,9 +214,9 @@ public export
 Ord GebSList where
   (<) = slistLessThan (<)
 
-----------------------------------------------------------------------------
----- Translation between (well-typed) Geb expressions and S-expressions ----
-----------------------------------------------------------------------------
+-- | One of the concepts for which we have an S-expression representation is
+-- | the class of S-expression itself -- whether an S-expression represents
+-- | a language, for example, or an object, morphism, or term.
 
 public export
 data GebExpressionClass : Type where
@@ -539,6 +252,48 @@ public export
 Show GebExpressionClass where
   show c = show (gebClassToExp c)
 
+----------------------------------------------------------------
+---- General definition of programming language / metalogic ----
+----------------------------------------------------------------
+
+-- | A "Language" (short in this case for "programming language") is a category
+-- | which is capable of performing computation and can be defined solely by
+-- | computation.  It can be viewed as having morphisms which represent
+-- | computable functions with computably-representable effects.
+-- |
+-- | By "capable of performing computation", we mean that Gödel's
+-- | incompleteness theorems apply to the category.  In other words, it can
+-- | express metalogic; we could also say that it can reflect itself, in that
+-- | it can define functions on its own expressions.  (So perhaps we might
+-- | say something like "computable metacategory" rather than "programming
+-- | language".)  A combination of products, coproducts, and decidable
+-- | equality gives us the ability to perform substitution, which in turn
+-- | allows us to represent function application -- the fundamental
+-- | computation in any programming language.
+-- |
+-- | A language is unsuitable as a metalogic if it is inconsistent -- if its
+-- | operational semantics allow non-termination, or if it has any partial
+-- | functions.  Of course, one consequence of Gödel's incompleteness theorems
+-- | is that we can never be sure that there _are_ any languages that are
+-- | suitable as metalogics in that sense!
+-- |
+-- | So there is a minimal programming language, with this definition:  just
+-- | what is required for Gödel's incompleteness theorems to apply.  There is
+-- | also a maximal programming language:  the universal Turing machine,
+-- | with non-terminating and partial functions.
+-- |
+-- | Our definitions of languages below all take the form of a
+-- | category-theoretical, point-free (termless) definition of syntax and
+-- | type system, and an operational definition of semantics using an
+-- | interpretation of objects as the types and morphisms as the functions
+-- | of a programming language which does have terms.  The functions of the
+-- | language are general computable functions with effects, the terms are
+-- | S-expressions, and the types are specifications of the domains,
+-- | codomains, input-output behavior, and the effects of functions.
+public export
+data LanguageRep : Type where
+  MinimalRep : LanguageRep
+
 public export
 gebLanguageRepToExp : LanguageRep -> GebSExp
 gebLanguageRepToExp MinimalRep = $^ GAMinimal
@@ -556,6 +311,30 @@ gebLanguageRepRepresentationComplete MinimalRep = Refl
 public export
 Show LanguageRep where
   show l = show (gebLanguageRepToExp l)
+
+-------------------------
+---- Minimal objects ----
+-------------------------
+
+-- | Every programming language (using the Geb definition) has an initial
+-- | object, a terminal object, finite products and coproducts, an object
+-- | which we interpret as the type of representations of the language's
+-- | objects and morphisms, and a decidable equality on those
+-- | representations.  This is enough to perform substitution on
+-- | representations.
+-- |
+-- | Note that we are _not_ assuming exponential objects yet -- for example,
+-- | the minimal language does not have any first-class functions, and
+-- | primitive recursion has only first-order functions.
+
+-- | Well-typed representations of common objects.
+public export
+data MinimalObjectRep : Type where
+  InitialRep : MinimalObjectRep
+  TerminalRep : MinimalObjectRep
+  ProductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
+  CoproductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
+  ExpressionRep : MinimalObjectRep
 
 public export
 gebMinimalObjectRepToExp : MinimalObjectRep -> GebSExp
@@ -602,43 +381,210 @@ Show MinimalObjectRep where
   show o = show (gebMinimalObjectRepToExp o)
 
 public export
-gebMinimalMorphismRepToExp : MinimalMorphismRep -> GebSExp
-gebMinimalMorphismRepToExp (IdentityRep objectRep) =
-  GAIdentity $* [gebMinimalObjectRepToExp objectRep]
-gebMinimalMorphismRepToExp (ComposeRep g f) =
-  GACompose $* [gebMinimalMorphismRepToExp g, gebMinimalMorphismRepToExp f]
-gebMinimalMorphismRepToExp (FromInitialRep codomainRep) =
-  GAFromInitial $* [gebMinimalObjectRepToExp codomainRep]
-gebMinimalMorphismRepToExp (ToTerminalRep domainRep) =
-  GAToTerminal $* [gebMinimalObjectRepToExp domainRep]
+DecEq MinimalObjectRep where
+  decEq o o' with
+    (decEq (gebMinimalObjectRepToExp o) (gebMinimalObjectRepToExp o'))
+      decEq o o' | Yes eq = Yes $
+        justInjective $
+          trans
+            (sym (gebMinimalObjectRepRepresentationComplete o))
+            (trans
+              (cong gebExpToMinimalObjectRep eq)
+              (gebMinimalObjectRepRepresentationComplete o'))
+      decEq o o' | No neq = No $ \oeq => neq $ cong gebMinimalObjectRepToExp oeq
+
+mutual
+  public export
+  data MinimalMorphismRep : Type where
+    IdentityRep : MinimalObjectRep -> MinimalMorphismRep
+    ComposeRep : (g, f : MinimalMorphismRep) ->
+      {auto composable :
+        minimalMorphismRepCodomain f = minimalMorphismRepDomain g} ->
+      MinimalMorphismRep
+    FromInitialRep : MinimalObjectRep -> MinimalMorphismRep
+    ToTerminalRep : MinimalObjectRep -> MinimalMorphismRep
+
+  public export
+  gebMinimalMorphismRepToExp : MinimalMorphismRep -> GebSExp
+  gebMinimalMorphismRepToExp (IdentityRep objectRep) =
+    GAIdentity $* [gebMinimalObjectRepToExp objectRep]
+  gebMinimalMorphismRepToExp (ComposeRep g f) =
+    GACompose $* [gebMinimalMorphismRepToExp g, gebMinimalMorphismRepToExp f]
+  gebMinimalMorphismRepToExp (FromInitialRep codomainRep) =
+    GAFromInitial $* [gebMinimalObjectRepToExp codomainRep]
+  gebMinimalMorphismRepToExp (ToTerminalRep domainRep) =
+    GAToTerminal $* [gebMinimalObjectRepToExp domainRep]
+
+  public export
+  gebExpToMinimalMorphismRep : GebSExp -> Maybe MinimalMorphismRep
+  gebExpToMinimalMorphismRep (GAFromInitial $* [codomainExp]) =
+    case gebExpToMinimalObjectRep codomainExp of
+      Just codomainRep => Just $ FromInitialRep codomainRep
+      _ => Nothing
+  gebExpToMinimalMorphismRep (GAToTerminal $* [domainExp]) =
+    case gebExpToMinimalObjectRep domainExp of
+      Just domainRep => Just $ ToTerminalRep domainRep
+      _ => Nothing
+  gebExpToMinimalMorphismRep _ = Nothing
+
+  public export
+  gebMinimalMorphismRepRepresentationComplete : (r : MinimalMorphismRep) ->
+    gebExpToMinimalMorphismRep (gebMinimalMorphismRepToExp r) = Just r
+  gebMinimalMorphismRepRepresentationComplete (IdentityRep objectRep) =
+    ?gebMinimalMorphismRepRepresentationComplete_hole_identity
+  gebMinimalMorphismRepRepresentationComplete (ComposeRep g f) =
+    ?gebMinimalMorphismRepRepresentationComplete_hole_compose
+  gebMinimalMorphismRepRepresentationComplete (FromInitialRep codomainRep) =
+    ?gebMinimalMorphismRepRepresentationComplete_hole_frominitial
+  gebMinimalMorphismRepRepresentationComplete (ToTerminalRep domainRep) =
+    ?gebMinimalMorphismRepRepresentationComplete_hole_toterminal
+
+  public export
+  Show MinimalMorphismRep where
+    show m = show (gebMinimalMorphismRepToExp m)
+
+  public export
+  DecEq MinimalMorphismRep where
+    decEq o o' with
+      (decEq (gebMinimalMorphismRepToExp o) (gebMinimalMorphismRepToExp o'))
+        decEq o o' | Yes eq = Yes $
+          justInjective $
+            trans
+              (sym (gebMinimalMorphismRepRepresentationComplete o))
+              (trans
+                (cong gebExpToMinimalMorphismRep eq)
+                (gebMinimalMorphismRepRepresentationComplete o'))
+        decEq o o' | No neq = No $ \oeq =>
+          neq $ cong gebMinimalMorphismRepToExp oeq
+
+  public export
+  minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
+  minimalMorphismRepDomain (IdentityRep objectRep) = objectRep
+  minimalMorphismRepDomain (ComposeRep g f) = minimalMorphismRepDomain f
+  minimalMorphismRepDomain (FromInitialRep _) = InitialRep
+  minimalMorphismRepDomain (ToTerminalRep domain) = domain
+
+  public export
+  minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
+  minimalMorphismRepCodomain (IdentityRep objectRep) = objectRep
+  minimalMorphismRepCodomain (ComposeRep g f) = minimalMorphismRepCodomain g
+  minimalMorphismRepCodomain (FromInitialRep codomain) = codomain
+  minimalMorphismRepCodomain (ToTerminalRep _) = TerminalRep
+
+-----------------------------------------------------------------------------
+---- The interpretation into Idris-2 of the minimal programming language ----
+-----------------------------------------------------------------------------
 
 public export
-gebExpToMinimalMorphismRep : GebSExp -> Maybe MinimalMorphismRep
-gebExpToMinimalMorphismRep (GAFromInitial $* [codomainExp]) =
-  case gebExpToMinimalObjectRep codomainExp of
-    Just codomainRep => Just $ FromInitialRep codomainRep
-    _ => Nothing
-gebExpToMinimalMorphismRep (GAToTerminal $* [domainExp]) =
-  case gebExpToMinimalObjectRep domainExp of
-    Just domainRep => Just $ ToTerminalRep domainRep
-    _ => Nothing
-gebExpToMinimalMorphismRep _ = Nothing
+data MinimalExpressionRep : Type where
+  MinimalObjectExp : MinimalObjectRep -> MinimalExpressionRep
+  MinimalMorphismExp : MinimalMorphismRep -> MinimalExpressionRep
 
 public export
-gebMinimalMorphismRepRepresentationComplete : (r : MinimalMorphismRep) ->
-  gebExpToMinimalMorphismRep (gebMinimalMorphismRepToExp r) = Just r
-gebMinimalMorphismRepRepresentationComplete (IdentityRep objectRep) =
-  ?gebMinimalMorphismRepRepresentationComplete_hole_identity
-gebMinimalMorphismRepRepresentationComplete (ComposeRep g f) =
-  ?gebMinimalMorphismRepRepresentationComplete_hole_compose
-gebMinimalMorphismRepRepresentationComplete (FromInitialRep codomainRep) =
-  ?gebMinimalMorphismRepRepresentationComplete_hole_frominitial
-gebMinimalMorphismRepRepresentationComplete (ToTerminalRep domainRep) =
-  ?gebMinimalMorphismRepRepresentationComplete_hole_toterminal
+interpretMinimalObjectRep : MinimalObjectRep -> Type
+interpretMinimalObjectRep InitialRep = Void
+interpretMinimalObjectRep TerminalRep = ()
+interpretMinimalObjectRep (ProductRep r r') =
+  (interpretMinimalObjectRep r, interpretMinimalObjectRep r')
+interpretMinimalObjectRep (CoproductRep r r') =
+  Either (interpretMinimalObjectRep r) (interpretMinimalObjectRep r')
+interpretMinimalObjectRep ExpressionRep = MinimalExpressionRep
 
 public export
-Show MinimalMorphismRep where
-  show m = show (gebMinimalMorphismRepToExp m)
+interpretMinimalMorphismDomain : MinimalMorphismRep -> Type
+interpretMinimalMorphismDomain r =
+  interpretMinimalObjectRep (minimalMorphismRepDomain r)
+
+public export
+interpretMinimalMorphismCodomain : MinimalMorphismRep -> Type
+interpretMinimalMorphismCodomain r =
+  interpretMinimalObjectRep (minimalMorphismRepCodomain r)
+
+public export
+interpretMinimalMorphismType : MinimalMorphismRep -> Type
+interpretMinimalMorphismType r =
+  interpretMinimalMorphismDomain r -> interpretMinimalMorphismCodomain r
+
+public export
+interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
+  interpretMinimalMorphismType r
+interpretMinimalMorphismRep (IdentityRep o) x = x
+interpretMinimalMorphismRep (ComposeRep g f {composable}) x =
+  interpretMinimalMorphismRep g
+    (rewrite sym composable in interpretMinimalMorphismRep f x)
+interpretMinimalMorphismRep (FromInitialRep _) x = void x
+interpretMinimalMorphismRep (ToTerminalRep _) _ = ()
+
+-----------------------------------
+---- Correctness of reflection ----
+-----------------------------------
+
+public export
+minimalObjectQuote :
+  MinimalObjectRep -> interpretMinimalObjectRep ExpressionRep
+minimalObjectQuote o = ?minimalObjectReflection_hole
+
+public export
+minimalObjectUnquote :
+  interpretMinimalObjectRep ExpressionRep -> MinimalObjectRep
+minimalObjectUnquote x = ?minimalObjectUnquote_hole
+
+export
+minimalObjectUnquoteQuoteCorrect :
+  (r : MinimalObjectRep) -> minimalObjectUnquote (minimalObjectQuote r) = r
+minimalObjectUnquoteQuoteCorrect r = ?minimalObjectUnquoteQuoteCorrect_hole
+
+export
+minimalObjectQuoteUnquoteCorrect :
+  (x : interpretMinimalObjectRep ExpressionRep) ->
+  minimalObjectQuote (minimalObjectUnquote x) = x
+minimalObjectQuoteUnquoteCorrect x = ?minimalObjectQuoteUnquoteCorrect_hole
+
+public export
+minimalMorphismQuote :
+  MinimalMorphismRep -> interpretMinimalObjectRep ExpressionRep
+minimalMorphismQuote m = ?minimalMorphismReflection_hole
+
+public export
+minimalMorphismUnquote : interpretMinimalObjectRep ExpressionRep ->
+  MinimalMorphismRep
+minimalMorphismUnquote x = ?minimalMorphismUnquote_hole
+
+export
+minimalMorphismUnquoteQuoteCorrect : (r : MinimalMorphismRep) ->
+  minimalMorphismUnquote (minimalMorphismQuote r) = r
+minimalMorphismUnquoteQuoteCorrect r =
+  ?minimalMorphismUnquoteQuoteCorrect_hole
+
+export
+minimalMorphismQuoteUnquoteCorrect :
+  (x : interpretMinimalObjectRep ExpressionRep) ->
+  minimalMorphismQuote (minimalMorphismUnquote x) = x
+minimalMorphismQuoteUnquoteCorrect x = ?minimalMorphismQuoteUnquoteCorrect_hole
+
+------------------------------------------------------------
+---- Term reduction in the minimal programming language ----
+------------------------------------------------------------
+
+-- | Terms are used to define operational semantics for the category-theoretical
+-- | representations of programming languages.  We have a well-typed
+-- | representation of terms in Idris defined by the interpretation of objects
+-- | as types -- together with the notion of function application, which we
+-- | do not have in the category-theoretical representation.
+
+public export
+data MinimalTermType : Type where
+  MinimalTypeTerm : (type : MinimalObjectRep) -> MinimalTermType
+  MinimalMorphismTerm : (domain, codomain : MinimalObjectRep) -> MinimalTermType
+
+public export
+data MinimalTerm : MinimalTermType -> Type where
+  FullyEvaluatedTerm : (o : MinimalObjectRep) ->
+    interpretMinimalObjectRep o -> MinimalTerm (MinimalTypeTerm o)
+  Application : {domain, codomain : MinimalObjectRep} ->
+    MinimalTerm (MinimalMorphismTerm domain codomain) ->
+    MinimalTerm (MinimalTypeTerm domain) ->
+    MinimalTerm (MinimalTypeTerm codomain)
 
 public export
 gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
@@ -659,3 +605,20 @@ gebMinimalTermRepresentationComplete term =
 public export
 (type : MinimalTermType) => Show (MinimalTerm type) where
   show term = show (gebMinimalTermToExp term)
+
+public export
+interpretMinimalTermType : MinimalTermType -> Type
+interpretMinimalTermType type = ?interpretMinimalTermType_hole
+
+public export
+interpretMinimalTerm : {type : MinimalTermType} -> (term : MinimalTerm type) ->
+  interpretMinimalTermType type
+interpretMinimalTerm {type} term = ?interpretMinimalTerm_hole
+
+public export
+minimalMorphismToTerm : (m : MinimalMorphismRep) ->
+  MinimalTerm $
+    MinimalMorphismTerm
+      (minimalMorphismRepDomain m)
+      (minimalMorphismRepCodomain m)
+minimalMorphismToTerm m = ?minimalMorphismToTerm_hole

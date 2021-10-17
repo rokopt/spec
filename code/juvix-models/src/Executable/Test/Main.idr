@@ -45,7 +45,7 @@ import ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
 %default total
 
 export
-partial main : IO ()
+main : IO ()
 main = do
   Geb.Test.GebTest.gebTests
   {-
