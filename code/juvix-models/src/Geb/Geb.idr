@@ -405,6 +405,21 @@ mutual
     ToTerminalRep : MinimalObjectRep -> MinimalMorphismRep
 
   public export
+  minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
+  minimalMorphismRepDomain (IdentityRep objectRep) = objectRep
+  minimalMorphismRepDomain (ComposeRep g f) = minimalMorphismRepDomain f
+  minimalMorphismRepDomain (FromInitialRep _) = InitialRep
+  minimalMorphismRepDomain (ToTerminalRep domain) = domain
+
+  public export
+  minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
+  minimalMorphismRepCodomain (IdentityRep objectRep) = objectRep
+  minimalMorphismRepCodomain (ComposeRep g f) = minimalMorphismRepCodomain g
+  minimalMorphismRepCodomain (FromInitialRep codomain) = codomain
+  minimalMorphismRepCodomain (ToTerminalRep _) = TerminalRep
+
+mutual
+  public export
   gebMinimalMorphismRepToExp : MinimalMorphismRep -> GebSExp
   gebMinimalMorphismRepToExp (IdentityRep objectRep) =
     GAIdentity $* [gebMinimalObjectRepToExp objectRep]
@@ -482,20 +497,6 @@ mutual
   public export
   DecEq MinimalMorphismRep where
     decEq = minimalMorphismRepDecEq
-
-  public export
-  minimalMorphismRepDomain : MinimalMorphismRep -> MinimalObjectRep
-  minimalMorphismRepDomain (IdentityRep objectRep) = objectRep
-  minimalMorphismRepDomain (ComposeRep g f) = minimalMorphismRepDomain f
-  minimalMorphismRepDomain (FromInitialRep _) = InitialRep
-  minimalMorphismRepDomain (ToTerminalRep domain) = domain
-
-  public export
-  minimalMorphismRepCodomain : MinimalMorphismRep -> MinimalObjectRep
-  minimalMorphismRepCodomain (IdentityRep objectRep) = objectRep
-  minimalMorphismRepCodomain (ComposeRep g f) = minimalMorphismRepCodomain g
-  minimalMorphismRepCodomain (FromInitialRep codomain) = codomain
-  minimalMorphismRepCodomain (ToTerminalRep _) = TerminalRep
 
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
