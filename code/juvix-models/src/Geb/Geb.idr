@@ -60,6 +60,46 @@ data MinimalObjectRep : Type where
   CoproductRep : MinimalObjectRep -> MinimalObjectRep -> MinimalObjectRep
   ExpressionRep : MinimalObjectRep
 
+public export
+DecEq MinimalObjectRep where
+  decEq InitialRep InitialRep = Yes Refl
+  decEq InitialRep TerminalRep = No $ \eq => case eq of Refl impossible
+  decEq InitialRep (ProductRep _ _) = No $ \eq => case eq of Refl impossible
+  decEq InitialRep (CoproductRep _ _) = No $ \eq => case eq of Refl impossible
+  decEq InitialRep ExpressionRep = No $ \eq => case eq of Refl impossible
+  decEq TerminalRep InitialRep = No $ \eq => case eq of Refl impossible
+  decEq TerminalRep TerminalRep = Yes Refl
+  decEq TerminalRep (ProductRep _ _) = No $ \eq => case eq of Refl impossible
+  decEq TerminalRep (CoproductRep _ _) = No $ \eq => case eq of Refl impossible
+  decEq TerminalRep ExpressionRep = No $ \eq => case eq of Refl impossible
+  decEq (ProductRep _ _) InitialRep = No $ \eq => case eq of Refl impossible
+  decEq (ProductRep _ _) TerminalRep = No $ \eq => case eq of Refl impossible
+  decEq (ProductRep l r) (ProductRep l' r') =
+    case (decEq l l', decEq r r') of
+      (Yes Refl, Yes Refl) => Yes Refl
+      (No neq, _) => No $ \eq => case eq of Refl => void (neq Refl)
+      (_, No neq) => No $ \eq => case eq of Refl => void (neq Refl)
+  decEq (ProductRep _ _) (CoproductRep _ _) =
+    No $ \eq => case eq of Refl impossible
+  decEq (ProductRep _ _) ExpressionRep = No $ \eq => case eq of Refl impossible
+  decEq (CoproductRep _ _) InitialRep = No $ \eq => case eq of Refl impossible
+  decEq (CoproductRep _ _) TerminalRep = No $ \eq => case eq of Refl impossible
+  decEq (CoproductRep _ _) (ProductRep _ _) =
+    No $ \eq => case eq of Refl impossible
+  decEq (CoproductRep l r) (CoproductRep l' r') =
+    case (decEq l l', decEq r r') of
+      (Yes Refl, Yes Refl) => Yes Refl
+      (No neq, _) => No $ \eq => case eq of Refl => void (neq Refl)
+      (_, No neq) => No $ \eq => case eq of Refl => void (neq Refl)
+  decEq (CoproductRep _ _) ExpressionRep =
+    No $ \eq => case eq of Refl impossible
+  decEq ExpressionRep InitialRep = No $ \eq => case eq of Refl impossible
+  decEq ExpressionRep TerminalRep = No $ \eq => case eq of Refl impossible
+  decEq ExpressionRep (ProductRep _ _) = No $ \eq => case eq of Refl impossible
+  decEq ExpressionRep (CoproductRep _ _) =
+    No $ \eq => case eq of Refl impossible
+  decEq ExpressionRep ExpressionRep = Yes Refl
+
 mutual
   public export
   data MinimalMorphismRep : Type where
@@ -84,6 +124,51 @@ mutual
   minimalMorphismRepCodomain (ComposeRep g f) = minimalMorphismRepCodomain g
   minimalMorphismRepCodomain (FromInitialRep codomain) = codomain
   minimalMorphismRepCodomain (ToTerminalRep _) = TerminalRep
+
+  public export
+  DecEq MinimalMorphismRep where
+    decEq (IdentityRep o) (IdentityRep o') = case (decEq o o') of
+      Yes Refl => Yes Refl
+      No neq => No $ \eq => case eq of Refl => void (neq Refl)
+    decEq (IdentityRep _) (ComposeRep _ _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (IdentityRep _) (FromInitialRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (IdentityRep _) (ToTerminalRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (ComposeRep _ _) (IdentityRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq
+      (ComposeRep g f {composable})
+      (ComposeRep g' f' {composable=composable'}) =
+        case (decEq g g', decEq f f') of
+          (Yes Refl, Yes Refl) => Yes ?composable_eq_hole
+          (No neq, _) => No $ \eq => case eq of Refl => void (neq Refl)
+          (_, No neq) => No $ \eq => case eq of Refl => void (neq Refl)
+    decEq (ComposeRep _ _) (FromInitialRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (ComposeRep _ _) (ToTerminalRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (FromInitialRep _) (IdentityRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (FromInitialRep _) (ComposeRep _ _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (FromInitialRep codomain) (FromInitialRep codomain') =
+      case (decEq codomain codomain') of
+        Yes Refl => Yes Refl
+        No neq => No $ \eq => case eq of Refl => void (neq Refl)
+    decEq (FromInitialRep _) (ToTerminalRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (ToTerminalRep _) (IdentityRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (ToTerminalRep _) (ComposeRep _ _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (ToTerminalRep _) (FromInitialRep _) =
+      No $ \eq => case eq of Refl impossible
+    decEq (ToTerminalRep domain) (ToTerminalRep domain') =
+      case (decEq domain domain') of
+        Yes Refl => Yes Refl
+        No neq => No $ \eq => case eq of Refl => void (neq Refl)
 
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
