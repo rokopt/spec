@@ -403,6 +403,18 @@ mutual
       MinimalMorphism
     FromInitial : MinimalObject -> MinimalMorphism
     ToTerminal : MinimalObject -> MinimalMorphism
+    ProductIntro : (f, g : MinimalMorphism) ->
+      {auto domainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
+        (minimalMorphismDomain f) (minimalMorphismDomain g)} ->
+      MinimalMorphism
+    ProductElimLeft : (a, b : MinimalObject) -> MinimalMorphism
+    ProductElimRight : (a, b : MinimalObject) -> MinimalMorphism
+    CoproductElim : (f, g : MinimalMorphism) ->
+      {auto codomainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
+        (minimalMorphismCodomain f) (minimalMorphismCodomain g)} ->
+      MinimalMorphism
+    CoproductIntroLeft : (a, b : MinimalObject) -> MinimalMorphism
+    CoproductIntroRight : (a, b : MinimalObject) -> MinimalMorphism
 
   public export
   minimalMorphismDomain : MinimalMorphism -> MinimalObject
@@ -410,6 +422,7 @@ mutual
   minimalMorphismDomain (Compose g f) = minimalMorphismDomain f
   minimalMorphismDomain (FromInitial _) = Initial
   minimalMorphismDomain (ToTerminal domain) = domain
+  minimalMorphismDomain _ = ?minimalMorphismDomain_hole
 
   public export
   minimalMorphismCodomain : MinimalMorphism -> MinimalObject
@@ -417,6 +430,7 @@ mutual
   minimalMorphismCodomain (Compose g f) = minimalMorphismCodomain g
   minimalMorphismCodomain (FromInitial codomain) = codomain
   minimalMorphismCodomain (ToTerminal _) = Terminal
+  minimalMorphismCodomain _ = ?minimalMorphismCodomain_hole
 
 mutual
   public export
@@ -429,6 +443,7 @@ mutual
     GAFromInitial $* [gebMinimalObjectToExp codomain]
   gebMinimalMorphismToExp (ToTerminal domain) =
     GAToTerminal $* [gebMinimalObjectToExp domain]
+  gebMinimalMorphismToExp _ = ?gebMinimalMorphismToExp_hole
 
   public export
   gebExpToMinimalMorphism : GebSExp -> Maybe MinimalMorphism
@@ -479,6 +494,8 @@ mutual
   gebMinimalMorphismRepresentationComplete (ToTerminal domain) =
     rewrite gebMinimalObjectRepresentationComplete domain in
     Refl
+  gebMinimalMorphismRepresentationComplete _ =
+    ?gebMinimalMorphismRepresentationComplete_hole
 
   public export
   Show MinimalMorphism where
@@ -541,6 +558,7 @@ interpretMinimalMorphism (Compose g f {composable}) x =
       interpretMinimalMorphism f x
 interpretMinimalMorphism (FromInitial _) x = void x
 interpretMinimalMorphism (ToTerminal _) _ = ()
+interpretMinimalMorphism _ _ = ?interpretMinimalMorphism_hole
 
 -----------------------------------
 ---- Correctness of reflection ----
