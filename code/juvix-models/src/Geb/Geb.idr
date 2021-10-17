@@ -190,18 +190,18 @@ minimalMorphismUnique m m' =
 -----------------------------------------------------------------------------
 
 public export
-interpretMinimalObject : {r : MinimalObjectRep} -> MinimalObject r -> Type
-interpretMinimalObject Initial = Void
-interpretMinimalObject Terminal = ()
-interpretMinimalObject (Product o o') =
-  (interpretMinimalObject o, interpretMinimalObject o')
-interpretMinimalObject (Coproduct o o') =
-  Either (interpretMinimalObject o) (interpretMinimalObject o')
-interpretMinimalObject Expression = MinimalExpressionRep
+interpretMinimalObjectRep : MinimalObjectRep -> Type
+interpretMinimalObjectRep InitialRep = Void
+interpretMinimalObjectRep TerminalRep = ()
+interpretMinimalObjectRep (ProductRep r r') =
+  (interpretMinimalObjectRep r, interpretMinimalObjectRep r')
+interpretMinimalObjectRep (CoproductRep r r') =
+  Either (interpretMinimalObjectRep r) (interpretMinimalObjectRep r')
+interpretMinimalObjectRep ExpressionRep = MinimalExpressionRep
 
 public export
-interpretMinimalObjectRep : MinimalObjectRep -> Type
-interpretMinimalObjectRep r = interpretMinimalObject (minimalObject r)
+interpretMinimalObject : {r : MinimalObjectRep} -> MinimalObject r -> Type
+interpretMinimalObject {r} _ = interpretMinimalObjectRep r
 
 public export
 interpretMinimalMorphismDomain : MinimalMorphismRep -> Type
@@ -219,21 +219,16 @@ interpretMinimalMorphismType r =
   interpretMinimalMorphismDomain r -> interpretMinimalMorphismCodomain r
 
 public export
+interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
+  interpretMinimalMorphismType r
+interpretMinimalMorphismRep (FromInitialRep _) x = void x
+interpretMinimalMorphismRep (ToTerminalRep _) _ = ()
+
+public export
 interpretMinimalMorphism :
   {r : MinimalMorphismRep} -> (m: MinimalMorphism r) ->
   interpretMinimalMorphismType r
-interpretMinimalMorphism
-  {r=(FromInitialRep codomainRep)} (MinimalFromInitial _) x =
-    ?interpretMinimalMorphism_hole_frominitial
-interpretMinimalMorphism
-  {r=(ToTerminalRep domainRep)} (MinimalToTerminal _) x =
-    ?interpretMinimalMorphism_hole_toterminal
-
-public export
-interpretMinimalMorphismRep : (r : MinimalMorphismRep) ->
-  interpretMinimalObject (minimalMorphismDomain r) ->
-  interpretMinimalObject (minimalMorphismCodomain r)
-interpretMinimalMorphismRep r = interpretMinimalMorphism (minimalMorphism r)
+interpretMinimalMorphism {r} _ = interpretMinimalMorphismRep r
 
 -----------------------------------
 ---- Correctness of reflection ----
