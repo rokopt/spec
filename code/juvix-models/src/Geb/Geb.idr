@@ -821,47 +821,37 @@ interpretMinimalMorphism _ _ = ?interpretMinimalMorphism_hole
 -----------------------------------
 
 public export
-minimalObjectQuote :
-  MinimalObject -> interpretMinimalObject Expression
-minimalObjectQuote o = ?minimalObjectReflection_hole
+minimalObjectQuote : MinimalObject -> interpretMinimalObject Expression
+minimalObjectQuote = MinimalObjectExp
 
 public export
-minimalObjectUnquote :
-  interpretMinimalObject Expression -> MinimalObject
-minimalObjectUnquote x = ?minimalObjectUnquote_hole
+minimalMorphismQuote : MinimalMorphism -> interpretMinimalObject Expression
+minimalMorphismQuote = MinimalMorphismExp
+
+public export
+minimalExpressionQuote : MinimalExpression -> interpretMinimalObject Expression
+minimalExpressionQuote = id
+
+public export
+minimalExpressionUnquote :
+  interpretMinimalObject Expression -> MinimalExpression
+minimalExpressionUnquote = id
 
 export
-minimalObjectUnquoteQuoteCorrect :
-  (r : MinimalObject) -> minimalObjectUnquote (minimalObjectQuote r) = r
-minimalObjectUnquoteQuoteCorrect r = ?minimalObjectUnquoteQuoteCorrect_hole
-
-export
-minimalObjectQuoteUnquoteCorrect :
-  (x : interpretMinimalObject Expression) ->
-  minimalObjectQuote (minimalObjectUnquote x) = x
-minimalObjectQuoteUnquoteCorrect x = ?minimalObjectQuoteUnquoteCorrect_hole
-
-public export
-minimalMorphismQuote :
-  MinimalMorphism -> interpretMinimalObject Expression
-minimalMorphismQuote m = ?minimalMorphismReflection_hole
-
-public export
-minimalMorphismUnquote : interpretMinimalObject Expression ->
-  MinimalMorphism
-minimalMorphismUnquote x = ?minimalMorphismUnquote_hole
+minimalObjectUnquoteQuoteCorrect : (r : MinimalObject) ->
+  minimalExpressionUnquote (minimalObjectQuote r) = MinimalObjectExp r
+minimalObjectUnquoteQuoteCorrect r = Refl
 
 export
 minimalMorphismUnquoteQuoteCorrect : (r : MinimalMorphism) ->
-  minimalMorphismUnquote (minimalMorphismQuote r) = r
-minimalMorphismUnquoteQuoteCorrect r =
-  ?minimalMorphismUnquoteQuoteCorrect_hole
+  minimalExpressionUnquote (minimalMorphismQuote r) = MinimalMorphismExp r
+minimalMorphismUnquoteQuoteCorrect r = Refl
 
 export
-minimalMorphismQuoteUnquoteCorrect :
+minimalExpressionQuoteUnquoteCorrect :
   (x : interpretMinimalObject Expression) ->
-  minimalMorphismQuote (minimalMorphismUnquote x) = x
-minimalMorphismQuoteUnquoteCorrect x = ?minimalMorphismQuoteUnquoteCorrect_hole
+  minimalExpressionQuote (minimalExpressionUnquote x) = x
+minimalExpressionQuoteUnquoteCorrect x = Refl
 
 ------------------------------------------------------
 ---- Morphism transformations ("compiler passes") ----
