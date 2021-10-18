@@ -416,33 +416,33 @@ mutual
   data MinimalMorphism : Type where
     Identity : MinimalObject -> MinimalMorphism
     Compose : (g, f : MinimalMorphism) ->
-      {auto composable : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismCodomain f) (minimalMorphismDomain g)} ->
+      {auto composable :
+        (minimalMorphismCodomain f) = (minimalMorphismDomain g)} ->
       MinimalMorphism
     FromInitial : MinimalObject -> MinimalMorphism
     ToTerminal : MinimalObject -> MinimalMorphism
     ProductIntro : (f, g : MinimalMorphism) ->
-      {auto domainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismDomain f) (minimalMorphismDomain g)} ->
+      {auto domainsMatch :
+        (minimalMorphismDomain f) = (minimalMorphismDomain g)} ->
       MinimalMorphism
     ProductElimLeft : (a, b : MinimalObject) -> MinimalMorphism
     ProductElimRight : (a, b : MinimalObject) -> MinimalMorphism
     CoproductElim : (f, g : MinimalMorphism) ->
-      {auto codomainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismCodomain f) (minimalMorphismCodomain g)} ->
+      {auto codomainsMatch :
+        (minimalMorphismCodomain f) = (minimalMorphismCodomain g)} ->
       MinimalMorphism
     CoproductIntroLeft : (a, b : MinimalObject) -> MinimalMorphism
     CoproductIntroRight : (a, b : MinimalObject) -> MinimalMorphism
     ExpressionIntro : MinimalExpression -> MinimalMorphism
     ExpressionElim : (exp, exp', eqCase, neqCase : MinimalMorphism) ->
-      {auto expDomainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismDomain exp) (minimalMorphismDomain exp')} ->
-      {auto eqDomainMatches : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismDomain exp) (minimalMorphismDomain eqCase)} ->
-      {auto neqDomainMatches : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismDomain exp) (minimalMorphismDomain neqCase)} ->
-      {auto eqCodomainsMatch : AreDecEq Geb.Geb.minimalObjectDecEq
-        (minimalMorphismCodomain eqCase) (minimalMorphismCodomain neqCase)} ->
+      {auto expDomainsMatch :
+        (minimalMorphismDomain exp) = (minimalMorphismDomain exp')} ->
+      {auto eqDomainMatches :
+        (minimalMorphismDomain exp) = (minimalMorphismDomain eqCase)} ->
+      {auto neqDomainMatches :
+        (minimalMorphismDomain exp) = (minimalMorphismDomain neqCase)} ->
+      {auto eqCodomainsMatch :
+        (minimalMorphismCodomain eqCase) = (minimalMorphismCodomain neqCase)} ->
       MinimalMorphism
 
   public export
@@ -507,13 +507,7 @@ mutual
       (Just g, Just f) =>
         case (minimalObjectDecEq
           (minimalMorphismCodomain f) (minimalMorphismDomain g)) of
-            Yes composable =>
-              Just $ Compose g f
-                {composable=(
-                    rewrite composable in
-                    DecEqReturnsYes {deq=minimalObjectDecEq} $
-                      decEqRefl minimalObjectDecEq
-                        (minimalMorphismDomain g))}
+            Yes composable => Just $ Compose g f {composable}
             No _ => Nothing
       _ => Nothing
   gebExpToMinimalMorphism (GAFromInitial $* [codomainExp]) =
@@ -535,9 +529,9 @@ mutual
   gebMinimalMorphismRepresentationComplete (Compose g f {composable}) =
     rewrite gebMinimalMorphismRepresentationComplete g in
     rewrite gebMinimalMorphismRepresentationComplete f in
-    rewrite AreDecEqExtract composable in
+    rewrite composable in
     rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain g) in
-    rewrite AreDecEqUnique composable _ in
+    rewrite uip composable _ in
     Refl
   gebMinimalMorphismRepresentationComplete (FromInitial codomain) =
     rewrite gebMinimalObjectRepresentationComplete codomain in
@@ -600,7 +594,7 @@ interpretMinimalMorphism : (r : MinimalMorphism) ->
 interpretMinimalMorphism (Identity o) x = x
 interpretMinimalMorphism (Compose g f {composable}) x =
   interpretMinimalMorphism g $
-    replace {p=interpretMinimalObject} (AreDecEqExtract composable) $
+    replace {p=interpretMinimalObject} composable $
       interpretMinimalMorphism f x
 interpretMinimalMorphism (FromInitial _) x = void x
 interpretMinimalMorphism (ToTerminal _) _ = ()
