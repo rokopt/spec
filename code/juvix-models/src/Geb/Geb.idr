@@ -727,7 +727,14 @@ mutual
     rewrite gebMinimalObjectRepresentationComplete b in
     Refl
   gebMinimalMorphismRepresentationComplete (ExpressionIntro x) =
-    ?gebMinimalMorphismRepresentationComplete_expressionintro_hole
+    case x of
+      MinimalObjectExp o =>
+        rewrite gebMinimalObjectRepresentationComplete o in
+        Refl
+      MinimalMorphismExp m =>
+        rewrite gebMorphismExpIsNotObject m in
+        rewrite gebMinimalMorphismRepresentationComplete m in
+        Refl
   gebMinimalMorphismRepresentationComplete
     (ExpressionElim exp exp' eqCase neqCase) =
       ?gebMinimalMorphismRepresentationComplete_expressionelim_hole
