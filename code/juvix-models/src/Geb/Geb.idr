@@ -456,7 +456,15 @@ mutual
   minimalMorphismDomain (Compose g f) = minimalMorphismDomain f
   minimalMorphismDomain (FromInitial _) = Initial
   minimalMorphismDomain (ToTerminal domain) = domain
-  minimalMorphismDomain _ = ?minimalMorphismDomain_hole
+  minimalMorphismDomain (ProductIntro f g) = minimalMorphismDomain f
+  minimalMorphismDomain (ProductElimLeft a b) = Product a b
+  minimalMorphismDomain (ProductElimRight a b) = Product a b
+  minimalMorphismDomain (CoproductElim f g) =
+    Coproduct (minimalMorphismDomain f) (minimalMorphismDomain g)
+  minimalMorphismDomain (CoproductIntroLeft a b) = a
+  minimalMorphismDomain (CoproductIntroRight a b) = b
+  minimalMorphismDomain (ExpressionIntro _) = Terminal
+  minimalMorphismDomain (ExpressionElim exp _ _ _) = minimalMorphismDomain exp
 
   public export
   minimalMorphismCodomain : MinimalMorphism -> MinimalObject
@@ -464,7 +472,16 @@ mutual
   minimalMorphismCodomain (Compose g f) = minimalMorphismCodomain g
   minimalMorphismCodomain (FromInitial codomain) = codomain
   minimalMorphismCodomain (ToTerminal _) = Terminal
-  minimalMorphismCodomain _ = ?minimalMorphismCodomain_hole
+  minimalMorphismCodomain (ProductIntro f g) =
+    Product (minimalMorphismCodomain f) (minimalMorphismCodomain g)
+  minimalMorphismCodomain (ProductElimLeft a b) = a
+  minimalMorphismCodomain (ProductElimRight a b) = b
+  minimalMorphismCodomain (CoproductElim f g) = minimalMorphismCodomain f
+  minimalMorphismCodomain (CoproductIntroLeft a b) = Coproduct a b
+  minimalMorphismCodomain (CoproductIntroRight a b) = Coproduct a b
+  minimalMorphismCodomain (ExpressionIntro _) = Expression
+  minimalMorphismCodomain (ExpressionElim _ _ eqCase _) =
+    minimalMorphismCodomain eqCase
 
 mutual
   public export
