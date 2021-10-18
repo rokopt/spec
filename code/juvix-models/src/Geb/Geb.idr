@@ -451,6 +451,10 @@ public export
 DecEq MinimalObject where
   decEq = minimalObjectDecEq
 
+public export
+Eq MinimalObject using decEqToEq where
+  (==) = (==)
+
 mutual
   public export
   data MinimalMorphism : Type where
@@ -477,6 +481,10 @@ mutual
     ExpressionElim : (exp, exp', eqCase, neqCase : MinimalMorphism) ->
       {auto expDomainsMatch :
         (minimalMorphismDomain exp) = (minimalMorphismDomain exp')} ->
+      {auto expCodomainIsExpression :
+        (minimalMorphismCodomain exp) = Expression} ->
+      {auto expCodomainsMatch :
+        (minimalMorphismCodomain exp) = (minimalMorphismCodomain exp')} ->
       {auto eqDomainMatches :
         (minimalMorphismDomain exp) = (minimalMorphismDomain eqCase)} ->
       {auto neqDomainMatches :
@@ -635,17 +643,25 @@ mutual
         case
           (minimalObjectDecEq
             (minimalMorphismDomain exp) (minimalMorphismDomain exp'),
+           minimalObjectDecEq (minimalMorphismCodomain exp) Expression,
            minimalObjectDecEq
-            (minimalMorphismDomain exp) (minimalMorphismDomain eqCase),
-           minimalObjectDecEq
-            (minimalMorphismDomain exp) (minimalMorphismDomain neqCase),
-           minimalObjectDecEq
-            (minimalMorphismCodomain eqCase) (minimalMorphismCodomain neqCase))
-          of
-            (Yes domainsMatch, Yes eqDomainsMatch, Yes neqDomainsMatch,
-              Yes codomainsMatch) =>
-                Just $ ExpressionElim exp exp' eqCase neqCase
-            _ => Nothing
+            (minimalMorphismCodomain exp) (minimalMorphismCodomain exp')) of
+              (Yes domainsMatch, Yes expCodomainIsExpression,
+              Yes expCodomainsMatch) =>
+                case
+                  (minimalObjectDecEq
+                    (minimalMorphismDomain exp)
+                    (minimalMorphismDomain eqCase),
+                  minimalObjectDecEq
+                    (minimalMorphismDomain exp)
+                    (minimalMorphismDomain neqCase),
+                  minimalObjectDecEq
+                    (minimalMorphismCodomain eqCase)
+                    (minimalMorphismCodomain neqCase)) of
+                (Yes eqDomainsMatch, Yes neqDomainsMatch, Yes codomainsMatch) =>
+                  Just $ ExpressionElim exp exp' eqCase neqCase
+                _ => Nothing
+              _ => Nothing
       _ => Nothing
   gebExpToMinimalMorphism _ = Nothing
 
@@ -737,22 +753,29 @@ mutual
         Refl
   gebMinimalMorphismRepresentationComplete
     (ExpressionElim exp exp' eqCase neqCase
-      {expDomainsMatch} {eqDomainMatches}
-      {neqDomainMatches} {eqCodomainsMatch}) =
+      {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
+      {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) =
         rewrite gebMinimalMorphismRepresentationComplete exp in
         rewrite gebMinimalMorphismRepresentationComplete exp' in
         rewrite gebMinimalMorphismRepresentationComplete eqCase in
         rewrite gebMinimalMorphismRepresentationComplete neqCase in
         rewrite sym expDomainsMatch in
-        rewrite sym eqDomainMatches in
-        rewrite sym neqDomainMatches in
-        rewrite sym eqCodomainsMatch in
+        rewrite sym expCodomainIsExpression in
+        rewrite expCodomainsMatch in
         rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
+        rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain exp') in
+        rewrite sym eqDomainMatches in
+        rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
+        rewrite sym neqDomainMatches in
+        rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
+        rewrite sym eqCodomainsMatch in
         rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain eqCase) in
-        rewrite uip expDomainsMatch _ in
-        rewrite uip eqDomainMatches _ in
-        rewrite uip neqDomainMatches _ in
         rewrite uip eqCodomainsMatch _ in
+        rewrite uip neqDomainMatches _ in
+        rewrite uip eqDomainMatches _ in
+        rewrite uip expCodomainsMatch _ in
+        rewrite uip expCodomainIsExpression _ in
+        rewrite uip expDomainsMatch _ in
         Refl
 
   export
@@ -769,8 +792,35 @@ DecEq MinimalMorphism where
   decEq = minimalMorphismDecEq
 
 public export
+Eq MinimalMorphism using decEqToEq where
+  (==) = (==)
+
+public export
 Show MinimalMorphism where
   show m = show (gebMinimalMorphismToExp m)
+
+public export
+minimalExpressionDecEq : DecEqPred MinimalExpression
+minimalExpressionDecEq (MinimalObjectExp x) (MinimalObjectExp x') =
+  case decEq x x' of
+    Yes Refl => Yes Refl
+    No neq => No $ \eq => case eq of Refl => neq Refl
+minimalExpressionDecEq (MinimalObjectExp x) (MinimalMorphismExp x') =
+  No $ \eq => case eq of Refl impossible
+minimalExpressionDecEq (MinimalMorphismExp x) (MinimalObjectExp x') =
+  No $ \eq => case eq of Refl impossible
+minimalExpressionDecEq (MinimalMorphismExp x) (MinimalMorphismExp x') =
+  case decEq x x' of
+    Yes Refl => Yes Refl
+    No neq => No $ \eq => case eq of Refl => neq Refl
+
+public export
+DecEq MinimalExpression where
+  decEq = minimalExpressionDecEq
+
+public export
+Eq MinimalExpression using decEqToEq where
+  (==) = (==)
 
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
@@ -814,7 +864,35 @@ interpretMinimalMorphism (ToTerminal _) _ = ()
 interpretMinimalMorphism (ProductIntro f g {domainsMatch}) x =
   (interpretMinimalMorphism f x,
    interpretMinimalMorphism g (rewrite sym domainsMatch in x))
-interpretMinimalMorphism _ _ = ?interpretMinimalMorphism_hole
+interpretMinimalMorphism (ProductElimLeft a b) x = fst x
+interpretMinimalMorphism (ProductElimRight a b) x = snd x
+interpretMinimalMorphism (CoproductElim f g {codomainsMatch}) x =
+  case x of
+    Left x' => interpretMinimalMorphism f x'
+    Right x' => rewrite codomainsMatch in interpretMinimalMorphism g x'
+interpretMinimalMorphism (CoproductIntroLeft a b) x = Left x
+interpretMinimalMorphism (CoproductIntroRight a b) x = Right x
+interpretMinimalMorphism (ExpressionIntro exp) () = exp
+interpretMinimalMorphism (ExpressionElim exp exp' eqCase neqCase
+  {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
+  {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) x =
+    let
+      y = interpretMinimalMorphism exp x
+      y' = replace {p=interpretMinimalObject} expCodomainIsExpression y
+      z = interpretMinimalMorphism exp' (rewrite sym expDomainsMatch in x)
+      z' = replace {p=interpretMinimalObject} (sym expCodomainsMatch) z
+      z'' = replace {p=interpretMinimalObject} expCodomainIsExpression z'
+      {-
+      z = replace {p=interpretMinimalObject} expCodomainsMatch $
+        rewrite expCodomainsMatch in
+        interpretMinimalMorphism exp' (rewrite sym expDomainsMatch in x)
+        -}
+    in
+    if y' == z'' then
+      interpretMinimalMorphism eqCase (rewrite sym eqDomainMatches in x)
+    else
+      rewrite eqCodomainsMatch in
+      interpretMinimalMorphism neqCase (rewrite sym neqDomainMatches in x)
 
 -----------------------------------
 ---- Correctness of reflection ----
