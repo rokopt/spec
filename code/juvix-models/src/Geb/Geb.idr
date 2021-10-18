@@ -811,6 +811,9 @@ interpretMinimalMorphism (Compose g f {composable}) x =
       interpretMinimalMorphism f x
 interpretMinimalMorphism (FromInitial _) x = void x
 interpretMinimalMorphism (ToTerminal _) _ = ()
+interpretMinimalMorphism (ProductIntro f g {domainsMatch}) x =
+  (interpretMinimalMorphism f x,
+   interpretMinimalMorphism g (rewrite sym domainsMatch in x))
 interpretMinimalMorphism _ _ = ?interpretMinimalMorphism_hole
 
 -----------------------------------
