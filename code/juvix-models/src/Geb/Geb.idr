@@ -560,6 +560,7 @@ mutual
        gebMinimalMorphismToExp eqCase,
        gebMinimalMorphismToExp neqCase]
 
+mutual
   public export
   gebExpToMinimalMorphism : GebSExp -> Maybe MinimalMorphism
   gebExpToMinimalMorphism (GAIdentity $* [objectExp]) =
@@ -584,6 +585,7 @@ mutual
       _ => Nothing
   gebExpToMinimalMorphism _ = Nothing
 
+mutual
   public export
   gebMinimalMorphismRepresentationComplete : (r : MinimalMorphism) ->
     gebExpToMinimalMorphism (gebMinimalMorphismToExp r) = Just r
@@ -606,22 +608,22 @@ mutual
   gebMinimalMorphismRepresentationComplete _ =
     ?gebMinimalMorphismRepresentationComplete_hole
 
-  public export
-  Show MinimalMorphism where
-    show m = show (gebMinimalMorphismToExp m)
+public export
+Show MinimalMorphism where
+  show m = show (gebMinimalMorphismToExp m)
 
-  export
-  minimalMorphismDecEq : DecEqPred MinimalMorphism
-  minimalMorphismDecEq =
-    encodingDecEq
-      gebMinimalMorphismToExp
-      gebExpToMinimalMorphism
-      gebMinimalMorphismRepresentationComplete
-      decEq
+export
+minimalMorphismDecEq : DecEqPred MinimalMorphism
+minimalMorphismDecEq =
+  encodingDecEq
+    gebMinimalMorphismToExp
+    gebExpToMinimalMorphism
+    gebMinimalMorphismRepresentationComplete
+    decEq
 
-  public export
-  DecEq MinimalMorphism where
-    decEq = minimalMorphismDecEq
+public export
+DecEq MinimalMorphism where
+  decEq = minimalMorphismDecEq
 
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
