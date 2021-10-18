@@ -736,8 +736,24 @@ mutual
         rewrite gebMinimalMorphismRepresentationComplete m in
         Refl
   gebMinimalMorphismRepresentationComplete
-    (ExpressionElim exp exp' eqCase neqCase) =
-      ?gebMinimalMorphismRepresentationComplete_expressionelim_hole
+    (ExpressionElim exp exp' eqCase neqCase
+      {expDomainsMatch} {eqDomainMatches}
+      {neqDomainMatches} {eqCodomainsMatch}) =
+        rewrite gebMinimalMorphismRepresentationComplete exp in
+        rewrite gebMinimalMorphismRepresentationComplete exp' in
+        rewrite gebMinimalMorphismRepresentationComplete eqCase in
+        rewrite gebMinimalMorphismRepresentationComplete neqCase in
+        rewrite sym expDomainsMatch in
+        rewrite sym eqDomainMatches in
+        rewrite sym neqDomainMatches in
+        rewrite sym eqCodomainsMatch in
+        rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
+        rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain eqCase) in
+        rewrite uip expDomainsMatch _ in
+        rewrite uip eqDomainMatches _ in
+        rewrite uip neqDomainMatches _ in
+        rewrite uip eqCodomainsMatch _ in
+        Refl
 
   export
   minimalMorphismDecEq : DecEqPred MinimalMorphism
