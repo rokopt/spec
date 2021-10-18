@@ -562,6 +562,15 @@ mutual
 
 mutual
   public export
+  gebExpToMinimalExp : GebSExp -> Maybe MinimalExpression
+  gebExpToMinimalExp x =
+    case gebExpToMinimalObject x of
+      Just o => Just $ MinimalObjectExp o
+      Nothing => case gebExpToMinimalMorphism x of
+        Just m => Just $ MinimalMorphismExp m
+        Nothing => Nothing
+
+  public export
   gebExpToMinimalMorphism : GebSExp -> Maybe MinimalMorphism
   gebExpToMinimalMorphism (GAIdentity $* [objectExp]) =
     case gebExpToMinimalObject objectExp of
@@ -583,9 +592,91 @@ mutual
     case gebExpToMinimalObject domainExp of
       Just domain => Just $ ToTerminal domain
       _ => Nothing
+  gebExpToMinimalMorphism (GAProductIntro $* [fExp, gExp]) =
+    case (gebExpToMinimalMorphism fExp, gebExpToMinimalMorphism gExp) of
+      (Just f, Just g) =>
+        case (minimalObjectDecEq
+          (minimalMorphismDomain f) (minimalMorphismDomain g)) of
+            Yes domainsMatch => Just $ ProductIntro f g {domainsMatch}
+            No _ => Nothing
+      _ => Nothing
+  gebExpToMinimalMorphism (GAProductElimLeft $* [aExp, bExp]) =
+    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
+      (Just a, Just b) => Just $ ProductElimLeft a b
+      _ => Nothing
+  gebExpToMinimalMorphism (GAProductElimRight $* [aExp, bExp]) =
+    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
+      (Just a, Just b) => Just $ ProductElimRight a b
+      _ => Nothing
+  gebExpToMinimalMorphism (GACoproductElim $* [fExp, gExp]) =
+    case (gebExpToMinimalMorphism fExp, gebExpToMinimalMorphism gExp) of
+      (Just f, Just g) =>
+        case (minimalObjectDecEq
+          (minimalMorphismCodomain f) (minimalMorphismCodomain g)) of
+            Yes codomainsMatch => Just $ CoproductElim f g {codomainsMatch}
+            No _ => Nothing
+      _ => Nothing
+  gebExpToMinimalMorphism (GACoproductIntroLeft $* [aExp, bExp]) =
+    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
+      (Just a, Just b) => Just $ CoproductIntroLeft a b
+      _ => Nothing
+  gebExpToMinimalMorphism (GACoproductIntroRight $* [aExp, bExp]) =
+    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
+      (Just a, Just b) => Just $ CoproductIntroRight a b
+      _ => Nothing
+  gebExpToMinimalMorphism (GAExpressionIntro $* [x]) =
+    case gebExpToMinimalExp x of
+      Just minimalExp => Just $ ExpressionIntro minimalExp
+      _ => Nothing
+  gebExpToMinimalMorphism (GAExpressionElim $* [exp, exp', eqExp, neqExp]) =
+    case (gebExpToMinimalMorphism exp, gebExpToMinimalMorphism exp',
+          gebExpToMinimalMorphism eqExp, gebExpToMinimalMorphism neqExp) of
+      (Just exp, Just exp', Just eqCase, Just neqCase) =>
+        case
+          (minimalObjectDecEq
+            (minimalMorphismDomain exp) (minimalMorphismDomain exp'),
+           minimalObjectDecEq
+            (minimalMorphismDomain exp) (minimalMorphismDomain eqCase),
+           minimalObjectDecEq
+            (minimalMorphismDomain exp) (minimalMorphismDomain neqCase),
+           minimalObjectDecEq
+            (minimalMorphismCodomain eqCase) (minimalMorphismCodomain neqCase))
+          of
+            (Yes domainsMatch, Yes eqDomainsMatch, Yes neqDomainsMatch,
+              Yes codomainsMatch) =>
+                Just $ ExpressionElim exp exp' eqCase neqCase
+            _ => Nothing
+      _ => Nothing
   gebExpToMinimalMorphism _ = Nothing
 
 mutual
+  public export
+  gebMorphismExpIsNotObject : (m : MinimalMorphism) ->
+    gebExpToMinimalObject (gebMinimalMorphismToExp m) = Nothing
+  gebMorphismExpIsNotObject (Identity _) = Refl
+  gebMorphismExpIsNotObject (Compose _ _) = Refl
+  gebMorphismExpIsNotObject (FromInitial _) = Refl
+  gebMorphismExpIsNotObject (ToTerminal _) = Refl
+  gebMorphismExpIsNotObject (ProductIntro _ _) = Refl
+  gebMorphismExpIsNotObject (ProductElimLeft _ _) = Refl
+  gebMorphismExpIsNotObject (ProductElimRight _ _) = Refl
+  gebMorphismExpIsNotObject (CoproductElim _ _) = Refl
+  gebMorphismExpIsNotObject (CoproductIntroLeft _ _) = Refl
+  gebMorphismExpIsNotObject (CoproductIntroRight _ _) = Refl
+  gebMorphismExpIsNotObject (ExpressionIntro _) = Refl
+  gebMorphismExpIsNotObject (ExpressionElim _ _ _ _) = Refl
+
+  public export
+  gebMinimalExpRepresentationComplete : (r : MinimalExpression) ->
+    gebExpToMinimalExp (gebMinimalExpressionToExp r) = Just r
+  gebMinimalExpRepresentationComplete (MinimalObjectExp o) =
+    rewrite gebMinimalObjectRepresentationComplete o in
+    Refl
+  gebMinimalExpRepresentationComplete (MinimalMorphismExp m) =
+    rewrite gebMorphismExpIsNotObject m in
+    rewrite gebMinimalMorphismRepresentationComplete m in
+    Refl
+
   public export
   gebMinimalMorphismRepresentationComplete : (r : MinimalMorphism) ->
     gebExpToMinimalMorphism (gebMinimalMorphismToExp r) = Just r
@@ -605,25 +696,58 @@ mutual
   gebMinimalMorphismRepresentationComplete (ToTerminal domain) =
     rewrite gebMinimalObjectRepresentationComplete domain in
     Refl
-  gebMinimalMorphismRepresentationComplete _ =
-    ?gebMinimalMorphismRepresentationComplete_hole
+  gebMinimalMorphismRepresentationComplete (ProductIntro f g {domainsMatch}) =
+    rewrite gebMinimalMorphismRepresentationComplete f in
+    rewrite gebMinimalMorphismRepresentationComplete g in
+    rewrite domainsMatch in
+    rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain g) in
+    rewrite uip domainsMatch _ in
+    Refl
+  gebMinimalMorphismRepresentationComplete (ProductElimLeft a b) =
+    rewrite gebMinimalObjectRepresentationComplete a in
+    rewrite gebMinimalObjectRepresentationComplete b in
+    Refl
+  gebMinimalMorphismRepresentationComplete (ProductElimRight a b) =
+    rewrite gebMinimalObjectRepresentationComplete a in
+    rewrite gebMinimalObjectRepresentationComplete b in
+    Refl
+  gebMinimalMorphismRepresentationComplete (CoproductElim f g {codomainsMatch}) =
+    rewrite gebMinimalMorphismRepresentationComplete f in
+    rewrite gebMinimalMorphismRepresentationComplete g in
+    rewrite codomainsMatch in
+    rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain g) in
+    rewrite uip codomainsMatch _ in
+    Refl
+  gebMinimalMorphismRepresentationComplete (CoproductIntroLeft a b) =
+    rewrite gebMinimalObjectRepresentationComplete a in
+    rewrite gebMinimalObjectRepresentationComplete b in
+    Refl
+  gebMinimalMorphismRepresentationComplete (CoproductIntroRight a b) =
+    rewrite gebMinimalObjectRepresentationComplete a in
+    rewrite gebMinimalObjectRepresentationComplete b in
+    Refl
+  gebMinimalMorphismRepresentationComplete (ExpressionIntro x) =
+    ?gebMinimalMorphismRepresentationComplete_expressionintro_hole
+  gebMinimalMorphismRepresentationComplete
+    (ExpressionElim exp exp' eqCase neqCase) =
+      ?gebMinimalMorphismRepresentationComplete_expressionelim_hole
 
-public export
-Show MinimalMorphism where
-  show m = show (gebMinimalMorphismToExp m)
-
-export
-minimalMorphismDecEq : DecEqPred MinimalMorphism
-minimalMorphismDecEq =
-  encodingDecEq
-    gebMinimalMorphismToExp
-    gebExpToMinimalMorphism
-    gebMinimalMorphismRepresentationComplete
-    decEq
+  export
+  minimalMorphismDecEq : DecEqPred MinimalMorphism
+  minimalMorphismDecEq =
+    encodingDecEq
+      gebMinimalMorphismToExp
+      gebExpToMinimalMorphism
+      gebMinimalMorphismRepresentationComplete
+      decEq
 
 public export
 DecEq MinimalMorphism where
   decEq = minimalMorphismDecEq
+
+public export
+Show MinimalMorphism where
+  show m = show (gebMinimalMorphismToExp m)
 
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
