@@ -52,6 +52,14 @@ data GebAtom : Type where
   GACompose : GebAtom
   GAFromInitial : GebAtom
   GAToTerminal : GebAtom
+  GAProductIntro : GebAtom
+  GAProductElimLeft : GebAtom
+  GAProductElimRight : GebAtom
+  GACoproductElim : GebAtom
+  GACoproductIntroLeft : GebAtom
+  GACoproductIntroRight : GebAtom
+  GAExpressionIntro : GebAtom
+  GAExpressionElim : GebAtom
 
   -- | The notion of a term of any programming language.
   GATerm : GebAtom
@@ -80,6 +88,14 @@ gaEncode GAFromInitial = 13
 gaEncode GAToTerminal = 14
 gaEncode GAIdentity = 15
 gaEncode GACompose = 16
+gaEncode GAProductIntro = 17
+gaEncode GAProductElimLeft = 18
+gaEncode GAProductElimRight = 19
+gaEncode GACoproductElim = 20
+gaEncode GACoproductIntroLeft = 21
+gaEncode GACoproductIntroRight = 22
+gaEncode GAExpressionIntro = 23
+gaEncode GAExpressionElim = 24
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -100,6 +116,14 @@ gaDecode 13 = Just GAFromInitial
 gaDecode 14 = Just GAToTerminal
 gaDecode 15 = Just GAIdentity
 gaDecode 16 = Just GACompose
+gaDecode 17 = Just GAProductIntro
+gaDecode 18 = Just GAProductElimLeft
+gaDecode 19 = Just GAProductElimRight
+gaDecode 20 = Just GACoproductElim
+gaDecode 21 = Just GACoproductIntroLeft
+gaDecode 22 = Just GACoproductIntroRight
+gaDecode 23 = Just GAExpressionIntro
+gaDecode 24 = Just GAExpressionElim
 gaDecode _ = Nothing
 
 export
@@ -121,6 +145,14 @@ gaDecodeEncodeIsJust GAFromInitial = Refl
 gaDecodeEncodeIsJust GAToTerminal = Refl
 gaDecodeEncodeIsJust GAIdentity = Refl
 gaDecodeEncodeIsJust GACompose = Refl
+gaDecodeEncodeIsJust GAProductIntro = Refl
+gaDecodeEncodeIsJust GAProductElimLeft = Refl
+gaDecodeEncodeIsJust GAProductElimRight = Refl
+gaDecodeEncodeIsJust GACoproductElim = Refl
+gaDecodeEncodeIsJust GACoproductIntroLeft = Refl
+gaDecodeEncodeIsJust GACoproductIntroRight = Refl
+gaDecodeEncodeIsJust GAExpressionIntro = Refl
+gaDecodeEncodeIsJust GAExpressionElim = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -141,6 +173,14 @@ gebAtomToString GAFromInitial = "FromInitial"
 gebAtomToString GAToTerminal = "ToTerminal"
 gebAtomToString GAIdentity = "Identity"
 gebAtomToString GACompose = "Compose"
+gebAtomToString GAProductIntro = "ProductIntro"
+gebAtomToString GAProductElimLeft = "ProductElimLeft"
+gebAtomToString GAProductElimRight = "ProductElimRight"
+gebAtomToString GACoproductElim = "CoproductElim"
+gebAtomToString GACoproductIntroLeft = "CoproductIntroLeft"
+gebAtomToString GACoproductIntroRight = "CoproductIntroRight"
+gebAtomToString GAExpressionIntro = "ExpressionIntro"
+gebAtomToString GAExpressionElim = "ExpressionElim"
 
 public export
 Show GebAtom where
@@ -485,6 +525,11 @@ mutual
 
 mutual
   public export
+  gebMinimalExpressionToExp : MinimalExpression -> GebSExp
+  gebMinimalExpressionToExp (MinimalObjectExp o) = gebMinimalObjectToExp o
+  gebMinimalExpressionToExp (MinimalMorphismExp m) = gebMinimalMorphismToExp m
+
+  public export
   gebMinimalMorphismToExp : MinimalMorphism -> GebSExp
   gebMinimalMorphismToExp (Identity object) =
     GAIdentity $* [gebMinimalObjectToExp object]
@@ -494,7 +539,26 @@ mutual
     GAFromInitial $* [gebMinimalObjectToExp codomain]
   gebMinimalMorphismToExp (ToTerminal domain) =
     GAToTerminal $* [gebMinimalObjectToExp domain]
-  gebMinimalMorphismToExp _ = ?gebMinimalMorphismToExp_hole
+  gebMinimalMorphismToExp (ProductIntro f g) =
+    GAProductIntro $* [gebMinimalMorphismToExp f, gebMinimalMorphismToExp g]
+  gebMinimalMorphismToExp (ProductElimLeft a b) =
+    GAProductElimLeft $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
+  gebMinimalMorphismToExp (ProductElimRight a b) =
+    GAProductElimRight $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
+  gebMinimalMorphismToExp (CoproductElim f g) =
+    GACoproductElim $* [gebMinimalMorphismToExp f, gebMinimalMorphismToExp g]
+  gebMinimalMorphismToExp (CoproductIntroLeft a b) =
+    GACoproductIntroLeft $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
+  gebMinimalMorphismToExp (CoproductIntroRight a b) =
+    GACoproductIntroRight $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
+  gebMinimalMorphismToExp (ExpressionIntro x) =
+    GAExpressionIntro $* [gebMinimalExpressionToExp x]
+  gebMinimalMorphismToExp (ExpressionElim exp exp' eqCase neqCase) =
+    GAExpressionElim $*
+      [gebMinimalMorphismToExp exp,
+       gebMinimalMorphismToExp exp',
+       gebMinimalMorphismToExp eqCase,
+       gebMinimalMorphismToExp neqCase]
 
   public export
   gebExpToMinimalMorphism : GebSExp -> Maybe MinimalMorphism
