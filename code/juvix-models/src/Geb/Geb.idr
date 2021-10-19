@@ -65,7 +65,7 @@ data GebAtom : Type where
   GATerm : GebAtom
 
   -- | Terms common to all programming languages.
-  GAEvaluatedTerm : GebAtom
+  GAUnitTerm : GebAtom
   GAMorphismTerm : GebAtom
   GAApplication : GebAtom
 
@@ -81,7 +81,7 @@ gaEncode GACoproduct = 6
 gaEncode GAExpression = 7
 gaEncode GAMorphism = 8
 gaEncode GATerm = 9
-gaEncode GAEvaluatedTerm = 10
+gaEncode GAUnitTerm = 10
 gaEncode GAMorphismTerm = 11
 gaEncode GAApplication = 12
 gaEncode GAFromInitial = 13
@@ -109,7 +109,7 @@ gaDecode 6 = Just GACoproduct
 gaDecode 7 = Just GAExpression
 gaDecode 8 = Just GAMorphism
 gaDecode 9 = Just GATerm
-gaDecode 10 = Just GAEvaluatedTerm
+gaDecode 10 = Just GAUnitTerm
 gaDecode 11 = Just GAMorphismTerm
 gaDecode 12 = Just GAApplication
 gaDecode 13 = Just GAFromInitial
@@ -138,7 +138,7 @@ gaDecodeEncodeIsJust GACoproduct = Refl
 gaDecodeEncodeIsJust GAExpression = Refl
 gaDecodeEncodeIsJust GAMorphism = Refl
 gaDecodeEncodeIsJust GATerm = Refl
-gaDecodeEncodeIsJust GAEvaluatedTerm = Refl
+gaDecodeEncodeIsJust GAUnitTerm = Refl
 gaDecodeEncodeIsJust GAMorphismTerm = Refl
 gaDecodeEncodeIsJust GAApplication = Refl
 gaDecodeEncodeIsJust GAFromInitial = Refl
@@ -166,7 +166,7 @@ gebAtomToString GACoproduct = "Coproduct"
 gebAtomToString GAExpression = "Expression"
 gebAtomToString GAMorphism = "Morphism"
 gebAtomToString GATerm = "Term"
-gebAtomToString GAEvaluatedTerm = "EvaluatedTerm"
+gebAtomToString GAUnitTerm = "UnitTerm"
 gebAtomToString GAMorphismTerm = "MorphismTerm"
 gebAtomToString GAApplication = "Application"
 gebAtomToString GAFromInitial = "FromInitial"
@@ -1007,19 +1007,54 @@ mutual
 mutual
   public export
   gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
-  gebMinimalTermToExp t = ?gebMinimalTermToExp_hole
+  gebMinimalTermToExp (FullyEvaluatedTerm (UnappliedMorphismTerm morphism)) =
+    GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
+  gebMinimalTermToExp (FullyEvaluatedTerm UnitTerm) = $^ GAUnitTerm
+  gebMinimalTermToExp (Application f x) =
+    GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
 
   public export
   gebExpToMinimalTerm :
     GebSExp -> Maybe (type : MinimalTermType ** MinimalTerm type)
-  gebExpToMinimalTerm x = ?gebExpToMinimalTerm_hole
+  gebExpToMinimalTerm (GAMorphismTerm $* [x]) =
+    case gebExpToMinimalMorphism x of
+      Just morphism => Just
+        (MinimalMorphismTerm
+          (minimalMorphismDomain morphism)
+          (minimalMorphismCodomain morphism) **
+         (FullyEvaluatedTerm $ UnappliedMorphismTerm morphism))
+      Nothing => Nothing
+  gebExpToMinimalTerm (GAUnitTerm $* []) =
+    Just (MinimalTypeTerm Terminal ** FullyEvaluatedTerm UnitTerm)
+  gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
+    case (gebExpToMinimalTerm fExp, gebExpToMinimalTerm xExp) of
+      (Just (fType ** f), Just (xType ** x)) =>
+        case fType of
+          MinimalMorphismTerm domain codomain =>
+            case xType of
+              MinimalTypeTerm domain' => case decEq domain domain' of
+                Yes Refl => Just (MinimalTypeTerm codomain ** Application f x)
+                No _ => Nothing
+              _ => Nothing
+          _ => Nothing
+      _ => Nothing
+  gebExpToMinimalTerm _ = Nothing
 
   public export
   gebMinimalTermRepresentationComplete :
     {type : MinimalTermType} -> (term : MinimalTerm type) ->
     gebExpToMinimalTerm (gebMinimalTermToExp {type} term) = Just (type ** term)
-  gebMinimalTermRepresentationComplete term =
-    ?gebMinimalTermRepresentationComplete_hole
+  gebMinimalTermRepresentationComplete
+    (FullyEvaluatedTerm (UnappliedMorphismTerm morphism)) =
+    rewrite gebMinimalMorphismRepresentationComplete morphism in
+    Refl
+  gebMinimalTermRepresentationComplete (FullyEvaluatedTerm UnitTerm) = Refl
+  gebMinimalTermRepresentationComplete (Application f x) =
+    let
+      fComplete = gebMinimalTermRepresentationComplete f
+      xComplete = gebMinimalTermRepresentationComplete x
+    in
+    ?gebMinimalTermRepresentationComplete_hole_application
 
 public export
 (type : MinimalTermType) => Show (MinimalTerm type) where
