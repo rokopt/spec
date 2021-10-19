@@ -1006,10 +1006,16 @@ mutual
 
 mutual
   public export
-  gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
-  gebMinimalTermToExp (FullyEvaluatedTerm (UnappliedMorphismTerm morphism)) =
+  gebMinimalFullyAppliedTermToExp : {type : MinimalTermType} ->
+    MinimalFullyAppliedTerm type -> GebSExp
+  gebMinimalFullyAppliedTermToExp (UnappliedMorphismTerm morphism) =
     GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
-  gebMinimalTermToExp (FullyEvaluatedTerm UnitTerm) = $^ GAUnitTerm
+  gebMinimalFullyAppliedTermToExp UnitTerm = $^ GAUnitTerm
+
+  public export
+  gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
+  gebMinimalTermToExp (FullyEvaluatedTerm term) =
+    gebMinimalFullyAppliedTermToExp term
   gebMinimalTermToExp (Application f x) =
     GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
 
@@ -1049,12 +1055,11 @@ mutual
     rewrite gebMinimalMorphismRepresentationComplete morphism in
     Refl
   gebMinimalTermRepresentationComplete (FullyEvaluatedTerm UnitTerm) = Refl
-  gebMinimalTermRepresentationComplete (Application f x) =
-    let
-      fComplete = gebMinimalTermRepresentationComplete f
-      xComplete = gebMinimalTermRepresentationComplete x
-    in
-    ?gebMinimalTermRepresentationComplete_hole_application
+  gebMinimalTermRepresentationComplete (Application {domain} f x) =
+    rewrite gebMinimalTermRepresentationComplete f in
+    rewrite gebMinimalTermRepresentationComplete x in
+    rewrite decEqRefl minimalObjectDecEq domain in
+    Refl
 
 public export
 (type : MinimalTermType) => Show (MinimalTerm type) where
@@ -1063,12 +1068,24 @@ public export
 mutual
   public export
   interpretMinimalTermType : MinimalTermType -> Type
-  interpretMinimalTermType type = ?interpretMinimalTermType_hole
+  interpretMinimalTermType (MinimalTypeTerm type) = interpretMinimalObject type
+  interpretMinimalTermType (MinimalMorphismTerm domain codomain) =
+    interpretMinimalObject domain -> interpretMinimalObject codomain
+
+  public export
+  interpretMinimalFullyAppliedTerm : {type : MinimalTermType} ->
+    (term : MinimalFullyAppliedTerm type) -> interpretMinimalTermType type
+  interpretMinimalFullyAppliedTerm (UnappliedMorphismTerm morphism) =
+    interpretMinimalMorphism morphism
+  interpretMinimalFullyAppliedTerm UnitTerm = ()
 
   public export
   interpretMinimalTerm : {type : MinimalTermType} ->
     (term : MinimalTerm type) -> interpretMinimalTermType type
-  interpretMinimalTerm {type} term = ?interpretMinimalTerm_hole
+  interpretMinimalTerm (FullyEvaluatedTerm x) =
+    interpretMinimalFullyAppliedTerm x
+  interpretMinimalTerm (Application f x) =
+    interpretMinimalTerm f $ interpretMinimalTerm x
 
 public export
 minimalMorphismToTerm : (m : MinimalMorphism) ->
