@@ -1095,28 +1095,45 @@ minimalMorphismToTerm : (m : MinimalMorphism) ->
       (minimalMorphismCodomain m)
 minimalMorphismToTerm m = FullyEvaluatedTerm $ UnappliedMorphismTerm m
 
-public export
-bigStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
-  MinimalFullyAppliedTerm type
-bigStepMinimalTermReduction (FullyEvaluatedTerm x) = x
-bigStepMinimalTermReduction (Application f x) with
-  (bigStepMinimalTermReduction f, bigStepMinimalTermReduction x)
-    bigStepMinimalTermReduction (Application f x) |
-      (UnappliedMorphismTerm m, xReduced) =
-        case minimalMorphismDomain m of
-          Initial => ?bigStepMinimalTermReduction_hole_initial
-          Terminal => ?bigStepMinimalTermReduction_hole_terminal
-          Product a b => ?bigStepMinimalTermReduction_hole_product
-          Coproduct a b => ?bigStepMinimalTermReduction_hole_coproduct
-          Expression => ?bigStepMinimalTermReduction_hole_coproduct_exp
+mutual
+  public export
+  bigStepMinimalMorphismReduction :
+    (m : MinimalMorphism) ->
+    MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m)) ->
+    MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismCodomain m))
+  bigStepMinimalMorphismReduction f x =
+    ?bigStepMinimalMorphismReduction_hole
 
-public export
-bigStepMinimalTermReductionCorrect :
-  {type : MinimalTermType} -> (term : MinimalTerm type) ->
-  interpretMinimalTerm (FullyEvaluatedTerm (bigStepMinimalTermReduction term)) =
-    interpretMinimalTerm term
-bigStepMinimalTermReductionCorrect {type} term =
-  ?bigStepMinimalTermReductionCorrect_hole
+  public export
+  bigStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
+    MinimalFullyAppliedTerm type
+  bigStepMinimalTermReduction (FullyEvaluatedTerm x) = x
+  bigStepMinimalTermReduction (Application f x) with
+    (bigStepMinimalTermReduction f, bigStepMinimalTermReduction x)
+      bigStepMinimalTermReduction (Application f x) |
+        (UnappliedMorphismTerm m, xReduced) =
+          bigStepMinimalMorphismReduction m xReduced
+
+mutual
+  public export
+  bigStepMinimalMorphismReductionCorrect :
+    (m : MinimalMorphism) ->
+    (x :
+      MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m))) ->
+    interpretMinimalFullyAppliedTerm (bigStepMinimalMorphismReduction m x) =
+      interpretMinimalFullyAppliedTerm (UnappliedMorphismTerm m)
+        (interpretMinimalFullyAppliedTerm x)
+  bigStepMinimalMorphismReductionCorrect m x =
+    ?bigStepMinimalMorphismReductionCorrect_hole
+
+  public export
+  bigStepMinimalTermReductionCorrect :
+    {type : MinimalTermType} -> (term : MinimalTerm type) ->
+    interpretMinimalTerm
+      (FullyEvaluatedTerm (bigStepMinimalTermReduction term)) =
+        interpretMinimalTerm term
+  bigStepMinimalTermReductionCorrect {type} term =
+    ?bigStepMinimalTermReductionCorrect_hole
 
 public export
 smallStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
