@@ -1098,7 +1098,17 @@ minimalMorphismToTerm m = FullyEvaluatedTerm $ UnappliedMorphismTerm m
 public export
 bigStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
   MinimalFullyAppliedTerm type
-bigStepMinimalTermReduction {type} term = ?bigStepMinimalTermReduction_hole
+bigStepMinimalTermReduction (FullyEvaluatedTerm x) = x
+bigStepMinimalTermReduction (Application f x) with
+  (bigStepMinimalTermReduction f, bigStepMinimalTermReduction x)
+    bigStepMinimalTermReduction (Application f x) |
+      (UnappliedMorphismTerm m, xReduced) =
+        case minimalMorphismDomain m of
+          Initial => ?bigStepMinimalTermReduction_hole_initial
+          Terminal => ?bigStepMinimalTermReduction_hole_terminal
+          Product a b => ?bigStepMinimalTermReduction_hole_product
+          Coproduct a b => ?bigStepMinimalTermReduction_hole_coproduct
+          Expression => ?bigStepMinimalTermReduction_hole_coproduct_exp
 
 public export
 bigStepMinimalTermReductionCorrect :
