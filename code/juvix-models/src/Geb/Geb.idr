@@ -66,6 +66,10 @@ data GebAtom : Type where
 
   -- | Terms common to all programming languages.
   GAUnitTerm : GebAtom
+  GAPairTerm : GebAtom
+  GALeftTerm : GebAtom
+  GARightTerm : GebAtom
+  GAExpressionTerm : GebAtom
   GAMorphismTerm : GebAtom
   GAApplication : GebAtom
 
@@ -96,6 +100,10 @@ gaEncode GACoproductIntroLeft = 21
 gaEncode GACoproductIntroRight = 22
 gaEncode GAExpressionIntro = 23
 gaEncode GAExpressionElim = 24
+gaEncode GAPairTerm = 25
+gaEncode GALeftTerm = 26
+gaEncode GARightTerm = 27
+gaEncode GAExpressionTerm = 28
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -124,6 +132,10 @@ gaDecode 21 = Just GACoproductIntroLeft
 gaDecode 22 = Just GACoproductIntroRight
 gaDecode 23 = Just GAExpressionIntro
 gaDecode 24 = Just GAExpressionElim
+gaDecode 25 = Just GAPairTerm
+gaDecode 26 = Just GALeftTerm
+gaDecode 27 = Just GARightTerm
+gaDecode 28 = Just GAExpressionTerm
 gaDecode _ = Nothing
 
 export
@@ -153,6 +165,10 @@ gaDecodeEncodeIsJust GACoproductIntroLeft = Refl
 gaDecodeEncodeIsJust GACoproductIntroRight = Refl
 gaDecodeEncodeIsJust GAExpressionIntro = Refl
 gaDecodeEncodeIsJust GAExpressionElim = Refl
+gaDecodeEncodeIsJust GAPairTerm = Refl
+gaDecodeEncodeIsJust GALeftTerm = Refl
+gaDecodeEncodeIsJust GARightTerm = Refl
+gaDecodeEncodeIsJust GAExpressionTerm = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -181,6 +197,10 @@ gebAtomToString GACoproductIntroLeft = "CoproductIntroLeft"
 gebAtomToString GACoproductIntroRight = "CoproductIntroRight"
 gebAtomToString GAExpressionIntro = "ExpressionIntro"
 gebAtomToString GAExpressionElim = "ExpressionElim"
+gebAtomToString GAPairTerm = "PairTerm"
+gebAtomToString GALeftTerm = "LeftTerm"
+gebAtomToString GARightTerm = "RightTerm"
+gebAtomToString GAExpressionTerm = "ExpressionTerm"
 
 public export
 Show GebAtom where
@@ -994,10 +1014,25 @@ mutual
           (minimalMorphismDomain morphism)
           (minimalMorphismCodomain morphism)
     UnitTerm : MinimalFullyAppliedTerm $ MinimalTypeTerm Terminal
+    PairTerm : {left, right : MinimalObject} ->
+      MinimalFullyAppliedTerm (MinimalTypeTerm left) ->
+      MinimalFullyAppliedTerm (MinimalTypeTerm right) ->
+      MinimalFullyAppliedTerm $ MinimalTypeTerm $ Product left right
+    MinimalLeft : {left : MinimalObject} ->
+      MinimalFullyAppliedTerm (MinimalTypeTerm left) ->
+      (right : MinimalObject) ->
+      MinimalFullyAppliedTerm $ MinimalTypeTerm $ Coproduct left right
+    MinimalRight :
+      (left : MinimalObject) ->
+      {right : MinimalObject} ->
+      MinimalFullyAppliedTerm (MinimalTypeTerm right) ->
+      MinimalFullyAppliedTerm $ MinimalTypeTerm $ Coproduct left right
+    ExpressionTerm : MinimalExpression ->
+      MinimalFullyAppliedTerm $ MinimalTypeTerm $ Expression
 
   public export
   data MinimalTerm : MinimalTermType -> Type where
-    FullyEvaluatedTerm : {type : MinimalTermType} ->
+    FullyAppliedTerm : {type : MinimalTermType} ->
       MinimalFullyAppliedTerm type -> MinimalTerm type
     Application : {domain, codomain : MinimalObject} ->
       MinimalTerm (MinimalMorphismTerm domain codomain) ->
@@ -1011,10 +1046,21 @@ mutual
   gebMinimalFullyAppliedTermToExp (UnappliedMorphismTerm morphism) =
     GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
   gebMinimalFullyAppliedTermToExp UnitTerm = $^ GAUnitTerm
+  gebMinimalFullyAppliedTermToExp (PairTerm left right) =
+    GAPairTerm $* [gebMinimalFullyAppliedTermToExp left,
+                   gebMinimalFullyAppliedTermToExp right]
+  gebMinimalFullyAppliedTermToExp (MinimalLeft left right) =
+    GALeftTerm $*
+      [gebMinimalFullyAppliedTermToExp left, gebMinimalObjectToExp right]
+  gebMinimalFullyAppliedTermToExp (MinimalRight left right) =
+    GARightTerm $*
+      [gebMinimalObjectToExp left, gebMinimalFullyAppliedTermToExp right]
+  gebMinimalFullyAppliedTermToExp (ExpressionTerm x) =
+    GAExpressionTerm $* [gebMinimalExpressionToExp x]
 
   public export
   gebMinimalTermToExp : {type : MinimalTermType} -> MinimalTerm type -> GebSExp
-  gebMinimalTermToExp (FullyEvaluatedTerm term) =
+  gebMinimalTermToExp (FullyAppliedTerm term) =
     gebMinimalFullyAppliedTermToExp term
   gebMinimalTermToExp (Application f x) =
     GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
@@ -1028,10 +1074,10 @@ mutual
         (MinimalMorphismTerm
           (minimalMorphismDomain morphism)
           (minimalMorphismCodomain morphism) **
-         (FullyEvaluatedTerm $ UnappliedMorphismTerm morphism))
+         (FullyAppliedTerm $ UnappliedMorphismTerm morphism))
       Nothing => Nothing
   gebExpToMinimalTerm (GAUnitTerm $* []) =
-    Just (MinimalTypeTerm Terminal ** FullyEvaluatedTerm UnitTerm)
+    Just (MinimalTypeTerm Terminal ** FullyAppliedTerm UnitTerm)
   gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
     case (gebExpToMinimalTerm fExp, gebExpToMinimalTerm xExp) of
       (Just (fType ** f), Just (xType ** x)) =>
@@ -1047,19 +1093,39 @@ mutual
   gebExpToMinimalTerm _ = Nothing
 
   public export
+  gebMinimalFullyAppliedTermRepresentationComplete :
+    {type : MinimalTermType} -> (term : MinimalFullyAppliedTerm type) ->
+    gebExpToMinimalTerm
+      (gebMinimalFullyAppliedTermToExp {type} term) =
+        Just (type ** term)
+  gebMinimalFullyAppliedTermRepresentationComplete
+    (UnappliedMorphismTerm morphism) =
+      rewrite gebMinimalMorphismRepresentationComplete morphism in
+      ?gebMinimalFullyAppliedTermRepresentationComplete_hole_morphism
+  gebMinimalFullyAppliedTermRepresentationComplete UnitTerm =
+      ?gebMinimalFullyAppliedTermRepresentationComplete_hole_unit
+  gebMinimalFullyAppliedTermRepresentationComplete (PairTerm left right) =
+      ?gebMinimalTermRepresentationComplete_hole_pair
+  gebMinimalFullyAppliedTermRepresentationComplete
+    (MinimalLeft left right) =
+      ?gebMinimalTermRepresentationComplete_hole_left
+  gebMinimalFullyAppliedTermRepresentationComplete
+    (MinimalRight left right) =
+      ?gebMinimalTermRepresentationComplete_hole_right
+  gebMinimalFullyAppliedTermRepresentationComplete (ExpressionTerm x) =
+    ?gebMinimalTermRepresentationComplete_hole_expression
+
+  public export
   gebMinimalTermRepresentationComplete :
     {type : MinimalTermType} -> (term : MinimalTerm type) ->
     gebExpToMinimalTerm (gebMinimalTermToExp {type} term) = Just (type ** term)
-  gebMinimalTermRepresentationComplete
-    (FullyEvaluatedTerm (UnappliedMorphismTerm morphism)) =
-    rewrite gebMinimalMorphismRepresentationComplete morphism in
-    Refl
-  gebMinimalTermRepresentationComplete (FullyEvaluatedTerm UnitTerm) = Refl
   gebMinimalTermRepresentationComplete (Application {domain} f x) =
     rewrite gebMinimalTermRepresentationComplete f in
     rewrite gebMinimalTermRepresentationComplete x in
     rewrite decEqRefl minimalObjectDecEq domain in
     Refl
+  gebMinimalTermRepresentationComplete (FullyAppliedTerm term) =
+    ?gebMinimalTermRepresentationComplete_hole_fully_applied
 
 public export
 (type : MinimalTermType) => Show (MinimalTerm type) where
@@ -1078,11 +1144,20 @@ mutual
   interpretMinimalFullyAppliedTerm (UnappliedMorphismTerm morphism) =
     interpretMinimalMorphism morphism
   interpretMinimalFullyAppliedTerm UnitTerm = ()
+  interpretMinimalFullyAppliedTerm (PairTerm left right) =
+    (interpretMinimalFullyAppliedTerm left,
+     interpretMinimalFullyAppliedTerm right)
+  interpretMinimalFullyAppliedTerm (MinimalLeft left right) =
+    ?interpretMinimalFullyAppliedTerm_hole_left
+  interpretMinimalFullyAppliedTerm (MinimalRight left right) =
+    ?interpretMinimalFullyAppliedTerm_hole_right
+  interpretMinimalFullyAppliedTerm (ExpressionTerm x) =
+    ?interpretMinimalFullyAppliedTerm_hole_expression
 
   public export
   interpretMinimalTerm : {type : MinimalTermType} ->
     (term : MinimalTerm type) -> interpretMinimalTermType type
-  interpretMinimalTerm (FullyEvaluatedTerm x) =
+  interpretMinimalTerm (FullyAppliedTerm x) =
     interpretMinimalFullyAppliedTerm x
   interpretMinimalTerm (Application f x) =
     interpretMinimalTerm f $ interpretMinimalTerm x
@@ -1093,7 +1168,7 @@ minimalMorphismToTerm : (m : MinimalMorphism) ->
     MinimalMorphismTerm
       (minimalMorphismDomain m)
       (minimalMorphismCodomain m)
-minimalMorphismToTerm m = FullyEvaluatedTerm $ UnappliedMorphismTerm m
+minimalMorphismToTerm m = FullyAppliedTerm $ UnappliedMorphismTerm m
 
 mutual
   public export
@@ -1128,7 +1203,7 @@ mutual
   public export
   bigStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
     MinimalFullyAppliedTerm type
-  bigStepMinimalTermReduction (FullyEvaluatedTerm x) = x
+  bigStepMinimalTermReduction (FullyAppliedTerm x) = x
   bigStepMinimalTermReduction (Application f x) with
     (bigStepMinimalTermReduction f, bigStepMinimalTermReduction x)
       bigStepMinimalTermReduction (Application f x) |
@@ -1151,7 +1226,7 @@ mutual
   bigStepMinimalTermReductionCorrect :
     {type : MinimalTermType} -> (term : MinimalTerm type) ->
     interpretMinimalTerm
-      (FullyEvaluatedTerm (bigStepMinimalTermReduction term)) =
+      (FullyAppliedTerm (bigStepMinimalTermReduction term)) =
         interpretMinimalTerm term
   bigStepMinimalTermReductionCorrect {type} term =
     ?bigStepMinimalTermReductionCorrect_hole
@@ -1188,7 +1263,7 @@ smallStepMinimalTermReductionCompletes {type} term =
 public export
 smallStepMinimalTermReductionCorrect :
   {type : MinimalTermType} -> (term : MinimalTerm type) ->
-  interpretMinimalTerm (FullyEvaluatedTerm
+  interpretMinimalTerm (FullyAppliedTerm
     (fst (smallStepMinimalTermReductionCompletes term))) =
       interpretMinimalTerm term
 smallStepMinimalTermReductionCorrect {type} term =
