@@ -1101,8 +1101,29 @@ mutual
     (m : MinimalMorphism) ->
     MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m)) ->
     MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismCodomain m))
-  bigStepMinimalMorphismReduction f x =
-    ?bigStepMinimalMorphismReduction_hole
+  bigStepMinimalMorphismReduction (Identity _) x = x
+  bigStepMinimalMorphismReduction (Compose g f {composable}) x =
+    bigStepMinimalMorphismReduction g $
+      rewrite sym composable in bigStepMinimalMorphismReduction f x
+  bigStepMinimalMorphismReduction (FromInitial _) x =
+    void $ interpretMinimalFullyAppliedTerm x
+  bigStepMinimalMorphismReduction (ToTerminal _) _ = UnitTerm
+  bigStepMinimalMorphismReduction (ProductIntro f g) x =
+    ?bigStepMinimalMorphismReduction_hole_product_intro
+  bigStepMinimalMorphismReduction (ProductElimLeft a b) x =
+    ?bigStepMinimalMorphismReduction_hole_product_elim_left
+  bigStepMinimalMorphismReduction (ProductElimRight a b) x =
+    ?bigStepMinimalMorphismReduction_hole_product_elim_right
+  bigStepMinimalMorphismReduction (CoproductElim f g) x =
+    ?bigStepMinimalMorphismReduction_hole_coproduct_elim
+  bigStepMinimalMorphismReduction (CoproductIntroLeft a b) x =
+    ?bigStepMinimalMorphismReduction_hole_coproduct_intro_left
+  bigStepMinimalMorphismReduction (CoproductIntroRight a b) x =
+    ?bigStepMinimalMorphismReduction_hole_coproduct_intro_right
+  bigStepMinimalMorphismReduction (ExpressionIntro y) x =
+    ?bigStepMinimalMorphismReduction_hole_expression_intro
+  bigStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase) x =
+    ?bigStepMinimalMorphismReduction_hole_expression_elim
 
   public export
   bigStepMinimalTermReduction : {type : MinimalTermType} -> MinimalTerm type ->
