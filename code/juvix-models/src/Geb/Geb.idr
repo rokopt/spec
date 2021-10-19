@@ -1078,6 +1078,19 @@ mutual
       Nothing => Nothing
   gebExpToMinimalTerm (GAUnitTerm $* []) =
     Just (MinimalTypeTerm Terminal ** FullyAppliedTerm UnitTerm)
+  gebExpToMinimalTerm (GAPairTerm $* [left, right]) with
+    (gebExpToMinimalTerm left, gebExpToMinimalTerm right)
+      gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
+        (Just (MinimalTypeTerm leftObject ** leftTerm),
+         Just (MinimalTypeTerm rightObject ** rightTerm)) =
+          Just
+            (MinimalTypeTerm (Product leftObject rightObject) **
+             FullyAppliedTerm
+              (PairTerm
+                ?gebExpToMinimalTerm_hole_pair_left
+                ?gebExpToMinimalTerm_hole_pair_right))
+      gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
+        _ = Nothing
   gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
     case (gebExpToMinimalTerm fExp, gebExpToMinimalTerm xExp) of
       (Just (fType ** f), Just (xType ** x)) =>
@@ -1097,13 +1110,13 @@ mutual
     {type : MinimalTermType} -> (term : MinimalFullyAppliedTerm type) ->
     gebExpToMinimalTerm
       (gebMinimalFullyAppliedTermToExp {type} term) =
-        Just (type ** term)
+        Just (type ** FullyAppliedTerm term)
   gebMinimalFullyAppliedTermRepresentationComplete
     (UnappliedMorphismTerm morphism) =
       rewrite gebMinimalMorphismRepresentationComplete morphism in
-      ?gebMinimalFullyAppliedTermRepresentationComplete_hole_morphism
+      Refl
   gebMinimalFullyAppliedTermRepresentationComplete UnitTerm =
-      ?gebMinimalFullyAppliedTermRepresentationComplete_hole_unit
+      Refl
   gebMinimalFullyAppliedTermRepresentationComplete (PairTerm left right) =
       ?gebMinimalTermRepresentationComplete_hole_pair
   gebMinimalFullyAppliedTermRepresentationComplete
