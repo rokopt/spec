@@ -65,6 +65,7 @@ data GebAtom : Type where
   GATerm : GebAtom
 
   -- | Terms common to all programming languages.
+  GAExFalsoTerm : GebAtom
   GAUnitTerm : GebAtom
   GAPairTerm : GebAtom
   GALeftTerm : GebAtom
@@ -104,6 +105,7 @@ gaEncode GAPairTerm = 25
 gaEncode GALeftTerm = 26
 gaEncode GARightTerm = 27
 gaEncode GAExpressionTerm = 28
+gaEncode GAExFalsoTerm = 29
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -136,6 +138,7 @@ gaDecode 25 = Just GAPairTerm
 gaDecode 26 = Just GALeftTerm
 gaDecode 27 = Just GARightTerm
 gaDecode 28 = Just GAExpressionTerm
+gaDecode 29 = Just GAExFalsoTerm
 gaDecode _ = Nothing
 
 export
@@ -169,6 +172,7 @@ gaDecodeEncodeIsJust GAPairTerm = Refl
 gaDecodeEncodeIsJust GALeftTerm = Refl
 gaDecodeEncodeIsJust GARightTerm = Refl
 gaDecodeEncodeIsJust GAExpressionTerm = Refl
+gaDecodeEncodeIsJust GAExFalsoTerm = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -201,6 +205,7 @@ gebAtomToString GAPairTerm = "PairTerm"
 gebAtomToString GALeftTerm = "LeftTerm"
 gebAtomToString GARightTerm = "RightTerm"
 gebAtomToString GAExpressionTerm = "ExpressionTerm"
+gebAtomToString GAExFalsoTerm = "ExFalsoTerm"
 
 public export
 Show GebAtom where
@@ -731,6 +736,8 @@ mutual
     case eqo of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GAUnitTerm $* _) _ _ eqo eqm =
     case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAExFalsoTerm $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GAMorphismTerm $* _) _ _ eqo eqm =
     case eqo of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GAApplication $* _) _ _ eqo eqm =
@@ -971,11 +978,6 @@ interpretMinimalMorphism (ExpressionElim exp exp' eqCase neqCase
       z = interpretMinimalMorphism exp' (rewrite sym expDomainsMatch in x)
       z' = replace {p=interpretMinimalObject} (sym expCodomainsMatch) z
       z'' = replace {p=interpretMinimalObject} expCodomainIsExpression z'
-      {-
-      z = replace {p=interpretMinimalObject} expCodomainsMatch $
-        rewrite expCodomainsMatch in
-        interpretMinimalMorphism exp' (rewrite sym expDomainsMatch in x)
-        -}
     in
     if y' == z'' then
       interpretMinimalMorphism eqCase (rewrite sym eqDomainMatches in x)
@@ -1087,6 +1089,9 @@ data MinimalTerm : (numApplications : Nat) -> MinimalTermType -> Type where
     MinimalTerm termApplications (MinimalTypeTerm domain) ->
     MinimalTerm
       (S $ morphismApplications + termApplications) (MinimalTypeTerm codomain)
+  ExFalsoTerm : {numApplications : Nat} -> {type : MinimalObject} ->
+    MinimalTerm numApplications (MinimalTypeTerm Initial) ->
+    MinimalTerm numApplications $ MinimalTypeTerm type
   UnitTerm : MinimalTerm 0 $ MinimalTypeTerm Terminal
   PairTerm : {leftApplications, rightApplications : Nat} ->
     {left, right : MinimalObject} ->
@@ -1118,6 +1123,8 @@ gebMinimalTermToExp (Application f x) =
   GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
 gebMinimalTermToExp (UnappliedMorphismTerm morphism) =
   GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
+gebMinimalTermToExp {type=(MinimalTypeTerm type)} (ExFalsoTerm ti) =
+  GAUnitTerm $* [gebMinimalTermToExp ti, gebMinimalObjectToExp type]
 gebMinimalTermToExp UnitTerm = $^ GAUnitTerm
 gebMinimalTermToExp
   (PairTerm {leftApplications} {rightApplications} {left} {right}
@@ -1142,6 +1149,11 @@ gebExpToMinimalTerm (GAMorphismTerm $* [x]) =
        0 **
        (UnappliedMorphismTerm morphism))
     Nothing => Nothing
+gebExpToMinimalTerm (GAExFalsoTerm $* [ti, ty]) =
+  case (gebExpToMinimalTerm ti, gebExpToMinimalObject ty) of
+    (Just (MinimalTypeTerm Initial ** n ** initialTerm), Just type) =>
+      Just (MinimalTypeTerm type ** n ** ExFalsoTerm initialTerm)
+    _ => Nothing
 gebExpToMinimalTerm (GAUnitTerm $* []) =
   Just (MinimalTypeTerm Terminal ** 0 ** UnitTerm)
 gebExpToMinimalTerm (GAPairTerm $* [left, right]) with
@@ -1208,6 +1220,8 @@ gebMinimalTermRepresentationComplete
   (UnappliedMorphismTerm morphism) =
     rewrite gebMinimalMorphismRepresentationComplete morphism in
     Refl
+gebMinimalTermRepresentationComplete (ExFalsoTerm ti) =
+  ?gebMinimalTermRepresentationComplete_hole_exfalso
 gebMinimalTermRepresentationComplete UnitTerm =
     Refl
 gebMinimalTermRepresentationComplete (PairTerm left right) =
@@ -1238,6 +1252,7 @@ interpretMinimalTerm (Application f x) =
   interpretMinimalTerm f $ interpretMinimalTerm x
 interpretMinimalTerm (UnappliedMorphismTerm morphism) =
   interpretMinimalMorphism morphism
+interpretMinimalTerm (ExFalsoTerm v) = void $ interpretMinimalTerm v
 interpretMinimalTerm UnitTerm = ()
 interpretMinimalTerm (PairTerm left right) =
   (interpretMinimalTerm left, interpretMinimalTerm right)
@@ -1281,18 +1296,36 @@ bigStepMinimalMorphismReduction :
   (m : MinimalMorphism) ->
   MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m)) ->
   MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismCodomain m))
-bigStepMinimalMorphismReduction (Identity y) x = ?bigStepMinimalMorphismReduction_hole_1
-bigStepMinimalMorphismReduction (Compose g f) x = ?bigStepMinimalMorphismReduction_hole_2
-bigStepMinimalMorphismReduction (FromInitial y) x = ?bigStepMinimalMorphismReduction_hole_3
-bigStepMinimalMorphismReduction (ToTerminal y) x = ?bigStepMinimalMorphismReduction_hole_4
-bigStepMinimalMorphismReduction (ProductIntro f g) x = ?bigStepMinimalMorphismReduction_hole_5
-bigStepMinimalMorphismReduction (ProductElimLeft a b) x = ?bigStepMinimalMorphismReduction_hole_6
-bigStepMinimalMorphismReduction (ProductElimRight a b) x = ?bigStepMinimalMorphismReduction_hole_7
-bigStepMinimalMorphismReduction (CoproductElim f g) x = ?bigStepMinimalMorphismReduction_hole_8
-bigStepMinimalMorphismReduction (CoproductIntroLeft a b) x = ?bigStepMinimalMorphismReduction_hole_9
-bigStepMinimalMorphismReduction (CoproductIntroRight a b) x = ?bigStepMinimalMorphismReduction_hole_10
-bigStepMinimalMorphismReduction (ExpressionIntro y) x = ?bigStepMinimalMorphismReduction_hole_11
-bigStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase) x = ?bigStepMinimalMorphismReduction_hole_12
+bigStepMinimalMorphismReduction (Identity _) x = x
+bigStepMinimalMorphismReduction (Compose g f {composable}) x =
+  bigStepMinimalMorphismReduction g $
+    rewrite sym composable in (bigStepMinimalMorphismReduction f x)
+bigStepMinimalMorphismReduction (FromInitial _) x = ExFalsoTerm x
+bigStepMinimalMorphismReduction (ToTerminal y) x = UnitTerm
+bigStepMinimalMorphismReduction (ProductIntro f g {domainsMatch}) x =
+  PairTerm
+    (bigStepMinimalMorphismReduction f x)
+    (bigStepMinimalMorphismReduction g $ rewrite sym domainsMatch in x)
+bigStepMinimalMorphismReduction (ProductElimLeft a b) x = case x of
+  PairTerm {leftApplications=0} {rightApplications=0} left right => left
+  ExFalsoTerm ti => ExFalsoTerm ti
+bigStepMinimalMorphismReduction (ProductElimRight a b) x = case x of
+  PairTerm {leftApplications=0} {rightApplications=0} left right => right
+  ExFalsoTerm ti => ExFalsoTerm ti
+bigStepMinimalMorphismReduction (CoproductElim f g {codomainsMatch}) x =
+  case x of
+    MinimalLeft left _ =>
+      bigStepMinimalMorphismReduction f left
+    MinimalRight _ right =>
+      rewrite codomainsMatch in bigStepMinimalMorphismReduction g right
+    ExFalsoTerm ti => ExFalsoTerm ti
+bigStepMinimalMorphismReduction (CoproductIntroLeft left right) x =
+  MinimalLeft x right
+bigStepMinimalMorphismReduction (CoproductIntroRight left right) x =
+  MinimalRight left x
+bigStepMinimalMorphismReduction (ExpressionIntro exp) _ = ExpressionTerm exp
+bigStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase) x =
+  ?bigStepMinimalMorphismReduction_hole_expElim
 
 public export
 bigStepMinimalTermReduction :
@@ -1305,11 +1338,18 @@ bigStepMinimalTermReduction (Application f x) with
       (UnappliedMorphismTerm m, xReduced) =
         bigStepMinimalMorphismReduction m xReduced
 bigStepMinimalTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
-bigStepMinimalTermReduction UnitTerm = ?bigStepMinimalTermReduction_hole_3
-bigStepMinimalTermReduction (PairTerm x y) = ?bigStepMinimalTermReduction_hole_4
-bigStepMinimalTermReduction (MinimalLeft x right) = ?bigStepMinimalTermReduction_hole_5
-bigStepMinimalTermReduction (MinimalRight left x) = ?bigStepMinimalTermReduction_hole_6
-bigStepMinimalTermReduction (ExpressionTerm x) = ?bigStepMinimalTermReduction_hole_7
+bigStepMinimalTermReduction (ExFalsoTerm ti) =
+  ExFalsoTerm $ bigStepMinimalTermReduction ti
+bigStepMinimalTermReduction UnitTerm = UnitTerm
+bigStepMinimalTermReduction (PairTerm left right) =
+  PairTerm
+    (bigStepMinimalTermReduction left)
+    (bigStepMinimalTermReduction right)
+bigStepMinimalTermReduction (MinimalLeft left right) =
+  MinimalLeft (bigStepMinimalTermReduction left) right
+bigStepMinimalTermReduction (MinimalRight left right) =
+  MinimalRight left (bigStepMinimalTermReduction right)
+bigStepMinimalTermReduction (ExpressionTerm x) = ExpressionTerm x
 
 mutual
   public export
@@ -1338,31 +1378,53 @@ smallStepMinimalMorphismReduction :
   (remainingApplications : Nat **
    MinimalTerm
     remainingApplications (MinimalTypeTerm (minimalMorphismCodomain m)))
-smallStepMinimalMorphismReduction (Identity x) term = ?smallStepMinimalMorphismReduction_hole_1
-smallStepMinimalMorphismReduction (Compose g f) term = ?smallStepMinimalMorphismReduction_hole_2
-smallStepMinimalMorphismReduction (FromInitial x) term = ?smallStepMinimalMorphismReduction_hole_3
-smallStepMinimalMorphismReduction (ToTerminal x) term = ?smallStepMinimalMorphismReduction_hole_4
-smallStepMinimalMorphismReduction (ProductIntro f g) term = ?smallStepMinimalMorphismReduction_hole_5
-smallStepMinimalMorphismReduction (ProductElimLeft a b) term = ?smallStepMinimalMorphismReduction_hole_6
-smallStepMinimalMorphismReduction (ProductElimRight a b) term = ?smallStepMinimalMorphismReduction_hole_7
-smallStepMinimalMorphismReduction (CoproductElim f g) term = ?smallStepMinimalMorphismReduction_hole_8
-smallStepMinimalMorphismReduction (CoproductIntroLeft a b) term = ?smallStepMinimalMorphismReduction_hole_9
-smallStepMinimalMorphismReduction (CoproductIntroRight a b) term = ?smallStepMinimalMorphismReduction_hole_10
-smallStepMinimalMorphismReduction (ExpressionIntro x) term = ?smallStepMinimalMorphismReduction_hole_11
-smallStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase) term = ?smallStepMinimalMorphismReduction_hole_12
+smallStepMinimalMorphismReduction (Identity x) term =
+  ?smallStepMinimalMorphismReduction_hole_ident
+smallStepMinimalMorphismReduction (Compose g f) term =
+  ?smallStepMinimalMorphismReduction_hole_compose
+smallStepMinimalMorphismReduction (FromInitial x) term =
+  ?smallStepMinimalMorphismReduction_hole_frominit
+smallStepMinimalMorphismReduction (ToTerminal x) term =
+  ?smallStepMinimalMorphismReduction_hole_toterm
+smallStepMinimalMorphismReduction (ProductIntro f g) term =
+  ?smallStepMinimalMorphismReduction_hole_prodintro
+smallStepMinimalMorphismReduction (ProductElimLeft a b) term =
+  ?smallStepMinimalMorphismReduction_hole_prodleft
+smallStepMinimalMorphismReduction (ProductElimRight a b) term =
+  ?smallStepMinimalMorphismReduction_hole_prodright
+smallStepMinimalMorphismReduction (CoproductElim f g) term =
+  ?smallStepMinimalMorphismReduction_hole_coelim
+smallStepMinimalMorphismReduction (CoproductIntroLeft a b) term =
+  ?smallStepMinimalMorphismReduction_hole_cointroleft
+smallStepMinimalMorphismReduction (CoproductIntroRight a b) term =
+  ?smallStepMinimalMorphismReduction_hole_cointroright
+smallStepMinimalMorphismReduction (ExpressionIntro x) term =
+  ?smallStepMinimalMorphismReduction_hole_expIntro
+smallStepMinimalMorphismReduction
+  (ExpressionElim exp exp' eqCase neqCase) term =
+    ?smallStepMinimalMorphismReduction_hole_expElim
 
 public export
 smallStepMinimalTermReduction :
   {type : MinimalTermType} -> {numApplications : Nat} ->
   MinimalTerm numApplications type ->
   (remainingApplications : Nat ** MinimalTerm remainingApplications type)
-smallStepMinimalTermReduction (UnappliedMorphismTerm morphism) = ?smallStepMinimalTermReduction_hole_1
-smallStepMinimalTermReduction (Application x y) = ?smallStepMinimalTermReduction_hole_2
-smallStepMinimalTermReduction UnitTerm = ?smallStepMinimalTermReduction_hole_3
-smallStepMinimalTermReduction (PairTerm x y) = ?smallStepMinimalTermReduction_hole_4
-smallStepMinimalTermReduction (MinimalLeft x right) = ?smallStepMinimalTermReduction_hole_5
-smallStepMinimalTermReduction (MinimalRight left x) = ?smallStepMinimalTermReduction_hole_6
-smallStepMinimalTermReduction (ExpressionTerm x) = ?smallStepMinimalTermReduction_hole_7
+smallStepMinimalTermReduction (UnappliedMorphismTerm morphism) =
+  ?smallStepMinimalTermReduction_hole_unapplied
+smallStepMinimalTermReduction (Application x y) =
+  ?smallStepMinimalTermReduction_hole_app
+smallStepMinimalTermReduction (ExFalsoTerm ti) =
+  ?smallStepMinimalTermReduction_hole_exfalso
+smallStepMinimalTermReduction UnitTerm =
+  ?smallStepMinimalTermReduction_hole_unit
+smallStepMinimalTermReduction (PairTerm x y) =
+  ?smallStepMinimalTermReduction_hole_pair
+smallStepMinimalTermReduction (MinimalLeft x right) =
+  ?smallStepMinimalTermReduction_hole_left
+smallStepMinimalTermReduction (MinimalRight left x) =
+  ?smallStepMinimalTermReduction_hole_right
+smallStepMinimalTermReduction (ExpressionTerm x) =
+  ?smallStepMinimalTermReduction_hole_exp
 
 public export
 data SmallStepMinimalTermReductionCompletes :
