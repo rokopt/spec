@@ -1042,7 +1042,7 @@ MinimalFullyAppliedTerm : MinimalTermType -> Type
 MinimalFullyAppliedTerm = MinimalTerm 0
 
 public export
-gebMinimalTermToExp : {numApplications : Nat} -> {type : MinimalTermType} ->
+gebMinimalTermToExp : {type: MinimalTermType} -> {numApplications : Nat} ->
   MinimalTerm numApplications type -> GebSExp
 gebMinimalTermToExp (Application f x) =
   GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
@@ -1050,15 +1050,15 @@ gebMinimalTermToExp (UnappliedMorphismTerm morphism) =
   GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
 gebMinimalTermToExp UnitTerm = $^ GAUnitTerm
 gebMinimalTermToExp
-  (PairTerm {leftApplications} {rightApplications} left right) =
-    GAPairTerm $* [gebMinimalTermToExp left, gebMinimalTermToExp right]
-gebMinimalTermToExp (MinimalLeft left right) =
+  (PairTerm {leftApplications} {rightApplications} {left} {right}
+   leftTerm rightTerm) =
+    GAPairTerm $* [gebMinimalTermToExp leftTerm, gebMinimalTermToExp rightTerm]
+gebMinimalTermToExp {numApplications} (MinimalLeft left right) =
   GALeftTerm $* [gebMinimalTermToExp left, gebMinimalObjectToExp right]
-gebMinimalTermToExp (MinimalRight left right) =
+gebMinimalTermToExp {numApplications} (MinimalRight left right) =
   GARightTerm $* [gebMinimalObjectToExp left, gebMinimalTermToExp right]
 gebMinimalTermToExp (ExpressionTerm x) =
   GAExpressionTerm $* [gebMinimalExpressionToExp x]
-gebMinimalTermToExp _ = ?gebMinimalTermToExp_hole
 
 public export
 gebExpToMinimalTerm :
@@ -1082,9 +1082,7 @@ gebExpToMinimalTerm (GAPairTerm $* [left, right]) with
         Just
           (MinimalTypeTerm (Product leftObject rightObject) **
            nLeft + nRight **
-           (PairTerm
-             ?gebExpToMinimalTerm_hole_pair_left
-             ?gebExpToMinimalTerm_hole_pair_right))
+           (PairTerm leftTerm rightTerm))
     gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
       _ = Nothing
 gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
@@ -1102,6 +1100,25 @@ gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
               No _ => Nothing
             _ => Nothing
         _ => Nothing
+    _ => Nothing
+gebExpToMinimalTerm (GAExpression $* [exp]) = gebExpToMinimalTerm exp
+gebExpToMinimalTerm (GALeftTerm $* [leftExp, rightExp]) =
+  case (gebExpToMinimalTerm leftExp, gebExpToMinimalObject rightExp) of
+    (Just (MinimalTypeTerm leftObject ** nLeft ** leftTerm),
+     Just rightObject) =>
+      Just
+        (MinimalTypeTerm (Coproduct leftObject rightObject) **
+         nLeft **
+         MinimalLeft leftTerm rightObject)
+    _ => Nothing
+gebExpToMinimalTerm (GARightTerm $* [leftExp, rightExp]) =
+  case (gebExpToMinimalObject leftExp, gebExpToMinimalTerm rightExp) of
+    (Just leftObject,
+     Just (MinimalTypeTerm rightObject ** nRight ** rightTerm)) =>
+      Just
+        (MinimalTypeTerm (Coproduct leftObject rightObject) **
+         nRight **
+         MinimalRight leftObject rightTerm)
     _ => Nothing
 gebExpToMinimalTerm _ = Nothing
 
