@@ -588,15 +588,34 @@ mutual
        gebMinimalMorphismToExp eqCase,
        gebMinimalMorphismToExp neqCase]
 
+public export
+gebMorphismExpIsNotObject : (m : MinimalMorphism) ->
+  gebExpToMinimalObject (gebMinimalMorphismToExp m) = Nothing
+gebMorphismExpIsNotObject (Identity _) = Refl
+gebMorphismExpIsNotObject (Compose _ _) = Refl
+gebMorphismExpIsNotObject (FromInitial _) = Refl
+gebMorphismExpIsNotObject (ToTerminal _) = Refl
+gebMorphismExpIsNotObject (ProductIntro _ _) = Refl
+gebMorphismExpIsNotObject (ProductElimLeft _ _) = Refl
+gebMorphismExpIsNotObject (ProductElimRight _ _) = Refl
+gebMorphismExpIsNotObject (CoproductElim _ _) = Refl
+gebMorphismExpIsNotObject (CoproductIntroLeft _ _) = Refl
+gebMorphismExpIsNotObject (CoproductIntroRight _ _) = Refl
+gebMorphismExpIsNotObject (ExpressionIntro _) = Refl
+gebMorphismExpIsNotObject (ExpressionElim _ _ _ _) = Refl
+
 mutual
   public export
   gebExpToMinimalExp : GebSExp -> Maybe MinimalExpression
-  gebExpToMinimalExp x =
-    case gebExpToMinimalObject x of
-      Just o => Just $ MinimalObjectExp o
-      Nothing => case gebExpToMinimalMorphism x of
-        Just m => Just $ MinimalMorphismExp m
-        Nothing => Nothing
+  gebExpToMinimalExp x with (gebExpToMinimalObject x, gebExpToMinimalMorphism x)
+    proof p
+      gebExpToMinimalExp x | (Just o, Just m) =
+        let pfst = PairFstEq p in
+        let psnd = PairSndEq p in
+        void (gebExpIsNotBothObjectAndMorphism x o m pfst psnd)
+      gebExpToMinimalExp x | (Just o, Nothing) = Just $ MinimalObjectExp o
+      gebExpToMinimalExp x | (Nothing, Just m) = Just $ MinimalMorphismExp m
+      gebExpToMinimalExp x | (Nothing, Nothing) = Nothing
 
   public export
   gebExpToMinimalMorphism : GebSExp -> Maybe MinimalMorphism
@@ -685,21 +704,70 @@ mutual
       _ => Nothing
   gebExpToMinimalMorphism _ = Nothing
 
+  public export
+  gebExpIsNotBothObjectAndMorphism : (x : GebSExp) ->
+    (o : MinimalObject) -> (m : MinimalMorphism) ->
+    gebExpToMinimalObject x = Just o -> gebExpToMinimalMorphism x = Just m ->
+    Void
+  gebExpIsNotBothObjectAndMorphism (GALanguage $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAMinimal $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAObject $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAInitial $* _) _ _ eqo eqm =
+    case eqm of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GATerminal $* _) _ _ eqo eqm =
+    case eqm of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAProduct $* _) _ _ eqo eqm =
+    case eqm of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GACoproduct $* _) _ _ eqo eqm =
+    case eqm of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAExpression $* _) _ _ eqo eqm =
+    case eqm of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAMorphism $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GATerm $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAUnitTerm $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAMorphismTerm $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAApplication $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAFromInitial $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAToTerminal $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAIdentity $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GACompose $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAProductIntro $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAProductElimLeft $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAProductElimRight $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GACoproductElim $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GACoproductIntroLeft $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GACoproductIntroRight $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAExpressionIntro $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAExpressionElim $* _) _ _ eqo eqm =
+    case eqo of Refl impossible
+
 public export
-gebMorphismExpIsNotObject : (m : MinimalMorphism) ->
-  gebExpToMinimalObject (gebMinimalMorphismToExp m) = Nothing
-gebMorphismExpIsNotObject (Identity _) = Refl
-gebMorphismExpIsNotObject (Compose _ _) = Refl
-gebMorphismExpIsNotObject (FromInitial _) = Refl
-gebMorphismExpIsNotObject (ToTerminal _) = Refl
-gebMorphismExpIsNotObject (ProductIntro _ _) = Refl
-gebMorphismExpIsNotObject (ProductElimLeft _ _) = Refl
-gebMorphismExpIsNotObject (ProductElimRight _ _) = Refl
-gebMorphismExpIsNotObject (CoproductElim _ _) = Refl
-gebMorphismExpIsNotObject (CoproductIntroLeft _ _) = Refl
-gebMorphismExpIsNotObject (CoproductIntroRight _ _) = Refl
-gebMorphismExpIsNotObject (ExpressionIntro _) = Refl
-gebMorphismExpIsNotObject (ExpressionElim _ _ _ _) = Refl
+gebObjectExpIsNotMorphism : (o : MinimalObject) ->
+  gebExpToMinimalMorphism (gebMinimalObjectToExp o) = Nothing
+gebObjectExpIsNotMorphism Initial = Refl
+gebObjectExpIsNotMorphism Terminal = Refl
+gebObjectExpIsNotMorphism (Product _ _) = Refl
+gebObjectExpIsNotMorphism (Coproduct _ _) = Refl
+gebObjectExpIsNotMorphism Expression = Refl
 
 public export
 gebMinimalMorphismRepresentationComplete : (r : MinimalMorphism) ->
@@ -753,6 +821,7 @@ gebMinimalMorphismRepresentationComplete (CoproductIntroRight a b) =
 gebMinimalMorphismRepresentationComplete (ExpressionIntro x) =
   case x of
     MinimalObjectExp o =>
+      rewrite gebObjectExpIsNotMorphism o in
       rewrite gebMinimalObjectRepresentationComplete o in
       Refl
     MinimalMorphismExp m =>
@@ -799,6 +868,7 @@ public export
 gebMinimalExpRepresentationComplete : (r : MinimalExpression) ->
   gebExpToMinimalExp (gebMinimalExpressionToExp r) = Just r
 gebMinimalExpRepresentationComplete (MinimalObjectExp o) =
+  rewrite gebObjectExpIsNotMorphism o in
   rewrite gebMinimalObjectRepresentationComplete o in
   Refl
 gebMinimalExpRepresentationComplete (MinimalMorphismExp m) =
@@ -1101,7 +1171,7 @@ gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
             _ => Nothing
         _ => Nothing
     _ => Nothing
-gebExpToMinimalTerm (GAExpression $* [exp]) = gebExpToMinimalTerm exp
+gebExpToMinimalTerm (GAExpressionTerm $* [exp]) = gebExpToMinimalTerm exp
 gebExpToMinimalTerm (GALeftTerm $* [leftExp, rightExp]) =
   case (gebExpToMinimalTerm leftExp, gebExpToMinimalObject rightExp) of
     (Just (MinimalTypeTerm leftObject ** nLeft ** leftTerm),
@@ -1141,7 +1211,7 @@ gebMinimalTermRepresentationComplete
 gebMinimalTermRepresentationComplete UnitTerm =
     Refl
 gebMinimalTermRepresentationComplete (PairTerm left right) =
-    ?gebMinimalTermRepresentationComplete_hole_pair
+  ?gebMinimalTermRepresentationComplete_hole_pair
 gebMinimalTermRepresentationComplete
   (MinimalLeft left right) =
     ?gebMinimalTermRepresentationComplete_hole_left
@@ -1161,11 +1231,6 @@ interpretMinimalTermType (MinimalMorphismTerm domain codomain) =
   interpretMinimalObject domain -> interpretMinimalObject codomain
 
 public export
-interpretMinimalFullyAppliedTerm : {type : MinimalTermType} ->
-  (term : MinimalFullyAppliedTerm type) -> interpretMinimalTermType type
-interpretMinimalFullyAppliedTerm term = ?interpretMinimalFullyAppliedTerm_hole
-
-public export
 interpretMinimalTerm : {type : MinimalTermType} -> {numApplications : Nat} ->
   (term : MinimalTerm numApplications type) -> interpretMinimalTermType type
 interpretMinimalTerm (Application f x) =
@@ -1176,11 +1241,10 @@ interpretMinimalTerm UnitTerm = ()
 interpretMinimalTerm (PairTerm left right) =
   (interpretMinimalTerm left, interpretMinimalTerm right)
 interpretMinimalTerm (MinimalLeft left right) =
-  ?interpretMinimalFullyAppliedTerm_hole_left
+  Left $ interpretMinimalTerm left
 interpretMinimalTerm (MinimalRight left right) =
-  ?interpretMinimalFullyAppliedTerm_hole_right
-interpretMinimalTerm (ExpressionTerm x) =
-  ?interpretMinimalFullyAppliedTerm_hole_expression
+  Right $ interpretMinimalTerm right
+interpretMinimalTerm (ExpressionTerm x) = x
 
 bigStepMinimalMorphismReduction :
   (m : MinimalMorphism) ->
@@ -1205,11 +1269,9 @@ mutual
   public export
   bigStepMinimalMorphismReductionCorrect :
     (m : MinimalMorphism) ->
-    (x :
-      MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m))) ->
-    interpretMinimalFullyAppliedTerm (bigStepMinimalMorphismReduction m x) =
-      interpretMinimalFullyAppliedTerm (UnappliedMorphismTerm m)
-        (interpretMinimalFullyAppliedTerm x)
+    (x : MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m))) ->
+    interpretMinimalTerm (bigStepMinimalMorphismReduction m x) =
+      interpretMinimalTerm (UnappliedMorphismTerm m) (interpretMinimalTerm x)
   bigStepMinimalMorphismReductionCorrect m x =
     ?bigStepMinimalMorphismReductionCorrect_hole
 
