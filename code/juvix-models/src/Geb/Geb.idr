@@ -1246,6 +1246,35 @@ interpretMinimalTerm (MinimalRight left right) =
   Right $ interpretMinimalTerm right
 interpretMinimalTerm (ExpressionTerm x) = x
 
+-- | A correct morphism transformation preserves the interpretation of
+-- | term application.
+public export
+correctMinimalMorphismTransformPreservesTermInterpretation :
+  (transform : MinimalMorphismTransform) ->
+  {domainTransformCorrect :
+    MinimalMorphismTransformDomainCorrect transform} ->
+  {codomainTransformCorrect :
+    MinimalMorphismTransformCodomainCorrect transform} ->
+  MinimalMorphismTransformCorrect
+    transform domainTransformCorrect codomainTransformCorrect ->
+  (m : MinimalMorphism) ->
+  {numApplications : Nat} ->
+  (term :
+    MinimalTerm numApplications
+      (MinimalTypeTerm (minimalMorphismDomain m))) ->
+  (term' :
+    MinimalTerm numApplications
+      (MinimalTypeTerm (minimalMorphismDomain (transform m)))) ->
+  interpretMinimalTerm term =
+    (rewrite sym (domainTransformCorrect m) in (interpretMinimalTerm term')) ->
+  interpretMinimalTerm
+    (Application (UnappliedMorphismTerm m) term) =
+  (rewrite sym (codomainTransformCorrect m) in (interpretMinimalTerm
+    (Application (UnappliedMorphismTerm (transform m)) term')))
+correctMinimalMorphismTransformPreservesTermInterpretation
+  transform transformCorrect m {numApplications} term term' termEq =
+    ?correctMinimalMorphismTransformPreservesTermInterpretation_hole
+
 bigStepMinimalMorphismReduction :
   (m : MinimalMorphism) ->
   MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m)) ->
@@ -1263,7 +1292,7 @@ bigStepMinimalTermReduction (Application f x) with
       (UnappliedMorphismTerm m, xReduced) =
         bigStepMinimalMorphismReduction m xReduced
 bigStepMinimalTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
-bigStepMinimalTermReduction term = ?bigStepMinimalTermReuction_hole
+bigStepMinimalTermReduction term = ?bigStepMinimalTermReduction_hole
 
 mutual
   public export
