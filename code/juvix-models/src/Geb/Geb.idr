@@ -1331,8 +1331,32 @@ bigStepMinimalMorphismReduction (CoproductIntroLeft left right) x =
 bigStepMinimalMorphismReduction (CoproductIntroRight left right) x =
   MinimalRight left x
 bigStepMinimalMorphismReduction (ExpressionIntro exp) _ = ExpressionTerm exp
-bigStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase) x =
-  ?bigStepMinimalMorphismReduction_hole_expElim
+bigStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase
+  {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
+  {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) x =
+    let
+      xReduced = bigStepMinimalMorphismReduction exp x
+      xReduced' = bigStepMinimalMorphismReduction exp'
+        (rewrite sym expDomainsMatch in x)
+      xReducedRewritten =
+        replace {p=(MinimalTerm 0 . MinimalTypeTerm)}
+          expCodomainIsExpression xReduced
+      xReducedRewritten' =
+        replace {p=(MinimalTerm 0 . MinimalTypeTerm)}
+          expCodomainIsExpression (rewrite expCodomainsMatch in xReduced')
+      xInterpreted = interpretMinimalTerm xReducedRewritten
+      xInterpreted' = interpretMinimalTerm xReducedRewritten'
+      eqCaseReduced =
+        bigStepMinimalMorphismReduction
+          eqCase (rewrite sym eqDomainMatches in x)
+      eqCaseReduced' =
+        bigStepMinimalMorphismReduction
+          neqCase (rewrite sym neqDomainMatches in x)
+    in
+    if xInterpreted == xInterpreted' then
+      eqCaseReduced else
+    (replace {p=(MinimalTerm 0. MinimalTypeTerm)}
+      (sym eqCodomainsMatch) eqCaseReduced')
 
 public export
 bigStepMinimalTermReduction :
