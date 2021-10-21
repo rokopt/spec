@@ -1263,6 +1263,12 @@ interpretMinimalTerm (MinimalRight left right) =
   Right $ interpretMinimalTerm right
 interpretMinimalTerm (ExpressionTerm x) = x
 
+public export
+gebNoExFalsoTerm : {numApplications : Nat} ->
+  (ti : MinimalTerm numApplications (MinimalTypeTerm Initial)) ->
+  Void
+gebNoExFalsoTerm ti = void $ interpretMinimalTerm ti
+
 -- | A correct morphism transformation preserves the interpretation of
 -- | term application.
 public export
