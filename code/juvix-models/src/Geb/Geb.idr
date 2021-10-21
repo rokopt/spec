@@ -1124,7 +1124,7 @@ gebMinimalTermToExp (Application f x) =
 gebMinimalTermToExp (UnappliedMorphismTerm morphism) =
   GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
 gebMinimalTermToExp {type=(MinimalTypeTerm type)} (ExFalsoTerm ti) =
-  GAUnitTerm $* [gebMinimalTermToExp ti, gebMinimalObjectToExp type]
+  GAExFalsoTerm $* [gebMinimalTermToExp ti, gebMinimalObjectToExp type]
 gebMinimalTermToExp UnitTerm = $^ GAUnitTerm
 gebMinimalTermToExp
   (PairTerm {leftApplications} {rightApplications} {left} {right}
@@ -1221,9 +1221,10 @@ gebMinimalTermRepresentationComplete
     rewrite gebMinimalMorphismRepresentationComplete morphism in
     Refl
 gebMinimalTermRepresentationComplete (ExFalsoTerm ti) =
+  let tiComplete = gebMinimalTermRepresentationComplete ti in
   ?gebMinimalTermRepresentationComplete_hole_exfalso
 gebMinimalTermRepresentationComplete UnitTerm =
-    Refl
+  Refl
 gebMinimalTermRepresentationComplete (PairTerm left right) =
   ?gebMinimalTermRepresentationComplete_hole_pair
 gebMinimalTermRepresentationComplete
