@@ -226,62 +226,62 @@ mutual
       Vect n (SObject generator) ->
       SObject generator
 
+public export
+record SObjIndSig {scAtom : Type} {generator : SCategoryGenerator scAtom}
+  (p : SObject generator -> Type)
+  (pv : (n : Nat) -> Vect n (SObject generator) -> Type) where
+    constructor SObjIndArgs
+    objStep : (n : Nat) -> (a : scAtom) ->
+      (isObject : lookup a (objectConstructors generator) = Just n) ->
+      (objVect : Vect n (SObject generator)) ->
+      pv n objVect ->
+      p (SObjConstruct generator a objVect)
+    objBaseCase : pv 0 []
+    objIndStep : (obj : SObject generator) -> p obj -> (n : Nat) ->
+      (objVect : Vect n (SObject generator)) -> pv n objVect ->
+      pv (S n) (obj :: objVect)
+
 mutual
   public export
   sObjInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
     {p : SObject generator -> Type} ->
     {pv : (n : Nat) -> Vect n (SObject generator) -> Type} ->
-    (objStep : (n : Nat) -> (a : scAtom) ->
-      (isObject : lookup a (objectConstructors generator) = Just n) ->
-      (objVect : Vect n (SObject generator)) ->
-      pv n objVect ->
-      p (SObjConstruct generator a objVect)) ->
-    (baseCase : pv 0 []) ->
-    (indStep : (obj : SObject generator) -> p obj -> (n : Nat) ->
-      (objVect : Vect n (SObject generator)) -> pv n objVect ->
-      pv (S n) (obj :: objVect)) ->
+    SObjIndSig p pv ->
     (obj : SObject generator) -> p obj
-  sObjInd objStep baseCase indStep (SObjConstruct _ a {n} {isObject} objVect) =
-    objStep n a isObject objVect
-      (sObjVectInd {p} {pv} objStep baseCase indStep objVect)
+  sObjInd signature (SObjConstruct _ a {n} {isObject} objVect) =
+    objStep signature n a isObject objVect
+      (sObjVectInd {p} {pv} signature  objVect)
 
   public export
   sObjVectInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
     {p : SObject generator -> Type} ->
     {pv : (n : Nat) -> Vect n (SObject generator) -> Type} ->
-    (objStep : (n : Nat) -> (a : scAtom) ->
-      (isObject : lookup a (objectConstructors generator) = Just n) ->
-      (objVect : Vect n (SObject generator)) ->
-      pv n objVect ->
-      p (SObjConstruct generator a objVect)) ->
-    (baseCase : pv 0 []) ->
-    (indStep : (obj : SObject generator) -> p obj -> (n : Nat) ->
-      (objVect : Vect n (SObject generator)) -> pv n objVect ->
-      pv (S n) (obj :: objVect)) ->
+    SObjIndSig p pv ->
     {n : Nat} -> (objVect : Vect n (SObject generator)) ->
     pv n objVect
-  sObjVectInd objStep baseCase indStep [] = baseCase
-  sObjVectInd objStep baseCase indStep {n=(S n')} (obj :: objVect') =
-    indStep obj (sObjInd objStep baseCase indStep obj)
-      n' objVect' (sObjVectInd objStep baseCase indStep objVect')
+  sObjVectInd signature [] = objBaseCase signature
+  sObjVectInd signature {n=(S n')} (obj :: objVect') =
+    objIndStep signature obj (sObjInd signature obj)
+      n' objVect' (sObjVectInd signature objVect')
+
+SObjShowSig : {scAtom : Type} -> Show scAtom =>
+  (generator : SCategoryGenerator scAtom) ->
+  SObjIndSig {generator} (\_ => String) (\_, _ => String)
+SObjShowSig generator = SObjIndArgs {generator}
+  (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
+  "_"
+  (\_, headStr, n, _, tailStr =>
+  headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
 
 public export
 (atom : Type) => Show atom => (generator : SCategoryGenerator atom) =>
 Show (SObject generator) where
-  show = sObjInd
-     (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
-     "_"
-     (\_, headStr, n, _, tailStr =>
-      headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
+  show = sObjInd $ SObjShowSig generator
 
 public export
 (atom : Type) => Show atom => (generator : SCategoryGenerator atom) =>
 (n : Nat) => Show (Vect n (SObject generator)) where
-  show = sObjVectInd
-     (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
-     "_"
-     (\_, headStr, n, _, tailStr =>
-      headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
+  show = sObjVectInd $ SObjShowSig generator
 
 mutual
   public export
