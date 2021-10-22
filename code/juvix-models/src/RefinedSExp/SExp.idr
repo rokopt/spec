@@ -270,7 +270,7 @@ public export
 Show (SObject generator) where
   show = sObjInd
      (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
-     "|"
+     "_"
      (\_, headStr, n, _, tailStr =>
       headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
 
@@ -279,7 +279,7 @@ public export
 (n : Nat) => Show (Vect n (SObject generator)) where
   show = sObjVectInd
      (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
-     "|"
+     "_"
      (\_, headStr, n, _, tailStr =>
       headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
 
