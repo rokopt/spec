@@ -250,7 +250,7 @@ mutual
     (obj : SObject generator) -> p obj
   sObjInd signature (SObjConstruct _ a {n} {isObject} objVect) =
     objStep signature n a isObject objVect
-      (sObjVectInd {p} {pv} signature  objVect)
+      (sObjVectInd {p} {pv} signature objVect)
 
   public export
   sObjVectInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
