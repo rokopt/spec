@@ -199,6 +199,43 @@ mutual
     SExpTail : {pred : SPred atom} -> SListExists pred l ->
       SListExists pred (x :: l)
 
+public export
+SortArity : Type -> Type
+SortArity = SList
+
+public export
+SExpMap : Type -> Type -> Type
+SExpMap atom = SortedMap atom
+
+public export
+AlgebraArity : Type -> Type
+AlgebraArity atom = SExpMap atom (SortArity atom)
+
+public export
+data SExpConstructorParam : (atom : Type) -> Type where
+  SExpConstructorSort : {atom : Type} ->
+    (sort : atom) -> (arity : SortArity atom) ->
+    SExpConstructorParam atom
+  SExpConstructorPreviousParam : {atom : Type} ->
+    (index : Nat) -> SExpConstructorParam atom
+
+public export
+record SExpConstructor (atom : Type) where
+  constructor SExpConstructorSignature
+  constructorParams : SList (SExpConstructorParam atom)
+  constructorArgs : SList (SExpConstructorParam atom)
+
+public export
+SortConstructors : Type -> Type
+SortConstructors atom = SExpMap atom (SExpConstructor atom)
+
+public export
+record SExpAlgebra (atom : Type) where
+  constructor SExpAlgebraSignature
+  algebraParameters : List (AlgebraArity atom)
+  algebraArity : AlgebraArity atom
+  sortConstructors : SortConstructors atom
+
 -- | S-expression categories.
 mutual
   public export

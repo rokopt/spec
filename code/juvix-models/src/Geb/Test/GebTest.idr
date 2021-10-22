@@ -37,6 +37,31 @@ GebCategoryGenerator =
     GebCategoryObjects
     GebCategoryMorphisms
 
+public export
+GebObjectArity : SortArity GebAtom
+GebObjectArity = empty
+
+public export
+GebMorphismArity : SortArity GebAtom
+GebMorphismArity = [$^ GAObject, $^ GAObject]
+
+public export
+GebAlgebraArity : AlgebraArity GebAtom
+GebAlgebraArity = fromList
+  [
+    (GAObject, GebObjectArity)
+  , (GAMorphism, GebMorphismArity)
+  ]
+
+public export
+GebAlgebra : SExpAlgebra GebAtom
+GebAlgebra = SExpAlgebraSignature
+  []
+  GebAlgebraArity
+  ?GebAlgebra_hole_sortConstructors
+
+-- public export
+
 export
 gebTests : IO ()
 gebTests = do
