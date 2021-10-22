@@ -212,22 +212,53 @@ AlgebraArity : Type -> Type
 AlgebraArity atom = SExpMap atom (SortArity atom)
 
 public export
-data SExpConstructorParam : (atom : Type) -> Type where
-  SExpConstructorSort : {atom : Type} ->
-    (sort : atom) -> (arity : SortArity atom) ->
-    SExpConstructorParam atom
-  SExpConstructorPreviousParam : {atom : Type} ->
-    (index : Nat) -> SExpConstructorParam atom
+data SAlgKeyword : Type where
+  SAKSortParam : SAlgKeyword
+  SAKConstructorArg : SAlgKeyword
+  SAKPreviousParam : SAlgKeyword
 
 public export
-record SExpConstructor (atom : Type) where
-  constructor SExpConstructorSignature
-  constructorParams : SList (SExpConstructorParam atom)
-  constructorArgs : SList (SExpConstructorParam atom)
+data SAlgAtom : (atom : Type) -> Type where
+  SAKeyword : {atom : Type} -> SAlgKeyword -> SAlgAtom atom
+  SACustom : {atom : Type} -> atom -> SAlgAtom atom
+
+public export
+SASortParam : {atom : Type} -> SAlgAtom atom
+SASortParam = SAKeyword SAKSortParam
+
+public export
+SAConstructorArg : {atom : Type} -> SAlgAtom atom
+SAConstructorArg = SAKeyword SAKConstructorArg
+
+public export
+SAPreviousParam : {atom : Type} -> SAlgAtom atom
+SAPreviousParam = SAKeyword SAKPreviousParam
+
+public export
+SAlgExp : Type -> Type
+SAlgExp atom = SExp (SAlgAtom atom)
+
+public export
+SAlgList : Type -> Type
+SAlgList atom = SList (SAlgAtom atom)
+
+public export
+SExpConstructor : (atom : Type) -> Type
+SExpConstructor atom = (SAlgList atom, SAlgList atom) -- params, sort args
+
+public export
+SExpConstructorMap : Type -> Type
+SExpConstructorMap atom = SExpMap atom (SExpConstructor atom)
+
+public export
+record SortConstructor (atom : Type) where
+  constructor SortSignature
+  sortParams : SAlgList atom
+  sortConstructors : SExpConstructorMap atom
 
 public export
 SortConstructors : Type -> Type
-SortConstructors atom = SExpMap atom (SExpConstructor atom)
+SortConstructors atom = SExpMap atom (SortConstructor atom)
 
 public export
 record SExpAlgebra (atom : Type) where
