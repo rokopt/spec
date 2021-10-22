@@ -3,6 +3,9 @@ module RefinedSExp.SExp
 import public Library.FunctionsAndRelations
 import public Library.Decidability
 import public Library.List
+import public Data.SortedMap
+import public Data.SortedSet
+import public Data.Vect
 
 %default total
 
@@ -195,3 +198,118 @@ mutual
       SListExists pred (x :: l)
     SExpTail : {pred : SPred atom} -> SListExists pred l ->
       SListExists pred (x :: l)
+
+-- | S-expression categories.
+mutual
+  public export
+  ObjectMap : Type -> Type
+  ObjectMap atom = SortedMap atom Nat
+
+  public export
+  MorphismMap : Type -> Type
+  MorphismMap atom = SortedMap atom Void
+
+  public export
+  record SCategoryGenerator (scAtom : Type) where
+    constructor SCategoryArgs
+    identityID : scAtom
+    composeID : scAtom
+    objectConstructors : ObjectMap scAtom
+    morphismConstructors : MorphismMap scAtom
+
+  public export
+  data SObject : {scAtom : Type} -> SCategoryGenerator scAtom -> Type where
+    SObjConstruct : {scAtom : Type} ->
+      (generator : SCategoryGenerator scAtom) ->
+      (a : scAtom) -> {auto n : Nat} ->
+      {auto isObject : lookup a (objectConstructors generator) = Just n} ->
+      Vect n (SObject generator) ->
+      SObject generator
+
+mutual
+  public export
+  sObjInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
+    {p : SObject generator -> Type} ->
+    {pv : (n : Nat) -> Vect n (SObject generator) -> Type} ->
+    (objStep : (n : Nat) -> (a : scAtom) ->
+      (isObject : lookup a (objectConstructors generator) = Just n) ->
+      (objVect : Vect n (SObject generator)) ->
+      pv n objVect ->
+      p (SObjConstruct generator a objVect)) ->
+    (baseCase : pv 0 []) ->
+    (indStep : (obj : SObject generator) -> p obj -> (n : Nat) ->
+      (objVect : Vect n (SObject generator)) -> pv n objVect ->
+      pv (S n) (obj :: objVect)) ->
+    (obj : SObject generator) -> p obj
+  sObjInd objStep baseCase indStep (SObjConstruct _ a {n} {isObject} objVect) =
+    objStep n a isObject objVect
+      (sObjVectInd {p} {pv} objStep baseCase indStep objVect)
+
+  public export
+  sObjVectInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
+    {p : SObject generator -> Type} ->
+    {pv : (n : Nat) -> Vect n (SObject generator) -> Type} ->
+    (objStep : (n : Nat) -> (a : scAtom) ->
+      (isObject : lookup a (objectConstructors generator) = Just n) ->
+      (objVect : Vect n (SObject generator)) ->
+      pv n objVect ->
+      p (SObjConstruct generator a objVect)) ->
+    (baseCase : pv 0 []) ->
+    (indStep : (obj : SObject generator) -> p obj -> (n : Nat) ->
+      (objVect : Vect n (SObject generator)) -> pv n objVect ->
+      pv (S n) (obj :: objVect)) ->
+    {n : Nat} -> (objVect : Vect n (SObject generator)) ->
+    pv n objVect
+  sObjVectInd objStep baseCase indStep [] = baseCase
+  sObjVectInd objStep baseCase indStep {n=(S n')} (obj :: objVect') =
+    indStep obj (sObjInd objStep baseCase indStep obj)
+      n' objVect' (sObjVectInd objStep baseCase indStep objVect')
+
+public export
+(atom : Type) => Show atom => (generator : SCategoryGenerator atom) =>
+Show (SObject generator) where
+  show = sObjInd
+     (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
+     "|"
+     (\_, headStr, n, _, tailStr =>
+      headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
+
+public export
+(atom : Type) => Show atom => (generator : SCategoryGenerator atom) =>
+(n : Nat) => Show (Vect n (SObject generator)) where
+  show = sObjVectInd
+     (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
+     "|"
+     (\_, headStr, n, _, tailStr =>
+      headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
+
+mutual
+  public export
+  Show atom => Show (SCategoryGenerator atom) where
+    show g = "{Identity : " ++ (show $ identityID g) ++
+      ", Compose : " ++ (show $ composeID g) ++
+      ", Objects : " ++ (show $ objectConstructors g) ++
+      ", Morphisms : " ++ (show $ morphismConstructors g) ++ "}"
+
+mutual
+  public export
+  sobject : {scAtom : Type} -> (generator : SCategoryGenerator scAtom) ->
+    SExp scAtom -> Maybe $ SObject generator
+  sobject generator (a $* l) with (lookup a $ objectConstructors generator)
+    proof isObject
+      sobject generator (a $* l) | Just n = case sobjectVect generator l n of
+        Just svect => Just $ SObjConstruct generator a {isObject} svect
+        Nothing => Nothing
+      sobject generator (a $* l) | Nothing = Nothing
+
+  public export
+  sobjectVect : {scAtom : Type} -> (generator : SCategoryGenerator scAtom) ->
+    SList scAtom -> (expectedLength : Nat) ->
+    Maybe $ Vect expectedLength $ SObject generator
+  sobjectVect generator [] 0 = Just []
+  sobjectVect generator [] (S _) = Nothing
+  sobjectVect generator (_ :: _) 0 = Nothing
+  sobjectVect generator (x :: l) (S n) =
+    case (sobject generator x, sobjectVect generator l n) of
+      (Just x', Just l') => Just (x' :: l')
+      _ => Nothing

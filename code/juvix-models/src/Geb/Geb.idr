@@ -1,11 +1,10 @@
 module Geb.Geb
 
 import Library.FunctionsAndRelations
-import RefinedSExp.SExp
 import Library.Decidability
-import RefinedSExp.SExp
-import Data.SortedSet
-import Data.SortedMap
+import public RefinedSExp.SExp
+import public Data.SortedSet
+import public Data.SortedMap
 
 %default total
 

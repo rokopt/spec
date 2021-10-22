@@ -13,11 +13,39 @@ backAndForth = case (gebExpToMinimalTerm $ gebMinimalTermToExp unitPair) of
   Just term => "Just " ++ show (snd term)
   Nothing => "Nothing"
 
+public export
+GebCategoryObjects : ObjectMap GebAtom
+GebCategoryObjects =
+  fromList [
+    (GAInitial, 0),
+    (GATerminal, 0)
+  ]
+
+public export
+GebCategoryMorphisms : MorphismMap GebAtom
+GebCategoryMorphisms = fromList []
+
+public export
+GebCategoryGenerator : SCategoryGenerator GebAtom
+GebCategoryGenerator =
+  SCategoryArgs
+    GAIdentity
+    GACompose
+    GebCategoryObjects
+    GebCategoryMorphisms
+
 export
 gebTests : IO ()
 gebTests = do
   printLn "Begin gebTests:"
-  printLn "End gebTests."
   printLn $ "unitPair=" ++ show unitPair
   printLn $ "backandforth=" ++ backAndForth
+  printLn $ "lookup=" ++ show (lookup GAInitial GebCategoryObjects)
+  printLn $ "sobject initial=" ++
+    show (sobject GebCategoryGenerator ($^ GAInitial))
+  printLn $ "sobject random=" ++
+    show (sobject GebCategoryGenerator ($^ GALanguage))
+  printLn $ "sobject too many params=" ++
+    show (sobject GebCategoryGenerator (GALanguage $* [$^ GAInitial]))
+  printLn "End gebTests."
   pure ()
