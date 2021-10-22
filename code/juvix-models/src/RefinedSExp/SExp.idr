@@ -213,9 +213,8 @@ AlgebraArity atom = SExpMap atom (SortArity atom)
 
 public export
 data SAlgKeyword : Type where
-  SAKSortParam : SAlgKeyword
-  SAKConstructorArg : SAlgKeyword
-  SAKPreviousParam : SAlgKeyword
+  SAKConstructorArg : Nat -> SAlgKeyword
+  SAKPreviousParam : Nat -> SAlgKeyword
 
 public export
 data SAlgAtom : (atom : Type) -> Type where
@@ -223,24 +222,28 @@ data SAlgAtom : (atom : Type) -> Type where
   SACustom : {atom : Type} -> atom -> SAlgAtom atom
 
 public export
-SASortParam : {atom : Type} -> SAlgAtom atom
-SASortParam = SAKeyword SAKSortParam
-
-public export
-SAConstructorArg : {atom : Type} -> SAlgAtom atom
-SAConstructorArg = SAKeyword SAKConstructorArg
-
-public export
-SAPreviousParam : {atom : Type} -> SAlgAtom atom
-SAPreviousParam = SAKeyword SAKPreviousParam
-
-public export
 SAlgExp : Type -> Type
-SAlgExp atom = SExp (SAlgAtom atom)
+SAlgExp = SExp . SAlgAtom
 
 public export
 SAlgList : Type -> Type
-SAlgList atom = SList (SAlgAtom atom)
+SAlgList = SList . SAlgAtom
+
+public export
+SAConstructorArg : {atom : Type} -> Nat -> SAlgAtom atom
+SAConstructorArg = SAKeyword . SAKConstructorArg
+
+public export
+SAPreviousParam : {atom : Type} -> Nat -> SAlgAtom atom
+SAPreviousParam = SAKeyword . SAKPreviousParam
+
+public export
+SExpConstructorArg : {atom : Type} -> Nat -> SAlgExp atom
+SExpConstructorArg = ($^) . SAConstructorArg
+
+public export
+SExpPreviousParam : {atom : Type} -> Nat -> SAlgExp atom
+SExpPreviousParam = ($^) . SAPreviousParam
 
 public export
 SExpConstructor : (atom : Type) -> Type

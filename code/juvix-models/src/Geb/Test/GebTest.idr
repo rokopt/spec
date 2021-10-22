@@ -103,19 +103,37 @@ GebObjectConstructorMap = fromList
   , (GACoproduct, GebProductConstructor)
   ]
 
+public export
 GebObjectSortConstructor : SortConstructor GebAtom
 GebObjectSortConstructor = SortSignature [] GebObjectConstructorMap
 
 public export
+GAlgMorphism : GAlgAtom
+GAlgMorphism = SACustom GAMorphism
+
+public export
+GebMorphismArgument : GAlgExp -> GAlgExp -> GAlgExp
+GebMorphismArgument domain codomain = GAlgMorphism $* [domain, codomain]
+
+public export
 GebIdentityConstructor : SExpConstructor GebAtom
 GebIdentityConstructor =
-  ([GebObjectArgument, GebObjectArgument], [GebObjectArgument])
+  ([GebObjectArgument], [SExpConstructorArg 0, SExpConstructorArg 0])
+
+public export
+GebComposeConstructor : SExpConstructor GebAtom
+GebComposeConstructor =
+  ([GebObjectArgument, GebObjectArgument, GebObjectArgument,
+    GebMorphismArgument (SExpConstructorArg 1) (SExpConstructorArg 2),
+    GebMorphismArgument (SExpConstructorArg 0) (SExpConstructorArg 1)],
+   [SExpConstructorArg 0, SExpConstructorArg 2])
 
 public export
 GebMorphismConstructorMap : SExpConstructorMap GebAtom
 GebMorphismConstructorMap = fromList
   [
     (GAIdentity, GebIdentityConstructor)
+  , (GACompose, GebComposeConstructor)
   ]
 
 public export
