@@ -5,7 +5,7 @@ import public Data.List.Elem
 import public Data.List.Equalities
 import public Data.Nat
 import public Library.Decidability
-import public Category.Category
+import public Library.FunctionsAndRelations
 
 %default total
 
@@ -656,6 +656,7 @@ ListTransformPreservesExists : {a, b : Type} ->
 ListTransformPreservesExists predA predB f =
   (x : a) -> predA x -> ListExists predB (f x)
 
+{-
 public export
 ListCategory : Category
 ListCategory = MkCategory
@@ -666,6 +667,7 @@ ListCategory = MkCategory
   (\f => Refl)
   (\f => Refl)
   (\f, g, h => Refl)
+  -}
 
 public export
 map_id_ext : {a : Type} -> (l : List a) -> map (id {a}) l = l
