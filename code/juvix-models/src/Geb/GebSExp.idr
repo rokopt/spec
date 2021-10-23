@@ -414,7 +414,7 @@ gebObjectRepresentationComplete (l ** o) =
 
 public export
 Show Object where
-  show o = show (gebObjectToExp o)
+  show = show . gebObjectToExp
 
 export
 objectDecEq : DecEqPred Object
@@ -447,6 +447,64 @@ data LanguageMorphism : {l : Language} ->
         (PromoteObject domain) (PromoteObject codomain)
     Identity : {l : Language} -> (o : LanguageObject l) -> LanguageMorphism o o
     Compose : {l : Language} -> (o : LanguageObject l) -> LanguageMorphism o o
+
+public export
+Morphism : Type
+Morphism = (l : Language **
+            domain : LanguageObject l ** codomain : LanguageObject l **
+            LanguageMorphism {l} domain codomain)
+
+public export
+gebLanguageMorphismToExp :
+  {l : Language} -> {domain, codomain : LanguageObject l} ->
+  LanguageMorphism domain codomain -> GebSExp
+gebLanguageMorphismToExp m = ?gebLanguageMorphismToExp_hole
+
+public export
+gebMorphismToExp : Morphism -> GebSExp
+gebMorphismToExp (l ** domain ** codomain ** m) =
+  gebLanguageMorphismToExp {l} {domain} {codomain} m
+
+public export
+gebExpToMorphism : GebSExp -> Maybe Morphism
+gebExpToMorphism x = ?gebExpToMorphism_hole
+
+public export
+gebLanguageMorphismRepresentationComplete : {l : Language} ->
+  {domain, codomain : LanguageObject l} ->
+  (m : LanguageMorphism domain codomain) ->
+  gebExpToMorphism (gebLanguageMorphismToExp {l} {domain} {codomain} m) =
+    Just (l ** domain ** codomain ** m)
+gebLanguageMorphismRepresentationComplete {l} {domain} {codomain} m =
+  ?gebLanguageMorphismRepresentationComplete_hole
+
+public export
+gebMorphismRepresentationComplete : (m : Morphism) ->
+  gebExpToMorphism (gebMorphismToExp m) = Just m
+gebMorphismRepresentationComplete (l ** domain ** codomain ** m) =
+  gebLanguageMorphismRepresentationComplete {l} {domain} {codomain} m
+
+public export
+Show Morphism where
+  show = show . gebMorphismToExp
+
+export
+morphismDecEq : DecEqPred Morphism
+morphismDecEq =
+  encodingDecEq
+    gebMorphismToExp
+    gebExpToMorphism
+    gebMorphismRepresentationComplete
+    decEq
+
+public export
+DecEq Morphism where
+  decEq = morphismDecEq
+
+public export
+Eq Morphism using decEqToEq where
+  (==) = (==)
+
 {-
 mutual
   public export
