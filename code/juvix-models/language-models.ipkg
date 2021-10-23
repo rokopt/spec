@@ -9,6 +9,8 @@ modules = Library.TypesAndFunctions
     , Library.Decidability
     , Geb.Geb
     , Geb.Test.GebTest
+    , Geb.GebSExp
+    , Geb.Test.GebSExpTest
     , Category.Category
     , Library.List
     , Theories.SimplyTypedLambdaCalculus

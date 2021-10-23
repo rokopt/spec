@@ -2,6 +2,7 @@ module Executable.Test.Main
 
 import Library.Test.TestLibrary
 import Geb.Test.GebTest
+import Geb.Test.GebSExpTest
 import RefinedSExp.Test.ListTest
 import RefinedSExp.PairVariant.Test.SExpTest
 import RefinedSExp.Test.ComputableFunctionsTest
@@ -48,6 +49,7 @@ export
 main : IO ()
 main = do
   Geb.Test.GebTest.gebTests
+  Geb.Test.GebSExpTest.gebSExpTests
   {-
   RefinedSExp.Test.ListTest.listTests
   RefinedSExp.PairVariant.Test.SExpTest.sExpTests
