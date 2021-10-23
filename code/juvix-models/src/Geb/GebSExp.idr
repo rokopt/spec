@@ -334,8 +334,8 @@ public export
 data LanguageObject : Language -> Type where
   PromoteObject : LanguageObject Minimal -> LanguageObject HigherOrderInductive
   AtomObject : (l : Language) -> LanguageObject l
-  SExpObject : {l : Language} -> LanguageObject l -> LanguageObject l
-  SListObject : {l : Language} -> LanguageObject l -> LanguageObject l
+  SExpObject : (l : Language) -> LanguageObject l
+  SListObject : (l : Language) -> LanguageObject l
 
 public export
 Object : Type
@@ -345,10 +345,10 @@ public export
 gebLanguageObjectToExp : {l : Language} -> LanguageObject l -> GebSExp
 gebLanguageObjectToExp {l} (AtomObject l) =
   GAAtom $* [gebLanguageToExp l]
-gebLanguageObjectToExp {l} (SExpObject o) =
-  GASExp $* [gebLanguageToExp l, gebLanguageObjectToExp o]
-gebLanguageObjectToExp {l} (SListObject o) =
-  GASList $* [gebLanguageToExp l, gebLanguageObjectToExp o]
+gebLanguageObjectToExp {l} (SExpObject l) =
+  GASExp $* [gebLanguageToExp l]
+gebLanguageObjectToExp {l} (SListObject l) =
+  GASList $* [gebLanguageToExp l]
 gebLanguageObjectToExp {l=Minimal} (PromoteObject o) impossible
 gebLanguageObjectToExp {l=HigherOrderInductive} (PromoteObject o) =
   GAPromoteObject $*
@@ -370,17 +370,13 @@ gebExpToObject (GAPromoteObject $* [oldlx, newlx, ox]) =
 gebExpToObject (GAAtom $* [x]) = case gebExpToLanguage x of
   Just l => Just (l ** AtomObject l)
   _ => Nothing
-gebExpToObject (GASExp $* [lx, ox]) =
-  case (gebExpToLanguage lx, gebExpToObject ox) of
-    (Just l, Just (l' ** o)) => case decEq l l' of
-      Yes Refl => Just $ (l ** SExpObject o)
-      _ => Nothing
+gebExpToObject (GASExp $* [lx]) =
+  case (gebExpToLanguage lx) of
+    (Just l) => Just (l ** SExpObject l)
     _ => Nothing
-gebExpToObject (GASList $* [lx, ox]) =
-  case (gebExpToLanguage lx, gebExpToObject ox) of
-    (Just l, Just (l' ** o)) => case decEq l l' of
-      Yes Refl => Just $ (l ** SListObject o)
-      _ => Nothing
+gebExpToObject (GASList $* [lx]) =
+  case (gebExpToLanguage lx) of
+    (Just l) => Just (l ** SListObject l)
     _ => Nothing
 gebExpToObject _ = Nothing
 
@@ -395,15 +391,11 @@ gebLanguageObjectRepresentationComplete
 gebLanguageObjectRepresentationComplete {l} (AtomObject l) =
   rewrite gebLanguageRepresentationComplete l in
   Refl
-gebLanguageObjectRepresentationComplete {l} (SExpObject o) =
+gebLanguageObjectRepresentationComplete {l} (SExpObject l) =
   rewrite gebLanguageRepresentationComplete l in
-  rewrite gebLanguageObjectRepresentationComplete o in
-  rewrite decEqRefl decEq l in
   Refl
-gebLanguageObjectRepresentationComplete {l} (SListObject o) =
+gebLanguageObjectRepresentationComplete {l} (SListObject l) =
   rewrite gebLanguageRepresentationComplete l in
-  rewrite gebLanguageObjectRepresentationComplete o in
-  rewrite decEqRefl decEq l in
   Refl
 
 public export
@@ -503,6 +495,63 @@ DecEq Morphism where
 
 public export
 Eq Morphism using decEqToEq where
+  (==) = (==)
+
+----------------------------------------------------------------------
+---- Refinements of reflective (SExp-based) programming languages ----
+----------------------------------------------------------------------
+
+public export
+data LanguageRefinement : Language -> Type where
+
+public export
+Refinement : Type
+Refinement = DPair Language LanguageRefinement
+
+public export
+gebLanguageRefinementToExp : {l : Language} -> LanguageRefinement l -> GebSExp
+gebLanguageRefinementToExp {l} r = ?gebLanguageRefinement_hole
+
+public export
+gebRefinementToExp : Refinement -> GebSExp
+gebRefinementToExp (l ** r) = gebLanguageRefinementToExp {l} r
+
+public export
+gebExpToRefinement : GebSExp -> Maybe Refinement
+gebExpToRefinement x = ?gebExpToRefinement_hole
+
+public export
+gebLanguageRefinementRepresentationComplete : {l : Language} ->
+  (r : LanguageRefinement l) ->
+  gebExpToRefinement (gebLanguageRefinementToExp {l} r) = Just (l ** r)
+gebLanguageRefinementRepresentationComplete {l} r =
+  ?gebLanguageRefinementRepresentationComplete_hole
+
+public export
+gebRefinementRepresentationComplete : (r : Refinement) ->
+  gebExpToRefinement (gebRefinementToExp r) = Just r
+gebRefinementRepresentationComplete (l ** r) =
+  gebLanguageRefinementRepresentationComplete {l} r
+
+public export
+Show Refinement where
+  show = show . gebRefinementToExp
+
+export
+refinementDecEq : DecEqPred Refinement
+refinementDecEq =
+  encodingDecEq
+    gebRefinementToExp
+    gebExpToRefinement
+    gebRefinementRepresentationComplete
+    decEq
+
+public export
+DecEq Refinement where
+  decEq = refinementDecEq
+
+public export
+Eq Refinement using decEqToEq where
   (==) = (==)
 
 {-
