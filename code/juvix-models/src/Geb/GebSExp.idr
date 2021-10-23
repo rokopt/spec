@@ -22,6 +22,7 @@ data GebAtom : Type where
   GAObject : GebAtom
 
   -- | Objects common to all programming languages.
+  GAPromoteObject : GebAtom
   GAAtom : GebAtom
   GASExp : GebAtom
   GASList : GebAtom
@@ -30,6 +31,7 @@ data GebAtom : Type where
   GAMorphism : GebAtom
 
   -- | Morphisms common to all programming languages.
+  GAPromoteMorphism : GebAtom
   GAIdentity : GebAtom
   GACompose : GebAtom
   GAAtomIntro : GebAtom
@@ -54,23 +56,25 @@ gaEncode GALanguage = 0
 gaEncode GAMinimal = 1
 gaEncode GAHigherOrderInductive = 2
 gaEncode GAObject = 3
-gaEncode GAAtom = 4
-gaEncode GASExp = 5
-gaEncode GASList = 6
-gaEncode GAMorphism = 7
-gaEncode GAIdentity = 8
-gaEncode GACompose = 9
-gaEncode GAAtomIntro = 10
-gaEncode GAAtomElim = 11
-gaEncode GASExpIntro = 12
-gaEncode GASExpElim = 13
-gaEncode GASListIntroNil = 14
-gaEncode GASListIntroCons = 15
-gaEncode GASListElim = 16
-gaEncode GATerm = 17
-gaEncode GAAtomTerm = 18
-gaEncode GASExpTerm = 19
-gaEncode GASListTerm = 20
+gaEncode GAPromoteObject = 4
+gaEncode GAAtom = 5
+gaEncode GASExp = 6
+gaEncode GASList = 7
+gaEncode GAMorphism = 8
+gaEncode GAPromoteMorphism = 9
+gaEncode GAIdentity = 10
+gaEncode GACompose = 11
+gaEncode GAAtomIntro = 12
+gaEncode GAAtomElim = 13
+gaEncode GASExpIntro = 14
+gaEncode GASExpElim = 15
+gaEncode GASListIntroNil = 16
+gaEncode GASListIntroCons = 17
+gaEncode GASListElim = 18
+gaEncode GATerm = 19
+gaEncode GAAtomTerm = 20
+gaEncode GASExpTerm = 21
+gaEncode GASListTerm = 22
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -78,23 +82,25 @@ gaDecode 0 = Just GALanguage
 gaDecode 1 = Just GAMinimal
 gaDecode 2 = Just GAHigherOrderInductive
 gaDecode 3 = Just GAObject
-gaDecode 4 = Just GAAtom
-gaDecode 5 = Just GASExp
-gaDecode 6 = Just GASList
-gaDecode 7 = Just GAMorphism
-gaDecode 8 = Just GAIdentity
-gaDecode 9 = Just GACompose
-gaDecode 10 = Just GAAtomIntro
-gaDecode 11 = Just GAAtomElim
-gaDecode 12 = Just GASExpIntro
-gaDecode 13 = Just GASExpElim
-gaDecode 14 = Just GASListIntroNil
-gaDecode 15 = Just GASListIntroCons
-gaDecode 16 = Just GASListElim
-gaDecode 17 = Just GATerm
-gaDecode 18 = Just GAAtomTerm
-gaDecode 19 = Just GASExpTerm
-gaDecode 20 = Just GASListTerm
+gaDecode 4 = Just GAPromoteObject
+gaDecode 5 = Just GAAtom
+gaDecode 6 = Just GASExp
+gaDecode 7 = Just GASList
+gaDecode 8 = Just GAMorphism
+gaDecode 9 = Just GAPromoteMorphism
+gaDecode 10 = Just GAIdentity
+gaDecode 11 = Just GACompose
+gaDecode 12 = Just GAAtomIntro
+gaDecode 13 = Just GAAtomElim
+gaDecode 14 = Just GASExpIntro
+gaDecode 15 = Just GASExpElim
+gaDecode 16 = Just GASListIntroNil
+gaDecode 17 = Just GASListIntroCons
+gaDecode 18 = Just GASListElim
+gaDecode 19 = Just GATerm
+gaDecode 20 = Just GAAtomTerm
+gaDecode 21 = Just GASExpTerm
+gaDecode 22 = Just GASListTerm
 gaDecode _ = Nothing
 
 export
@@ -103,10 +109,12 @@ gaDecodeEncodeIsJust GALanguage = Refl
 gaDecodeEncodeIsJust GAMinimal = Refl
 gaDecodeEncodeIsJust GAHigherOrderInductive = Refl
 gaDecodeEncodeIsJust GAObject = Refl
+gaDecodeEncodeIsJust GAPromoteObject = Refl
 gaDecodeEncodeIsJust GAAtom = Refl
 gaDecodeEncodeIsJust GASExp = Refl
 gaDecodeEncodeIsJust GASList = Refl
 gaDecodeEncodeIsJust GAMorphism = Refl
+gaDecodeEncodeIsJust GAPromoteMorphism = Refl
 gaDecodeEncodeIsJust GAIdentity = Refl
 gaDecodeEncodeIsJust GACompose = Refl
 gaDecodeEncodeIsJust GAAtomIntro = Refl
@@ -127,10 +135,12 @@ gebAtomToString GALanguage = "Language"
 gebAtomToString GAMinimal = "Minimal"
 gebAtomToString GAHigherOrderInductive = "HigherOrderInductive"
 gebAtomToString GAObject = "Object"
+gebAtomToString GAPromoteObject = "PromoteObject"
 gebAtomToString GAAtom = "Atom"
 gebAtomToString GASExp = "SExp"
 gebAtomToString GASList = "SList"
 gebAtomToString GAMorphism = "Morphism"
+gebAtomToString GAPromoteMorphism = "PromoteMorphism"
 gebAtomToString GAIdentity = "Identity"
 gebAtomToString GACompose = "Compose"
 gebAtomToString GAAtomIntro = "AtomIntro"
@@ -316,9 +326,13 @@ public export
 Show Language where
   show l = show (gebLanguageToExp l)
 
--- | Objects of reflective (SExp-based) programming languages.
+------------------------------------------------------------------
+---- Objects of reflective (SExp-based) programming languages ----
+------------------------------------------------------------------
+
 public export
 data LanguageObject : Language -> Type where
+  PromoteObject : LanguageObject Minimal -> LanguageObject HigherOrderInductive
   AtomObject : (l : Language) -> LanguageObject l
   SExpObject : {l : Language} -> LanguageObject l -> LanguageObject l
   SListObject : {l : Language} -> LanguageObject l -> LanguageObject l
@@ -335,6 +349,11 @@ gebLanguageObjectToExp {l} (SExpObject o) =
   GASExp $* [gebLanguageToExp l, gebLanguageObjectToExp o]
 gebLanguageObjectToExp {l} (SListObject o) =
   GASList $* [gebLanguageToExp l, gebLanguageObjectToExp o]
+gebLanguageObjectToExp {l=Minimal} (PromoteObject o) impossible
+gebLanguageObjectToExp {l=HigherOrderInductive} (PromoteObject o) =
+  GAPromoteObject $*
+    [gebLanguageToExp Minimal, gebLanguageToExp HigherOrderInductive,
+     gebLanguageObjectToExp o]
 
 public export
 gebObjectToExp : Object -> GebSExp
@@ -342,6 +361,12 @@ gebObjectToExp (l ** o) = gebLanguageObjectToExp {l} o
 
 public export
 gebExpToObject : GebSExp -> Maybe Object
+gebExpToObject (GAPromoteObject $* [oldlx, newlx, ox]) =
+  case (gebExpToLanguage oldlx, gebExpToLanguage newlx, gebExpToObject ox) of
+    (Just Minimal, Just HigherOrderInductive,
+     Just (Minimal ** o)) =>
+      Just $ (HigherOrderInductive ** PromoteObject o)
+    _ => Nothing
 gebExpToObject (GAAtom $* [x]) = case gebExpToLanguage x of
   Just l => Just (l ** AtomObject l)
   _ => Nothing
@@ -363,6 +388,10 @@ public export
 gebLanguageObjectRepresentationComplete : {l : Language} ->
   (o : LanguageObject l) ->
   gebExpToObject (gebLanguageObjectToExp {l} o) = Just (l ** o)
+gebLanguageObjectRepresentationComplete
+  {l=HigherOrderInductive} (PromoteObject o) =
+    rewrite gebLanguageObjectRepresentationComplete o in
+    Refl
 gebLanguageObjectRepresentationComplete {l} (AtomObject l) =
   rewrite gebLanguageRepresentationComplete l in
   Refl
@@ -404,6 +433,20 @@ public export
 Eq Object using decEqToEq where
   (==) = (==)
 
+--------------------------------------------------------------------
+---- Morphisms of reflective (SExp-based) programming languages ----
+--------------------------------------------------------------------
+
+public export
+data LanguageMorphism : {l : Language} ->
+  (domain, codomain : LanguageObject l) -> Type where
+    PromoteMorphism : {domain, codomain : LanguageObject Minimal} ->
+      LanguageMorphism {l=Minimal}
+        domain codomain ->
+      LanguageMorphism {l=HigherOrderInductive}
+        (PromoteObject domain) (PromoteObject codomain)
+    Identity : {l : Language} -> (o : LanguageObject l) -> LanguageMorphism o o
+    Compose : {l : Language} -> (o : LanguageObject l) -> LanguageMorphism o o
 {-
 mutual
   public export
