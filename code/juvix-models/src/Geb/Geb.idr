@@ -41,7 +41,8 @@ data GebAtom : Type where
   GATerminal : GebAtom
   GAProduct : GebAtom
   GACoproduct : GebAtom
-  GAExpression : GebAtom
+  GAObjectExpression : GebAtom
+  GAMorphismExpression : GebAtom
 
   -- | The notion of a morphism of any programming language.
   GAMorphism : GebAtom
@@ -82,7 +83,7 @@ gaEncode GAInitial = 3
 gaEncode GATerminal = 4
 gaEncode GAProduct = 5
 gaEncode GACoproduct = 6
-gaEncode GAExpression = 7
+gaEncode GAObjectExpression = 7
 gaEncode GAMorphism = 8
 gaEncode GATerm = 9
 gaEncode GAUnitTerm = 10
@@ -105,6 +106,7 @@ gaEncode GALeftTerm = 26
 gaEncode GARightTerm = 27
 gaEncode GAExpressionTerm = 28
 gaEncode GAExFalsoTerm = 29
+gaEncode GAMorphismExpression = 30
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -115,7 +117,7 @@ gaDecode 3 = Just GAInitial
 gaDecode 4 = Just GATerminal
 gaDecode 5 = Just GAProduct
 gaDecode 6 = Just GACoproduct
-gaDecode 7 = Just GAExpression
+gaDecode 7 = Just GAObjectExpression
 gaDecode 8 = Just GAMorphism
 gaDecode 9 = Just GATerm
 gaDecode 10 = Just GAUnitTerm
@@ -138,6 +140,7 @@ gaDecode 26 = Just GALeftTerm
 gaDecode 27 = Just GARightTerm
 gaDecode 28 = Just GAExpressionTerm
 gaDecode 29 = Just GAExFalsoTerm
+gaDecode 30 = Just GAMorphismExpression
 gaDecode _ = Nothing
 
 export
@@ -149,7 +152,7 @@ gaDecodeEncodeIsJust GAInitial = Refl
 gaDecodeEncodeIsJust GATerminal = Refl
 gaDecodeEncodeIsJust GAProduct = Refl
 gaDecodeEncodeIsJust GACoproduct = Refl
-gaDecodeEncodeIsJust GAExpression = Refl
+gaDecodeEncodeIsJust GAObjectExpression = Refl
 gaDecodeEncodeIsJust GAMorphism = Refl
 gaDecodeEncodeIsJust GATerm = Refl
 gaDecodeEncodeIsJust GAUnitTerm = Refl
@@ -172,6 +175,7 @@ gaDecodeEncodeIsJust GALeftTerm = Refl
 gaDecodeEncodeIsJust GARightTerm = Refl
 gaDecodeEncodeIsJust GAExpressionTerm = Refl
 gaDecodeEncodeIsJust GAExFalsoTerm = Refl
+gaDecodeEncodeIsJust GAMorphismExpression = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -182,7 +186,7 @@ gebAtomToString GAInitial = "Initial"
 gebAtomToString GATerminal = "Terminal"
 gebAtomToString GAProduct = "Product"
 gebAtomToString GACoproduct = "Coproduct"
-gebAtomToString GAExpression = "Expression"
+gebAtomToString GAObjectExpression = "ObjectExpression"
 gebAtomToString GAMorphism = "Morphism"
 gebAtomToString GATerm = "Term"
 gebAtomToString GAUnitTerm = "UnitTerm"
@@ -205,6 +209,7 @@ gebAtomToString GALeftTerm = "LeftTerm"
 gebAtomToString GARightTerm = "RightTerm"
 gebAtomToString GAExpressionTerm = "ExpressionTerm"
 gebAtomToString GAExFalsoTerm = "ExFalsoTerm"
+gebAtomToString GAMorphismExpression = "MorphismExpression"
 
 public export
 Show GebAtom where
@@ -416,7 +421,8 @@ data MinimalObject : Type where
   Terminal : MinimalObject
   Product : MinimalObject -> MinimalObject -> MinimalObject
   Coproduct : MinimalObject -> MinimalObject -> MinimalObject
-  Expression : MinimalObject
+  ObjectExpression : MinimalObject
+  MorphismExpression : MinimalObject -> MinimalObject -> MinimalObject
 
 public export
 gebMinimalObjectToExp : MinimalObject -> GebSExp
@@ -426,7 +432,10 @@ gebMinimalObjectToExp (Product r r') =
   GAProduct $* [gebMinimalObjectToExp r, gebMinimalObjectToExp r']
 gebMinimalObjectToExp (Coproduct r r') =
   GACoproduct $* [gebMinimalObjectToExp r, gebMinimalObjectToExp r']
-gebMinimalObjectToExp Expression = $^ GAExpression
+gebMinimalObjectToExp ObjectExpression = $^ GAObjectExpression
+gebMinimalObjectToExp (MorphismExpression domain codomain) =
+  GAMorphismExpression $*
+    [gebMinimalObjectToExp domain, gebMinimalObjectToExp codomain]
 
 public export
 gebExpToMinimalObject : GebSExp -> Maybe MinimalObject
@@ -440,7 +449,11 @@ gebExpToMinimalObject (GACoproduct $* [r, r']) =
   case (gebExpToMinimalObject r, gebExpToMinimalObject r') of
     (Just o, Just o') => Just $ Coproduct o o'
     _ => Nothing
-gebExpToMinimalObject (GAExpression $* []) = Just Expression
+gebExpToMinimalObject (GAObjectExpression $* []) = Just ObjectExpression
+gebExpToMinimalObject (GAMorphismExpression $* [domainRep, codomainRep]) =
+  case (gebExpToMinimalObject domainRep, gebExpToMinimalObject codomainRep) of
+    (Just domain, Just codomain) => Just $ MorphismExpression domain codomain
+    _ => Nothing
 gebExpToMinimalObject _ = Nothing
 
 public export
@@ -456,7 +469,11 @@ gebMinimalObjectRepresentationComplete (Coproduct r r') =
   rewrite gebMinimalObjectRepresentationComplete r in
   rewrite gebMinimalObjectRepresentationComplete r' in
   Refl
-gebMinimalObjectRepresentationComplete Expression = Refl
+gebMinimalObjectRepresentationComplete ObjectExpression = Refl
+gebMinimalObjectRepresentationComplete (MorphismExpression r r') =
+  rewrite gebMinimalObjectRepresentationComplete r in
+  rewrite gebMinimalObjectRepresentationComplete r' in
+  Refl
 
 public export
 Show MinimalObject where
@@ -501,12 +518,12 @@ mutual
       MinimalMorphism
     CoproductIntroLeft : (a, b : MinimalObject) -> MinimalMorphism
     CoproductIntroRight : (a, b : MinimalObject) -> MinimalMorphism
-    ExpressionIntro : MinimalExpression -> MinimalMorphism
+    ExpressionIntro : MinimalObject -> MinimalMorphism
     ExpressionElim : (exp, exp', eqCase, neqCase : MinimalMorphism) ->
       {auto expDomainsMatch :
         (minimalMorphismDomain exp) = (minimalMorphismDomain exp')} ->
       {auto expCodomainIsExpression :
-        (minimalMorphismCodomain exp) = Expression} ->
+        (minimalMorphismCodomain exp) = ObjectExpression} ->
       {auto expCodomainsMatch :
         (minimalMorphismCodomain exp) = (minimalMorphismCodomain exp')} ->
       {auto eqDomainMatches :
@@ -551,7 +568,7 @@ mutual
   minimalMorphismCodomain (CoproductElim f g) = minimalMorphismCodomain f
   minimalMorphismCodomain (CoproductIntroLeft a b) = Coproduct a b
   minimalMorphismCodomain (CoproductIntroRight a b) = Coproduct a b
-  minimalMorphismCodomain (ExpressionIntro _) = Expression
+  minimalMorphismCodomain (ExpressionIntro _) = ObjectExpression
   minimalMorphismCodomain (ExpressionElim _ _ eqCase _) =
     minimalMorphismCodomain eqCase
 
@@ -584,7 +601,7 @@ mutual
   gebMinimalMorphismToExp (CoproductIntroRight a b) =
     GACoproductIntroRight $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
   gebMinimalMorphismToExp (ExpressionIntro x) =
-    GAExpressionIntro $* [gebMinimalExpressionToExp x]
+    GAExpressionIntro $* [gebMinimalObjectToExp x]
   gebMinimalMorphismToExp (ExpressionElim exp exp' eqCase neqCase) =
     GAExpressionElim $*
       [gebMinimalMorphismToExp exp,
@@ -676,8 +693,8 @@ mutual
       (Just a, Just b) => Just $ CoproductIntroRight a b
       _ => Nothing
   gebExpToMinimalMorphism (GAExpressionIntro $* [x]) =
-    case gebExpToMinimalExp x of
-      Just minimalExp => Just $ ExpressionIntro minimalExp
+    case gebExpToMinimalObject x of
+      Just minimalObj => Just $ ExpressionIntro minimalObj
       _ => Nothing
   gebExpToMinimalMorphism (GAExpressionElim $* [exp, exp', eqExp, neqExp]) =
     case (gebExpToMinimalMorphism exp, gebExpToMinimalMorphism exp',
@@ -686,7 +703,7 @@ mutual
         case
           (minimalObjectDecEq
             (minimalMorphismDomain exp) (minimalMorphismDomain exp'),
-           minimalObjectDecEq (minimalMorphismCodomain exp) Expression,
+           minimalObjectDecEq (minimalMorphismCodomain exp) ObjectExpression,
            minimalObjectDecEq
             (minimalMorphismCodomain exp) (minimalMorphismCodomain exp')) of
               (Yes domainsMatch, Yes expCodomainIsExpression,
@@ -727,7 +744,9 @@ mutual
     case eqm of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GACoproduct $* _) _ _ eqo eqm =
     case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAExpression $* _) _ _ eqo eqm =
+  gebExpIsNotBothObjectAndMorphism (GAObjectExpression $* _) _ _ eqo eqm =
+    case eqm of Refl impossible
+  gebExpIsNotBothObjectAndMorphism (GAMorphismExpression $* _) _ _ eqo eqm =
     case eqm of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GAMorphism $* _) _ _ eqo eqm =
     case eqo of Refl impossible
@@ -773,7 +792,8 @@ gebObjectExpIsNotMorphism Initial = Refl
 gebObjectExpIsNotMorphism Terminal = Refl
 gebObjectExpIsNotMorphism (Product _ _) = Refl
 gebObjectExpIsNotMorphism (Coproduct _ _) = Refl
-gebObjectExpIsNotMorphism Expression = Refl
+gebObjectExpIsNotMorphism ObjectExpression = Refl
+gebObjectExpIsNotMorphism (MorphismExpression _ _) = Refl
 
 public export
 gebMinimalMorphismRepresentationComplete : (r : MinimalMorphism) ->
@@ -824,16 +844,9 @@ gebMinimalMorphismRepresentationComplete (CoproductIntroRight a b) =
   rewrite gebMinimalObjectRepresentationComplete a in
   rewrite gebMinimalObjectRepresentationComplete b in
   Refl
-gebMinimalMorphismRepresentationComplete (ExpressionIntro x) =
-  case x of
-    MinimalObjectExp o =>
-      rewrite gebObjectExpIsNotMorphism o in
-      rewrite gebMinimalObjectRepresentationComplete o in
-      Refl
-    MinimalMorphismExp m =>
-      rewrite gebMorphismExpIsNotObject m in
-      rewrite gebMinimalMorphismRepresentationComplete m in
-      Refl
+gebMinimalMorphismRepresentationComplete (ExpressionIntro o) =
+  rewrite gebMinimalObjectRepresentationComplete o in
+  Refl
 gebMinimalMorphismRepresentationComplete
   (ExpressionElim exp exp' eqCase neqCase
     {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
@@ -929,7 +942,10 @@ interpretMinimalObject (Product r r') =
   (interpretMinimalObject r, interpretMinimalObject r')
 interpretMinimalObject (Coproduct r r') =
   Either (interpretMinimalObject r) (interpretMinimalObject r')
-interpretMinimalObject Expression = MinimalExpression
+interpretMinimalObject ObjectExpression = MinimalObject
+interpretMinimalObject (MorphismExpression domain codomain) =
+  (m : MinimalMorphism **
+   (minimalMorphismDomain m = domain, minimalMorphismCodomain m = codomain))
 
 public export
 interpretMinimalMorphismDomain : MinimalMorphism -> Type
@@ -989,37 +1005,17 @@ interpretMinimalMorphism (ExpressionElim exp exp' eqCase neqCase
 -----------------------------------
 
 public export
-minimalObjectQuote : MinimalObject -> interpretMinimalObject Expression
-minimalObjectQuote = MinimalObjectExp
+minimalObjectQuote : MinimalObject -> interpretMinimalObject ObjectExpression
+minimalObjectQuote = Prelude.id
 
 public export
-minimalMorphismQuote : MinimalMorphism -> interpretMinimalObject Expression
-minimalMorphismQuote = MinimalMorphismExp
-
-public export
-minimalExpressionQuote : MinimalExpression -> interpretMinimalObject Expression
-minimalExpressionQuote = id
-
-public export
-minimalExpressionUnquote :
-  interpretMinimalObject Expression -> MinimalExpression
-minimalExpressionUnquote = id
+minimalObjectUnquote : interpretMinimalObject ObjectExpression -> MinimalObject
+minimalObjectUnquote = Prelude.id
 
 export
 minimalObjectUnquoteQuoteCorrect : (r : MinimalObject) ->
-  minimalExpressionUnquote (minimalObjectQuote r) = MinimalObjectExp r
+  minimalObjectUnquote (minimalObjectQuote r) = r
 minimalObjectUnquoteQuoteCorrect r = Refl
-
-export
-minimalMorphismUnquoteQuoteCorrect : (r : MinimalMorphism) ->
-  minimalExpressionUnquote (minimalMorphismQuote r) = MinimalMorphismExp r
-minimalMorphismUnquoteQuoteCorrect r = Refl
-
-export
-minimalExpressionQuoteUnquoteCorrect :
-  (x : interpretMinimalObject Expression) ->
-  minimalExpressionQuote (minimalExpressionUnquote x) = x
-minimalExpressionQuoteUnquoteCorrect x = Refl
 
 ------------------------------------------------------
 ---- Morphism transformations ("compiler passes") ----
@@ -1108,8 +1104,8 @@ data MinimalTerm : (numApplications : Nat) -> MinimalTermType -> Type where
     {rightApplications : Nat} -> {right : MinimalObject} ->
     MinimalTerm rightApplications (MinimalTypeTerm right) ->
     MinimalTerm rightApplications $ MinimalTypeTerm $ Coproduct left right
-  ExpressionTerm : MinimalExpression ->
-    MinimalTerm 0 $ MinimalTypeTerm $ Expression
+  ExpressionTerm : MinimalObject ->
+    MinimalTerm 0 $ MinimalTypeTerm $ ObjectExpression
 
 public export
 MinimalFullyAppliedTerm : MinimalTermType -> Type
@@ -1134,7 +1130,7 @@ gebMinimalTermToExp {numApplications} (MinimalLeft left right) =
 gebMinimalTermToExp {numApplications} (MinimalRight left right) =
   GARightTerm $* [gebMinimalObjectToExp left, gebMinimalTermToExp right]
 gebMinimalTermToExp (ExpressionTerm x) =
-  GAExpressionTerm $* [gebMinimalExpressionToExp x]
+  GAExpressionTerm $* [gebMinimalObjectToExp x]
 
 public export
 gebExpToMinimalTerm :

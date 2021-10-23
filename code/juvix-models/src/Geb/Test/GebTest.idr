@@ -21,7 +21,7 @@ GebCategoryObjects =
     , (GATerminal, 0)
     , (GAProduct, 2)
     , (GACoproduct, 2)
-    , (GAExpression, 0)
+    , (GAObjectExpression, 0)
   ]
 
 public export
@@ -179,14 +179,15 @@ gebTests = do
       (GACoproduct $*
           [GAProduct $* [$^ GAInitial, $^ GATerminal]
         ,  GAProduct $*
-             [GACoproduct $* [$^ GATerminal, $^ GAExpression]
+             [GACoproduct $* [$^ GATerminal, $^ GAObjectExpression]
              , $^ GATerminal]]))
   printLn $ "again with a wrong parameter count=" ++
     show (sobject GebCategoryGenerator
       (GACoproduct $*
           [GAProduct $* [$^ GAInitial, $^ GATerminal]
         ,  GAProduct $*
-             [GACoproduct $* [$^ GATerminal, GAExpression $* [$^ GAExpression]]
+             [GACoproduct $* [$^ GATerminal, GAObjectExpression $*
+              [$^ GAObjectExpression]]
              , $^ GATerminal]]))
   printLn "End gebTests."
   pure ()
