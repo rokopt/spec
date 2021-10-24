@@ -6,7 +6,6 @@ import Library.Decidability
 
 %default total
 
-{-
 namespace
 FreeCategories
     public export
@@ -304,6 +303,7 @@ FreeCategories
     (<-^) head tail =
         GeneratorMultipleValid head tail Refl (GeneratorSingletonValid tail)
 
+{-
     public export
     generatorListValidDec :
         {object : Type} -> DecEqPred object -> {morphism : Morphism object} ->
@@ -379,6 +379,7 @@ FreeCategories
             (generatorListValidDec decEq (((domain, codomain) ** head) :: tail))
         (^<~~) {domain} {codomain} head tail | Yes valid = (-~) valid
         (^<~~) {domain} {codomain} head tail | No _ = ()
+-}
 
     public export
     record FreeCategory where
@@ -398,6 +399,7 @@ FreeCategories
     FreeMorphism : {cat : FreeCategory} -> Signature (FreeObject cat) -> Type
     FreeMorphism {cat} = GeneratedMorphism (FreeGenerator cat)
 
+{-
 namespace
 ContractCategories
     Slice : {cat : FreeCategory} -> FreeObject cat -> Type
