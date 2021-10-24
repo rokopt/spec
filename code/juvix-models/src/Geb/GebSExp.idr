@@ -34,13 +34,8 @@ data GebAtom : Type where
   GAPromoteMorphism : GebAtom
   GAIdentity : GebAtom
   GACompose : GebAtom
-  GAAtomIntro : GebAtom
-  GAAtomElim : GebAtom
   GASExpIntro : GebAtom
   GASExpElim : GebAtom
-  GASListIntroNil : GebAtom
-  GASListIntroCons : GebAtom
-  GASListElim : GebAtom
 
   -- | The notion of a term of any programming language.
   GATerm : GebAtom
@@ -64,17 +59,12 @@ gaEncode GAMorphism = 8
 gaEncode GAPromoteMorphism = 9
 gaEncode GAIdentity = 10
 gaEncode GACompose = 11
-gaEncode GAAtomIntro = 12
-gaEncode GAAtomElim = 13
-gaEncode GASExpIntro = 14
-gaEncode GASExpElim = 15
-gaEncode GASListIntroNil = 16
-gaEncode GASListIntroCons = 17
-gaEncode GASListElim = 18
-gaEncode GATerm = 19
-gaEncode GAAtomTerm = 20
-gaEncode GASExpTerm = 21
-gaEncode GASListTerm = 22
+gaEncode GASExpIntro = 12
+gaEncode GASExpElim = 13
+gaEncode GATerm = 14
+gaEncode GAAtomTerm = 15
+gaEncode GASExpTerm = 16
+gaEncode GASListTerm = 17
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -90,17 +80,12 @@ gaDecode 8 = Just GAMorphism
 gaDecode 9 = Just GAPromoteMorphism
 gaDecode 10 = Just GAIdentity
 gaDecode 11 = Just GACompose
-gaDecode 12 = Just GAAtomIntro
-gaDecode 13 = Just GAAtomElim
-gaDecode 14 = Just GASExpIntro
-gaDecode 15 = Just GASExpElim
-gaDecode 16 = Just GASListIntroNil
-gaDecode 17 = Just GASListIntroCons
-gaDecode 18 = Just GASListElim
-gaDecode 19 = Just GATerm
-gaDecode 20 = Just GAAtomTerm
-gaDecode 21 = Just GASExpTerm
-gaDecode 22 = Just GASListTerm
+gaDecode 12 = Just GASExpIntro
+gaDecode 13 = Just GASExpElim
+gaDecode 14 = Just GATerm
+gaDecode 15 = Just GAAtomTerm
+gaDecode 16 = Just GASExpTerm
+gaDecode 17 = Just GASListTerm
 gaDecode _ = Nothing
 
 export
@@ -117,13 +102,8 @@ gaDecodeEncodeIsJust GAMorphism = Refl
 gaDecodeEncodeIsJust GAPromoteMorphism = Refl
 gaDecodeEncodeIsJust GAIdentity = Refl
 gaDecodeEncodeIsJust GACompose = Refl
-gaDecodeEncodeIsJust GAAtomIntro = Refl
-gaDecodeEncodeIsJust GAAtomElim = Refl
 gaDecodeEncodeIsJust GASExpIntro = Refl
 gaDecodeEncodeIsJust GASExpElim = Refl
-gaDecodeEncodeIsJust GASListIntroNil = Refl
-gaDecodeEncodeIsJust GASListIntroCons = Refl
-gaDecodeEncodeIsJust GASListElim = Refl
 gaDecodeEncodeIsJust GATerm = Refl
 gaDecodeEncodeIsJust GAAtomTerm = Refl
 gaDecodeEncodeIsJust GASExpTerm = Refl
@@ -143,13 +123,8 @@ gebAtomToString GAMorphism = "Morphism"
 gebAtomToString GAPromoteMorphism = "PromoteMorphism"
 gebAtomToString GAIdentity = "Identity"
 gebAtomToString GACompose = "Compose"
-gebAtomToString GAAtomIntro = "AtomIntro"
-gebAtomToString GAAtomElim = "AtomElim"
 gebAtomToString GASExpIntro = "SExpIntro"
 gebAtomToString GASExpElim = "SExpElim"
-gebAtomToString GASListIntroNil = "SListIntroNil"
-gebAtomToString GASListIntroCons = "SListIntroCons"
-gebAtomToString GASListElim = "SListElim"
 gebAtomToString GATerm = "Term"
 gebAtomToString GAAtomTerm = "AtomTerm"
 gebAtomToString GASExpTerm = "SExpTerm"
@@ -249,6 +224,8 @@ gebMap = fromList
 ---- General definition of programming language / metalogic ----
 ----------------------------------------------------------------
 
+mutual
+
 -- | A "Language" (short in this case for "programming language") is a category
 -- | which is capable of performing computation and can be defined solely by
 -- | computation.  It can be viewed as having morphisms which represent
@@ -283,36 +260,78 @@ gebMap = fromList
 -- | language are general computable functions with effects, the terms are
 -- | S-expressions, and the types are specifications of the domains,
 -- | codomains, input-output behavior, and the effects of functions.
-public export
-data Language : Type where
-  Minimal : Language
-  HigherOrderInductive : Language
+  public export
+  data IsLanguage : GebSExp -> Type where
+    Minimal : IsLanguage ($^ GAMinimal)
+    HigherOrderInductive : IsLanguage ($^ GAHigherOrderInductive)
 
-public export
-gebLanguageToExp : Language -> GebSExp
-gebLanguageToExp Minimal = $^ GAMinimal
-gebLanguageToExp HigherOrderInductive = $^ GAHigherOrderInductive
+  public export
+  Language : Type
+  Language = DPair GebSExp IsLanguage
 
-public export
-gebExpToLanguage : GebSExp -> Maybe Language
-gebExpToLanguage (GAMinimal $* []) = Just Minimal
-gebExpToLanguage (GAHigherOrderInductive $* []) = Just HigherOrderInductive
-gebExpToLanguage _ = Nothing
+  public export
+  data IsObject : GebSExp -> Type where
+    IsSExpObject : (l : GebSExp) -> {auto isLanguage : IsLanguage l} ->
+      IsObject (GASExp $* [l])
 
-public export
-gebLanguageRepresentationComplete : (r : Language) ->
-  gebExpToLanguage (gebLanguageToExp r) = Just r
-gebLanguageRepresentationComplete Minimal = Refl
-gebLanguageRepresentationComplete HigherOrderInductive = Refl
+  public export
+  Object : Type
+  Object = DPair GebSExp IsObject
 
-export
-languageDecEq : DecEqPred Language
-languageDecEq =
-  encodingDecEq
-    gebLanguageToExp
-    gebExpToLanguage
-    gebLanguageRepresentationComplete
-    decEq
+  public export
+  objectLanguage : {x : GebSExp} -> IsObject x -> Language
+  objectLanguage (IsSExpObject l {isLanguage}) = (l ** isLanguage)
+
+  public export
+  data IsRefinement : GebSExp -> Type where
+
+  public export
+  Refinement : Type
+  Refinement = DPair GebSExp IsRefinement
+
+---------------------------------------------------------------------
+---- Completeness and uniqueness of S-expression representations ----
+---------------------------------------------------------------------
+
+mutual
+
+  public export
+  gebSExpToIsLanguage : (x : GebSExp) -> Maybe (IsLanguage x)
+  gebSExpToIsLanguage (GAMinimal $* []) = Just Minimal
+  gebSExpToIsLanguage (GAHigherOrderInductive $* []) =
+    Just HigherOrderInductive
+  gebSExpToIsLanguage _ = Nothing
+
+  public export
+  gebSExpToLanguage : GebSExp -> Maybe Language
+  gebSExpToLanguage x with (gebSExpToIsLanguage x)
+    gebSExpToLanguage x | Just l = Just $ (x ** l)
+    gebSExpToLanguage x | Nothing = Nothing
+
+  export
+  gebLanguageRepresentationUnique : {x : GebSExp} ->
+    (l, l' : IsLanguage x) -> l = l'
+  gebLanguageRepresentationUnique l l' =
+    ?gebLanguageRepresentationUnique_hole
+
+  export
+  gebLanguageRepresentationComplete : (l : Language) ->
+    gebSExpToLanguage (fst l) = Just l
+  gebLanguageRepresentationComplete l =
+    ?gebLanguageRepresentationComplete_hole
+
+  export
+  languageDecEq : DecEqPred Language
+  languageDecEq =
+    encodingDecEq
+      fst
+      gebSExpToLanguage
+      gebLanguageRepresentationComplete
+      decEq
+
+-------------------------------------------------------------
+---- Instances derived from S-expression representations ----
+-------------------------------------------------------------
 
 public export
 DecEq Language where
@@ -324,7 +343,9 @@ Eq Language using decEqToEq where
 
 public export
 Show Language where
-  show l = show (gebLanguageToExp l)
+  show = show . fst
+
+{-
 
 ------------------------------------------------------------------
 ---- Objects of reflective (SExp-based) programming languages ----
@@ -554,7 +575,6 @@ public export
 Eq Refinement using decEqToEq where
   (==) = (==)
 
-{-
 mutual
   public export
   data Morphism : Type where
