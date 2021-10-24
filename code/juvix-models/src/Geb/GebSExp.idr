@@ -294,27 +294,57 @@ mutual
   public export
   data IsObject : GebSExp -> Type where
     ReflectiveObject : {x : GebSExp} ->
-      IsCategory x -> IsObject (GAReflectiveObject $*** x)
+      (IsCategory x) -> IsObject (GAReflectiveObject $*** x)
 
   public export
   Object : Type
   Object = DPair GebSExp IsObject
 
   public export
-  objectCategory : {x : GebSExp} -> IsObject x -> Category
+  data HasCategory : (object, category : GebSExp) -> Type where
+    ReflectiveObjectCategory : (category : GebSExp) ->
+      {auto isCategory : IsCategory category} ->
+      HasCategory (GAReflectiveObject $*** category) category
 
   public export
   data IsMorphism : GebSExp -> Type where
+    IsIdentity : {x : GebSExp} -> IsObject x -> IsMorphism (GAIdentity $*** x)
+    IsCompose : {a, b, c, g, f : GebSExp} ->
+      {oa : IsObject a} ->
+      {ob : IsObject b} ->
+      {oc : IsObject c} ->
+      (mg : IsMorphism g) -> (mf : IsMorphism f) ->
+      {domf : HasDomain f a} ->
+      {codf : HasCodomain f b} ->
+      {domg : HasDomain g b} ->
+      {codg : HasCodomain g c} ->
+      IsMorphism $ GACompose $* [g, f]
 
   public export
   Morphism : Type
   Morphism = DPair GebSExp IsMorphism
 
   public export
-  morphismDomain : {x : GebSExp} -> IsMorphism x -> Object
+  data HasDomain : (morphism, domain : GebSExp) -> Type where
+    IdentityDomain : (domain : GebSExp) ->
+      {auto isObject : IsObject domain} ->
+      HasDomain (GAIdentity $*** domain) domain
+    MorphismDomain : {a, b, c, g, f : GebSExp} ->
+      {oa : IsObject a} ->
+      {ob : IsObject b} ->
+      {oc : IsObject c} ->
+      (mg : IsMorphism g) -> (mf : IsMorphism f) ->
+      {domf : HasDomain f a} ->
+      {codf : HasCodomain f b} ->
+      {domg : HasDomain g b} ->
+      {codg : HasCodomain g c} ->
+      HasDomain (GACompose $* [g, f]) a
 
   public export
-  morphismCodomain : {x : GebSExp} -> IsMorphism x -> Object
+  data HasCodomain : (morphism, codomain : GebSExp) -> Type where
+    IdentityCodomain : (codomain : GebSExp) ->
+      {auto isObject : IsObject codomain} ->
+      HasCodomain (GAIdentity $*** codomain) codomain
 
   public export
   data IsReflective : GebSExp -> Type where
@@ -389,6 +419,114 @@ mutual
       gebSExpToCategory
       gebCategoryRepresentationComplete
       decEq
+
+  public export
+  objectCategory : {x : GebSExp} -> IsObject x -> Category
+  objectCategory {x=(GAReflectiveObject $* [cat])}
+    (ReflectiveObject isCategory) = (cat ** isCategory)
+
+  public export
+  morphismDomain : {x : GebSExp} -> IsMorphism x -> Object
+  morphismDomain {x=(GAIdentity $* [obj])} (IsIdentity isObject) =
+    (obj ** isObject)
+  morphismDomain {x=(GACompose $* [g, f])} (IsCompose {a} {oa} _ _) =
+    (a ** oa)
+
+  public export
+  morphismCodomain : {x : GebSExp} -> IsMorphism x -> Object
+  morphismCodomain {x=(GAIdentity $* [obj])} (IsIdentity isObject) =
+    (obj ** isObject)
+  morphismCodomain {x=(GACompose $* [g, f])} (IsCompose {c} {oc} _ _) =
+    (c ** oc)
+
+  public export
+  morphismDomainConsistent : (m, o : GebSExp) ->
+    {isMorphism : IsMorphism m} -> {isObject : IsObject o} ->
+    morphismDomain isMorphism = (o ** isObject) ->
+    HasDomain m o
+  morphismDomainConsistent (GAIdentity $* [o]) o
+    {isMorphism=(IsIdentity isObject)} {isObject} Refl =
+      IdentityDomain o
+  morphismDomainConsistent (GACompose $* [g, f]) a
+    {isMorphism=(IsCompose {oa} {ob} {oc} {domf} {codf} {domg} {codg} {a} {b}
+     {c} mg mf)} Refl =
+      MorphismDomain {oa} {ob} {oc} {domf} {codf} {domg} {codg} {a} {b} {c}
+        mg mf
+
+  public export
+  morphismCodomainConsistent : (m, o : GebSExp) ->
+    {isMorphism : IsMorphism m} -> {isObject : IsObject o} ->
+    morphismCodomain isMorphism = (o ** isObject) ->
+    HasCodomain m o
+  morphismCodomainConsistent m o {isMorphism} {isObject} eq =
+    ?morphismCodomainConsistent_hole
+
+  public export
+  morphismDomainComplete : (m, o : GebSExp) ->
+    {isMorphism : IsMorphism m} -> {isObject : IsObject o} ->
+    HasDomain m o ->
+    morphismDomain isMorphism = (o ** isObject)
+  morphismDomainComplete m o {isMorphism} {isObject} eq =
+    ?morphismDomainComplete_hole
+
+  public export
+  morphismCodomainComplete : (m, o : GebSExp) ->
+    {isMorphism : IsMorphism m} -> {isObject : IsObject o} ->
+    HasCodomain m o ->
+    morphismCodomain isMorphism = (o ** isObject)
+  morphismCodomainComplete m o {isMorphism} {isObject} eq =
+    ?morphismCodomainComplete_hole
+
+  public export
+  morphismDomainCategory : {x : GebSExp} -> IsMorphism x -> Category
+  morphismDomainCategory m = objectCategory (snd $ morphismDomain m)
+
+  public export
+  morphismCodomainCategory : {x : GebSExp} -> IsMorphism x -> Category
+  morphismCodomainCategory m = objectCategory (snd $ morphismCodomain m)
+
+  public export
+  morphismCategoryConsistent : {x : GebSExp} -> (m : IsMorphism x) ->
+    morphismDomainCategory m = morphismCodomainCategory m
+  morphismCategoryConsistent {x=(GAIdentity $* [obj])}
+    (IsIdentity isObject) =
+      Refl
+  morphismCategoryConsistent {x=(GACompose $* [g, f])}
+    (IsCompose {a} {b} {c} {oa} {ob} {oc} {domf} {codf} {domg} {codg} mg mf) =
+      let
+        mcatconsf = morphismCategoryConsistent mf
+        mcatconsg = morphismCategoryConsistent mg
+        mdomcompf = morphismDomainComplete f a domf
+          {isMorphism=mf} {isObject=oa}
+        mcodcompf = morphismCodomainComplete f b codf
+          {isMorphism=mf} {isObject=ob}
+        mdomcompg = morphismDomainComplete g b domg
+          {isMorphism=mg} {isObject=ob}
+        mcodcompg = morphismCodomainComplete g c codg
+          {isMorphism=mg} {isObject=oc}
+        mfcodcata = replace
+          {p=(\a' => (objectCategory $ snd a') =
+            (objectCategory $ snd $ morphismCodomain mf))}
+          mdomcompf mcatconsf
+        mgcodcatb = replace
+          {p=(\b' => (objectCategory $ snd b') =
+            (objectCategory $ snd $ morphismCodomain mg))}
+          mdomcompg mcatconsg
+        mgdomcatc = replace
+          {p=(\c' => (objectCategory $ snd $ morphismDomain mg) =
+            (objectCategory $ snd c'))}
+          mcodcompg mcatconsg
+        mfdomcatb = replace
+          {p=(\b' => (objectCategory $ snd $ morphismDomain mf) =
+            (objectCategory $ snd b'))}
+          mcodcompf mcatconsf
+      in
+      trans (trans (trans (trans (trans mfcodcata (sym mcatconsf)) mfdomcatb)
+        mgcodcatb) (sym mcatconsg)) mgdomcatc
+
+  public export
+  morphismCategory : {x : GebSExp} -> IsMorphism x -> Category
+  morphismCategory = morphismDomainCategory
 
 -------------------------------------------------------------
 ---- Instances derived from S-expression representations ----
