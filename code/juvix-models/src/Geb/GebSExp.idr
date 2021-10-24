@@ -8,20 +8,27 @@ import public RefinedSExp.SExp
 
 public export
 data GebAtom : Type where
-  -- | The notion of a language itself.
-  GALanguage : GebAtom
+  -- | The notion of a category.
+  GACategory : GebAtom
 
-  -- | The minimal programming language, with substitution (pattern-matching)
+  -- | The notion of a reflective category.
+  GAReflective : GebAtom
+
+  -- | The object in a reflective category which can represent the
+  -- | category itself.
+  GAReflectiveObject : GebAtom
+
+  -- | The minimal reflective category, with substitution (pattern-matching)
   -- | only.
-  GAMinimal : GebAtom
+  GAMinimalReflective : GebAtom
 
   -- | A language with fixed points of substitution.
-  GAHigherOrderInductive : GebAtom
+  GAHigherOrder : GebAtom
 
-  -- | The notion of an object of any programming language.
+  -- | The notion of an object of any category.
   GAObject : GebAtom
 
-  -- | Objects common to all programming languages.
+  -- | Objects common to all reflective categories.
   GAPromoteObject : GebAtom
   GAAtom : GebAtom
   GASExp : GebAtom
@@ -45,11 +52,14 @@ data GebAtom : Type where
   GASExpTerm : GebAtom
   GASListTerm : GebAtom
 
+  -- | The notion of a refinement.
+  GARefinement : GebAtom
+
 public export
 gaEncode : GebAtom -> Nat
-gaEncode GALanguage = 0
-gaEncode GAMinimal = 1
-gaEncode GAHigherOrderInductive = 2
+gaEncode GACategory = 0
+gaEncode GAMinimalReflective = 1
+gaEncode GAHigherOrder = 2
 gaEncode GAObject = 3
 gaEncode GAPromoteObject = 4
 gaEncode GAAtom = 5
@@ -65,12 +75,15 @@ gaEncode GATerm = 14
 gaEncode GAAtomTerm = 15
 gaEncode GASExpTerm = 16
 gaEncode GASListTerm = 17
+gaEncode GAReflective = 18
+gaEncode GAReflectiveObject = 19
+gaEncode GARefinement = 20
 
 public export
 gaDecode : Nat -> Maybe GebAtom
-gaDecode 0 = Just GALanguage
-gaDecode 1 = Just GAMinimal
-gaDecode 2 = Just GAHigherOrderInductive
+gaDecode 0 = Just GACategory
+gaDecode 1 = Just GAMinimalReflective
+gaDecode 2 = Just GAHigherOrder
 gaDecode 3 = Just GAObject
 gaDecode 4 = Just GAPromoteObject
 gaDecode 5 = Just GAAtom
@@ -86,13 +99,16 @@ gaDecode 14 = Just GATerm
 gaDecode 15 = Just GAAtomTerm
 gaDecode 16 = Just GASExpTerm
 gaDecode 17 = Just GASListTerm
+gaDecode 18 = Just GAReflective
+gaDecode 19 = Just GAReflectiveObject
+gaDecode 20 = Just GARefinement
 gaDecode _ = Nothing
 
 export
 gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
-gaDecodeEncodeIsJust GALanguage = Refl
-gaDecodeEncodeIsJust GAMinimal = Refl
-gaDecodeEncodeIsJust GAHigherOrderInductive = Refl
+gaDecodeEncodeIsJust GACategory = Refl
+gaDecodeEncodeIsJust GAMinimalReflective = Refl
+gaDecodeEncodeIsJust GAHigherOrder = Refl
 gaDecodeEncodeIsJust GAObject = Refl
 gaDecodeEncodeIsJust GAPromoteObject = Refl
 gaDecodeEncodeIsJust GAAtom = Refl
@@ -108,12 +124,15 @@ gaDecodeEncodeIsJust GATerm = Refl
 gaDecodeEncodeIsJust GAAtomTerm = Refl
 gaDecodeEncodeIsJust GASExpTerm = Refl
 gaDecodeEncodeIsJust GASListTerm = Refl
+gaDecodeEncodeIsJust GAReflective = Refl
+gaDecodeEncodeIsJust GAReflectiveObject = Refl
+gaDecodeEncodeIsJust GARefinement = Refl
 
 public export
 gebAtomToString : GebAtom -> String
-gebAtomToString GALanguage = "Language"
-gebAtomToString GAMinimal = "Minimal"
-gebAtomToString GAHigherOrderInductive = "HigherOrderInductive"
+gebAtomToString GACategory = "Category"
+gebAtomToString GAMinimalReflective = "MinimalReflective"
+gebAtomToString GAHigherOrder = "HigherOrder"
 gebAtomToString GAObject = "Object"
 gebAtomToString GAPromoteObject = "PromoteObject"
 gebAtomToString GAAtom = "Atom"
@@ -129,6 +148,9 @@ gebAtomToString GATerm = "Term"
 gebAtomToString GAAtomTerm = "AtomTerm"
 gebAtomToString GASExpTerm = "SExpTerm"
 gebAtomToString GASListTerm = "SListTerm"
+gebAtomToString GAReflective = "Reflective"
+gebAtomToString GAReflectiveObject = "ReflectiveObject"
+gebAtomToString GARefinement = "Refinement"
 
 public export
 Show GebAtom where
@@ -226,7 +248,7 @@ gebMap = fromList
 
 mutual
 
--- | A "Language" (short in this case for "programming language") is a category
+-- | A "Category" (short in this case for "programming language") is a category
 -- | which is capable of performing computation and can be defined solely by
 -- | computation.  It can be viewed as having morphisms which represent
 -- | computable functions with computably-representable effects.
@@ -261,29 +283,65 @@ mutual
 -- | S-expressions, and the types are specifications of the domains,
 -- | codomains, input-output behavior, and the effects of functions.
   public export
-  data IsLanguage : GebSExp -> Type where
-    Minimal : IsLanguage ($^ GAMinimal)
-    HigherOrderInductive : IsLanguage ($^ GAHigherOrderInductive)
+  data IsCategory : GebSExp -> Type where
+    MinimalReflective : IsCategory ($^ GAMinimalReflective)
+    HigherOrder : IsCategory ($^ GAHigherOrder)
 
   public export
-  Language : Type
-  Language = DPair GebSExp IsLanguage
+  Category : Type
+  Category = DPair GebSExp IsCategory
 
   public export
   data IsObject : GebSExp -> Type where
-    IsSExpObject : (l : GebSExp) -> {auto isLanguage : IsLanguage l} ->
-      IsObject (GASExp $* [l])
+    ReflectiveObject : {x : GebSExp} ->
+      IsCategory x -> IsObject (GAReflectiveObject $*** x)
 
   public export
   Object : Type
   Object = DPair GebSExp IsObject
 
   public export
-  objectLanguage : {x : GebSExp} -> IsObject x -> Language
-  objectLanguage (IsSExpObject l {isLanguage}) = (l ** isLanguage)
+  objectCategory : {x : GebSExp} -> IsObject x -> Category
+
+  public export
+  data IsMorphism : GebSExp -> Type where
+
+  public export
+  Morphism : Type
+  Morphism = DPair GebSExp IsMorphism
+
+  public export
+  morphismDomain : {x : GebSExp} -> IsMorphism x -> Object
+
+  public export
+  morphismCodomain : {x : GebSExp} -> IsMorphism x -> Object
+
+  public export
+  data IsReflective : GebSExp -> Type where
+    MinimalIsReflective : IsReflective (GAReflective $**^ GAMinimalReflective)
+    HigherOrderIsReflective : IsReflective (GAReflective $**^ GAHigherOrder)
+
+  public export
+  ReflectiveCategory : Type
+  ReflectiveCategory = DPair GebSExp IsReflective
+
+  public export
+  reflectiveCategory : {x : GebSExp} -> IsReflective x -> Category
+  reflectiveCategory {x=(GAReflective $* [$^ GAMinimalReflective])}
+    MinimalIsReflective = (GAMinimalReflective $* [] ** MinimalReflective)
+  reflectiveCategory {x=(GAReflective $* [$^ GAHigherOrder])}
+    HigherOrderIsReflective = (GAHigherOrder $* [] ** HigherOrder)
 
   public export
   data IsRefinement : GebSExp -> Type where
+    CategoryRefinement : (x : GebSExp) -> IsCategory x ->
+      IsRefinement (GARefinement $*** x)
+    ObjectRefinement : (x : GebSExp) -> IsObject x ->
+      IsRefinement (GARefinement $*** x)
+    MorphismRefinement : (x : GebSExp) -> IsMorphism x ->
+      IsRefinement (GARefinement $*** x)
+    ReflectiveRefinement : (x : GebSExp) -> IsReflective x ->
+      IsRefinement (GARefinement $*** x)
 
   public export
   Refinement : Type
@@ -296,37 +354,40 @@ mutual
 mutual
 
   public export
-  gebSExpToIsLanguage : (x : GebSExp) -> Maybe (IsLanguage x)
-  gebSExpToIsLanguage (GAMinimal $* []) = Just Minimal
-  gebSExpToIsLanguage (GAHigherOrderInductive $* []) =
-    Just HigherOrderInductive
-  gebSExpToIsLanguage _ = Nothing
+  gebSExpToIsCategory : (x : GebSExp) -> Maybe (IsCategory x)
+  gebSExpToIsCategory (GAMinimalReflective $* []) = Just MinimalReflective
+  gebSExpToIsCategory (GAHigherOrder $* []) = Just HigherOrder
+  gebSExpToIsCategory _ = Nothing
 
   public export
-  gebSExpToLanguage : GebSExp -> Maybe Language
-  gebSExpToLanguage x with (gebSExpToIsLanguage x)
-    gebSExpToLanguage x | Just l = Just $ (x ** l)
-    gebSExpToLanguage x | Nothing = Nothing
+  gebSExpToCategory : GebSExp -> Maybe Category
+  gebSExpToCategory x with (gebSExpToIsCategory x)
+    gebSExpToCategory x | Just l = Just $ (x ** l)
+    gebSExpToCategory x | Nothing = Nothing
 
   export
-  gebLanguageRepresentationUnique : {x : GebSExp} ->
-    (l, l' : IsLanguage x) -> l = l'
-  gebLanguageRepresentationUnique l l' =
-    ?gebLanguageRepresentationUnique_hole
+  gebCategoryRepresentationComplete : (l : Category) ->
+    gebSExpToCategory (fst l) = Just l
+  gebCategoryRepresentationComplete (_ ** MinimalReflective) = Refl
+  gebCategoryRepresentationComplete (_ ** HigherOrder) = Refl
 
   export
-  gebLanguageRepresentationComplete : (l : Language) ->
-    gebSExpToLanguage (fst l) = Just l
-  gebLanguageRepresentationComplete l =
-    ?gebLanguageRepresentationComplete_hole
+  gebCategoryRepresentationUnique : {x : GebSExp} ->
+    (l, l' : IsCategory x) -> l = l'
+  gebCategoryRepresentationUnique
+    {x=(GAMinimalReflective $* [])} MinimalReflective MinimalReflective =
+    Refl
+  gebCategoryRepresentationUnique
+    {x=(GAHigherOrder $* [])} HigherOrder HigherOrder =
+    Refl
 
   export
-  languageDecEq : DecEqPred Language
-  languageDecEq =
+  categoryDecEq : DecEqPred Category
+  categoryDecEq =
     encodingDecEq
       fst
-      gebSExpToLanguage
-      gebLanguageRepresentationComplete
+      gebSExpToCategory
+      gebCategoryRepresentationComplete
       decEq
 
 -------------------------------------------------------------
@@ -334,15 +395,15 @@ mutual
 -------------------------------------------------------------
 
 public export
-DecEq Language where
-  decEq = languageDecEq
+DecEq Category where
+  decEq = categoryDecEq
 
 public export
-Eq Language using decEqToEq where
+Eq Category using decEqToEq where
   (==) = (==)
 
 public export
-Show Language where
+Show Category where
   show = show . fst
 
 {-
@@ -353,7 +414,7 @@ Show Language where
 
 public export
 data LanguageObject : Language -> Type where
-  PromoteObject : LanguageObject Minimal -> LanguageObject HigherOrderInductive
+  PromoteObject : LanguageObject MinimalReflective -> LanguageObject HigherOrder
   AtomObject : (l : Language) -> LanguageObject l
   SExpObject : (l : Language) -> LanguageObject l
   SListObject : (l : Language) -> LanguageObject l
@@ -370,10 +431,10 @@ gebLanguageObjectToExp {l} (SExpObject l) =
   GASExp $* [gebLanguageToExp l]
 gebLanguageObjectToExp {l} (SListObject l) =
   GASList $* [gebLanguageToExp l]
-gebLanguageObjectToExp {l=Minimal} (PromoteObject o) impossible
-gebLanguageObjectToExp {l=HigherOrderInductive} (PromoteObject o) =
+gebLanguageObjectToExp {l=MinimalReflective} (PromoteObject o) impossible
+gebLanguageObjectToExp {l=HigherOrder} (PromoteObject o) =
   GAPromoteObject $*
-    [gebLanguageToExp Minimal, gebLanguageToExp HigherOrderInductive,
+    [gebLanguageToExp MinimalReflective, gebLanguageToExp HigherOrder,
      gebLanguageObjectToExp o]
 
 public export
@@ -384,9 +445,9 @@ public export
 gebExpToObject : GebSExp -> Maybe Object
 gebExpToObject (GAPromoteObject $* [oldlx, newlx, ox]) =
   case (gebExpToLanguage oldlx, gebExpToLanguage newlx, gebExpToObject ox) of
-    (Just Minimal, Just HigherOrderInductive,
-     Just (Minimal ** o)) =>
-      Just $ (HigherOrderInductive ** PromoteObject o)
+    (Just MinimalReflective, Just HigherOrder,
+     Just (MinimalReflective ** o)) =>
+      Just $ (HigherOrder ** PromoteObject o)
     _ => Nothing
 gebExpToObject (GAAtom $* [x]) = case gebExpToLanguage x of
   Just l => Just (l ** AtomObject l)
@@ -406,7 +467,7 @@ gebLanguageObjectRepresentationComplete : {l : Language} ->
   (o : LanguageObject l) ->
   gebExpToObject (gebLanguageObjectToExp {l} o) = Just (l ** o)
 gebLanguageObjectRepresentationComplete
-  {l=HigherOrderInductive} (PromoteObject o) =
+  {l=HigherOrder} (PromoteObject o) =
     rewrite gebLanguageObjectRepresentationComplete o in
     Refl
 gebLanguageObjectRepresentationComplete {l} (AtomObject l) =
@@ -453,10 +514,10 @@ Eq Object using decEqToEq where
 public export
 data LanguageMorphism : {l : Language} ->
   (domain, codomain : LanguageObject l) -> Type where
-    PromoteMorphism : {domain, codomain : LanguageObject Minimal} ->
-      LanguageMorphism {l=Minimal}
+    PromoteMorphism : {domain, codomain : LanguageObject MinimalReflective} ->
+      LanguageMorphism {l=MinimalReflective}
         domain codomain ->
-      LanguageMorphism {l=HigherOrderInductive}
+      LanguageMorphism {l=HigherOrder}
         (PromoteObject domain) (PromoteObject codomain)
     Identity : {l : Language} -> (o : LanguageObject l) -> LanguageMorphism o o
     Compose : {l : Language} -> (o : LanguageObject l) -> LanguageMorphism o o
@@ -614,9 +675,9 @@ mutual
       Morphism
 
   public export
-  data MinimalExpression : Type where
-    ObjectExp : Object -> MinimalExpression
-    MorphismExp : Morphism -> MinimalExpression
+  data MinimalReflectiveExpression : Type where
+    ObjectExp : Object -> MinimalReflectiveExpression
+    MorphismExp : Morphism -> MinimalReflectiveExpression
 
   public export
   morphismDomain : Morphism -> Object
@@ -653,9 +714,9 @@ mutual
 
 mutual
   public export
-  gebMinimalExpressionToExp : MinimalExpression -> GebSExp
-  gebMinimalExpressionToExp (ObjectExp o) = gebObjectToExp o
-  gebMinimalExpressionToExp (MorphismExp m) = gebMorphismToExp m
+  gebMinimalReflectiveExpressionToExp : MinimalReflectiveExpression -> GebSExp
+  gebMinimalReflectiveExpressionToExp (ObjectExp o) = gebObjectToExp o
+  gebMinimalReflectiveExpressionToExp (MorphismExp m) = gebMorphismToExp m
 
   public export
   gebMorphismToExp : Morphism -> GebSExp
@@ -706,16 +767,16 @@ gebMorphismExpIsNotObject (ExpressionElim _ _ _ _) = Refl
 
 mutual
   public export
-  gebExpToMinimalExp : GebSExp -> Maybe MinimalExpression
-  gebExpToMinimalExp x with (gebExpToObject x, gebExpToMorphism x)
+  gebExpToMinimalReflectiveExp : GebSExp -> Maybe MinimalReflectiveExpression
+  gebExpToMinimalReflectiveExp x with (gebExpToObject x, gebExpToMorphism x)
     proof p
-      gebExpToMinimalExp x | (Just o, Just m) =
+      gebExpToMinimalReflectiveExp x | (Just o, Just m) =
         let pfst = PairFstEq p in
         let psnd = PairSndEq p in
         void (gebExpIsNotBothObjectAndMorphism x o m pfst psnd)
-      gebExpToMinimalExp x | (Just o, Nothing) = Just $ ObjectExp o
-      gebExpToMinimalExp x | (Nothing, Just m) = Just $ MorphismExp m
-      gebExpToMinimalExp x | (Nothing, Nothing) = Nothing
+      gebExpToMinimalReflectiveExp x | (Just o, Nothing) = Just $ ObjectExp o
+      gebExpToMinimalReflectiveExp x | (Nothing, Just m) = Just $ MorphismExp m
+      gebExpToMinimalReflectiveExp x | (Nothing, Nothing) = Nothing
 
   public export
   gebExpToMorphism : GebSExp -> Maybe Morphism
@@ -811,7 +872,7 @@ mutual
     Void
   gebExpIsNotBothObjectAndMorphism (GALanguage $* _) _ _ eqo eqm =
     case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAMinimal $* _) _ _ eqo eqm =
+  gebExpIsNotBothObjectAndMorphism (GAMinimalReflective $* _) _ _ eqo eqm =
     case eqo of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GAObject $* _) _ _ eqo eqm =
     case eqo of Refl impossible
@@ -963,13 +1024,13 @@ morphismDecEq =
     decEq
 
 public export
-gebMinimalExpRepresentationComplete : (r : MinimalExpression) ->
-  gebExpToMinimalExp (gebMinimalExpressionToExp r) = Just r
-gebMinimalExpRepresentationComplete (ObjectExp o) =
+gebMinimalReflectiveExpRepresentationComplete : (r : MinimalReflectiveExpression) ->
+  gebExpToMinimalReflectiveExp (gebMinimalReflectiveExpressionToExp r) = Just r
+gebMinimalReflectiveExpRepresentationComplete (ObjectExp o) =
   rewrite gebObjectExpIsNotMorphism o in
   rewrite gebObjectRepresentationComplete o in
   Refl
-gebMinimalExpRepresentationComplete (MorphismExp m) =
+gebMinimalReflectiveExpRepresentationComplete (MorphismExp m) =
   rewrite gebMorphismExpIsNotObject m in
   rewrite gebMorphismRepresentationComplete m in
   Refl
@@ -987,7 +1048,7 @@ Show Morphism where
   show m = show (gebMorphismToExp m)
 
 public export
-minimalExpressionDecEq : DecEqPred MinimalExpression
+minimalExpressionDecEq : DecEqPred MinimalReflectiveExpression
 minimalExpressionDecEq (ObjectExp x) (ObjectExp x') =
   case decEq x x' of
     Yes Refl => Yes Refl
@@ -1002,11 +1063,11 @@ minimalExpressionDecEq (MorphismExp x) (MorphismExp x') =
     No neq => No $ \eq => case eq of Refl => neq Refl
 
 public export
-DecEq MinimalExpression where
+DecEq MinimalReflectiveExpression where
   decEq = minimalExpressionDecEq
 
 public export
-Eq MinimalExpression using decEqToEq where
+Eq MinimalReflectiveExpression using decEqToEq where
   (==) = (==)
 
 -----------------------------------------------------------------------------
@@ -1146,75 +1207,75 @@ MorphismTransformCorrect
 -- | do not have in the category-theoretical representation.
 
 public export
-data MinimalTermType : Type where
-  MinimalTypeTerm : (type : Object) -> MinimalTermType
-  MorphismTerm : (domain, codomain : Object) -> MinimalTermType
+data MinimalReflectiveTermType : Type where
+  MinimalReflectiveTypeTerm : (type : Object) -> MinimalReflectiveTermType
+  MorphismTerm : (domain, codomain : Object) -> MinimalReflectiveTermType
 
 public export
-data MinimalTerm : (numApplications : Nat) -> MinimalTermType -> Type where
+data MinimalReflectiveTerm : (numApplications : Nat) -> MinimalReflectiveTermType -> Type where
   UnappliedMorphismTerm : (morphism : Morphism) ->
-    MinimalTerm 0 $
+    MinimalReflectiveTerm 0 $
       MorphismTerm
         (morphismDomain morphism)
         (morphismCodomain morphism)
   Application : {morphismApplications, termApplications : Nat} ->
     {domain, codomain : Object} ->
-    MinimalTerm morphismApplications (MorphismTerm domain codomain) ->
-    MinimalTerm termApplications (MinimalTypeTerm domain) ->
-    MinimalTerm
-      (S $ morphismApplications + termApplications) (MinimalTypeTerm codomain)
+    MinimalReflectiveTerm morphismApplications (MorphismTerm domain codomain) ->
+    MinimalReflectiveTerm termApplications (MinimalReflectiveTypeTerm domain) ->
+    MinimalReflectiveTerm
+      (S $ morphismApplications + termApplications) (MinimalReflectiveTypeTerm codomain)
   ExFalsoTerm : {numApplications : Nat} -> {type : Object} ->
-    MinimalTerm numApplications (MinimalTypeTerm Initial) ->
-    MinimalTerm numApplications $ MinimalTypeTerm type
-  UnitTerm : MinimalTerm 0 $ MinimalTypeTerm Terminal
+    MinimalReflectiveTerm numApplications (MinimalReflectiveTypeTerm Initial) ->
+    MinimalReflectiveTerm numApplications $ MinimalReflectiveTypeTerm type
+  UnitTerm : MinimalReflectiveTerm 0 $ MinimalReflectiveTypeTerm Terminal
   PairTerm : {leftApplications, rightApplications : Nat} ->
     {left, right : Object} ->
-    MinimalTerm leftApplications (MinimalTypeTerm left) ->
-    MinimalTerm rightApplications (MinimalTypeTerm right) ->
-    MinimalTerm (leftApplications + rightApplications) $
-      MinimalTypeTerm $ Product left right
-  MinimalLeft :
+    MinimalReflectiveTerm leftApplications (MinimalReflectiveTypeTerm left) ->
+    MinimalReflectiveTerm rightApplications (MinimalReflectiveTypeTerm right) ->
+    MinimalReflectiveTerm (leftApplications + rightApplications) $
+      MinimalReflectiveTypeTerm $ Product left right
+  MinimalReflectiveLeft :
     {leftApplications : Nat} -> {left : Object} ->
-    MinimalTerm leftApplications (MinimalTypeTerm left) ->
+    MinimalReflectiveTerm leftApplications (MinimalReflectiveTypeTerm left) ->
     (right : Object) ->
-    MinimalTerm leftApplications $ MinimalTypeTerm $ Coproduct left right
-  MinimalRight :
+    MinimalReflectiveTerm leftApplications $ MinimalReflectiveTypeTerm $ Coproduct left right
+  MinimalReflectiveRight :
     (left : Object) ->
     {rightApplications : Nat} -> {right : Object} ->
-    MinimalTerm rightApplications (MinimalTypeTerm right) ->
-    MinimalTerm rightApplications $ MinimalTypeTerm $ Coproduct left right
+    MinimalReflectiveTerm rightApplications (MinimalReflectiveTypeTerm right) ->
+    MinimalReflectiveTerm rightApplications $ MinimalReflectiveTypeTerm $ Coproduct left right
   ExpressionTerm : Object ->
-    MinimalTerm 0 $ MinimalTypeTerm $ ObjectExpression
+    MinimalReflectiveTerm 0 $ MinimalReflectiveTypeTerm $ ObjectExpression
 
 public export
-MinimalFullyAppliedTerm : MinimalTermType -> Type
-MinimalFullyAppliedTerm = MinimalTerm 0
+MinimalReflectiveFullyAppliedTerm : MinimalReflectiveTermType -> Type
+MinimalReflectiveFullyAppliedTerm = MinimalReflectiveTerm 0
 
 public export
-gebMinimalTermToExp : {type: MinimalTermType} -> {numApplications : Nat} ->
-  MinimalTerm numApplications type -> GebSExp
-gebMinimalTermToExp (Application f x) =
-  GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
-gebMinimalTermToExp (UnappliedMorphismTerm morphism) =
+gebMinimalReflectiveTermToExp : {type: MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  MinimalReflectiveTerm numApplications type -> GebSExp
+gebMinimalReflectiveTermToExp (Application f x) =
+  GAApplication $* [gebMinimalReflectiveTermToExp f, gebMinimalReflectiveTermToExp x]
+gebMinimalReflectiveTermToExp (UnappliedMorphismTerm morphism) =
   GAMorphismTerm $* [gebMorphismToExp morphism]
-gebMinimalTermToExp {type=(MinimalTypeTerm type)} (ExFalsoTerm ti) =
-  GAExFalsoTerm $* [gebMinimalTermToExp ti, gebObjectToExp type]
-gebMinimalTermToExp UnitTerm = $^ GAUnitTerm
-gebMinimalTermToExp
+gebMinimalReflectiveTermToExp {type=(MinimalReflectiveTypeTerm type)} (ExFalsoTerm ti) =
+  GAExFalsoTerm $* [gebMinimalReflectiveTermToExp ti, gebObjectToExp type]
+gebMinimalReflectiveTermToExp UnitTerm = $^ GAUnitTerm
+gebMinimalReflectiveTermToExp
   (PairTerm {leftApplications} {rightApplications} {left} {right}
    leftTerm rightTerm) =
-    GAPairTerm $* [gebMinimalTermToExp leftTerm, gebMinimalTermToExp rightTerm]
-gebMinimalTermToExp {numApplications} (MinimalLeft left right) =
-  GALeftTerm $* [gebMinimalTermToExp left, gebObjectToExp right]
-gebMinimalTermToExp {numApplications} (MinimalRight left right) =
-  GARightTerm $* [gebObjectToExp left, gebMinimalTermToExp right]
-gebMinimalTermToExp (ExpressionTerm x) =
+    GAPairTerm $* [gebMinimalReflectiveTermToExp leftTerm, gebMinimalReflectiveTermToExp rightTerm]
+gebMinimalReflectiveTermToExp {numApplications} (MinimalReflectiveLeft left right) =
+  GALeftTerm $* [gebMinimalReflectiveTermToExp left, gebObjectToExp right]
+gebMinimalReflectiveTermToExp {numApplications} (MinimalReflectiveRight left right) =
+  GARightTerm $* [gebObjectToExp left, gebMinimalReflectiveTermToExp right]
+gebMinimalReflectiveTermToExp (ExpressionTerm x) =
   GAExpressionTerm $* [gebObjectToExp x]
 
 public export
-gebExpToMinimalTerm :
-  GebSExp -> Maybe (type : MinimalTermType ** n : Nat ** MinimalTerm n type)
-gebExpToMinimalTerm (GAMorphismTerm $* [x]) =
+gebExpToMinimalReflectiveTerm :
+  GebSExp -> Maybe (type : MinimalReflectiveTermType ** n : Nat ** MinimalReflectiveTerm n type)
+gebExpToMinimalReflectiveTerm (GAMorphismTerm $* [x]) =
   case gebExpToMorphism x of
     Just morphism => Just
       (MorphismTerm
@@ -1223,125 +1284,125 @@ gebExpToMinimalTerm (GAMorphismTerm $* [x]) =
        0 **
        (UnappliedMorphismTerm morphism))
     Nothing => Nothing
-gebExpToMinimalTerm (GAExFalsoTerm $* [ti, ty]) =
-  case (gebExpToMinimalTerm ti, gebExpToObject ty) of
-    (Just (MinimalTypeTerm Initial ** n ** initialTerm), Just type) =>
-      Just (MinimalTypeTerm type ** n ** ExFalsoTerm initialTerm)
+gebExpToMinimalReflectiveTerm (GAExFalsoTerm $* [ti, ty]) =
+  case (gebExpToMinimalReflectiveTerm ti, gebExpToObject ty) of
+    (Just (MinimalReflectiveTypeTerm Initial ** n ** initialTerm), Just type) =>
+      Just (MinimalReflectiveTypeTerm type ** n ** ExFalsoTerm initialTerm)
     _ => Nothing
-gebExpToMinimalTerm (GAUnitTerm $* []) =
-  Just (MinimalTypeTerm Terminal ** 0 ** UnitTerm)
-gebExpToMinimalTerm (GAPairTerm $* [left, right]) with
-  (gebExpToMinimalTerm left, gebExpToMinimalTerm right)
-    gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
-      (Just (MinimalTypeTerm leftObject ** nLeft ** leftTerm),
-       Just (MinimalTypeTerm rightObject ** nRight ** rightTerm)) =
+gebExpToMinimalReflectiveTerm (GAUnitTerm $* []) =
+  Just (MinimalReflectiveTypeTerm Terminal ** 0 ** UnitTerm)
+gebExpToMinimalReflectiveTerm (GAPairTerm $* [left, right]) with
+  (gebExpToMinimalReflectiveTerm left, gebExpToMinimalReflectiveTerm right)
+    gebExpToMinimalReflectiveTerm (GAPairTerm $* [left, right]) |
+      (Just (MinimalReflectiveTypeTerm leftObject ** nLeft ** leftTerm),
+       Just (MinimalReflectiveTypeTerm rightObject ** nRight ** rightTerm)) =
         Just
-          (MinimalTypeTerm (Product leftObject rightObject) **
+          (MinimalReflectiveTypeTerm (Product leftObject rightObject) **
            nLeft + nRight **
            (PairTerm leftTerm rightTerm))
-    gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
+    gebExpToMinimalReflectiveTerm (GAPairTerm $* [left, right]) |
       _ = Nothing
-gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
-  case (gebExpToMinimalTerm fExp, gebExpToMinimalTerm xExp) of
+gebExpToMinimalReflectiveTerm (GAApplication $* [fExp, xExp]) =
+  case (gebExpToMinimalReflectiveTerm fExp, gebExpToMinimalReflectiveTerm xExp) of
     (Just (fType ** nLeft ** f), Just (xType ** nRight ** x)) =>
       case fType of
         MorphismTerm domain codomain =>
           case xType of
-            MinimalTypeTerm domain' => case decEq domain domain' of
+            MinimalReflectiveTypeTerm domain' => case decEq domain domain' of
               Yes Refl =>
                 Just
-                  (MinimalTypeTerm codomain **
+                  (MinimalReflectiveTypeTerm codomain **
                    S (nLeft + nRight) **
                    Application f x)
               No _ => Nothing
             _ => Nothing
         _ => Nothing
     _ => Nothing
-gebExpToMinimalTerm (GAExpressionTerm $* [exp]) = gebExpToMinimalTerm exp
-gebExpToMinimalTerm (GALeftTerm $* [leftExp, rightExp]) =
-  case (gebExpToMinimalTerm leftExp, gebExpToObject rightExp) of
-    (Just (MinimalTypeTerm leftObject ** nLeft ** leftTerm),
+gebExpToMinimalReflectiveTerm (GAExpressionTerm $* [exp]) = gebExpToMinimalReflectiveTerm exp
+gebExpToMinimalReflectiveTerm (GALeftTerm $* [leftExp, rightExp]) =
+  case (gebExpToMinimalReflectiveTerm leftExp, gebExpToObject rightExp) of
+    (Just (MinimalReflectiveTypeTerm leftObject ** nLeft ** leftTerm),
      Just rightObject) =>
       Just
-        (MinimalTypeTerm (Coproduct leftObject rightObject) **
+        (MinimalReflectiveTypeTerm (Coproduct leftObject rightObject) **
          nLeft **
-         MinimalLeft leftTerm rightObject)
+         MinimalReflectiveLeft leftTerm rightObject)
     _ => Nothing
-gebExpToMinimalTerm (GARightTerm $* [leftExp, rightExp]) =
-  case (gebExpToObject leftExp, gebExpToMinimalTerm rightExp) of
+gebExpToMinimalReflectiveTerm (GARightTerm $* [leftExp, rightExp]) =
+  case (gebExpToObject leftExp, gebExpToMinimalReflectiveTerm rightExp) of
     (Just leftObject,
-     Just (MinimalTypeTerm rightObject ** nRight ** rightTerm)) =>
+     Just (MinimalReflectiveTypeTerm rightObject ** nRight ** rightTerm)) =>
       Just
-        (MinimalTypeTerm (Coproduct leftObject rightObject) **
+        (MinimalReflectiveTypeTerm (Coproduct leftObject rightObject) **
          nRight **
-         MinimalRight leftObject rightTerm)
+         MinimalReflectiveRight leftObject rightTerm)
     _ => Nothing
-gebExpToMinimalTerm _ = Nothing
+gebExpToMinimalReflectiveTerm _ = Nothing
 
 public export
-gebMinimalTermRepresentationComplete :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  gebExpToMinimalTerm
-    (gebMinimalTermToExp {type} {numApplications} term) =
+gebMinimalReflectiveTermRepresentationComplete :
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  (term : MinimalReflectiveTerm numApplications type) ->
+  gebExpToMinimalReflectiveTerm
+    (gebMinimalReflectiveTermToExp {type} {numApplications} term) =
       Just (type ** numApplications ** term)
-gebMinimalTermRepresentationComplete (Application {domain} f x) =
-  rewrite gebMinimalTermRepresentationComplete f in
-  rewrite gebMinimalTermRepresentationComplete x in
+gebMinimalReflectiveTermRepresentationComplete (Application {domain} f x) =
+  rewrite gebMinimalReflectiveTermRepresentationComplete f in
+  rewrite gebMinimalReflectiveTermRepresentationComplete x in
   rewrite decEqRefl objectDecEq domain in
   Refl
-gebMinimalTermRepresentationComplete
+gebMinimalReflectiveTermRepresentationComplete
   (UnappliedMorphismTerm morphism) =
     rewrite gebMorphismRepresentationComplete morphism in
     Refl
-gebMinimalTermRepresentationComplete (ExFalsoTerm ti) =
-  let tiComplete = gebMinimalTermRepresentationComplete ti in
-  ?gebMinimalTermRepresentationComplete_hole_exfalso
-gebMinimalTermRepresentationComplete UnitTerm =
+gebMinimalReflectiveTermRepresentationComplete (ExFalsoTerm ti) =
+  let tiComplete = gebMinimalReflectiveTermRepresentationComplete ti in
+  ?gebMinimalReflectiveTermRepresentationComplete_hole_exfalso
+gebMinimalReflectiveTermRepresentationComplete UnitTerm =
   Refl
-gebMinimalTermRepresentationComplete (PairTerm left right) =
-  ?gebMinimalTermRepresentationComplete_hole_pair
-gebMinimalTermRepresentationComplete
-  (MinimalLeft left right) =
-    ?gebMinimalTermRepresentationComplete_hole_left
-gebMinimalTermRepresentationComplete
-  (MinimalRight left right) =
-    ?gebMinimalTermRepresentationComplete_hole_right
-gebMinimalTermRepresentationComplete (ExpressionTerm x) =
-  ?gebMinimalTermRepresentationComplete_hole_expression
+gebMinimalReflectiveTermRepresentationComplete (PairTerm left right) =
+  ?gebMinimalReflectiveTermRepresentationComplete_hole_pair
+gebMinimalReflectiveTermRepresentationComplete
+  (MinimalReflectiveLeft left right) =
+    ?gebMinimalReflectiveTermRepresentationComplete_hole_left
+gebMinimalReflectiveTermRepresentationComplete
+  (MinimalReflectiveRight left right) =
+    ?gebMinimalReflectiveTermRepresentationComplete_hole_right
+gebMinimalReflectiveTermRepresentationComplete (ExpressionTerm x) =
+  ?gebMinimalReflectiveTermRepresentationComplete_hole_expression
 
 public export
-(type : MinimalTermType) => (n : Nat) => Show (MinimalTerm n type) where
-  show term = show (gebMinimalTermToExp term)
+(type : MinimalReflectiveTermType) => (n : Nat) => Show (MinimalReflectiveTerm n type) where
+  show term = show (gebMinimalReflectiveTermToExp term)
 
 public export
-interpretMinimalTermType : MinimalTermType -> Type
-interpretMinimalTermType (MinimalTypeTerm type) = interpretObject type
-interpretMinimalTermType (MorphismTerm domain codomain) =
+interpretMinimalReflectiveTermType : MinimalReflectiveTermType -> Type
+interpretMinimalReflectiveTermType (MinimalReflectiveTypeTerm type) = interpretObject type
+interpretMinimalReflectiveTermType (MorphismTerm domain codomain) =
   interpretObject domain -> interpretObject codomain
 
 public export
-interpretMinimalTerm : {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) -> interpretMinimalTermType type
-interpretMinimalTerm (Application f x) =
-  interpretMinimalTerm f $ interpretMinimalTerm x
-interpretMinimalTerm (UnappliedMorphismTerm morphism) =
+interpretMinimalReflectiveTerm : {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  (term : MinimalReflectiveTerm numApplications type) -> interpretMinimalReflectiveTermType type
+interpretMinimalReflectiveTerm (Application f x) =
+  interpretMinimalReflectiveTerm f $ interpretMinimalReflectiveTerm x
+interpretMinimalReflectiveTerm (UnappliedMorphismTerm morphism) =
   interpretMorphism morphism
-interpretMinimalTerm (ExFalsoTerm v) = void $ interpretMinimalTerm v
-interpretMinimalTerm UnitTerm = ()
-interpretMinimalTerm (PairTerm left right) =
-  (interpretMinimalTerm left, interpretMinimalTerm right)
-interpretMinimalTerm (MinimalLeft left right) =
-  Left $ interpretMinimalTerm left
-interpretMinimalTerm (MinimalRight left right) =
-  Right $ interpretMinimalTerm right
-interpretMinimalTerm (ExpressionTerm x) = x
+interpretMinimalReflectiveTerm (ExFalsoTerm v) = void $ interpretMinimalReflectiveTerm v
+interpretMinimalReflectiveTerm UnitTerm = ()
+interpretMinimalReflectiveTerm (PairTerm left right) =
+  (interpretMinimalReflectiveTerm left, interpretMinimalReflectiveTerm right)
+interpretMinimalReflectiveTerm (MinimalReflectiveLeft left right) =
+  Left $ interpretMinimalReflectiveTerm left
+interpretMinimalReflectiveTerm (MinimalReflectiveRight left right) =
+  Right $ interpretMinimalReflectiveTerm right
+interpretMinimalReflectiveTerm (ExpressionTerm x) = x
 
 public export
 gebNoExFalsoTerm : {numApplications : Nat} ->
-  (ti : MinimalTerm numApplications (MinimalTypeTerm Initial)) ->
+  (ti : MinimalReflectiveTerm numApplications (MinimalReflectiveTypeTerm Initial)) ->
   Void
-gebNoExFalsoTerm ti = void $ interpretMinimalTerm ti
+gebNoExFalsoTerm ti = void $ interpretMinimalReflectiveTerm ti
 
 -- | A correct morphism transformation preserves the interpretation of
 -- | term application.
@@ -1357,16 +1418,16 @@ correctMorphismTransformPreservesTermInterpretation :
   (m : Morphism) ->
   {numApplications : Nat} ->
   (term :
-    MinimalTerm numApplications
-      (MinimalTypeTerm (morphismDomain m))) ->
+    MinimalReflectiveTerm numApplications
+      (MinimalReflectiveTypeTerm (morphismDomain m))) ->
   (term' :
-    MinimalTerm numApplications
-      (MinimalTypeTerm (morphismDomain (transform m)))) ->
-  interpretMinimalTerm term =
-    (rewrite sym (domainTransformCorrect m) in (interpretMinimalTerm term')) ->
-  interpretMinimalTerm
+    MinimalReflectiveTerm numApplications
+      (MinimalReflectiveTypeTerm (morphismDomain (transform m)))) ->
+  interpretMinimalReflectiveTerm term =
+    (rewrite sym (domainTransformCorrect m) in (interpretMinimalReflectiveTerm term')) ->
+  interpretMinimalReflectiveTerm
     (Application (UnappliedMorphismTerm m) term) =
-  (rewrite sym (codomainTransformCorrect m) in (interpretMinimalTerm
+  (rewrite sym (codomainTransformCorrect m) in (interpretMinimalReflectiveTerm
     (Application (UnappliedMorphismTerm (transform m)) term')))
 correctMorphismTransformPreservesTermInterpretation
   transform transformCorrect m {numApplications} term term' termEq =
@@ -1375,8 +1436,8 @@ correctMorphismTransformPreservesTermInterpretation
 public export
 bigStepMorphismReduction :
   (m : Morphism) ->
-  MinimalFullyAppliedTerm (MinimalTypeTerm (morphismDomain m)) ->
-  MinimalFullyAppliedTerm (MinimalTypeTerm (morphismCodomain m))
+  MinimalReflectiveFullyAppliedTerm (MinimalReflectiveTypeTerm (morphismDomain m)) ->
+  MinimalReflectiveFullyAppliedTerm (MinimalReflectiveTypeTerm (morphismCodomain m))
 bigStepMorphismReduction (Identity _) x = x
 bigStepMorphismReduction (Compose g f {composable}) x =
   bigStepMorphismReduction g $
@@ -1395,15 +1456,15 @@ bigStepMorphismReduction (ProductElimRight a b) x = case x of
   ExFalsoTerm ti => ExFalsoTerm ti
 bigStepMorphismReduction (CoproductElim f g {codomainsMatch}) x =
   case x of
-    MinimalLeft left _ =>
+    MinimalReflectiveLeft left _ =>
       bigStepMorphismReduction f left
-    MinimalRight _ right =>
+    MinimalReflectiveRight _ right =>
       rewrite codomainsMatch in bigStepMorphismReduction g right
     ExFalsoTerm ti => ExFalsoTerm ti
 bigStepMorphismReduction (CoproductIntroLeft left right) x =
-  MinimalLeft x right
+  MinimalReflectiveLeft x right
 bigStepMorphismReduction (CoproductIntroRight left right) x =
-  MinimalRight left x
+  MinimalReflectiveRight left x
 bigStepMorphismReduction (ExpressionIntro exp) _ = ExpressionTerm exp
 bigStepMorphismReduction (ExpressionElim exp exp' eqCase neqCase
   {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
@@ -1413,13 +1474,13 @@ bigStepMorphismReduction (ExpressionElim exp exp' eqCase neqCase
       xReduced' = bigStepMorphismReduction exp'
         (rewrite sym expDomainsMatch in x)
       xReducedRewritten =
-        replace {p=(MinimalTerm 0 . MinimalTypeTerm)}
+        replace {p=(MinimalReflectiveTerm 0 . MinimalReflectiveTypeTerm)}
           expCodomainIsExpression xReduced
       xReducedRewritten' =
-        replace {p=(MinimalTerm 0 . MinimalTypeTerm)}
+        replace {p=(MinimalReflectiveTerm 0 . MinimalReflectiveTypeTerm)}
           expCodomainIsExpression (rewrite expCodomainsMatch in xReduced')
-      xInterpreted = interpretMinimalTerm xReducedRewritten
-      xInterpreted' = interpretMinimalTerm xReducedRewritten'
+      xInterpreted = interpretMinimalReflectiveTerm xReducedRewritten
+      xInterpreted' = interpretMinimalReflectiveTerm xReducedRewritten'
       eqCaseReduced =
         bigStepMorphismReduction
           eqCase (rewrite sym eqDomainMatches in x)
@@ -1429,60 +1490,60 @@ bigStepMorphismReduction (ExpressionElim exp exp' eqCase neqCase
     in
     if xInterpreted == xInterpreted' then
       eqCaseReduced else
-    (replace {p=(MinimalTerm 0. MinimalTypeTerm)}
+    (replace {p=(MinimalReflectiveTerm 0. MinimalReflectiveTypeTerm)}
       (sym eqCodomainsMatch) eqCaseReduced')
 
 public export
-bigStepMinimalTermReduction :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  MinimalTerm numApplications type ->
-  MinimalFullyAppliedTerm type
-bigStepMinimalTermReduction (Application f x) with
-  (bigStepMinimalTermReduction f, bigStepMinimalTermReduction x)
-    bigStepMinimalTermReduction (Application f x) |
+bigStepMinimalReflectiveTermReduction :
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  MinimalReflectiveTerm numApplications type ->
+  MinimalReflectiveFullyAppliedTerm type
+bigStepMinimalReflectiveTermReduction (Application f x) with
+  (bigStepMinimalReflectiveTermReduction f, bigStepMinimalReflectiveTermReduction x)
+    bigStepMinimalReflectiveTermReduction (Application f x) |
       (UnappliedMorphismTerm m, xReduced) =
         bigStepMorphismReduction m xReduced
-bigStepMinimalTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
-bigStepMinimalTermReduction (ExFalsoTerm ti) =
-  ExFalsoTerm $ bigStepMinimalTermReduction ti
-bigStepMinimalTermReduction UnitTerm = UnitTerm
-bigStepMinimalTermReduction (PairTerm left right) =
+bigStepMinimalReflectiveTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
+bigStepMinimalReflectiveTermReduction (ExFalsoTerm ti) =
+  ExFalsoTerm $ bigStepMinimalReflectiveTermReduction ti
+bigStepMinimalReflectiveTermReduction UnitTerm = UnitTerm
+bigStepMinimalReflectiveTermReduction (PairTerm left right) =
   PairTerm
-    (bigStepMinimalTermReduction left)
-    (bigStepMinimalTermReduction right)
-bigStepMinimalTermReduction (MinimalLeft left right) =
-  MinimalLeft (bigStepMinimalTermReduction left) right
-bigStepMinimalTermReduction (MinimalRight left right) =
-  MinimalRight left (bigStepMinimalTermReduction right)
-bigStepMinimalTermReduction (ExpressionTerm x) = ExpressionTerm x
+    (bigStepMinimalReflectiveTermReduction left)
+    (bigStepMinimalReflectiveTermReduction right)
+bigStepMinimalReflectiveTermReduction (MinimalReflectiveLeft left right) =
+  MinimalReflectiveLeft (bigStepMinimalReflectiveTermReduction left) right
+bigStepMinimalReflectiveTermReduction (MinimalReflectiveRight left right) =
+  MinimalReflectiveRight left (bigStepMinimalReflectiveTermReduction right)
+bigStepMinimalReflectiveTermReduction (ExpressionTerm x) = ExpressionTerm x
 
 mutual
   public export
   bigStepMorphismReductionCorrect :
     (m : Morphism) ->
-    (x : MinimalFullyAppliedTerm (MinimalTypeTerm (morphismDomain m))) ->
-    interpretMinimalTerm (bigStepMorphismReduction m x) =
-      interpretMinimalTerm (UnappliedMorphismTerm m) (interpretMinimalTerm x)
+    (x : MinimalReflectiveFullyAppliedTerm (MinimalReflectiveTypeTerm (morphismDomain m))) ->
+    interpretMinimalReflectiveTerm (bigStepMorphismReduction m x) =
+      interpretMinimalReflectiveTerm (UnappliedMorphismTerm m) (interpretMinimalReflectiveTerm x)
   bigStepMorphismReductionCorrect m x =
     ?bigStepMorphismReductionCorrect_hole
 
   public export
-  bigStepMinimalTermReductionCorrect :
-    {type : MinimalTermType} -> {numApplications : Nat} ->
-    (term : MinimalTerm numApplications type) ->
-    interpretMinimalTerm (bigStepMinimalTermReduction term) =
-      interpretMinimalTerm term
-  bigStepMinimalTermReductionCorrect {type} term =
-    ?bigStepMinimalTermReductionCorrect_hole
+  bigStepMinimalReflectiveTermReductionCorrect :
+    {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+    (term : MinimalReflectiveTerm numApplications type) ->
+    interpretMinimalReflectiveTerm (bigStepMinimalReflectiveTermReduction term) =
+      interpretMinimalReflectiveTerm term
+  bigStepMinimalReflectiveTermReductionCorrect {type} term =
+    ?bigStepMinimalReflectiveTermReductionCorrect_hole
 
 public export
 smallStepMorphismReduction :
   (m : Morphism) ->
   {numApplications : Nat} ->
-  MinimalTerm numApplications (MinimalTypeTerm (morphismDomain m)) ->
+  MinimalReflectiveTerm numApplications (MinimalReflectiveTypeTerm (morphismDomain m)) ->
   (remainingApplications : Nat **
-   MinimalTerm
-    remainingApplications (MinimalTypeTerm (morphismCodomain m)))
+   MinimalReflectiveTerm
+    remainingApplications (MinimalReflectiveTypeTerm (morphismCodomain m)))
 smallStepMorphismReduction (Identity x) term =
   ?smallStepMorphismReduction_hole_ident
 smallStepMorphismReduction (Compose g f) term =
@@ -1510,75 +1571,75 @@ smallStepMorphismReduction
     ?smallStepMorphismReduction_hole_expElim
 
 public export
-smallStepMinimalTermReduction :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  MinimalTerm numApplications type ->
-  (remainingApplications : Nat ** MinimalTerm remainingApplications type)
-smallStepMinimalTermReduction (UnappliedMorphismTerm morphism) =
-  ?smallStepMinimalTermReduction_hole_unapplied
-smallStepMinimalTermReduction (Application x y) =
-  ?smallStepMinimalTermReduction_hole_app
-smallStepMinimalTermReduction (ExFalsoTerm ti) =
-  ?smallStepMinimalTermReduction_hole_exfalso
-smallStepMinimalTermReduction UnitTerm =
-  ?smallStepMinimalTermReduction_hole_unit
-smallStepMinimalTermReduction (PairTerm x y) =
-  ?smallStepMinimalTermReduction_hole_pair
-smallStepMinimalTermReduction (MinimalLeft x right) =
-  ?smallStepMinimalTermReduction_hole_left
-smallStepMinimalTermReduction (MinimalRight left x) =
-  ?smallStepMinimalTermReduction_hole_right
-smallStepMinimalTermReduction (ExpressionTerm x) =
-  ?smallStepMinimalTermReduction_hole_exp
+smallStepMinimalReflectiveTermReduction :
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  MinimalReflectiveTerm numApplications type ->
+  (remainingApplications : Nat ** MinimalReflectiveTerm remainingApplications type)
+smallStepMinimalReflectiveTermReduction (UnappliedMorphismTerm morphism) =
+  ?smallStepMinimalReflectiveTermReduction_hole_unapplied
+smallStepMinimalReflectiveTermReduction (Application x y) =
+  ?smallStepMinimalReflectiveTermReduction_hole_app
+smallStepMinimalReflectiveTermReduction (ExFalsoTerm ti) =
+  ?smallStepMinimalReflectiveTermReduction_hole_exfalso
+smallStepMinimalReflectiveTermReduction UnitTerm =
+  ?smallStepMinimalReflectiveTermReduction_hole_unit
+smallStepMinimalReflectiveTermReduction (PairTerm x y) =
+  ?smallStepMinimalReflectiveTermReduction_hole_pair
+smallStepMinimalReflectiveTermReduction (MinimalReflectiveLeft x right) =
+  ?smallStepMinimalReflectiveTermReduction_hole_left
+smallStepMinimalReflectiveTermReduction (MinimalReflectiveRight left x) =
+  ?smallStepMinimalReflectiveTermReduction_hole_right
+smallStepMinimalReflectiveTermReduction (ExpressionTerm x) =
+  ?smallStepMinimalReflectiveTermReduction_hole_exp
 
 public export
-data SmallStepMinimalTermReductionCompletes :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  (reduced : MinimalFullyAppliedTerm type) -> Type
+data SmallStepMinimalReflectiveTermReductionCompletes :
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  (term : MinimalReflectiveTerm numApplications type) ->
+  (reduced : MinimalReflectiveFullyAppliedTerm type) -> Type
   where
-    SmallStepMinimalReductionLastStep :
-      {type : MinimalTermType} -> {numApplications : Nat} ->
-      {term : MinimalTerm numApplications type} ->
-      {reduced : MinimalFullyAppliedTerm type} ->
-      smallStepMinimalTermReduction term = Left reduced ->
-      SmallStepMinimalTermReductionCompletes term reduced
-    SmallStepMinimalReductionPreviousStep :
-      {type : MinimalTermType} ->
+    SmallStepMinimalReflectiveReductionLastStep :
+      {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+      {term : MinimalReflectiveTerm numApplications type} ->
+      {reduced : MinimalReflectiveFullyAppliedTerm type} ->
+      smallStepMinimalReflectiveTermReduction term = Left reduced ->
+      SmallStepMinimalReflectiveTermReductionCompletes term reduced
+    SmallStepMinimalReflectiveReductionPreviousStep :
+      {type : MinimalReflectiveTermType} ->
       {numApplications, intermediateNumApplications : Nat} ->
-      {term : MinimalTerm numApplications type} ->
-      {intermediateTerm : MinimalTerm intermediateNumApplications type} ->
-      {reduced : MinimalFullyAppliedTerm type} ->
-      smallStepMinimalTermReduction term = Right intermediateTerm ->
-      SmallStepMinimalTermReductionCompletes intermediateTerm reduced ->
-      SmallStepMinimalTermReductionCompletes term reduced
+      {term : MinimalReflectiveTerm numApplications type} ->
+      {intermediateTerm : MinimalReflectiveTerm intermediateNumApplications type} ->
+      {reduced : MinimalReflectiveFullyAppliedTerm type} ->
+      smallStepMinimalReflectiveTermReduction term = Right intermediateTerm ->
+      SmallStepMinimalReflectiveTermReductionCompletes intermediateTerm reduced ->
+      SmallStepMinimalReflectiveTermReductionCompletes term reduced
 
 public export
-smallStepMinimalTermReductionCompletes :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
+smallStepMinimalReflectiveTermReductionCompletes :
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  (term : MinimalReflectiveTerm numApplications type) ->
   DPair
-    (MinimalFullyAppliedTerm type)
-    (SmallStepMinimalTermReductionCompletes term)
-smallStepMinimalTermReductionCompletes {type} term =
-  ?smallStepMinimalTermReductionCompletes_hole
+    (MinimalReflectiveFullyAppliedTerm type)
+    (SmallStepMinimalReflectiveTermReductionCompletes term)
+smallStepMinimalReflectiveTermReductionCompletes {type} term =
+  ?smallStepMinimalReflectiveTermReductionCompletes_hole
 
 public export
-smallStepMinimalTermReductionCorrect :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  interpretMinimalTerm
-    (fst (smallStepMinimalTermReductionCompletes term)) =
-      interpretMinimalTerm term
-smallStepMinimalTermReductionCorrect {type} term =
-  ?smallStepMinimalTermReductionCorrect_hole
+smallStepMinimalReflectiveTermReductionCorrect :
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  (term : MinimalReflectiveTerm numApplications type) ->
+  interpretMinimalReflectiveTerm
+    (fst (smallStepMinimalReflectiveTermReductionCompletes term)) =
+      interpretMinimalReflectiveTerm term
+smallStepMinimalReflectiveTermReductionCorrect {type} term =
+  ?smallStepMinimalReflectiveTermReductionCorrect_hole
 
 public export
 minimalTermReductionsConsistent :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  bigStepMinimalTermReduction term =
-    snd (smallStepMinimalTermReductionCompletes term)
+  {type : MinimalReflectiveTermType} -> {numApplications : Nat} ->
+  (term : MinimalReflectiveTerm numApplications type) ->
+  bigStepMinimalReflectiveTermReduction term =
+    snd (smallStepMinimalReflectiveTermReductionCompletes term)
 minimalTermReductionsConsistent term = ?minimalTermReductionsConsistent_hole
 
 -}
@@ -1600,5 +1661,5 @@ data Kind : Type where
 
 public export
 data ParameterizedLanguage : Kind -> Type where
-  ParameterizedMinimal : ParameterizedLanguage (KStar LogicSort)
-  ParameterizedHigherOrderInductive : ParameterizedLanguage (KStar LogicSort)
+  ParameterizedMinimalReflective : ParameterizedLanguage (KStar LogicSort)
+  ParameterizedHigherOrder : ParameterizedLanguage (KStar LogicSort)
