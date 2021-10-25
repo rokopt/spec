@@ -299,9 +299,9 @@ KindRepresentationList : Type -> Type
 KindRepresentationList = List . KindRepresentation
 
 public export
-KindExpStar :
+StarRepresentation :
   {initialSort : Type} -> initialSort -> SortRepresentation initialSort
-KindExpStar sort = $^ (KindAtomStar sort)
+StarRepresentation sort = $^ (KindAtomStar sort)
 
 mutual
   public export
@@ -330,18 +330,18 @@ mutual
           Telescope DependentKind kindParameterRepresentation []} ->
         {previousSorts : KindRepresentation initialSort} ->
         (sort : initialSort) ->
-        DependentSort kindParameters (KindExpStar sort) previousSorts
+        DependentSort kindParameters (StarRepresentation sort) previousSorts
+
+public export
+DependentKindStar : {initialSort : Type} ->
+  (sort : initialSort) -> DependentKind [StarRepresentation sort] []
+DependentKindStar sort =
+  DependentKindSignature (|~|) $ (!~!) (DependentSortStar sort)
 
 public export
 DependentKindList : {initialSort : Type} ->
   KindRepresentationList initialSort -> Type
 DependentKindList representation = Telescope DependentKind representation []
-
-public export
-DependentKindStar : {initialSort : Type} ->
-  (sort : initialSort) -> DependentKind [KindExpStar sort] []
-DependentKindStar sort =
-  DependentKindSignature (|~|) $ (!~!) (DependentSortStar sort)
 
     {-
       ApplyDependentKind :
