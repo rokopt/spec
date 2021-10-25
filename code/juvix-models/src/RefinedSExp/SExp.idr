@@ -431,6 +431,7 @@ mutual
             (KindRepresentation parameterListRepresentation arityRepresentation)
             argumentsToApply)
           previousSorts
+      {-
       ApplyKindParameter :
         {initialSort : Type} ->
         {parameterListRepresentation : KindSList initialSort} ->
@@ -440,14 +441,15 @@ mutual
         {auto ok : InBounds kindIndex parameterListRepresentation} ->
         {previousSorts : KindSList initialSort} ->
         {argumentsToApply : KindSList initialSort} ->
-        {- KindApplication ?kindhole previousSorts argumentsToApply -> -}
-        KindApplication (kindParameters @~ kindIndex) previousSorts argumentsToApply ->
+        KindApplication (kindParameters @~ kindIndex)
+          previousSorts argumentsToApply ->
         DependentSort
           kindParameters
           (KindApplicationRepresentation
             (KindRepresentation parameterListRepresentation arityRepresentation)
             argumentsToApply)
           previousSorts
+      -}
 
   public export
   data KindApplication :
