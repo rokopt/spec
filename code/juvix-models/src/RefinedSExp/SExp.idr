@@ -307,25 +307,14 @@ mutual
   SortSignatureList = Telescope SortSignature
 
   public export
-  data SortSignature : (representation : SAlgList) ->
+  SortSignature : (representation : SAlgList) ->
     (sortSigsInContext : List SAlgList) ->
-    Type where
-      SortSignatureParams : (representation : SAlgList) ->
-        (sortSigsInContext : List SAlgList) ->
-        IsSortParameterList sortSigsInContext representation [] ->
-        SortSignature representation sortSigsInContext
-
-  public export
-  IsSortParameterList :
-    (sortSigsInContext : List SAlgList) ->
-    (representation : SAlgList) ->
-    (paramsInContext : SAlgList) ->
     Type
-  IsSortParameterList sortSigsInContext =
-    Telescope (IsRefinement sortSigsInContext)
+  SortSignature representation sortSigsInContext =
+    Telescope (Refinement sortSigsInContext) representation []
 
   public export
-  data IsRefinement :
+  data Refinement :
     (sortSigsInContext : List SAlgList) ->
     (representation : SAlgExp) ->
     (paramsInContext : SAlgList) ->
@@ -337,7 +326,7 @@ mutual
         {auto matches : MatchesSortSignature
           (take sort sortSigsInContext) paramsInContext
           (index sort sortSigsInContext {ok}) sortParams} ->
-        IsRefinement
+        Refinement
           sortSigsInContext (sort $* sortParams) paramsInContext
 
   public export
