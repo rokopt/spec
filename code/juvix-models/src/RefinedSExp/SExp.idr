@@ -199,102 +199,155 @@ mutual
     SExpTail : {pred : SPred atom} -> SListExists pred l ->
       SListExists pred (x :: l)
 
+infixr 7 :~:
 public export
-data SAlgebraAtom : Type where
-  SAtomAlgebraSignature : SAlgebraAtom
-  SAtomAlgebraSigList : SAlgebraAtom
-  SAtomAlgebraSortSigList : SAlgebraAtom
-  SAtomSortSignature : SAlgebraAtom
-  SAtomRefinement : Nat -> SAlgebraAtom
+data Telescope :
+  {0 fieldRepresentationType : Type} ->
+  (0 fieldType :
+    fieldRepresentationType -> List fieldRepresentationType -> Type) ->
+  (representation : List fieldRepresentationType) ->
+  (previousFields : List fieldRepresentationType) ->
+  Type where
+    (|~|) :
+      {0 fieldRepresentationType : Type} ->
+      {0 fieldType :
+        fieldRepresentationType -> List fieldRepresentationType -> Type} ->
+      {previousFields : List fieldRepresentationType} ->
+      Telescope fieldType [] previousFields
+    (:~:) :
+      {0 fieldRepresentationType : Type} ->
+      {0 fieldType :
+        fieldRepresentationType -> List fieldRepresentationType -> Type} ->
+      {previousFields : List fieldRepresentationType} ->
+      {headRep : fieldRepresentationType} ->
+      {tailRep : List fieldRepresentationType} ->
+      fieldType headRep previousFields ->
+      Telescope fieldType tailRep (headRep :: previousFields) ->
+      Telescope fieldType (headRep :: tailRep) previousFields
+
+prefix 11 !~!
+public export
+(!~!) : {0 fieldRepresentationType : Type} ->
+  {0 fieldType :
+    fieldRepresentationType -> List fieldRepresentationType -> Type} ->
+  {representation : fieldRepresentationType} ->
+  {previousFields : List fieldRepresentationType} ->
+  fieldType representation previousFields ->
+  Telescope fieldType [representation] previousFields
+(!~!) field = field :~: (|~|)
+
+infixr 7 :~!
+public export
+(:~!) : {0 fieldRepresentationType : Type} ->
+  {0 fieldType :
+    fieldRepresentationType -> List fieldRepresentationType -> Type} ->
+  {headRep, tailRep : fieldRepresentationType} ->
+  {previousFields : List fieldRepresentationType} ->
+  fieldType headRep previousFields ->
+  fieldType tailRep (headRep :: previousFields) ->
+  Telescope fieldType [headRep, tailRep] previousFields
+head :~! tail = head :~: !~! tail
+
+public export
+SAlgAtom : Type
+SAlgAtom = Nat
+{-
+data SAlgAtom : Type where
+  SAlgSort : Nat -> SAlgAtom
+  SAlgParam : Nat -> SAlgAtom
+  -}
 
 public export
 SAlgExp : Type
-SAlgExp = SExp SAlgebraAtom
+SAlgExp = SExp SAlgAtom
 
 public export
 SAlgList : Type
-SAlgList = SList SAlgebraAtom
+SAlgList = SList SAlgAtom
 
 mutual
-  -- | A refinement algebra may take other algebras as parameters.
-  -- | The type of an algebra is known as its "signature", and
-  -- | consists of the list of signatures of its parameters and of the
-  -- | list of signatures of its sorts.
   public export
-  data IsAlgebraSignatureList : (representation : SAlgList) -> Type where
-    AlgebraSignatureListNil : IsAlgebraSignatureList []
-    AlgebraSignatureListCons :
-        (headRep : SAlgExp) -> (tailRep : SAlgList) ->
-        {auto isAlgebraArity : IsAlgebraSignature headRep} ->
-        {auto isAlgebraArityList : IsAlgebraSignatureList tailRep} ->
-        IsAlgebraSignatureList (headRep :: tailRep)
+  data IsSortSignatureList :
+    (representation : List SAlgList) ->
+    (sortSigsInContext : List SAlgList) ->
+    Type where
+      SortSigListNil : {sortSigsInContext : List (SAlgList)} ->
+        IsSortSignatureList [] sortSigsInContext
+      SortSigListCons :
+        (headRep : SAlgList) -> (tailRep : List (SAlgList)) ->
+        {sortSigsInHeadContext : List (SAlgList)} ->
+        IsSortSignature headRep sortSigsInHeadContext ->
+        IsSortSignatureList tailRep (headRep :: sortSigsInHeadContext) ->
+        IsSortSignatureList (headRep :: tailRep) sortSigsInHeadContext
 
   public export
-  AlgebraSignatureExp : (algebraSigs, sortSigList : SAlgList) -> SAlgExp
-  AlgebraSignatureExp algebraSigs sortSigList =
-    SAtomAlgebraSignature $*
-      [SAtomAlgebraSigList $* algebraSigs,
-       SAtomAlgebraSortSigList $* sortSigList]
+  data IsSortSignature : (representation : SAlgList) ->
+    (sortSigsInContext : List SAlgList) ->
+    Type where
+      SortSignatureParams : (representation : SAlgList) ->
+        (sortSigsInContext : List SAlgList) ->
+        IsSortParameterList sortSigsInContext representation [] ->
+        IsSortSignature representation sortSigsInContext
 
   public export
-  data IsAlgebraSignature : (representation : SAlgExp) -> Type where
-    AlgebraSignature : (algebraSigs : SAlgList) -> (sortSigList : SAlgList) ->
-      {auto isSigList : IsAlgebraSignatureList algebraSigs} ->
-      {auto isSortSigList : IsSortSignatureList sortSigList $
-        AlgebraSignatureExp algebraSigs sortSigList} ->
-      IsAlgebraSignature (AlgebraSignatureExp algebraSigs sortSigList)
+  data IsSortParameterList :
+    (sortSigsInContext : List SAlgList) ->
+    (representation : SAlgList) ->
+    (paramsInContext : SAlgList) ->
+    Type where
+      SortSignatureNil :
+        {sortSigsInContext : List (SAlgList)} ->
+        {paramsInContext : SAlgList} ->
+        IsSortParameterList sortSigsInContext [] paramsInContext
+      SortSignatureCons : (headRep : SAlgExp) -> (tailRep : SAlgList) ->
+        {sortSigsInContext : List (SAlgList)} ->
+        {paramsInHeadContext : SAlgList} ->
+        IsRefinement headRep sortSigsInContext paramsInHeadContext ->
+        IsSortParameterList sortSigsInContext tailRep
+          (headRep :: paramsInHeadContext) ->
+        IsSortParameterList sortSigsInContext (headRep ::tailRep)
+          paramsInHeadContext
 
   public export
-  data IsSortSignatureList : (representation : SAlgList) ->
-    (algebraSignature : SAlgExp) -> Type where
-      SortSignatureNil : {algebraSignature : SAlgExp} ->
-        IsSortSignatureList [] algebraSignature
-      SortSignatureCons : {algebraSignature : SAlgExp} ->
-        (headRep : SAlgExp) -> (tailRep : SAlgList) ->
-        {auto isSortSig : IsSortSignature headRep algebraSignature} ->
-        {auto isSortSigList : IsSortSignatureList tailRep algebraSignature} ->
-        IsSortSignatureList (headRep :: tailRep) algebraSignature
-
-  -- | The signature of a sort is a telescope of refinements.
-  public export
-  data IsSortSignature :
-    (representation : SAlgExp) -> (algebraSignature : SAlgExp) -> Type where
-      SortSignatureTelescope :
-        (representation : SAlgList) -> (algebraSignature : SAlgExp) ->
-        {auto isTelescope :
-          IsSortTelescope representation algebraSignature []} ->
-        IsSortSignature (SAtomSortSignature $* representation) algebraSignature
+  data IsRefinement : (representation : SAlgExp) ->
+    (sortSigsInContext : List SAlgList) ->
+    (paramsInContext : SAlgList) ->
+    Type where
+      ApplySort : (sortSigsInContext : List SAlgList) ->
+        (paramsInContext : SAlgList) ->
+        (sort : Nat) -> (sortParams : SAlgList) ->
+        {auto ok : InBounds sort sortSigsInContext} ->
+        {auto matches : MatchesSortSignature
+          (take sort sortSigsInContext) paramsInContext
+          (index sort sortSigsInContext {ok}) sortParams} ->
+        IsRefinement
+          (sort $* sortParams) sortSigsInContext paramsInContext
 
   public export
-  data IsSortTelescope :
-    (representation : SAlgList) -> (algebraSignature : SAlgExp) ->
-    (prevTelescope : SAlgList) -> Type where
-      SortTelescopeNil :
-        {algebraSignature : SAlgExp} -> {prevTelescope : SAlgList} ->
-        IsSortTelescope [] algebraSignature prevTelescope
-      SortTelescopeCons :
-        {algebraSignature : SAlgExp} -> {prevTelescope : SAlgList} ->
-        (headRep : SAlgExp) -> (tailRep : SAlgList) ->
-        {auto isRefinement :
-          IsRefinement headRep algebraSignature prevTelescope} ->
-        {auto isTelescope :
-          IsSortTelescope tailRep algebraSignature prevTelescope} ->
-        IsSortTelescope
-          (headRep :: tailRep) algebraSignature (headRep :: prevTelescope)
+  data MatchesSortSignature :
+    (sortSigsInContext : List SAlgList) ->
+    (paramsInContext : SAlgList) ->
+    (sortSig : SAlgList) ->
+    (params : SAlgList) ->
+    Type where
+      MatchesNil :
+        {sortSigsInContext : List SAlgList} -> {paramsInContext : SAlgList} ->
+        MatchesSortSignature sortSigsInContext paramsInContext [] []
+      MatchesCons :
+        {sigHead, paramHead : SAlgExp} -> {sigTail, paramTail : SAlgList} ->
+        {sortSigsInContext : List SAlgList} -> {paramsInContext : SAlgList} ->
+        MatchesSortParam sortSigsInContext paramsInContext
+          sigHead paramHead ->
+        MatchesSortSignature sortSigsInContext paramsInContext
+          sigTail paramTail ->
+        MatchesSortSignature
+          sortSigsInContext paramsInContext
+            (sigHead :: sigTail) (paramHead :: paramTail)
 
   public export
-  data IsRefinement :
-    (representation : SAlgExp) -> (algebraSignature : SAlgExp) ->
-    (previousTelescope : SAlgList) -> Type where
-      AppliedSort : (algebraSignature : SAlgExp) ->
-        (previousTelescope : SAlgList) ->
-        (sort : Nat) -> (sortApplication : SAlgExp) ->
-        {auto isSortApplication : IsSortApplication sortApplication
-          algebraSignature sort previousTelescope} ->
-        IsRefinement (SAtomRefinement sort $* [sortApplication])
-          algebraSignature previousTelescope
-
-  public export
-  data IsSortApplication : (representation : SAlgExp) ->
-    (algebraSignature : SAlgExp) -> (sort : Nat) ->
-    (previousTelescope : SAlgList) -> Type where
+  data MatchesSortParam :
+    (sortSigsInContext : List SAlgList) ->
+    (paramsInContext : SAlgList) ->
+    (sig : SAlgExp) ->
+    (param : SAlgExp) ->
+    Type where
