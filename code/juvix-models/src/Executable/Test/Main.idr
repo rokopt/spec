@@ -48,6 +48,7 @@ import ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
 export
 main : IO ()
 main = do
+  RefinedSExp.Test.SExpTest.sexpTests
   Geb.Test.GebTest.gebTests
   Geb.Test.GebSExpTest.gebSExpTests
   {-
@@ -61,7 +62,6 @@ main = do
   RefinedSExp.Test.AlgebraicSExpTest.algebraicSExpTests
   RefinedSExp.Test.AlgebraicSExpInterpretationTest.algebraicSExpInterpretationTests
   RefinedSExp.Test.ComputationTest.computationTests
-  RefinedSExp.Test.SExpTest.sexpTests
   RefinedSExp.Test.NamingTest.namingTests
   RefinedSExp.Test.InterpretationTest.interpretationTests
   Datatypes.Test.AlgebraicTypesTest.algebraicTypesTests

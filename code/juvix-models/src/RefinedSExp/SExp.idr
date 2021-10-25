@@ -200,187 +200,101 @@ mutual
       SListExists pred (x :: l)
 
 public export
-SortArity : Type -> Type
-SortArity = SList
+data SAlgebraAtom : Type where
+  SAtomAlgebraSignature : SAlgebraAtom
+  SAtomAlgebraSigList : SAlgebraAtom
+  SAtomAlgebraSortSigList : SAlgebraAtom
+  SAtomSortSignature : SAlgebraAtom
+  SAtomRefinement : Nat -> SAlgebraAtom
 
 public export
-SExpMap : Type -> Type -> Type
-SExpMap atom = SortedMap atom
+SAlgExp : Type
+SAlgExp = SExp SAlgebraAtom
 
 public export
-AlgebraArity : Type -> Type
-AlgebraArity atom = SExpMap atom (SortArity atom)
-
-public export
-data SAlgKeyword : Type where
-  SAKConstructorArg : Nat -> SAlgKeyword
-  SAKPreviousParam : Nat -> SAlgKeyword
-
-public export
-data SAlgAtom : (atom : Type) -> Type where
-  SAKeyword : {atom : Type} -> SAlgKeyword -> SAlgAtom atom
-  SACustom : {atom : Type} -> atom -> SAlgAtom atom
-
-public export
-SAlgExp : Type -> Type
-SAlgExp = SExp . SAlgAtom
-
-public export
-SAlgList : Type -> Type
-SAlgList = SList . SAlgAtom
-
-public export
-SAConstructorArg : {atom : Type} -> Nat -> SAlgAtom atom
-SAConstructorArg = SAKeyword . SAKConstructorArg
-
-public export
-SAPreviousParam : {atom : Type} -> Nat -> SAlgAtom atom
-SAPreviousParam = SAKeyword . SAKPreviousParam
-
-public export
-SExpConstructorArg : {atom : Type} -> Nat -> SAlgExp atom
-SExpConstructorArg = ($^) . SAConstructorArg
-
-public export
-SExpPreviousParam : {atom : Type} -> Nat -> SAlgExp atom
-SExpPreviousParam = ($^) . SAPreviousParam
-
-public export
-SExpConstructor : (atom : Type) -> Type
-SExpConstructor atom = (SAlgList atom, SAlgList atom) -- params, sort args
-
-public export
-SExpConstructorMap : Type -> Type
-SExpConstructorMap atom = SExpMap atom (SExpConstructor atom)
-
-public export
-record SortConstructor (atom : Type) where
-  constructor SortSignature
-  sortParams : SAlgList atom
-  sortConstructors : SExpConstructorMap atom
-
-public export
-SortConstructors : Type -> Type
-SortConstructors atom = SExpMap atom (SortConstructor atom)
-
-public export
-record SExpAlgebra (atom : Type) where
-  constructor SExpAlgebraSignature
-  algebraParameters : List (AlgebraArity atom)
-  algebraArity : AlgebraArity atom
-  sortConstructors : SortConstructors atom
-
--- | S-expression categories.
-mutual
-  public export
-  ObjectMap : Type -> Type
-  ObjectMap atom = SortedMap atom Nat
-
-  public export
-  MorphismMap : Type -> Type
-  MorphismMap atom = SortedMap atom Void
-
-  public export
-  record SCategoryGenerator (scAtom : Type) where
-    constructor SCategoryArgs
-    identityID : scAtom
-    composeID : scAtom
-    objectConstructors : ObjectMap scAtom
-    morphismConstructors : MorphismMap scAtom
-
-  public export
-  data SObject : {scAtom : Type} -> SCategoryGenerator scAtom -> Type where
-    SObjConstruct : {scAtom : Type} ->
-      (generator : SCategoryGenerator scAtom) ->
-      (a : scAtom) -> {auto n : Nat} ->
-      {auto isObject : lookup a (objectConstructors generator) = Just n} ->
-      Vect n (SObject generator) ->
-      SObject generator
-
-public export
-record SObjIndSig {scAtom : Type} {generator : SCategoryGenerator scAtom}
-  (p : SObject generator -> Type)
-  (pv : (n : Nat) -> Vect n (SObject generator) -> Type) where
-    constructor SObjIndArgs
-    objStep : (n : Nat) -> (a : scAtom) ->
-      (isObject : lookup a (objectConstructors generator) = Just n) ->
-      (objVect : Vect n (SObject generator)) ->
-      pv n objVect ->
-      p (SObjConstruct generator a objVect)
-    objBaseCase : pv 0 []
-    objIndStep : (obj : SObject generator) -> p obj -> (n : Nat) ->
-      (objVect : Vect n (SObject generator)) -> pv n objVect ->
-      pv (S n) (obj :: objVect)
+SAlgList : Type
+SAlgList = SList SAlgebraAtom
 
 mutual
+  -- | A refinement algebra may take other algebras as parameters.
+  -- | The type of an algebra is known as its "signature", and
+  -- | consists of the list of signatures of its parameters and of the
+  -- | list of signatures of its sorts.
   public export
-  sObjInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
-    {p : SObject generator -> Type} ->
-    {pv : (n : Nat) -> Vect n (SObject generator) -> Type} ->
-    SObjIndSig p pv ->
-    (obj : SObject generator) -> p obj
-  sObjInd signature (SObjConstruct _ a {n} {isObject} objVect) =
-    objStep signature n a isObject objVect
-      (sObjVectInd {p} {pv} signature objVect)
-
-  public export
-  sObjVectInd : {scAtom : Type} -> {generator : SCategoryGenerator scAtom} ->
-    {p : SObject generator -> Type} ->
-    {pv : (n : Nat) -> Vect n (SObject generator) -> Type} ->
-    SObjIndSig p pv ->
-    {n : Nat} -> (objVect : Vect n (SObject generator)) ->
-    pv n objVect
-  sObjVectInd signature [] = objBaseCase signature
-  sObjVectInd signature {n=(S n')} (obj :: objVect') =
-    objIndStep signature obj (sObjInd signature obj)
-      n' objVect' (sObjVectInd signature objVect')
-
-SObjShowSig : {scAtom : Type} -> Show scAtom =>
-  (generator : SCategoryGenerator scAtom) ->
-  SObjIndSig {generator} (\_ => String) (\_, _ => String)
-SObjShowSig generator = SObjIndArgs {generator}
-  (\_, a, _, _, vectStr => "<" ++ show a ++ " : " ++ vectStr ++ ">")
-  "_"
-  (\_, headStr, n, _, tailStr =>
-  headStr ++ (if n /= 0 then ", " ++ tailStr else ""))
-
-public export
-(atom : Type) => Show atom => (generator : SCategoryGenerator atom) =>
-Show (SObject generator) where
-  show = sObjInd $ SObjShowSig generator
-
-public export
-(atom : Type) => Show atom => (generator : SCategoryGenerator atom) =>
-(n : Nat) => Show (Vect n (SObject generator)) where
-  show = sObjVectInd $ SObjShowSig generator
-
-mutual
-  public export
-  Show atom => Show (SCategoryGenerator atom) where
-    show g = "{Identity : " ++ (show $ identityID g) ++
-      ", Compose : " ++ (show $ composeID g) ++
-      ", Objects : " ++ (show $ objectConstructors g) ++
-      ", Morphisms : " ++ (show $ morphismConstructors g) ++ "}"
-
-mutual
-  public export
-  sobject : {scAtom : Type} -> (generator : SCategoryGenerator scAtom) ->
-    SExp scAtom -> Maybe $ SObject generator
-  sobject generator (a $* l) with (lookup a $ objectConstructors generator)
-    proof isObject
-      sobject generator (a $* l) | Just n = case sobjectVect generator l n of
-        Just svect => Just $ SObjConstruct generator a {isObject} svect
-        Nothing => Nothing
-      sobject generator (a $* l) | Nothing = Nothing
+  data IsAlgebraSignatureList : (representation : SAlgList) -> Type where
+    AlgebraSignatureListNil : IsAlgebraSignatureList []
+    AlgebraSignatureListCons :
+        (headRep : SAlgExp) -> (tailRep : SAlgList) ->
+        {auto isAlgebraArity : IsAlgebraSignature headRep} ->
+        {auto isAlgebraArityList : IsAlgebraSignatureList tailRep} ->
+        IsAlgebraSignatureList (headRep :: tailRep)
 
   public export
-  sobjectVect : {scAtom : Type} -> (generator : SCategoryGenerator scAtom) ->
-    SList scAtom -> (expectedLength : Nat) ->
-    Maybe $ Vect expectedLength $ SObject generator
-  sobjectVect generator [] 0 = Just []
-  sobjectVect generator [] (S _) = Nothing
-  sobjectVect generator (_ :: _) 0 = Nothing
-  sobjectVect generator (x :: l) (S n) =
-    case (sobject generator x, sobjectVect generator l n) of
-      (Just x', Just l') => Just (x' :: l')
-      _ => Nothing
+  AlgebraSignatureExp : (algebraSigs, sortSigList : SAlgList) -> SAlgExp
+  AlgebraSignatureExp algebraSigs sortSigList =
+    SAtomAlgebraSignature $*
+      [SAtomAlgebraSigList $* algebraSigs,
+       SAtomAlgebraSortSigList $* sortSigList]
+
+  public export
+  data IsAlgebraSignature : (representation : SAlgExp) -> Type where
+    AlgebraSignature : (algebraSigs : SAlgList) -> (sortSigList : SAlgList) ->
+      {auto isSigList : IsAlgebraSignatureList algebraSigs} ->
+      {auto isSortSigList : IsSortSignatureList sortSigList $
+        AlgebraSignatureExp algebraSigs sortSigList} ->
+      IsAlgebraSignature (AlgebraSignatureExp algebraSigs sortSigList)
+
+  public export
+  data IsSortSignatureList : (representation : SAlgList) ->
+    (algebraSignature : SAlgExp) -> Type where
+      SortSignatureNil : {algebraSignature : SAlgExp} ->
+        IsSortSignatureList [] algebraSignature
+      SortSignatureCons : {algebraSignature : SAlgExp} ->
+        (headRep : SAlgExp) -> (tailRep : SAlgList) ->
+        {auto isSortSig : IsSortSignature headRep algebraSignature} ->
+        {auto isSortSigList : IsSortSignatureList tailRep algebraSignature} ->
+        IsSortSignatureList (headRep :: tailRep) algebraSignature
+
+  -- | The signature of a sort is a telescope of refinements.
+  public export
+  data IsSortSignature :
+    (representation : SAlgExp) -> (algebraSignature : SAlgExp) -> Type where
+      SortSignatureTelescope :
+        (representation : SAlgList) -> (algebraSignature : SAlgExp) ->
+        {auto isTelescope :
+          IsSortTelescope representation algebraSignature []} ->
+        IsSortSignature (SAtomSortSignature $* representation) algebraSignature
+
+  public export
+  data IsSortTelescope :
+    (representation : SAlgList) -> (algebraSignature : SAlgExp) ->
+    (prevTelescope : SAlgList) -> Type where
+      SortTelescopeNil :
+        {algebraSignature : SAlgExp} -> {prevTelescope : SAlgList} ->
+        IsSortTelescope [] algebraSignature prevTelescope
+      SortTelescopeCons :
+        {algebraSignature : SAlgExp} -> {prevTelescope : SAlgList} ->
+        (headRep : SAlgExp) -> (tailRep : SAlgList) ->
+        {auto isRefinement :
+          IsRefinement headRep algebraSignature prevTelescope} ->
+        {auto isTelescope :
+          IsSortTelescope tailRep algebraSignature prevTelescope} ->
+        IsSortTelescope
+          (headRep :: tailRep) algebraSignature (headRep :: prevTelescope)
+
+  public export
+  data IsRefinement :
+    (representation : SAlgExp) -> (algebraSignature : SAlgExp) ->
+    (previousTelescope : SAlgList) -> Type where
+      AppliedSort : (algebraSignature : SAlgExp) ->
+        (previousTelescope : SAlgList) ->
+        (sort : Nat) -> (sortApplication : SAlgExp) ->
+        {auto isSortApplication : IsSortApplication sortApplication
+          algebraSignature sort previousTelescope} ->
+        IsRefinement (SAtomRefinement sort $* [sortApplication])
+          algebraSignature previousTelescope
+
+  public export
+  data IsSortApplication : (representation : SAlgExp) ->
+    (algebraSignature : SAlgExp) -> (sort : Nat) ->
+    (previousTelescope : SAlgList) -> Type where

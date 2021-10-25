@@ -13,6 +13,8 @@ backAndForth = case (gebExpToMinimalTerm $ gebMinimalTermToExp unitPair) of
   Just term => "Just " ++ show (snd term)
   Nothing => "Nothing"
 
+{-
+
 public export
 GebCategoryObjects : ObjectMap GebAtom
 GebCategoryObjects =
@@ -156,7 +158,7 @@ GebAlgebra = SExpAlgebraSignature
   GebAlgebraArity
   GebSortConstructors
 
--- public export
+-}
 
 export
 gebTests : IO ()
@@ -164,6 +166,7 @@ gebTests = do
   printLn "Begin gebTests:"
   printLn $ "unitPair=" ++ show unitPair
   printLn $ "backandforth=" ++ backAndForth
+  {-
   printLn $ "lookup=" ++ show (lookup GAInitial GebCategoryObjects)
   printLn $ "sobject initial=" ++
     show (sobject GebCategoryGenerator ($^ GAInitial))
@@ -189,5 +192,6 @@ gebTests = do
              [GACoproduct $* [$^ GATerminal, GAObjectExpression $*
               [$^ GAObjectExpression]]
              , $^ GATerminal]]))
+  -}
   printLn "End gebTests."
   pure ()
