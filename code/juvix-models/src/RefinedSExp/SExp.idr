@@ -222,7 +222,7 @@ data Telescope :
       {headRep : fieldRepresentationType} ->
       {tailRep : List fieldRepresentationType} ->
       fieldType headRep previousFields ->
-      Telescope fieldType tailRep (headRep :: previousFields) ->
+      Telescope fieldType tailRep (previousFields ++ [headRep]) ->
       Telescope fieldType (headRep :: tailRep) previousFields
 
 prefix 11 !~!
@@ -244,9 +244,43 @@ public export
   {headRep, tailRep : fieldRepresentationType} ->
   {previousFields : List fieldRepresentationType} ->
   fieldType headRep previousFields ->
-  fieldType tailRep (headRep :: previousFields) ->
+  fieldType tailRep (previousFields ++ [headRep]) ->
   Telescope fieldType [headRep, tailRep] previousFields
 head :~! tail = head :~: !~! tail
+
+public export
+TelescopeTypeN :
+  {0 fieldRepresentationType : Type} ->
+  {fieldType :
+    fieldRepresentationType -> List fieldRepresentationType -> Type} ->
+  (representation : List fieldRepresentationType) ->
+  (previousFields : List fieldRepresentationType) ->
+  (n : Nat) ->
+  {auto ok : InBounds n representation} ->
+  Type
+TelescopeTypeN {fieldType} representation previousFields n =
+  fieldType (index n representation {ok})
+    (previousFields ++ take n representation)
+
+infixr 8 @~
+public export
+(@~) :
+  {0 fieldRepresentationType : Type} ->
+  {0 fieldType :
+    fieldRepresentationType -> List fieldRepresentationType -> Type} ->
+  {representation : List fieldRepresentationType} ->
+  {previousFields : List fieldRepresentationType} ->
+  Telescope fieldType representation previousFields ->
+  (n : Nat) ->
+  {auto ok : InBounds n representation} ->
+  TelescopeTypeN {fieldType} representation previousFields n {ok}
+(@~) {representation=(headRep :: _)} (head :~: _) Z {ok=InFirst} =
+  rewrite appendNilRightNeutral previousFields in
+  head
+(@~) {representation=(headRep :: tailRep)}
+  (field :~: telescope) (S n) {ok=(InLater _)} =
+    rewrite appendAssociative previousFields [headRep] (take n tailRep) in
+    telescope @~ n
 
 public export
 SAlgAtom : Type
