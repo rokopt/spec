@@ -283,77 +283,76 @@ public export
     telescope @~ n
 
 public export
-SAlgAtom : Type
-SAlgAtom = Nat
-{-
-data SAlgAtom : Type where
-  SAlgSort : Nat -> SAlgAtom
-  SAlgParam : Nat -> SAlgAtom
-  -}
+KindAtom : Type
+KindAtom = Nat
 
 public export
-SAlgExp : Type
-SAlgExp = SExp SAlgAtom
+KindParameter : Type
+KindParameter = SExp KindAtom
 
 public export
-SAlgList : Type
-SAlgList = SList SAlgAtom
+KindRepresentation : Type
+KindRepresentation = SList KindAtom
 
 mutual
   public export
-  SortSignatureList :
-    (representation : List SAlgList) -> (sortSigsInContext : List SAlgList) ->
+  DependentKindList :
+    (representation : List KindRepresentation) ->
+    (previousKinds : List KindRepresentation) ->
     Type
-  SortSignatureList = Telescope SortSignature
+  DependentKindList = Telescope DependentKind
 
   public export
-  SortSignature : (representation : SAlgList) ->
-    (sortSigsInContext : List SAlgList) ->
+  DependentKind : (representation : KindRepresentation) ->
+    (previousKinds : List KindRepresentation) ->
     Type
-  SortSignature representation sortSigsInContext =
-    Telescope (Refinement sortSigsInContext) representation []
+  DependentKind representation previousKinds =
+    Telescope (DependentKindParameter previousKinds) representation []
 
   public export
-  data Refinement :
-    (sortSigsInContext : List SAlgList) ->
-    (representation : SAlgExp) ->
-    (paramsInContext : SAlgList) ->
+  data DependentKindParameter :
+    (previousKinds : List KindRepresentation) ->
+    (representation : KindParameter) ->
+    (previousParams : KindRepresentation) ->
     Type where
-      ApplySort : (sortSigsInContext : List SAlgList) ->
-        (paramsInContext : SAlgList) ->
-        (sort : Nat) -> (sortParams : SAlgList) ->
-        {auto ok : InBounds sort sortSigsInContext} ->
-        {auto matches : MatchesSortSignature
-          (take sort sortSigsInContext) paramsInContext
-          (index sort sortSigsInContext {ok}) sortParams} ->
-        Refinement
-          sortSigsInContext (sort $* sortParams) paramsInContext
+      ApplyDependentKind : (previousKinds : List KindRepresentation) ->
+        (previousParams : KindRepresentation) ->
+        (kind : Nat) -> (kindParams : KindRepresentation) ->
+        {auto ok : InBounds kind previousKinds} ->
+        {auto matches : MatchesDependentKind
+          (take kind previousKinds) previousParams
+          (index kind previousKinds {ok}) kindParams} ->
+        DependentKindParameter
+          previousKinds (kind $* kindParams) previousParams
 
   public export
-  data MatchesSortSignature :
-    (sortSigsInContext : List SAlgList) ->
-    (paramsInContext : SAlgList) ->
-    (sortSig : SAlgList) ->
-    (params : SAlgList) ->
+  data MatchesDependentKind :
+    (previousKinds : List KindRepresentation) ->
+    (previousParams : KindRepresentation) ->
+    (kind : KindRepresentation) ->
+    (params : KindRepresentation) ->
     Type where
       MatchesNil :
-        {sortSigsInContext : List SAlgList} -> {paramsInContext : SAlgList} ->
-        MatchesSortSignature sortSigsInContext paramsInContext [] []
+        {previousKinds : List KindRepresentation} ->
+        {previousParams : KindRepresentation} ->
+        MatchesDependentKind previousKinds previousParams [] []
       MatchesCons :
-        {sortSigsInContext : List SAlgList} -> {paramsInContext : SAlgList} ->
-        {sigHead, paramHead : SAlgExp} -> {sigTail, paramTail : SAlgList} ->
-        MatchesSortParam sortSigsInContext paramsInContext
+        {previousKinds : List KindRepresentation} ->
+        {previousParams : KindRepresentation} ->
+        {sigHead, paramHead : KindParameter} ->
+        {sigTail, paramTail : KindRepresentation} ->
+        MatchesDependentKindParam previousKinds previousParams
           sigHead paramHead ->
-        MatchesSortSignature sortSigsInContext paramsInContext
+        MatchesDependentKind previousKinds previousParams
           sigTail paramTail ->
-        MatchesSortSignature
-          sortSigsInContext paramsInContext
+        MatchesDependentKind
+          previousKinds previousParams
             (sigHead :: sigTail) (paramHead :: paramTail)
 
   public export
-  data MatchesSortParam :
-    (sortSigsInContext : List SAlgList) ->
-    (paramsInContext : SAlgList) ->
-    (sig : SAlgExp) ->
-    (param : SAlgExp) ->
+  data MatchesDependentKindParam :
+    (previousKinds : List KindRepresentation) ->
+    (previousParams : KindRepresentation) ->
+    (sig : KindParameter) ->
+    (param : KindParameter) ->
     Type where
