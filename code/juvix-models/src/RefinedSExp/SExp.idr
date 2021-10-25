@@ -301,50 +301,33 @@ SAlgList = SList SAlgAtom
 
 mutual
   public export
-  data IsSortSignatureList :
-    (representation : List SAlgList) ->
-    (sortSigsInContext : List SAlgList) ->
-    Type where
-      SortSigListNil : {sortSigsInContext : List (SAlgList)} ->
-        IsSortSignatureList [] sortSigsInContext
-      SortSigListCons :
-        (headRep : SAlgList) -> (tailRep : List (SAlgList)) ->
-        {sortSigsInHeadContext : List (SAlgList)} ->
-        IsSortSignature headRep sortSigsInHeadContext ->
-        IsSortSignatureList tailRep (headRep :: sortSigsInHeadContext) ->
-        IsSortSignatureList (headRep :: tailRep) sortSigsInHeadContext
+  SortSignatureList :
+    (representation : List SAlgList) -> (sortSigsInContext : List SAlgList) ->
+    Type
+  SortSignatureList = Telescope SortSignature
 
   public export
-  data IsSortSignature : (representation : SAlgList) ->
+  data SortSignature : (representation : SAlgList) ->
     (sortSigsInContext : List SAlgList) ->
     Type where
       SortSignatureParams : (representation : SAlgList) ->
         (sortSigsInContext : List SAlgList) ->
         IsSortParameterList sortSigsInContext representation [] ->
-        IsSortSignature representation sortSigsInContext
+        SortSignature representation sortSigsInContext
 
   public export
-  data IsSortParameterList :
+  IsSortParameterList :
     (sortSigsInContext : List SAlgList) ->
     (representation : SAlgList) ->
     (paramsInContext : SAlgList) ->
-    Type where
-      SortSignatureNil :
-        {sortSigsInContext : List (SAlgList)} ->
-        {paramsInContext : SAlgList} ->
-        IsSortParameterList sortSigsInContext [] paramsInContext
-      SortSignatureCons : (headRep : SAlgExp) -> (tailRep : SAlgList) ->
-        {sortSigsInContext : List (SAlgList)} ->
-        {paramsInHeadContext : SAlgList} ->
-        IsRefinement headRep sortSigsInContext paramsInHeadContext ->
-        IsSortParameterList sortSigsInContext tailRep
-          (headRep :: paramsInHeadContext) ->
-        IsSortParameterList sortSigsInContext (headRep ::tailRep)
-          paramsInHeadContext
+    Type
+  IsSortParameterList sortSigsInContext =
+    Telescope (IsRefinement sortSigsInContext)
 
   public export
-  data IsRefinement : (representation : SAlgExp) ->
+  data IsRefinement :
     (sortSigsInContext : List SAlgList) ->
+    (representation : SAlgExp) ->
     (paramsInContext : SAlgList) ->
     Type where
       ApplySort : (sortSigsInContext : List SAlgList) ->
@@ -355,7 +338,7 @@ mutual
           (take sort sortSigsInContext) paramsInContext
           (index sort sortSigsInContext {ok}) sortParams} ->
         IsRefinement
-          (sort $* sortParams) sortSigsInContext paramsInContext
+          sortSigsInContext (sort $* sortParams) paramsInContext
 
   public export
   data MatchesSortSignature :
@@ -368,8 +351,8 @@ mutual
         {sortSigsInContext : List SAlgList} -> {paramsInContext : SAlgList} ->
         MatchesSortSignature sortSigsInContext paramsInContext [] []
       MatchesCons :
-        {sigHead, paramHead : SAlgExp} -> {sigTail, paramTail : SAlgList} ->
         {sortSigsInContext : List SAlgList} -> {paramsInContext : SAlgList} ->
+        {sigHead, paramHead : SAlgExp} -> {sigTail, paramTail : SAlgList} ->
         MatchesSortParam sortSigsInContext paramsInContext
           sigHead paramHead ->
         MatchesSortSignature sortSigsInContext paramsInContext
