@@ -287,8 +287,8 @@ KindAtom : Type
 KindAtom = Nat
 
 public export
-KindParameter : Type
-KindParameter = SExp KindAtom
+SortRepresentation : Type
+SortRepresentation = SExp KindAtom
 
 public export
 KindRepresentation : Type
@@ -296,63 +296,57 @@ KindRepresentation = SList KindAtom
 
 mutual
   public export
-  DependentKindList :
-    (representation : List KindRepresentation) ->
-    (previousKinds : List KindRepresentation) ->
-    Type
-  DependentKindList = Telescope DependentKind
+  record DependentKind (representation : KindRepresentation) where
+    constructor DependentKindSignature
+    dependentKindParameters :
+      List KindRepresentation
+    dependentKindArity :
+      Telescope (DependentSort dependentKindParameters) representation []
 
   public export
-  DependentKind : (representation : KindRepresentation) ->
-    (previousKinds : List KindRepresentation) ->
-    Type
-  DependentKind representation previousKinds =
-    Telescope (DependentKindParameter previousKinds) representation []
-
-  public export
-  data DependentKindParameter :
-    (previousKinds : List KindRepresentation) ->
-    (representation : KindParameter) ->
-    (previousParams : KindRepresentation) ->
+  data DependentSort :
+    (kindParameters : List KindRepresentation) ->
+    (representation : SortRepresentation) ->
+    (previousSorts : KindRepresentation) ->
     Type where
-      ApplyDependentKind : (previousKinds : List KindRepresentation) ->
-        (previousParams : KindRepresentation) ->
+      ApplyDependentKind : (kindParameters : List KindRepresentation) ->
+        (previousSorts : KindRepresentation) ->
         (kind : Nat) -> (kindParams : KindRepresentation) ->
-        {auto ok : InBounds kind previousKinds} ->
+        {auto ok : InBounds kind kindParameters} ->
         {auto matches : MatchesDependentKind
-          (take kind previousKinds) previousParams
-          (index kind previousKinds {ok}) kindParams} ->
-        DependentKindParameter
-          previousKinds (kind $* kindParams) previousParams
+          (take kind kindParameters) previousSorts
+          (index kind kindParameters {ok}) kindParams} ->
+        DependentSort
+          kindParameters (kind $* kindParams) previousSorts
 
   public export
   data MatchesDependentKind :
-    (previousKinds : List KindRepresentation) ->
-    (previousParams : KindRepresentation) ->
+    (kindParameters : List KindRepresentation) ->
+    (previousSorts : KindRepresentation) ->
     (kind : KindRepresentation) ->
     (params : KindRepresentation) ->
     Type where
       MatchesNil :
-        {previousKinds : List KindRepresentation} ->
-        {previousParams : KindRepresentation} ->
-        MatchesDependentKind previousKinds previousParams [] []
+        {kindParameters : List KindRepresentation} ->
+        {previousSorts : KindRepresentation} ->
+        MatchesDependentKind kindParameters previousSorts [] []
       MatchesCons :
-        {previousKinds : List KindRepresentation} ->
-        {previousParams : KindRepresentation} ->
-        {sigHead, paramHead : KindParameter} ->
+        {kindParameters : List KindRepresentation} ->
+        {previousSorts : KindRepresentation} ->
+        {sigHead, paramHead : SortRepresentation} ->
         {sigTail, paramTail : KindRepresentation} ->
-        MatchesDependentKindParam previousKinds previousParams
+        MatchesDependentKindParam kindParameters previousSorts
           sigHead paramHead ->
-        MatchesDependentKind previousKinds previousParams
+        MatchesDependentKind kindParameters previousSorts
           sigTail paramTail ->
         MatchesDependentKind
-          previousKinds previousParams
+          kindParameters previousSorts
             (sigHead :: sigTail) (paramHead :: paramTail)
 
   public export
   data MatchesDependentKindParam :
-    (previousKinds : List KindRepresentation) ->
-    (previousParams : KindRepresentation) ->
-    (sig : KindParameter) ->
-    (param : KindParameter) ->
+    (kindParameters : List KindRepresentation) ->
+    (previousSorts : KindRepresentation) ->
+    (sig : SortRepresentation) ->
+    (param : SortRepresentation) ->
     Type where
