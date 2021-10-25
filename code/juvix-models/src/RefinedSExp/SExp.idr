@@ -376,6 +376,31 @@ mutual
           parameterListRepresentation
 
   public export
+  dependentKindParameters :
+    {initialSort : Type} ->
+    {parameterListRepresentation : KindSList initialSort} ->
+    {arityRepresentation : KindSList initialSort} ->
+    (kind :
+      DependentKind
+        (KindRepresentation parameterListRepresentation arityRepresentation)
+      parameterListRepresentation) ->
+    DependentKindList parameterListRepresentation
+  dependentKindParameters (DependentKindSignature params _) = params
+
+  public export
+  dependentKindArity :
+    {initialSort : Type} ->
+    {parameterListRepresentation : KindSList initialSort} ->
+    {arityRepresentation : KindSList initialSort} ->
+    (kind :
+      DependentKind
+        (KindRepresentation parameterListRepresentation arityRepresentation)
+        parameterListRepresentation) ->
+    DependentKindArity {parameterListRepresentation}
+      (dependentKindParameters kind) arityRepresentation
+  dependentKindArity {arityRepresentation} (DependentKindSignature _ arity) = arity
+
+  public export
   data DependentSort :
     {initialSort : Type} ->
     {parameterListRepresentation : KindSList initialSort} ->
@@ -383,26 +408,45 @@ mutual
     (representation : KindSExp initialSort) ->
     (previousSorts : KindSList initialSort) ->
     Type where
+    {- -}
       DependentSortStar : {initialSort : Type} ->
         {parameterListRepresentation : KindSList initialSort} ->
-        {kindParameters :
-          Telescope DependentKind parameterListRepresentation []} ->
+        {kindParameters : DependentKindList parameterListRepresentation} ->
         {previousSorts : KindSList initialSort} ->
         (sort : initialSort) ->
         DependentSort kindParameters (StarSortRepresentation sort) previousSorts
       ApplyExistingKind :
         {initialSort : Type} ->
-        {kindRepresentation : KindSExp initialSort} ->
         {parameterListRepresentation : KindSList initialSort} ->
-        {kindParameters : DependentKindList parameterListRepresentation} ->
-        {kind : DependentKind kindRepresentation parameterListRepresentation} ->
+        {arityRepresentation : KindSList initialSort} ->
+        {kind : DependentKind
+          (KindRepresentation parameterListRepresentation arityRepresentation)
+          parameterListRepresentation} ->
         {previousSorts : KindSList initialSort} ->
         {argumentsToApply : KindSList initialSort} ->
-        KindApplication kind kindParameters previousSorts argumentsToApply ->
+        KindApplication kind previousSorts argumentsToApply ->
         DependentSort
-          {parameterListRepresentation}
+          (dependentKindParameters kind)
+          (KindApplicationRepresentation
+            (KindRepresentation parameterListRepresentation arityRepresentation)
+            argumentsToApply)
+          previousSorts
+      ApplyKindParameter :
+        {initialSort : Type} ->
+        {parameterListRepresentation : KindSList initialSort} ->
+        {kindParameters : DependentKindList parameterListRepresentation} ->
+        {arityRepresentation : KindSList initialSort} ->
+        (kindIndex : Nat) ->
+        {auto ok : InBounds kindIndex parameterListRepresentation} ->
+        {previousSorts : KindSList initialSort} ->
+        {argumentsToApply : KindSList initialSort} ->
+        {- KindApplication ?kindhole previousSorts argumentsToApply -> -}
+        KindApplication (kindParameters @~ kindIndex) previousSorts argumentsToApply ->
+        DependentSort
           kindParameters
-          (KindApplicationRepresentation kindRepresentation argumentsToApply)
+          (KindApplicationRepresentation
+            (KindRepresentation parameterListRepresentation arityRepresentation)
+            argumentsToApply)
           previousSorts
 
   public export
@@ -410,16 +454,10 @@ mutual
     {initialSort : Type} ->
     {kindRepresentation : KindSExp initialSort} ->
     {parameterListRepresentation : KindSList initialSort} ->
-    DependentKind kindRepresentation parameterListRepresentation ->
-    (kindParameters : Telescope DependentKind parameterListRepresentation []) ->
+    (kind : DependentKind kindRepresentation parameterListRepresentation) ->
     (previousSorts : KindSList initialSort) ->
     (argumentsToApply : KindSList initialSort) ->
     Type where
-      KindStar : {initialSort : Type} ->
-        {previousSorts : KindSList initialSort} ->
-        {sort : initialSort} ->
-        (kind : DependentKind (StarKindRepresentation sort) []) ->
-        KindApplication kind (|~|) previousSorts []
 
 public export
 DependentKindStar : {initialSort : Type} ->
