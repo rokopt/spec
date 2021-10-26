@@ -412,9 +412,7 @@ mutual
     ExpressionObject : {lang, sort : GebSExp} -> (refinement : GebSExp) ->
       {auto isLanguage : Language lang []} ->
       {auto isSort : Sort sort []} ->
-      {auto isRefinement :
-        Refinement refinement
-          [GAExpressionRefinement $* [sort, refinement]]} ->
+      {auto isRefinement : Refinement refinement [sort]} ->
       Object (GAExpressionObject $* [lang, refinement]) [lang]
 
   -- | Takes an "implicit" language parameter and two explicit
@@ -456,9 +454,7 @@ mutual
     RefinementRefinement : (s : GebSExp) -> {auto isSort : Sort s []} ->
       Refinement (GARefinementRefinement $*** s) [$^ GARefinementSort]
     ExpressionRefinement : {s : GebSExp} -> {auto isSort : Sort s []} ->
-      (r : GebSExp) ->
-      {auto isRefinement :
-        Refinement r [GARefinementRefinement $*** s]} ->
+      (r : GebSExp) -> {auto isRefinement : Refinement r [s]} ->
       Refinement (GAExpressionRefinement $* [s, r]) [$^ GAExpressionSort]
     LanguageRefinement :
       Refinement ($^ GALanguageRefinement) [$^ GALanguageSort]
@@ -505,6 +501,37 @@ mutual
       {auto isMorphism : Morphism morphism [lang, domain, codomain]} ->
       Expression (GAMorphismExpression $*** morphism)
         [$^ GAMorphismSort, GAMorphismRefinement $* [lang, domain, codomain]]
+
+mutual
+  public export
+  checkExpression : (expression : GebSExp) -> (refinement : GebSList) ->
+    Dec $ Expression expression refinement
+  checkExpression x r = ?checkExpression_hole
+
+  public export
+  checkExpressionCorrect : {x : GebSExp} -> {l : GebSList} ->
+    (exp : Expression x l) -> checkExpression x l = Yes exp
+  checkExpressionCorrect {x} {l} exp = ?checkExpressionCorrect_hole
+
+mutual
+  public export
+  interpretRefinement : {s : GebSExp} ->
+    {auto isSort : Sort s []} ->
+    (r : GebSExp) ->
+    {auto isRefinement : Refinement r [s]} ->
+    (GebSExp -> Bool)
+  interpretRefinement {s} r {isSort} {isRefinement} x =
+    ?interpretRefinement_hole
+
+  public export
+  refinementCorrect : {s, r : GebSExp} ->
+    {auto isSort : Sort s []} ->
+    {auto isRefinement : Refinement r [s]} ->
+    (x : GebSExp) ->
+    {auto isExpression : Expression x [s, r]} ->
+    IsTrue (interpretRefinement {s} {isSort} r {isRefinement} x)
+  refinementCorrect {s} {r} {isSort} {isRefinement} x {isExpression} =
+    ?refinementCorrect_hole
 
 {-
   TermSort : GebExpressionSort
