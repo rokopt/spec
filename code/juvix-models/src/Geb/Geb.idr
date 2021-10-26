@@ -544,7 +544,82 @@ mutual
     {auto isRefinement : Refinement r [s]} ->
     (GebSExp -> Bool)
   interpretRefinement {s} r {isSort} {isRefinement} x =
-    ?interpretRefinement_hole
+ ?interpretRefinement_hole
+
+------------------------------------------------------
+---- Morphism transformations ("compiler passes") ----
+------------------------------------------------------
+
+ObjectMap : (sourceLang, targetLang : GebSExp) ->
+  {auto sourceIsLanguage : Language sourceLang []} ->
+  {auto targetIsLanguage : Language targetLang []} ->
+  Type
+ObjectMap sourceLang targetLang {sourceIsLanguage} {targetIsLanguage} =
+  (sourceObj : GebSExp) -> Object sourceObj [sourceLang] ->
+  (targetObj : GebSExp ** Object targetObj [targetLang])
+
+LanguageFunctor : {sourceLang, targetLang : GebSExp} ->
+  {auto sourceIsLanguage : Language sourceLang []} ->
+  {auto targetIsLanguage : Language targetLang []} ->
+  (objectMap : ObjectMap sourceLang targetLang) ->
+  Type
+LanguageFunctor {sourceLang} {targetLang} {sourceIsLanguage} {targetIsLanguage}
+  objectMap =
+    (domain, codomain : GebSExp) ->
+    (domainObject : Object domain [sourceLang]) ->
+    (codomainObject : Object codomain [sourceLang]) ->
+    (morphism : GebSExp) ->
+    Morphism morphism [sourceLang, domain, codomain] ->
+    (transformed : GebSExp **
+     Morphism transformed
+      [targetLang,
+       fst (objectMap domain domainObject),
+       fst (objectMap codomain codomainObject)])
+
+-- | A correct compiler pass is a functor whose morphism map
+-- | preserves extensional equality.
+-- |
+-- | It might be a useful generalization for this definition to require only
+-- | isomorphism, not equality.
+
+ObjectMapPreservesInterpretation : {sourceLang, targetLang : GebSExp} ->
+  {auto sourceIsLanguage : Language sourceLang []} ->
+  {auto targetIsLanguage : Language targetLang []} ->
+  ObjectMap sourceLang targetLang ->
+  Type
+ObjectMapPreservesInterpretation {sourceLang} {targetLang}
+  {sourceIsLanguage} {targetIsLanguage} objectMap =
+    (object : GebSExp) -> (isObject : Object object [sourceLang]) ->
+    interpretObject object {isObject} =
+      interpretObject (fst (objectMap object isObject))
+        {isObject=(snd (objectMap object isObject))}
+
+FunctorPreservesInterpretation : {sourceLang, targetLang : GebSExp} ->
+  {auto sourceIsLanguage : Language sourceLang []} ->
+  {auto targetIsLanguage : Language targetLang []} ->
+  (objectMap : ObjectMap sourceLang targetLang) ->
+  (preservesObjects : ObjectMapPreservesInterpretation objectMap) ->
+  LanguageFunctor objectMap ->
+  Type
+FunctorPreservesInterpretation {sourceLang} {targetLang}
+  {sourceIsLanguage} {targetIsLanguage} objectMap preservesObjects functor =
+    (domain, codomain : GebSExp) ->
+    (domainObject : Object domain [sourceLang]) ->
+    (codomainObject : Object codomain [sourceLang]) ->
+    (morphism : GebSExp) ->
+    (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
+    (x : interpretObject {isObject=domainObject} domain) ->
+    interpretMorphism morphism x {isMorphism} =
+      (rewrite preservesObjects codomain codomainObject in
+       interpretMorphism
+        {domainObject=(snd (objectMap domain domainObject))}
+        {codomainObject=(snd (objectMap codomain codomainObject))}
+        (fst (functor
+          domain codomain domainObject codomainObject morphism isMorphism))
+        (rewrite sym (preservesObjects domain domainObject) in x)
+        {isMorphism=(
+          (snd (functor
+            domain codomain domainObject codomainObject morphism isMorphism)))})
 
 {-
   TermSort : GebExpressionSort
