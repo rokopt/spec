@@ -66,6 +66,7 @@ data GebAtom : Type where
   GATerminal : GebAtom
   GAProduct : GebAtom
   GACoproduct : GebAtom
+  GAExpressionObject : GebAtom
 
   GAObjectExpression : GebAtom
   GAMorphismExpression : GebAtom
@@ -150,6 +151,7 @@ gaEncode GASortExpression = 41
 gaEncode GALanguageExpression = 42
 gaEncode GAExpressionSort = 43
 gaEncode GAExpressionRefinement = 44
+gaEncode GAExpressionObject = 45
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -198,6 +200,7 @@ gaDecode 41 = Just GASortExpression
 gaDecode 42 = Just GALanguageExpression
 gaDecode 43 = Just GAExpressionSort
 gaDecode 44 = Just GAExpressionRefinement
+gaDecode 45 = Just GAExpressionObject
 gaDecode _ = Nothing
 
 export
@@ -247,6 +250,7 @@ gaDecodeEncodeIsJust GASortExpression = Refl
 gaDecodeEncodeIsJust GALanguageExpression = Refl
 gaDecodeEncodeIsJust GAExpressionSort = Refl
 gaDecodeEncodeIsJust GAExpressionRefinement = Refl
+gaDecodeEncodeIsJust GAExpressionObject = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -295,6 +299,7 @@ gebAtomToString GASortExpression = "SortExpression"
 gebAtomToString GALanguageExpression = "LanguageExpression"
 gebAtomToString GAExpressionSort = "ExpressionSort"
 gebAtomToString GAExpressionRefinement = "ExpressionRefinement"
+gebAtomToString GAExpressionObject = "ExpressionObject"
 
 public export
 Show GebAtom where
@@ -400,6 +405,17 @@ mutual
       Object (GAInitial $*** lang) [lang]
     Terminal : (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
       Object (GATerminal $*** lang) [lang]
+
+    -- | Reflects expressions of each refinement into each language.
+    -- | (In particular, this might reflect into language X an expression
+    -- | of language Y, or an expression of Geb itself.)
+    ExpressionObject : {lang, sort : GebSExp} -> (refinement : GebSExp) ->
+      {auto isLanguage : Language lang []} ->
+      {auto isSort : Sort sort []} ->
+      {auto isRefinement :
+        Refinement refinement
+          [GAExpressionRefinement $* [sort, refinement]]} ->
+      Object (GAExpressionObject $* [lang, refinement]) [lang]
 
   -- | Takes an "implicit" language parameter and two explicit
   -- | object parameters, which must have the same language.
