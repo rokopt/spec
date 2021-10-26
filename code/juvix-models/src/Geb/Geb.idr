@@ -35,6 +35,7 @@ data GebAtom : Type where
   GASortSort : GebAtom
   GAObjectSort : GebAtom
   GAMorphismSort : GebAtom
+  GAExpressionSort : GebAtom
 
   -- | The notion of a language itself.
   GALanguageRefinement : GebAtom
@@ -44,6 +45,9 @@ data GebAtom : Type where
 
   -- | The notion of a refinement.
   GARefinementRefinement : GebAtom
+
+  -- | The notion of an expression.
+  GAExpressionRefinement : GebAtom
 
   -- | The minimal programming language.
   GAMinimal : GebAtom
@@ -144,6 +148,8 @@ gaEncode GAMorphismSort = 39
 gaEncode GARefinementExpression = 40
 gaEncode GASortExpression = 41
 gaEncode GALanguageExpression = 42
+gaEncode GAExpressionSort = 43
+gaEncode GAExpressionRefinement = 44
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -190,6 +196,8 @@ gaDecode 39 = Just GAMorphismSort
 gaDecode 40 = Just GARefinementExpression
 gaDecode 41 = Just GASortExpression
 gaDecode 42 = Just GALanguageExpression
+gaDecode 43 = Just GAExpressionSort
+gaDecode 44 = Just GAExpressionRefinement
 gaDecode _ = Nothing
 
 export
@@ -237,6 +245,8 @@ gaDecodeEncodeIsJust GAMorphismSort = Refl
 gaDecodeEncodeIsJust GARefinementExpression = Refl
 gaDecodeEncodeIsJust GASortExpression = Refl
 gaDecodeEncodeIsJust GALanguageExpression = Refl
+gaDecodeEncodeIsJust GAExpressionSort = Refl
+gaDecodeEncodeIsJust GAExpressionRefinement = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -283,6 +293,8 @@ gebAtomToString GAMorphismSort = "MorphismSort"
 gebAtomToString GARefinementExpression = "RefinementExpression"
 gebAtomToString GASortExpression = "SortExpression"
 gebAtomToString GALanguageExpression = "LanguageExpression"
+gebAtomToString GAExpressionSort = "ExpressionSort"
+gebAtomToString GAExpressionRefinement = "ExpressionRefinement"
 
 public export
 Show GebAtom where
@@ -379,10 +391,13 @@ mutual
   public export
   data Language : GebSExp -> GebSList -> Type where
     Minimal : Language ($^ GAMinimal) []
+    HigherOrder : Language ($^ GAHigherOrder) []
 
   -- | Takes one parameter, a language.
   public export
   data Object : GebSExp -> GebSList -> Type where
+    Initial : (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
+      Object (GAInitial $*** lang) [lang]
     Terminal : (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
       Object (GATerminal $*** lang) [lang]
 
@@ -390,6 +405,10 @@ mutual
   -- | object parameters, which must have the same language.
   public export
   data Morphism : GebSExp -> GebSList -> Type where
+    Identity : {lang : GebSExp} -> (obj : GebSExp) ->
+      {auto isLanguage : Language lang []} ->
+      {auto isObj : Object obj [lang]} ->
+      Morphism (GAIdentity $*** obj) [lang, obj]
     Compose : {lang, a, b, c : GebSExp} ->
       {auto isLanguage : Language lang []} ->
       {auto aObj : Object a [lang]} ->
@@ -406,6 +425,7 @@ mutual
   data Sort : GebSExp -> GebSList -> Type where
     SortSort : Sort ($^ GASortSort) []
     RefinementSort : Sort ($^ GARefinementSort) []
+    ExpressionSort : Sort ($^ GAExpressionSort) []
     LanguageSort : Sort ($^ GALanguageSort) []
     ObjectSort : Sort ($^ GAObjectSort) []
     MorphismSort : Sort ($^ GAMorphismSort) []
@@ -419,6 +439,11 @@ mutual
     SortRefinement : Refinement ($^ GASortRefinement) [$^ GASortSort]
     RefinementRefinement : (s : GebSExp) -> {auto isSort : Sort s []} ->
       Refinement (GARefinementRefinement $*** s) [$^ GARefinementSort]
+    ExpressionRefinement : {s : GebSExp} -> {auto isSort : Sort s []} ->
+      (r : GebSExp) ->
+      {auto isRefinement :
+        Refinement r [GARefinementRefinement $*** s]} ->
+      Refinement (GAExpressionRefinement $* [s, r]) [$^ GAExpressionSort]
     LanguageRefinement :
       Refinement ($^ GALanguageRefinement) [$^ GALanguageSort]
     ObjectRefinement : (lang : GebSExp) ->
@@ -466,15 +491,6 @@ mutual
         [$^ GAMorphismSort, GAMorphismRefinement $* [lang, domain, codomain]]
 
 {-
--- | One of the concepts for which we have an S-expression representation is
--- | the sort of S-expression itself -- whether an S-expression represents
--- | a language, for example, or an object, morphism, or term.
-
-public export
-data GebExpressionSort : Type where
-  LanguageSort : GebExpressionSort
-  ObjectSort : GebExpressionSort
-  MorphismSort : GebExpressionSort
   TermSort : GebExpressionSort
 
 public export
