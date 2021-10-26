@@ -502,6 +502,10 @@ mutual
       Expression (GAMorphismExpression $*** morphism)
         [$^ GAMorphismSort, GAMorphismRefinement $* [lang, domain, codomain]]
 
+-----------------------------------------------------
+---- Type-checking in Idris-2 of Geb expressions ----
+-----------------------------------------------------
+
 mutual
   public export
   checkExpression : (expression : GebSExp) -> (refinement : GebSList) ->
@@ -517,6 +521,10 @@ mutual
   checkExpressionUnique : {x : GebSExp} -> {l : GebSList} ->
     (exp, exp' : Expression x l) -> exp = exp'
   checkExpressionUnique {x} {l} exp exp' = ?checkExpressionUnique_hole
+
+--------------------------------------------------------
+---- Interpretation into Idris-2 of Geb expressions ----
+--------------------------------------------------------
 
 mutual
   public export
@@ -621,36 +629,56 @@ FunctorPreservesInterpretation {sourceLang} {targetLang}
           (snd (functor
             domain codomain domainObject codomainObject morphism isMorphism)))})
 
+------------------------------------------------------
+---- Operational semantics through term reduction ----
+------------------------------------------------------
+
+-- | Above, we define the semantics of Geb through interpretation into
+-- | Idris-2.  Here, we do so through more explicit operational semantics,
+-- | with representation of terms.  This allows us to examine interpretation
+-- | step-by-step, and also, through small-step semantics, to interpret
+-- | non-terminating functions.
+
+public export
+data TermSort : (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
+  Type where
+    TermSortType :
+      (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
+      (object : GebSExp) -> {auto isObject : Object object [lang]} ->
+      TermSort lang
+    TermSortFunction :
+      (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
+      (domain, codomain : GebSExp) ->
+      {auto domainObject : Object domain [lang]} ->
+      {auto codomainObject : Object codomain [lang]} ->
+      TermSort lang
+
+public export
+data Term : (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
+  (numApplications : Nat) -> TermSort lang -> Type where
+    UnappliedMorphismTerm :
+      {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
+      {domain, codomain : GebSExp} ->
+      {auto domainObject : Object domain [lang]} ->
+      {auto codomainObject : Object codomain [lang]} ->
+      (morphism : GebSExp) ->
+      {auto isMorphism : Morphism morphism [lang, domain, codomain]} ->
+      Term lang 0 $ TermSortFunction lang domain codomain
+    Application :
+      {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
+      {domain, codomain : GebSExp} ->
+      {auto domainObject : Object domain [lang]} ->
+      {auto codomainObject : Object codomain [lang]} ->
+      {morphismApplications, termApplications : Nat} ->
+      Term lang morphismApplications (TermSortFunction lang domain codomain) ->
+      Term lang termApplications (TermSortType lang domain) ->
+      Term lang
+        (S $ morphismApplications + termApplications)
+        (TermSortType lang codomain)
+    UnitTerm : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
+      Term lang 0 $ TermSortType lang (GATerminal $*** lang)
+
 {-
-  TermSort : GebExpressionSort
-
-public export
-gebSortToExp : GebExpressionSort -> GebSExp
-gebSortToExp LanguageSort = $^ GALanguageRefinement
-gebSortToExp ObjectSort = $^ GAObject
-gebSortToExp MorphismSort = $^ GAMorphism
-gebSortToExp TermSort = $^ GATerm
-
-public export
-gebExpToSort : GebSExp -> Maybe GebExpressionSort
-gebExpToSort (GALanguageRefinement $* []) = Just LanguageSort
-gebExpToSort (GAObject $* []) = Just ObjectSort
-gebExpToSort (GAMorphism $* []) = Just MorphismSort
-gebExpToSort (GATerm $* []) = Just TermSort
-gebExpToSort _ = Nothing
-
-export
-gebExpressionSortRepresentationComplete :
-  (c : GebExpressionSort) -> gebExpToSort (gebSortToExp c) = Just c
-gebExpressionSortRepresentationComplete LanguageSort = Refl
-gebExpressionSortRepresentationComplete ObjectSort = Refl
-gebExpressionSortRepresentationComplete MorphismSort = Refl
-gebExpressionSortRepresentationComplete TermSort = Refl
-
-public export
-Show GebExpressionSort where
-  show c = show (gebSortToExp c)
-
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
 ----------------------------------------------------------------
@@ -689,27 +717,6 @@ Show GebExpressionSort where
 -- | language are general computable functions with effects, the terms are
 -- | S-expressions, and the types are specifications of the domains,
 -- | codomains, input-output behavior, and the effects of functions.
-public export
-data Language : Type where
-  MinimalLanguage : Language
-
-public export
-gebLanguageToExp : Language -> GebSExp
-gebLanguageToExp MinimalLanguage = $^ GAMinimal
-
-public export
-gebExpToLanguage : GebSExp -> Maybe Language
-gebExpToLanguage (GAMinimal $* []) = Just MinimalLanguage
-gebExpToLanguage _ = Nothing
-
-public export
-gebLanguageRepresentationComplete : (r : Language) ->
-  gebExpToLanguage (gebLanguageToExp r) = Just r
-gebLanguageRepresentationComplete MinimalLanguage = Refl
-
-public export
-Show Language where
-  show l = show (gebLanguageToExp l)
 
 -------------------------
 ---- Minimal objects ----
@@ -735,78 +742,6 @@ data MinimalObject : Type where
   Coproduct : MinimalObject -> MinimalObject -> MinimalObject
   ObjectExpression : MinimalObject
   MorphismExpression : MinimalObject -> MinimalObject -> MinimalObject
-
-public export
-gebMinimalObjectToExp : MinimalObject -> GebSExp
-gebMinimalObjectToExp Initial = $^ GAInitial
-gebMinimalObjectToExp Terminal = $^ GATerminal
-gebMinimalObjectToExp (Product r r') =
-  GAProduct $* [gebMinimalObjectToExp r, gebMinimalObjectToExp r']
-gebMinimalObjectToExp (Coproduct r r') =
-  GACoproduct $* [gebMinimalObjectToExp r, gebMinimalObjectToExp r']
-gebMinimalObjectToExp ObjectExpression = $^ GAObjectExpression
-gebMinimalObjectToExp (MorphismExpression domain codomain) =
-  GAMorphismExpression $*
-    [gebMinimalObjectToExp domain, gebMinimalObjectToExp codomain]
-
-public export
-gebExpToMinimalObject : GebSExp -> Maybe MinimalObject
-gebExpToMinimalObject (GAInitial $* []) = Just Initial
-gebExpToMinimalObject (GATerminal $* []) = Just Terminal
-gebExpToMinimalObject (GAProduct $* [r, r']) =
-  case (gebExpToMinimalObject r, gebExpToMinimalObject r') of
-    (Just o, Just o') => Just $ Product o o'
-    _ => Nothing
-gebExpToMinimalObject (GACoproduct $* [r, r']) =
-  case (gebExpToMinimalObject r, gebExpToMinimalObject r') of
-    (Just o, Just o') => Just $ Coproduct o o'
-    _ => Nothing
-gebExpToMinimalObject (GAObjectExpression $* []) = Just ObjectExpression
-gebExpToMinimalObject (GAMorphismExpression $* [domainRep, codomainRep]) =
-  case (gebExpToMinimalObject domainRep, gebExpToMinimalObject codomainRep) of
-    (Just domain, Just codomain) => Just $ MorphismExpression domain codomain
-    _ => Nothing
-gebExpToMinimalObject _ = Nothing
-
-public export
-gebMinimalObjectRepresentationComplete : (r : MinimalObject) ->
-  gebExpToMinimalObject (gebMinimalObjectToExp r) = Just r
-gebMinimalObjectRepresentationComplete Initial = Refl
-gebMinimalObjectRepresentationComplete Terminal = Refl
-gebMinimalObjectRepresentationComplete (Product r r') =
-  rewrite gebMinimalObjectRepresentationComplete r in
-  rewrite gebMinimalObjectRepresentationComplete r' in
-  Refl
-gebMinimalObjectRepresentationComplete (Coproduct r r') =
-  rewrite gebMinimalObjectRepresentationComplete r in
-  rewrite gebMinimalObjectRepresentationComplete r' in
-  Refl
-gebMinimalObjectRepresentationComplete ObjectExpression = Refl
-gebMinimalObjectRepresentationComplete (MorphismExpression r r') =
-  rewrite gebMinimalObjectRepresentationComplete r in
-  rewrite gebMinimalObjectRepresentationComplete r' in
-  Refl
-
-public export
-Show MinimalObject where
-  show o = show (gebMinimalObjectToExp o)
-
-export
-minimalObjectDecEq : DecEqPred MinimalObject
-minimalObjectDecEq =
-  encodingDecEq
-    gebMinimalObjectToExp
-    gebExpToMinimalObject
-    gebMinimalObjectRepresentationComplete
-    decEq
-
-public export
-DecEq MinimalObject where
-  decEq = minimalObjectDecEq
-
-public export
-Eq MinimalObject using decEqToEq where
-  (==) = (==)
 
 mutual
   public export
@@ -846,402 +781,6 @@ mutual
         (minimalMorphismCodomain eqCase) = (minimalMorphismCodomain neqCase)} ->
       MinimalMorphism
 
-  public export
-  data MinimalExpression : Type where
-    MinimalObjectExp : MinimalObject -> MinimalExpression
-    MinimalMorphismExp : MinimalMorphism -> MinimalExpression
-
-  public export
-  minimalMorphismDomain : MinimalMorphism -> MinimalObject
-  minimalMorphismDomain (Identity object) = object
-  minimalMorphismDomain (Compose g f) = minimalMorphismDomain f
-  minimalMorphismDomain (FromInitial _) = Initial
-  minimalMorphismDomain (ToTerminal domain) = domain
-  minimalMorphismDomain (ProductIntro f g) = minimalMorphismDomain f
-  minimalMorphismDomain (ProductElimLeft a b) = Product a b
-  minimalMorphismDomain (ProductElimRight a b) = Product a b
-  minimalMorphismDomain (CoproductElim f g) =
-    Coproduct (minimalMorphismDomain f) (minimalMorphismDomain g)
-  minimalMorphismDomain (CoproductIntroLeft a b) = a
-  minimalMorphismDomain (CoproductIntroRight a b) = b
-  minimalMorphismDomain (ExpressionIntro _) = Terminal
-  minimalMorphismDomain (ExpressionElim exp _ _ _) = minimalMorphismDomain exp
-
-  public export
-  minimalMorphismCodomain : MinimalMorphism -> MinimalObject
-  minimalMorphismCodomain (Identity object) = object
-  minimalMorphismCodomain (Compose g f) = minimalMorphismCodomain g
-  minimalMorphismCodomain (FromInitial codomain) = codomain
-  minimalMorphismCodomain (ToTerminal _) = Terminal
-  minimalMorphismCodomain (ProductIntro f g) =
-    Product (minimalMorphismCodomain f) (minimalMorphismCodomain g)
-  minimalMorphismCodomain (ProductElimLeft a b) = a
-  minimalMorphismCodomain (ProductElimRight a b) = b
-  minimalMorphismCodomain (CoproductElim f g) = minimalMorphismCodomain f
-  minimalMorphismCodomain (CoproductIntroLeft a b) = Coproduct a b
-  minimalMorphismCodomain (CoproductIntroRight a b) = Coproduct a b
-  minimalMorphismCodomain (ExpressionIntro _) = ObjectExpression
-  minimalMorphismCodomain (ExpressionElim _ _ eqCase _) =
-    minimalMorphismCodomain eqCase
-
-mutual
-  public export
-  gebMinimalExpressionToExp : MinimalExpression -> GebSExp
-  gebMinimalExpressionToExp (MinimalObjectExp o) = gebMinimalObjectToExp o
-  gebMinimalExpressionToExp (MinimalMorphismExp m) = gebMinimalMorphismToExp m
-
-  public export
-  gebMinimalMorphismToExp : MinimalMorphism -> GebSExp
-  gebMinimalMorphismToExp (Identity object) =
-    GAIdentity $* [gebMinimalObjectToExp object]
-  gebMinimalMorphismToExp (Compose g f) =
-    GACompose $* [gebMinimalMorphismToExp g, gebMinimalMorphismToExp f]
-  gebMinimalMorphismToExp (FromInitial codomain) =
-    GAFromInitial $* [gebMinimalObjectToExp codomain]
-  gebMinimalMorphismToExp (ToTerminal domain) =
-    GAToTerminal $* [gebMinimalObjectToExp domain]
-  gebMinimalMorphismToExp (ProductIntro f g) =
-    GAProductIntro $* [gebMinimalMorphismToExp f, gebMinimalMorphismToExp g]
-  gebMinimalMorphismToExp (ProductElimLeft a b) =
-    GAProductElimLeft $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
-  gebMinimalMorphismToExp (ProductElimRight a b) =
-    GAProductElimRight $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
-  gebMinimalMorphismToExp (CoproductElim f g) =
-    GACoproductElim $* [gebMinimalMorphismToExp f, gebMinimalMorphismToExp g]
-  gebMinimalMorphismToExp (CoproductIntroLeft a b) =
-    GACoproductIntroLeft $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
-  gebMinimalMorphismToExp (CoproductIntroRight a b) =
-    GACoproductIntroRight $* [gebMinimalObjectToExp a, gebMinimalObjectToExp b]
-  gebMinimalMorphismToExp (ExpressionIntro x) =
-    GAExpressionIntro $* [gebMinimalObjectToExp x]
-  gebMinimalMorphismToExp (ExpressionElim exp exp' eqCase neqCase) =
-    GAExpressionElim $*
-      [gebMinimalMorphismToExp exp,
-       gebMinimalMorphismToExp exp',
-       gebMinimalMorphismToExp eqCase,
-       gebMinimalMorphismToExp neqCase]
-
-public export
-gebMorphismExpIsNotObject : (m : MinimalMorphism) ->
-  gebExpToMinimalObject (gebMinimalMorphismToExp m) = Nothing
-gebMorphismExpIsNotObject (Identity _) = Refl
-gebMorphismExpIsNotObject (Compose _ _) = Refl
-gebMorphismExpIsNotObject (FromInitial _) = Refl
-gebMorphismExpIsNotObject (ToTerminal _) = Refl
-gebMorphismExpIsNotObject (ProductIntro _ _) = Refl
-gebMorphismExpIsNotObject (ProductElimLeft _ _) = Refl
-gebMorphismExpIsNotObject (ProductElimRight _ _) = Refl
-gebMorphismExpIsNotObject (CoproductElim _ _) = Refl
-gebMorphismExpIsNotObject (CoproductIntroLeft _ _) = Refl
-gebMorphismExpIsNotObject (CoproductIntroRight _ _) = Refl
-gebMorphismExpIsNotObject (ExpressionIntro _) = Refl
-gebMorphismExpIsNotObject (ExpressionElim _ _ _ _) = Refl
-
-mutual
-  public export
-  gebExpToMinimalExp : GebSExp -> Maybe MinimalExpression
-  gebExpToMinimalExp x with (gebExpToMinimalObject x, gebExpToMinimalMorphism x)
-    proof p
-      gebExpToMinimalExp x | (Just o, Just m) =
-        let pfst = PairFstEq p in
-        let psnd = PairSndEq p in
-        void (gebExpIsNotBothObjectAndMorphism x o m pfst psnd)
-      gebExpToMinimalExp x | (Just o, Nothing) = Just $ MinimalObjectExp o
-      gebExpToMinimalExp x | (Nothing, Just m) = Just $ MinimalMorphismExp m
-      gebExpToMinimalExp x | (Nothing, Nothing) = Nothing
-
-  public export
-  gebExpToMinimalMorphism : GebSExp -> Maybe MinimalMorphism
-  gebExpToMinimalMorphism (GAIdentity $* [objectExp]) =
-    case gebExpToMinimalObject objectExp of
-      Just object => Just $ Identity object
-      _ => Nothing
-  gebExpToMinimalMorphism (GACompose $* [gExp, fExp]) =
-    case (gebExpToMinimalMorphism gExp, gebExpToMinimalMorphism fExp) of
-      (Just g, Just f) =>
-        case (minimalObjectDecEq
-          (minimalMorphismCodomain f) (minimalMorphismDomain g)) of
-            Yes composable => Just $ Compose g f {composable}
-            No _ => Nothing
-      _ => Nothing
-  gebExpToMinimalMorphism (GAFromInitial $* [codomainExp]) =
-    case gebExpToMinimalObject codomainExp of
-      Just codomain => Just $ FromInitial codomain
-      _ => Nothing
-  gebExpToMinimalMorphism (GAToTerminal $* [domainExp]) =
-    case gebExpToMinimalObject domainExp of
-      Just domain => Just $ ToTerminal domain
-      _ => Nothing
-  gebExpToMinimalMorphism (GAProductIntro $* [fExp, gExp]) =
-    case (gebExpToMinimalMorphism fExp, gebExpToMinimalMorphism gExp) of
-      (Just f, Just g) =>
-        case (minimalObjectDecEq
-          (minimalMorphismDomain f) (minimalMorphismDomain g)) of
-            Yes domainsMatch => Just $ ProductIntro f g {domainsMatch}
-            No _ => Nothing
-      _ => Nothing
-  gebExpToMinimalMorphism (GAProductElimLeft $* [aExp, bExp]) =
-    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
-      (Just a, Just b) => Just $ ProductElimLeft a b
-      _ => Nothing
-  gebExpToMinimalMorphism (GAProductElimRight $* [aExp, bExp]) =
-    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
-      (Just a, Just b) => Just $ ProductElimRight a b
-      _ => Nothing
-  gebExpToMinimalMorphism (GACoproductElim $* [fExp, gExp]) =
-    case (gebExpToMinimalMorphism fExp, gebExpToMinimalMorphism gExp) of
-      (Just f, Just g) =>
-        case (minimalObjectDecEq
-          (minimalMorphismCodomain f) (minimalMorphismCodomain g)) of
-            Yes codomainsMatch => Just $ CoproductElim f g {codomainsMatch}
-            No _ => Nothing
-      _ => Nothing
-  gebExpToMinimalMorphism (GACoproductIntroLeft $* [aExp, bExp]) =
-    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
-      (Just a, Just b) => Just $ CoproductIntroLeft a b
-      _ => Nothing
-  gebExpToMinimalMorphism (GACoproductIntroRight $* [aExp, bExp]) =
-    case (gebExpToMinimalObject aExp, gebExpToMinimalObject bExp) of
-      (Just a, Just b) => Just $ CoproductIntroRight a b
-      _ => Nothing
-  gebExpToMinimalMorphism (GAExpressionIntro $* [x]) =
-    case gebExpToMinimalObject x of
-      Just minimalObj => Just $ ExpressionIntro minimalObj
-      _ => Nothing
-  gebExpToMinimalMorphism (GAExpressionElim $* [exp, exp', eqExp, neqExp]) =
-    case (gebExpToMinimalMorphism exp, gebExpToMinimalMorphism exp',
-          gebExpToMinimalMorphism eqExp, gebExpToMinimalMorphism neqExp) of
-      (Just exp, Just exp', Just eqCase, Just neqCase) =>
-        case
-          (minimalObjectDecEq
-            (minimalMorphismDomain exp) (minimalMorphismDomain exp'),
-           minimalObjectDecEq (minimalMorphismCodomain exp) ObjectExpression,
-           minimalObjectDecEq
-            (minimalMorphismCodomain exp) (minimalMorphismCodomain exp')) of
-              (Yes domainsMatch, Yes expCodomainIsExpression,
-              Yes expCodomainsMatch) =>
-                case
-                  (minimalObjectDecEq
-                    (minimalMorphismDomain exp)
-                    (minimalMorphismDomain eqCase),
-                  minimalObjectDecEq
-                    (minimalMorphismDomain exp)
-                    (minimalMorphismDomain neqCase),
-                  minimalObjectDecEq
-                    (minimalMorphismCodomain eqCase)
-                    (minimalMorphismCodomain neqCase)) of
-                (Yes eqDomainsMatch, Yes neqDomainsMatch, Yes codomainsMatch) =>
-                  Just $ ExpressionElim exp exp' eqCase neqCase
-                _ => Nothing
-              _ => Nothing
-      _ => Nothing
-  gebExpToMinimalMorphism _ = Nothing
-
-  public export
-  gebExpIsNotBothObjectAndMorphism : (x : GebSExp) ->
-    (o : MinimalObject) -> (m : MinimalMorphism) ->
-    gebExpToMinimalObject x = Just o -> gebExpToMinimalMorphism x = Just m ->
-    Void
-  gebExpIsNotBothObjectAndMorphism (GALanguageRefinement $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAMinimal $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAObject $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAInitial $* _) _ _ eqo eqm =
-    case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GATerminal $* _) _ _ eqo eqm =
-    case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAProduct $* _) _ _ eqo eqm =
-    case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GACoproduct $* _) _ _ eqo eqm =
-    case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAObjectExpression $* _) _ _ eqo eqm =
-    case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAMorphismExpression $* _) _ _ eqo eqm =
-    case eqm of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAMorphism $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GATerm $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAUnitTerm $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAExFalsoTerm $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAMorphismTerm $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAApplication $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAFromInitial $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAToTerminal $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAIdentity $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GACompose $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAProductIntro $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAProductElimLeft $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAProductElimRight $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GACoproductElim $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GACoproductIntroLeft $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GACoproductIntroRight $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAExpressionIntro $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-  gebExpIsNotBothObjectAndMorphism (GAExpressionElim $* _) _ _ eqo eqm =
-    case eqo of Refl impossible
-
-public export
-gebObjectExpIsNotMorphism : (o : MinimalObject) ->
-  gebExpToMinimalMorphism (gebMinimalObjectToExp o) = Nothing
-gebObjectExpIsNotMorphism Initial = Refl
-gebObjectExpIsNotMorphism Terminal = Refl
-gebObjectExpIsNotMorphism (Product _ _) = Refl
-gebObjectExpIsNotMorphism (Coproduct _ _) = Refl
-gebObjectExpIsNotMorphism ObjectExpression = Refl
-gebObjectExpIsNotMorphism (MorphismExpression _ _) = Refl
-
-public export
-gebMinimalMorphismRepresentationComplete : (r : MinimalMorphism) ->
-  gebExpToMinimalMorphism (gebMinimalMorphismToExp r) = Just r
-gebMinimalMorphismRepresentationComplete (Identity object) =
-  rewrite gebMinimalObjectRepresentationComplete object in
-  Refl
-gebMinimalMorphismRepresentationComplete (Compose g f {composable}) =
-  rewrite gebMinimalMorphismRepresentationComplete g in
-  rewrite gebMinimalMorphismRepresentationComplete f in
-  rewrite composable in
-  rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain g) in
-  rewrite uip composable _ in
-  Refl
-gebMinimalMorphismRepresentationComplete (FromInitial codomain) =
-  rewrite gebMinimalObjectRepresentationComplete codomain in
-  Refl
-gebMinimalMorphismRepresentationComplete (ToTerminal domain) =
-  rewrite gebMinimalObjectRepresentationComplete domain in
-  Refl
-gebMinimalMorphismRepresentationComplete (ProductIntro f g {domainsMatch}) =
-  rewrite gebMinimalMorphismRepresentationComplete f in
-  rewrite gebMinimalMorphismRepresentationComplete g in
-  rewrite domainsMatch in
-  rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain g) in
-  rewrite uip domainsMatch _ in
-  Refl
-gebMinimalMorphismRepresentationComplete (ProductElimLeft a b) =
-  rewrite gebMinimalObjectRepresentationComplete a in
-  rewrite gebMinimalObjectRepresentationComplete b in
-  Refl
-gebMinimalMorphismRepresentationComplete (ProductElimRight a b) =
-  rewrite gebMinimalObjectRepresentationComplete a in
-  rewrite gebMinimalObjectRepresentationComplete b in
-  Refl
-gebMinimalMorphismRepresentationComplete (CoproductElim f g {codomainsMatch}) =
-  rewrite gebMinimalMorphismRepresentationComplete f in
-  rewrite gebMinimalMorphismRepresentationComplete g in
-  rewrite codomainsMatch in
-  rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain g) in
-  rewrite uip codomainsMatch _ in
-  Refl
-gebMinimalMorphismRepresentationComplete (CoproductIntroLeft a b) =
-  rewrite gebMinimalObjectRepresentationComplete a in
-  rewrite gebMinimalObjectRepresentationComplete b in
-  Refl
-gebMinimalMorphismRepresentationComplete (CoproductIntroRight a b) =
-  rewrite gebMinimalObjectRepresentationComplete a in
-  rewrite gebMinimalObjectRepresentationComplete b in
-  Refl
-gebMinimalMorphismRepresentationComplete (ExpressionIntro o) =
-  rewrite gebMinimalObjectRepresentationComplete o in
-  Refl
-gebMinimalMorphismRepresentationComplete
-  (ExpressionElim exp exp' eqCase neqCase
-    {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
-    {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) =
-      rewrite gebMinimalMorphismRepresentationComplete exp in
-      rewrite gebMinimalMorphismRepresentationComplete exp' in
-      rewrite gebMinimalMorphismRepresentationComplete eqCase in
-      rewrite gebMinimalMorphismRepresentationComplete neqCase in
-      rewrite sym expDomainsMatch in
-      rewrite sym expCodomainIsExpression in
-      rewrite expCodomainsMatch in
-      rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
-      rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain exp') in
-      rewrite sym eqDomainMatches in
-      rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
-      rewrite sym neqDomainMatches in
-      rewrite decEqRefl minimalObjectDecEq (minimalMorphismDomain exp) in
-      rewrite sym eqCodomainsMatch in
-      rewrite decEqRefl minimalObjectDecEq (minimalMorphismCodomain eqCase) in
-      rewrite uip eqCodomainsMatch _ in
-      rewrite uip neqDomainMatches _ in
-      rewrite uip eqDomainMatches _ in
-      rewrite uip expCodomainsMatch _ in
-      rewrite uip expCodomainIsExpression _ in
-      rewrite uip expDomainsMatch _ in
-      Refl
-
-export
-minimalMorphismDecEq : DecEqPred MinimalMorphism
-minimalMorphismDecEq =
-  encodingDecEq
-    gebMinimalMorphismToExp
-    gebExpToMinimalMorphism
-    gebMinimalMorphismRepresentationComplete
-    decEq
-
-public export
-gebMinimalExpRepresentationComplete : (r : MinimalExpression) ->
-  gebExpToMinimalExp (gebMinimalExpressionToExp r) = Just r
-gebMinimalExpRepresentationComplete (MinimalObjectExp o) =
-  rewrite gebObjectExpIsNotMorphism o in
-  rewrite gebMinimalObjectRepresentationComplete o in
-  Refl
-gebMinimalExpRepresentationComplete (MinimalMorphismExp m) =
-  rewrite gebMorphismExpIsNotObject m in
-  rewrite gebMinimalMorphismRepresentationComplete m in
-  Refl
-
-public export
-DecEq MinimalMorphism where
-  decEq = minimalMorphismDecEq
-
-public export
-Eq MinimalMorphism using decEqToEq where
-  (==) = (==)
-
-public export
-Show MinimalMorphism where
-  show m = show (gebMinimalMorphismToExp m)
-
-public export
-minimalExpressionDecEq : DecEqPred MinimalExpression
-minimalExpressionDecEq (MinimalObjectExp x) (MinimalObjectExp x') =
-  case decEq x x' of
-    Yes Refl => Yes Refl
-    No neq => No $ \eq => case eq of Refl => neq Refl
-minimalExpressionDecEq (MinimalObjectExp x) (MinimalMorphismExp x') =
-  No $ \eq => case eq of Refl impossible
-minimalExpressionDecEq (MinimalMorphismExp x) (MinimalObjectExp x') =
-  No $ \eq => case eq of Refl impossible
-minimalExpressionDecEq (MinimalMorphismExp x) (MinimalMorphismExp x') =
-  case decEq x x' of
-    Yes Refl => Yes Refl
-    No neq => No $ \eq => case eq of Refl => neq Refl
-
-public export
-DecEq MinimalExpression where
-  decEq = minimalExpressionDecEq
-
-public export
-Eq MinimalExpression using decEqToEq where
-  (==) = (==)
-
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
 -----------------------------------------------------------------------------
@@ -1258,21 +797,6 @@ interpretMinimalObject ObjectExpression = MinimalObject
 interpretMinimalObject (MorphismExpression domain codomain) =
   (m : MinimalMorphism **
    (minimalMorphismDomain m = domain, minimalMorphismCodomain m = codomain))
-
-public export
-interpretMinimalMorphismDomain : MinimalMorphism -> Type
-interpretMinimalMorphismDomain r =
-  interpretMinimalObject (minimalMorphismDomain r)
-
-public export
-interpretMinimalMorphismCodomain : MinimalMorphism -> Type
-interpretMinimalMorphismCodomain r =
-  interpretMinimalObject (minimalMorphismCodomain r)
-
-public export
-interpretMinimalMorphismType : MinimalMorphism -> Type
-interpretMinimalMorphismType r =
-  interpretMinimalMorphismDomain r -> interpretMinimalMorphismCodomain r
 
 public export
 interpretMinimalMorphism : (r : MinimalMorphism) ->
@@ -1328,45 +852,6 @@ export
 minimalObjectUnquoteQuoteCorrect : (r : MinimalObject) ->
   minimalObjectUnquote (minimalObjectQuote r) = r
 minimalObjectUnquoteQuoteCorrect r = Refl
-
-------------------------------------------------------
----- Morphism transformations ("compiler passes") ----
-------------------------------------------------------
-
-public export
-MinimalMorphismTransform : Type
-MinimalMorphismTransform = MinimalMorphism -> MinimalMorphism
-
--- | A correct morphism transformation preserves the morphism's domain.
-public export
-MinimalMorphismTransformDomainCorrect : MinimalMorphismTransform -> Type
-MinimalMorphismTransformDomainCorrect transform = (m : MinimalMorphism) ->
-  interpretMinimalMorphismDomain (transform m) =
-    interpretMinimalMorphismDomain m
-
--- | A correct morphism transformation preserves the morphism's codomain.
-public export
-MinimalMorphismTransformCodomainCorrect : MinimalMorphismTransform -> Type
-MinimalMorphismTransformCodomainCorrect transform = (m : MinimalMorphism) ->
-  interpretMinimalMorphismCodomain (transform m) =
-    interpretMinimalMorphismCodomain m
-
--- | A correct morphism transformation preserves extensional equality.
-public export
-MinimalMorphismTransformCorrect : (transform : MinimalMorphismTransform) ->
-  (domainTransformCorrect :
-    MinimalMorphismTransformDomainCorrect transform) ->
-  (codomainTransformCorrect :
-    MinimalMorphismTransformCodomainCorrect transform) ->
-  Type
-MinimalMorphismTransformCorrect
-  transform domainTransformCorrect codomainTransformCorrect =
-    (m : MinimalMorphism) ->
-    (x : interpretMinimalMorphismDomain m) ->
-      (rewrite sym (codomainTransformCorrect m) in
-       interpretMinimalMorphism (transform m)
-         (rewrite domainTransformCorrect m in x)) =
-       interpretMinimalMorphism m x
 
 ------------------------------------------------------------
 ---- Term reduction in the minimal programming language ----
