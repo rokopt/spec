@@ -5,6 +5,7 @@ import public Geb.Geb
 
 %default total
 
+{-
 unitPair : MinimalTerm 0 (MinimalTypeTerm (Product Terminal Terminal))
 unitPair = PairTerm UnitTerm UnitTerm
 
@@ -12,8 +13,6 @@ backAndForth : String
 backAndForth = case (gebExpToMinimalTerm $ gebMinimalTermToExp unitPair) of
   Just term => "Just " ++ show (snd term)
   Nothing => "Nothing"
-
-{-
 
 public export
 GebCategoryObjects : ObjectMap GebAtom
@@ -163,10 +162,10 @@ GebAlgebra = SExpAlgebraSignature
 export
 gebTests : IO ()
 gebTests = do
+  {-
   printLn "Begin gebTests:"
   printLn $ "unitPair=" ++ show unitPair
   printLn $ "backandforth=" ++ backAndForth
-  {-
   printLn $ "lookup=" ++ show (lookup GAInitial GebCategoryObjects)
   printLn $ "sobject initial=" ++
     show (sobject GebCategoryGenerator ($^ GAInitial))

@@ -27,25 +27,50 @@ import public Data.SortedMap
 -- | a compiler.
 public export
 data GebAtom : Type where
+  -- | The notion of sort of refinement -- such as language, object,
+  -- | morphism, or even refinement itself.  (One sort of refinement
+  -- | is "is a refinement".)
+  GARefinementSort : GebAtom
+  GALanguageSort : GebAtom
+  GASortSort : GebAtom
+  GAObjectSort : GebAtom
+  GAMorphismSort : GebAtom
+
   -- | The notion of a language itself.
-  GALanguage : GebAtom
+  GALanguageRefinement : GebAtom
+
+  -- | The notion of a sort.
+  GASortRefinement : GebAtom
+
+  -- | The notion of a refinement.
+  GARefinementRefinement : GebAtom
 
   -- | The minimal programming language.
   GAMinimal : GebAtom
 
+  -- | Higher-order computable functions.
+  GAHigherOrder : GebAtom
+
+  -- | Geb itself.
+  GAGeb : GebAtom
+
   -- | The notion of an object of any programming language.
-  GAObject : GebAtom
+  GAObjectRefinement : GebAtom
 
   -- | Objects common to all programming languages.
   GAInitial : GebAtom
   GATerminal : GebAtom
   GAProduct : GebAtom
   GACoproduct : GebAtom
+
   GAObjectExpression : GebAtom
   GAMorphismExpression : GebAtom
+  GARefinementExpression : GebAtom
+  GASortExpression : GebAtom
+  GALanguageExpression : GebAtom
 
   -- | The notion of a morphism of any programming language.
-  GAMorphism : GebAtom
+  GAMorphismRefinement : GebAtom
 
   -- | Morphisms common to all programming languages.
   GAIdentity : GebAtom
@@ -76,15 +101,15 @@ data GebAtom : Type where
 
 public export
 gaEncode : GebAtom -> Nat
-gaEncode GALanguage = 0
+gaEncode GALanguageRefinement = 0
 gaEncode GAMinimal = 1
-gaEncode GAObject = 2
+gaEncode GAObjectRefinement = 2
 gaEncode GAInitial = 3
 gaEncode GATerminal = 4
 gaEncode GAProduct = 5
 gaEncode GACoproduct = 6
 gaEncode GAObjectExpression = 7
-gaEncode GAMorphism = 8
+gaEncode GAMorphismRefinement = 8
 gaEncode GATerm = 9
 gaEncode GAUnitTerm = 10
 gaEncode GAMorphismTerm = 11
@@ -107,18 +132,30 @@ gaEncode GARightTerm = 27
 gaEncode GAExpressionTerm = 28
 gaEncode GAExFalsoTerm = 29
 gaEncode GAMorphismExpression = 30
+gaEncode GAHigherOrder = 31
+gaEncode GAGeb = 32
+gaEncode GARefinementRefinement = 33
+gaEncode GARefinementSort = 34
+gaEncode GALanguageSort = 35
+gaEncode GASortSort = 36
+gaEncode GASortRefinement = 37
+gaEncode GAObjectSort = 38
+gaEncode GAMorphismSort = 39
+gaEncode GARefinementExpression = 40
+gaEncode GASortExpression = 41
+gaEncode GALanguageExpression = 42
 
 public export
 gaDecode : Nat -> Maybe GebAtom
-gaDecode 0 = Just GALanguage
+gaDecode 0 = Just GALanguageRefinement
 gaDecode 1 = Just GAMinimal
-gaDecode 2 = Just GAObject
+gaDecode 2 = Just GAObjectRefinement
 gaDecode 3 = Just GAInitial
 gaDecode 4 = Just GATerminal
 gaDecode 5 = Just GAProduct
 gaDecode 6 = Just GACoproduct
 gaDecode 7 = Just GAObjectExpression
-gaDecode 8 = Just GAMorphism
+gaDecode 8 = Just GAMorphismRefinement
 gaDecode 9 = Just GATerm
 gaDecode 10 = Just GAUnitTerm
 gaDecode 11 = Just GAMorphismTerm
@@ -141,19 +178,31 @@ gaDecode 27 = Just GARightTerm
 gaDecode 28 = Just GAExpressionTerm
 gaDecode 29 = Just GAExFalsoTerm
 gaDecode 30 = Just GAMorphismExpression
+gaDecode 31 = Just GAHigherOrder
+gaDecode 32 = Just GAGeb
+gaDecode 33 = Just GARefinementRefinement
+gaDecode 34 = Just GARefinementSort
+gaDecode 35 = Just GALanguageSort
+gaDecode 36 = Just GASortSort
+gaDecode 37 = Just GASortRefinement
+gaDecode 38 = Just GAObjectSort
+gaDecode 39 = Just GAMorphismSort
+gaDecode 40 = Just GARefinementExpression
+gaDecode 41 = Just GASortExpression
+gaDecode 42 = Just GALanguageExpression
 gaDecode _ = Nothing
 
 export
 gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
-gaDecodeEncodeIsJust GALanguage = Refl
+gaDecodeEncodeIsJust GALanguageRefinement = Refl
 gaDecodeEncodeIsJust GAMinimal = Refl
-gaDecodeEncodeIsJust GAObject = Refl
+gaDecodeEncodeIsJust GAObjectRefinement = Refl
 gaDecodeEncodeIsJust GAInitial = Refl
 gaDecodeEncodeIsJust GATerminal = Refl
 gaDecodeEncodeIsJust GAProduct = Refl
 gaDecodeEncodeIsJust GACoproduct = Refl
 gaDecodeEncodeIsJust GAObjectExpression = Refl
-gaDecodeEncodeIsJust GAMorphism = Refl
+gaDecodeEncodeIsJust GAMorphismRefinement = Refl
 gaDecodeEncodeIsJust GATerm = Refl
 gaDecodeEncodeIsJust GAUnitTerm = Refl
 gaDecodeEncodeIsJust GAMorphismTerm = Refl
@@ -176,18 +225,30 @@ gaDecodeEncodeIsJust GARightTerm = Refl
 gaDecodeEncodeIsJust GAExpressionTerm = Refl
 gaDecodeEncodeIsJust GAExFalsoTerm = Refl
 gaDecodeEncodeIsJust GAMorphismExpression = Refl
+gaDecodeEncodeIsJust GAHigherOrder = Refl
+gaDecodeEncodeIsJust GAGeb = Refl
+gaDecodeEncodeIsJust GARefinementRefinement = Refl
+gaDecodeEncodeIsJust GARefinementSort = Refl
+gaDecodeEncodeIsJust GALanguageSort = Refl
+gaDecodeEncodeIsJust GASortSort = Refl
+gaDecodeEncodeIsJust GASortRefinement = Refl
+gaDecodeEncodeIsJust GAObjectSort = Refl
+gaDecodeEncodeIsJust GAMorphismSort = Refl
+gaDecodeEncodeIsJust GARefinementExpression = Refl
+gaDecodeEncodeIsJust GASortExpression = Refl
+gaDecodeEncodeIsJust GALanguageExpression = Refl
 
 public export
 gebAtomToString : GebAtom -> String
-gebAtomToString GALanguage = "Language"
+gebAtomToString GALanguageRefinement = "Language"
 gebAtomToString GAMinimal = "Minimal"
-gebAtomToString GAObject = "Object"
+gebAtomToString GAObjectRefinement = "ObjectRefinement"
 gebAtomToString GAInitial = "Initial"
 gebAtomToString GATerminal = "Terminal"
 gebAtomToString GAProduct = "Product"
 gebAtomToString GACoproduct = "Coproduct"
 gebAtomToString GAObjectExpression = "ObjectExpression"
-gebAtomToString GAMorphism = "Morphism"
+gebAtomToString GAMorphismRefinement = "MorphismRefinement"
 gebAtomToString GATerm = "Term"
 gebAtomToString GAUnitTerm = "UnitTerm"
 gebAtomToString GAMorphismTerm = "MorphismTerm"
@@ -210,6 +271,18 @@ gebAtomToString GARightTerm = "RightTerm"
 gebAtomToString GAExpressionTerm = "ExpressionTerm"
 gebAtomToString GAExFalsoTerm = "ExFalsoTerm"
 gebAtomToString GAMorphismExpression = "MorphismExpression"
+gebAtomToString GAHigherOrder = "HigherOrder"
+gebAtomToString GAGeb = "Geb"
+gebAtomToString GARefinementRefinement = "RefinementRefinement"
+gebAtomToString GARefinementSort = "RefinementSort"
+gebAtomToString GALanguageSort = "LanguageSort"
+gebAtomToString GASortSort = "SortSort"
+gebAtomToString GASortRefinement = "SortRefinement"
+gebAtomToString GAObjectSort = "ObjectSort"
+gebAtomToString GAMorphismSort = "MorphismSort"
+gebAtomToString GARefinementExpression = "RefinementExpression"
+gebAtomToString GASortExpression = "SortExpression"
+gebAtomToString GALanguageExpression = "LanguageExpression"
 
 public export
 Show GebAtom where
@@ -301,43 +374,135 @@ public export
 gebMap : List (GebAtom, GebSList) -> GebMap
 gebMap = fromList
 
+mutual
+  -- | Takes no parameters.
+  public export
+  data Language : GebSExp -> GebSList -> Type where
+    Minimal : Language ($^ GAMinimal) []
+
+  -- | Takes one parameter, a language.
+  public export
+  data Object : GebSExp -> GebSList -> Type where
+    Terminal : (lang : GebSExp) -> {auto isLanguage : Language lang []} ->
+      Object (GATerminal $*** lang) [lang]
+
+  -- | Takes an "implicit" language parameter and two explicit
+  -- | object parameters, which must have the same language.
+  public export
+  data Morphism : GebSExp -> GebSList -> Type where
+    Compose : {lang, a, b, c : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      {auto aObj : Object a [lang]} ->
+      {auto bObj : Object b [lang]} ->
+      {auto cObj : Object c [lang]} ->
+      (g, f : GebSExp) ->
+      {auto gMorph : Morphism g [lang, b, c]} ->
+      {auto fMorph : Morphism f [lang, a, b]} ->
+      Morphism (GACompose $* [g, f]) [lang, a, c]
+
+  -- | Takes no parameters.
+  -- | These are "refinement families" (by analogy to "type families").
+  public export
+  data Sort : GebSExp -> GebSList -> Type where
+    SortSort : Sort ($^ GASortSort) []
+    RefinementSort : Sort ($^ GARefinementSort) []
+    LanguageSort : Sort ($^ GALanguageSort) []
+    ObjectSort : Sort ($^ GAObjectSort) []
+    MorphismSort : Sort ($^ GAMorphismSort) []
+
+  -- | Takes one parameter, a sort.  Refinements are analogous to types --
+  -- | a refinement may be viewed as the type of S-expressions which
+  -- | are selected by it (the refinement in this view is a characteristic
+  -- | function on S-expressions).
+  public export
+  data Refinement : GebSExp -> GebSList -> Type where
+    SortRefinement : Refinement ($^ GASortRefinement) [$^ GASortSort]
+    RefinementRefinement : (s : GebSExp) -> {auto isSort : Sort s []} ->
+      Refinement (GARefinementRefinement $*** s) [$^ GARefinementSort]
+    LanguageRefinement :
+      Refinement ($^ GALanguageRefinement) [$^ GALanguageSort]
+    ObjectRefinement : (lang : GebSExp) ->
+      {auto isLanguage : Language lang []} ->
+      Refinement (GAObjectRefinement $*** lang) [$^ GAObjectSort]
+    MorphismRefinement : {lang : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      (domain, codomain : GebSExp) ->
+      {auto domainObj : Object domain [lang]} ->
+      {auto codomainObj : Object codomain [lang]} ->
+      Refinement
+        (GAMorphismRefinement $* [lang, domain, codomain]) [$^ GAMorphismSort]
+
+  -- | Takes two parameters, an "implicit" sort and a refinement of
+  -- | that sort.  An expression consists of refinement _constructors_;
+  -- | it may be viewed as an S-expression which is selected by its
+  -- | refinement parameter.
+  public export
+  data Expression : GebSExp -> GebSList -> Type where
+    SortExpression : (s : GebSExp) -> {auto isSort : Sort s []} ->
+      Expression (GASortExpression $*** s) [$^ GASortSort, $^ GASortRefinement]
+    RefinementExpression : {s : GebSExp} -> {auto isSort : Sort s []} ->
+      (r : GebSExp) ->
+      {auto isRefinement :
+        Refinement r [GARefinementRefinement $*** s]} ->
+      Expression (GARefinementExpression $*** r)
+        [$^ GARefinementSort, GARefinementRefinement $*** s]
+    LanguageExpression : (lang : GebSExp) ->
+      {auto isLanguage : Language lang []} ->
+      Expression (GALanguageExpression $*** x)
+        [$^ GALanguageSort, $^ GALanguageRefinement]
+    ObjectExpression : {lang : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      (object : GebSExp) ->
+      {auto isObject : Object object [lang]} ->
+      Expression (GAObjectExpression $*** object)
+        [$^ GAObjectSort, GAObjectRefinement $*** lang]
+    MorphismExpression : {lang, domain, codomain : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      {auto domainObj : Object domain [lang]} ->
+      {auto codomainObj : Object codomain [lang]} ->
+      (morphism : GebSExp) ->
+      {auto isMorphism : Morphism morphism [lang, domain, codomain]} ->
+      Expression (GAMorphismExpression $*** morphism)
+        [$^ GAMorphismSort, GAMorphismRefinement $* [lang, domain, codomain]]
+
+{-
 -- | One of the concepts for which we have an S-expression representation is
--- | the class of S-expression itself -- whether an S-expression represents
+-- | the sort of S-expression itself -- whether an S-expression represents
 -- | a language, for example, or an object, morphism, or term.
 
 public export
-data GebExpressionClass : Type where
-  LanguageClass : GebExpressionClass
-  ObjectClass : GebExpressionClass
-  MorphismClass : GebExpressionClass
-  TermClass : GebExpressionClass
+data GebExpressionSort : Type where
+  LanguageSort : GebExpressionSort
+  ObjectSort : GebExpressionSort
+  MorphismSort : GebExpressionSort
+  TermSort : GebExpressionSort
 
 public export
-gebClassToExp : GebExpressionClass -> GebSExp
-gebClassToExp LanguageClass = $^ GALanguage
-gebClassToExp ObjectClass = $^ GAObject
-gebClassToExp MorphismClass = $^ GAMorphism
-gebClassToExp TermClass = $^ GATerm
+gebSortToExp : GebExpressionSort -> GebSExp
+gebSortToExp LanguageSort = $^ GALanguageRefinement
+gebSortToExp ObjectSort = $^ GAObject
+gebSortToExp MorphismSort = $^ GAMorphism
+gebSortToExp TermSort = $^ GATerm
 
 public export
-gebExpToClass : GebSExp -> Maybe GebExpressionClass
-gebExpToClass (GALanguage $* []) = Just LanguageClass
-gebExpToClass (GAObject $* []) = Just ObjectClass
-gebExpToClass (GAMorphism $* []) = Just MorphismClass
-gebExpToClass (GATerm $* []) = Just TermClass
-gebExpToClass _ = Nothing
+gebExpToSort : GebSExp -> Maybe GebExpressionSort
+gebExpToSort (GALanguageRefinement $* []) = Just LanguageSort
+gebExpToSort (GAObject $* []) = Just ObjectSort
+gebExpToSort (GAMorphism $* []) = Just MorphismSort
+gebExpToSort (GATerm $* []) = Just TermSort
+gebExpToSort _ = Nothing
 
 export
-gebExpressionClassRepresentationComplete :
-  (c : GebExpressionClass) -> gebExpToClass (gebClassToExp c) = Just c
-gebExpressionClassRepresentationComplete LanguageClass = Refl
-gebExpressionClassRepresentationComplete ObjectClass = Refl
-gebExpressionClassRepresentationComplete MorphismClass = Refl
-gebExpressionClassRepresentationComplete TermClass = Refl
+gebExpressionSortRepresentationComplete :
+  (c : GebExpressionSort) -> gebExpToSort (gebSortToExp c) = Just c
+gebExpressionSortRepresentationComplete LanguageSort = Refl
+gebExpressionSortRepresentationComplete ObjectSort = Refl
+gebExpressionSortRepresentationComplete MorphismSort = Refl
+gebExpressionSortRepresentationComplete TermSort = Refl
 
 public export
-Show GebExpressionClass where
-  show c = show (gebClassToExp c)
+Show GebExpressionSort where
+  show c = show (gebSortToExp c)
 
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
@@ -411,7 +576,7 @@ Show Language where
 -- | representations.
 -- |
 -- | Note that we are _not_ assuming exponential objects yet -- for example,
--- | the minimal language does not have any first-class functions, and
+-- | the minimal language does not have any first-sort functions, and
 -- | primitive recursion has only first-order functions.
 
 -- | Well-typed representations of common objects.
@@ -730,7 +895,7 @@ mutual
     (o : MinimalObject) -> (m : MinimalMorphism) ->
     gebExpToMinimalObject x = Just o -> gebExpToMinimalMorphism x = Just m ->
     Void
-  gebExpIsNotBothObjectAndMorphism (GALanguage $* _) _ _ eqo eqm =
+  gebExpIsNotBothObjectAndMorphism (GALanguageRefinement $* _) _ _ eqo eqm =
     case eqo of Refl impossible
   gebExpIsNotBothObjectAndMorphism (GAMinimal $* _) _ _ eqo eqm =
     case eqo of Refl impossible
@@ -1501,3 +1666,4 @@ minimalTermReductionsConsistent :
   bigStepMinimalTermReduction term =
     snd (smallStepMinimalTermReductionCompletes term)
 minimalTermReductionsConsistent term = ?minimalTermReductionsConsistent_hole
+-}
