@@ -513,7 +513,30 @@ mutual
     (exp : Expression x l) -> checkExpression x l = Yes exp
   checkExpressionCorrect {x} {l} exp = ?checkExpressionCorrect_hole
 
+  public export
+  checkExpressionUnique : {x : GebSExp} -> {l : GebSList} ->
+    (exp, exp' : Expression x l) -> exp = exp'
+  checkExpressionUnique {x} {l} exp exp' = ?checkExpressionUnique_hole
+
 mutual
+  public export
+  interpretObject : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
+    (obj : GebSExp) -> {auto isObject : Object obj [lang]} ->
+    Type
+  interpretObject {lang} {isLanguage} obj {isObject} = ?interpretObject_hole
+
+  public export
+  interpretMorphism : {lang, domain, codomain : GebSExp} ->
+    {auto isLanguage : Language lang []} ->
+    {auto domainObject : Object domain [lang]} ->
+    {auto codomainObject : Object codomain [lang]} ->
+    (m : GebSExp) -> {auto isMorphism : Morphism m [lang, domain, codomain]} ->
+    (interpretObject {isObject=domainObject} domain ->
+     interpretObject {isObject=codomainObject} codomain)
+  interpretMorphism {lang} {domain} {codomain} {isLanguage}
+    {domainObject} {codomainObject} m {isMorphism} x =
+      ?interpretMorphism_hole
+
   public export
   interpretRefinement : {s : GebSExp} ->
     {auto isSort : Sort s []} ->
@@ -522,16 +545,6 @@ mutual
     (GebSExp -> Bool)
   interpretRefinement {s} r {isSort} {isRefinement} x =
     ?interpretRefinement_hole
-
-  public export
-  refinementCorrect : {s, r : GebSExp} ->
-    {auto isSort : Sort s []} ->
-    {auto isRefinement : Refinement r [s]} ->
-    (x : GebSExp) ->
-    {auto isExpression : Expression x [s, r]} ->
-    IsTrue (interpretRefinement {s} {isSort} r {isRefinement} x)
-  refinementCorrect {s} {r} {isSort} {isRefinement} x {isExpression} =
-    ?refinementCorrect_hole
 
 {-
   TermSort : GebExpressionSort
