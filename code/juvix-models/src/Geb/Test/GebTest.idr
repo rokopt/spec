@@ -162,8 +162,8 @@ GebAlgebra = SExpAlgebraSignature
 export
 gebTests : IO ()
 gebTests = do
-  {-
   printLn "Begin gebTests:"
+  {-
   printLn $ "unitPair=" ++ show unitPair
   printLn $ "backandforth=" ++ backAndForth
   printLn $ "lookup=" ++ show (lookup GAInitial GebCategoryObjects)
