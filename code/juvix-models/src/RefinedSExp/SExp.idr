@@ -199,6 +199,41 @@ mutual
     SExpTail : {pred : SPred atom} -> SListExists pred l ->
       SListExists pred (x :: l)
 
+mutual
+  infixr 7 $~:
+  public export
+  data STelescope :
+    {0 fieldRepresentationAtom : Type} ->
+    (0 fieldType :
+      SExp fieldRepresentationAtom -> List (SList fieldRepresentationAtom) ->
+      Type) ->
+    (representation : SList fieldRepresentationAtom) ->
+    (contexts : List $ SList fieldRepresentationAtom) ->
+    Type where
+      ($~|) :
+        {0 fieldRepresentationAtom : Type} ->
+        {0 fieldType :
+          SExp fieldRepresentationAtom ->
+          List (SList fieldRepresentationAtom) ->
+          Type} ->
+        {contexts : List $ SList fieldRepresentationAtom} ->
+        STelescope fieldType [] contexts
+      ($~:) :
+        {0 fieldRepresentationAtom : Type} ->
+        {0 fieldType :
+          SExp fieldRepresentationAtom ->
+          List (SList fieldRepresentationAtom) ->
+          Type} ->
+        {olderContexts : List $ SList fieldRepresentationAtom} ->
+        {newestContext : SList fieldRepresentationAtom} ->
+        {headRep : SExp fieldRepresentationAtom} ->
+        {tailRep : SList fieldRepresentationAtom} ->
+        fieldType headRep (newestContext :: olderContexts) ->
+        STelescope fieldType tailRep
+          ((newestContext ++ [headRep]) :: olderContexts) ->
+        STelescope fieldType (headRep :: tailRep)
+          (newestContext :: olderContexts)
+
 infixr 7 :~:
 public export
 data Telescope :
