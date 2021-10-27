@@ -494,6 +494,50 @@ mutual
       Morphism (GACompose $* [g, f]) [lang, a, c]
     FromInitial : {lang, obj : GebSExp} -> Object obj [lang] ->
       Morphism (GAFromInitial $*** obj) [lang, GAInitial $*** lang, obj]
+    ToTerminal : {lang, obj : GebSExp} -> Object obj [lang] ->
+      Morphism (GAToTerminal $*** obj) [lang, obj, GATerminal $*** lang]
+    ProductIntro : {lang, domain, codomainLeft, codomainRight,
+        left, right : GebSExp} ->
+      Morphism left [lang, domain, codomainLeft] ->
+      Morphism right [lang, domain, codomainRight] ->
+      Morphism (GAProductIntro $* [left, right])
+        [lang, domain, GAProduct $* [codomainLeft, codomainRight]]
+    ProductElimLeft : {lang, left, right : GebSExp} ->
+      Object left [lang] -> Object right [lang] ->
+      Morphism (GAProductElimLeft $* [left, right])
+        [lang, GAProduct $* [left, right], left]
+    ProductElimRight : {lang, left, right : GebSExp} ->
+      Object left [lang] -> Object right [lang] ->
+      Morphism (GAProductElimRight $* [left, right])
+        [lang, GAProduct $* [left, right], right]
+    CoproductIntroLeft : {lang, left, right : GebSExp} ->
+      Object left [lang] -> Object right [lang] ->
+      Morphism (GACoproductIntroLeft $* [left, right])
+        [lang, left, GACoproduct $* [left, right]]
+    CoproductIntroRight : {lang, left, right : GebSExp} ->
+      Object left [lang] -> Object right [lang] ->
+      Morphism (GACoproductIntroRight $* [left, right])
+        [lang, right, GACoproduct $* [left, right]]
+    CoproductElim : {lang, domainLeft, domainRight, codomain,
+        left, right : GebSExp} ->
+      Morphism left [lang, domainLeft, codomain] ->
+      Morphism right [lang, domainRight, codomain] ->
+      Morphism (GACoproductElim $* [left, right])
+        [lang, GACoproduct $* [domainLeft, domainRight], codomain]
+    ExponentialEval : {lang, domain, codomain : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      {auto hasExponentials : LanguageHasExponentials isLanguage} ->
+      Object domain [lang] -> Object codomain [lang] ->
+      Morphism (GAExponentialEval $* [domain, codomain])
+        [lang,
+         GAProduct $* [GAExponential $* [domain, codomain], domain], codomain]
+    Curry : {lang, domainLeft, domainRight, codomain, morphism : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      {auto hasExponentials : LanguageHasExponentials isLanguage} ->
+      Morphism morphism
+        [lang, GAProduct $* [domainLeft, domainRight], codomain] ->
+      Morphism (GACurry $*** morphism)
+        [lang, domainLeft, GAExponential $* [domainRight, codomain]]
 
   -- | Takes no parameters.
   -- | These are "refinement families" (by analogy to "type families").
@@ -597,6 +641,7 @@ mutual
   morphismDomainObject (Identity o) = o
   morphismDomainObject (Compose g f) = morphismDomainObject f
   morphismDomainObject (FromInitial obj) = Initial (objectLanguage obj)
+  morphismDomainObject (ToTerminal obj) = obj
 
   public export
   morphismCodomainObject : {lang, domain, codomain, morphism : GebSExp} ->
@@ -605,6 +650,7 @@ mutual
   morphismCodomainObject (Identity o) = o
   morphismCodomainObject (Compose g f) = morphismCodomainObject g
   morphismCodomainObject (FromInitial obj) = obj
+  morphismCodomainObject (ToTerminal obj) = Terminal (objectLanguage obj)
 
 public export
 morphismLanguage : {lang, domain, codomain, morphism : GebSExp} ->
@@ -640,6 +686,7 @@ mutual
     let u = objectUnique (morphismCodomainObject f) (morphismDomainObject g) in
     interpretMorphism g (rewrite sym u in (interpretMorphism f x))
   interpretMorphism (FromInitial _) v = void v
+  interpretMorphism (ToTerminal _) _ = ()
 
   public export
   interpretRefinement : {s, r : GebSExp} ->
@@ -894,43 +941,3 @@ smallStepTermReductionCorrect :
   interpretTerm (fst (smallStepTermReductionCompletes term)) =
     interpretTerm term
 smallStepTermReductionCorrect term = ?smallStepTermReductionCorrect_hole
-
-{-
-mutual
-  public export
-  data Morphism : Type where
-    Identity : MinimalObject -> Morphism
-    Compose : (g, f : Morphism) ->
-      {auto composable :
-        (morphismCodomainObject f) = (morphismDomainObject g)} ->
-      Morphism
-    FromInitial : MinimalObject -> Morphism
-    ToTerminal : MinimalObject -> Morphism
-    ProductIntro : (f, g : Morphism) ->
-      {auto domainsMatch :
-        (morphismDomainObject f) = (morphismDomainObject g)} ->
-      Morphism
-    ProductElimLeft : (a, b : MinimalObject) -> Morphism
-    ProductElimRight : (a, b : MinimalObject) -> Morphism
-    CoproductElim : (f, g : Morphism) ->
-      {auto codomainsMatch :
-        (morphismCodomainObject f) = (morphismCodomainObject g)} ->
-      Morphism
-    CoproductIntroLeft : (a, b : MinimalObject) -> Morphism
-    CoproductIntroRight : (a, b : MinimalObject) -> Morphism
-    ExpressionIntro : MinimalObject -> Morphism
-    ExpressionElim : (exp, exp', eqCase, neqCase : Morphism) ->
-      {auto expDomainsMatch :
-        (morphismDomainObject exp) = (morphismDomainObject exp')} ->
-      {auto expCodomainIsExpression :
-        (morphismCodomainObject exp) = ObjectExpression} ->
-      {auto expCodomainsMatch :
-        (morphismCodomainObject exp) = (morphismCodomainObject exp')} ->
-      {auto eqDomainMatches :
-        (morphismDomainObject exp) = (morphismDomainObject eqCase)} ->
-      {auto neqDomainMatches :
-        (morphismDomainObject exp) = (morphismDomainObject neqCase)} ->
-      {auto eqCodomainsMatch :
-        (morphismCodomainObject eqCase) = (morphismCodomainObject neqCase)} ->
-      Morphism
--}
