@@ -460,14 +460,20 @@ mutual
   -- | Takes one parameter, a language.
   public export
   data Object : GebSExp -> GebSList -> Type where
-    Initial : {lang : GebSExp} -> Language lang [] ->
+    Initial :
+      {lang : GebSExp} -> Language lang [] ->
       Object (GAInitial $*** lang) [lang]
-    Terminal : {lang : GebSExp} -> Language lang [] ->
+    Terminal :
+      {lang : GebSExp} -> Language lang [] ->
       Object (GATerminal $*** lang) [lang]
-    Product : {lang, left, right : GebSExp} ->
+    Product :
+      {lang, left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Object (GAProduct $* [left, right]) [lang]
-    Coproduct : {lang, left, right : GebSExp} ->
+    Coproduct :
+      {lang, left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Object (GACoproduct $* [left, right]) [lang]
     Exponential : {lang, left, right : GebSExp} ->
@@ -488,38 +494,55 @@ mutual
   public export
   data Morphism : GebSExp -> GebSList -> Type where
     Identity : {lang, obj : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object obj [lang] -> Morphism (GAIdentity $*** obj) [lang, obj, obj]
     Compose : {lang, a, b, c, g, f : GebSExp} ->
+      {isLanguage : Language lang []} -> {objA : Object a [lang]} ->
+      {objB : Object b [lang]} -> {objC : Object c [lang]} ->
       Morphism g [lang, b, c] -> Morphism f [lang, a, b] ->
       Morphism (GACompose $* [g, f]) [lang, a, c]
-    FromInitial : {lang, obj : GebSExp} -> Object obj [lang] ->
+    FromInitial : {lang, obj : GebSExp} ->
+      {isLanguage : Language lang []} -> Object obj [lang] ->
       Morphism (GAFromInitial $*** obj) [lang, GAInitial $*** lang, obj]
-    ToTerminal : {lang, obj : GebSExp} -> Object obj [lang] ->
+    ToTerminal : {lang, obj : GebSExp} ->
+      {isLanguage : Language lang []} -> Object obj [lang] ->
       Morphism (GAToTerminal $*** obj) [lang, obj, GATerminal $*** lang]
     ProductIntro : {lang, domain, codomainLeft, codomainRight,
         left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
+      {domainObject : Object domain [lang]} ->
+      {codomainLeftObject : Object codomainLeft [lang]} ->
+      {codomainRightObject : Object codomainRight [lang]} ->
       Morphism left [lang, domain, codomainLeft] ->
       Morphism right [lang, domain, codomainRight] ->
       Morphism (GAProductIntro $* [left, right])
         [lang, domain, GAProduct $* [codomainLeft, codomainRight]]
     ProductElimLeft : {lang, left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GAProductElimLeft $* [left, right])
         [lang, GAProduct $* [left, right], left]
     ProductElimRight : {lang, left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GAProductElimRight $* [left, right])
         [lang, GAProduct $* [left, right], right]
     CoproductIntroLeft : {lang, left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GACoproductIntroLeft $* [left, right])
         [lang, left, GACoproduct $* [left, right]]
     CoproductIntroRight : {lang, left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GACoproductIntroRight $* [left, right])
         [lang, right, GACoproduct $* [left, right]]
     CoproductElim : {lang, domainLeft, domainRight, codomain,
         left, right : GebSExp} ->
+      {isLanguage : Language lang []} ->
+      {domainLeftObject : Object domainLeft [lang]} ->
+      {domainRightObject : Object domainRight [lang]} ->
+      {codomainObject : Object codomain [lang]} ->
       Morphism left [lang, domainLeft, codomain] ->
       Morphism right [lang, domainRight, codomain] ->
       Morphism (GACoproductElim $* [left, right])
@@ -534,6 +557,9 @@ mutual
     Curry : {lang, domainLeft, domainRight, codomain, morphism : GebSExp} ->
       {auto isLanguage : Language lang []} ->
       {auto hasExponentials : LanguageHasExponentials isLanguage} ->
+      {domainLeftObject : Object domainLeft [lang]} ->
+      {domainRightObject : Object domainRight [lang]} ->
+      {codomainObject : Object codomain [lang]} ->
       Morphism morphism
         [lang, GAProduct $* [domainLeft, domainRight], codomain] ->
       Morphism (GACurry $*** morphism)
@@ -633,31 +659,6 @@ mutual
     (exp, exp' : Expression x l) -> exp = exp'
   expressionUnique {x} {l} exp exp' = ?expressionUnique_hole
 
-mutual
-  public export
-  morphismDomainObject : {lang, domain, codomain, morphism : GebSExp} ->
-    Morphism morphism [lang, domain, codomain] ->
-    Object domain [lang]
-  morphismDomainObject (Identity o) = o
-  morphismDomainObject (Compose g f) = morphismDomainObject f
-  morphismDomainObject (FromInitial obj) = Initial (objectLanguage obj)
-  morphismDomainObject (ToTerminal obj) = obj
-
-  public export
-  morphismCodomainObject : {lang, domain, codomain, morphism : GebSExp} ->
-    Morphism morphism [lang, domain, codomain] ->
-    Object codomain [lang]
-  morphismCodomainObject (Identity o) = o
-  morphismCodomainObject (Compose g f) = morphismCodomainObject g
-  morphismCodomainObject (FromInitial obj) = obj
-  morphismCodomainObject (ToTerminal obj) = Terminal (objectLanguage obj)
-
-public export
-morphismLanguage : {lang, domain, codomain, morphism : GebSExp} ->
-  Morphism morphism [lang, domain, codomain] ->
-  Language lang []
-morphismLanguage = objectLanguage . morphismDomainObject
-
 --------------------------------------------------------
 ---- Interpretation into Idris-2 of Geb expressions ----
 --------------------------------------------------------
@@ -678,20 +679,26 @@ mutual
 
   public export
   interpretMorphism : {lang, domain, codomain, morphism : GebSExp} ->
+    {domainObject : Object domain [lang]} ->
+    {codomainObject : Object codomain [lang]} ->
     (isMorphism : Morphism morphism [lang, domain, codomain]) ->
-    interpretObject (morphismDomainObject isMorphism) ->
-      interpretObject (morphismCodomainObject isMorphism)
-  interpretMorphism (Identity _) x = x
+    interpretObject domainObject -> interpretObject codomainObject
+  interpretMorphism m = ?interpretMorphism_hole
+    {-
+  interpretMorphism (Identity o) x = ?id_hole
   interpretMorphism (Compose g f) x =
-    let u = objectUnique (morphismCodomainObject f) (morphismDomainObject g) in
-    interpretMorphism g (rewrite sym u in (interpretMorphism f x))
-  interpretMorphism (FromInitial _) v = void v
-  interpretMorphism (ToTerminal _) _ = ()
+    -- let u = objectUnique (morphismCodomainObject f) (morphismDomainObject g) in
+    -- interpretMorphism g (rewrite sym u in (interpretMorphism f x))
+    -- interpretMorphism g (interpretMorphism f x)
+    ?interpretMorphism_compose_hole
+  interpretMorphism (FromInitial _) v = void ?interpretMorphism_hole_void
+  interpretMorphism (ToTerminal _) _ = ?interpretMorphism_hole_unit
 
   public export
   interpretRefinement : {s, r : GebSExp} ->
     Refinement r [s] -> (GebSExp -> Bool)
   interpretRefinement {s} {r} isRefinement x = ?interpretRefinement_hole
+  -}
 
 ------------------------------------------------------
 ---- Morphism transformations ("compiler passes") ----
@@ -712,37 +719,15 @@ LanguageFunctor : {sourceLang, targetLang : GebSExp} ->
 LanguageFunctor {sourceLang} {targetLang} {sourceIsLanguage} {targetIsLanguage}
   objectMap =
     (domain, codomain : GebSExp) ->
+    (domainObject : Object domain [sourceLang]) ->
+    (codomainObject : Object codomain [sourceLang]) ->
     (morphism : GebSExp) ->
     (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
     (transformed : GebSExp **
      Morphism transformed
       [targetLang,
-       fst (objectMap domain $ morphismDomainObject isMorphism),
-       fst (objectMap codomain $ morphismCodomainObject isMorphism)])
-
-domainMapConsistent : {sourceLang, targetLang : GebSExp} ->
-  {sourceIsLanguage : Language sourceLang []} ->
-  {targetIsLanguage : Language targetLang []} ->
-  (objectMap : ObjectMap sourceIsLanguage targetIsLanguage) ->
-  (functor : LanguageFunctor {sourceIsLanguage} {targetIsLanguage} objectMap) ->
-  {domain, codomain : GebSExp} ->
-  {morphism : GebSExp} ->
-  (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
-  snd (objectMap domain (morphismDomainObject isMorphism)) =
-    (morphismDomainObject (snd (functor domain codomain morphism isMorphism)))
-domainMapConsistent objectMap functor isMorphism = objectUnique _ _
-
-codomainMapConsistent : {sourceLang, targetLang : GebSExp} ->
-  {sourceIsLanguage : Language sourceLang []} ->
-  {targetIsLanguage : Language targetLang []} ->
-  (objectMap : ObjectMap sourceIsLanguage targetIsLanguage) ->
-  (functor : LanguageFunctor {sourceIsLanguage} {targetIsLanguage} objectMap) ->
-  {domain, codomain : GebSExp} ->
-  {morphism : GebSExp} ->
-  (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
-  snd (objectMap codomain (morphismCodomainObject isMorphism)) =
-    (morphismCodomainObject (snd (functor domain codomain morphism isMorphism)))
-codomainMapConsistent objectMap functor isMorphism = objectUnique _ _
+       fst (objectMap domain domainObject),
+       fst (objectMap codomain codomainObject)])
 
 -- | A correct compiler pass is a functor whose morphism map
 -- | preserves extensional equality.
@@ -772,20 +757,17 @@ FunctorPreservesInterpretation : {sourceLang, targetLang : GebSExp} ->
 FunctorPreservesInterpretation {sourceLang} {targetLang}
   {sourceIsLanguage} {targetIsLanguage} objectMap preservesObjects functor =
     (domain, codomain : GebSExp) ->
+    (domainObject : Object domain [sourceLang]) ->
+    (codomainObject : Object codomain [sourceLang]) ->
     (morphism : GebSExp) ->
     (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
-    (x : interpretObject $ morphismDomainObject isMorphism) ->
-    interpretMorphism isMorphism x =
-      (rewrite preservesObjects codomain (morphismCodomainObject isMorphism) in
-       rewrite codomainMapConsistent {sourceIsLanguage} {targetIsLanguage}
-        objectMap functor isMorphism in
-          (interpretMorphism
-            (snd (functor domain codomain morphism isMorphism))
-            (rewrite sym (domainMapConsistent
-              {sourceIsLanguage} {targetIsLanguage}
-              objectMap functor isMorphism) in
-             (replace {p=id}
-              (preservesObjects domain (morphismDomainObject isMorphism)) x))))
+    (x : interpretObject domainObject) ->
+    interpretMorphism {domainObject} {codomainObject} isMorphism x =
+      (rewrite preservesObjects codomain codomainObject in
+       (interpretMorphism {domainObject=(snd (objectMap domain domainObject))}
+        (snd (functor
+          domain codomain domainObject codomainObject morphism isMorphism))
+        (rewrite sym (preservesObjects domain domainObject) in x)))
 
 ------------------------------------------------------
 ---- Operational semantics through term reduction ----
@@ -813,10 +795,10 @@ data Term : {lang : GebSExp} -> {isLanguage : Language lang []} ->
   (numApplications : Nat) -> TermSort isLanguage -> Type where
     UnappliedMorphismTerm :
       {lang, domain, codomain, morphism : GebSExp} ->
+      {domainObject : Object domain [lang]} ->
+      {codomainObject : Object codomain [lang]} ->
       (isMorphism : Morphism morphism [lang, domain, codomain]) ->
-      Term 0 $ TermSortFunction
-        (morphismDomainObject isMorphism)
-        (morphismCodomainObject isMorphism)
+      Term 0 $ TermSortFunction domainObject codomainObject
     Application :
       {lang, domain, codomain : GebSExp} ->
       {domainObject : Object domain [lang]} ->
@@ -877,12 +859,13 @@ interpretTerm term = ?interpretTerm_hole
 public export
 smallStepMorphismReduction :
   {lang, domain, codomain, morphism : GebSExp} ->
+  {domainObject : Object domain [lang]} ->
+  {codomainObject : Object codomain [lang]} ->
   (isMorphism : Morphism morphism [lang, domain, codomain]) ->
   {numApplications : Nat} ->
-  Term numApplications (TermSortType (morphismDomainObject isMorphism)) ->
+  Term numApplications (TermSortType domainObject) ->
   (remainingApplications : Nat **
-   Term remainingApplications
-    (TermSortType (morphismCodomainObject isMorphism)))
+   Term remainingApplications (TermSortType codomainObject))
 smallStepMorphismReduction = ?smallStepMorphismReduction_hole
 
 public export
