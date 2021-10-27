@@ -568,24 +568,11 @@ objectLanguage (ExpressionObject language _ _) = language
 
 mutual
   public export
-  morphismDomainObject : {lang, domain, codomain, morphism : GebSExp} ->
-    Morphism morphism [lang, domain, codomain] ->
-    Object domain [lang]
-  morphismDomainObject isMorphism = ?morphismDomainObject_hole
+  objectUnique : {lang, object : GebSExp} ->
+    (obj, obj' : Object object [lang]) ->
+    obj = obj'
+  objectUnique obj obj' = ?objectUnique_hole
 
-  public export
-  morphismCodomainObject : {lang, domain, codomain, morphism : GebSExp} ->
-    Morphism morphism [lang, domain, codomain] ->
-    Object codomain [lang]
-  morphismCodomainObject isMorphism = ?morphismCodomainObject_hole
-
-public export
-morphismLanguage : {lang, domain, codomain, morphism : GebSExp} ->
-  Morphism morphism [lang, domain, codomain] ->
-  Language lang []
-morphismLanguage = objectLanguage . morphismDomainObject
-
-mutual
   public export
   checkExpression : (expression : GebSExp) -> (refinement : GebSList) ->
     Dec $ Expression expression refinement
@@ -597,9 +584,28 @@ mutual
   checkExpressionCorrect {x} {l} exp = ?checkExpressionCorrect_hole
 
   public export
-  checkExpressionUnique : {x : GebSExp} -> {l : GebSList} ->
+  expressionUnique : {x : GebSExp} -> {l : GebSList} ->
     (exp, exp' : Expression x l) -> exp = exp'
-  checkExpressionUnique {x} {l} exp exp' = ?checkExpressionUnique_hole
+  expressionUnique {x} {l} exp exp' = ?expressionUnique_hole
+
+mutual
+  public export
+  morphismDomainObject : {lang, domain, codomain, morphism : GebSExp} ->
+    Morphism morphism [lang, domain, codomain] ->
+    Object domain [lang]
+  morphismDomainObject (Compose g f) = morphismDomainObject f
+
+  public export
+  morphismCodomainObject : {lang, domain, codomain, morphism : GebSExp} ->
+    Morphism morphism [lang, domain, codomain] ->
+    Object codomain [lang]
+  morphismCodomainObject (Compose g f) = morphismCodomainObject g
+
+public export
+morphismLanguage : {lang, domain, codomain, morphism : GebSExp} ->
+  Morphism morphism [lang, domain, codomain] ->
+  Language lang []
+morphismLanguage = objectLanguage . morphismDomainObject
 
 --------------------------------------------------------
 ---- Interpretation into Idris-2 of Geb expressions ----
@@ -608,14 +614,25 @@ mutual
 mutual
   public export
   interpretObject : {lang, obj : GebSExp} -> Object obj [lang] -> Type
-  interpretObject {lang} {obj} isObject = ?interpretObject_hole
+  interpretObject (Initial _) = Void
+  interpretObject (Terminal _) = ()
+  interpretObject (Product left right) =
+    (interpretObject left, interpretObject right)
+  interpretObject (Coproduct left right) =
+    Either (interpretObject left) (interpretObject right)
+  interpretObject (Exponential domain codomain) =
+    interpretObject domain -> interpretObject codomain
+  interpretObject (ExpressionObject {sort} {refinement} _ _ _) =
+    (x : GebSExp ** Expression x [sort, refinement])
 
   public export
   interpretMorphism : {lang, domain, codomain, morphism : GebSExp} ->
-    Morphism morphism [lang, domain, codomain] ->
-    interpretObject domainObject -> interpretObject codomainObject
-  interpretMorphism {lang} {domain} {codomain} {morphism} isMorphism x =
-    ?interpretMorphism_hole
+    (isMorphism : Morphism morphism [lang, domain, codomain]) ->
+    interpretObject (morphismDomainObject isMorphism) ->
+      interpretObject (morphismCodomainObject isMorphism)
+  interpretMorphism (Compose g f) x =
+    let u = objectUnique (morphismCodomainObject f) (morphismDomainObject g) in
+    interpretMorphism g (rewrite sym u in (interpretMorphism f x))
 
   public export
   interpretRefinement : {s, r : GebSExp} ->
@@ -641,15 +658,37 @@ LanguageFunctor : {sourceLang, targetLang : GebSExp} ->
 LanguageFunctor {sourceLang} {targetLang} {sourceIsLanguage} {targetIsLanguage}
   objectMap =
     (domain, codomain : GebSExp) ->
-    (domainObject : Object domain [sourceLang]) ->
-    (codomainObject : Object codomain [sourceLang]) ->
     (morphism : GebSExp) ->
-    Morphism morphism [sourceLang, domain, codomain] ->
+    (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
     (transformed : GebSExp **
      Morphism transformed
       [targetLang,
-       fst (objectMap domain domainObject),
-       fst (objectMap codomain codomainObject)])
+       fst (objectMap domain $ morphismDomainObject isMorphism),
+       fst (objectMap codomain $ morphismCodomainObject isMorphism)])
+
+domainMapConsistent : {sourceLang, targetLang : GebSExp} ->
+  {sourceIsLanguage : Language sourceLang []} ->
+  {targetIsLanguage : Language targetLang []} ->
+  (objectMap : ObjectMap sourceIsLanguage targetIsLanguage) ->
+  (functor : LanguageFunctor {sourceIsLanguage} {targetIsLanguage} objectMap) ->
+  {domain, codomain : GebSExp} ->
+  {morphism : GebSExp} ->
+  (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
+  snd (objectMap domain (morphismDomainObject isMorphism)) =
+    (morphismDomainObject (snd (functor domain codomain morphism isMorphism)))
+domainMapConsistent objectMap functor isMorphism = objectUnique _ _
+
+codomainMapConsistent : {sourceLang, targetLang : GebSExp} ->
+  {sourceIsLanguage : Language sourceLang []} ->
+  {targetIsLanguage : Language targetLang []} ->
+  (objectMap : ObjectMap sourceIsLanguage targetIsLanguage) ->
+  (functor : LanguageFunctor {sourceIsLanguage} {targetIsLanguage} objectMap) ->
+  {domain, codomain : GebSExp} ->
+  {morphism : GebSExp} ->
+  (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
+  snd (objectMap codomain (morphismCodomainObject isMorphism)) =
+    (morphismCodomainObject (snd (functor domain codomain morphism isMorphism)))
+codomainMapConsistent objectMap functor isMorphism = objectUnique _ _
 
 -- | A correct compiler pass is a functor whose morphism map
 -- | preserves extensional equality.
@@ -679,19 +718,20 @@ FunctorPreservesInterpretation : {sourceLang, targetLang : GebSExp} ->
 FunctorPreservesInterpretation {sourceLang} {targetLang}
   {sourceIsLanguage} {targetIsLanguage} objectMap preservesObjects functor =
     (domain, codomain : GebSExp) ->
-    (domainObject : Object domain [sourceLang]) ->
-    (codomainObject : Object codomain [sourceLang]) ->
     (morphism : GebSExp) ->
     (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
-    (x : interpretObject domainObject) ->
-    interpretMorphism {domainObject} {codomainObject} isMorphism x =
-      (rewrite preservesObjects codomain codomainObject in
-       interpretMorphism
-        {domainObject=(snd (objectMap domain domainObject))}
-        {codomainObject=(snd (objectMap codomain codomainObject))}
-        (snd (functor
-          domain codomain domainObject codomainObject morphism isMorphism))
-        (rewrite sym (preservesObjects domain domainObject) in x))
+    (x : interpretObject $ morphismDomainObject isMorphism) ->
+    interpretMorphism isMorphism x =
+      (rewrite preservesObjects codomain (morphismCodomainObject isMorphism) in
+       rewrite codomainMapConsistent {sourceIsLanguage} {targetIsLanguage}
+        objectMap functor isMorphism in
+          (interpretMorphism
+            (snd (functor domain codomain morphism isMorphism))
+            (rewrite sym (domainMapConsistent
+              {sourceIsLanguage} {targetIsLanguage}
+              objectMap functor isMorphism) in
+             (replace {p=id}
+              (preservesObjects domain (morphismDomainObject isMorphism)) x))))
 
 ------------------------------------------------------
 ---- Operational semantics through term reduction ----
@@ -849,15 +889,6 @@ smallStepTermReductionCorrect :
 smallStepTermReductionCorrect term = ?smallStepTermReductionCorrect_hole
 
 {-
-public export
-data MinimalObject : Type where
-  Initial : MinimalObject
-  Terminal : MinimalObject
-  Product : MinimalObject -> MinimalObject -> MinimalObject
-  Coproduct : MinimalObject -> MinimalObject -> MinimalObject
-  ObjectExpression : MinimalObject
-  MorphismExpression : MinimalObject -> MinimalObject -> MinimalObject
-
 mutual
   public export
   data Morphism : Type where
