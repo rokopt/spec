@@ -219,7 +219,7 @@ SExpForAllEliminatorSigToEliminatorSig {sp} signature =
 
 public export
 sexpForAllEliminator :
-  {atom : Type} -> {sp : SPred atom} -> {0 lp : SLPred atom} ->
+  {atom : Type} -> {sp : SPred atom} ->
   (signature : SExpForAllEliminatorSig sp) ->
   SExp atom ~> SExpForAll sp
 sexpForAllEliminator signature =
