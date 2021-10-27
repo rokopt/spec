@@ -391,6 +391,45 @@ public export
 gebMap : List (GebAtom, GebSList) -> GebMap
 gebMap = fromList
 
+----------------------------------------------------------------
+---- General definition of programming language / metalogic ----
+----------------------------------------------------------------
+
+-- | A "Language" (short in this case for "programming language") is a category
+-- | which is capable of performing computation and can be defined solely by
+-- | computation.  It can be viewed as having morphisms which represent
+-- | computable functions with computably-representable effects.
+-- |
+-- | By "capable of performing computation", we mean that Gödel's
+-- | incompleteness theorems apply to the category.  In other words, it can
+-- | express metalogic; we could also say that it can reflect itself, in that
+-- | it can define functions on its own expressions.  (So perhaps we might
+-- | say something like "computable metacategory" rather than "programming
+-- | language".)  A combination of products, coproducts, and decidable
+-- | equality gives us the ability to perform substitution, which in turn
+-- | allows us to represent function application -- the fundamental
+-- | computation in any programming language.
+-- |
+-- | A language is unsuitable as a metalogic if it is inconsistent -- if its
+-- | operational semantics allow non-termination, or if it has any partial
+-- | functions.  Of course, one consequence of Gödel's incompleteness theorems
+-- | is that we can never be sure that there _are_ any languages that are
+-- | suitable as metalogics in that sense!
+-- |
+-- | So there is a minimal programming language, with this definition:  just
+-- | what is required for Gödel's incompleteness theorems to apply.  There is
+-- | also a maximal programming language:  the universal Turing machine,
+-- | with non-terminating and partial functions.
+-- |
+-- | Our definitions of languages below all take the form of a
+-- | category-theoretical, point-free (termless) definition of syntax and
+-- | type system, and an operational definition of semantics using an
+-- | interpretation of objects as the types and morphisms as the functions
+-- | of a programming language which does have terms.  The functions of the
+-- | language are general computable functions with effects, the terms are
+-- | S-expressions, and the types are specifications of the domains,
+-- | codomains, input-output behavior, and the effects of functions.
+
 mutual
   -- | Takes no parameters.
   public export
@@ -670,6 +709,27 @@ FullyAppliedTerm : {lang : GebSExp} -> {isLanguage : Language lang []} ->
 FullyAppliedTerm = Term 0
 
 public export
+termSortToExp : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  TermSort isLanguage -> GebSExp
+termSortToExp sort = ?termSortToExp_hole
+
+public export
+termToExp : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {numApplications : Nat} -> {sort : TermSort isLanguage} ->
+  Term numApplications sort -> GebSExp
+termToExp term = ?termToExp_hole
+
+public export
+(lang : GebSExp) => (isLanguage : Language lang []) =>
+  Show (TermSort isLanguage) where
+    show = show . termSortToExp
+
+public export
+(lang : GebSExp) => (isLanguage : Language lang []) =>
+  (s : TermSort isLanguage) => (n : Nat) => Show (Term n s) where
+    show = show . termToExp
+
+public export
 interpretTermSort :
   {lang : GebSExp} -> {isLanguage : Language lang []} ->
   TermSort isLanguage -> Type
@@ -755,61 +815,6 @@ smallStepTermReductionCorrect :
 smallStepTermReductionCorrect term = ?smallStepTermReductionCorrect_hole
 
 {-
-----------------------------------------------------------------
----- General definition of programming language / metalogic ----
-----------------------------------------------------------------
-
--- | A "Language" (short in this case for "programming language") is a category
--- | which is capable of performing computation and can be defined solely by
--- | computation.  It can be viewed as having morphisms which represent
--- | computable functions with computably-representable effects.
--- |
--- | By "capable of performing computation", we mean that Gödel's
--- | incompleteness theorems apply to the category.  In other words, it can
--- | express metalogic; we could also say that it can reflect itself, in that
--- | it can define functions on its own expressions.  (So perhaps we might
--- | say something like "computable metacategory" rather than "programming
--- | language".)  A combination of products, coproducts, and decidable
--- | equality gives us the ability to perform substitution, which in turn
--- | allows us to represent function application -- the fundamental
--- | computation in any programming language.
--- |
--- | A language is unsuitable as a metalogic if it is inconsistent -- if its
--- | operational semantics allow non-termination, or if it has any partial
--- | functions.  Of course, one consequence of Gödel's incompleteness theorems
--- | is that we can never be sure that there _are_ any languages that are
--- | suitable as metalogics in that sense!
--- |
--- | So there is a minimal programming language, with this definition:  just
--- | what is required for Gödel's incompleteness theorems to apply.  There is
--- | also a maximal programming language:  the universal Turing machine,
--- | with non-terminating and partial functions.
--- |
--- | Our definitions of languages below all take the form of a
--- | category-theoretical, point-free (termless) definition of syntax and
--- | type system, and an operational definition of semantics using an
--- | interpretation of objects as the types and morphisms as the functions
--- | of a programming language which does have terms.  The functions of the
--- | language are general computable functions with effects, the terms are
--- | S-expressions, and the types are specifications of the domains,
--- | codomains, input-output behavior, and the effects of functions.
-
--------------------------
----- Minimal objects ----
--------------------------
-
--- | Every programming language (using the Geb definition) has an initial
--- | object, a terminal object, finite products and coproducts, an object
--- | which we interpret as the type of representations of the language's
--- | objects and morphisms, and a decidable equality on those
--- | representations.  This is enough to perform substitution on
--- | representations.
--- |
--- | Note that we are _not_ assuming exponential objects yet -- for example,
--- | the minimal language does not have any first-sort functions, and
--- | primitive recursion has only first-order functions.
-
--- | Well-typed representations of common objects.
 public export
 data MinimalObject : Type where
   Initial : MinimalObject
@@ -857,93 +862,6 @@ mutual
         (morphismCodomainObject eqCase) = (morphismCodomainObject neqCase)} ->
       Morphism
 
------------------------------------------------------------------------------
----- The interpretation into Idris-2 of the minimal programming language ----
------------------------------------------------------------------------------
-
-public export
-interpretMinimalObject : MinimalObject -> Type
-interpretMinimalObject Initial = Void
-interpretMinimalObject Terminal = ()
-interpretMinimalObject (Product r r') =
-  (interpretMinimalObject r, interpretMinimalObject r')
-interpretMinimalObject (Coproduct r r') =
-  Either (interpretMinimalObject r) (interpretMinimalObject r')
-interpretMinimalObject ObjectExpression = MinimalObject
-interpretMinimalObject (MorphismExpression domain codomain) =
-  (m : Morphism **
-   (morphismDomainObject m = domain, morphismCodomainObject m = codomain))
-
-public export
-interpretMorphism : (r : Morphism) ->
-  interpretMorphismType r
-interpretMorphism (Identity o) x = x
-interpretMorphism (Compose g f {composable}) x =
-  interpretMorphism g $
-    replace {p=interpretMinimalObject} composable $
-      interpretMorphism f x
-interpretMorphism (FromInitial _) x = void x
-interpretMorphism (ToTerminal _) _ = ()
-interpretMorphism (ProductIntro f g {domainsMatch}) x =
-  (interpretMorphism f x,
-   interpretMorphism g (rewrite sym domainsMatch in x))
-interpretMorphism (ProductElimLeft a b) x = fst x
-interpretMorphism (ProductElimRight a b) x = snd x
-interpretMorphism (CoproductElim f g {codomainsMatch}) x =
-  case x of
-    Left x' => interpretMorphism f x'
-    Right x' => rewrite codomainsMatch in interpretMorphism g x'
-interpretMorphism (CoproductIntroLeft a b) x = Left x
-interpretMorphism (CoproductIntroRight a b) x = Right x
-interpretMorphism (ExpressionIntro exp) () = exp
-interpretMorphism (ExpressionElim exp exp' eqCase neqCase
-  {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
-  {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) x =
-    let
-      y = interpretMorphism exp x
-      y' = replace {p=interpretMinimalObject} expCodomainIsExpression y
-      z = interpretMorphism exp' (rewrite sym expDomainsMatch in x)
-      z' = replace {p=interpretMinimalObject} (sym expCodomainsMatch) z
-      z'' = replace {p=interpretMinimalObject} expCodomainIsExpression z'
-    in
-    if y' == z'' then
-      interpretMorphism eqCase (rewrite sym eqDomainMatches in x)
-    else
-      rewrite eqCodomainsMatch in
-      interpretMorphism neqCase (rewrite sym neqDomainMatches in x)
-
------------------------------------
----- Correctness of reflection ----
------------------------------------
-
-public export
-minimalObjectQuote : MinimalObject -> interpretMinimalObject ObjectExpression
-minimalObjectQuote = Prelude.id
-
-public export
-minimalObjectUnquote : interpretMinimalObject ObjectExpression -> MinimalObject
-minimalObjectUnquote = Prelude.id
-
-export
-minimalObjectUnquoteQuoteCorrect : (r : MinimalObject) ->
-  minimalObjectUnquote (minimalObjectQuote r) = r
-minimalObjectUnquoteQuoteCorrect r = Refl
-
-------------------------------------------------------------
----- Term reduction in the minimal programming language ----
-------------------------------------------------------------
-
--- | Terms are used to define operational semantics for the category-theoretical
--- | representations of programming languages.  We have a well-typed
--- | representation of terms in Idris defined by the interpretation of objects
--- | as types -- together with the notion of function application, which we
--- | do not have in the category-theoretical representation.
-
-public export
-data TermType : Type where
-  TermSortType : (type : MinimalObject) -> TermType
-  MorphismTerm : (domain, codomain : MinimalObject) -> TermType
-
 public export
 data Term : (numApplications : Nat) -> TermType -> Type where
   UnappliedMorphismTerm : (morphism : Morphism) ->
@@ -981,10 +899,6 @@ data Term : (numApplications : Nat) -> TermType -> Type where
     Term 0 $ TermSortType $ ObjectExpression
 
 public export
-FullyAppliedTerm : TermType -> Type
-FullyAppliedTerm = Term 0
-
-public export
 gebTermToExp : {type: TermType} -> {numApplications : Nat} ->
   Term numApplications type -> GebSExp
 gebTermToExp (Application f x) =
@@ -1006,266 +920,6 @@ gebTermToExp (ExpressionTerm x) =
   GAExpressionTerm $* [gebMinimalObjectToExp x]
 
 public export
-gebExpToTerm :
-  GebSExp -> Maybe (type : TermType ** n : Nat ** Term n type)
-gebExpToTerm (GAMorphismTerm $* [x]) =
-  case gebExpToMorphism x of
-    Just morphism => Just
-      (MorphismTerm
-        (morphismDomainObject morphism)
-        (morphismCodomainObject morphism) **
-       0 **
-       (UnappliedMorphismTerm morphism))
-    Nothing => Nothing
-gebExpToTerm (GAExFalsoTerm $* [ti, ty]) =
-  case (gebExpToTerm ti, gebExpToMinimalObject ty) of
-    (Just (TermSortType Initial ** n ** initialTerm), Just type) =>
-      Just (TermSortType type ** n ** ExFalsoTerm initialTerm)
-    _ => Nothing
-gebExpToTerm (GAUnitTerm $* []) =
-  Just (TermSortType Terminal ** 0 ** UnitTerm)
-gebExpToTerm (GAPairTerm $* [left, right]) with
-  (gebExpToTerm left, gebExpToTerm right)
-    gebExpToTerm (GAPairTerm $* [left, right]) |
-      (Just (TermSortType leftObject ** nLeft ** leftTerm),
-       Just (TermSortType rightObject ** nRight ** rightTerm)) =
-        Just
-          (TermSortType (Product leftObject rightObject) **
-           nLeft + nRight **
-           (PairTerm leftTerm rightTerm))
-    gebExpToTerm (GAPairTerm $* [left, right]) |
-      _ = Nothing
-gebExpToTerm (GAApplication $* [fExp, xExp]) =
-  case (gebExpToTerm fExp, gebExpToTerm xExp) of
-    (Just (fType ** nLeft ** f), Just (xType ** nRight ** x)) =>
-      case fType of
-        MorphismTerm domain codomain =>
-          case xType of
-            TermSortType domain' => case decEq domain domain' of
-              Yes Refl =>
-                Just
-                  (TermSortType codomain **
-                   S (nLeft + nRight) **
-                   Application f x)
-              No _ => Nothing
-            _ => Nothing
-        _ => Nothing
-    _ => Nothing
-gebExpToTerm (GAExpressionTerm $* [exp]) = gebExpToTerm exp
-gebExpToTerm (GALeftTerm $* [leftExp, rightExp]) =
-  case (gebExpToTerm leftExp, gebExpToMinimalObject rightExp) of
-    (Just (TermSortType leftObject ** nLeft ** leftTerm),
-     Just rightObject) =>
-      Just
-        (TermSortType (Coproduct leftObject rightObject) **
-         nLeft **
-         MinimalLeft leftTerm rightObject)
-    _ => Nothing
-gebExpToTerm (GARightTerm $* [leftExp, rightExp]) =
-  case (gebExpToMinimalObject leftExp, gebExpToTerm rightExp) of
-    (Just leftObject,
-     Just (TermSortType rightObject ** nRight ** rightTerm)) =>
-      Just
-        (TermSortType (Coproduct leftObject rightObject) **
-         nRight **
-         MinimalRight leftObject rightTerm)
-    _ => Nothing
-gebExpToTerm _ = Nothing
-
-public export
-gebTermRepresentationComplete :
-  {type : TermType} -> {numApplications : Nat} ->
-  (term : Term numApplications type) ->
-  gebExpToTerm
-    (gebTermToExp {type} {numApplications} term) =
-      Just (type ** numApplications ** term)
-gebTermRepresentationComplete (Application {domain} f x) =
-  rewrite gebTermRepresentationComplete f in
-  rewrite gebTermRepresentationComplete x in
-  rewrite decEqRefl minimalObjectDecEq domain in
-  Refl
-gebTermRepresentationComplete
-  (UnappliedMorphismTerm morphism) =
-    rewrite gebMorphismRepresentationComplete morphism in
-    Refl
-gebTermRepresentationComplete (ExFalsoTerm ti) =
-  let tiComplete = gebTermRepresentationComplete ti in
-  ?gebTermRepresentationComplete_hole_exfalso
-gebTermRepresentationComplete UnitTerm =
-  Refl
-gebTermRepresentationComplete (PairTerm left right) =
-  ?gebTermRepresentationComplete_hole_pair
-gebTermRepresentationComplete
-  (MinimalLeft left right) =
-    ?gebTermRepresentationComplete_hole_left
-gebTermRepresentationComplete
-  (MinimalRight left right) =
-    ?gebTermRepresentationComplete_hole_right
-gebTermRepresentationComplete (ExpressionTerm x) =
-  ?gebTermRepresentationComplete_hole_expression
-
-public export
 (type : TermType) => (n : Nat) => Show (Term n type) where
   show term = show (gebTermToExp term)
-
-public export
-interpretTermType : TermType -> Type
-interpretTermType (TermSortType type) = interpretMinimalObject type
-interpretTermType (MorphismTerm domain codomain) =
-  interpretMinimalObject domain -> interpretMinimalObject codomain
-
-public export
-interpretTerm : {type : TermType} -> {numApplications : Nat} ->
-  (term : Term numApplications type) -> interpretTermType type
-interpretTerm (Application f x) =
-  interpretTerm f $ interpretTerm x
-interpretTerm (UnappliedMorphismTerm morphism) =
-  interpretMorphism morphism
-interpretTerm (ExFalsoTerm v) = void $ interpretTerm v
-interpretTerm UnitTerm = ()
-interpretTerm (PairTerm left right) =
-  (interpretTerm left, interpretTerm right)
-interpretTerm (MinimalLeft left right) =
-  Left $ interpretTerm left
-interpretTerm (MinimalRight left right) =
-  Right $ interpretTerm right
-interpretTerm (ExpressionTerm x) = x
-
-public export
-gebNoExFalsoTerm : {numApplications : Nat} ->
-  (ti : Term numApplications (TermSortType Initial)) ->
-  Void
-gebNoExFalsoTerm ti = void $ interpretTerm ti
-
--- | A correct morphism transformation preserves the interpretation of
--- | term application.
-public export
-correctMorphismTransformPreservesTermInterpretation :
-  (transform : MorphismTransform) ->
-  {domainTransformCorrect :
-    MorphismTransformDomainCorrect transform} ->
-  {codomainTransformCorrect :
-    MorphismTransformCodomainCorrect transform} ->
-  MorphismTransformCorrect
-    transform domainTransformCorrect codomainTransformCorrect ->
-  (m : Morphism) ->
-  {numApplications : Nat} ->
-  (term :
-    Term numApplications
-      (TermSortType (morphismDomainObject m))) ->
-  (term' :
-    Term numApplications
-      (TermSortType (morphismDomainObject (transform m)))) ->
-  interpretTerm term =
-    (rewrite sym (domainTransformCorrect m) in (interpretTerm term')) ->
-  interpretTerm
-    (Application (UnappliedMorphismTerm m) term) =
-  (rewrite sym (codomainTransformCorrect m) in (interpretTerm
-    (Application (UnappliedMorphismTerm (transform m)) term')))
-correctMorphismTransformPreservesTermInterpretation
-  transform transformCorrect m {numApplications} term term' termEq =
-    ?correctMorphismTransformPreservesTermInterpretation_hole
-
-public export
-bigStepMorphismReduction :
-  (m : Morphism) ->
-  FullyAppliedTerm (TermSortType (morphismDomainObject m)) ->
-  FullyAppliedTerm (TermSortType (morphismCodomainObject m))
-bigStepMorphismReduction (Identity _) x = x
-bigStepMorphismReduction (Compose g f {composable}) x =
-  bigStepMorphismReduction g $
-    rewrite sym composable in (bigStepMorphismReduction f x)
-bigStepMorphismReduction (FromInitial _) x = ExFalsoTerm x
-bigStepMorphismReduction (ToTerminal y) x = UnitTerm
-bigStepMorphismReduction (ProductIntro f g {domainsMatch}) x =
-  PairTerm
-    (bigStepMorphismReduction f x)
-    (bigStepMorphismReduction g $ rewrite sym domainsMatch in x)
-bigStepMorphismReduction (ProductElimLeft a b) x = case x of
-  PairTerm {leftApplications=0} {rightApplications=0} left right => left
-  ExFalsoTerm ti => ExFalsoTerm ti
-bigStepMorphismReduction (ProductElimRight a b) x = case x of
-  PairTerm {leftApplications=0} {rightApplications=0} left right => right
-  ExFalsoTerm ti => ExFalsoTerm ti
-bigStepMorphismReduction (CoproductElim f g {codomainsMatch}) x =
-  case x of
-    MinimalLeft left _ =>
-      bigStepMorphismReduction f left
-    MinimalRight _ right =>
-      rewrite codomainsMatch in bigStepMorphismReduction g right
-    ExFalsoTerm ti => ExFalsoTerm ti
-bigStepMorphismReduction (CoproductIntroLeft left right) x =
-  MinimalLeft x right
-bigStepMorphismReduction (CoproductIntroRight left right) x =
-  MinimalRight left x
-bigStepMorphismReduction (ExpressionIntro exp) _ = ExpressionTerm exp
-bigStepMorphismReduction (ExpressionElim exp exp' eqCase neqCase
-  {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
-  {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) x =
-    let
-      xReduced = bigStepMorphismReduction exp x
-      xReduced' = bigStepMorphismReduction exp'
-        (rewrite sym expDomainsMatch in x)
-      xReducedRewritten =
-        replace {p=(Term 0 . TermSortType)}
-          expCodomainIsExpression xReduced
-      xReducedRewritten' =
-        replace {p=(Term 0 . TermSortType)}
-          expCodomainIsExpression (rewrite expCodomainsMatch in xReduced')
-      xInterpreted = interpretTerm xReducedRewritten
-      xInterpreted' = interpretTerm xReducedRewritten'
-      eqCaseReduced =
-        bigStepMorphismReduction
-          eqCase (rewrite sym eqDomainMatches in x)
-      eqCaseReduced' =
-        bigStepMorphismReduction
-          neqCase (rewrite sym neqDomainMatches in x)
-    in
-    if xInterpreted == xInterpreted' then
-      eqCaseReduced else
-    (replace {p=(Term 0. TermSortType)}
-      (sym eqCodomainsMatch) eqCaseReduced')
-
-public export
-bigStepTermReduction :
-  {type : TermType} -> {numApplications : Nat} ->
-  Term numApplications type ->
-  FullyAppliedTerm type
-bigStepTermReduction (Application f x) with
-  (bigStepTermReduction f, bigStepTermReduction x)
-    bigStepTermReduction (Application f x) |
-      (UnappliedMorphismTerm m, xReduced) =
-        bigStepMorphismReduction m xReduced
-bigStepTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
-bigStepTermReduction (ExFalsoTerm ti) =
-  ExFalsoTerm $ bigStepTermReduction ti
-bigStepTermReduction UnitTerm = UnitTerm
-bigStepTermReduction (PairTerm left right) =
-  PairTerm
-    (bigStepTermReduction left)
-    (bigStepTermReduction right)
-bigStepTermReduction (MinimalLeft left right) =
-  MinimalLeft (bigStepTermReduction left) right
-bigStepTermReduction (MinimalRight left right) =
-  MinimalRight left (bigStepTermReduction right)
-bigStepTermReduction (ExpressionTerm x) = ExpressionTerm x
-
-mutual
-  public export
-  bigStepMorphismReductionCorrect :
-    (m : Morphism) ->
-    (x : FullyAppliedTerm (TermSortType (morphismDomainObject m))) ->
-    interpretTerm (bigStepMorphismReduction m x) =
-      interpretTerm (UnappliedMorphismTerm m) (interpretTerm x)
-  bigStepMorphismReductionCorrect m x =
-    ?bigStepMorphismReductionCorrect_hole
-
-  public export
-  bigStepTermReductionCorrect :
-    {type : TermType} -> {numApplications : Nat} ->
-    (term : Term numApplications type) ->
-    interpretTerm (bigStepTermReduction term) =
-      interpretTerm term
-  bigStepTermReductionCorrect {type} term =
-    ?bigStepTermReductionCorrect_hole
 -}
