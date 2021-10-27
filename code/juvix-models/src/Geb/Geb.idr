@@ -612,7 +612,7 @@ mutual
         [$^ GARefinementSort, GARefinementRefinement $*** s]
     LanguageExpression : {lang : GebSExp} ->
       Language lang [] ->
-      Expression (GALanguageExpression $*** x)
+      Expression (GALanguageExpression $*** lang)
         [$^ GALanguageSort, $^ GALanguageRefinement]
     ObjectExpression : {lang, object : GebSExp} ->
       Object object [lang] ->
