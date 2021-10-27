@@ -66,6 +66,7 @@ data GebAtom : Type where
   GATerminal : GebAtom
   GAProduct : GebAtom
   GACoproduct : GebAtom
+  GAExponential : GebAtom
   GAExpressionObject : GebAtom
 
   GAObjectExpression : GebAtom
@@ -90,6 +91,8 @@ data GebAtom : Type where
   GACoproductIntroRight : GebAtom
   GAExpressionIntro : GebAtom
   GAExpressionElim : GebAtom
+  GAExponentialEval : GebAtom
+  GACurry : GebAtom
 
   -- | The notion of a term of any programming language.
   GATerm : GebAtom
@@ -152,6 +155,9 @@ gaEncode GALanguageExpression = 42
 gaEncode GAExpressionSort = 43
 gaEncode GAExpressionRefinement = 44
 gaEncode GAExpressionObject = 45
+gaEncode GAExponential = 46
+gaEncode GAExponentialEval = 47
+gaEncode GACurry = 48
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -201,6 +207,9 @@ gaDecode 42 = Just GALanguageExpression
 gaDecode 43 = Just GAExpressionSort
 gaDecode 44 = Just GAExpressionRefinement
 gaDecode 45 = Just GAExpressionObject
+gaDecode 46 = Just GAExponential
+gaDecode 47 = Just GAExponentialEval
+gaDecode 48 = Just GACurry
 gaDecode _ = Nothing
 
 export
@@ -251,6 +260,9 @@ gaDecodeEncodeIsJust GALanguageExpression = Refl
 gaDecodeEncodeIsJust GAExpressionSort = Refl
 gaDecodeEncodeIsJust GAExpressionRefinement = Refl
 gaDecodeEncodeIsJust GAExpressionObject = Refl
+gaDecodeEncodeIsJust GAExponential = Refl
+gaDecodeEncodeIsJust GAExponentialEval = Refl
+gaDecodeEncodeIsJust GACurry = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -300,6 +312,9 @@ gebAtomToString GALanguageExpression = "LanguageExpression"
 gebAtomToString GAExpressionSort = "ExpressionSort"
 gebAtomToString GAExpressionRefinement = "ExpressionRefinement"
 gebAtomToString GAExpressionObject = "ExpressionObject"
+gebAtomToString GAExponential = "Exponential"
+gebAtomToString GAExponentialEval = "ExponentialEval"
+gebAtomToString GACurry = "Curry"
 
 public export
 Show GebAtom where
@@ -437,6 +452,11 @@ mutual
     Minimal : Language ($^ GAMinimal) []
     HigherOrder : Language ($^ GAHigherOrder) []
 
+  public export
+  data LanguageHasExponentials : {lang : GebSExp} ->
+    Language lang [] -> Type where
+      HigherOrderHasExponentials : LanguageHasExponentials HigherOrder
+
   -- | Takes one parameter, a language.
   public export
   data Object : GebSExp -> GebSList -> Type where
@@ -444,6 +464,17 @@ mutual
       Object (GAInitial $*** lang) [lang]
     Terminal : {lang : GebSExp} -> Language lang [] ->
       Object (GATerminal $*** lang) [lang]
+    Product : {lang, left, right : GebSExp} ->
+      Object left [lang] -> Object right [lang] ->
+      Object (GAProduct $* [left, right]) [lang]
+    Coproduct : {lang, left, right : GebSExp} ->
+      Object left [lang] -> Object right [lang] ->
+      Object (GACoproduct $* [left, right]) [lang]
+    Exponential : {lang, left, right : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      {auto hasExponentials : LanguageHasExponentials isLanguage} ->
+      Object left [lang] -> Object right [lang] ->
+      Object (GAExponential $* [left, right]) [lang]
 
     -- | Reflects expressions of each refinement into each language.
     -- | (In particular, this might reflect into language X an expression
@@ -530,6 +561,9 @@ objectLanguage : {lang, object : GebSExp} ->
   Object object [lang] -> Language lang []
 objectLanguage (Initial language) = language
 objectLanguage (Terminal language) = language
+objectLanguage (Product left _) = objectLanguage left
+objectLanguage (Coproduct left _) = objectLanguage left
+objectLanguage (Exponential left _) = objectLanguage left
 objectLanguage (ExpressionObject language _ _) = language
 
 mutual
@@ -861,65 +895,4 @@ mutual
       {auto eqCodomainsMatch :
         (morphismCodomainObject eqCase) = (morphismCodomainObject neqCase)} ->
       Morphism
-
-public export
-data Term : (numApplications : Nat) -> TermType -> Type where
-  UnappliedMorphismTerm : (morphism : Morphism) ->
-    Term 0 $
-      MorphismTerm
-        (morphismDomainObject morphism)
-        (morphismCodomainObject morphism)
-  Application : {morphismApplications, termApplications : Nat} ->
-    {domain, codomain : MinimalObject} ->
-    Term morphismApplications (MorphismTerm domain codomain) ->
-    Term termApplications (TermSortType domain) ->
-    Term
-      (S $ morphismApplications + termApplications) (TermSortType codomain)
-  ExFalsoTerm : {numApplications : Nat} -> {type : MinimalObject} ->
-    Term numApplications (TermSortType Initial) ->
-    Term numApplications $ TermSortType type
-  UnitTerm : Term 0 $ TermSortType Terminal
-  PairTerm : {leftApplications, rightApplications : Nat} ->
-    {left, right : MinimalObject} ->
-    Term leftApplications (TermSortType left) ->
-    Term rightApplications (TermSortType right) ->
-    Term (leftApplications + rightApplications) $
-      TermSortType $ Product left right
-  MinimalLeft :
-    {leftApplications : Nat} -> {left : MinimalObject} ->
-    Term leftApplications (TermSortType left) ->
-    (right : MinimalObject) ->
-    Term leftApplications $ TermSortType $ Coproduct left right
-  MinimalRight :
-    (left : MinimalObject) ->
-    {rightApplications : Nat} -> {right : MinimalObject} ->
-    Term rightApplications (TermSortType right) ->
-    Term rightApplications $ TermSortType $ Coproduct left right
-  ExpressionTerm : MinimalObject ->
-    Term 0 $ TermSortType $ ObjectExpression
-
-public export
-gebTermToExp : {type: TermType} -> {numApplications : Nat} ->
-  Term numApplications type -> GebSExp
-gebTermToExp (Application f x) =
-  GAApplication $* [gebTermToExp f, gebTermToExp x]
-gebTermToExp (UnappliedMorphismTerm morphism) =
-  GAMorphismTerm $* [gebMorphismToExp morphism]
-gebTermToExp {type=(TermSortType type)} (ExFalsoTerm ti) =
-  GAExFalsoTerm $* [gebTermToExp ti, gebMinimalObjectToExp type]
-gebTermToExp UnitTerm = $^ GAUnitTerm
-gebTermToExp
-  (PairTerm {leftApplications} {rightApplications} {left} {right}
-   leftTerm rightTerm) =
-    GAPairTerm $* [gebTermToExp leftTerm, gebTermToExp rightTerm]
-gebTermToExp {numApplications} (MinimalLeft left right) =
-  GALeftTerm $* [gebTermToExp left, gebMinimalObjectToExp right]
-gebTermToExp {numApplications} (MinimalRight left right) =
-  GARightTerm $* [gebMinimalObjectToExp left, gebTermToExp right]
-gebTermToExp (ExpressionTerm x) =
-  GAExpressionTerm $* [gebMinimalObjectToExp x]
-
-public export
-(type : TermType) => (n : Nat) => Show (Term n type) where
-  show term = show (gebTermToExp term)
 -}
