@@ -2,8 +2,9 @@ module ReflectiveLanguages.Substitutive
 
 import Library.FunctionsAndRelations
 import Library.Decidability
-import RefinedSExp.List
-import public Datatypes.DependentAlgebraicTypes
+-- import RefinedSExp.List
+-- import public Datatypes.DependentAlgebraicTypes
+import RefinedSExp.SExp
 import public Data.Nat
 
 %default total
@@ -111,6 +112,7 @@ public export
 CSLPred : Type
 CSLPred = (contextSize : Nat) -> CSLNPred contextSize
 
+{-
 -- | Keyword atoms of S-expressions which represent refinements.
 public export
 data Keyword : Type where
@@ -320,3 +322,4 @@ mutual
     (l : RLList rl) -> rl.rlApplicative (TypecheckResults rl context l)
   typecheckList rl context x = typecheckList_hole
   -}
+-}

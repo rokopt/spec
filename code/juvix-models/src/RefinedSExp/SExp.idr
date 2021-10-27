@@ -599,3 +599,12 @@ DependentKindStar sort =
     (param : KindSExp) ->
     Type where
     -}
+
+public export
+RefinementSignature : (atom : Type) -> Type
+RefinementSignature atom = SList atom -> Maybe (SList atom, SList atom)
+
+public export
+Refinement : (atom : Type) -> Type
+Refinement atom =
+  SortedMap atom (RefinementSignature atom) -> RefinementSignature atom
