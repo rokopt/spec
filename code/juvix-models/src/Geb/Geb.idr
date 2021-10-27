@@ -488,11 +488,12 @@ mutual
   public export
   data Morphism : GebSExp -> GebSList -> Type where
     Identity : {lang, obj : GebSExp} ->
-      Language lang [] -> Object obj [lang] ->
-      Morphism (GAIdentity $*** obj) [lang, obj]
+      Object obj [lang] -> Morphism (GAIdentity $*** obj) [lang, obj, obj]
     Compose : {lang, a, b, c, g, f : GebSExp} ->
       Morphism g [lang, b, c] -> Morphism f [lang, a, b] ->
       Morphism (GACompose $* [g, f]) [lang, a, c]
+    FromInitial : {lang, obj : GebSExp} -> Object obj [lang] ->
+      Morphism (GAFromInitial $*** obj) [lang, GAInitial $*** lang, obj]
 
   -- | Takes no parameters.
   -- | These are "refinement families" (by analogy to "type families").
@@ -593,13 +594,17 @@ mutual
   morphismDomainObject : {lang, domain, codomain, morphism : GebSExp} ->
     Morphism morphism [lang, domain, codomain] ->
     Object domain [lang]
+  morphismDomainObject (Identity o) = o
   morphismDomainObject (Compose g f) = morphismDomainObject f
+  morphismDomainObject (FromInitial obj) = Initial (objectLanguage obj)
 
   public export
   morphismCodomainObject : {lang, domain, codomain, morphism : GebSExp} ->
     Morphism morphism [lang, domain, codomain] ->
     Object codomain [lang]
+  morphismCodomainObject (Identity o) = o
   morphismCodomainObject (Compose g f) = morphismCodomainObject g
+  morphismCodomainObject (FromInitial obj) = obj
 
 public export
 morphismLanguage : {lang, domain, codomain, morphism : GebSExp} ->
@@ -630,9 +635,11 @@ mutual
     (isMorphism : Morphism morphism [lang, domain, codomain]) ->
     interpretObject (morphismDomainObject isMorphism) ->
       interpretObject (morphismCodomainObject isMorphism)
+  interpretMorphism (Identity _) x = x
   interpretMorphism (Compose g f) x =
     let u = objectUnique (morphismCodomainObject f) (morphismDomainObject g) in
     interpretMorphism g (rewrite sym u in (interpretMorphism f x))
+  interpretMorphism (FromInitial _) v = void v
 
   public export
   interpretRefinement : {s, r : GebSExp} ->
