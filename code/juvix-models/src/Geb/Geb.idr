@@ -627,16 +627,6 @@ mutual
 ---- Type-checking in Idris-2 of Geb expressions ----
 -----------------------------------------------------
 
-public export
-objectLanguage : {lang, object : GebSExp} ->
-  Object object [lang] -> Language lang []
-objectLanguage (Initial language) = language
-objectLanguage (Terminal language) = language
-objectLanguage (Product left _) = objectLanguage left
-objectLanguage (Coproduct left _) = objectLanguage left
-objectLanguage (Exponential left _) = objectLanguage left
-objectLanguage (ExpressionObject language _ _) = language
-
 mutual
   public export
   objectUnique : {lang, object : GebSExp} ->
@@ -782,36 +772,39 @@ FunctorPreservesInterpretation {sourceLang} {targetLang}
 public export
 data TermSort : {lang : GebSExp} -> Language lang [] -> Type where
   TermSortType :
-    {lang, object : GebSExp} -> (isObject : Object object [lang]) ->
-    TermSort (objectLanguage isObject)
+    {lang, object : GebSExp} -> {isLanguage : Language lang []} ->
+    (isObject : Object object [lang]) -> TermSort isLanguage
   TermSortFunction :
     {lang, domain, codomain : GebSExp} ->
+    {isLanguage : Language lang []} ->
     (domainObject : Object domain [lang]) ->
     (codomainObject : Object codomain [lang]) ->
-    TermSort (objectLanguage domainObject)
+    TermSort isLanguage
 
 public export
 data Term : {lang : GebSExp} -> {isLanguage : Language lang []} ->
   (numApplications : Nat) -> TermSort isLanguage -> Type where
     UnappliedMorphismTerm :
       {lang, domain, codomain, morphism : GebSExp} ->
+      {isLanguage : Language lang []} ->
       {domainObject : Object domain [lang]} ->
       {codomainObject : Object codomain [lang]} ->
       (isMorphism : Morphism morphism [lang, domain, codomain]) ->
-      Term 0 $ TermSortFunction domainObject codomainObject
+      Term {isLanguage} 0 $ TermSortFunction domainObject codomainObject
     Application :
       {lang, domain, codomain : GebSExp} ->
+      {isLanguage : Language lang []} ->
       {domainObject : Object domain [lang]} ->
       {codomainObject : Object codomain [lang]} ->
       {morphismApplications, termApplications : Nat} ->
-      Term morphismApplications
+      Term {isLanguage} morphismApplications
         (TermSortFunction domainObject codomainObject) ->
-      Term termApplications (TermSortType domainObject) ->
-      Term
+      Term {isLanguage} termApplications (TermSortType domainObject) ->
+      Term {isLanguage}
         (S $ morphismApplications + termApplications)
         (TermSortType codomainObject)
     UnitTerm : {lang : GebSExp} -> (isLanguage : Language lang []) ->
-      Term 0 $ TermSortType (Terminal isLanguage)
+      Term {isLanguage} 0 $ TermSortType (Terminal isLanguage)
 
 public export
 FullyAppliedTerm : {lang : GebSExp} -> {isLanguage : Language lang []} ->
@@ -859,13 +852,14 @@ interpretTerm term = ?interpretTerm_hole
 public export
 smallStepMorphismReduction :
   {lang, domain, codomain, morphism : GebSExp} ->
+  {isLanguage : Language lang []} ->
   {domainObject : Object domain [lang]} ->
   {codomainObject : Object codomain [lang]} ->
   (isMorphism : Morphism morphism [lang, domain, codomain]) ->
   {numApplications : Nat} ->
-  Term numApplications (TermSortType domainObject) ->
+  Term {isLanguage} numApplications (TermSortType domainObject) ->
   (remainingApplications : Nat **
-   Term remainingApplications (TermSortType codomainObject))
+   Term {isLanguage} remainingApplications (TermSortType codomainObject))
 smallStepMorphismReduction = ?smallStepMorphismReduction_hole
 
 public export
