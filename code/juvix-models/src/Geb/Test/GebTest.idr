@@ -159,6 +159,28 @@ GebAlgebra = SExpAlgebraSignature
 
 -}
 
+{-
+GebRefinement : Type
+GebRefinement = Refinement GebAtom
+
+Sort : GebRefinement
+Sort _ [] = Just ([$^ GASortRefinement], [$^ GARefinementRefinement])
+Sort _ _ = Nothing
+
+Language : GebRefinement
+Language _ [] = Just ([$^ GALanguageRefinement], [$^ GALanguageSort])
+Language _ _ = Nothing
+
+Object : GebRefinement
+Object _ [language $* []] = Just ([$^ language], [])
+Object _ _ = Nothing
+
+Morphism : GebRefinement
+Morphism _ [language $* [], domain $* [l], codomain $* [l']] =
+  ?Morphism_hole
+Morphism _ _ = Nothing
+-}
+
 export
 gebTests : IO ()
 gebTests = do

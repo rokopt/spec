@@ -67,6 +67,7 @@ data GebAtom : Type where
   GAProduct : GebAtom
   GACoproduct : GebAtom
   GAExponential : GebAtom
+  GARefinementObject : GebAtom
   GAExpressionObject : GebAtom
 
   GAObjectExpression : GebAtom
@@ -158,6 +159,7 @@ gaEncode GAExpressionObject = 45
 gaEncode GAExponential = 46
 gaEncode GAExponentialEval = 47
 gaEncode GACurry = 48
+gaEncode GARefinementObject = 49
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -210,6 +212,7 @@ gaDecode 45 = Just GAExpressionObject
 gaDecode 46 = Just GAExponential
 gaDecode 47 = Just GAExponentialEval
 gaDecode 48 = Just GACurry
+gaDecode 49 = Just GARefinementObject
 gaDecode _ = Nothing
 
 export
@@ -263,6 +266,7 @@ gaDecodeEncodeIsJust GAExpressionObject = Refl
 gaDecodeEncodeIsJust GAExponential = Refl
 gaDecodeEncodeIsJust GAExponentialEval = Refl
 gaDecodeEncodeIsJust GACurry = Refl
+gaDecodeEncodeIsJust GARefinementObject = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -315,6 +319,7 @@ gebAtomToString GAExpressionObject = "ExpressionObject"
 gebAtomToString GAExponential = "Exponential"
 gebAtomToString GAExponentialEval = "ExponentialEval"
 gebAtomToString GACurry = "Curry"
+gebAtomToString GARefinementObject = "RefinementObject"
 
 public export
 Show GebAtom where
@@ -468,12 +473,12 @@ mutual
       Object (GATerminal $*** lang) [lang]
     Product :
       {lang, left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Object (GAProduct $* [left, right]) [lang]
     Coproduct :
       {lang, left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Object (GACoproduct $* [left, right]) [lang]
     Exponential : {lang, left, right : GebSExp} ->
@@ -481,6 +486,15 @@ mutual
       {auto hasExponentials : LanguageHasExponentials isLanguage} ->
       Object left [lang] -> Object right [lang] ->
       Object (GAExponential $* [left, right]) [lang]
+
+    RefinementObject : {lang, refined, pass, fail, test : GebSExp} ->
+      {auto isLanguage : Language lang []} ->
+      {refinedObject : Object refined [lang]} ->
+      {passObject : Object pass [lang]} ->
+      {failObject : Object fail [lang]} ->
+      (testMorphism :
+        Morphism test [lang, refined, GACoproduct $* [pass, fail]]) ->
+      Object (GARefinementObject $* [refined, pass, fail, test]) [lang]
 
     -- | Reflects expressions of each refinement into each language.
     -- | (In particular, this might reflect into language X an expression
@@ -494,22 +508,22 @@ mutual
   public export
   data Morphism : GebSExp -> GebSList -> Type where
     Identity : {lang, obj : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object obj [lang] -> Morphism (GAIdentity $*** obj) [lang, obj, obj]
     Compose : {lang, a, b, c, g, f : GebSExp} ->
-      {isLanguage : Language lang []} -> {objA : Object a [lang]} ->
+      {auto isLanguage : Language lang []} -> {objA : Object a [lang]} ->
       {objB : Object b [lang]} -> {objC : Object c [lang]} ->
       Morphism g [lang, b, c] -> Morphism f [lang, a, b] ->
       Morphism (GACompose $* [g, f]) [lang, a, c]
     FromInitial : {lang, obj : GebSExp} ->
-      {isLanguage : Language lang []} -> Object obj [lang] ->
+      {auto isLanguage : Language lang []} -> Object obj [lang] ->
       Morphism (GAFromInitial $*** obj) [lang, GAInitial $*** lang, obj]
     ToTerminal : {lang, obj : GebSExp} ->
-      {isLanguage : Language lang []} -> Object obj [lang] ->
+      {auto isLanguage : Language lang []} -> Object obj [lang] ->
       Morphism (GAToTerminal $*** obj) [lang, obj, GATerminal $*** lang]
     ProductIntro : {lang, domain, codomainLeft, codomainRight,
         left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       {domainObject : Object domain [lang]} ->
       {codomainLeftObject : Object codomainLeft [lang]} ->
       {codomainRightObject : Object codomainRight [lang]} ->
@@ -518,28 +532,28 @@ mutual
       Morphism (GAProductIntro $* [left, right])
         [lang, domain, GAProduct $* [codomainLeft, codomainRight]]
     ProductElimLeft : {lang, left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GAProductElimLeft $* [left, right])
         [lang, GAProduct $* [left, right], left]
     ProductElimRight : {lang, left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GAProductElimRight $* [left, right])
         [lang, GAProduct $* [left, right], right]
     CoproductIntroLeft : {lang, left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GACoproductIntroLeft $* [left, right])
         [lang, left, GACoproduct $* [left, right]]
     CoproductIntroRight : {lang, left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       Object left [lang] -> Object right [lang] ->
       Morphism (GACoproductIntroRight $* [left, right])
         [lang, right, GACoproduct $* [left, right]]
     CoproductElim : {lang, domainLeft, domainRight, codomain,
         left, right : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       {domainLeftObject : Object domainLeft [lang]} ->
       {domainRightObject : Object domainRight [lang]} ->
       {codomainObject : Object codomain [lang]} ->
@@ -549,14 +563,14 @@ mutual
         [lang, GACoproduct $* [domainLeft, domainRight], codomain]
     ExponentialEval : {lang, domain, codomain : GebSExp} ->
       {auto isLanguage : Language lang []} ->
-      {auto hasExponentials : LanguageHasExponentials isLanguage} ->
+      {hasExponentials : LanguageHasExponentials isLanguage} ->
       Object domain [lang] -> Object codomain [lang] ->
       Morphism (GAExponentialEval $* [domain, codomain])
         [lang,
          GAProduct $* [GAExponential $* [domain, codomain], domain], codomain]
     Curry : {lang, domainLeft, domainRight, codomain, morphism : GebSExp} ->
       {auto isLanguage : Language lang []} ->
-      {auto hasExponentials : LanguageHasExponentials isLanguage} ->
+      {hasExponentials : LanguageHasExponentials isLanguage} ->
       {domainLeftObject : Object domainLeft [lang]} ->
       {domainRightObject : Object domainRight [lang]} ->
       {codomainObject : Object codomain [lang]} ->
@@ -655,40 +669,54 @@ mutual
 
 mutual
   public export
-  interpretObject : {lang, obj : GebSExp} -> Object obj [lang] -> Type
+  interpretObject : {lang, obj : GebSExp} ->
+    {isLanguage : Language lang []} -> Object obj [lang] -> Type
   interpretObject (Initial _) = Void
   interpretObject (Terminal _) = ()
   interpretObject (Product left right) =
-    (interpretObject left, interpretObject right)
+    (interpretObject {isLanguage} left, interpretObject {isLanguage} right)
   interpretObject (Coproduct left right) =
-    Either (interpretObject left) (interpretObject right)
+    Either
+      (interpretObject {isLanguage} left)
+      (interpretObject {isLanguage} right)
   interpretObject (Exponential domain codomain) =
-    interpretObject domain -> interpretObject codomain
+    interpretObject {isLanguage} domain -> interpretObject {isLanguage} codomain
+  interpretObject (RefinementObject
+    {refinedObject} {passObject} {failObject} testMorphism) =
+      interpretRefinementObject {isLanguage}
+        refinedObject passObject failObject testMorphism
   interpretObject (ExpressionObject {sort} {refinement} _ _ _) =
     (x : GebSExp ** Expression x [sort, refinement])
 
   public export
+  interpretRefinementObject : {lang, refined, pass, fail, morphism : GebSExp} ->
+    {isLanguage : Language lang []} ->
+    Object refined [lang] -> Object pass [lang] -> Object fail [lang] ->
+    (testMorphism :
+      Morphism morphism [lang, refined, GACoproduct $* [pass,fail]]) -> Type
+  interpretRefinementObject {isLanguage}
+    refinedObject passObject failObject testMorphism =
+      (x : interpretObject {isLanguage} refinedObject **
+       IsLeft {a=(interpretObject passObject)} {b=(interpretObject failObject)}
+        $ interpretMorphism
+            {domainObject=refinedObject}
+            {codomainObject=(Coproduct passObject failObject)}
+            testMorphism x)
+
+  public export
   interpretMorphism : {lang, domain, codomain, morphism : GebSExp} ->
+    {isLanguage : Language lang []} ->
     {domainObject : Object domain [lang]} ->
     {codomainObject : Object codomain [lang]} ->
     (isMorphism : Morphism morphism [lang, domain, codomain]) ->
-    interpretObject domainObject -> interpretObject codomainObject
+    interpretObject {isLanguage} domainObject ->
+    interpretObject {isLanguage} codomainObject
   interpretMorphism m = ?interpretMorphism_hole
-    {-
-  interpretMorphism (Identity o) x = ?id_hole
-  interpretMorphism (Compose g f) x =
-    -- let u = objectUnique (morphismCodomainObject f) (morphismDomainObject g) in
-    -- interpretMorphism g (rewrite sym u in (interpretMorphism f x))
-    -- interpretMorphism g (interpretMorphism f x)
-    ?interpretMorphism_compose_hole
-  interpretMorphism (FromInitial _) v = void ?interpretMorphism_hole_void
-  interpretMorphism (ToTerminal _) _ = ?interpretMorphism_hole_unit
 
   public export
   interpretRefinement : {s, r : GebSExp} ->
     Refinement r [s] -> (GebSExp -> Bool)
   interpretRefinement {s} {r} isRefinement x = ?interpretRefinement_hole
-  -}
 
 ------------------------------------------------------
 ---- Morphism transformations ("compiler passes") ----
@@ -733,8 +761,9 @@ ObjectMapPreservesInterpretation : {sourceLang, targetLang : GebSExp} ->
 ObjectMapPreservesInterpretation {sourceLang} {targetLang}
   {sourceIsLanguage} {targetIsLanguage} objectMap =
     (object : GebSExp) -> (isObject : Object object [sourceLang]) ->
-    interpretObject isObject =
-      interpretObject (snd (objectMap object isObject))
+    interpretObject {isLanguage=sourceIsLanguage} isObject =
+      interpretObject {isLanguage=targetIsLanguage}
+        (snd (objectMap object isObject))
 
 FunctorPreservesInterpretation : {sourceLang, targetLang : GebSExp} ->
   {sourceIsLanguage : Language sourceLang []} ->
@@ -750,11 +779,15 @@ FunctorPreservesInterpretation {sourceLang} {targetLang}
     (domainObject : Object domain [sourceLang]) ->
     (codomainObject : Object codomain [sourceLang]) ->
     (morphism : GebSExp) ->
-    (isMorphism : Morphism morphism [sourceLang, domain, codomain]) ->
-    (x : interpretObject domainObject) ->
-    interpretMorphism {domainObject} {codomainObject} isMorphism x =
+    (isMorphism : Morphism
+      morphism [sourceLang, domain, codomain]) ->
+    (x : interpretObject {isLanguage=sourceIsLanguage} domainObject) ->
+    interpretMorphism {isLanguage=sourceIsLanguage}
+     {domainObject} {codomainObject} isMorphism x =
       (rewrite preservesObjects codomain codomainObject in
-       (interpretMorphism {domainObject=(snd (objectMap domain domainObject))}
+       (interpretMorphism
+        {isLanguage=targetIsLanguage}
+        {domainObject=(snd (objectMap domain domainObject))}
         (snd (functor
           domain codomain domainObject codomainObject morphism isMorphism))
         (rewrite sym (preservesObjects domain domainObject) in x)))
@@ -772,52 +805,52 @@ FunctorPreservesInterpretation {sourceLang} {targetLang}
 public export
 data TermSort : {lang : GebSExp} -> Language lang [] -> Type where
   TermSortType :
-    {lang, object : GebSExp} -> {isLanguage : Language lang []} ->
+    {lang, object : GebSExp} -> {auto isLanguage : Language lang []} ->
     (isObject : Object object [lang]) -> TermSort isLanguage
   TermSortFunction :
     {lang, domain, codomain : GebSExp} ->
-    {isLanguage : Language lang []} ->
+    {auto isLanguage : Language lang []} ->
     (domainObject : Object domain [lang]) ->
     (codomainObject : Object codomain [lang]) ->
     TermSort isLanguage
 
 public export
-data Term : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+data Term : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   (numApplications : Nat) -> TermSort isLanguage -> Type where
     UnappliedMorphismTerm :
       {lang, domain, codomain, morphism : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       {domainObject : Object domain [lang]} ->
       {codomainObject : Object codomain [lang]} ->
       (isMorphism : Morphism morphism [lang, domain, codomain]) ->
-      Term {isLanguage} 0 $ TermSortFunction domainObject codomainObject
+      Term 0 $ TermSortFunction domainObject codomainObject
     Application :
       {lang, domain, codomain : GebSExp} ->
-      {isLanguage : Language lang []} ->
+      {auto isLanguage : Language lang []} ->
       {domainObject : Object domain [lang]} ->
       {codomainObject : Object codomain [lang]} ->
       {morphismApplications, termApplications : Nat} ->
-      Term {isLanguage} morphismApplications
+      Term morphismApplications
         (TermSortFunction domainObject codomainObject) ->
-      Term {isLanguage} termApplications (TermSortType domainObject) ->
-      Term {isLanguage}
+      Term termApplications (TermSortType domainObject) ->
+      Term
         (S $ morphismApplications + termApplications)
         (TermSortType codomainObject)
     UnitTerm : {lang : GebSExp} -> (isLanguage : Language lang []) ->
-      Term {isLanguage} 0 $ TermSortType (Terminal isLanguage)
+      Term 0 $ TermSortType (Terminal isLanguage)
 
 public export
-FullyAppliedTerm : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+FullyAppliedTerm : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   TermSort isLanguage -> Type
 FullyAppliedTerm = Term 0
 
 public export
-termSortToExp : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+termSortToExp : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   TermSort isLanguage -> GebSExp
 termSortToExp sort = ?termSortToExp_hole
 
 public export
-termToExp : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+termToExp : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   {numApplications : Nat} -> {sort : TermSort isLanguage} ->
   Term numApplications sort -> GebSExp
 termToExp term = ?termToExp_hole
@@ -834,16 +867,16 @@ public export
 
 public export
 interpretTermSort :
-  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   TermSort isLanguage -> Type
-interpretTermSort (TermSortType object) =
-  interpretObject object
-interpretTermSort (TermSortFunction domain codomain) =
-  interpretObject domain -> interpretObject codomain
+interpretTermSort {isLanguage} (TermSortType object) =
+  interpretObject {isLanguage} object
+interpretTermSort {isLanguage} (TermSortFunction domain codomain) =
+  interpretObject {isLanguage} domain -> interpretObject {isLanguage} codomain
 
 public export
 interpretTerm :
-  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   Term numApplications sort ->
   interpretTermSort sort
@@ -852,18 +885,19 @@ interpretTerm term = ?interpretTerm_hole
 public export
 smallStepMorphismReduction :
   {lang, domain, codomain, morphism : GebSExp} ->
-  {isLanguage : Language lang []} ->
+  {auto isLanguage : Language lang []} ->
   {domainObject : Object domain [lang]} ->
   {codomainObject : Object codomain [lang]} ->
   (isMorphism : Morphism morphism [lang, domain, codomain]) ->
   {numApplications : Nat} ->
-  Term {isLanguage} numApplications (TermSortType domainObject) ->
+  Term numApplications (TermSortType domainObject) ->
   (remainingApplications : Nat **
-   Term {isLanguage} remainingApplications (TermSortType codomainObject))
+   Term remainingApplications (TermSortType codomainObject))
 smallStepMorphismReduction = ?smallStepMorphismReduction_hole
 
 public export
-smallStepTermReduction : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+smallStepTermReduction : {lang : GebSExp} ->
+  {auto isLanguage : Language lang []} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   Term numApplications sort ->
   (remainingApplications : Nat ** Term remainingApplications sort)
@@ -871,20 +905,20 @@ smallStepTermReduction = ?smallStepTermReduction_hole
 
 public export
 data SmallStepTermReductionCompletes :
-  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   (term : Term numApplications sort) ->
   (reduced : FullyAppliedTerm sort) -> Type
   where
     SmallStepReductionLastStep :
-      {lang : GebSExp} -> {isLanguage : Language lang []} ->
+      {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
       {sort : TermSort isLanguage} -> {numApplications : Nat} ->
       {term : Term numApplications sort} ->
       {reduced : FullyAppliedTerm sort} ->
       smallStepTermReduction term = Left reduced ->
       SmallStepTermReductionCompletes term reduced
     SmallStepReductionPreviousStep :
-      {lang : GebSExp} -> {isLanguage : Language lang []} ->
+      {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
       {sort : TermSort isLanguage} ->
       {numApplications, intermediateNumApplications : Nat} ->
       {term : Term numApplications sort} ->
@@ -901,8 +935,8 @@ data IsNormalizing : {lang : GebSExp} -> Language lang [] -> Type where
 
 public export
 smallStepTermReductionCompletes :
-  {lang : GebSExp} -> {isLanguage : Language lang []} ->
-  {auto isNormalizing : IsNormalizing isLanguage} ->
+  {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
+  {isNormalizing : IsNormalizing isLanguage} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   (term : Term numApplications sort) ->
   DPair (FullyAppliedTerm sort) (SmallStepTermReductionCompletes term)
@@ -911,10 +945,10 @@ smallStepTermReductionCompletes {sort} {numApplications} term =
 
 public export
 smallStepTermReductionCorrect :
-  {lang : GebSExp} -> {isLanguage : Language lang []} ->
-  {auto isNormalizing : IsNormalizing isLanguage} ->
+  {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
+  {isNormalizing : IsNormalizing isLanguage} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   (term : Term numApplications sort) ->
-  interpretTerm (fst (smallStepTermReductionCompletes term)) =
+  interpretTerm (fst (smallStepTermReductionCompletes {isNormalizing} term)) =
     interpretTerm term
 smallStepTermReductionCorrect term = ?smallStepTermReductionCorrect_hole
