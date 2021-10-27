@@ -200,6 +200,32 @@ mutual
       SListExists pred (x :: l)
 
 public export
+record SExpForAllEliminatorSig
+  {atom : Type} (0 sp : SPred atom)
+  where
+    constructor SExpForAllEliminatorArgs
+    expElim : (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $* l)
+
+public export
+SExpForAllEliminatorSigToEliminatorSig :
+  {atom : Type} -> {sp : SPred atom} ->
+  SExpForAllEliminatorSig sp ->
+  SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
+SExpForAllEliminatorSigToEliminatorSig {sp} signature =
+  SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
+    (\a, l, forAll => SExpAndList (expElim signature a l forAll) forAll)
+    (SForAllNil {pred=sp})
+    (\_, _ => SForAllCons)
+
+public export
+sexpForAllEliminator :
+  {atom : Type} -> {sp : SPred atom} -> {0 lp : SLPred atom} ->
+  (signature : SExpForAllEliminatorSig sp) ->
+  SExp atom ~> SExpForAll sp
+sexpForAllEliminator signature =
+  sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
+
+public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 
