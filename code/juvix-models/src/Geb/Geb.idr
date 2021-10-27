@@ -489,7 +489,9 @@ mutual
 public export
 objectLanguage : {lang, object : GebSExp} ->
   Object object [lang] -> Language lang []
-objectLanguage isObject = ?objectLanguage_hole
+objectLanguage (Initial language) = language
+objectLanguage (Terminal language) = language
+objectLanguage (ExpressionObject language _ _) = language
 
 mutual
   public export
@@ -662,6 +664,96 @@ data Term : {lang : GebSExp} -> {isLanguage : Language lang []} ->
     UnitTerm : {lang : GebSExp} -> (isLanguage : Language lang []) ->
       Term 0 $ TermSortType (Terminal isLanguage)
 
+public export
+FullyAppliedTerm : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  TermSort isLanguage -> Type
+FullyAppliedTerm = Term 0
+
+public export
+interpretTermSort :
+  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  TermSort isLanguage -> Type
+interpretTermSort (TermSortType object) =
+  interpretObject object
+interpretTermSort (TermSortFunction domain codomain) =
+  interpretObject domain -> interpretObject codomain
+
+public export
+interpretTerm :
+  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {sort : TermSort isLanguage} -> {numApplications : Nat} ->
+  Term numApplications sort ->
+  interpretTermSort sort
+interpretTerm term = ?interpretTerm_hole
+
+public export
+smallStepMorphismReduction :
+  {lang, domain, codomain, morphism : GebSExp} ->
+  (isMorphism : Morphism morphism [lang, domain, codomain]) ->
+  {numApplications : Nat} ->
+  Term numApplications (TermSortType (morphismDomainObject isMorphism)) ->
+  (remainingApplications : Nat **
+   Term remainingApplications
+    (TermSortType (morphismCodomainObject isMorphism)))
+smallStepMorphismReduction = ?smallStepMorphismReduction_hole
+
+public export
+smallStepTermReduction : {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {sort : TermSort isLanguage} -> {numApplications : Nat} ->
+  Term numApplications sort ->
+  (remainingApplications : Nat ** Term remainingApplications sort)
+smallStepTermReduction = ?smallStepTermReduction_hole
+
+public export
+data SmallStepTermReductionCompletes :
+  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {sort : TermSort isLanguage} -> {numApplications : Nat} ->
+  (term : Term numApplications sort) ->
+  (reduced : FullyAppliedTerm sort) -> Type
+  where
+    SmallStepReductionLastStep :
+      {lang : GebSExp} -> {isLanguage : Language lang []} ->
+      {sort : TermSort isLanguage} -> {numApplications : Nat} ->
+      {term : Term numApplications sort} ->
+      {reduced : FullyAppliedTerm sort} ->
+      smallStepTermReduction term = Left reduced ->
+      SmallStepTermReductionCompletes term reduced
+    SmallStepReductionPreviousStep :
+      {lang : GebSExp} -> {isLanguage : Language lang []} ->
+      {sort : TermSort isLanguage} ->
+      {numApplications, intermediateNumApplications : Nat} ->
+      {term : Term numApplications sort} ->
+      {intermediateTerm : Term intermediateNumApplications sort} ->
+      {reduced : FullyAppliedTerm sort} ->
+      smallStepTermReduction term = Right intermediateTerm ->
+      SmallStepTermReductionCompletes intermediateTerm reduced ->
+      SmallStepTermReductionCompletes term reduced
+
+public export
+data IsNormalizing : {lang : GebSExp} -> Language lang [] -> Type where
+  MinimalIsNormalizing : IsNormalizing Minimal
+  HigherOrderIsNormalizing : IsNormalizing HigherOrder
+
+public export
+smallStepTermReductionCompletes :
+  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {auto isNormalizing : IsNormalizing isLanguage} ->
+  {sort : TermSort isLanguage} -> {numApplications : Nat} ->
+  (term : Term numApplications sort) ->
+  DPair (FullyAppliedTerm sort) (SmallStepTermReductionCompletes term)
+smallStepTermReductionCompletes {sort} {numApplications} term =
+  ?smallStepTermReductionCompletes_hole
+
+public export
+smallStepTermReductionCorrect :
+  {lang : GebSExp} -> {isLanguage : Language lang []} ->
+  {auto isNormalizing : IsNormalizing isLanguage} ->
+  {sort : TermSort isLanguage} -> {numApplications : Nat} ->
+  (term : Term numApplications sort) ->
+  interpretTerm (fst (smallStepTermReductionCompletes term)) =
+    interpretTerm term
+smallStepTermReductionCorrect term = ?smallStepTermReductionCorrect_hole
+
 {-
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
@@ -729,41 +821,41 @@ data MinimalObject : Type where
 
 mutual
   public export
-  data MinimalMorphism : Type where
-    Identity : MinimalObject -> MinimalMorphism
-    Compose : (g, f : MinimalMorphism) ->
+  data Morphism : Type where
+    Identity : MinimalObject -> Morphism
+    Compose : (g, f : Morphism) ->
       {auto composable :
-        (minimalMorphismCodomain f) = (minimalMorphismDomain g)} ->
-      MinimalMorphism
-    FromInitial : MinimalObject -> MinimalMorphism
-    ToTerminal : MinimalObject -> MinimalMorphism
-    ProductIntro : (f, g : MinimalMorphism) ->
+        (morphismCodomainObject f) = (morphismDomainObject g)} ->
+      Morphism
+    FromInitial : MinimalObject -> Morphism
+    ToTerminal : MinimalObject -> Morphism
+    ProductIntro : (f, g : Morphism) ->
       {auto domainsMatch :
-        (minimalMorphismDomain f) = (minimalMorphismDomain g)} ->
-      MinimalMorphism
-    ProductElimLeft : (a, b : MinimalObject) -> MinimalMorphism
-    ProductElimRight : (a, b : MinimalObject) -> MinimalMorphism
-    CoproductElim : (f, g : MinimalMorphism) ->
+        (morphismDomainObject f) = (morphismDomainObject g)} ->
+      Morphism
+    ProductElimLeft : (a, b : MinimalObject) -> Morphism
+    ProductElimRight : (a, b : MinimalObject) -> Morphism
+    CoproductElim : (f, g : Morphism) ->
       {auto codomainsMatch :
-        (minimalMorphismCodomain f) = (minimalMorphismCodomain g)} ->
-      MinimalMorphism
-    CoproductIntroLeft : (a, b : MinimalObject) -> MinimalMorphism
-    CoproductIntroRight : (a, b : MinimalObject) -> MinimalMorphism
-    ExpressionIntro : MinimalObject -> MinimalMorphism
-    ExpressionElim : (exp, exp', eqCase, neqCase : MinimalMorphism) ->
+        (morphismCodomainObject f) = (morphismCodomainObject g)} ->
+      Morphism
+    CoproductIntroLeft : (a, b : MinimalObject) -> Morphism
+    CoproductIntroRight : (a, b : MinimalObject) -> Morphism
+    ExpressionIntro : MinimalObject -> Morphism
+    ExpressionElim : (exp, exp', eqCase, neqCase : Morphism) ->
       {auto expDomainsMatch :
-        (minimalMorphismDomain exp) = (minimalMorphismDomain exp')} ->
+        (morphismDomainObject exp) = (morphismDomainObject exp')} ->
       {auto expCodomainIsExpression :
-        (minimalMorphismCodomain exp) = ObjectExpression} ->
+        (morphismCodomainObject exp) = ObjectExpression} ->
       {auto expCodomainsMatch :
-        (minimalMorphismCodomain exp) = (minimalMorphismCodomain exp')} ->
+        (morphismCodomainObject exp) = (morphismCodomainObject exp')} ->
       {auto eqDomainMatches :
-        (minimalMorphismDomain exp) = (minimalMorphismDomain eqCase)} ->
+        (morphismDomainObject exp) = (morphismDomainObject eqCase)} ->
       {auto neqDomainMatches :
-        (minimalMorphismDomain exp) = (minimalMorphismDomain neqCase)} ->
+        (morphismDomainObject exp) = (morphismDomainObject neqCase)} ->
       {auto eqCodomainsMatch :
-        (minimalMorphismCodomain eqCase) = (minimalMorphismCodomain neqCase)} ->
-      MinimalMorphism
+        (morphismCodomainObject eqCase) = (morphismCodomainObject neqCase)} ->
+      Morphism
 
 -----------------------------------------------------------------------------
 ---- The interpretation into Idris-2 of the minimal programming language ----
@@ -779,46 +871,46 @@ interpretMinimalObject (Coproduct r r') =
   Either (interpretMinimalObject r) (interpretMinimalObject r')
 interpretMinimalObject ObjectExpression = MinimalObject
 interpretMinimalObject (MorphismExpression domain codomain) =
-  (m : MinimalMorphism **
-   (minimalMorphismDomain m = domain, minimalMorphismCodomain m = codomain))
+  (m : Morphism **
+   (morphismDomainObject m = domain, morphismCodomainObject m = codomain))
 
 public export
-interpretMinimalMorphism : (r : MinimalMorphism) ->
-  interpretMinimalMorphismType r
-interpretMinimalMorphism (Identity o) x = x
-interpretMinimalMorphism (Compose g f {composable}) x =
-  interpretMinimalMorphism g $
+interpretMorphism : (r : Morphism) ->
+  interpretMorphismType r
+interpretMorphism (Identity o) x = x
+interpretMorphism (Compose g f {composable}) x =
+  interpretMorphism g $
     replace {p=interpretMinimalObject} composable $
-      interpretMinimalMorphism f x
-interpretMinimalMorphism (FromInitial _) x = void x
-interpretMinimalMorphism (ToTerminal _) _ = ()
-interpretMinimalMorphism (ProductIntro f g {domainsMatch}) x =
-  (interpretMinimalMorphism f x,
-   interpretMinimalMorphism g (rewrite sym domainsMatch in x))
-interpretMinimalMorphism (ProductElimLeft a b) x = fst x
-interpretMinimalMorphism (ProductElimRight a b) x = snd x
-interpretMinimalMorphism (CoproductElim f g {codomainsMatch}) x =
+      interpretMorphism f x
+interpretMorphism (FromInitial _) x = void x
+interpretMorphism (ToTerminal _) _ = ()
+interpretMorphism (ProductIntro f g {domainsMatch}) x =
+  (interpretMorphism f x,
+   interpretMorphism g (rewrite sym domainsMatch in x))
+interpretMorphism (ProductElimLeft a b) x = fst x
+interpretMorphism (ProductElimRight a b) x = snd x
+interpretMorphism (CoproductElim f g {codomainsMatch}) x =
   case x of
-    Left x' => interpretMinimalMorphism f x'
-    Right x' => rewrite codomainsMatch in interpretMinimalMorphism g x'
-interpretMinimalMorphism (CoproductIntroLeft a b) x = Left x
-interpretMinimalMorphism (CoproductIntroRight a b) x = Right x
-interpretMinimalMorphism (ExpressionIntro exp) () = exp
-interpretMinimalMorphism (ExpressionElim exp exp' eqCase neqCase
+    Left x' => interpretMorphism f x'
+    Right x' => rewrite codomainsMatch in interpretMorphism g x'
+interpretMorphism (CoproductIntroLeft a b) x = Left x
+interpretMorphism (CoproductIntroRight a b) x = Right x
+interpretMorphism (ExpressionIntro exp) () = exp
+interpretMorphism (ExpressionElim exp exp' eqCase neqCase
   {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
   {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) x =
     let
-      y = interpretMinimalMorphism exp x
+      y = interpretMorphism exp x
       y' = replace {p=interpretMinimalObject} expCodomainIsExpression y
-      z = interpretMinimalMorphism exp' (rewrite sym expDomainsMatch in x)
+      z = interpretMorphism exp' (rewrite sym expDomainsMatch in x)
       z' = replace {p=interpretMinimalObject} (sym expCodomainsMatch) z
       z'' = replace {p=interpretMinimalObject} expCodomainIsExpression z'
     in
     if y' == z'' then
-      interpretMinimalMorphism eqCase (rewrite sym eqDomainMatches in x)
+      interpretMorphism eqCase (rewrite sym eqDomainMatches in x)
     else
       rewrite eqCodomainsMatch in
-      interpretMinimalMorphism neqCase (rewrite sym neqDomainMatches in x)
+      interpretMorphism neqCase (rewrite sym neqDomainMatches in x)
 
 -----------------------------------
 ---- Correctness of reflection ----
@@ -848,438 +940,332 @@ minimalObjectUnquoteQuoteCorrect r = Refl
 -- | do not have in the category-theoretical representation.
 
 public export
-data MinimalTermType : Type where
-  MinimalTypeTerm : (type : MinimalObject) -> MinimalTermType
-  MinimalMorphismTerm : (domain, codomain : MinimalObject) -> MinimalTermType
+data TermType : Type where
+  TermSortType : (type : MinimalObject) -> TermType
+  MorphismTerm : (domain, codomain : MinimalObject) -> TermType
 
 public export
-data MinimalTerm : (numApplications : Nat) -> MinimalTermType -> Type where
-  UnappliedMorphismTerm : (morphism : MinimalMorphism) ->
-    MinimalTerm 0 $
-      MinimalMorphismTerm
-        (minimalMorphismDomain morphism)
-        (minimalMorphismCodomain morphism)
+data Term : (numApplications : Nat) -> TermType -> Type where
+  UnappliedMorphismTerm : (morphism : Morphism) ->
+    Term 0 $
+      MorphismTerm
+        (morphismDomainObject morphism)
+        (morphismCodomainObject morphism)
   Application : {morphismApplications, termApplications : Nat} ->
     {domain, codomain : MinimalObject} ->
-    MinimalTerm morphismApplications (MinimalMorphismTerm domain codomain) ->
-    MinimalTerm termApplications (MinimalTypeTerm domain) ->
-    MinimalTerm
-      (S $ morphismApplications + termApplications) (MinimalTypeTerm codomain)
+    Term morphismApplications (MorphismTerm domain codomain) ->
+    Term termApplications (TermSortType domain) ->
+    Term
+      (S $ morphismApplications + termApplications) (TermSortType codomain)
   ExFalsoTerm : {numApplications : Nat} -> {type : MinimalObject} ->
-    MinimalTerm numApplications (MinimalTypeTerm Initial) ->
-    MinimalTerm numApplications $ MinimalTypeTerm type
-  UnitTerm : MinimalTerm 0 $ MinimalTypeTerm Terminal
+    Term numApplications (TermSortType Initial) ->
+    Term numApplications $ TermSortType type
+  UnitTerm : Term 0 $ TermSortType Terminal
   PairTerm : {leftApplications, rightApplications : Nat} ->
     {left, right : MinimalObject} ->
-    MinimalTerm leftApplications (MinimalTypeTerm left) ->
-    MinimalTerm rightApplications (MinimalTypeTerm right) ->
-    MinimalTerm (leftApplications + rightApplications) $
-      MinimalTypeTerm $ Product left right
+    Term leftApplications (TermSortType left) ->
+    Term rightApplications (TermSortType right) ->
+    Term (leftApplications + rightApplications) $
+      TermSortType $ Product left right
   MinimalLeft :
     {leftApplications : Nat} -> {left : MinimalObject} ->
-    MinimalTerm leftApplications (MinimalTypeTerm left) ->
+    Term leftApplications (TermSortType left) ->
     (right : MinimalObject) ->
-    MinimalTerm leftApplications $ MinimalTypeTerm $ Coproduct left right
+    Term leftApplications $ TermSortType $ Coproduct left right
   MinimalRight :
     (left : MinimalObject) ->
     {rightApplications : Nat} -> {right : MinimalObject} ->
-    MinimalTerm rightApplications (MinimalTypeTerm right) ->
-    MinimalTerm rightApplications $ MinimalTypeTerm $ Coproduct left right
+    Term rightApplications (TermSortType right) ->
+    Term rightApplications $ TermSortType $ Coproduct left right
   ExpressionTerm : MinimalObject ->
-    MinimalTerm 0 $ MinimalTypeTerm $ ObjectExpression
+    Term 0 $ TermSortType $ ObjectExpression
 
 public export
-MinimalFullyAppliedTerm : MinimalTermType -> Type
-MinimalFullyAppliedTerm = MinimalTerm 0
+FullyAppliedTerm : TermType -> Type
+FullyAppliedTerm = Term 0
 
 public export
-gebMinimalTermToExp : {type: MinimalTermType} -> {numApplications : Nat} ->
-  MinimalTerm numApplications type -> GebSExp
-gebMinimalTermToExp (Application f x) =
-  GAApplication $* [gebMinimalTermToExp f, gebMinimalTermToExp x]
-gebMinimalTermToExp (UnappliedMorphismTerm morphism) =
-  GAMorphismTerm $* [gebMinimalMorphismToExp morphism]
-gebMinimalTermToExp {type=(MinimalTypeTerm type)} (ExFalsoTerm ti) =
-  GAExFalsoTerm $* [gebMinimalTermToExp ti, gebMinimalObjectToExp type]
-gebMinimalTermToExp UnitTerm = $^ GAUnitTerm
-gebMinimalTermToExp
+gebTermToExp : {type: TermType} -> {numApplications : Nat} ->
+  Term numApplications type -> GebSExp
+gebTermToExp (Application f x) =
+  GAApplication $* [gebTermToExp f, gebTermToExp x]
+gebTermToExp (UnappliedMorphismTerm morphism) =
+  GAMorphismTerm $* [gebMorphismToExp morphism]
+gebTermToExp {type=(TermSortType type)} (ExFalsoTerm ti) =
+  GAExFalsoTerm $* [gebTermToExp ti, gebMinimalObjectToExp type]
+gebTermToExp UnitTerm = $^ GAUnitTerm
+gebTermToExp
   (PairTerm {leftApplications} {rightApplications} {left} {right}
    leftTerm rightTerm) =
-    GAPairTerm $* [gebMinimalTermToExp leftTerm, gebMinimalTermToExp rightTerm]
-gebMinimalTermToExp {numApplications} (MinimalLeft left right) =
-  GALeftTerm $* [gebMinimalTermToExp left, gebMinimalObjectToExp right]
-gebMinimalTermToExp {numApplications} (MinimalRight left right) =
-  GARightTerm $* [gebMinimalObjectToExp left, gebMinimalTermToExp right]
-gebMinimalTermToExp (ExpressionTerm x) =
+    GAPairTerm $* [gebTermToExp leftTerm, gebTermToExp rightTerm]
+gebTermToExp {numApplications} (MinimalLeft left right) =
+  GALeftTerm $* [gebTermToExp left, gebMinimalObjectToExp right]
+gebTermToExp {numApplications} (MinimalRight left right) =
+  GARightTerm $* [gebMinimalObjectToExp left, gebTermToExp right]
+gebTermToExp (ExpressionTerm x) =
   GAExpressionTerm $* [gebMinimalObjectToExp x]
 
 public export
-gebExpToMinimalTerm :
-  GebSExp -> Maybe (type : MinimalTermType ** n : Nat ** MinimalTerm n type)
-gebExpToMinimalTerm (GAMorphismTerm $* [x]) =
-  case gebExpToMinimalMorphism x of
+gebExpToTerm :
+  GebSExp -> Maybe (type : TermType ** n : Nat ** Term n type)
+gebExpToTerm (GAMorphismTerm $* [x]) =
+  case gebExpToMorphism x of
     Just morphism => Just
-      (MinimalMorphismTerm
-        (minimalMorphismDomain morphism)
-        (minimalMorphismCodomain morphism) **
+      (MorphismTerm
+        (morphismDomainObject morphism)
+        (morphismCodomainObject morphism) **
        0 **
        (UnappliedMorphismTerm morphism))
     Nothing => Nothing
-gebExpToMinimalTerm (GAExFalsoTerm $* [ti, ty]) =
-  case (gebExpToMinimalTerm ti, gebExpToMinimalObject ty) of
-    (Just (MinimalTypeTerm Initial ** n ** initialTerm), Just type) =>
-      Just (MinimalTypeTerm type ** n ** ExFalsoTerm initialTerm)
+gebExpToTerm (GAExFalsoTerm $* [ti, ty]) =
+  case (gebExpToTerm ti, gebExpToMinimalObject ty) of
+    (Just (TermSortType Initial ** n ** initialTerm), Just type) =>
+      Just (TermSortType type ** n ** ExFalsoTerm initialTerm)
     _ => Nothing
-gebExpToMinimalTerm (GAUnitTerm $* []) =
-  Just (MinimalTypeTerm Terminal ** 0 ** UnitTerm)
-gebExpToMinimalTerm (GAPairTerm $* [left, right]) with
-  (gebExpToMinimalTerm left, gebExpToMinimalTerm right)
-    gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
-      (Just (MinimalTypeTerm leftObject ** nLeft ** leftTerm),
-       Just (MinimalTypeTerm rightObject ** nRight ** rightTerm)) =
+gebExpToTerm (GAUnitTerm $* []) =
+  Just (TermSortType Terminal ** 0 ** UnitTerm)
+gebExpToTerm (GAPairTerm $* [left, right]) with
+  (gebExpToTerm left, gebExpToTerm right)
+    gebExpToTerm (GAPairTerm $* [left, right]) |
+      (Just (TermSortType leftObject ** nLeft ** leftTerm),
+       Just (TermSortType rightObject ** nRight ** rightTerm)) =
         Just
-          (MinimalTypeTerm (Product leftObject rightObject) **
+          (TermSortType (Product leftObject rightObject) **
            nLeft + nRight **
            (PairTerm leftTerm rightTerm))
-    gebExpToMinimalTerm (GAPairTerm $* [left, right]) |
+    gebExpToTerm (GAPairTerm $* [left, right]) |
       _ = Nothing
-gebExpToMinimalTerm (GAApplication $* [fExp, xExp]) =
-  case (gebExpToMinimalTerm fExp, gebExpToMinimalTerm xExp) of
+gebExpToTerm (GAApplication $* [fExp, xExp]) =
+  case (gebExpToTerm fExp, gebExpToTerm xExp) of
     (Just (fType ** nLeft ** f), Just (xType ** nRight ** x)) =>
       case fType of
-        MinimalMorphismTerm domain codomain =>
+        MorphismTerm domain codomain =>
           case xType of
-            MinimalTypeTerm domain' => case decEq domain domain' of
+            TermSortType domain' => case decEq domain domain' of
               Yes Refl =>
                 Just
-                  (MinimalTypeTerm codomain **
+                  (TermSortType codomain **
                    S (nLeft + nRight) **
                    Application f x)
               No _ => Nothing
             _ => Nothing
         _ => Nothing
     _ => Nothing
-gebExpToMinimalTerm (GAExpressionTerm $* [exp]) = gebExpToMinimalTerm exp
-gebExpToMinimalTerm (GALeftTerm $* [leftExp, rightExp]) =
-  case (gebExpToMinimalTerm leftExp, gebExpToMinimalObject rightExp) of
-    (Just (MinimalTypeTerm leftObject ** nLeft ** leftTerm),
+gebExpToTerm (GAExpressionTerm $* [exp]) = gebExpToTerm exp
+gebExpToTerm (GALeftTerm $* [leftExp, rightExp]) =
+  case (gebExpToTerm leftExp, gebExpToMinimalObject rightExp) of
+    (Just (TermSortType leftObject ** nLeft ** leftTerm),
      Just rightObject) =>
       Just
-        (MinimalTypeTerm (Coproduct leftObject rightObject) **
+        (TermSortType (Coproduct leftObject rightObject) **
          nLeft **
          MinimalLeft leftTerm rightObject)
     _ => Nothing
-gebExpToMinimalTerm (GARightTerm $* [leftExp, rightExp]) =
-  case (gebExpToMinimalObject leftExp, gebExpToMinimalTerm rightExp) of
+gebExpToTerm (GARightTerm $* [leftExp, rightExp]) =
+  case (gebExpToMinimalObject leftExp, gebExpToTerm rightExp) of
     (Just leftObject,
-     Just (MinimalTypeTerm rightObject ** nRight ** rightTerm)) =>
+     Just (TermSortType rightObject ** nRight ** rightTerm)) =>
       Just
-        (MinimalTypeTerm (Coproduct leftObject rightObject) **
+        (TermSortType (Coproduct leftObject rightObject) **
          nRight **
          MinimalRight leftObject rightTerm)
     _ => Nothing
-gebExpToMinimalTerm _ = Nothing
+gebExpToTerm _ = Nothing
 
 public export
-gebMinimalTermRepresentationComplete :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  gebExpToMinimalTerm
-    (gebMinimalTermToExp {type} {numApplications} term) =
+gebTermRepresentationComplete :
+  {type : TermType} -> {numApplications : Nat} ->
+  (term : Term numApplications type) ->
+  gebExpToTerm
+    (gebTermToExp {type} {numApplications} term) =
       Just (type ** numApplications ** term)
-gebMinimalTermRepresentationComplete (Application {domain} f x) =
-  rewrite gebMinimalTermRepresentationComplete f in
-  rewrite gebMinimalTermRepresentationComplete x in
+gebTermRepresentationComplete (Application {domain} f x) =
+  rewrite gebTermRepresentationComplete f in
+  rewrite gebTermRepresentationComplete x in
   rewrite decEqRefl minimalObjectDecEq domain in
   Refl
-gebMinimalTermRepresentationComplete
+gebTermRepresentationComplete
   (UnappliedMorphismTerm morphism) =
-    rewrite gebMinimalMorphismRepresentationComplete morphism in
+    rewrite gebMorphismRepresentationComplete morphism in
     Refl
-gebMinimalTermRepresentationComplete (ExFalsoTerm ti) =
-  let tiComplete = gebMinimalTermRepresentationComplete ti in
-  ?gebMinimalTermRepresentationComplete_hole_exfalso
-gebMinimalTermRepresentationComplete UnitTerm =
+gebTermRepresentationComplete (ExFalsoTerm ti) =
+  let tiComplete = gebTermRepresentationComplete ti in
+  ?gebTermRepresentationComplete_hole_exfalso
+gebTermRepresentationComplete UnitTerm =
   Refl
-gebMinimalTermRepresentationComplete (PairTerm left right) =
-  ?gebMinimalTermRepresentationComplete_hole_pair
-gebMinimalTermRepresentationComplete
+gebTermRepresentationComplete (PairTerm left right) =
+  ?gebTermRepresentationComplete_hole_pair
+gebTermRepresentationComplete
   (MinimalLeft left right) =
-    ?gebMinimalTermRepresentationComplete_hole_left
-gebMinimalTermRepresentationComplete
+    ?gebTermRepresentationComplete_hole_left
+gebTermRepresentationComplete
   (MinimalRight left right) =
-    ?gebMinimalTermRepresentationComplete_hole_right
-gebMinimalTermRepresentationComplete (ExpressionTerm x) =
-  ?gebMinimalTermRepresentationComplete_hole_expression
+    ?gebTermRepresentationComplete_hole_right
+gebTermRepresentationComplete (ExpressionTerm x) =
+  ?gebTermRepresentationComplete_hole_expression
 
 public export
-(type : MinimalTermType) => (n : Nat) => Show (MinimalTerm n type) where
-  show term = show (gebMinimalTermToExp term)
+(type : TermType) => (n : Nat) => Show (Term n type) where
+  show term = show (gebTermToExp term)
 
 public export
-interpretMinimalTermType : MinimalTermType -> Type
-interpretMinimalTermType (MinimalTypeTerm type) = interpretMinimalObject type
-interpretMinimalTermType (MinimalMorphismTerm domain codomain) =
+interpretTermType : TermType -> Type
+interpretTermType (TermSortType type) = interpretMinimalObject type
+interpretTermType (MorphismTerm domain codomain) =
   interpretMinimalObject domain -> interpretMinimalObject codomain
 
 public export
-interpretMinimalTerm : {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) -> interpretMinimalTermType type
-interpretMinimalTerm (Application f x) =
-  interpretMinimalTerm f $ interpretMinimalTerm x
-interpretMinimalTerm (UnappliedMorphismTerm morphism) =
-  interpretMinimalMorphism morphism
-interpretMinimalTerm (ExFalsoTerm v) = void $ interpretMinimalTerm v
-interpretMinimalTerm UnitTerm = ()
-interpretMinimalTerm (PairTerm left right) =
-  (interpretMinimalTerm left, interpretMinimalTerm right)
-interpretMinimalTerm (MinimalLeft left right) =
-  Left $ interpretMinimalTerm left
-interpretMinimalTerm (MinimalRight left right) =
-  Right $ interpretMinimalTerm right
-interpretMinimalTerm (ExpressionTerm x) = x
+interpretTerm : {type : TermType} -> {numApplications : Nat} ->
+  (term : Term numApplications type) -> interpretTermType type
+interpretTerm (Application f x) =
+  interpretTerm f $ interpretTerm x
+interpretTerm (UnappliedMorphismTerm morphism) =
+  interpretMorphism morphism
+interpretTerm (ExFalsoTerm v) = void $ interpretTerm v
+interpretTerm UnitTerm = ()
+interpretTerm (PairTerm left right) =
+  (interpretTerm left, interpretTerm right)
+interpretTerm (MinimalLeft left right) =
+  Left $ interpretTerm left
+interpretTerm (MinimalRight left right) =
+  Right $ interpretTerm right
+interpretTerm (ExpressionTerm x) = x
 
 public export
 gebNoExFalsoTerm : {numApplications : Nat} ->
-  (ti : MinimalTerm numApplications (MinimalTypeTerm Initial)) ->
+  (ti : Term numApplications (TermSortType Initial)) ->
   Void
-gebNoExFalsoTerm ti = void $ interpretMinimalTerm ti
+gebNoExFalsoTerm ti = void $ interpretTerm ti
 
 -- | A correct morphism transformation preserves the interpretation of
 -- | term application.
 public export
-correctMinimalMorphismTransformPreservesTermInterpretation :
-  (transform : MinimalMorphismTransform) ->
+correctMorphismTransformPreservesTermInterpretation :
+  (transform : MorphismTransform) ->
   {domainTransformCorrect :
-    MinimalMorphismTransformDomainCorrect transform} ->
+    MorphismTransformDomainCorrect transform} ->
   {codomainTransformCorrect :
-    MinimalMorphismTransformCodomainCorrect transform} ->
-  MinimalMorphismTransformCorrect
+    MorphismTransformCodomainCorrect transform} ->
+  MorphismTransformCorrect
     transform domainTransformCorrect codomainTransformCorrect ->
-  (m : MinimalMorphism) ->
+  (m : Morphism) ->
   {numApplications : Nat} ->
   (term :
-    MinimalTerm numApplications
-      (MinimalTypeTerm (minimalMorphismDomain m))) ->
+    Term numApplications
+      (TermSortType (morphismDomainObject m))) ->
   (term' :
-    MinimalTerm numApplications
-      (MinimalTypeTerm (minimalMorphismDomain (transform m)))) ->
-  interpretMinimalTerm term =
-    (rewrite sym (domainTransformCorrect m) in (interpretMinimalTerm term')) ->
-  interpretMinimalTerm
+    Term numApplications
+      (TermSortType (morphismDomainObject (transform m)))) ->
+  interpretTerm term =
+    (rewrite sym (domainTransformCorrect m) in (interpretTerm term')) ->
+  interpretTerm
     (Application (UnappliedMorphismTerm m) term) =
-  (rewrite sym (codomainTransformCorrect m) in (interpretMinimalTerm
+  (rewrite sym (codomainTransformCorrect m) in (interpretTerm
     (Application (UnappliedMorphismTerm (transform m)) term')))
-correctMinimalMorphismTransformPreservesTermInterpretation
+correctMorphismTransformPreservesTermInterpretation
   transform transformCorrect m {numApplications} term term' termEq =
-    ?correctMinimalMorphismTransformPreservesTermInterpretation_hole
+    ?correctMorphismTransformPreservesTermInterpretation_hole
 
 public export
-bigStepMinimalMorphismReduction :
-  (m : MinimalMorphism) ->
-  MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m)) ->
-  MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismCodomain m))
-bigStepMinimalMorphismReduction (Identity _) x = x
-bigStepMinimalMorphismReduction (Compose g f {composable}) x =
-  bigStepMinimalMorphismReduction g $
-    rewrite sym composable in (bigStepMinimalMorphismReduction f x)
-bigStepMinimalMorphismReduction (FromInitial _) x = ExFalsoTerm x
-bigStepMinimalMorphismReduction (ToTerminal y) x = UnitTerm
-bigStepMinimalMorphismReduction (ProductIntro f g {domainsMatch}) x =
+bigStepMorphismReduction :
+  (m : Morphism) ->
+  FullyAppliedTerm (TermSortType (morphismDomainObject m)) ->
+  FullyAppliedTerm (TermSortType (morphismCodomainObject m))
+bigStepMorphismReduction (Identity _) x = x
+bigStepMorphismReduction (Compose g f {composable}) x =
+  bigStepMorphismReduction g $
+    rewrite sym composable in (bigStepMorphismReduction f x)
+bigStepMorphismReduction (FromInitial _) x = ExFalsoTerm x
+bigStepMorphismReduction (ToTerminal y) x = UnitTerm
+bigStepMorphismReduction (ProductIntro f g {domainsMatch}) x =
   PairTerm
-    (bigStepMinimalMorphismReduction f x)
-    (bigStepMinimalMorphismReduction g $ rewrite sym domainsMatch in x)
-bigStepMinimalMorphismReduction (ProductElimLeft a b) x = case x of
+    (bigStepMorphismReduction f x)
+    (bigStepMorphismReduction g $ rewrite sym domainsMatch in x)
+bigStepMorphismReduction (ProductElimLeft a b) x = case x of
   PairTerm {leftApplications=0} {rightApplications=0} left right => left
   ExFalsoTerm ti => ExFalsoTerm ti
-bigStepMinimalMorphismReduction (ProductElimRight a b) x = case x of
+bigStepMorphismReduction (ProductElimRight a b) x = case x of
   PairTerm {leftApplications=0} {rightApplications=0} left right => right
   ExFalsoTerm ti => ExFalsoTerm ti
-bigStepMinimalMorphismReduction (CoproductElim f g {codomainsMatch}) x =
+bigStepMorphismReduction (CoproductElim f g {codomainsMatch}) x =
   case x of
     MinimalLeft left _ =>
-      bigStepMinimalMorphismReduction f left
+      bigStepMorphismReduction f left
     MinimalRight _ right =>
-      rewrite codomainsMatch in bigStepMinimalMorphismReduction g right
+      rewrite codomainsMatch in bigStepMorphismReduction g right
     ExFalsoTerm ti => ExFalsoTerm ti
-bigStepMinimalMorphismReduction (CoproductIntroLeft left right) x =
+bigStepMorphismReduction (CoproductIntroLeft left right) x =
   MinimalLeft x right
-bigStepMinimalMorphismReduction (CoproductIntroRight left right) x =
+bigStepMorphismReduction (CoproductIntroRight left right) x =
   MinimalRight left x
-bigStepMinimalMorphismReduction (ExpressionIntro exp) _ = ExpressionTerm exp
-bigStepMinimalMorphismReduction (ExpressionElim exp exp' eqCase neqCase
+bigStepMorphismReduction (ExpressionIntro exp) _ = ExpressionTerm exp
+bigStepMorphismReduction (ExpressionElim exp exp' eqCase neqCase
   {expDomainsMatch} {expCodomainIsExpression} {expCodomainsMatch}
   {eqDomainMatches} {neqDomainMatches} {eqCodomainsMatch}) x =
     let
-      xReduced = bigStepMinimalMorphismReduction exp x
-      xReduced' = bigStepMinimalMorphismReduction exp'
+      xReduced = bigStepMorphismReduction exp x
+      xReduced' = bigStepMorphismReduction exp'
         (rewrite sym expDomainsMatch in x)
       xReducedRewritten =
-        replace {p=(MinimalTerm 0 . MinimalTypeTerm)}
+        replace {p=(Term 0 . TermSortType)}
           expCodomainIsExpression xReduced
       xReducedRewritten' =
-        replace {p=(MinimalTerm 0 . MinimalTypeTerm)}
+        replace {p=(Term 0 . TermSortType)}
           expCodomainIsExpression (rewrite expCodomainsMatch in xReduced')
-      xInterpreted = interpretMinimalTerm xReducedRewritten
-      xInterpreted' = interpretMinimalTerm xReducedRewritten'
+      xInterpreted = interpretTerm xReducedRewritten
+      xInterpreted' = interpretTerm xReducedRewritten'
       eqCaseReduced =
-        bigStepMinimalMorphismReduction
+        bigStepMorphismReduction
           eqCase (rewrite sym eqDomainMatches in x)
       eqCaseReduced' =
-        bigStepMinimalMorphismReduction
+        bigStepMorphismReduction
           neqCase (rewrite sym neqDomainMatches in x)
     in
     if xInterpreted == xInterpreted' then
       eqCaseReduced else
-    (replace {p=(MinimalTerm 0. MinimalTypeTerm)}
+    (replace {p=(Term 0. TermSortType)}
       (sym eqCodomainsMatch) eqCaseReduced')
 
 public export
-bigStepMinimalTermReduction :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  MinimalTerm numApplications type ->
-  MinimalFullyAppliedTerm type
-bigStepMinimalTermReduction (Application f x) with
-  (bigStepMinimalTermReduction f, bigStepMinimalTermReduction x)
-    bigStepMinimalTermReduction (Application f x) |
+bigStepTermReduction :
+  {type : TermType} -> {numApplications : Nat} ->
+  Term numApplications type ->
+  FullyAppliedTerm type
+bigStepTermReduction (Application f x) with
+  (bigStepTermReduction f, bigStepTermReduction x)
+    bigStepTermReduction (Application f x) |
       (UnappliedMorphismTerm m, xReduced) =
-        bigStepMinimalMorphismReduction m xReduced
-bigStepMinimalTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
-bigStepMinimalTermReduction (ExFalsoTerm ti) =
-  ExFalsoTerm $ bigStepMinimalTermReduction ti
-bigStepMinimalTermReduction UnitTerm = UnitTerm
-bigStepMinimalTermReduction (PairTerm left right) =
+        bigStepMorphismReduction m xReduced
+bigStepTermReduction (UnappliedMorphismTerm m) = UnappliedMorphismTerm m
+bigStepTermReduction (ExFalsoTerm ti) =
+  ExFalsoTerm $ bigStepTermReduction ti
+bigStepTermReduction UnitTerm = UnitTerm
+bigStepTermReduction (PairTerm left right) =
   PairTerm
-    (bigStepMinimalTermReduction left)
-    (bigStepMinimalTermReduction right)
-bigStepMinimalTermReduction (MinimalLeft left right) =
-  MinimalLeft (bigStepMinimalTermReduction left) right
-bigStepMinimalTermReduction (MinimalRight left right) =
-  MinimalRight left (bigStepMinimalTermReduction right)
-bigStepMinimalTermReduction (ExpressionTerm x) = ExpressionTerm x
+    (bigStepTermReduction left)
+    (bigStepTermReduction right)
+bigStepTermReduction (MinimalLeft left right) =
+  MinimalLeft (bigStepTermReduction left) right
+bigStepTermReduction (MinimalRight left right) =
+  MinimalRight left (bigStepTermReduction right)
+bigStepTermReduction (ExpressionTerm x) = ExpressionTerm x
 
 mutual
   public export
-  bigStepMinimalMorphismReductionCorrect :
-    (m : MinimalMorphism) ->
-    (x : MinimalFullyAppliedTerm (MinimalTypeTerm (minimalMorphismDomain m))) ->
-    interpretMinimalTerm (bigStepMinimalMorphismReduction m x) =
-      interpretMinimalTerm (UnappliedMorphismTerm m) (interpretMinimalTerm x)
-  bigStepMinimalMorphismReductionCorrect m x =
-    ?bigStepMinimalMorphismReductionCorrect_hole
+  bigStepMorphismReductionCorrect :
+    (m : Morphism) ->
+    (x : FullyAppliedTerm (TermSortType (morphismDomainObject m))) ->
+    interpretTerm (bigStepMorphismReduction m x) =
+      interpretTerm (UnappliedMorphismTerm m) (interpretTerm x)
+  bigStepMorphismReductionCorrect m x =
+    ?bigStepMorphismReductionCorrect_hole
 
   public export
-  bigStepMinimalTermReductionCorrect :
-    {type : MinimalTermType} -> {numApplications : Nat} ->
-    (term : MinimalTerm numApplications type) ->
-    interpretMinimalTerm (bigStepMinimalTermReduction term) =
-      interpretMinimalTerm term
-  bigStepMinimalTermReductionCorrect {type} term =
-    ?bigStepMinimalTermReductionCorrect_hole
-
-public export
-smallStepMinimalMorphismReduction :
-  (m : MinimalMorphism) ->
-  {numApplications : Nat} ->
-  MinimalTerm numApplications (MinimalTypeTerm (minimalMorphismDomain m)) ->
-  (remainingApplications : Nat **
-   MinimalTerm
-    remainingApplications (MinimalTypeTerm (minimalMorphismCodomain m)))
-smallStepMinimalMorphismReduction (Identity x) term =
-  ?smallStepMinimalMorphismReduction_hole_ident
-smallStepMinimalMorphismReduction (Compose g f) term =
-  ?smallStepMinimalMorphismReduction_hole_compose
-smallStepMinimalMorphismReduction (FromInitial x) term =
-  ?smallStepMinimalMorphismReduction_hole_frominit
-smallStepMinimalMorphismReduction (ToTerminal x) term =
-  ?smallStepMinimalMorphismReduction_hole_toterm
-smallStepMinimalMorphismReduction (ProductIntro f g) term =
-  ?smallStepMinimalMorphismReduction_hole_prodintro
-smallStepMinimalMorphismReduction (ProductElimLeft a b) term =
-  ?smallStepMinimalMorphismReduction_hole_prodleft
-smallStepMinimalMorphismReduction (ProductElimRight a b) term =
-  ?smallStepMinimalMorphismReduction_hole_prodright
-smallStepMinimalMorphismReduction (CoproductElim f g) term =
-  ?smallStepMinimalMorphismReduction_hole_coelim
-smallStepMinimalMorphismReduction (CoproductIntroLeft a b) term =
-  ?smallStepMinimalMorphismReduction_hole_cointroleft
-smallStepMinimalMorphismReduction (CoproductIntroRight a b) term =
-  ?smallStepMinimalMorphismReduction_hole_cointroright
-smallStepMinimalMorphismReduction (ExpressionIntro x) term =
-  ?smallStepMinimalMorphismReduction_hole_expIntro
-smallStepMinimalMorphismReduction
-  (ExpressionElim exp exp' eqCase neqCase) term =
-    ?smallStepMinimalMorphismReduction_hole_expElim
-
-public export
-smallStepMinimalTermReduction :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  MinimalTerm numApplications type ->
-  (remainingApplications : Nat ** MinimalTerm remainingApplications type)
-smallStepMinimalTermReduction (UnappliedMorphismTerm morphism) =
-  ?smallStepMinimalTermReduction_hole_unapplied
-smallStepMinimalTermReduction (Application x y) =
-  ?smallStepMinimalTermReduction_hole_app
-smallStepMinimalTermReduction (ExFalsoTerm ti) =
-  ?smallStepMinimalTermReduction_hole_exfalso
-smallStepMinimalTermReduction UnitTerm =
-  ?smallStepMinimalTermReduction_hole_unit
-smallStepMinimalTermReduction (PairTerm x y) =
-  ?smallStepMinimalTermReduction_hole_pair
-smallStepMinimalTermReduction (MinimalLeft x right) =
-  ?smallStepMinimalTermReduction_hole_left
-smallStepMinimalTermReduction (MinimalRight left x) =
-  ?smallStepMinimalTermReduction_hole_right
-smallStepMinimalTermReduction (ExpressionTerm x) =
-  ?smallStepMinimalTermReduction_hole_exp
-
-public export
-data SmallStepMinimalTermReductionCompletes :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  (reduced : MinimalFullyAppliedTerm type) -> Type
-  where
-    SmallStepMinimalReductionLastStep :
-      {type : MinimalTermType} -> {numApplications : Nat} ->
-      {term : MinimalTerm numApplications type} ->
-      {reduced : MinimalFullyAppliedTerm type} ->
-      smallStepMinimalTermReduction term = Left reduced ->
-      SmallStepMinimalTermReductionCompletes term reduced
-    SmallStepMinimalReductionPreviousStep :
-      {type : MinimalTermType} ->
-      {numApplications, intermediateNumApplications : Nat} ->
-      {term : MinimalTerm numApplications type} ->
-      {intermediateTerm : MinimalTerm intermediateNumApplications type} ->
-      {reduced : MinimalFullyAppliedTerm type} ->
-      smallStepMinimalTermReduction term = Right intermediateTerm ->
-      SmallStepMinimalTermReductionCompletes intermediateTerm reduced ->
-      SmallStepMinimalTermReductionCompletes term reduced
-
-public export
-smallStepMinimalTermReductionCompletes :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  DPair
-    (MinimalFullyAppliedTerm type)
-    (SmallStepMinimalTermReductionCompletes term)
-smallStepMinimalTermReductionCompletes {type} term =
-  ?smallStepMinimalTermReductionCompletes_hole
-
-public export
-smallStepMinimalTermReductionCorrect :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  interpretMinimalTerm
-    (fst (smallStepMinimalTermReductionCompletes term)) =
-      interpretMinimalTerm term
-smallStepMinimalTermReductionCorrect {type} term =
-  ?smallStepMinimalTermReductionCorrect_hole
-
-public export
-minimalTermReductionsConsistent :
-  {type : MinimalTermType} -> {numApplications : Nat} ->
-  (term : MinimalTerm numApplications type) ->
-  bigStepMinimalTermReduction term =
-    snd (smallStepMinimalTermReductionCompletes term)
-minimalTermReductionsConsistent term = ?minimalTermReductionsConsistent_hole
+  bigStepTermReductionCorrect :
+    {type : TermType} -> {numApplications : Nat} ->
+    (term : Term numApplications type) ->
+    interpretTerm (bigStepTermReduction term) =
+      interpretTerm term
+  bigStepTermReductionCorrect {type} term =
+    ?bigStepTermReductionCorrect_hole
 -}
