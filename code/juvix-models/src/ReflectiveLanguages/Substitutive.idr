@@ -2,8 +2,7 @@ module ReflectiveLanguages.Substitutive
 
 import Library.FunctionsAndRelations
 import Library.Decidability
--- import RefinedSExp.List
--- import public Datatypes.DependentAlgebraicTypes
+import RefinedSExp.List
 import RefinedSExp.SExp
 import public Data.Nat
 

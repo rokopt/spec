@@ -2,7 +2,7 @@ module RefinedSExp.SExp
 
 import public Library.FunctionsAndRelations
 import public Library.Decidability
-import public Library.List
+import public RefinedSExp.List
 import public Data.SortedMap
 import public Data.SortedSet
 import public Data.Vect
