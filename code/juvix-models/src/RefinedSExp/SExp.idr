@@ -100,7 +100,7 @@ record SExpEliminatorSig
 mutual
   public export
   sexpEliminator :
-    {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
+    {0 atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
     (signature : SExpEliminatorSig sp lp) ->
     SExp atom ~> sp
   sexpEliminator signature (a $* l) =
@@ -108,7 +108,7 @@ mutual
 
   public export
   slistEliminator :
-    {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
+    {0 atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
     (signature : SExpEliminatorSig sp lp) ->
     SList atom ~> lp
   slistEliminator signature [] =
@@ -119,7 +119,7 @@ mutual
 
 public export
 sexpEliminators :
-  {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
+  {0 atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
   (signature : SExpEliminatorSig sp lp) ->
   (SExp atom ~> sp, SList atom ~> lp)
 sexpEliminators signature =
@@ -176,37 +176,45 @@ mutual
   slistLessThan aLessThan (x :: l) (x' :: l') =
     if (sexpLessThan aLessThan x x') then True else slistLessThan aLessThan l l'
 
-mutual
-  public export
-  data SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom where
-    SExpAndList : {pred : SPred atom} -> pred (a $* l) -> SListForAll pred l ->
-      SExpForAll pred (a $* l)
+public export
+SExpGenerateForAllSig : {0 atom : Type} -> SPred atom ->
+  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
+SExpGenerateForAllSig {atom} sp =
+  SExpEliminatorArgs {atom}
+    (\a, l => Pair $ sp (a $* l)) () (\_, _ => Pair)
 
-  public export
-  data SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom where
-    SForAllNil : {pred : SPred atom} -> SListForAll pred []
-    SForAllCons : {pred : SPred atom} ->
-      SExpForAll pred x -> SListForAll pred l ->
-      SListForAll pred (x :: l)
+public export
+SExpGenerateExistsSig : {0 atom : Type} -> SPred atom ->
+  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
+SExpGenerateExistsSig {atom} sp =
+  SExpEliminatorArgs {atom}
+    (\a, l => Either $ sp (a $* l)) Void (\_, _ => Either)
+
+public export
+SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom
+SExpForAll {atom} sp = sexpEliminator (SExpGenerateForAllSig sp)
+
+public export
+SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom
+SListForAll {atom} sp = slistEliminator (SExpGenerateForAllSig sp)
 
 public export
 sexpForAllHead : {0 atom : Type} -> {sp : SPred atom} -> {x : SExp atom} ->
   SExpForAll sp x -> sp x
-sexpForAllHead (SExpAndList spx _) = spx
+sexpForAllHead {x=(_ $* _)} = fst
 
-mutual
-  public export
-  data SExpExists : {0 atom : Type} -> SPred atom -> SPred atom where
-    SExpThis : {pred : SPred atom} -> pred x -> SExpExists pred x
-    SExpInList : {pred : SPred atom} -> SListExists pred l ->
-      SExpExists pred (x $* l)
+public export
+sexpForAllTail : {0 atom : Type} -> {sp : SPred atom} ->
+  {a : atom} -> {l : SList atom} -> SExpForAll sp (a $* l) -> SListForAll sp l
+sexpForAllTail = snd
 
-  public export
-  data SListExists : {0 atom : Type} -> SPred atom -> SLPred atom where
-    SExpHead : {pred : SPred atom} -> SExpExists pred x ->
-      SListExists pred (x :: l)
-    SExpTail : {pred : SPred atom} -> SListExists pred l ->
-      SListExists pred (x :: l)
+public export
+SExpExists : {0 atom : Type} -> SPred atom -> SPred atom
+SExpExists {atom} sp = sexpEliminator (SExpGenerateExistsSig sp)
+
+public export
+SListExists : {0 atom : Type} -> SPred atom -> SLPred atom
+SListExists {atom} sp = slistEliminator (SExpGenerateExistsSig sp)
 
 public export
 record SExpForAllEliminatorSig
@@ -222,9 +230,9 @@ SExpForAllEliminatorSigToEliminatorSig :
   SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
 SExpForAllEliminatorSigToEliminatorSig {sp} signature =
   SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
-    (\a, l, forAll => SExpAndList (expElim signature a l forAll) forAll)
-    (SForAllNil {pred=sp})
-    (\_, _ => SForAllCons)
+    (\a, l, forAll => (expElim signature a l forAll, forAll))
+    ()
+    (\_, _ => MkPair)
 
 public export
 sexpForAllEliminator :
