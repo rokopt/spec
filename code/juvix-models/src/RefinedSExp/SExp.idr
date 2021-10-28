@@ -258,6 +258,38 @@ sexpGeneralInduction :
 sexpGeneralInduction {sp} signature x =
   sexpForAllHead {sp} (sexpForAllEliminator {sp} signature x)
 
+-- | Allows the use of a predicate on the output of a function -- such
+-- | as a proof of some correctness condition(s) -- within the induction
+-- | step.  For example, a proof of correctness of the output of the
+-- | previous steps might allow the induction step to avoid having to
+-- | handle some case that it would not be able to handle correctly if
+-- | it ever happened, but which it can prove never happens.
+public export
+record SExpStrengthenedInductionSig
+  {atom : Type} (sp : SPred atom)
+  (spp : (x : SExp atom) -> sp x -> Type)
+  where
+    constructor SExpStrengthenedInductionArgs
+    expElim : (a : atom) -> (l : SList atom) ->
+      SListForAll (\x => (spx : sp x ** spp x (spx))) l ->
+      sp (a $* l)
+    stepCorrect : (a : atom) -> (l : SList atom) ->
+      (lforAll : SListForAll (\x => (spx : sp x ** spp x (spx))) l) ->
+      spp (a $* l) (expElim a l lforAll)
+
+public export
+sexpGeneralStrengthenedInduction :
+  {atom : Type} -> {sp : SPred atom} ->
+  {spp : (x : SExp atom) -> sp x -> Type} ->
+  (signature : SExpStrengthenedInductionSig sp spp) ->
+  (x : SExp atom) -> DPair (sp x) (spp x)
+sexpGeneralStrengthenedInduction signature =
+  sexpGeneralInduction
+    (SExpForAllEliminatorArgs $
+      \a, l, lforAll =>
+        (expElim signature a l lforAll ** stepCorrect signature a l lforAll)
+    )
+
 public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v

@@ -438,20 +438,25 @@ CorrectCompilation : GebSExp -> Type
 CorrectCompilation x = (r : CompileResult x ** CompilationIsCorrect x r)
 
 public export
-gebCompileCertifiedInductionStep : (a : GebAtom) -> (l : GebSList) ->
+gebCompileInductionStep : (a : GebAtom) -> (l : GebSList) ->
   (lforAll : SListForAll CorrectCompilation l) ->
-  CorrectCompilation (a $* l)
-gebCompileCertifiedInductionStep _ _ lforAll =
-  (Right (UnimplementedAtom _) **
-   CompilationCorrectnessConditions
+  CompileResult (a $* l)
+gebCompileInductionStep _ _ lforAll = Right (UnimplementedAtom _)
+
+public export
+gebCompileInductionProofStep : (a : GebAtom) -> (l : GebSList) ->
+  (lforAll : SListForAll CorrectCompilation l) ->
+  CompilationIsCorrect (a $* l) (gebCompileInductionStep a l lforAll)
+gebCompileInductionProofStep _ _ lforAll =
+  CompilationCorrectnessConditions
     (\i => case i of _ impossible)
     (\e => case e of UnimplementedAtom _ => Refl)
-  )
 
 public export
 gebCompileCertified : GebSExp ~> CorrectCompilation
-gebCompileCertified = sexpGeneralInduction $
-  SExpForAllEliminatorArgs gebCompileCertifiedInductionStep
+gebCompileCertified = sexpGeneralStrengthenedInduction $
+  SExpStrengthenedInductionArgs
+    gebCompileInductionStep gebCompileInductionProofStep
 
 public export
 gebCompile :
