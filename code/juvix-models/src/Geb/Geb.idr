@@ -421,6 +421,7 @@ mutual
 
   public export
   data TypecheckError : GebSExp -> Type where
+    UnimplementedAtom : (x : GebSExp) -> TypecheckError x
 
 public export
 CompileResult : GebSExp -> Type
@@ -440,11 +441,11 @@ public export
 gebCompileCertifiedInductionStep : (a : GebAtom) -> (l : GebSList) ->
   (lforAll : SListForAll CorrectCompilation l) ->
   CorrectCompilation (a $* l)
-gebCompileCertifiedInductionStep a l lforAll =
-  (?gebCompilerCertifiedResultInductionStep_hole **
+gebCompileCertifiedInductionStep _ _ lforAll =
+  (Right (UnimplementedAtom _) **
    CompilationCorrectnessConditions
-    (?gebCompileCertifiedSuccessComplete_hole)
-    (?gebCompileCertifiedErrorComplete_hole)
+    (\i => case i of _ impossible)
+    (\e => case e of UnimplementedAtom _ => Refl)
   )
 
 public export
