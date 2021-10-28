@@ -415,6 +415,75 @@ gebMap = fromList
 ---- General definition of programming language / metalogic ----
 ----------------------------------------------------------------
 
+mutual
+  public export
+  data IdrisInterpretation : GebSExp -> Type where
+
+  public export
+  data TypecheckError : GebSExp -> Type where
+
+  public export
+  CompileResult : GebSExp -> Type
+  CompileResult x = Either (IdrisInterpretation x) (TypecheckError x)
+
+  public export
+  gebInterpretInductionStep : (a : GebAtom) -> (l : GebSList) ->
+    (lforAll : SListForAll CompileResult l) ->
+    CompileResult (a $* l)
+  gebInterpretInductionStep a l lforAll = ?gebInterpretInductionStep_hole
+
+  public export
+  gebCompile :
+    (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
+  gebCompile =
+    sexpGeneralInduction $ SExpForAllEliminatorArgs gebInterpretInductionStep
+
+public export
+compileSuccessComplete : (x : GebSExp) -> (i : IdrisInterpretation x) ->
+  gebCompile x = Left i
+compileSuccessComplete = sexpGeneralInduction $ SExpForAllEliminatorArgs $
+  \a, l, lForAll, i => ?compileSuccessComplete_hole
+
+public export
+idrisInterpretationUnique : (x : GebSExp) -> (i, i' : IdrisInterpretation x) ->
+  i = i'
+idrisInterpretationUnique x i i' =
+  case
+    trans
+    (sym $ compileSuccessComplete x i)
+    (compileSuccessComplete x i') of
+      Refl => Refl
+
+public export
+typecheckErrorComplete : (x : GebSExp) -> (e : TypecheckError x) ->
+  gebCompile x = Right e
+typecheckErrorComplete = sexpGeneralInduction $ SExpForAllEliminatorArgs $
+  \a, l, lForAll, i => ?typecheckErrorComplete_hole
+
+public export
+typecheckErrorUnique : (x : GebSExp) -> (e, e' : TypecheckError x) ->
+  e = e'
+typecheckErrorUnique x e e' =
+  case
+    trans
+    (sym $ typecheckErrorComplete x e)
+    (typecheckErrorComplete x e') of
+      Refl => Refl
+
+public export
+compileSuccessAndTypecheckErrorMutuallyExclusive : (x : GebSExp) ->
+  (i : IdrisInterpretation x) -> (e : TypecheckError x) -> Void
+compileSuccessAndTypecheckErrorMutuallyExclusive x i e =
+  case
+    trans
+    (sym $ compileSuccessComplete x i)
+    (typecheckErrorComplete x e) of
+      Refl impossible
+
+----------------------------------------------------------------
+---- General definition of programming language / metalogic ----
+----------------------------------------------------------------
+
 -- | A "Language" (short in this case for "programming language") is a category
 -- | which is capable of performing computation and can be defined solely by
 -- | computation.  It can be viewed as having morphisms which represent

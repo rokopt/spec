@@ -243,6 +243,22 @@ sexpForAllEliminator signature =
   sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
 
 public export
+slistForAllEliminator :
+  {atom : Type} -> {sp : SPred atom} ->
+  (signature : SExpForAllEliminatorSig sp) ->
+  SList atom ~> SListForAll sp
+slistForAllEliminator signature =
+  slistEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
+
+public export
+sexpGeneralInduction :
+  {atom : Type} -> {sp : SPred atom} ->
+  (signature : SExpForAllEliminatorSig sp) ->
+  SExp atom ~> sp
+sexpGeneralInduction {sp} signature x =
+  sexpForAllHead {sp} (sexpForAllEliminator {sp} signature x)
+
+public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 
