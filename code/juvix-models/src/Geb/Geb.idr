@@ -439,10 +439,18 @@ gebCompile =
   sexpGeneralInduction $ SExpForAllEliminatorArgs gebInterpretInductionStep
 
 public export
+compileSuccessCompleteInductionStep : (a : GebAtom) -> (l : GebSList) ->
+  (lforAll : SListForAll
+    (\x => (i : IdrisInterpretation x) -> gebCompile x = Left i) l) ->
+  (i : IdrisInterpretation (a $* l)) -> gebCompile (a $* l) = Left i
+compileSuccessCompleteInductionStep a l lForAll i =
+  ?compileSuccessCompleteInductionStep_hole
+
+public export
 compileSuccessComplete : (x : GebSExp) -> (i : IdrisInterpretation x) ->
   gebCompile x = Left i
 compileSuccessComplete = sexpGeneralInduction $ SExpForAllEliminatorArgs $
-  \a, l, lForAll, i => ?compileSuccessComplete_hole
+  compileSuccessCompleteInductionStep
 
 public export
 idrisInterpretationUnique : (x : GebSExp) -> (i, i' : IdrisInterpretation x) ->
@@ -455,10 +463,18 @@ idrisInterpretationUnique x i i' =
       Refl => Refl
 
 public export
+typecheckErrorCompleteInductionStep : (a : GebAtom) -> (l : GebSList) ->
+  (lforAll : SListForAll
+    (\x => (e : TypecheckError x) -> gebCompile x = Right e) l) ->
+  (e : TypecheckError (a $* l)) -> gebCompile (a $* l) = Right e
+typecheckErrorCompleteInductionStep a l lForAll e =
+  ?typecheckErrorCompleteInductionStep_hole
+
+public export
 typecheckErrorComplete : (x : GebSExp) -> (e : TypecheckError x) ->
   gebCompile x = Right e
 typecheckErrorComplete = sexpGeneralInduction $ SExpForAllEliminatorArgs $
-  \a, l, lForAll, i => ?typecheckErrorComplete_hole
+  typecheckErrorCompleteInductionStep
 
 public export
 typecheckErrorUnique : (x : GebSExp) -> (e, e' : TypecheckError x) ->
