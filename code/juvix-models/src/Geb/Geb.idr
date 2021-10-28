@@ -423,9 +423,20 @@ mutual
   data TypecheckError : GebSExp -> Type where
     UnimplementedAtom : (x : GebSExp) -> TypecheckError x
 
+  public export
+  data IdrisListInterpretation : GebSList -> Type where
+
+  public export
+  data TypecheckErrors : GebSList -> Type where
+    UnimplementedList : (l : GebSList) -> TypecheckErrors l
+
 public export
 CompileResult : GebSExp -> Type
 CompileResult x = Either (IdrisInterpretation x) (TypecheckError x)
+
+public export
+ListCompileResult : GebSList -> Type
+ListCompileResult l = Either (IdrisListInterpretation l) (TypecheckErrors l)
 
 public export
 record CompilationIsCorrect (x : GebSExp) (r : CompileResult x) where
@@ -434,29 +445,69 @@ record CompilationIsCorrect (x : GebSExp) (r : CompileResult x) where
   TypecheckErrorComplete : (e : TypecheckError x) -> r = Right e
 
 public export
+record ListCompilationIsCorrect (l : GebSList) (r : ListCompileResult l) where
+  constructor ListCompilationCorrectnessConditions
+  ListCompilationSuccessComplete : (i : IdrisListInterpretation l) -> r = Left i
+  ListTypecheckErrorComplete : (e : TypecheckErrors l) -> r = Right e
+
+public export
 CorrectCompilation : GebSExp -> Type
-CorrectCompilation x = (r : CompileResult x ** CompilationIsCorrect x r)
+CorrectCompilation x =
+  (r : CompileResult x ** CompilationIsCorrect x r)
 
 public export
-gebCompileInductionStep : (a : GebAtom) -> (l : GebSList) ->
-  (lforAll : SListForAll CorrectCompilation l) ->
-  CompileResult (a $* l)
-gebCompileInductionStep _ _ lforAll = Right (UnimplementedAtom _)
+CorrectListCompilation : GebSList -> Type
+CorrectListCompilation l =
+  (r : ListCompileResult l ** ListCompilationIsCorrect l r)
 
-public export
-gebCompileInductionProofStep : (a : GebAtom) -> (l : GebSList) ->
-  (lforAll : SListForAll CorrectCompilation l) ->
-  CompilationIsCorrect (a $* l) (gebCompileInductionStep a l lforAll)
-gebCompileInductionProofStep _ _ lforAll =
+gebCompileCertifiedLeftElim :
+  (a : GebAtom) -> (l : GebSList) -> (i : IdrisListInterpretation l) ->
+  ListCompilationIsCorrect l (Left i) ->
+  Either (IdrisInterpretation (a $* l)) (TypecheckError (a $* l))
+gebCompileCertifiedLeftElim a l i correct =
+  Right (UnimplementedAtom _)
+
+gebCompileCertifiedLeftElimCorrect :
+  (a : GebAtom) -> (l : GebSList) -> (i : IdrisListInterpretation l) ->
+  (correct : ListCompilationIsCorrect l (Left i)) ->
+  CompilationIsCorrect (a $* l) (gebCompileCertifiedLeftElim a l i correct)
+gebCompileCertifiedLeftElimCorrect a l i correct =
   CompilationCorrectnessConditions
-    (\i => case i of _ impossible)
-    (\e => case e of UnimplementedAtom _ => Refl)
+    (\i' => case i' of _ impossible)
+    (\e' => case e' of UnimplementedAtom _ => Refl)
+
+public export
+gebCompileNilElim : Either (IdrisListInterpretation []) (TypecheckErrors [])
+gebCompileNilElim = Right (UnimplementedList [])
+
+public export
+gebCompileNilElimCorrect : ListCompilationIsCorrect [] Geb.gebCompileNilElim
+gebCompileNilElimCorrect =
+  ListCompilationCorrectnessConditions
+    (\i' => case i' of _ impossible)
+    (\e' => case e' of UnimplementedList _ => Refl)
+
+public export
+GebCompileSignature :
+  SExpEitherInductionSig
+    Prelude.Basics.id
+    {fFunctor=IdentityIsFunctor}
+    IdrisInterpretation TypecheckError
+    IdrisListInterpretation TypecheckErrors
+    CompilationIsCorrect
+    ListCompilationIsCorrect
+GebCompileSignature =
+  SExpEitherInductionArgs
+    gebCompileCertifiedLeftElim
+    gebCompileCertifiedLeftElimCorrect
+    gebCompileNilElim
+    gebCompileNilElimCorrect
 
 public export
 gebCompileCertified : GebSExp ~> CorrectCompilation
-gebCompileCertified = sexpGeneralStrengthenedInduction $
-  SExpStrengthenedInductionArgs
-    gebCompileInductionStep gebCompileInductionProofStep
+gebCompileCertified =
+  sexpEitherInduction
+    {f=Prelude.Basics.id} {fFunctor=IdentityIsFunctor} GebCompileSignature
 
 public export
 gebCompile :

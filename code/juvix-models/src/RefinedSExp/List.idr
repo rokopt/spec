@@ -100,6 +100,20 @@ ListExists : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
 ListExists ap = listEliminator (ListEliminatorArgs Void (const . Either . ap))
 
 public export
+data IsSublist : {atom : Type} -> (lsub, lsuper: List atom) -> Type where
+  NilSublist : {atom : Type} -> (lsuper : List atom) -> IsSublist [] lsuper
+  ExclusiveSublist : {atom : Type} -> (a : atom) ->
+    (lsub, lsuper : List atom) -> IsSublist lsub lsuper ->
+    IsSublist lsub (a :: lsuper)
+  InclusiveSublist : {atom : Type} -> (a : atom) ->
+    (lsub, lsuper : List atom) -> IsSublist lsub lsuper ->
+    IsSublist (a :: lsub) (a :: lsuper)
+
+public export
+IsNonEmptySublist : {atom : Type} -> (lsub, lsuper: List atom) -> Type
+IsNonEmptySublist lsub lsuper = (NonEmpty lsub, IsSublist lsub lsuper)
+
+public export
 EitherList : (types : List Type) -> Type
 EitherList [] = Void
 EitherList (t :: ts) = Either t (EitherList ts)

@@ -291,6 +291,77 @@ sexpGeneralStrengthenedInduction signature =
     )
 
 public export
+record SExpEitherInductionSig
+  (f : Type -> Type) {fFunctor : Functor f}
+  {atom : Type} (spl, spr : SPred atom) (lpl, lpr : SLPred atom)
+  (spp : (x : SExp atom) -> f (Either (spl x) (spr x)) -> Type)
+  (lpp : (l : SList atom) -> f (Either (lpl l) (lpr l)) -> Type)
+  where
+    constructor SExpEitherInductionArgs
+    leftElim : (a : atom) -> (l : SList atom) -> (flpl : f (lpl l)) ->
+      lpp l (map {f} Left flpl) ->
+      f (Either (spl (a $* l)) (spr (a $* l)))
+    leftElimCorrect : (a : atom) -> (l : SList atom) -> (flpl : f (lpl l)) ->
+      (lppl : lpp l (map {f} Left flpl)) ->
+      spp (a $* l) (leftElim a l flpl lppl)
+    nilElim : f (Either (lpl []) (lpr []))
+    nilElimCorrect : lpp [] nilElim
+
+public export
+sexpEitherInduction :
+  {f : Type -> Type} -> {fFunctor : Functor f} ->
+  {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
+  {spp : (x : SExp atom) -> f (Either (spl x) (spr x)) -> Type} ->
+  {lpp : (l : SList atom) -> f (Either (lpl l) (lpr l)) -> Type} ->
+  (signature :
+    SExpEitherInductionSig f {fFunctor}
+      spl spr lpl lpr spp lpp) ->
+  (x : SExp atom) ->
+  DPair (f (Either (spl x) (spr x))) (spp x)
+sexpEitherInduction signature =
+  sexpEliminator
+    $ SExpEliminatorArgs
+      {lp=(\l => (result : f (Either (lpl l) (lpr l)) ** lpp l result))}
+      (\a, l, flpl => ?sexpEitherInduction_hole_expElim)
+      (?sexpEitherInduction_hole_nilElim)
+      (\x, l, spx, lpl => ?sexpEitherInduction_hole_consElim)
+{-
+  sexpEliminator
+    {lp=(\l => Either
+      (SListForAll (\x => (splx : spl x ** spp x (Left splx))) l)
+      (
+       (SListForAll (\x => (spx : Either (spl x) (spr x) ** spp x spx)) l),
+       (l' : SList atom **
+        nonEmptySublist : IsNonEmptySublist l' l **
+        ListForAll (\x => (sprx : spr x ** spp x (Right sprx))) l')
+      )
+    )
+    } $ SExpEliminatorArgs
+      (\a, l, listResult => case listResult of
+        Left successes =>
+          (leftElim signature a l successes **
+           leftCorrect signature a l successes
+            (leftElim signature a l successes))
+        Right (conditions, (l' ** nonEmptySublist ** failures)) =>
+          ?sexpEitherInduction_hole_expElim_fail
+      )
+      (Left ())
+      (\x, l, spx, spxl => case spx of
+        (result ** condition) => case (result, spxl) of
+          (Left splx, Left successes) =>
+            (?sexpEitherInduction_hole_cons_success_success)
+          (Left splx,
+           Right (conditions, (l' ** nonEmptySublist ** failures))) =>
+            (?sexpEitherInduction_hole_cons_success_failures)
+          (Right sprx, Left successes) =>
+            (?sexpEitherInduction_hole_cons_new_failure)
+          (Right sprx,
+           Right (conditions, (l' ** nonEmptySublist ** failures))) =>
+            (?sexpEitherInduction_hole_cons_fail_failures)
+      )
+      -}
+
+public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 

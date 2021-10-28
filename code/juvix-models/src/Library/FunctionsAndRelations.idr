@@ -803,6 +803,10 @@ public export
   map = functorMap fi
 
 public export
+[IdentityIsFunctor] Functor Prelude.Basics.id where
+  map = Prelude.Basics.id
+
+public export
 Functor Prelude.Basics.id where
   map = Prelude.Basics.id
 
