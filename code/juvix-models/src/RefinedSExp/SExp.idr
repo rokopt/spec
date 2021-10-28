@@ -177,22 +177,31 @@ mutual
     if (sexpLessThan aLessThan x x') then True else slistLessThan aLessThan l l'
 
 mutual
+  public export
   data SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom where
     SExpAndList : {pred : SPred atom} -> pred (a $* l) -> SListForAll pred l ->
       SExpForAll pred (a $* l)
 
+  public export
   data SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom where
     SForAllNil : {pred : SPred atom} -> SListForAll pred []
     SForAllCons : {pred : SPred atom} ->
       SExpForAll pred x -> SListForAll pred l ->
       SListForAll pred (x :: l)
 
+public export
+sexpForAllHead : {0 atom : Type} -> {sp : SPred atom} -> {x : SExp atom} ->
+  SExpForAll sp x -> sp x
+sexpForAllHead (SExpAndList spx _) = spx
+
 mutual
+  public export
   data SExpExists : {0 atom : Type} -> SPred atom -> SPred atom where
     SExpThis : {pred : SPred atom} -> pred x -> SExpExists pred x
     SExpInList : {pred : SPred atom} -> SListExists pred l ->
       SExpExists pred (x $* l)
 
+  public export
   data SListExists : {0 atom : Type} -> SPred atom -> SLPred atom where
     SExpHead : {pred : SPred atom} -> SExpExists pred x ->
       SListExists pred (x :: l)
@@ -226,26 +235,6 @@ sexpForAllEliminator signature =
   sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
 
 public export
-record SExpPerAtomCheckSig (0 atom : Type) (0 fail : Type) where
-  constructor SExpPerAtomCheckArgs
-  transformParams : SortedMap atom (SList atom -> Either (SList atom) fail)
-
-public export
-perAtomCheck : {0 atom : Type} -> {0 fail : Type} ->
-  SExpPerAtomCheckSig atom fail -> SExp atom -> Either (SList atom) fail
-perAtomCheck signature x = ?perAtomCheck_hole
-
-public export
-record SExpPerAtomEvalSig
-  {0 atom : Type} {0 fail : Type}
-  (check : SExpPerAtomCheckSig atom fail) (lp : SLPred atom)
-  where
-    constructor SExpPerAtomEvalArgs
-    transformParams :
-      SortedMap atom
-        ((l : SList atom) -> ListForAll (IsLeft . perAtomCheck check) l -> lp l)
-
-public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 
@@ -267,11 +256,13 @@ SExpFlatMatches : {atom : Type} -> SExpFlatMatch atom -> SExp atom -> Type
 SExpFlatMatches {atom} (genericAtom, expMatchers) (a $* l) =
   (a = genericAtom (), length l = length expMatchers)
 
+{-
 public export
 sexpFlatMatch : {atom, type: Type} -> {match : SExpFlatMatch atom} ->
   SExpFlatMatchElim match type ->
   (x : SExp atom) -> SExpFlatMatches match x -> type
-sexpFlatMatch elim x matches = ?sexpFlatMatch_hole
+sexpFlatMatch elim x matches = sexpFlatMatch_hole
+-}
 
 public export
 SExpFlatRefinement : Type -> Type
@@ -289,12 +280,14 @@ SExpFlatRefined [] _ = Void
 SExpFlatRefined (firstMatch :: laterMatches) x =
   Either (SExpFlatMatches firstMatch x) (SExpFlatRefined laterMatches x)
 
+{-
 public export
 sexpFlatRefine : {atom, type : Type} ->
   {refinement : SExpFlatRefinement atom} ->
   SExpFlatRefinementElim refinement type ->
   (x : SExp atom) -> SExpFlatRefined refinement x -> type
-sexpFlatRefine elim x refined = ?sexpFlatRefine_hole
+sexpFlatRefine elim x refined = sexpFlatRefine_hole
+-}
 
 mutual
   infixr 7 $~:
