@@ -226,6 +226,26 @@ sexpForAllEliminator signature =
   sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
 
 public export
+record SExpPerAtomCheckSig (0 atom : Type) (0 fail : Type) where
+  constructor SExpPerAtomCheckArgs
+  transformParams : SortedMap atom (SList atom -> Either (SList atom) fail)
+
+public export
+perAtomCheck : {0 atom : Type} -> {0 fail : Type} ->
+  SExpPerAtomCheckSig atom fail -> SExp atom -> Either (SList atom) fail
+perAtomCheck signature x = ?perAtomCheck_hole
+
+public export
+record SExpPerAtomEvalSig
+  {0 atom : Type} {0 fail : Type}
+  (check : SExpPerAtomCheckSig atom fail) (lp : SLPred atom)
+  where
+    constructor SExpPerAtomEvalArgs
+    transformParams :
+      SortedMap atom
+        ((l : SList atom) -> ListForAll (IsLeft . perAtomCheck check) l -> lp l)
+
+public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 
