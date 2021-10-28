@@ -422,21 +422,21 @@ mutual
   public export
   data TypecheckError : GebSExp -> Type where
 
-  public export
-  CompileResult : GebSExp -> Type
-  CompileResult x = Either (IdrisInterpretation x) (TypecheckError x)
+public export
+CompileResult : GebSExp -> Type
+CompileResult x = Either (IdrisInterpretation x) (TypecheckError x)
 
-  public export
-  gebInterpretInductionStep : (a : GebAtom) -> (l : GebSList) ->
-    (lforAll : SListForAll CompileResult l) ->
-    CompileResult (a $* l)
-  gebInterpretInductionStep a l lforAll = ?gebInterpretInductionStep_hole
+public export
+gebInterpretInductionStep : (a : GebAtom) -> (l : GebSList) ->
+  (lforAll : SListForAll CompileResult l) ->
+  CompileResult (a $* l)
+gebInterpretInductionStep a l lforAll = ?gebInterpretInductionStep_hole
 
-  public export
-  gebCompile :
-    (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
-  gebCompile =
-    sexpGeneralInduction $ SExpForAllEliminatorArgs gebInterpretInductionStep
+public export
+gebCompile :
+  (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
+gebCompile =
+  sexpGeneralInduction $ SExpForAllEliminatorArgs gebInterpretInductionStep
 
 public export
 compileSuccessComplete : (x : GebSExp) -> (i : IdrisInterpretation x) ->
