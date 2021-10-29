@@ -339,13 +339,7 @@ Ord GebAtom where
 
 export
 gaDecEq : (a, a' : GebAtom) -> Dec (a = a')
-gaDecEq a a' with (decEq (gaEncode a) (gaEncode a'))
-  gaDecEq a a' | Yes eq = Yes $
-    justInjective $
-      trans
-        (sym (gaDecodeEncodeIsJust a))
-        (trans (cong gaDecode eq) (gaDecodeEncodeIsJust a'))
-  gaDecEq a a' | No neq = No $ \aeq => neq $ cong gaEncode aeq
+gaDecEq = encodingDecEq gaEncode gaDecode gaDecodeEncodeIsJust decEq
 
 public export
 DecEq GebAtom where
