@@ -417,105 +417,130 @@ gebMap = fromList
 
 mutual
   public export
-  data IdrisInterpretation : GebSExp -> Type where
+  data TypecheckSuccess : GebSExp -> Type where
 
   public export
   data TypecheckError : GebSExp -> Type where
-    UnimplementedExp : (x : GebSExp) -> TypecheckError x
+    UnimplementedAtom : (a : GebAtom) -> (l : GebSList) ->
+      TypecheckSuccessList l -> TypecheckError (a $* l)
+    SubexpressionFailed : (a : GebAtom) -> (l : GebSList) ->
+      TypecheckErrors l -> TypecheckError (a $* l)
 
   public export
-  data IdrisListInterpretation : GebSList -> Type where
+  data TypecheckSuccessList : GebSList -> Type where
+    EmptySuccessList : TypecheckSuccessList []
+    SuccessListCons : (x : GebSExp) -> (l : GebSList) ->
+      TypecheckSuccess x -> TypecheckSuccessList l ->
+      TypecheckSuccessList (x :: l)
 
   public export
   data TypecheckErrors : GebSList -> Type where
-    UnimplementedList : (l : GebSList) -> TypecheckErrors l
+    FirstError : (x : GebSExp) -> TypecheckErrors [x]
+    AdditionalError : (x : GebSExp) -> (l : GebSList) ->
+      TypecheckError x -> TypecheckErrors l -> TypecheckErrors (x :: l)
 
 public export
 CompileResult : GebSExp -> Type
-CompileResult x = Either (IdrisInterpretation x) (TypecheckError x)
+CompileResult x = Either (TypecheckSuccess x) (TypecheckError x)
 
 public export
 ListCompileResult : GebSList -> Type
-ListCompileResult l = Either (IdrisListInterpretation l) (TypecheckErrors l)
+ListCompileResult l = Either (TypecheckSuccessList l) (TypecheckErrors l)
 
 public export
-record SuccessIsCorrect (x : GebSExp) (i : IdrisInterpretation x) where
+record SuccessIsCorrect (x : GebSExp) (i : TypecheckSuccess x) where
   constructor SuccessCorrectnessConditions
-  CompilationSuccessComplete : (i' : IdrisInterpretation x) -> i = i'
+  TypecheckSuccessComplete : (i' : TypecheckSuccess x) -> i = i'
+  TypecheckSuccessEnsuresNoError : (e : TypecheckError x) -> Void
 
 public export
 record FailureIsCorrect (x : GebSExp) (e : TypecheckError x) where
   constructor FailureCorrectnessConditions
   TypecheckErrorComplete : (e' : TypecheckError x) -> e = e'
+  TypecheckErrorEnsuresNoInterpretation : (i : TypecheckSuccess x) -> Void
 
 public export
-record ListSuccessIsCorrect (l : GebSList) (i : IdrisListInterpretation l) where
+record ListSuccessIsCorrect (l : GebSList) (i : TypecheckSuccessList l) where
   constructor ListSuccessCorrectnessConditions
-  ListCompilationSuccessComplete : (i' : IdrisListInterpretation l) -> i = i'
+  ListTypecheckSuccessComplete : (i' : TypecheckSuccessList l) -> i = i'
+  ListTypecheckSuccessEnsuresNoError : (le : TypecheckErrors l) -> Void
 
 public export
 record ListFailureIsCorrect (l : GebSList) (e : TypecheckErrors l) where
   constructor ListFailureCorrectnessConditions
   ListTypecheckErrorComplete : (e' : TypecheckErrors l) -> e = e'
+  ListTypecheckErrorEnsuresNoSuccesses :
+    (li : TypecheckSuccessList l) -> Void
 
 public export
 CorrectCompilation : GebSExp -> Type
 CorrectCompilation x =
   Either
-    (DPair (IdrisInterpretation x) (SuccessIsCorrect x))
+    (DPair (TypecheckSuccess x) (SuccessIsCorrect x))
     (DPair (TypecheckError x) (FailureIsCorrect x))
 
 public export
 CorrectListCompilation : GebSList -> Type
 CorrectListCompilation l =
   Either
-    (DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l))
+    (DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l))
     (DPair (TypecheckErrors l) (ListFailureIsCorrect l))
 
 public export
 gebCompileCertifiedLeftElim :
   (a : GebAtom) -> (l : GebSList) ->
-  DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
+  DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
   Either
-    (DPair (IdrisInterpretation (a $* l)) (SuccessIsCorrect (a $* l)))
+    (DPair (TypecheckSuccess (a $* l)) (SuccessIsCorrect (a $* l)))
     (DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l)))
-gebCompileCertifiedLeftElim a l (i ** correct) = case l of _ impossible
-{-
-gebCompileCertifiedLeftElim GALanguageSort [] (li ** correct) =
-  ?gebCompileCertifiedLeftElim_language_hole
-gebCompileCertifiedLeftElim GALanguageSort (_ :: _) (li ** correct) =
-  ?gebCompileCertifiedLeftElim_language_wrong_number_of_args_hole
-gebCompileCertifiedLeftElim _ l (li ** correct) =
-  ?gebCompileCertifiedLeftElim_other_than_language_hole
--}
+gebCompileCertifiedLeftElim a l (li ** correct) =
+  Right
+    (UnimplementedAtom a l li **
+     FailureCorrectnessConditions
+      (\e' => case e' of
+        UnimplementedAtom a' l' li' =>
+          rewrite ListTypecheckSuccessComplete correct li' in Refl
+        SubexpressionFailed a' l' le =>
+          void (ListTypecheckSuccessEnsuresNoError correct le))
+      (\i => case i of _ impossible)
+    )
 
 public export
 gebCompileCertifiedRightElim :
   (a : GebAtom) -> (l : GebSList) ->
   DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
   DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l))
-gebCompileCertifiedRightElim a l (UnimplementedList _ ** correct) =
-  (UnimplementedExp (a $* l) **
-   FailureCorrectnessConditions $ \e' => case e' of UnimplementedExp _ => Refl)
+gebCompileCertifiedRightElim a l (le ** correct) =
+  (SubexpressionFailed a l le **
+   FailureCorrectnessConditions
+    (\e' => case e' of
+      UnimplementedAtom a' l' le' =>
+        void $ ListTypecheckErrorEnsuresNoSuccesses correct le'
+      SubexpressionFailed a' l' le' =>
+        rewrite ListTypecheckErrorComplete correct le' in Refl)
+    (\i => case i of _ impossible)
+  )
 
 public export
 gebCompileNilElim :
   Either
-    (DPair (IdrisListInterpretation []) (ListSuccessIsCorrect []))
+    (DPair (TypecheckSuccessList []) (ListSuccessIsCorrect []))
     (DPair (TypecheckErrors []) (ListFailureIsCorrect []))
 gebCompileNilElim =
-  Right
-    (UnimplementedList [] **
-     ListFailureCorrectnessConditions $
-      \e => case e of UnimplementedList _ => Refl)
+  Left
+    (EmptySuccessList **
+     ListSuccessCorrectnessConditions
+      (\li => case li of EmptySuccessList => Refl)
+      (\le => case le of _ impossible)
+    )
 
 public export
 gebCompileCertifiedConsLeftLeft :
   (x : GebSExp) -> (l : GebSList) ->
-  DPair (IdrisInterpretation x) (SuccessIsCorrect x) ->
-  DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
+  DPair (TypecheckSuccess x) (SuccessIsCorrect x) ->
+  DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
   Either
-    (DPair (IdrisListInterpretation (x :: l)) (ListSuccessIsCorrect (x :: l)))
+    (DPair (TypecheckSuccessList (x :: l)) (ListSuccessIsCorrect (x :: l)))
     (DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l)))
 gebCompileCertifiedConsLeftLeft x l (i ** expCorrect) (li ** listCorrect) =
   case (i, li) of
@@ -524,7 +549,7 @@ gebCompileCertifiedConsLeftLeft x l (i ** expCorrect) (li ** listCorrect) =
 public export
 gebCompileCertifiedConsLeftRight :
   (x : GebSExp) -> (l : GebSList) ->
-  DPair (IdrisInterpretation x) (SuccessIsCorrect x) ->
+  DPair (TypecheckSuccess x) (SuccessIsCorrect x) ->
   DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsLeftRight x l (i ** expCorrect) (le ** listCorrect) =
@@ -535,11 +560,10 @@ public export
 gebCompileCertifiedConsRightLeft :
   (x : GebSExp) -> (l : GebSList) ->
   DPair (TypecheckError x) (FailureIsCorrect x) ->
-  DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
+  DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsRightLeft x l (e ** expCorrect) (li ** listCorrect) =
-  case (e, li) of
-    (_, _) impossible
+  ?gebCompileCertifiedConsRightLeft_hole
 
 public export
 gebCompileCertifiedConsRightRight :
@@ -548,19 +572,16 @@ gebCompileCertifiedConsRightRight :
   DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsRightRight x l (e ** expCorrect) (le ** listCorrect) =
-  case (e, le) of
-    (UnimplementedExp _, UnimplementedList _) =>
-      (UnimplementedList _ **
-       ListFailureCorrectnessConditions $ \e' => case e' of
-        UnimplementedList _ => Refl)
+  (AdditionalError x l e le **
+   ?gebCompileCertifiedConsRightRight_hole)
 
 public export
 GebCompileSignature :
   SExpEitherInductionSig
     Prelude.Basics.id
-    (\x => DPair (IdrisInterpretation x) (SuccessIsCorrect x))
+    (\x => DPair (TypecheckSuccess x) (SuccessIsCorrect x))
     (\x => DPair (TypecheckError x) (FailureIsCorrect x))
-    (\l => DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l))
+    (\l => DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l))
     (\l => DPair (TypecheckErrors l) (ListFailureIsCorrect l))
 GebCompileSignature =
   SExpEitherInductionArgs
@@ -578,7 +599,7 @@ gebCompileCertified =
   sexpEitherInduction {mMonad=IdentityIsMonad} GebCompileSignature
 
 public export
-gebCompile : (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
+gebCompile : (x : GebSExp) -> Either (TypecheckSuccess x) (TypecheckError x)
 gebCompile x with (gebCompileCertified x)
   gebCompile x | Left (i ** _) = Left i
   gebCompile x | Right (e ** _) = Right e
@@ -593,16 +614,16 @@ gebCompileCorrect x with (gebCompileCertified x)
   gebCompileCorrect x | (Right (e ** correct)) = correct
 
 public export
-compileSuccessComplete : (x : GebSExp) -> (i : IdrisInterpretation x) ->
+compileSuccessComplete : (x : GebSExp) -> (i : TypecheckSuccess x) ->
   gebCompile x = Left i
 compileSuccessComplete x i with (gebCompileCertified x)
   compileSuccessComplete x i | (Left (i' ** correct)) =
-    case CompilationSuccessComplete correct i of Refl => cong Left Refl
+    case TypecheckSuccessComplete correct i of Refl => cong Left Refl
   compileSuccessComplete x i | (Right (e' ** correct)) =
     case TypecheckErrorComplete correct e' of Refl impossible
 
 public export
-idrisInterpretationUnique : (x : GebSExp) -> (i, i' : IdrisInterpretation x) ->
+idrisInterpretationUnique : (x : GebSExp) -> (i, i' : TypecheckSuccess x) ->
   i = i'
 idrisInterpretationUnique x i i' =
   case
@@ -616,7 +637,7 @@ typecheckErrorComplete : (x : GebSExp) -> (e : TypecheckError x) ->
   gebCompile x = Right e
 typecheckErrorComplete x e with (gebCompileCertified x)
   typecheckErrorComplete x e | (Left (i' ** correct)) =
-    case CompilationSuccessComplete correct i' of Refl impossible
+    case TypecheckSuccessComplete correct i' of Refl impossible
   typecheckErrorComplete x e | (Right (e' ** correct)) =
     case TypecheckErrorComplete correct e of Refl => cong Right Refl
 
@@ -632,7 +653,7 @@ typecheckErrorUnique x e e' =
 
 public export
 compileSuccessAndTypecheckErrorMutuallyExclusive : (x : GebSExp) ->
-  (i : IdrisInterpretation x) -> (e : TypecheckError x) -> Void
+  (i : TypecheckSuccess x) -> (e : TypecheckError x) -> Void
 compileSuccessAndTypecheckErrorMutuallyExclusive x i e =
   case
     trans
@@ -642,27 +663,27 @@ compileSuccessAndTypecheckErrorMutuallyExclusive x i e =
 
 public export
 idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
-  (IdrisListInterpretation l -> (type : Type ** type)) ->
-  IdrisInterpretation (a $* l) ->
+  (TypecheckSuccessList l -> (type : Type ** type)) ->
+  TypecheckSuccess (a $* l) ->
   (type : Type ** type)
 idrisInterpretExpElim a l li i = case li of _ impossible
 
 public export
-idrisInterpretNilElim : IdrisListInterpretation [] -> (type : Type ** type)
-idrisInterpretNilElim li = case li of _ impossible
+idrisInterpretNilElim : TypecheckSuccessList [] -> (type : Type ** type)
+idrisInterpretNilElim li = ?idrisInterpretNilElim_hole
 
 public export
 idrisInterpretConsElim : (x : GebSExp) -> (l : GebSList) ->
-  (IdrisInterpretation x -> (type : Type ** type)) ->
-  (IdrisListInterpretation l -> (type : Type ** type)) ->
-  IdrisListInterpretation (x :: l) ->
+  (TypecheckSuccess x -> (type : Type ** type)) ->
+  (TypecheckSuccessList l -> (type : Type ** type)) ->
+  TypecheckSuccessList (x :: l) ->
   (type : Type ** type)
-idrisInterpretConsElim x l i li lxl = case i of _ impossible
+idrisInterpretConsElim x l i li lxl = ?idrisInterpretConsElim_hole
 
 public export
 idrisInterpretations :
-  ((x : GebSExp) -> IdrisInterpretation x -> (type : Type ** type),
-   (l : GebSList) -> IdrisListInterpretation l -> (type : Type ** type))
+  ((x : GebSExp) -> TypecheckSuccess x -> (type : Type ** type),
+   (l : GebSList) -> TypecheckSuccessList l -> (type : Type ** type))
 idrisInterpretations = sexpEliminators $ SExpEliminatorArgs
   idrisInterpretExpElim
   idrisInterpretNilElim
