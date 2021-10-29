@@ -215,12 +215,12 @@ SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom
 SListForAll {atom} sp = slistEliminator (SExpGenerateForAllSig sp)
 
 public export
-sexpForAllHead : {0 atom : Type} -> {sp : SPred atom} -> {x : SExp atom} ->
+sexpForAllHead : {0 atom : Type} -> {0 sp : SPred atom} -> {x : SExp atom} ->
   SExpForAll sp x -> sp x
 sexpForAllHead {x=(_ $* _)} = fst
 
 public export
-sexpForAllTail : {0 atom : Type} -> {sp : SPred atom} ->
+sexpForAllTail : {0 atom : Type} -> {0 sp : SPred atom} ->
   {a : atom} -> {l : SList atom} -> SExpForAll sp (a $* l) -> SListForAll sp l
 sexpForAllTail = snd
 
@@ -241,7 +241,7 @@ record SExpForAllEliminatorSig
 
 public export
 SExpForAllEliminatorSigToEliminatorSig :
-  {atom : Type} -> {sp : SPred atom} ->
+  {atom : Type} -> {0 sp : SPred atom} ->
   SExpForAllEliminatorSig sp ->
   SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
 SExpForAllEliminatorSigToEliminatorSig {sp} signature =
@@ -252,7 +252,7 @@ SExpForAllEliminatorSigToEliminatorSig {sp} signature =
 
 public export
 sexpForAllEliminator :
-  {atom : Type} -> {sp : SPred atom} ->
+  {atom : Type} -> {0 sp : SPred atom} ->
   (signature : SExpForAllEliminatorSig sp) ->
   SExp atom ~> SExpForAll sp
 sexpForAllEliminator signature =
@@ -260,7 +260,7 @@ sexpForAllEliminator signature =
 
 public export
 slistForAllEliminator :
-  {atom : Type} -> {sp : SPred atom} ->
+  {atom : Type} -> {0 sp : SPred atom} ->
   (signature : SExpForAllEliminatorSig sp) ->
   SList atom ~> SListForAll sp
 slistForAllEliminator signature =
@@ -268,7 +268,7 @@ slistForAllEliminator signature =
 
 public export
 sexpGeneralInduction :
-  {atom : Type} -> {sp : SPred atom} ->
+  {atom : Type} -> {0 sp : SPred atom} ->
   (signature : SExpForAllEliminatorSig sp) ->
   SExp atom ~> sp
 sexpGeneralInduction {sp} signature x =
@@ -282,7 +282,7 @@ sexpGeneralInduction {sp} signature x =
 -- | it ever happened, but which it can prove never happens.
 public export
 record SExpStrengthenedInductionSig
-  {atom : Type} (sp : SPred atom)
+  {atom : Type} (0 sp : SPred atom)
   (spp : (x : SExp atom) -> sp x -> Type)
   where
     constructor SExpStrengthenedInductionArgs
@@ -295,7 +295,7 @@ record SExpStrengthenedInductionSig
 
 public export
 sexpGeneralStrengthenedInduction :
-  {atom : Type} -> {sp : SPred atom} ->
+  {atom : Type} -> {0 sp : SPred atom} ->
   {spp : (x : SExp atom) -> sp x -> Type} ->
   (signature : SExpStrengthenedInductionSig sp spp) ->
   (x : SExp atom) -> DPair (sp x) (spp x)
@@ -309,7 +309,7 @@ sexpGeneralStrengthenedInduction signature =
 public export
 record SExpEitherInductionSig
   (m : Type -> Type) {mMonad : Monad m}
-  {atom : Type} (spl, spr : SPred atom) (lpl, lpr : SLPred atom)
+  {atom : Type} (0 spl, spr : SPred atom) (0 lpl, lpr : SLPred atom)
   where
     constructor SExpEitherInductionArgs
     leftElim : (a : atom) -> (l : SList atom) -> (mlpl : m (lpl l)) ->
@@ -330,7 +330,7 @@ record SExpEitherInductionSig
 public export
 SExpEitherInductionSigToEliminatorSig :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
+  {atom : Type} -> {0 spl, spr : SPred atom} -> {0 lpl, lpr : SLPred atom} ->
   SExpEitherInductionSig m {mMonad} spl spr lpl lpr ->
   SExpEliminatorSig
     (\x => m (Either (spl x) (spr x)))
@@ -362,7 +362,7 @@ SExpEitherInductionSigToEliminatorSig signature =
 public export
 sexpEitherInduction :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
+  {atom : Type} -> {0 spl, spr : SPred atom} -> {0 lpl, lpr : SLPred atom} ->
   (signature : SExpEitherInductionSig m {mMonad} spl spr lpl lpr) ->
   (x : SExp atom) -> m $ Either (spl x) (spr x)
 sexpEitherInduction signature =
