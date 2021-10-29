@@ -435,6 +435,8 @@ mutual
   data TypecheckErrors : GebSList -> Type where
     FirstError : (x : GebSExp) -> (l : GebSList) ->
       TypecheckError x -> TypecheckSuccessList l -> TypecheckErrors (x :: l)
+    NoNewError : (x : GebSExp) -> (l : GebSList) ->
+      TypecheckErrors l -> TypecheckErrors (x :: l)
     AdditionalError : (x : GebSExp) -> (l : GebSList) ->
       TypecheckError x -> TypecheckErrors l -> TypecheckErrors (x :: l)
 
@@ -548,8 +550,21 @@ gebCompileCertifiedConsLeftLeft :
   CorrectListCompilation (x :: l)
 gebCompileCertifiedConsLeftLeft x l
   (Element i expCorrect) (Element li listCorrect) =
-    case (i, li) of
-      (_, _) impossible
+    Left $ Element (SuccessListCons x l i li)
+      (ListSuccessCorrectnessConditions
+        (\sl => case sl of
+          EmptySuccessList impossible
+          SuccessListCons x' l' i' li' =>
+            rewrite TypecheckSuccessComplete expCorrect i' in
+            rewrite ListTypecheckSuccessComplete listCorrect li' in
+            Refl)
+        (\le => case le of
+          FirstError _ _ e'' _ =>
+            void $ TypecheckSuccessEnsuresNoError expCorrect e''
+          NoNewError _ _ li' =>
+            void $ ListTypecheckSuccessEnsuresNoError listCorrect li'
+          AdditionalError _ _ e'' _ =>
+            void $ TypecheckSuccessEnsuresNoError expCorrect e''))
 
 public export
 gebCompileCertifiedConsLeftRight :
@@ -559,8 +574,19 @@ gebCompileCertifiedConsLeftRight :
   Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsLeftRight x l
   (Element i expCorrect) (Element le listCorrect) =
-    case (i, le) of
-      (_, _) impossible
+  (Element (NoNewError x l le) $
+    ListFailureCorrectnessConditions
+      (\e' => case e' of
+        FirstError _ _ e'' li' =>
+          void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect li'
+        NoNewError _ _ li' =>
+          rewrite ListTypecheckErrorComplete listCorrect li' in
+          Refl
+        AdditionalError _ _ e'' _ =>
+          void $ TypecheckSuccessEnsuresNoError expCorrect e'')
+      (\xls => case xls of
+        SuccessListCons _ _ xs ls =>
+          void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect ls))
 
 public export
 gebCompileCertifiedConsRightLeft :
@@ -577,6 +603,8 @@ gebCompileCertifiedConsRightLeft x l
           rewrite TypecheckErrorComplete expCorrect e'' in
           rewrite ListTypecheckSuccessComplete listCorrect li' in
           Refl
+        NoNewError _ _ li' =>
+          void $ ListTypecheckSuccessEnsuresNoError listCorrect li'
         AdditionalError _ _ e'' li' =>
           void $ ListTypecheckSuccessEnsuresNoError listCorrect li')
       (\xls => case xls of
@@ -592,17 +620,7 @@ gebCompileCertifiedConsRightRight :
 gebCompileCertifiedConsRightRight x l
   (Element e expCorrect) (Element le listCorrect) =
   (Element (AdditionalError x l e le) $
-    ListFailureCorrectnessConditions
-      (\e' => case e' of
-        FirstError _ _ e'' li' =>
-          void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect li'
-        AdditionalError _ _ e'' li' =>
-          rewrite TypecheckErrorComplete expCorrect e'' in
-          rewrite ListTypecheckErrorComplete listCorrect li' in
-          Refl)
-      (\xls => case xls of
-        SuccessListCons _ _ xs ls =>
-          void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
+    ?gebCompileCertifiedConsRightRight_hole)
 
 public export
 GebCompileSignature :
