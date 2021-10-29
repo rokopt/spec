@@ -421,7 +421,7 @@ mutual
 
   public export
   data TypecheckError : GebSExp -> Type where
-    UnimplementedAtom : (x : GebSExp) -> TypecheckError x
+    UnimplementedExp : (x : GebSExp) -> TypecheckError x
 
   public export
   data IdrisListInterpretation : GebSList -> Type where
@@ -482,6 +482,15 @@ gebCompileCertifiedLeftElim :
 gebCompileCertifiedLeftElim a l (i ** correct) = case l of _ impossible
 
 public export
+gebCompileCertifiedRightElim :
+  (a : GebAtom) -> (l : GebSList) ->
+  DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
+  DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l))
+gebCompileCertifiedRightElim a l (UnimplementedList _ ** correct) =
+  (UnimplementedExp (a $* l) **
+   FailureCorrectnessConditions $ \e' => case e' of UnimplementedExp _ => Refl)
+
+public export
 gebCompileNilElim :
   Either
     (DPair (IdrisListInterpretation []) (ListSuccessIsCorrect []))
@@ -491,6 +500,44 @@ gebCompileNilElim =
     (UnimplementedList [] **
      ListFailureCorrectnessConditions $
       \e => case e of UnimplementedList _ => Refl)
+
+public export
+gebCompileCertifiedConsLeftLeft :
+  (x : GebSExp) -> (l : GebSList) ->
+  DPair (IdrisInterpretation x) (SuccessIsCorrect x) ->
+  DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
+  Either
+    (DPair (IdrisListInterpretation (x :: l)) (ListSuccessIsCorrect (x :: l)))
+    (DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l)))
+gebCompileCertifiedConsLeftLeft x l (i ** expCorrect) (e ** listCorrect) =
+  ?gebCompileCertifiedConsLeftLeft_hole
+
+public export
+gebCompileCertifiedConsLeftRight :
+  (x : GebSExp) -> (l : GebSList) ->
+  DPair (IdrisInterpretation x) (SuccessIsCorrect x) ->
+  DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
+  DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
+gebCompileCertifiedConsLeftRight x l (i ** expCorrect) (e ** listCorrect) =
+  ?gebCompileCertifiedConsLeftRight_hole
+
+public export
+gebCompileCertifiedConsRightLeft :
+  (x : GebSExp) -> (l : GebSList) ->
+  DPair (TypecheckError x) (FailureIsCorrect x) ->
+  DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
+  DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
+gebCompileCertifiedConsRightLeft x l (i ** expCorrect) (e ** listCorrect) =
+  ?gebCompileCertifiedConsRightLeft_hole
+
+public export
+gebCompileCertifiedConsRightRight :
+  (x : GebSExp) -> (l : GebSList) ->
+  DPair (TypecheckError x) (FailureIsCorrect x) ->
+  DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
+  DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
+gebCompileCertifiedConsRightRight x l (i ** expCorrect) (e ** listCorrect) =
+  ?gebCompileCertifiedConsRightRight_hole
 
 public export
 GebCompileSignature :
@@ -503,12 +550,12 @@ GebCompileSignature :
 GebCompileSignature =
   SExpEitherInductionArgs
     gebCompileCertifiedLeftElim
-    ?GebCompileSignature_rightElim_hole
+    gebCompileCertifiedRightElim
     gebCompileNilElim
-    ?GebCompileSignature_consLeftLeft_hole
-    ?GebCompileSignature_consLeftRight_hole
-    ?GebCompileSignature_consRightLeft_hole
-    ?GebCompileSignature_consRightRight_hole
+    gebCompileCertifiedConsLeftLeft
+    gebCompileCertifiedConsLeftRight
+    gebCompileCertifiedConsRightLeft
+    gebCompileCertifiedConsRightRight
 
 public export
 gebCompileCertified : GebSExp ~> CorrectCompilation
