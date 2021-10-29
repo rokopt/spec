@@ -1,6 +1,7 @@
 module RefinedSExp.List
 
 import Library.FunctionsAndRelations
+import Library.Decidability
 import public Data.List
 
 %default total
@@ -94,6 +95,21 @@ listMetaEliminator = listEliminator . ListMetaEliminatorSigToEliminatorSig
 public export
 ListForAll : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
 ListForAll ap = listEliminator (ListEliminatorArgs () (const . Pair . ap))
+
+public export
+listForAllGet : {atom : Type} -> DecEq atom => {ap : atom -> Type} ->
+  {l : List atom} -> ListForAll ap l -> (a : atom) -> Maybe $ ap a
+listForAllGet {l} =
+  listEliminator
+    {lp=(\l' => (lforAll' : ListForAll ap l') -> (a' : atom) -> Maybe $ ap a')}
+    (ListEliminatorArgs
+      (\_, _ => Nothing)
+      (\a, l', tailForAll, lforAll, a' => case decEq a a' of
+        Yes Refl => Just $ fst lforAll
+        No _ => tailForAll (snd lforAll) a'
+      )
+    )
+    l
 
 public export
 ListExists : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
