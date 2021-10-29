@@ -480,6 +480,14 @@ gebCompileCertifiedLeftElim :
     (DPair (IdrisInterpretation (a $* l)) (SuccessIsCorrect (a $* l)))
     (DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l)))
 gebCompileCertifiedLeftElim a l (i ** correct) = case l of _ impossible
+{-
+gebCompileCertifiedLeftElim GALanguageSort [] (li ** correct) =
+  ?gebCompileCertifiedLeftElim_language_hole
+gebCompileCertifiedLeftElim GALanguageSort (_ :: _) (li ** correct) =
+  ?gebCompileCertifiedLeftElim_language_wrong_number_of_args_hole
+gebCompileCertifiedLeftElim _ l (li ** correct) =
+  ?gebCompileCertifiedLeftElim_other_than_language_hole
+-}
 
 public export
 gebCompileCertifiedRightElim :
@@ -631,6 +639,34 @@ compileSuccessAndTypecheckErrorMutuallyExclusive x i e =
     (sym $ compileSuccessComplete x i)
     (typecheckErrorComplete x e) of
       Refl impossible
+
+public export
+idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
+  (IdrisListInterpretation l -> (type : Type ** type)) ->
+  IdrisInterpretation (a $* l) ->
+  (type : Type ** type)
+idrisInterpretExpElim a l li i = case li of _ impossible
+
+public export
+idrisInterpretNilElim : IdrisListInterpretation [] -> (type : Type ** type)
+idrisInterpretNilElim li = case li of _ impossible
+
+public export
+idrisInterpretConsElim : (x : GebSExp) -> (l : GebSList) ->
+  (IdrisInterpretation x -> (type : Type ** type)) ->
+  (IdrisListInterpretation l -> (type : Type ** type)) ->
+  IdrisListInterpretation (x :: l) ->
+  (type : Type ** type)
+idrisInterpretConsElim x l i li lxl = case i of _ impossible
+
+public export
+idrisInterpretations :
+  ((x : GebSExp) -> IdrisInterpretation x -> (type : Type ** type),
+   (l : GebSList) -> IdrisListInterpretation l -> (type : Type ** type))
+idrisInterpretations = sexpEliminators $ SExpEliminatorArgs
+  idrisInterpretExpElim
+  idrisInterpretNilElim
+  idrisInterpretConsElim
 
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
