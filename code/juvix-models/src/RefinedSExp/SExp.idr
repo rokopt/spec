@@ -292,34 +292,63 @@ sexpGeneralStrengthenedInduction signature =
 
 public export
 record SExpEitherInductionSig
-  (f : Type -> Type) {fFunctor : Functor f}
+  (m : Type -> Type) {mMonad : Monad m}
   {atom : Type} (spl, spr : SPred atom) (lpl, lpr : SLPred atom)
   where
     constructor SExpEitherInductionArgs
-    leftElim : (a : atom) -> (l : SList atom) -> (flpl : f (lpl l)) ->
-      f (Either (spl (a $* l)) (spr (a $* l)))
-    nilElim : f (Either (lpl []) (lpr []))
+    leftElim : (a : atom) -> (l : SList atom) -> (mlpl : m (lpl l)) ->
+      m (Either (spl (a $* l)) (spr (a $* l)))
+    rightElim : (a : atom) -> (l : SList atom) -> (mlpr : m (lpr l)) ->
+      m (spr (a $* l))
+    nilElim : m (Either (lpl []) (lpr []))
+    consLeftLeft : (x : SExp atom) -> (l : SList atom) ->
+      (mspl : m (spl x)) -> (mlpl : m (lpl l)) ->
+      m (Either (lpl (x :: l)) (lpr (x :: l)))
+    consLeftRight : (x : SExp atom) -> (l : SList atom) ->
+      (mspl : m (spl x)) -> (mlpr : m (lpr l)) -> m (lpr (x :: l))
+    consRightLeft : (x : SExp atom) -> (l : SList atom) ->
+      (mspr : m (spr x)) -> (mlpl : m (lpl l)) -> m (lpr (x :: l))
+    consRightRight : (x : SExp atom) -> (l : SList atom) ->
+      (mspr : m (spr x)) -> (mlpr : m (lpr l)) -> m (lpr (x :: l))
 
 public export
 SExpEitherInductionSigToEliminatorSig :
-  {f : Type -> Type} -> {fFunctor : Functor f} ->
+  {m : Type -> Type} -> {mMonad : Monad m} ->
   {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
-  SExpEitherInductionSig f {fFunctor} spl spr lpl lpr ->
+  SExpEitherInductionSig m {mMonad} spl spr lpl lpr ->
   SExpEliminatorSig
-    (\x => f (Either (spl x) (spr x)))
-    (\l => f (Either (lpl l) (lpr l)))
+    (\x => m (Either (spl x) (spr x)))
+    (\l => m (Either (lpl l) (lpr l)))
 SExpEitherInductionSigToEliminatorSig signature =
   SExpEliminatorArgs
-    (?SExpEitherInductionSigToEliminatorSig_hole_expElim)
-    (?SExpEitherInductionSigToEliminatorSig_hole_nilElim)
-    (?SExpEitherInductionSigToEliminatorSig_hole_consElim)
+    (\a, l, mlpl => do
+      listResult <- mlpl
+      case listResult of
+        Left listLeft => leftElim signature a l $ pure listLeft
+        Right listRight => map Right $ rightElim signature a l $ pure listRight)
+    (nilElim signature)
+    (\x, l, mspx, mlpl => do
+      expResult <- mspx
+      listResult <- mlpl
+      case (expResult, listResult) of
+        (Left expLeft, Left listLeft) =>
+          consLeftLeft signature x l (pure expLeft) (pure listLeft)
+        (Left expLeft, Right listRight) =>
+          map Right $
+            consLeftRight signature x l (pure expLeft) (pure listRight)
+        (Right expRight, Left listLeft) =>
+          map Right $
+            consRightLeft signature x l (pure expRight) (pure listLeft)
+        (Right expRight, Right listRight) =>
+          map Right $
+            consRightRight signature x l (pure expRight) (pure listRight))
 
 public export
 sexpEitherInduction :
-  {f : Type -> Type} -> {fFunctor : Functor f} ->
+  {m : Type -> Type} -> {mMonad : Monad m} ->
   {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
-  (signature : SExpEitherInductionSig f {fFunctor} spl spr lpl lpr) ->
-  (x : SExp atom) -> f $ Either (spl x) (spr x)
+  (signature : SExpEitherInductionSig m {mMonad} spl spr lpl lpr) ->
+  (x : SExp atom) -> m $ Either (spl x) (spr x)
 sexpEitherInduction signature =
   sexpEliminator (SExpEitherInductionSigToEliminatorSig signature)
 

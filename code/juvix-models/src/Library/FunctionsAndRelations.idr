@@ -816,6 +816,11 @@ Applicative Prelude.Basics.id where
   (<*>) = Prelude.Basics.id
 
 public export
+[IdentityIsApplicative] Applicative Prelude.Basics.id where
+  pure = Prelude.Basics.id
+  (<*>) = Prelude.Basics.id
+
+public export
 [PairOfFunctor] Functor PairOf where
   map f = mapPair f f
 
@@ -823,6 +828,10 @@ public export
 [PairOfApplicative] Applicative PairOf using PairOfFunctor where
   pure x = (x, x)
   (f, f') <*> (p, p') = (f p, f' p')
+
+public export
+[IdentityIsMonad] Monad Prelude.Basics.id using IdentityIsFunctor where
+  x >>= f = f x
 
 infixl 3 <.>
 public export

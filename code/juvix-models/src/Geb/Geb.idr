@@ -496,7 +496,6 @@ public export
 GebCompileSignature :
   SExpEitherInductionSig
     Prelude.Basics.id
-    {fFunctor=IdentityIsFunctor}
     (\x => DPair (IdrisInterpretation x) (SuccessIsCorrect x))
     (\x => DPair (TypecheckError x) (FailureIsCorrect x))
     (\l => DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l))
@@ -504,27 +503,41 @@ GebCompileSignature :
 GebCompileSignature =
   SExpEitherInductionArgs
     gebCompileCertifiedLeftElim
+    ?GebCompileSignature_rightElim_hole
     gebCompileNilElim
+    ?GebCompileSignature_consLeftLeft_hole
+    ?GebCompileSignature_consLeftRight_hole
+    ?GebCompileSignature_consRightLeft_hole
+    ?GebCompileSignature_consRightRight_hole
 
 public export
 gebCompileCertified : GebSExp ~> CorrectCompilation
 gebCompileCertified =
-  sexpEitherInduction
-    {f=Prelude.Basics.id} {fFunctor=IdentityIsFunctor} GebCompileSignature
+  sexpEitherInduction {mMonad=IdentityIsMonad} GebCompileSignature
 
 public export
-gebCompile :
-  (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
-gebCompile x = case gebCompileCertified x of
-  Left (i ** _) => Left i
-  Right (e ** _) => Right e
+gebCompile : (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
+gebCompile x with (gebCompileCertified x)
+  gebCompile x | Left (i ** _) = Left i
+  gebCompile x | Right (e ** _) = Right e
+
+public export
+gebCompileCorrect :
+  (x : GebSExp) -> case gebCompile x of
+    Left i => SuccessIsCorrect x i
+    Right e => FailureIsCorrect x e
+gebCompileCorrect x with (gebCompileCertified x)
+  gebCompileCorrect x | (Left (i ** correct)) = correct
+  gebCompileCorrect x | (Right (e ** correct)) = correct
 
 public export
 compileSuccessComplete : (x : GebSExp) -> (i : IdrisInterpretation x) ->
   gebCompile x = Left i
-compileSuccessComplete x i = case gebCompileCertified x of
-  Left (i ** correct) => ?compileSuccessComplete_hole_left
-  Right (e ** correct) => ?compileSuccessComplete_hole_right
+compileSuccessComplete x i with (gebCompileCertified x)
+  compileSuccessComplete x i | (Left (i' ** correct)) =
+    case CompilationSuccessComplete correct i of Refl => cong Left Refl
+  compileSuccessComplete x i | (Right (e' ** correct)) =
+    case TypecheckErrorComplete correct e' of Refl impossible
 
 public export
 idrisInterpretationUnique : (x : GebSExp) -> (i, i' : IdrisInterpretation x) ->
@@ -539,9 +552,11 @@ idrisInterpretationUnique x i i' =
 public export
 typecheckErrorComplete : (x : GebSExp) -> (e : TypecheckError x) ->
   gebCompile x = Right e
-typecheckErrorComplete x = case gebCompileCertified x of
-  Left (i ** correct) => ?typecheckErrorComplete_hole_left
-  Right (e ** correct) => ?typecheckErrorComplete_hole_right
+typecheckErrorComplete x e with (gebCompileCertified x)
+  typecheckErrorComplete x e | (Left (i' ** correct)) =
+    case CompilationSuccessComplete correct i' of Refl impossible
+  typecheckErrorComplete x e | (Right (e' ** correct)) =
+    case TypecheckErrorComplete correct e of Refl => cong Right Refl
 
 public export
 typecheckErrorUnique : (x : GebSExp) -> (e, e' : TypecheckError x) ->
