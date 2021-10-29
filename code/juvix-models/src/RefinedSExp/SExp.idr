@@ -34,6 +34,16 @@ mutual
   SList : (atom : Type) -> Type
   SList = List . SExp
 
+prefix 11 $<
+public export
+($<) : {atom : Type} -> SExp atom -> atom
+($<) (a $* _) = a
+
+prefix 11 $>
+public export
+($>) : {atom : Type} -> SExp atom -> SList atom
+($>) (_ $* l) = l
+
 prefix 11 $^
 public export
 ($^) : {atom : Type} -> atom -> SExp atom
