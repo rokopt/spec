@@ -294,33 +294,22 @@ public export
 record SExpEitherInductionSig
   (f : Type -> Type) {fFunctor : Functor f}
   {atom : Type} (spl, spr : SPred atom) (lpl, lpr : SLPred atom)
-  (spp : (x : SExp atom) -> f (Either (spl x) (spr x)) -> Type)
-  (lpp : (l : SList atom) -> f (Either (lpl l) (lpr l)) -> Type)
   where
     constructor SExpEitherInductionArgs
     leftElim : (a : atom) -> (l : SList atom) -> (flpl : f (lpl l)) ->
-      lpp l (map {f} Left flpl) ->
       f (Either (spl (a $* l)) (spr (a $* l)))
-    leftElimCorrect : (a : atom) -> (l : SList atom) -> (flpl : f (lpl l)) ->
-      (lppl : lpp l (map {f} Left flpl)) ->
-      spp (a $* l) (leftElim a l flpl lppl)
     nilElim : f (Either (lpl []) (lpr []))
-    nilElimCorrect : lpp [] nilElim
 
 public export
 SExpEitherInductionSigToEliminatorSig :
   {f : Type -> Type} -> {fFunctor : Functor f} ->
   {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
-  {spp : (x : SExp atom) -> f (Either (spl x) (spr x)) -> Type} ->
-  {lpp : (l : SList atom) -> f (Either (lpl l) (lpr l)) -> Type} ->
-  SExpEitherInductionSig f {fFunctor} spl spr lpl lpr spp lpp ->
+  SExpEitherInductionSig f {fFunctor} spl spr lpl lpr ->
   SExpEliminatorSig
-    (\x => (result : f (Either (spl x) (spr x)) ** spp x result))
-    (\l => (result : f (Either (lpl l) (lpr l)) ** lpp l result))
+    (\x => f (Either (spl x) (spr x)))
+    (\l => f (Either (lpl l) (lpr l)))
 SExpEitherInductionSigToEliminatorSig signature =
   SExpEliminatorArgs
-    {sp=(\x => (result : f (Either (spl x) (spr x)) ** spp x result))}
-    {lp=(\l => (result : f (Either (lpl l) (lpr l)) ** lpp l result))}
     (?SExpEitherInductionSigToEliminatorSig_hole_expElim)
     (?SExpEitherInductionSigToEliminatorSig_hole_nilElim)
     (?SExpEitherInductionSigToEliminatorSig_hole_consElim)
@@ -329,11 +318,8 @@ public export
 sexpEitherInduction :
   {f : Type -> Type} -> {fFunctor : Functor f} ->
   {atom : Type} -> {spl, spr : SPred atom} -> {lpl, lpr : SLPred atom} ->
-  {spp : (x : SExp atom) -> f (Either (spl x) (spr x)) -> Type} ->
-  {lpp : (l : SList atom) -> f (Either (lpl l) (lpr l)) -> Type} ->
-  (signature : SExpEitherInductionSig f {fFunctor} spl spr lpl lpr spp lpp) ->
-  (x : SExp atom) ->
-  DPair (f (Either (spl x) (spr x))) (spp x)
+  (signature : SExpEitherInductionSig f {fFunctor} spl spr lpl lpr) ->
+  (x : SExp atom) -> f $ Either (spl x) (spr x)
 sexpEitherInduction signature =
   sexpEliminator (SExpEitherInductionSigToEliminatorSig signature)
 

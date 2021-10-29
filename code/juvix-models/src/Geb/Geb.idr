@@ -439,69 +439,72 @@ ListCompileResult : GebSList -> Type
 ListCompileResult l = Either (IdrisListInterpretation l) (TypecheckErrors l)
 
 public export
-record CompilationIsCorrect (x : GebSExp) (r : CompileResult x) where
-  constructor CompilationCorrectnessConditions
-  CompilationSuccessComplete : (i : IdrisInterpretation x) -> r = Left i
-  TypecheckErrorComplete : (e : TypecheckError x) -> r = Right e
+record SuccessIsCorrect (x : GebSExp) (i : IdrisInterpretation x) where
+  constructor SuccessCorrectnessConditions
+  CompilationSuccessComplete : (i' : IdrisInterpretation x) -> i = i'
 
 public export
-record ListCompilationIsCorrect (l : GebSList) (r : ListCompileResult l) where
-  constructor ListCompilationCorrectnessConditions
-  ListCompilationSuccessComplete : (i : IdrisListInterpretation l) -> r = Left i
-  ListTypecheckErrorComplete : (e : TypecheckErrors l) -> r = Right e
+record FailureIsCorrect (x : GebSExp) (e : TypecheckError x) where
+  constructor FailureCorrectnessConditions
+  TypecheckErrorComplete : (e' : TypecheckError x) -> e = e'
+
+public export
+record ListSuccessIsCorrect (l : GebSList) (i : IdrisListInterpretation l) where
+  constructor ListSuccessCorrectnessConditions
+  ListCompilationSuccessComplete : (i' : IdrisListInterpretation l) -> i = i'
+
+public export
+record ListFailureIsCorrect (l : GebSList) (e : TypecheckErrors l) where
+  constructor ListFailureCorrectnessConditions
+  ListTypecheckErrorComplete : (e' : TypecheckErrors l) -> e = e'
 
 public export
 CorrectCompilation : GebSExp -> Type
 CorrectCompilation x =
-  (r : CompileResult x ** CompilationIsCorrect x r)
+  Either
+    (DPair (IdrisInterpretation x) (SuccessIsCorrect x))
+    (DPair (TypecheckError x) (FailureIsCorrect x))
 
 public export
 CorrectListCompilation : GebSList -> Type
 CorrectListCompilation l =
-  (r : ListCompileResult l ** ListCompilationIsCorrect l r)
+  Either
+    (DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l))
+    (DPair (TypecheckErrors l) (ListFailureIsCorrect l))
 
+public export
 gebCompileCertifiedLeftElim :
-  (a : GebAtom) -> (l : GebSList) -> (i : IdrisListInterpretation l) ->
-  ListCompilationIsCorrect l (Left i) ->
-  Either (IdrisInterpretation (a $* l)) (TypecheckError (a $* l))
-gebCompileCertifiedLeftElim a l i correct =
-  Right (UnimplementedAtom _)
-
-gebCompileCertifiedLeftElimCorrect :
-  (a : GebAtom) -> (l : GebSList) -> (i : IdrisListInterpretation l) ->
-  (correct : ListCompilationIsCorrect l (Left i)) ->
-  CompilationIsCorrect (a $* l) (gebCompileCertifiedLeftElim a l i correct)
-gebCompileCertifiedLeftElimCorrect a l i correct =
-  CompilationCorrectnessConditions
-    (\i' => case i' of _ impossible)
-    (\e' => case e' of UnimplementedAtom _ => Refl)
+  (a : GebAtom) -> (l : GebSList) ->
+  DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
+  Either
+    (DPair (IdrisInterpretation (a $* l)) (SuccessIsCorrect (a $* l)))
+    (DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l)))
+gebCompileCertifiedLeftElim a l (i ** correct) = case l of _ impossible
 
 public export
-gebCompileNilElim : Either (IdrisListInterpretation []) (TypecheckErrors [])
-gebCompileNilElim = Right (UnimplementedList [])
-
-public export
-gebCompileNilElimCorrect : ListCompilationIsCorrect [] Geb.gebCompileNilElim
-gebCompileNilElimCorrect =
-  ListCompilationCorrectnessConditions
-    (\i' => case i' of _ impossible)
-    (\e' => case e' of UnimplementedList _ => Refl)
+gebCompileNilElim :
+  Either
+    (DPair (IdrisListInterpretation []) (ListSuccessIsCorrect []))
+    (DPair (TypecheckErrors []) (ListFailureIsCorrect []))
+gebCompileNilElim =
+  Right
+    (UnimplementedList [] **
+     ListFailureCorrectnessConditions $
+      \e => case e of UnimplementedList _ => Refl)
 
 public export
 GebCompileSignature :
   SExpEitherInductionSig
     Prelude.Basics.id
     {fFunctor=IdentityIsFunctor}
-    IdrisInterpretation TypecheckError
-    IdrisListInterpretation TypecheckErrors
-    CompilationIsCorrect
-    ListCompilationIsCorrect
+    (\x => DPair (IdrisInterpretation x) (SuccessIsCorrect x))
+    (\x => DPair (TypecheckError x) (FailureIsCorrect x))
+    (\l => DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l))
+    (\l => DPair (TypecheckErrors l) (ListFailureIsCorrect l))
 GebCompileSignature =
   SExpEitherInductionArgs
     gebCompileCertifiedLeftElim
-    gebCompileCertifiedLeftElimCorrect
     gebCompileNilElim
-    gebCompileNilElimCorrect
 
 public export
 gebCompileCertified : GebSExp ~> CorrectCompilation
@@ -512,13 +515,16 @@ gebCompileCertified =
 public export
 gebCompile :
   (x : GebSExp) -> Either (IdrisInterpretation x) (TypecheckError x)
-gebCompile x = fst (gebCompileCertified x)
+gebCompile x = case gebCompileCertified x of
+  Left (i ** _) => Left i
+  Right (e ** _) => Right e
 
 public export
 compileSuccessComplete : (x : GebSExp) -> (i : IdrisInterpretation x) ->
   gebCompile x = Left i
-compileSuccessComplete x =
-  CompilationSuccessComplete (snd $ gebCompileCertified x)
+compileSuccessComplete x i = case gebCompileCertified x of
+  Left (i ** correct) => ?compileSuccessComplete_hole_left
+  Right (e ** correct) => ?compileSuccessComplete_hole_right
 
 public export
 idrisInterpretationUnique : (x : GebSExp) -> (i, i' : IdrisInterpretation x) ->
@@ -533,8 +539,9 @@ idrisInterpretationUnique x i i' =
 public export
 typecheckErrorComplete : (x : GebSExp) -> (e : TypecheckError x) ->
   gebCompile x = Right e
-typecheckErrorComplete x =
-  TypecheckErrorComplete (snd $ gebCompileCertified x)
+typecheckErrorComplete x = case gebCompileCertified x of
+  Left (i ** correct) => ?typecheckErrorComplete_hole_left
+  Right (e ** correct) => ?typecheckErrorComplete_hole_right
 
 public export
 typecheckErrorUnique : (x : GebSExp) -> (e, e' : TypecheckError x) ->
