@@ -509,8 +509,9 @@ gebCompileCertifiedConsLeftLeft :
   Either
     (DPair (IdrisListInterpretation (x :: l)) (ListSuccessIsCorrect (x :: l)))
     (DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l)))
-gebCompileCertifiedConsLeftLeft x l (i ** expCorrect) (e ** listCorrect) =
-  ?gebCompileCertifiedConsLeftLeft_hole
+gebCompileCertifiedConsLeftLeft x l (i ** expCorrect) (li ** listCorrect) =
+  case (i, li) of
+    (_, _) impossible
 
 public export
 gebCompileCertifiedConsLeftRight :
@@ -518,8 +519,9 @@ gebCompileCertifiedConsLeftRight :
   DPair (IdrisInterpretation x) (SuccessIsCorrect x) ->
   DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsLeftRight x l (i ** expCorrect) (e ** listCorrect) =
-  ?gebCompileCertifiedConsLeftRight_hole
+gebCompileCertifiedConsLeftRight x l (i ** expCorrect) (le ** listCorrect) =
+  case (i, le) of
+    (_, _) impossible
 
 public export
 gebCompileCertifiedConsRightLeft :
@@ -527,8 +529,9 @@ gebCompileCertifiedConsRightLeft :
   DPair (TypecheckError x) (FailureIsCorrect x) ->
   DPair (IdrisListInterpretation l) (ListSuccessIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsRightLeft x l (i ** expCorrect) (e ** listCorrect) =
-  ?gebCompileCertifiedConsRightLeft_hole
+gebCompileCertifiedConsRightLeft x l (e ** expCorrect) (li ** listCorrect) =
+  case (e, li) of
+    (_, _) impossible
 
 public export
 gebCompileCertifiedConsRightRight :
@@ -536,8 +539,12 @@ gebCompileCertifiedConsRightRight :
   DPair (TypecheckError x) (FailureIsCorrect x) ->
   DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsRightRight x l (i ** expCorrect) (e ** listCorrect) =
-  ?gebCompileCertifiedConsRightRight_hole
+gebCompileCertifiedConsRightRight x l (e ** expCorrect) (le ** listCorrect) =
+  case (e, le) of
+    (UnimplementedExp _, UnimplementedList _) =>
+      (UnimplementedList _ **
+       ListFailureCorrectnessConditions $ \e' => case e' of
+        UnimplementedList _ => Refl)
 
 public export
 GebCompileSignature :
