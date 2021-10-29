@@ -467,16 +467,6 @@ data IsLeft : {a, b : Type} -> Either a b -> Type where
   ItIsLeft : {a, b : Type} -> {x : a} -> IsLeft (Left x)
 
 public export
-data IsRight : {a, b : Type} -> Either a b -> Type where
-  ItIsRight : {a, b : Type} -> {x : a} -> IsRight (Right x)
-
-public export
-NotLeftAndRight : {a, b : Type} -> {e : Either a b} ->
-  IsLeft e -> IsRight e -> Void
-NotLeftAndRight e e' =
-  case e of ItIsLeft {x} => case e' of ItIsRight {x} impossible
-
-public export
 IsLeftElim : {A, B: Type} -> {x : Either A B} -> IsLeft x -> A
 IsLeftElim {x=(Left x')} ItIsLeft = x'
 IsLeftElim {x=(Right _)} ItIsLeft impossible
