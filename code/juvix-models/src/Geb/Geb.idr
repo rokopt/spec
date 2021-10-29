@@ -469,29 +469,37 @@ record ListFailureIsCorrect (l : GebSList) (e : TypecheckErrors l) where
     (li : TypecheckSuccessList l) -> Void
 
 public export
+CorrectSuccess : GebSExp -> Type
+CorrectSuccess x = Subset (TypecheckSuccess x) (SuccessIsCorrect x)
+
+public export
+CorrectListSuccess : GebSList -> Type
+CorrectListSuccess l = Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l)
+
+public export
+CorrectFailure : GebSExp -> Type
+CorrectFailure x = Subset (TypecheckError x) (FailureIsCorrect x)
+
+public export
+CorrectListFailure : GebSList -> Type
+CorrectListFailure l = Subset (TypecheckErrors l) (ListFailureIsCorrect l)
+
+public export
 CorrectCompilation : GebSExp -> Type
-CorrectCompilation x =
-  Either
-    (DPair (TypecheckSuccess x) (SuccessIsCorrect x))
-    (DPair (TypecheckError x) (FailureIsCorrect x))
+CorrectCompilation x = Either (CorrectSuccess x) (CorrectFailure x)
 
 public export
 CorrectListCompilation : GebSList -> Type
-CorrectListCompilation l =
-  Either
-    (DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l))
-    (DPair (TypecheckErrors l) (ListFailureIsCorrect l))
+CorrectListCompilation l = Either (CorrectListSuccess l) (CorrectListFailure l)
 
 public export
 gebCompileCertifiedLeftElim :
   (a : GebAtom) -> (l : GebSList) ->
-  DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  Either
-    (DPair (TypecheckSuccess (a $* l)) (SuccessIsCorrect (a $* l)))
-    (DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l)))
-gebCompileCertifiedLeftElim a l (li ** correct) =
+  Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
+  CorrectCompilation (a $* l)
+gebCompileCertifiedLeftElim a l (Element li correct) =
   Right
-    (UnimplementedAtom a l li **
+    (Element (UnimplementedAtom a l li) $
      FailureCorrectnessConditions
       (\e' => case e' of
         UnimplementedAtom a' l' li' =>
@@ -504,10 +512,10 @@ gebCompileCertifiedLeftElim a l (li ** correct) =
 public export
 gebCompileCertifiedRightElim :
   (a : GebAtom) -> (l : GebSList) ->
-  DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
-  DPair (TypecheckError (a $* l)) (FailureIsCorrect (a $* l))
-gebCompileCertifiedRightElim a l (le ** correct) =
-  (SubexpressionFailed a l le **
+  Subset (TypecheckErrors l) (ListFailureIsCorrect l) ->
+  Subset (TypecheckError (a $* l)) (FailureIsCorrect (a $* l))
+gebCompileCertifiedRightElim a l (Element le correct) =
+  (Element (SubexpressionFailed a l le) $
    FailureCorrectnessConditions
     (\e' => case e' of
       UnimplementedAtom a' l' le' =>
@@ -518,13 +526,10 @@ gebCompileCertifiedRightElim a l (le ** correct) =
   )
 
 public export
-gebCompileNilElim :
-  Either
-    (DPair (TypecheckSuccessList []) (ListSuccessIsCorrect []))
-    (DPair (TypecheckErrors []) (ListFailureIsCorrect []))
+gebCompileNilElim : CorrectListCompilation []
 gebCompileNilElim =
   Left
-    (EmptySuccessList **
+    (Element EmptySuccessList $
      ListSuccessCorrectnessConditions
       (\li => case li of EmptySuccessList => Refl)
       (\le => case le of _ impossible)
@@ -533,73 +538,75 @@ gebCompileNilElim =
 public export
 gebCompileCertifiedConsLeftLeft :
   (x : GebSExp) -> (l : GebSList) ->
-  DPair (TypecheckSuccess x) (SuccessIsCorrect x) ->
-  DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  Either
-    (DPair (TypecheckSuccessList (x :: l)) (ListSuccessIsCorrect (x :: l)))
-    (DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l)))
-gebCompileCertifiedConsLeftLeft x l (i ** expCorrect) (li ** listCorrect) =
-  case (i, li) of
-    (_, _) impossible
+  Subset (TypecheckSuccess x) (SuccessIsCorrect x) ->
+  Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
+  CorrectListCompilation (x :: l)
+gebCompileCertifiedConsLeftLeft x l
+  (Element i expCorrect) (Element li listCorrect) =
+    case (i, li) of
+      (_, _) impossible
 
 public export
 gebCompileCertifiedConsLeftRight :
   (x : GebSExp) -> (l : GebSList) ->
-  DPair (TypecheckSuccess x) (SuccessIsCorrect x) ->
-  DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
-  DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsLeftRight x l (i ** expCorrect) (le ** listCorrect) =
-  case (i, le) of
-    (_, _) impossible
+  Subset (TypecheckSuccess x) (SuccessIsCorrect x) ->
+  Subset (TypecheckErrors l) (ListFailureIsCorrect l) ->
+  Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
+gebCompileCertifiedConsLeftRight x l
+  (Element i expCorrect) (Element le listCorrect) =
+    case (i, le) of
+      (_, _) impossible
 
 public export
 gebCompileCertifiedConsRightLeft :
   (x : GebSExp) -> (l : GebSList) ->
-  DPair (TypecheckError x) (FailureIsCorrect x) ->
-  DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsRightLeft x l (e ** expCorrect) (li ** listCorrect) =
-  (FirstError x l e li **
-   ListFailureCorrectnessConditions
-    (\e' => case e' of
-      FirstError _ _ e'' li' =>
-        rewrite TypecheckErrorComplete expCorrect e'' in
-        rewrite ListTypecheckSuccessComplete listCorrect li' in
-        Refl
-      AdditionalError _ _ e'' li' =>
-        void $ ListTypecheckSuccessEnsuresNoError listCorrect li')
-    (\xls => case xls of
-      SuccessListCons _ _ xs ls =>
-        void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
+  Subset (TypecheckError x) (FailureIsCorrect x) ->
+  Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
+  Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
+gebCompileCertifiedConsRightLeft x l
+  (Element e expCorrect) (Element li listCorrect) =
+    (Element (FirstError x l e li) $
+    ListFailureCorrectnessConditions
+      (\e' => case e' of
+        FirstError _ _ e'' li' =>
+          rewrite TypecheckErrorComplete expCorrect e'' in
+          rewrite ListTypecheckSuccessComplete listCorrect li' in
+          Refl
+        AdditionalError _ _ e'' li' =>
+          void $ ListTypecheckSuccessEnsuresNoError listCorrect li')
+      (\xls => case xls of
+        SuccessListCons _ _ xs ls =>
+          void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
 
 public export
 gebCompileCertifiedConsRightRight :
   (x : GebSExp) -> (l : GebSList) ->
-  DPair (TypecheckError x) (FailureIsCorrect x) ->
-  DPair (TypecheckErrors l) (ListFailureIsCorrect l) ->
-  DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsRightRight x l (e ** expCorrect) (le ** listCorrect) =
-  (AdditionalError x l e le **
-   ListFailureCorrectnessConditions
-    (\e' => case e' of
-      FirstError _ _ e'' li' =>
-        void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect li'
-      AdditionalError _ _ e'' li' =>
-        rewrite TypecheckErrorComplete expCorrect e'' in
-        rewrite ListTypecheckErrorComplete listCorrect li' in
-        Refl)
-    (\xls => case xls of
-      SuccessListCons _ _ xs ls =>
-        void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
+  Subset (TypecheckError x) (FailureIsCorrect x) ->
+  Subset (TypecheckErrors l) (ListFailureIsCorrect l) ->
+  Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
+gebCompileCertifiedConsRightRight x l
+  (Element e expCorrect) (Element le listCorrect) =
+  (Element (AdditionalError x l e le) $
+    ListFailureCorrectnessConditions
+      (\e' => case e' of
+        FirstError _ _ e'' li' =>
+          void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect li'
+        AdditionalError _ _ e'' li' =>
+          rewrite TypecheckErrorComplete expCorrect e'' in
+          rewrite ListTypecheckErrorComplete listCorrect li' in
+          Refl)
+      (\xls => case xls of
+        SuccessListCons _ _ xs ls =>
+          void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
 
 public export
 GebCompileSignature :
   SExpEitherInductionSig
     Prelude.Basics.id
-    (\x => DPair (TypecheckSuccess x) (SuccessIsCorrect x))
-    (\x => DPair (TypecheckError x) (FailureIsCorrect x))
-    (\l => DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l))
-    (\l => DPair (TypecheckErrors l) (ListFailureIsCorrect l))
+    CorrectSuccess
+    CorrectFailure
+    CorrectListSuccess
+    CorrectListFailure
 GebCompileSignature =
   SExpEitherInductionArgs
     gebCompileCertifiedLeftElim
@@ -616,28 +623,28 @@ gebCompileCertified =
   sexpEitherInduction {mMonad=IdentityIsMonad} GebCompileSignature
 
 public export
-gebCompile : (x : GebSExp) -> Either (TypecheckSuccess x) (TypecheckError x)
+gebCompile : GebSExp ~> CompileResult
 gebCompile x with (gebCompileCertified x)
-  gebCompile x | Left (i ** _) = Left i
-  gebCompile x | Right (e ** _) = Right e
+  gebCompile x | Left (Element i _) = Left i
+  gebCompile x | Right (Element e _) = Right e
 
 public export
 gebCompileCorrect :
   (x : GebSExp) -> case gebCompile x of
-    Left i => SuccessIsCorrect x i
-    Right e => FailureIsCorrect x e
+    Left i => CorrectSuccess x
+    Right e => CorrectFailure x
 gebCompileCorrect x with (gebCompileCertified x)
-  gebCompileCorrect x | (Left (i ** correct)) = correct
-  gebCompileCorrect x | (Right (e ** correct)) = correct
+  gebCompileCorrect x | (Left (Element i correct)) = Element i correct
+  gebCompileCorrect x | (Right (Element e correct)) = Element e correct
 
 public export
 compileSuccessComplete : (x : GebSExp) -> (i : TypecheckSuccess x) ->
   gebCompile x = Left i
 compileSuccessComplete x i with (gebCompileCertified x)
-  compileSuccessComplete x i | (Left (i' ** correct)) =
-    case TypecheckSuccessComplete correct i of Refl => cong Left Refl
-  compileSuccessComplete x i | (Right (e' ** correct)) =
-    case TypecheckErrorComplete correct e' of Refl impossible
+  compileSuccessComplete _ i' | (Left (Element _ correct)) =
+    rewrite TypecheckSuccessComplete correct i' in Refl
+  compileSuccessComplete _ i' | (Right (Element _ correct)) =
+    void $ TypecheckErrorEnsuresNoSuccess correct i'
 
 public export
 idrisInterpretationUnique : (x : GebSExp) -> (i, i' : TypecheckSuccess x) ->
@@ -650,13 +657,13 @@ idrisInterpretationUnique x i i' =
       Refl => Refl
 
 public export
-typecheckErrorComplete : (x : GebSExp) -> (e : TypecheckError x) ->
+typecheckErrorComplete : (x : GebSExp) -> (0 e : TypecheckError x) ->
   gebCompile x = Right e
 typecheckErrorComplete x e with (gebCompileCertified x)
-  typecheckErrorComplete x e | (Left (i' ** correct)) =
-    case TypecheckSuccessComplete correct i' of Refl impossible
-  typecheckErrorComplete x e | (Right (e' ** correct)) =
-    case TypecheckErrorComplete correct e of Refl => cong Right Refl
+  typecheckErrorComplete _ e' | (Left (Element _ correct)) =
+    void $ TypecheckSuccessEnsuresNoError correct e'
+  typecheckErrorComplete _ e' | (Right (Element _ correct)) =
+    rewrite TypecheckErrorComplete correct e' in Refl
 
 public export
 typecheckErrorUnique : (x : GebSExp) -> (e, e' : TypecheckError x) ->
@@ -1242,7 +1249,7 @@ smallStepTermReductionCompletes :
   {isNormalizing : IsNormalizing isLanguage} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   (term : Term numApplications sort) ->
-  DPair (FullyAppliedTerm sort) (SmallStepTermReductionCompletes term)
+  Subset (FullyAppliedTerm sort) (SmallStepTermReductionCompletes term)
 smallStepTermReductionCompletes {sort} {numApplications} term =
   ?smallStepTermReductionCompletes_hole
 
