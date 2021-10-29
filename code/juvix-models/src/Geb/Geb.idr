@@ -451,23 +451,18 @@ ListCompileResult l = Either (TypecheckSuccessList l) (TypecheckErrors l)
 public export
 record SuccessIsCorrect (x : GebSExp) (i : TypecheckSuccess x) where
   constructor SuccessCorrectnessConditions
-  TypecheckSuccessEnsuresNoError : (e : TypecheckError x) -> Void
 
 public export
 record FailureIsCorrect (x : GebSExp) (e : TypecheckError x) where
   constructor FailureCorrectnessConditions
-  TypecheckErrorEnsuresNoSuccess : (i : TypecheckSuccess x) -> Void
 
 public export
 record ListSuccessIsCorrect (l : GebSList) (i : TypecheckSuccessList l) where
   constructor ListSuccessCorrectnessConditions
-  ListTypecheckSuccessEnsuresNoError : (le : TypecheckErrors l) -> Void
 
 public export
 record ListFailureIsCorrect (l : GebSList) (e : TypecheckErrors l) where
   constructor ListFailureCorrectnessConditions
-  ListTypecheckErrorEnsuresNoSuccesses :
-    (li : TypecheckSuccessList l) -> Void
 
 public export
 CorrectSuccess : GebSExp -> Type
@@ -502,7 +497,6 @@ gebCompileCertifiedLeftElim a l (Element li correct) =
   Right
     (Element (NewError a l li $ UnimplementedAtom a l li) $
      FailureCorrectnessConditions
-      (\i => case i of _ impossible)
     )
 
 public export
@@ -513,7 +507,6 @@ gebCompileCertifiedRightElim :
 gebCompileCertifiedRightElim a l (Element le correct) =
   (Element (SubexpressionFailed a l le) $
    FailureCorrectnessConditions
-    (\i => case i of _ impossible)
   )
 
 public export
@@ -522,7 +515,6 @@ gebCompileNilElim =
   Left
     (Element EmptySuccessList $
      ListSuccessCorrectnessConditions
-      (\le => case le of _ impossible)
     )
 
 public export
@@ -534,14 +526,7 @@ gebCompileCertifiedConsLeftLeft :
 gebCompileCertifiedConsLeftLeft x l
   (Element i expCorrect) (Element li listCorrect) =
     Left $ Element (SuccessListCons x l i li)
-      (ListSuccessCorrectnessConditions
-        (\le => case le of
-          FirstError _ _ e'' _ =>
-            void $ TypecheckSuccessEnsuresNoError expCorrect e''
-          NoNewError _ _ _ li' =>
-            void $ ListTypecheckSuccessEnsuresNoError listCorrect li'
-          AdditionalError _ _ e'' _ =>
-            void $ TypecheckSuccessEnsuresNoError expCorrect e''))
+      ListSuccessCorrectnessConditions
 
 public export
 gebCompileCertifiedConsLeftRight :
@@ -551,11 +536,7 @@ gebCompileCertifiedConsLeftRight :
   Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsLeftRight x l
   (Element i expCorrect) (Element le listCorrect) =
-  (Element (NoNewError x l i le) $
-    ListFailureCorrectnessConditions
-      (\xls => case xls of
-        SuccessListCons _ _ xs ls =>
-          void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect ls))
+  (Element (NoNewError x l i le) ListFailureCorrectnessConditions)
 
 public export
 gebCompileCertifiedConsRightLeft :
@@ -565,11 +546,7 @@ gebCompileCertifiedConsRightLeft :
   Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsRightLeft x l
   (Element e expCorrect) (Element li listCorrect) =
-    (Element (FirstError x l e li) $
-    ListFailureCorrectnessConditions
-      (\xls => case xls of
-        SuccessListCons _ _ xs ls =>
-          void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
+    (Element (FirstError x l e li) ListFailureCorrectnessConditions)
 
 public export
 gebCompileCertifiedConsRightRight :
@@ -579,11 +556,7 @@ gebCompileCertifiedConsRightRight :
   Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsRightRight x l
   (Element e expCorrect) (Element le listCorrect) =
-  (Element (AdditionalError x l e le) $
-    ListFailureCorrectnessConditions
-      (\xls => case xls of
-        SuccessListCons _ _ xs ls =>
-          void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
+  (Element (AdditionalError x l e le) ListFailureCorrectnessConditions)
 
 public export
 GebCompileSignature :
@@ -622,32 +595,6 @@ gebCompileCorrect :
 gebCompileCorrect x with (gebCompileCertified x)
   gebCompileCorrect x | (Left (Element i correct)) = Element i correct
   gebCompileCorrect x | (Right (Element e correct)) = Element e correct
-
-public export
-compileSuccessComplete : (x : GebSExp) -> (i : TypecheckSuccess x) ->
-  IsLeft $ gebCompile x
-compileSuccessComplete x i with (gebCompileCertified x)
-  compileSuccessComplete x i' | (Left (Element i correct)) =
-    ItIsLeft {b=(TypecheckError x)}
-  compileSuccessComplete _ i' | (Right (Element _ correct)) =
-    void $ TypecheckErrorEnsuresNoSuccess correct i'
-
-public export
-typecheckErrorComplete : (x : GebSExp) -> (0 e : TypecheckError x) ->
-  IsRight $ gebCompile x
-typecheckErrorComplete x e with (gebCompileCertified x)
-  typecheckErrorComplete _ e' | (Left (Element _ correct)) =
-    void $ TypecheckSuccessEnsuresNoError correct e'
-  typecheckErrorComplete x e' | (Right (Element e correct)) =
-    ItIsRight {b=(TypecheckSuccess x)}
-
-public export
-compileSuccessAndTypecheckErrorMutuallyExclusive : (x : GebSExp) ->
-  (i : TypecheckSuccess x) -> (e : TypecheckError x) -> Void
-compileSuccessAndTypecheckErrorMutuallyExclusive x i e with
-  (compileSuccessComplete x i, typecheckErrorComplete x e)
-    compileSuccessAndTypecheckErrorMutuallyExclusive x i e |
-      (isLeft, isRight) = void $ NotLeftAndRight isLeft isRight
 
 public export
 AnyErased : Type
