@@ -435,7 +435,8 @@ mutual
 
   public export
   data TypecheckErrors : GebSList -> Type where
-    FirstError : (x : GebSExp) -> TypecheckErrors [x]
+    FirstError : (x : GebSExp) -> (l : GebSList) ->
+      TypecheckError x -> TypecheckSuccessList l -> TypecheckErrors (x :: l)
     AdditionalError : (x : GebSExp) -> (l : GebSList) ->
       TypecheckError x -> TypecheckErrors l -> TypecheckErrors (x :: l)
 
@@ -457,7 +458,7 @@ public export
 record FailureIsCorrect (x : GebSExp) (e : TypecheckError x) where
   constructor FailureCorrectnessConditions
   TypecheckErrorComplete : (e' : TypecheckError x) -> e = e'
-  TypecheckErrorEnsuresNoInterpretation : (i : TypecheckSuccess x) -> Void
+  TypecheckErrorEnsuresNoSuccess : (i : TypecheckSuccess x) -> Void
 
 public export
 record ListSuccessIsCorrect (l : GebSList) (i : TypecheckSuccessList l) where
@@ -563,7 +564,18 @@ gebCompileCertifiedConsRightLeft :
   DPair (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsRightLeft x l (e ** expCorrect) (li ** listCorrect) =
-  ?gebCompileCertifiedConsRightLeft_hole
+  (FirstError x l e li **
+   ListFailureCorrectnessConditions
+    (\e' => case e' of
+      FirstError _ _ e'' li' =>
+        rewrite TypecheckErrorComplete expCorrect e'' in
+        rewrite ListTypecheckSuccessComplete listCorrect li' in
+        Refl
+      AdditionalError _ _ e'' li' =>
+        void $ ListTypecheckSuccessEnsuresNoError listCorrect li')
+    (\xls => case xls of
+      SuccessListCons _ _ xs ls =>
+        void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
 
 public export
 gebCompileCertifiedConsRightRight :
@@ -573,7 +585,17 @@ gebCompileCertifiedConsRightRight :
   DPair (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
 gebCompileCertifiedConsRightRight x l (e ** expCorrect) (le ** listCorrect) =
   (AdditionalError x l e le **
-   ?gebCompileCertifiedConsRightRight_hole)
+   ListFailureCorrectnessConditions
+    (\e' => case e' of
+      FirstError _ _ e'' li' =>
+        void $ ListTypecheckErrorEnsuresNoSuccesses listCorrect li'
+      AdditionalError _ _ e'' li' =>
+        rewrite TypecheckErrorComplete expCorrect e'' in
+        rewrite ListTypecheckErrorComplete listCorrect li' in
+        Refl)
+    (\xls => case xls of
+      SuccessListCons _ _ xs ls =>
+        void $ TypecheckErrorEnsuresNoSuccess expCorrect xs))
 
 public export
 GebCompileSignature :
@@ -663,31 +685,35 @@ compileSuccessAndTypecheckErrorMutuallyExclusive x i e =
 
 public export
 idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
-  (TypecheckSuccessList l -> (type : Type ** type)) ->
+  (TypecheckSuccessList l -> List (type : Type ** type)) ->
   TypecheckSuccess (a $* l) ->
   (type : Type ** type)
 idrisInterpretExpElim a l li i = case li of _ impossible
 
 public export
-idrisInterpretNilElim : TypecheckSuccessList [] -> (type : Type ** type)
-idrisInterpretNilElim li = ?idrisInterpretNilElim_hole
+idrisInterpretNilElim : TypecheckSuccessList [] -> List (type : Type ** type)
+idrisInterpretNilElim EmptySuccessList = []
 
 public export
 idrisInterpretConsElim : (x : GebSExp) -> (l : GebSList) ->
   (TypecheckSuccess x -> (type : Type ** type)) ->
-  (TypecheckSuccessList l -> (type : Type ** type)) ->
+  (TypecheckSuccessList l -> List (type : Type ** type)) ->
   TypecheckSuccessList (x :: l) ->
-  (type : Type ** type)
-idrisInterpretConsElim x l i li lxl = ?idrisInterpretConsElim_hole
+  List (type : Type ** type)
+idrisInterpretConsElim x l i li (SuccessListCons _ _ sx sl) = i sx :: li sl
 
 public export
 idrisInterpretations :
   ((x : GebSExp) -> TypecheckSuccess x -> (type : Type ** type),
-   (l : GebSList) -> TypecheckSuccessList l -> (type : Type ** type))
-idrisInterpretations = sexpEliminators $ SExpEliminatorArgs
-  idrisInterpretExpElim
-  idrisInterpretNilElim
-  idrisInterpretConsElim
+   (l : GebSList) -> TypecheckSuccessList l -> List (type : Type ** type))
+idrisInterpretations =
+  sexpEliminators
+    {sp=(\x => TypecheckSuccess x -> (type : Type ** type))}
+    {lp=(\l => TypecheckSuccessList l -> List (type : Type ** type))}
+    $ SExpEliminatorArgs
+      idrisInterpretExpElim
+      idrisInterpretNilElim
+      idrisInterpretConsElim
 
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
