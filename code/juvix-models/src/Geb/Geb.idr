@@ -409,12 +409,12 @@ gebMap = fromList
 mutual
   public export
   data TypecheckSuccess : GebSExp -> Type where
+    IsAtomicRefinement : (x : GebSExp) -> TypecheckSuccess x
 
   public export
   data TypecheckError : GebSExp -> Type where
     NewError : (a : GebAtom) -> (l : GebSList) ->
-      (sl : TypecheckSuccessList l) ->
-      TypecheckNewError a l sl -> TypecheckError (a $* l)
+      TypecheckNewError a l -> TypecheckError (a $* l)
     SubexpressionFailed : (a : GebAtom) -> (l : GebSList) ->
       TypecheckErrors l -> TypecheckError (a $* l)
 
@@ -426,10 +426,11 @@ mutual
       TypecheckSuccessList (x :: l)
 
   public export
-  data TypecheckNewError : (a : GebAtom) -> (l : GebSList) ->
-    TypecheckSuccessList l -> Type where
+  data TypecheckNewError : (a : GebAtom) -> (l : GebSList) -> Type where
+      WrongNumberOfArguments : (a : GebAtom) -> (l : GebSList) ->
+        TypecheckNewError a l
       UnimplementedAtom : (a : GebAtom) -> (l : GebSList) ->
-        (sl : TypecheckSuccessList l) -> TypecheckNewError a l sl
+        TypecheckNewError a l
 
   public export
   data TypecheckErrors : GebSList -> Type where
@@ -489,15 +490,47 @@ CorrectListCompilation : GebSList -> Type
 CorrectListCompilation l = Either (CorrectListSuccess l) (CorrectListFailure l)
 
 public export
+AtomHandler : GebAtom -> Type
+AtomHandler a =
+  (l : GebSList) -> Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
+  CorrectCompilation (a $* l)
+
+public export
+gebRefinementHandler : AtomHandler GARefinementSort
+gebRefinementHandler [] (Element li correct) =
+  Left $ Element (IsAtomicRefinement _) SuccessCorrectnessConditions
+gebRefinementHandler (_ :: _) (Element li correct) =
+  Right $ Element
+    (NewError _ _ $ WrongNumberOfArguments _ _) FailureCorrectnessConditions
+
+public export
+HandledAtomsList : List GebAtom
+HandledAtomsList =
+  [
+    GARefinementSort
+  ]
+
+public export
+AtomHandlerList : ListForAll AtomHandler HandledAtomsList
+AtomHandlerList =
+  (
+    gebRefinementHandler
+  , ()
+  )
+
+public export
 gebCompileCertifiedLeftElim :
   (a : GebAtom) -> (l : GebSList) ->
   Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
   CorrectCompilation (a $* l)
-gebCompileCertifiedLeftElim a l (Element li correct) =
-  Right
-    (Element (NewError a l li $ UnimplementedAtom a l li) $
-     FailureCorrectnessConditions
-    )
+gebCompileCertifiedLeftElim a l (Element li correct) with
+  (listForAllGet {ap=AtomHandler} {l=HandledAtomsList} AtomHandlerList a)
+    gebCompileCertifiedLeftElim a l (Element li correct) | Just handler =
+      handler l (Element li correct)
+    gebCompileCertifiedLeftElim a l (Element li correct) | Nothing =
+      Right $ Element
+        (NewError a l $ UnimplementedAtom a l)
+        FailureCorrectnessConditions
 
 public export
 gebCompileCertifiedRightElim :
@@ -605,7 +638,8 @@ idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
   (TypecheckSuccessList l -> List AnyErased) ->
   TypecheckSuccess (a $* l) ->
   AnyErased
-idrisInterpretExpElim a l li i = case li of _ impossible
+idrisInterpretExpElim a l li (IsAtomicRefinement _) =
+  Evidence Type (GebSExp -> Bool)
 
 public export
 idrisInterpretNilElim : TypecheckSuccessList [] -> List AnyErased
