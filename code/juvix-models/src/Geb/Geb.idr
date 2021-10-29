@@ -412,8 +412,9 @@ mutual
 
   public export
   data TypecheckError : GebSExp -> Type where
-    UnimplementedAtom : (a : GebAtom) -> (l : GebSList) ->
-      TypecheckSuccessList l -> TypecheckError (a $* l)
+    NewError : (a : GebAtom) -> (l : GebSList) ->
+      (sl : TypecheckSuccessList l) ->
+      TypecheckNewError a l sl -> TypecheckError (a $* l)
     SubexpressionFailed : (a : GebAtom) -> (l : GebSList) ->
       TypecheckErrors l -> TypecheckError (a $* l)
 
@@ -423,6 +424,12 @@ mutual
     SuccessListCons : (x : GebSExp) -> (l : GebSList) ->
       TypecheckSuccess x -> TypecheckSuccessList l ->
       TypecheckSuccessList (x :: l)
+
+  public export
+  data TypecheckNewError : (a : GebAtom) -> (l : GebSList) ->
+    TypecheckSuccessList l -> Type where
+      UnimplementedAtom : (a : GebAtom) -> (l : GebSList) ->
+        (sl : TypecheckSuccessList l) -> TypecheckNewError a l sl
 
   public export
   data TypecheckErrors : GebSList -> Type where
@@ -495,11 +502,13 @@ gebCompileCertifiedLeftElim :
   CorrectCompilation (a $* l)
 gebCompileCertifiedLeftElim a l (Element li correct) =
   Right
-    (Element (UnimplementedAtom a l li) $
+    (Element (NewError a l li $ UnimplementedAtom a l li) $
      FailureCorrectnessConditions
       (\e' => case e' of
-        UnimplementedAtom a' l' li' =>
-          rewrite ListTypecheckSuccessComplete correct li' in Refl
+        NewError a' l' li' e'' =>
+          rewrite ListTypecheckSuccessComplete correct li' in
+          case e'' of
+            UnimplementedAtom a'' l'' sl'' => Refl
         SubexpressionFailed a' l' le =>
           void (ListTypecheckSuccessEnsuresNoError correct le))
       (\i => case i of _ impossible)
@@ -514,7 +523,7 @@ gebCompileCertifiedRightElim a l (Element le correct) =
   (Element (SubexpressionFailed a l le) $
    FailureCorrectnessConditions
     (\e' => case e' of
-      UnimplementedAtom a' l' le' =>
+      NewError a' l' le' _ =>
         void $ ListTypecheckErrorEnsuresNoSuccesses correct le'
       SubexpressionFailed a' l' le' =>
         rewrite ListTypecheckErrorComplete correct le' in Refl)
