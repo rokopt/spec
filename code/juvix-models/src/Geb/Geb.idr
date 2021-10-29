@@ -5,6 +5,7 @@ import Library.Decidability
 import public RefinedSExp.SExp
 import public Data.SortedSet
 import public Data.SortedMap
+import public Data.DPair
 
 %default total
 
@@ -678,32 +679,36 @@ compileSuccessAndTypecheckErrorMutuallyExclusive x i e =
       Refl impossible
 
 public export
+AnyErased : Type
+AnyErased = Exists {type=Type} id
+
+public export
 idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
-  (TypecheckSuccessList l -> List (type : Type ** type)) ->
+  (TypecheckSuccessList l -> List AnyErased) ->
   TypecheckSuccess (a $* l) ->
-  (type : Type ** type)
+  AnyErased
 idrisInterpretExpElim a l li i = case li of _ impossible
 
 public export
-idrisInterpretNilElim : TypecheckSuccessList [] -> List (type : Type ** type)
+idrisInterpretNilElim : TypecheckSuccessList [] -> List AnyErased
 idrisInterpretNilElim EmptySuccessList = []
 
 public export
 idrisInterpretConsElim : (x : GebSExp) -> (l : GebSList) ->
-  (TypecheckSuccess x -> (type : Type ** type)) ->
-  (TypecheckSuccessList l -> List (type : Type ** type)) ->
+  (TypecheckSuccess x -> AnyErased) ->
+  (TypecheckSuccessList l -> List AnyErased) ->
   TypecheckSuccessList (x :: l) ->
-  List (type : Type ** type)
+  List AnyErased
 idrisInterpretConsElim x l i li (SuccessListCons _ _ sx sl) = i sx :: li sl
 
 public export
 idrisInterpretations :
-  ((x : GebSExp) -> TypecheckSuccess x -> (type : Type ** type),
-   (l : GebSList) -> TypecheckSuccessList l -> List (type : Type ** type))
+  ((x : GebSExp) -> TypecheckSuccess x -> AnyErased,
+   (l : GebSList) -> TypecheckSuccessList l -> List AnyErased)
 idrisInterpretations =
   sexpEliminators
-    {sp=(\x => TypecheckSuccess x -> (type : Type ** type))}
-    {lp=(\l => TypecheckSuccessList l -> List (type : Type ** type))}
+    {sp=(\x => TypecheckSuccess x -> AnyErased)}
+    {lp=(\l => TypecheckSuccessList l -> List AnyErased)}
     $ SExpEliminatorArgs
       idrisInterpretExpElim
       idrisInterpretNilElim
