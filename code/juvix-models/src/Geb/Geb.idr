@@ -355,28 +355,24 @@ GebSList : Type
 GebSList = SList GebAtom
 
 public export
-Show GebSExp where
-  show = fst (sexpShows show)
+Show GebSExp using DefaultSExpShow where
+  show = show
 
 public export
-Show GebSList where
-  show l = "(" ++ snd (sexpShows show) l ++ ")"
+Show GebSList using DefaultSListShow where
+  show = show
+
+public export
+DecEq GebSExp using DefaultSExpDecEq where
+  decEq = decEq
+
+public export
+DecEq GebSList using DefaultSListDecEq where
+  decEq = decEq
 
 public export
 gsDecEq : DecEqPred GebSExp
-gsDecEq = sexpDecEq gaDecEq
-
-public export
-gslDecEq : DecEqPred GebSList
-gslDecEq = slistDecEq gaDecEq
-
-public export
-DecEq GebSExp where
-  decEq = gsDecEq
-
-public export
-DecEq GebSList where
-  decEq = gslDecEq
+gsDecEq = decEq
 
 public export
 Eq GebSExp using decEqToEq where

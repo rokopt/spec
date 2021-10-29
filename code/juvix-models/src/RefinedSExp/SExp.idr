@@ -138,6 +138,14 @@ sexpShows {atom} showAtom =
       [] => sx
       _ :: _ => sx ++ " : " ++ sl)
 
+public export
+[DefaultSExpShow] (atom : Type) => Show atom => Show (SExp atom) where
+  show = fst $ sexpShows show
+
+public export
+[DefaultSListShow] (atom : Type) => Show atom => Show (SList atom) where
+  show l = "(" ++ snd (sexpShows show) l ++ ")"
+
 mutual
   public export
   sexpDecEq :
@@ -159,6 +167,14 @@ mutual
       (Yes Refl, Yes Refl) => Yes Refl
       (No xNeq, _) => No $ \eq => case eq of Refl => xNeq Refl
       (_ , No lNeq) => No $ \eq => case eq of Refl => lNeq Refl
+
+public export
+[DefaultSExpDecEq] (atom : Type) => DecEq atom => DecEq (SExp atom) where
+  decEq = sexpDecEq decEq
+
+public export
+[DefaultSListDecEq] (atom : Type) => DecEq atom => DecEq (SList atom) where
+  decEq = slistDecEq decEq
 
 mutual
   public export
