@@ -412,96 +412,29 @@ mutual
     IsAtomicRefinement : (x : GebSExp) -> TypecheckSuccess x
 
   public export
-  data TypecheckError : GebSExp -> Type where
-    NewError : (a : GebAtom) -> (l : GebSList) ->
-      TypecheckNewError a l -> TypecheckError (a $* l)
-    SubexpressionFailed : (a : GebAtom) -> (l : GebSList) ->
-      TypecheckErrors l -> TypecheckError (a $* l)
-
-  public export
   data TypecheckSuccessList : GebSList -> Type where
     EmptySuccessList : TypecheckSuccessList []
     SuccessListCons : (x : GebSExp) -> (l : GebSList) ->
       TypecheckSuccess x -> TypecheckSuccessList l ->
       TypecheckSuccessList (x :: l)
 
-  public export
-  data TypecheckNewError : (a : GebAtom) -> (l : GebSList) -> Type where
-      WrongNumberOfArguments : (a : GebAtom) -> (l : GebSList) ->
-        TypecheckNewError a l
-      UnimplementedAtom : (a : GebAtom) -> (l : GebSList) ->
-        TypecheckNewError a l
-
-  public export
-  data TypecheckErrors : GebSList -> Type where
-    FirstError : (x : GebSExp) -> (l : GebSList) ->
-      TypecheckError x -> TypecheckSuccessList l -> TypecheckErrors (x :: l)
-    NoNewError : (x : GebSExp) -> (l : GebSList) ->
-      TypecheckSuccess x -> TypecheckErrors l -> TypecheckErrors (x :: l)
-    AdditionalError : (x : GebSExp) -> (l : GebSList) ->
-      TypecheckError x -> TypecheckErrors l -> TypecheckErrors (x :: l)
-
 public export
 CompileResult : GebSExp -> Type
-CompileResult x = Either (TypecheckSuccess x) (TypecheckError x)
+CompileResult x = Maybe (TypecheckSuccess x)
 
 public export
 ListCompileResult : GebSList -> Type
-ListCompileResult l = Either (TypecheckSuccessList l) (TypecheckErrors l)
-
-public export
-record SuccessIsCorrect (x : GebSExp) (i : TypecheckSuccess x) where
-  constructor SuccessCorrectnessConditions
-
-public export
-record FailureIsCorrect (x : GebSExp) (e : TypecheckError x) where
-  constructor FailureCorrectnessConditions
-
-public export
-record ListSuccessIsCorrect (l : GebSList) (i : TypecheckSuccessList l) where
-  constructor ListSuccessCorrectnessConditions
-
-public export
-record ListFailureIsCorrect (l : GebSList) (e : TypecheckErrors l) where
-  constructor ListFailureCorrectnessConditions
-
-public export
-CorrectSuccess : GebSExp -> Type
-CorrectSuccess x = Subset (TypecheckSuccess x) (SuccessIsCorrect x)
-
-public export
-CorrectListSuccess : GebSList -> Type
-CorrectListSuccess l = Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l)
-
-public export
-CorrectFailure : GebSExp -> Type
-CorrectFailure x = Subset (TypecheckError x) (FailureIsCorrect x)
-
-public export
-CorrectListFailure : GebSList -> Type
-CorrectListFailure l = Subset (TypecheckErrors l) (ListFailureIsCorrect l)
-
-public export
-CorrectCompilation : GebSExp -> Type
-CorrectCompilation x = Either (CorrectSuccess x) (CorrectFailure x)
-
-public export
-CorrectListCompilation : GebSList -> Type
-CorrectListCompilation l = Either (CorrectListSuccess l) (CorrectListFailure l)
+ListCompileResult l = Maybe (TypecheckSuccessList l)
 
 public export
 AtomHandler : GebAtom -> Type
 AtomHandler a =
-  (l : GebSList) -> Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  CorrectCompilation (a $* l)
+  (l : GebSList) -> TypecheckSuccessList l -> CompileResult (a $* l)
 
 public export
 gebRefinementHandler : AtomHandler GARefinementSort
-gebRefinementHandler [] (Element li correct) =
-  Left $ Element (IsAtomicRefinement _) SuccessCorrectnessConditions
-gebRefinementHandler (_ :: _) (Element li correct) =
-  Right $ Element
-    (NewError _ _ $ WrongNumberOfArguments _ _) FailureCorrectnessConditions
+gebRefinementHandler [] _ = Just $ IsAtomicRefinement ($^ GARefinementSort)
+gebRefinementHandler (_ :: _) _ = Nothing
 
 public export
 HandledAtomsList : List GebAtom
@@ -521,113 +454,39 @@ AtomHandlerList =
 public export
 gebCompileCertifiedLeftElim :
   (a : GebAtom) -> (l : GebSList) ->
-  Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  CorrectCompilation (a $* l)
-gebCompileCertifiedLeftElim a l (Element li correct) with
+  TypecheckSuccessList l ->
+  CompileResult (a $* l)
+gebCompileCertifiedLeftElim a l li with
   (listForAllGet {ap=AtomHandler} {l=HandledAtomsList} AtomHandlerList a)
-    gebCompileCertifiedLeftElim a l (Element li correct) | Just handler =
-      handler l (Element li correct)
-    gebCompileCertifiedLeftElim a l (Element li correct) | Nothing =
-      Right $ Element
-        (NewError a l $ UnimplementedAtom a l)
-        FailureCorrectnessConditions
+    gebCompileCertifiedLeftElim a l li | Just handler = handler l li
+    gebCompileCertifiedLeftElim a l li | Nothing = Nothing
 
 public export
-gebCompileCertifiedRightElim :
-  (a : GebAtom) -> (l : GebSList) ->
-  Subset (TypecheckErrors l) (ListFailureIsCorrect l) ->
-  Subset (TypecheckError (a $* l)) (FailureIsCorrect (a $* l))
-gebCompileCertifiedRightElim a l (Element le correct) =
-  (Element (SubexpressionFailed a l le) $
-   FailureCorrectnessConditions
-  )
-
-public export
-gebCompileNilElim : CorrectListCompilation []
-gebCompileNilElim =
-  Left
-    (Element EmptySuccessList $
-     ListSuccessCorrectnessConditions
-    )
+gebCompileNilElim : ListCompileResult []
+gebCompileNilElim = Just EmptySuccessList
 
 public export
 gebCompileCertifiedConsLeftLeft :
   (x : GebSExp) -> (l : GebSList) ->
-  Subset (TypecheckSuccess x) (SuccessIsCorrect x) ->
-  Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  CorrectListCompilation (x :: l)
-gebCompileCertifiedConsLeftLeft x l
-  (Element i expCorrect) (Element li listCorrect) =
-    Left $ Element (SuccessListCons x l i li)
-      ListSuccessCorrectnessConditions
-
-public export
-gebCompileCertifiedConsLeftRight :
-  (x : GebSExp) -> (l : GebSList) ->
-  Subset (TypecheckSuccess x) (SuccessIsCorrect x) ->
-  Subset (TypecheckErrors l) (ListFailureIsCorrect l) ->
-  Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsLeftRight x l
-  (Element i expCorrect) (Element le listCorrect) =
-  (Element (NoNewError x l i le) ListFailureCorrectnessConditions)
-
-public export
-gebCompileCertifiedConsRightLeft :
-  (x : GebSExp) -> (l : GebSList) ->
-  Subset (TypecheckError x) (FailureIsCorrect x) ->
-  Subset (TypecheckSuccessList l) (ListSuccessIsCorrect l) ->
-  Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsRightLeft x l
-  (Element e expCorrect) (Element li listCorrect) =
-    (Element (FirstError x l e li) ListFailureCorrectnessConditions)
-
-public export
-gebCompileCertifiedConsRightRight :
-  (x : GebSExp) -> (l : GebSList) ->
-  Subset (TypecheckError x) (FailureIsCorrect x) ->
-  Subset (TypecheckErrors l) (ListFailureIsCorrect l) ->
-  Subset (TypecheckErrors (x :: l)) (ListFailureIsCorrect (x :: l))
-gebCompileCertifiedConsRightRight x l
-  (Element e expCorrect) (Element le listCorrect) =
-  (Element (AdditionalError x l e le) ListFailureCorrectnessConditions)
+  TypecheckSuccess x -> TypecheckSuccessList l -> ListCompileResult (x :: l)
+gebCompileCertifiedConsLeftLeft x l i li =
+  Just $ SuccessListCons x l i li
 
 public export
 GebCompileSignature :
-  SExpEitherInductionSig
+  SExpRefineIntroSig
     Prelude.Basics.id
-    CorrectSuccess
-    CorrectFailure
-    CorrectListSuccess
-    CorrectListFailure
+    TypecheckSuccess
+    TypecheckSuccessList
 GebCompileSignature =
-  SExpEitherInductionArgs
+  SExpRefineIntroArgs
     gebCompileCertifiedLeftElim
-    gebCompileCertifiedRightElim
     gebCompileNilElim
     gebCompileCertifiedConsLeftLeft
-    gebCompileCertifiedConsLeftRight
-    gebCompileCertifiedConsRightLeft
-    gebCompileCertifiedConsRightRight
-
-public export
-gebCompileCertified : GebSExp ~> CorrectCompilation
-gebCompileCertified =
-  sexpEitherInduction {mMonad=IdentityIsMonad} GebCompileSignature
 
 public export
 gebCompile : GebSExp ~> CompileResult
-gebCompile x with (gebCompileCertified x)
-  gebCompile x | Left (Element i _) = Left i
-  gebCompile x | Right (Element e _) = Right e
-
-public export
-gebCompileCorrect :
-  (x : GebSExp) -> case gebCompile x of
-    Left i => CorrectSuccess x
-    Right e => CorrectFailure x
-gebCompileCorrect x with (gebCompileCertified x)
-  gebCompileCorrect x | (Left (Element i correct)) = Element i correct
-  gebCompileCorrect x | (Right (Element e correct)) = Element e correct
+gebCompile = sexpRefineIntro {mMonad=IdentityIsMonad} GebCompileSignature
 
 public export
 AnyErased : Type
