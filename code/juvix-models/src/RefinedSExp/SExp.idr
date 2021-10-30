@@ -6,6 +6,7 @@ import public RefinedSExp.List
 import public Data.SortedMap
 import public Data.SortedSet
 import public Data.Vect
+import public Control.Monad.Reader
 
 %default total
 
@@ -318,7 +319,7 @@ sexpGeneralStrengthenedInduction signature =
 
 public export
 record SExpEitherInductionSig
-  (m : Type -> Type) {mMonad : Monad m}
+  (m : Type -> Type)
   {atom : Type} (0 spl, spr : SPred atom) (0 lpl, lpr : SLPred atom)
   where
     constructor SExpEitherInductionArgs
@@ -339,9 +340,9 @@ record SExpEitherInductionSig
 
 public export
 SExpEitherInductionSigToEliminatorSig :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 spl, spr : SPred atom} -> {0 lpl, lpr : SLPred atom} ->
-  SExpEitherInductionSig m {mMonad} spl spr lpl lpr ->
+  SExpEitherInductionSig m spl spr lpl lpr ->
   SExpEliminatorSig
     (\x => m (Either (spl x) (spr x)))
     (\l => m (Either (lpl l) (lpr l)))
@@ -371,25 +372,25 @@ SExpEitherInductionSigToEliminatorSig signature =
 
 public export
 sexpEitherInduction :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 spl, spr : SPred atom} -> {0 lpl, lpr : SLPred atom} ->
-  (signature : SExpEitherInductionSig m {mMonad} spl spr lpl lpr) ->
+  (signature : SExpEitherInductionSig m spl spr lpl lpr) ->
   (x : SExp atom) -> m $ Either (spl x) (spr x)
 sexpEitherInduction signature =
   sexpEliminator (SExpEitherInductionSigToEliminatorSig signature)
 
 public export
 slistEitherInduction :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 spl, spr : SPred atom} -> {0 lpl, lpr : SLPred atom} ->
-  (signature : SExpEitherInductionSig m {mMonad} spl spr lpl lpr) ->
+  (signature : SExpEitherInductionSig m spl spr lpl lpr) ->
   (l : SList atom) -> m $ Either (lpl l) (lpr l)
 slistEitherInduction signature =
   slistEliminator (SExpEitherInductionSigToEliminatorSig signature)
 
 public export
 record SExpRefineIntroSig
-  (m : Type -> Type) {mMonad : Monad m}
+  (m : Type -> Type)
   {atom : Type} (0 spl : SPred atom) (0 lpl : SLPred atom)
   where
     constructor SExpRefineIntroArgs
@@ -407,23 +408,23 @@ record SExpRefineIntroSig
 
 public export
 sexpRefineIntroExpElim :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
-  SExpRefineIntroSig m {mMonad} spl lpl ->
+  SExpRefineIntroSig m spl lpl ->
   (a : atom) -> (l : SList atom) ->
   m (Dec (lpl l)) -> m $ Dec (spl (a $* l))
-sexpRefineIntroExpElim signature {m} {mMonad} {spl} {lpl} a l mlpl =
+sexpRefineIntroExpElim signature {m} {spl} {lpl} a l mlpl =
   map mergeDecNot $
     (applyDecToEither (expElim signature a l) (notListElim signature a l)) mlpl
 
 public export
 sexpRefineIntroConsElim :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
-  SExpRefineIntroSig m {mMonad} spl lpl ->
+  SExpRefineIntroSig m spl lpl ->
   (x : SExp atom) -> (l : SList atom) ->
   m (Dec (spl x)) -> m (Dec (lpl l)) -> m $ Dec (lpl (x :: l))
-sexpRefineIntroConsElim signature {m} {mMonad} x l mspx mlpl = do
+sexpRefineIntroConsElim signature {m} x l mspx mlpl = do
   dspx <- mspx
   case dspx of
     Yes spx => do
@@ -435,9 +436,9 @@ sexpRefineIntroConsElim signature {m} {mMonad} x l mspx mlpl = do
 
 public export
 SExpRefineIntroSigToEliminatorSig :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
-  SExpRefineIntroSig m {mMonad} spl lpl ->
+  SExpRefineIntroSig m spl lpl ->
   SExpEliminatorSig (\x => m $ Dec (spl x)) (\l => m $ Dec (lpl l))
 SExpRefineIntroSigToEliminatorSig signature =
   SExpEliminatorArgs
@@ -447,34 +448,44 @@ SExpRefineIntroSigToEliminatorSig signature =
 
 public export
 sexpRefineIntro  :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
-  (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
+  (signature : SExpRefineIntroSig m spl lpl) ->
   (x : SExp atom) -> m $ Dec (spl x)
 sexpRefineIntro signature =
   sexpEliminator (SExpRefineIntroSigToEliminatorSig signature)
 
 public export
 slistRefineIntro :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
-  (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
+  (signature : SExpRefineIntroSig m spl lpl) ->
   (l : SList atom) -> m $ Dec (lpl l)
 slistRefineIntro signature =
   slistEliminator (SExpRefineIntroSigToEliminatorSig signature)
 
 public export
+sexpRefineIntroReader  :
+  {m : Type -> Type} -> Monad m => {stateType : Type} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  (signature : SExpRefineIntroSig (ReaderT stateType m) spl lpl) ->
+  (x : SExp atom) -> (ReaderT stateType m) $ Dec (spl x)
+sexpRefineIntroReader signature =
+  sexpEliminator (SExpRefineIntroSigToEliminatorSig signature)
+
+public export
 SExpRefineIntroIdSig : {atom : Type} ->
   (0 spl : SPred atom) -> (0 lpl : SLPred atom) -> Type
 SExpRefineIntroIdSig spl lpl =
-  SExpRefineIntroSig Prelude.Basics.id {mMonad=IdentityIsMonad} spl lpl
+  SExpRefineIntroSig Prelude.Basics.id spl lpl
 
 public export
 sexpRefineIntroId :
   {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefineIntroIdSig spl lpl) ->
   (x : SExp atom) -> Dec (spl x)
-sexpRefineIntroId signature = sexpRefineIntro signature
+sexpRefineIntroId signature =
+  let _ = IdentityIsMonad in sexpRefineIntro signature
 
 public export
 fromVoid : (type : Type) -> Void -> type

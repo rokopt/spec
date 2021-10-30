@@ -574,7 +574,7 @@ GebCompileSignature =
 
 public export
 gebCompile : GebSExp ~> CompileResult
-gebCompile = sexpRefineIntro {mMonad=IdentityIsMonad} GebCompileSignature
+gebCompile = let _ = IdentityIsMonad in sexpRefineIntro GebCompileSignature
 
 public export
 AnyErased : Type
