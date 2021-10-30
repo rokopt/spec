@@ -423,8 +423,15 @@ sexpRefineIntroConsElim :
   SExpRefineIntroSig m {mMonad} spl lpl ->
   (x : SExp atom) -> (l : SList atom) ->
   m (Dec (spl x)) -> m (Dec (lpl l)) -> m $ Dec (lpl (x :: l))
-sexpRefineIntroConsElim signature {m} {mMonad} x l mspx mlpl =
-  ?sexpRefineIntroConsElim_hole
+sexpRefineIntroConsElim signature {m} {mMonad} x l mspx mlpl = do
+  dspx <- mspx
+  case dspx of
+    Yes spx => do
+      dlpl <- mlpl
+      case dlpl of
+        Yes lpl => consElim signature x l (pure spx) (pure lpl)
+        No nlpl => map No $ notTailElim signature x l $ pure nlpl
+    No nspx => map No $ notHeadElim signature x l $ pure nspx
 
 public export
 SExpRefineIntroSigToEliminatorSig :
