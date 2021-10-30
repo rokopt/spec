@@ -439,60 +439,22 @@ SExpRefineIntroSigToEliminatorSig signature =
     (sexpRefineIntroConsElim signature)
 
 public export
-sexpRefineIntroViaOriginalEliminator :
+sexpRefineIntro  :
   {m : Type -> Type} -> {mMonad : Monad m} ->
   {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
   (x : SExp atom) -> m $ Dec (spl x)
-sexpRefineIntroViaOriginalEliminator signature =
+sexpRefineIntro signature =
   sexpEliminator (SExpRefineIntroSigToEliminatorSig signature)
-
-public export
-slistRefineIntroViaOriginalEliminator :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
-  (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
-  (l : SList atom) -> m $ Dec (lpl l)
-slistRefineIntroViaOriginalEliminator signature =
-  slistEliminator (SExpRefineIntroSigToEliminatorSig signature)
-
-public export
-SExpRefineIntroToEitherInductionSig :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
-  SExpRefineIntroSig m {mMonad} spl lpl ->
-  SExpEitherInductionSig m {mMonad} spl (Not . spl) lpl (Not . lpl)
-SExpRefineIntroToEitherInductionSig signature =
-  SExpEitherInductionArgs
-    (\a, l, mlpl =>
-      map decToEither $ expElim signature a l mlpl)
-    (notListElim signature)
-    (map decToEither (nilElim signature))
-    (\x, l, mspl, mlpl =>
-      map decToEither $ consElim signature x l mspl mlpl)
-    (\x, l, _, notlpl => notTailElim signature x l notlpl)
-    (\x, l, notspl, _ => notHeadElim signature x l notspl)
-    (\x, l, notspl, _ => notHeadElim signature x l notspl)
-
-public export
-sexpRefineIntro :
-  {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
-  (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
-  (x : SExp atom) -> m $ Dec (spl x)
-sexpRefineIntro signature x =
-  map {f=m} eitherToDec $
-    sexpEitherInduction (SExpRefineIntroToEitherInductionSig signature) x
 
 public export
 slistRefineIntro :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
   (l : SList atom) -> m $ Dec (lpl l)
-slistRefineIntro signature x =
-  map {f=m} eitherToDec $
-    slistEitherInduction (SExpRefineIntroToEitherInductionSig signature) x
+slistRefineIntro signature =
+  slistEliminator (SExpRefineIntroSigToEliminatorSig signature)
 
 public export
 SExpRefineIntroIdSig : {atom : Type} ->
@@ -502,7 +464,7 @@ SExpRefineIntroIdSig spl lpl =
 
 public export
 sexpRefineIntroId :
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefineIntroIdSig spl lpl) ->
   (x : SExp atom) -> Dec (spl x)
 sexpRefineIntroId signature = sexpRefineIntro signature
