@@ -379,6 +379,47 @@ sexpEitherInduction signature =
   sexpEliminator (SExpEitherInductionSigToEliminatorSig signature)
 
 public export
+record SExpRefineIntroSig
+  (m : Type -> Type) {mMonad : Monad m}
+  {atom : Type} (0 spl : SPred atom) (0 lpl : SLPred atom)
+  where
+    constructor SExpRefineIntroArgs
+    leftElim : (a : atom) -> (l : SList atom) -> (mlpl : m (lpl l)) ->
+      m (Maybe (spl (a $* l)))
+    nilElim : m (Maybe (lpl []))
+    consLeftLeft : (x : SExp atom) -> (l : SList atom) ->
+      (mspl : m (spl x)) -> (mlpl : m (lpl l)) ->
+      m (Maybe (lpl (x :: l)))
+
+public export
+SExpRefineIntroToEitherInductionSig :
+  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  SExpRefineIntroSig m {mMonad} spl lpl ->
+  SExpEitherInductionSig m {mMonad} spl (\_ => ()) lpl (\_ => ())
+SExpRefineIntroToEitherInductionSig signature =
+  SExpEitherInductionArgs
+    (\a, l, mlpl =>
+      map maybeToEither $ leftElim signature a l mlpl)
+    (\_, _, _ => pure ())
+    (map maybeToEither (nilElim signature))
+    (\x, l, mspl, mlpl =>
+      map maybeToEither $ consLeftLeft signature x l mspl mlpl)
+    (\_, _, _, _ => pure ())
+    (\_, _, _, _ => pure ())
+    (\_, _, _, _ => pure ())
+
+public export
+sexpRefineIntro :
+  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
+  (x : SExp atom) -> m $ Maybe (spl x)
+sexpRefineIntro signature x =
+  map {f=m} eitherToMaybe $
+    sexpEitherInduction (SExpRefineIntroToEitherInductionSig signature) x
+
+public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 

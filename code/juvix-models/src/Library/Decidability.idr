@@ -482,6 +482,16 @@ IsLeftElim {x=(Left x')} ItIsLeft = x'
 IsLeftElim {x=(Right _)} ItIsLeft impossible
 
 public export
+maybeToEither : {0 a : Type} -> Maybe a -> Either a ()
+maybeToEither (Just x) = Left x
+maybeToEither Nothing = Right ()
+
+public export
+eitherToMaybe : {0 a : Type} -> Either a () -> Maybe a
+eitherToMaybe (Left x) = Just x
+eitherToMaybe (Right ()) = Nothing
+
+public export
 natToFinCert : {m, n : Nat} -> m `LT` n -> Fin n
 natToFinCert {m=Z} LTEZero impossible
 natToFinCert {m=Z} (LTESucc lte) = FZ
