@@ -406,10 +406,26 @@ gebMap = fromList
 ---- General definition of programming language / metalogic ----
 ----------------------------------------------------------------
 
+public export
+HandledAtomsList : List GebAtom
+HandledAtomsList =
+  [
+    GARefinementSort
+  ]
+
 mutual
   public export
   data TypecheckSuccess : GebSExp -> Type where
-    IsAtomicRefinement : (x : GebSExp) -> TypecheckSuccess x
+    VerifiedSuccess : {a : GebAtom} -> {l : GebSList} ->
+      {handled : ListContains HandledAtomsList a} ->
+      {listSuccess : TypecheckSuccessList l} ->
+      TypecheckVerifiedSuccess a l handled listSuccess ->
+      TypecheckSuccess (a $* l)
+
+  public export
+  successIsHandled : {x : GebSExp} -> TypecheckSuccess x ->
+    ListContains HandledAtomsList (($<) x)
+  successIsHandled {x=(a $* _)} (VerifiedSuccess {handled} _) = handled
 
   public export
   data TypecheckSuccessList : GebSList -> Type where
@@ -418,30 +434,47 @@ mutual
       TypecheckSuccess x -> TypecheckSuccessList l ->
       TypecheckSuccessList (x :: l)
 
+  public export
+  successSublistSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
+    TypecheckSuccessList (($>) x)
+  successSublistSucceeds {x=(_ $* l)}
+    (VerifiedSuccess {listSuccess} _) = listSuccess
+
+  public export
+  data TypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
+    ListContains HandledAtomsList a -> TypecheckSuccessList l -> Type where
+      IsAtomicRefinement :
+        (handled : ListContains HandledAtomsList GARefinementSort) ->
+        TypecheckVerifiedSuccess GARefinementSort [] handled EmptySuccessList
+
+  public export
+  TypecheckSuccessWithHandling : {a : GebAtom} -> {l : GebSList} ->
+    {handled : ListContains HandledAtomsList a} ->
+    {listSuccess : TypecheckSuccessList l} ->
+    TypecheckVerifiedSuccess a l handled listSuccess ->
+    TypecheckSuccess (a $* l)
+  TypecheckSuccessWithHandling handledSuccess = VerifiedSuccess $ handledSuccess
+
 public export
 CompileResult : GebSExp -> Type
-CompileResult x = Maybe (TypecheckSuccess x)
+CompileResult x = Dec (TypecheckSuccess x)
 
 public export
 ListCompileResult : GebSList -> Type
-ListCompileResult l = Maybe (TypecheckSuccessList l)
+ListCompileResult l = Dec (TypecheckSuccessList l)
 
 public export
 AtomHandler : GebAtom -> Type
 AtomHandler a =
-  (l : GebSList) -> TypecheckSuccessList l -> CompileResult (a $* l)
+  (l : GebSList) -> TypecheckSuccessList l -> ListContains HandledAtomsList a ->
+  CompileResult (a $* l)
 
 public export
 gebRefinementHandler : AtomHandler GARefinementSort
-gebRefinementHandler [] _ = Just $ IsAtomicRefinement ($^ GARefinementSort)
-gebRefinementHandler (_ :: _) _ = Nothing
-
-public export
-HandledAtomsList : List GebAtom
-HandledAtomsList =
-  [
-    GARefinementSort
-  ]
+gebRefinementHandler [] _ handled = Yes $
+  TypecheckSuccessWithHandling $ IsAtomicRefinement handled
+gebRefinementHandler (_ :: _) _ _ = No $ \success => case success of
+  IsAtomicRefinement (_ $* (_ :: _)) impossible
 
 public export
 AtomHandlerList : ListForAll AtomHandler HandledAtomsList
@@ -452,25 +485,35 @@ AtomHandlerList =
   )
 
 public export
-gebCompileCertifiedLeftElim :
+gebCompileCertifiedExpElim :
   (a : GebAtom) -> (l : GebSList) ->
   TypecheckSuccessList l ->
   CompileResult (a $* l)
-gebCompileCertifiedLeftElim a l li with
-  (listForAllGet {ap=AtomHandler} {l=HandledAtomsList} AtomHandlerList a)
-    gebCompileCertifiedLeftElim a l li | Just handler = handler l li
-    gebCompileCertifiedLeftElim a l li | Nothing = Nothing
+gebCompileCertifiedExpElim a l li with (listContainsDec HandledAtomsList a)
+  gebCompileCertifiedExpElim a l li | Yes handled =
+    listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
+      handled AtomHandlerList l li handled
+  gebCompileCertifiedExpElim a l li | No notHandled =
+    No $ notHandled . successIsHandled
+
+public export
+gebCompileNotListElim :
+  (a : GebAtom) -> (l : GebSList) ->
+  Not (TypecheckSuccessList l) ->
+  Not $ TypecheckSuccess (a $* l)
+gebCompileNotListElim a l listFail expSuccess =
+  listFail $ successSublistSucceeds expSuccess
 
 public export
 gebCompileNilElim : ListCompileResult []
-gebCompileNilElim = Just EmptySuccessList
+gebCompileNilElim = Yes EmptySuccessList
 
 public export
-gebCompileCertifiedConsLeftLeft :
+gebCompileCertifiedConsElim :
   (x : GebSExp) -> (l : GebSList) ->
   TypecheckSuccess x -> TypecheckSuccessList l -> ListCompileResult (x :: l)
-gebCompileCertifiedConsLeftLeft x l i li =
-  Just $ SuccessListCons x l i li
+gebCompileCertifiedConsElim x l i li =
+  Yes $ SuccessListCons x l i li
 
 public export
 GebCompileSignature :
@@ -479,9 +522,10 @@ GebCompileSignature :
     TypecheckSuccessList
 GebCompileSignature =
   SExpRefineIntroArgs
-    gebCompileCertifiedLeftElim
+    gebCompileCertifiedExpElim
+    gebCompileNotListElim
     gebCompileNilElim
-    gebCompileCertifiedConsLeftLeft
+    gebCompileCertifiedConsElim
 
 public export
 gebCompile : GebSExp ~> CompileResult
@@ -492,12 +536,25 @@ AnyErased : Type
 AnyErased = Exists {type=Type} id
 
 public export
+idrisInterpretTypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
+  (TypecheckSuccessList l -> List AnyErased) ->
+  (handled : ListContains HandledAtomsList a) ->
+  (listSuccess : TypecheckSuccessList l) ->
+  TypecheckVerifiedSuccess a l handled listSuccess ->
+  AnyErased
+idrisInterpretTypecheckVerifiedSuccess GARefinementSort [] success handled
+  EmptySuccessList (IsAtomicRefinement _) =
+    Evidence Type (GebSExp -> Bool)
+
+public export
 idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
   (TypecheckSuccessList l -> List AnyErased) ->
   TypecheckSuccess (a $* l) ->
   AnyErased
-idrisInterpretExpElim a l li (IsAtomicRefinement _) =
-  Evidence Type (GebSExp -> Bool)
+idrisInterpretExpElim a l success
+  (VerifiedSuccess {handled} {listSuccess} refinement) =
+    idrisInterpretTypecheckVerifiedSuccess
+      a l success handled listSuccess refinement
 
 public export
 idrisInterpretNilElim : TypecheckSuccessList [] -> List AnyErased

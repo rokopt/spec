@@ -93,23 +93,48 @@ listMetaEliminator :
 listMetaEliminator = listEliminator . ListMetaEliminatorSigToEliminatorSig
 
 public export
+ListContains : {0 atom : Type} -> List atom -> atom -> Type
+ListContains =
+  listEliminator {lp=(\_ => atom -> Type)} $
+    ListEliminatorArgs
+      (\_ => Void)
+      (\a, l, lContains, a' => Either (a = a') (lContains a'))
+
+public export
+listContainsDec : {0 atom : Type} -> DecEq atom =>
+  (l : List atom) -> (a : atom) -> Dec (ListContains l a)
+listContainsDec =
+  listEliminator
+    {lp=(\l => (a : atom) -> Dec (ListContains l a))}
+    $ ListEliminatorArgs
+      (\_ => No id)
+      (\a, l, containsDec, a' => case decEq a a' of
+        Yes Refl => Yes $ Left Refl
+        No neq => case containsDec a' of
+          Yes contains => Yes $ Right contains
+          No notContains => No $ \contains =>
+            case contains of
+              Left aEq => void $ neq aEq
+              Right tailContains => void $ notContains tailContains)
+
+public export
 ListForAll : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type
 ListForAll ap = listEliminator (ListEliminatorArgs () (const . Pair . ap))
 
 public export
 listForAllGet : {atom : Type} -> DecEq atom => {ap : atom -> Type} ->
-  {l : List atom} -> ListForAll ap l -> (a : atom) -> Maybe $ ap a
-listForAllGet {l} =
+  {l : List atom} -> {a : atom} -> ListContains l a ->
+  (forAll : ListForAll ap l) -> ap a
+listForAllGet {l} {a} =
   listEliminator
-    {lp=(\l' => (lforAll' : ListForAll ap l') -> (a' : atom) -> Maybe $ ap a')}
+    {lp=(\l' =>
+      (a' : atom) -> ListContains l' a' -> ListForAll ap l' -> ap a')}
     (ListEliminatorArgs
-      (\_, _ => Nothing)
-      (\a, l', tailForAll, lforAll, a' => case decEq a a' of
-        Yes Refl => Just $ fst lforAll
-        No _ => tailForAll (snd lforAll) a'
-      )
-    )
-    l
+      (\_, v => void v)
+      (\a'', l'', containsDec, a''', contains, forAll => case contains of
+        Left Refl => fst forAll
+        Right tail => containsDec a''' tail $ snd forAll)
+    ) l a
 
 public export
 ListExists : {atom : Type} -> (ap : atom -> Type) -> List atom -> Type

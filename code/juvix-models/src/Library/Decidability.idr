@@ -492,6 +492,16 @@ eitherToMaybe (Left x) = Just x
 eitherToMaybe (Right ()) = Nothing
 
 public export
+eitherToDec : {0 a : Type} -> Either a (Not a) -> Dec a
+eitherToDec (Left x) = Yes x
+eitherToDec (Right n) = No n
+
+public export
+decToEither : {0 a : Type} -> Dec a -> Either a (Not a)
+decToEither (Yes y) = Left y
+decToEither (No n) = Right n
+
+public export
 natToFinCert : {m, n : Nat} -> m `LT` n -> Fin n
 natToFinCert {m=Z} LTEZero impossible
 natToFinCert {m=Z} (LTESucc lte) = FZ
