@@ -379,6 +379,15 @@ sexpEitherInduction signature =
   sexpEliminator (SExpEitherInductionSigToEliminatorSig signature)
 
 public export
+slistEitherInduction :
+  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {atom : Type} -> {0 spl, spr : SPred atom} -> {0 lpl, lpr : SLPred atom} ->
+  (signature : SExpEitherInductionSig m {mMonad} spl spr lpl lpr) ->
+  (l : SList atom) -> m $ Either (lpl l) (lpr l)
+slistEitherInduction signature =
+  slistEliminator (SExpEitherInductionSigToEliminatorSig signature)
+
+public export
 record SExpRefineIntroSig
   (m : Type -> Type) {mMonad : Monad m}
   {atom : Type} (0 spl : SPred atom) (0 lpl : SLPred atom)
@@ -418,6 +427,16 @@ sexpRefineIntro :
 sexpRefineIntro signature x =
   map {f=m} eitherToMaybe $
     sexpEitherInduction (SExpRefineIntroToEitherInductionSig signature) x
+
+public export
+slistRefineIntro :
+  {m : Type -> Type} -> {mMonad : Monad m} ->
+  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
+  (l : SList atom) -> m $ Maybe (lpl l)
+slistRefineIntro signature x =
+  map {f=m} eitherToMaybe $
+    slistEitherInduction (SExpRefineIntroToEitherInductionSig signature) x
 
 public export
 SExpRefineIntroIdSig : {atom : Type} ->
