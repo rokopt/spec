@@ -849,6 +849,19 @@ public export
     pure = pure {f} . pure {f=g}
     (<*>) = ((<*>) {f}) . (map {f} ((<*>) {f=g}))
 
+prefix 11 <!>
+public export
+interface Functor f => Coapplicative f where
+  constructor MkCopplicative
+  extract : f a -> a
+  abstract : (f a -> f b) -> f (a -> b)
+
+public export
+[ComposeCoapplicative] (Coapplicative f, Coapplicative g) =>
+  Coapplicative (f . g) using ComposeFunctor where
+    extract = extract {f=g} . extract {f}
+    abstract = map {f} (abstract {f=g}) . abstract {f}
+
 public export
 proj32 : {0 a, b, c : Type} -> (a, b, c) -> b
 proj32 = fst . snd
@@ -872,16 +885,31 @@ proj44 = snd . snd . snd
 public export
 map2 :
   {0 f : Type -> Type} -> Applicative f =>
-  {0 a, b : Type} ->
+  {0 a, b, c : Type} ->
   (a -> b -> c) ->
   f a -> f b -> f c
-map2 {f} fab x x' = map {f} fab x <*> x'
+map2 {f} fabc x x' = map {f} fabc x <*> x'
+
+public export
+map3 :
+  {0 f : Type -> Type} -> Applicative f =>
+  {0 a, b, c, d : Type} ->
+  (a -> b -> c -> d) ->
+  f a -> f b -> f c -> f d
+map3 {f} fabcd x y z = map {f} fabcd x <*> y <*> z
 
 public export
 applyPair :
   {0 f : Type -> Type} -> Applicative f =>
   {0 a, b : Type} -> f a -> f b -> f (a, b)
 applyPair = map2 MkPair
+
+public export
+applyEither :
+  {0 f : Type -> Type} -> Functor f =>
+  {0 a, b : Type} -> Either (f a) (f b) -> f (Either a b)
+applyEither (Left fa) = map Left fa
+applyEither (Right fb) = map Right fb
 
 public export
 applyTriple :
@@ -906,6 +934,12 @@ applyEitherElim :
   {f : Type -> Type} -> Applicative f =>
   {a, b, c : Type} -> f (a -> c) -> f (b -> c) -> f (Either a b) -> f c
 applyEitherElim fac fbc fe = pure eitherElim <*> (applyPair fac fbc) <*> fe
+
+public export
+appCompose :
+  {f : Type -> Type} -> Applicative f => {a, b, c : Type} ->
+  f (b -> c) -> f (a -> b) -> f (a -> c)
+appCompose fbc fab = map (.) fbc <*> fab
 
 public export
 ApplicativeToFunctor : {f : Type -> Type} -> Applicative f -> Functor f

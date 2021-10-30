@@ -408,11 +408,13 @@ record SExpRefineIntroSig
 public export
 sexpRefineIntroExpElim :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   SExpRefineIntroSig m {mMonad} spl lpl ->
   (a : atom) -> (l : SList atom) ->
   m (Dec (lpl l)) -> m $ Dec (spl (a $* l))
-sexpRefineIntroExpElim signature a l mlpl = ?sexpRefineIntroExpElim_hole
+sexpRefineIntroExpElim signature {m} {mMonad} {spl} {lpl} a l mlpl =
+  map mergeDecNot $
+    (applyDecToEither (expElim signature a l) (notListElim signature a l)) mlpl
 
 public export
 sexpRefineIntroConsElim :
@@ -421,12 +423,13 @@ sexpRefineIntroConsElim :
   SExpRefineIntroSig m {mMonad} spl lpl ->
   (x : SExp atom) -> (l : SList atom) ->
   m (Dec (spl x)) -> m (Dec (lpl l)) -> m $ Dec (lpl (x :: l))
-sexpRefineIntroConsElim signature x l mspx mlpl = ?sexpRefineIntroConsElim_hole
+sexpRefineIntroConsElim signature {m} {mMonad} x l mspx mlpl =
+  ?sexpRefineIntroConsElim_hole
 
 public export
 SExpRefineIntroSigToEliminatorSig :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   SExpRefineIntroSig m {mMonad} spl lpl ->
   SExpEliminatorSig (\x => m $ Dec (spl x)) (\l => m $ Dec (lpl l))
 SExpRefineIntroSigToEliminatorSig signature =
@@ -438,7 +441,7 @@ SExpRefineIntroSigToEliminatorSig signature =
 public export
 sexpRefineIntroViaOriginalEliminator :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
   (x : SExp atom) -> m $ Dec (spl x)
 sexpRefineIntroViaOriginalEliminator signature =
@@ -447,7 +450,7 @@ sexpRefineIntroViaOriginalEliminator signature =
 public export
 slistRefineIntroViaOriginalEliminator :
   {m : Type -> Type} -> {mMonad : Monad m} ->
-  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefineIntroSig m {mMonad} spl lpl) ->
   (l : SList atom) -> m $ Dec (lpl l)
 slistRefineIntroViaOriginalEliminator signature =

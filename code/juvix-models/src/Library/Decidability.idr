@@ -502,6 +502,48 @@ decToEither (Yes y) = Left y
 decToEither (No n) = Right n
 
 public export
+eitherIntroLeft : {a, b, c : Type} -> (a -> b) -> (a -> Either b c)
+eitherIntroLeft f = Left . f
+
+public export
+eitherIntroRight : {a, b, c : Type} -> (a -> c) -> (a -> Either b c)
+eitherIntroRight f = Right . f
+
+public export
+eitherElim : {a, b, c : Type} -> (a -> c, b -> c) -> Either a b -> c
+eitherElim signature either = case either of
+  Left x => fst signature x
+  Right y => snd signature y
+
+public export
+eitherMap : {a, b, c, d : Type} ->
+  (a -> c) -> (b -> d) -> Either a b -> Either c d
+eitherMap fac fbd either = case either of
+  Left x => Left $ fac x
+  Right y => Right $ fbd y
+
+public export
+applyPairMap : {f : Type -> Type} -> Applicative f => {a, b, c, d : Type} ->
+  (f a -> f b) -> (f c -> f d) -> f (a, c) -> f (b, d)
+applyPairMap {f} fab fcd fp = applyPair (fab $ map fst fp) (fcd $ map snd fp)
+
+public export
+applyDecToEither :
+  {f : Type -> Type} -> Monad f => {a, b, c : Type} ->
+  (f a -> f b) -> (f (Not a) -> f c) -> f (Dec a) -> f (Either b c)
+applyDecToEither {f} fab fnac fda = do
+  da <- fda
+  case da of
+    Yes a => map Left $ fab $ pure a
+    No nota => map Right $ fnac $ pure nota
+
+public export
+mergeDecNot : {a : Type} -> Either (Dec a) (Not a) -> Dec a
+mergeDecNot (Left (Yes a)) = Yes a
+mergeDecNot (Left (No notA)) = No notA
+mergeDecNot (Right notA) = No notA
+
+public export
 natToFinCert : {m, n : Nat} -> m `LT` n -> Fin n
 natToFinCert {m=Z} LTEZero impossible
 natToFinCert {m=Z} (LTESucc lte) = FZ
