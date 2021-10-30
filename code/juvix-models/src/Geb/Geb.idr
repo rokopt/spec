@@ -430,44 +430,44 @@ mutual
       TypecheckSuccessList (x :: l)
 
   public export
-  successAtomSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
-    ListContains HandledAtomsList (($<) x)
-  successAtomSucceeds {x=(a $* _)} (VerifiedSuccess {handled} _) = handled
-
-  public export
-  successListSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
-    TypecheckSuccessList (($>) x)
-  successListSucceeds {x=(_ $* l)}
-    (VerifiedSuccess {listSuccess} _) = listSuccess
-
-  public export
-  successHeadSucceeds : {x : GebSExp} -> {l : GebSList} ->
-    TypecheckSuccessList (x :: l) ->
-    TypecheckSuccess x
-  successHeadSucceeds EmptySuccessList impossible
-  successHeadSucceeds (SuccessListCons _ _ success _) = success
-
-  public export
-  successTailSucceeds : {x : GebSExp} -> {l : GebSList} ->
-    TypecheckSuccessList (x :: l) ->
-    TypecheckSuccessList l
-  successTailSucceeds EmptySuccessList impossible
-  successTailSucceeds (SuccessListCons _ _ _ success) = success
-
-  public export
   data TypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
     ListContains HandledAtomsList a -> TypecheckSuccessList l -> Type where
       IsAtomicRefinement :
         (handled : ListContains HandledAtomsList GARefinementSort) ->
         TypecheckVerifiedSuccess GARefinementSort [] handled EmptySuccessList
 
-  public export
-  TypecheckSuccessWithHandling : {a : GebAtom} -> {l : GebSList} ->
-    {handled : ListContains HandledAtomsList a} ->
-    {listSuccess : TypecheckSuccessList l} ->
-    TypecheckVerifiedSuccess a l handled listSuccess ->
-    TypecheckSuccess (a $* l)
-  TypecheckSuccessWithHandling handledSuccess = VerifiedSuccess $ handledSuccess
+public export
+successAtomSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
+  ListContains HandledAtomsList (($<) x)
+successAtomSucceeds {x=(a $* _)} (VerifiedSuccess {handled} _) = handled
+
+public export
+successListSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
+  TypecheckSuccessList (($>) x)
+successListSucceeds {x=(_ $* l)}
+  (VerifiedSuccess {listSuccess} _) = listSuccess
+
+public export
+successHeadSucceeds : {x : GebSExp} -> {l : GebSList} ->
+  TypecheckSuccessList (x :: l) ->
+  TypecheckSuccess x
+successHeadSucceeds EmptySuccessList impossible
+successHeadSucceeds (SuccessListCons _ _ success _) = success
+
+public export
+successTailSucceeds : {x : GebSExp} -> {l : GebSList} ->
+  TypecheckSuccessList (x :: l) ->
+  TypecheckSuccessList l
+successTailSucceeds EmptySuccessList impossible
+successTailSucceeds (SuccessListCons _ _ _ success) = success
+
+public export
+TypecheckSuccessWithHandling : {a : GebAtom} -> {l : GebSList} ->
+  {handled : ListContains HandledAtomsList a} ->
+  {listSuccess : TypecheckSuccessList l} ->
+  TypecheckVerifiedSuccess a l handled listSuccess ->
+  TypecheckSuccess (a $* l)
+TypecheckSuccessWithHandling handledSuccess = VerifiedSuccess $ handledSuccess
 
 public export
 CompileResult : GebSExp -> Type
