@@ -423,11 +423,6 @@ mutual
       TypecheckSuccess (a $* l)
 
   public export
-  successIsHandled : {x : GebSExp} -> TypecheckSuccess x ->
-    ListContains HandledAtomsList (($<) x)
-  successIsHandled {x=(a $* _)} (VerifiedSuccess {handled} _) = handled
-
-  public export
   data TypecheckSuccessList : GebSList -> Type where
     EmptySuccessList : TypecheckSuccessList []
     SuccessListCons : (x : GebSExp) -> (l : GebSList) ->
@@ -435,10 +430,29 @@ mutual
       TypecheckSuccessList (x :: l)
 
   public export
-  successSublistSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
+  successAtomSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
+    ListContains HandledAtomsList (($<) x)
+  successAtomSucceeds {x=(a $* _)} (VerifiedSuccess {handled} _) = handled
+
+  public export
+  successListSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
     TypecheckSuccessList (($>) x)
-  successSublistSucceeds {x=(_ $* l)}
+  successListSucceeds {x=(_ $* l)}
     (VerifiedSuccess {listSuccess} _) = listSuccess
+
+  public export
+  successHeadSucceeds : {x : GebSExp} -> {l : GebSList} ->
+    TypecheckSuccessList (x :: l) ->
+    TypecheckSuccess x
+  successHeadSucceeds EmptySuccessList impossible
+  successHeadSucceeds (SuccessListCons _ _ success _) = success
+
+  public export
+  successTailSucceeds : {x : GebSExp} -> {l : GebSList} ->
+    TypecheckSuccessList (x :: l) ->
+    TypecheckSuccessList l
+  successTailSucceeds EmptySuccessList impossible
+  successTailSucceeds (SuccessListCons _ _ _ success) = success
 
   public export
   data TypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
@@ -494,7 +508,7 @@ gebCompileCertifiedExpElim a l li with (listContainsDec HandledAtomsList a)
     listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
       handled AtomHandlerList l li handled
   gebCompileCertifiedExpElim a l li | No notHandled =
-    No $ notHandled . successIsHandled
+    No $ notHandled . successAtomSucceeds
 
 public export
 gebCompileNotListElim :
@@ -502,7 +516,7 @@ gebCompileNotListElim :
   Not (TypecheckSuccessList l) ->
   Not $ TypecheckSuccess (a $* l)
 gebCompileNotListElim a l listFail expSuccess =
-  listFail $ successSublistSucceeds expSuccess
+  listFail $ successListSucceeds expSuccess
 
 public export
 gebCompileNilElim : ListCompileResult []
@@ -520,14 +534,14 @@ gebCompileNotHeadElim : (x : GebSExp) -> (l : GebSList) ->
   Not (TypecheckSuccess x) ->
   Not $ TypecheckSuccessList (x :: l)
 gebCompileNotHeadElim x l headFail listSuccess =
-  ?gebCompileNotHeadElim_hole
+  headFail $ successHeadSucceeds listSuccess
 
 public export
 gebCompileNotTailElim : (x : GebSExp) -> (l : GebSList) ->
   Not (TypecheckSuccessList l) ->
   Not $ TypecheckSuccessList (x :: l)
 gebCompileNotTailElim x l tailFail listSuccess =
-  ?gebCompileNotTailElim_hole
+  tailFail $ successTailSucceeds listSuccess
 
 public export
 GebCompileSignature :
