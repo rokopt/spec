@@ -516,6 +516,20 @@ gebCompileCertifiedConsElim x l i li =
   Yes $ SuccessListCons x l i li
 
 public export
+gebCompileNotHeadElim : (x : GebSExp) -> (l : GebSList) ->
+  Not (TypecheckSuccess x) ->
+  Not $ TypecheckSuccessList (x :: l)
+gebCompileNotHeadElim x l headFail listSuccess =
+  ?gebCompileNotHeadElim_hole
+
+public export
+gebCompileNotTailElim : (x : GebSExp) -> (l : GebSList) ->
+  Not (TypecheckSuccessList l) ->
+  Not $ TypecheckSuccessList (x :: l)
+gebCompileNotTailElim x l tailFail listSuccess =
+  ?gebCompileNotTailElim_hole
+
+public export
 GebCompileSignature :
   SExpRefineIntroIdSig
     TypecheckSuccess
@@ -526,6 +540,8 @@ GebCompileSignature =
     gebCompileNotListElim
     gebCompileNilElim
     gebCompileCertifiedConsElim
+    gebCompileNotHeadElim
+    gebCompileNotTailElim
 
 public export
 gebCompile : GebSExp ~> CompileResult

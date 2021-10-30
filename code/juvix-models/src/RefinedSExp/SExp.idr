@@ -400,6 +400,10 @@ record SExpRefineIntroSig
     nilElim : m $ Dec (lpl [])
     consElim : (x : SExp atom) -> (l : SList atom) ->
       m (spl x) -> m (lpl l) -> m $ Dec (lpl (x :: l))
+    notHeadElim : (x : SExp atom) -> (l : SList atom) ->
+      m (Not (spl x)) -> m $ Not (lpl (x :: l))
+    notTailElim : (x : SExp atom) -> (l : SList atom) ->
+      m (Not (lpl l)) -> m $ Not (lpl (x :: l))
 
 public export
 SExpRefineIntroToEitherInductionSig :
@@ -415,9 +419,9 @@ SExpRefineIntroToEitherInductionSig signature =
     (map decToEither (nilElim signature))
     (\x, l, mspl, mlpl =>
       map decToEither $ consElim signature x l mspl mlpl)
-    ?SExpRefineIntroToEitherInductionSig_hole_left_right
-    ?SExpRefineIntroToEitherInductionSig_hole_right_left
-    ?SExpRefineIntroToEitherInductionSig_hole_right_right
+    (\x, l, _, notlpl => notTailElim signature x l notlpl)
+    (\x, l, notspl, _ => notHeadElim signature x l notspl)
+    (\x, l, notspl, _ => notHeadElim signature x l notspl)
 
 public export
 sexpRefineIntro :
