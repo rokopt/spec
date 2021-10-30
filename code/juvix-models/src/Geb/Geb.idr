@@ -411,7 +411,16 @@ HandledAtomsList : List GebAtom
 HandledAtomsList =
   [
     GARefinementSort
+  , GASortSort
   ]
+
+public export
+GARefinementSortHandled : ListContains HandledAtomsList GARefinementSort
+GARefinementSortHandled = Left Refl
+
+public export
+GASortSortHandled : ListContains HandledAtomsList GARefinementSort
+GASortSortHandled = Left Refl
 
 mutual
   public export
@@ -433,8 +442,8 @@ mutual
   data TypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
     ListContains HandledAtomsList a -> TypecheckSuccessList l -> Type where
       IsAtomicRefinement :
-        (handled : ListContains HandledAtomsList GARefinementSort) ->
-        TypecheckVerifiedSuccess GARefinementSort [] handled EmptySuccessList
+        TypecheckVerifiedSuccess
+          GARefinementSort [] GARefinementSortHandled EmptySuccessList
 
 public export
 successAtomSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
@@ -485,16 +494,22 @@ AtomHandler a =
 
 public export
 gebRefinementHandler : AtomHandler GARefinementSort
-gebRefinementHandler [] _ handled = Yes $
-  TypecheckSuccessWithHandling $ IsAtomicRefinement handled
+gebRefinementHandler [] _ _ = Yes $
+  TypecheckSuccessWithHandling $ IsAtomicRefinement
 gebRefinementHandler (_ :: _) _ _ = No $ \success => case success of
   IsAtomicRefinement (_ $* (_ :: _)) impossible
+
+public export
+gebSortSortHandler : AtomHandler GASortSort
+gebSortSortHandler _ _ _ = No $ \success =>
+  case success of (IsAtomicRefinement _) impossible
 
 public export
 AtomHandlerList : ListForAll AtomHandler HandledAtomsList
 AtomHandlerList =
   (
     gebRefinementHandler
+  , gebSortSortHandler
   , ()
   )
 
@@ -572,8 +587,8 @@ idrisInterpretTypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
   (listSuccess : TypecheckSuccessList l) ->
   TypecheckVerifiedSuccess a l handled listSuccess ->
   AnyErased
-idrisInterpretTypecheckVerifiedSuccess GARefinementSort [] success handled
-  EmptySuccessList (IsAtomicRefinement _) =
+idrisInterpretTypecheckVerifiedSuccess GARefinementSort [] success _
+  EmptySuccessList IsAtomicRefinement =
     Evidence Type (GebSExp -> Bool)
 
 public export
