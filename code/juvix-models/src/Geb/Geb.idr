@@ -474,8 +474,7 @@ gebCompileCertifiedConsLeftLeft x l i li =
 
 public export
 GebCompileSignature :
-  SExpRefineIntroSig
-    Prelude.Basics.id
+  SExpRefineIntroIdSig
     TypecheckSuccess
     TypecheckSuccessList
 GebCompileSignature =

@@ -420,6 +420,19 @@ sexpRefineIntro signature x =
     sexpEitherInduction (SExpRefineIntroToEitherInductionSig signature) x
 
 public export
+SExpRefineIntroIdSig : {atom : Type} ->
+  (0 spl : SPred atom) -> (0 lpl : SLPred atom) -> Type
+SExpRefineIntroIdSig spl lpl =
+  SExpRefineIntroSig Prelude.Basics.id {mMonad=IdentityIsMonad} spl lpl
+
+public export
+sexpRefineIntroId :
+  {atom : Type} -> {0 spl : SPred atom} -> {0 lpl : SLPred atom} ->
+  (signature : SExpRefineIntroIdSig spl lpl) ->
+  (x : SExp atom) -> Maybe (spl x)
+sexpRefineIntroId signature = sexpRefineIntro signature
+
+public export
 fromVoid : (type : Type) -> Void -> type
 fromVoid _ = \v => void v
 
