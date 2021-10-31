@@ -501,8 +501,8 @@ ListCompileResult l = GebContextMonad $ Dec $ TypecheckSuccessList l
 public export
 AtomHandler : GebAtom -> Type
 AtomHandler a =
-  (l : GebSList) -> TypecheckSuccessList l -> ListContains HandledAtomsList a ->
-  CompileResult (a $* l)
+  (l : GebSList) -> GebContextMonad (TypecheckSuccessList l) ->
+  ListContains HandledAtomsList a -> CompileResult (a $* l)
 
 public export
 gebRefinementHandler : AtomHandler GARefinementSort
@@ -532,11 +532,8 @@ gebCompileCertifiedExpElim :
   CompileResult (a $* l)
 gebCompileCertifiedExpElim a l li with (listContainsDec HandledAtomsList a)
   gebCompileCertifiedExpElim a l mli | Yes handled =
-    let _ = IdentityIsMonad in
-    do
-      li <- mli
-      listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
-        handled AtomHandlerList l li handled
+    listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
+      handled AtomHandlerList l mli handled
   gebCompileCertifiedExpElim a l li | No notHandled =
     pure $ No $ notHandled . successAtomSucceeds
 
@@ -585,6 +582,8 @@ GebCompileSignature :
     TypecheckSuccessList
 GebCompileSignature =
   SExpRefinePerAtomHandlerArgs
+    HandledAtomsList
+    AtomHandlerList
     gebCompileCertifiedExpElim
     gebCompileNotListElim
     gebCompileNilElim

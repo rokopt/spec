@@ -499,11 +499,22 @@ sexpRefineIntroId signature =
   let _ = IdentityIsMonad in sexpRefineIntro signature
 
 public export
+SExpRefinedPerAtomHandler : (m : Type -> Type) ->
+  {atom : Type} -> (spl : SPred atom) -> (lpl : SLPred atom) ->
+  (handledAtoms : List atom) -> atom -> Type
+SExpRefinedPerAtomHandler m {atom} spl lpl handledAtoms a =
+  (l : SList atom) -> m (lpl l) -> ListContains handledAtoms a ->
+  m $ Dec (spl (a $*l))
+
+public export
 record SExpRefinePerAtomHandlerSig
   (m : Type -> Type)
   {atom : Type} (0 spl : SPred atom) (0 lpl : SLPred atom)
   where
     constructor SExpRefinePerAtomHandlerArgs
+    handledAtoms : List atom
+    perAtomHandlers :
+      ListForAll (SExpRefinedPerAtomHandler m spl lpl handledAtoms) handledAtoms
     expElim : (a : atom) -> (l : SList atom) ->
       m (lpl l) -> m $ Dec (spl (a $* l))
     notListElim : (a : atom) -> (l : SList atom) ->
