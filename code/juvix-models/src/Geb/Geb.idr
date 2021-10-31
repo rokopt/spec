@@ -526,16 +526,9 @@ AtomHandlerList =
   )
 
 public export
-gebCompileCertifiedExpElim :
-  (a : GebAtom) -> (l : GebSList) ->
-  GebContextMonad (TypecheckSuccessList l) ->
-  CompileResult (a $* l)
-gebCompileCertifiedExpElim a l li with (listContainsDec HandledAtomsList a)
-  gebCompileCertifiedExpElim a l mli | Yes handled =
-    listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
-      handled AtomHandlerList l mli handled
-  gebCompileCertifiedExpElim a l li | No notHandled =
-    pure $ No $ notHandled . successAtomSucceeds
+gebHandlesOnlySpecifiedAtoms : (a : GebAtom) -> (l : GebSList) ->
+  GebContextMonad (TypecheckSuccess (a $* l) -> ListContains HandledAtomsList a)
+gebHandlesOnlySpecifiedAtoms a l = pure successAtomSucceeds
 
 public export
 gebCompileNotListElim :
@@ -584,7 +577,7 @@ GebCompileSignature =
   SExpRefinePerAtomHandlerArgs
     HandledAtomsList
     AtomHandlerList
-    gebCompileCertifiedExpElim
+    gebHandlesOnlySpecifiedAtoms
     gebCompileNotListElim
     gebCompileNilElim
     gebCompileCertifiedConsElim

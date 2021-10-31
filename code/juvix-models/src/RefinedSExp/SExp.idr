@@ -515,8 +515,8 @@ record SExpRefinePerAtomHandlerSig
     handledAtoms : List atom
     perAtomHandlers :
       ListForAll (SExpRefinedPerAtomHandler m spl lpl handledAtoms) handledAtoms
-    expElim : (a : atom) -> (l : SList atom) ->
-      m (lpl l) -> m $ Dec (spl (a $* l))
+    handlesOnlySpecifiedAtoms : (a : atom) -> (l : SList atom) ->
+      m (spl (a $* l) -> ListContains handledAtoms a)
     notListElim : (a : atom) -> (l : SList atom) ->
       m $ Not (lpl l) -> Not (spl (a $* l))
     nilElim : m $ Dec (lpl [])
@@ -528,14 +528,31 @@ record SExpRefinePerAtomHandlerSig
       m $ Not (lpl l) -> Not (lpl (x :: l))
 
 public export
+sexpRefinePerAtomExpElim : {m : Type -> Type} -> Monad m =>
+  {atom : Type} -> DecEq atom =>
+  {spl : SPred atom} -> {lpl : SLPred atom} ->
+  SExpRefinePerAtomHandlerSig m spl lpl ->
+  (a : atom) -> (l : SList atom) ->
+  m (lpl l) -> m $ Dec (spl (a $* l))
+sexpRefinePerAtomExpElim {m} {spl} {lpl} signature a l mlpl with
+  (listContainsDec (handledAtoms signature) a)
+    sexpRefinePerAtomExpElim signature a l mlpl | Yes handled =
+      listForAllGet handled
+        {ap=(SExpRefinedPerAtomHandler m spl lpl $ handledAtoms signature)}
+        (perAtomHandlers signature) l mlpl handled
+    sexpRefinePerAtomExpElim signature a l mlpl | No notHandled =
+      map No $ appCompose (pure notHandled) $
+        handlesOnlySpecifiedAtoms signature a l
+
+public export
 SExpRefinePerAtomHandlerSigToIntroSig :
   {m : Type -> Type} -> Monad m =>
-  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  {atom : Type} -> DecEq atom => {spl : SPred atom} -> {lpl : SLPred atom} ->
   SExpRefinePerAtomHandlerSig m spl lpl ->
   SExpRefineIntroSig m spl lpl
 SExpRefinePerAtomHandlerSigToIntroSig signature =
   SExpRefineIntroArgs
-    (expElim signature)
+    (sexpRefinePerAtomExpElim signature)
     (notListElim signature)
     (nilElim signature)
     (consElim signature)
@@ -545,7 +562,7 @@ SExpRefinePerAtomHandlerSigToIntroSig signature =
 public export
 sexpRefinePerAtomHandler  :
   {m : Type -> Type} -> Monad m =>
-  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  {atom : Type} -> DecEq atom => {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefinePerAtomHandlerSig m spl lpl) ->
   (x : SExp atom) -> m $ Dec (spl x)
 sexpRefinePerAtomHandler signature =
@@ -554,7 +571,7 @@ sexpRefinePerAtomHandler signature =
 public export
 slistRefinePerAtomHandler :
   {m : Type -> Type} -> Monad m =>
-  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  {atom : Type} -> DecEq atom => {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefinePerAtomHandlerSig m spl lpl) ->
   (l : SList atom) -> m $ Dec (lpl l)
 slistRefinePerAtomHandler signature =
@@ -563,7 +580,7 @@ slistRefinePerAtomHandler signature =
 public export
 sexpRefinePerAtomHandlerReader  :
   {m : Type -> Type} -> Monad m => {stateType : Type} ->
-  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  {atom : Type} -> DecEq atom => {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefinePerAtomHandlerSig (ReaderT stateType m) spl lpl) ->
   (x : SExp atom) -> (ReaderT stateType m) $ Dec (spl x)
 sexpRefinePerAtomHandlerReader = sexpRefinePerAtomHandler
@@ -571,7 +588,7 @@ sexpRefinePerAtomHandlerReader = sexpRefinePerAtomHandler
 public export
 slistRefinePerAtomHandlerReader  :
   {m : Type -> Type} -> Monad m => {stateType : Type} ->
-  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  {atom : Type} -> DecEq atom => {spl : SPred atom} -> {lpl : SLPred atom} ->
   (signature : SExpRefinePerAtomHandlerSig (ReaderT stateType m) spl lpl) ->
   (l : SList atom) -> (ReaderT stateType m) $ Dec (lpl l)
 slistRefinePerAtomHandlerReader = slistRefinePerAtomHandler
