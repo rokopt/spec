@@ -6,6 +6,8 @@ import public RefinedSExp.SExp
 
 %default total
 
+{-
+
 public export
 data GebAtom : Type where
   -- | The notion of a category.
@@ -459,7 +461,7 @@ mutual
     morphismCodomain isMorphism = (o ** isObject) ->
     HasCodomain m o
   morphismCodomainConsistent m o {isMorphism} {isObject} eq =
-    ?morphismCodomainConsistent_hole
+    morphismCodomainConsistent_hole
 
   public export
   morphismDomainComplete : (m, o : GebSExp) ->
@@ -467,7 +469,7 @@ mutual
     HasDomain m o ->
     morphismDomain isMorphism = (o ** isObject)
   morphismDomainComplete m o {isMorphism} {isObject} eq =
-    ?morphismDomainComplete_hole
+    morphismDomainComplete_hole
 
   public export
   morphismCodomainComplete : (m, o : GebSExp) ->
@@ -475,7 +477,7 @@ mutual
     HasCodomain m o ->
     morphismCodomain isMorphism = (o ** isObject)
   morphismCodomainComplete m o {isMorphism} {isObject} eq =
-    ?morphismCodomainComplete_hole
+    morphismCodomainComplete_hole
 
   public export
   morphismDomainCategory : {x : GebSExp} -> IsMorphism x -> Category
@@ -543,8 +545,6 @@ Eq Category using decEqToEq where
 public export
 Show Category where
   show = show . fst
-
-{-
 
 ------------------------------------------------------------------
 ---- Objects of reflective (SExp-based) programming languages ----
@@ -670,7 +670,7 @@ public export
 gebLanguageMorphismToExp :
   {l : Language} -> {domain, codomain : LanguageObject l} ->
   LanguageMorphism domain codomain -> GebSExp
-gebLanguageMorphismToExp m = ?gebLanguageMorphismToExp_hole
+gebLanguageMorphismToExp m = gebLanguageMorphismToExp_hole
 
 public export
 gebMorphismToExp : Morphism -> GebSExp
@@ -679,7 +679,7 @@ gebMorphismToExp (l ** domain ** codomain ** m) =
 
 public export
 gebExpToMorphism : GebSExp -> Maybe Morphism
-gebExpToMorphism x = ?gebExpToMorphism_hole
+gebExpToMorphism x = gebExpToMorphism_hole
 
 public export
 gebLanguageMorphismRepresentationComplete : {l : Language} ->
@@ -688,7 +688,7 @@ gebLanguageMorphismRepresentationComplete : {l : Language} ->
   gebExpToMorphism (gebLanguageMorphismToExp {l} {domain} {codomain} m) =
     Just (l ** domain ** codomain ** m)
 gebLanguageMorphismRepresentationComplete {l} {domain} {codomain} m =
-  ?gebLanguageMorphismRepresentationComplete_hole
+  gebLanguageMorphismRepresentationComplete_hole
 
 public export
 gebMorphismRepresentationComplete : (m : Morphism) ->
@@ -730,7 +730,7 @@ Refinement = DPair Language LanguageRefinement
 
 public export
 gebLanguageRefinementToExp : {l : Language} -> LanguageRefinement l -> GebSExp
-gebLanguageRefinementToExp {l} r = ?gebLanguageRefinement_hole
+gebLanguageRefinementToExp {l} r = gebLanguageRefinement_hole
 
 public export
 gebRefinementToExp : Refinement -> GebSExp
@@ -738,14 +738,14 @@ gebRefinementToExp (l ** r) = gebLanguageRefinementToExp {l} r
 
 public export
 gebExpToRefinement : GebSExp -> Maybe Refinement
-gebExpToRefinement x = ?gebExpToRefinement_hole
+gebExpToRefinement x = gebExpToRefinement_hole
 
 public export
 gebLanguageRefinementRepresentationComplete : {l : Language} ->
   (r : LanguageRefinement l) ->
   gebExpToRefinement (gebLanguageRefinementToExp {l} r) = Just (l ** r)
 gebLanguageRefinementRepresentationComplete {l} r =
-  ?gebLanguageRefinementRepresentationComplete_hole
+  gebLanguageRefinementRepresentationComplete_hole
 
 public export
 gebRefinementRepresentationComplete : (r : Refinement) ->
@@ -1495,19 +1495,19 @@ gebMinimalReflectiveTermRepresentationComplete
     Refl
 gebMinimalReflectiveTermRepresentationComplete (ExFalsoTerm ti) =
   let tiComplete = gebMinimalReflectiveTermRepresentationComplete ti in
-  ?gebMinimalReflectiveTermRepresentationComplete_hole_exfalso
+  gebMinimalReflectiveTermRepresentationComplete_hole_exfalso
 gebMinimalReflectiveTermRepresentationComplete UnitTerm =
   Refl
 gebMinimalReflectiveTermRepresentationComplete (PairTerm left right) =
-  ?gebMinimalReflectiveTermRepresentationComplete_hole_pair
+  gebMinimalReflectiveTermRepresentationComplete_hole_pair
 gebMinimalReflectiveTermRepresentationComplete
   (MinimalReflectiveLeft left right) =
-    ?gebMinimalReflectiveTermRepresentationComplete_hole_left
+    gebMinimalReflectiveTermRepresentationComplete_hole_left
 gebMinimalReflectiveTermRepresentationComplete
   (MinimalReflectiveRight left right) =
-    ?gebMinimalReflectiveTermRepresentationComplete_hole_right
+    gebMinimalReflectiveTermRepresentationComplete_hole_right
 gebMinimalReflectiveTermRepresentationComplete (ExpressionTerm x) =
-  ?gebMinimalReflectiveTermRepresentationComplete_hole_expression
+  gebMinimalReflectiveTermRepresentationComplete_hole_expression
 
 public export
 (type : MinimalReflectiveTermType) => (n : Nat) => Show (MinimalReflectiveTerm n type) where
@@ -1569,7 +1569,7 @@ correctMorphismTransformPreservesTermInterpretation :
     (Application (UnappliedMorphismTerm (transform m)) term')))
 correctMorphismTransformPreservesTermInterpretation
   transform transformCorrect m {numApplications} term term' termEq =
-    ?correctMorphismTransformPreservesTermInterpretation_hole
+    correctMorphismTransformPreservesTermInterpretation_hole
 
 public export
 bigStepMorphismReduction :
@@ -1663,7 +1663,7 @@ mutual
     interpretMinimalReflectiveTerm (bigStepMorphismReduction m x) =
       interpretMinimalReflectiveTerm (UnappliedMorphismTerm m) (interpretMinimalReflectiveTerm x)
   bigStepMorphismReductionCorrect m x =
-    ?bigStepMorphismReductionCorrect_hole
+    bigStepMorphismReductionCorrect_hole
 
   public export
   bigStepMinimalReflectiveTermReductionCorrect :
@@ -1672,7 +1672,7 @@ mutual
     interpretMinimalReflectiveTerm (bigStepMinimalReflectiveTermReduction term) =
       interpretMinimalReflectiveTerm term
   bigStepMinimalReflectiveTermReductionCorrect {type} term =
-    ?bigStepMinimalReflectiveTermReductionCorrect_hole
+    bigStepMinimalReflectiveTermReductionCorrect_hole
 
 public export
 smallStepMorphismReduction :
@@ -1683,30 +1683,30 @@ smallStepMorphismReduction :
    MinimalReflectiveTerm
     remainingApplications (MinimalReflectiveTypeTerm (morphismCodomain m)))
 smallStepMorphismReduction (Identity x) term =
-  ?smallStepMorphismReduction_hole_ident
+  smallStepMorphismReduction_hole_ident
 smallStepMorphismReduction (Compose g f) term =
-  ?smallStepMorphismReduction_hole_compose
+  smallStepMorphismReduction_hole_compose
 smallStepMorphismReduction (FromInitial x) term =
-  ?smallStepMorphismReduction_hole_frominit
+  smallStepMorphismReduction_hole_frominit
 smallStepMorphismReduction (ToTerminal x) term =
-  ?smallStepMorphismReduction_hole_toterm
+  smallStepMorphismReduction_hole_toterm
 smallStepMorphismReduction (ProductIntro f g) term =
-  ?smallStepMorphismReduction_hole_prodintro
+  smallStepMorphismReduction_hole_prodintro
 smallStepMorphismReduction (ProductElimLeft a b) term =
-  ?smallStepMorphismReduction_hole_prodleft
+  smallStepMorphismReduction_hole_prodleft
 smallStepMorphismReduction (ProductElimRight a b) term =
-  ?smallStepMorphismReduction_hole_prodright
+  smallStepMorphismReduction_hole_prodright
 smallStepMorphismReduction (CoproductElim f g) term =
-  ?smallStepMorphismReduction_hole_coelim
+  smallStepMorphismReduction_hole_coelim
 smallStepMorphismReduction (CoproductIntroLeft a b) term =
-  ?smallStepMorphismReduction_hole_cointroleft
+  smallStepMorphismReduction_hole_cointroleft
 smallStepMorphismReduction (CoproductIntroRight a b) term =
-  ?smallStepMorphismReduction_hole_cointroright
+  smallStepMorphismReduction_hole_cointroright
 smallStepMorphismReduction (ExpressionIntro x) term =
-  ?smallStepMorphismReduction_hole_expIntro
+  smallStepMorphismReduction_hole_expIntro
 smallStepMorphismReduction
   (ExpressionElim exp exp' eqCase neqCase) term =
-    ?smallStepMorphismReduction_hole_expElim
+    smallStepMorphismReduction_hole_expElim
 
 public export
 smallStepMinimalReflectiveTermReduction :
@@ -1714,21 +1714,21 @@ smallStepMinimalReflectiveTermReduction :
   MinimalReflectiveTerm numApplications type ->
   (remainingApplications : Nat ** MinimalReflectiveTerm remainingApplications type)
 smallStepMinimalReflectiveTermReduction (UnappliedMorphismTerm morphism) =
-  ?smallStepMinimalReflectiveTermReduction_hole_unapplied
+  smallStepMinimalReflectiveTermReduction_hole_unapplied
 smallStepMinimalReflectiveTermReduction (Application x y) =
-  ?smallStepMinimalReflectiveTermReduction_hole_app
+  smallStepMinimalReflectiveTermReduction_hole_app
 smallStepMinimalReflectiveTermReduction (ExFalsoTerm ti) =
-  ?smallStepMinimalReflectiveTermReduction_hole_exfalso
+  smallStepMinimalReflectiveTermReduction_hole_exfalso
 smallStepMinimalReflectiveTermReduction UnitTerm =
-  ?smallStepMinimalReflectiveTermReduction_hole_unit
+  smallStepMinimalReflectiveTermReduction_hole_unit
 smallStepMinimalReflectiveTermReduction (PairTerm x y) =
-  ?smallStepMinimalReflectiveTermReduction_hole_pair
+  smallStepMinimalReflectiveTermReduction_hole_pair
 smallStepMinimalReflectiveTermReduction (MinimalReflectiveLeft x right) =
-  ?smallStepMinimalReflectiveTermReduction_hole_left
+  smallStepMinimalReflectiveTermReduction_hole_left
 smallStepMinimalReflectiveTermReduction (MinimalReflectiveRight left x) =
-  ?smallStepMinimalReflectiveTermReduction_hole_right
+  smallStepMinimalReflectiveTermReduction_hole_right
 smallStepMinimalReflectiveTermReduction (ExpressionTerm x) =
-  ?smallStepMinimalReflectiveTermReduction_hole_exp
+  smallStepMinimalReflectiveTermReduction_hole_exp
 
 public export
 data SmallStepMinimalReflectiveTermReductionCompletes :
@@ -1760,7 +1760,7 @@ smallStepMinimalReflectiveTermReductionCompletes :
     (MinimalReflectiveFullyAppliedTerm type)
     (SmallStepMinimalReflectiveTermReductionCompletes term)
 smallStepMinimalReflectiveTermReductionCompletes {type} term =
-  ?smallStepMinimalReflectiveTermReductionCompletes_hole
+  smallStepMinimalReflectiveTermReductionCompletes_hole
 
 public export
 smallStepMinimalReflectiveTermReductionCorrect :
@@ -1770,7 +1770,7 @@ smallStepMinimalReflectiveTermReductionCorrect :
     (fst (smallStepMinimalReflectiveTermReductionCompletes term)) =
       interpretMinimalReflectiveTerm term
 smallStepMinimalReflectiveTermReductionCorrect {type} term =
-  ?smallStepMinimalReflectiveTermReductionCorrect_hole
+  smallStepMinimalReflectiveTermReductionCorrect_hole
 
 public export
 minimalTermReductionsConsistent :
@@ -1778,7 +1778,7 @@ minimalTermReductionsConsistent :
   (term : MinimalReflectiveTerm numApplications type) ->
   bigStepMinimalReflectiveTermReduction term =
     snd (smallStepMinimalReflectiveTermReductionCompletes term)
-minimalTermReductionsConsistent term = ?minimalTermReductionsConsistent_hole
+minimalTermReductionsConsistent term = minimalTermReductionsConsistent_hole
 
 -}
 
