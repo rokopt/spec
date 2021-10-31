@@ -639,6 +639,8 @@ idrisInterpretations =
       idrisInterpretNilElim
       idrisInterpretConsElim
 
+{-
+
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
 ----------------------------------------------------------------
@@ -874,22 +876,22 @@ mutual
   objectUnique : {lang, object : GebSExp} ->
     (obj, obj' : Object object [lang]) ->
     obj = obj'
-  objectUnique obj obj' = ?objectUnique_hole
+  objectUnique obj obj' = objectUnique_hole
 
   public export
   checkExpression : (expression : GebSExp) -> (refinement : GebSList) ->
     Dec $ Expression expression refinement
-  checkExpression x r = ?checkExpression_hole
+  checkExpression x r = checkExpression_hole
 
   public export
   checkExpressionCorrect : {x : GebSExp} -> {l : GebSList} ->
     (exp : Expression x l) -> checkExpression x l = Yes exp
-  checkExpressionCorrect {x} {l} exp = ?checkExpressionCorrect_hole
+  checkExpressionCorrect {x} {l} exp = checkExpressionCorrect_hole
 
   public export
   expressionUnique : {x : GebSExp} -> {l : GebSList} ->
     (exp, exp' : Expression x l) -> exp = exp'
-  expressionUnique {x} {l} exp exp' = ?expressionUnique_hole
+  expressionUnique {x} {l} exp exp' = expressionUnique_hole
 
 --------------------------------------------------------
 ---- Interpretation into Idris-2 of Geb expressions ----
@@ -939,12 +941,12 @@ mutual
     (isMorphism : Morphism morphism [lang, domain, codomain]) ->
     interpretObject {isLanguage} domainObject ->
     interpretObject {isLanguage} codomainObject
-  interpretMorphism m = ?interpretMorphism_hole
+  interpretMorphism m = interpretMorphism_hole
 
   public export
   interpretRefinement : {s, r : GebSExp} ->
     Refinement r [s] -> (GebSExp -> Bool)
-  interpretRefinement {s} {r} isRefinement x = ?interpretRefinement_hole
+  interpretRefinement {s} {r} isRefinement x = interpretRefinement_hole
 
 ------------------------------------------------------
 ---- Morphism transformations ("compiler passes") ----
@@ -1075,13 +1077,13 @@ FullyAppliedTerm = Term 0
 public export
 termSortToExp : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   TermSort isLanguage -> GebSExp
-termSortToExp sort = ?termSortToExp_hole
+termSortToExp sort = termSortToExp_hole
 
 public export
 termToExp : {lang : GebSExp} -> {auto isLanguage : Language lang []} ->
   {numApplications : Nat} -> {sort : TermSort isLanguage} ->
   Term numApplications sort -> GebSExp
-termToExp term = ?termToExp_hole
+termToExp term = termToExp_hole
 
 public export
 (lang : GebSExp) => (isLanguage : Language lang []) =>
@@ -1108,7 +1110,7 @@ interpretTerm :
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   Term numApplications sort ->
   interpretTermSort sort
-interpretTerm term = ?interpretTerm_hole
+interpretTerm term = interpretTerm_hole
 
 public export
 smallStepMorphismReduction :
@@ -1121,7 +1123,7 @@ smallStepMorphismReduction :
   Term numApplications (TermSortType domainObject) ->
   (remainingApplications : Nat **
    Term remainingApplications (TermSortType codomainObject))
-smallStepMorphismReduction = ?smallStepMorphismReduction_hole
+smallStepMorphismReduction = smallStepMorphismReduction_hole
 
 public export
 smallStepTermReduction : {lang : GebSExp} ->
@@ -1129,7 +1131,7 @@ smallStepTermReduction : {lang : GebSExp} ->
   {sort : TermSort isLanguage} -> {numApplications : Nat} ->
   Term numApplications sort ->
   (remainingApplications : Nat ** Term remainingApplications sort)
-smallStepTermReduction = ?smallStepTermReduction_hole
+smallStepTermReduction = smallStepTermReduction_hole
 
 public export
 data SmallStepTermReductionCompletes :
@@ -1169,7 +1171,7 @@ smallStepTermReductionCompletes :
   (term : Term numApplications sort) ->
   Subset (FullyAppliedTerm sort) (SmallStepTermReductionCompletes term)
 smallStepTermReductionCompletes {sort} {numApplications} term =
-  ?smallStepTermReductionCompletes_hole
+  smallStepTermReductionCompletes_hole
 
 public export
 smallStepTermReductionCorrect :
@@ -1179,4 +1181,6 @@ smallStepTermReductionCorrect :
   (term : Term numApplications sort) ->
   interpretTerm (fst (smallStepTermReductionCompletes {isNormalizing} term)) =
     interpretTerm term
-smallStepTermReductionCorrect term = ?smallStepTermReductionCorrect_hole
+smallStepTermReductionCorrect term = smallStepTermReductionCorrect_hole
+
+-}
