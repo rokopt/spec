@@ -177,7 +177,7 @@ Object _ _ = Nothing
 
 Morphism : GebRefinement
 Morphism _ [language $* [], domain $* [l], codomain $* [l']] =
-  ?Morphism_hole
+  Morphism_hole
 Morphism _ _ = Nothing
 -}
 
