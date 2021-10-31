@@ -489,61 +489,6 @@ sexpRefineIntroId :
 sexpRefineIntroId signature =
   let _ = IdentityIsMonad in sexpRefineIntro signature
 
-public export
-fromVoid : (type : Type) -> Void -> type
-fromVoid _ = \v => void v
-
-public export
-toUnit : (type : Type) -> type -> ()
-toUnit _ = \_ => ()
-
-public export
-SExpFlatMatch : Type -> Type
-SExpFlatMatch atom = (() -> atom, List (SExp atom -> ()))
-
-public export
-SExpFlatMatchElim : {atom : Type} -> SExpFlatMatch atom -> Type -> Type
-SExpFlatMatchElim {atom} (genericAtom, expMatchers) type =
-  (l : SList atom) -> length l = length expMatchers -> type
-
-public export
-SExpFlatMatches : {atom : Type} -> SExpFlatMatch atom -> SExp atom -> Type
-SExpFlatMatches {atom} (genericAtom, expMatchers) (a $* l) =
-  (a = genericAtom (), length l = length expMatchers)
-
-{-
-public export
-sexpFlatMatch : {atom, type: Type} -> {match : SExpFlatMatch atom} ->
-  SExpFlatMatchElim match type ->
-  (x : SExp atom) -> SExpFlatMatches match x -> type
-sexpFlatMatch elim x matches = sexpFlatMatch_hole
--}
-
-public export
-SExpFlatRefinement : Type -> Type
-SExpFlatRefinement = List . SExpFlatMatch
-
-public export
-SExpFlatRefinementElim : {atom : Type} ->
-  SExpFlatRefinement atom -> Type -> Type
-SExpFlatRefinementElim refinement =
-  (flip ListForAll refinement) . (flip SExpFlatMatchElim)
-
-public export
-SExpFlatRefined : {atom : Type} -> SExpFlatRefinement atom -> SExp atom -> Type
-SExpFlatRefined [] _ = Void
-SExpFlatRefined (firstMatch :: laterMatches) x =
-  Either (SExpFlatMatches firstMatch x) (SExpFlatRefined laterMatches x)
-
-{-
-public export
-sexpFlatRefine : {atom, type : Type} ->
-  {refinement : SExpFlatRefinement atom} ->
-  SExpFlatRefinementElim refinement type ->
-  (x : SExp atom) -> SExpFlatRefined refinement x -> type
-sexpFlatRefine elim x refined = sexpFlatRefine_hole
--}
-
 mutual
   infixr 7 $~:
   public export
