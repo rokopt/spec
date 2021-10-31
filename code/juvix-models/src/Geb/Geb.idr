@@ -479,12 +479,24 @@ TypecheckSuccessWithHandling : {a : GebAtom} -> {l : GebSList} ->
 TypecheckSuccessWithHandling handledSuccess = VerifiedSuccess $ handledSuccess
 
 public export
+GebMonad : Type -> Type
+GebMonad = Prelude.Basics.id
+
+public export
+GebContext : Type
+GebContext = ()
+
+public export
+GebContextMonad : Type -> Type
+GebContextMonad = ReaderT GebContext GebMonad
+
+public export
 CompileResult : GebSExp -> Type
-CompileResult x = Dec (TypecheckSuccess x)
+CompileResult x = GebContextMonad $ Dec $ TypecheckSuccess x
 
 public export
 ListCompileResult : GebSList -> Type
-ListCompileResult l = Dec (TypecheckSuccessList l)
+ListCompileResult l = GebContextMonad $ Dec $ TypecheckSuccessList l
 
 public export
 AtomHandler : GebAtom -> Type
@@ -494,14 +506,14 @@ AtomHandler a =
 
 public export
 gebRefinementHandler : AtomHandler GARefinementSort
-gebRefinementHandler [] _ _ = Yes $
-  TypecheckSuccessWithHandling $ IsAtomicRefinement
-gebRefinementHandler (_ :: _) _ _ = No $ \success => case success of
+gebRefinementHandler [] _ _ =
+  pure $ Yes $ TypecheckSuccessWithHandling $ IsAtomicRefinement
+gebRefinementHandler (_ :: _) _ _ = pure $ No $ \success => case success of
   IsAtomicRefinement (_ $* (_ :: _)) impossible
 
 public export
 gebSortSortHandler : AtomHandler GASortSort
-gebSortSortHandler _ _ _ = No $ \success =>
+gebSortSortHandler _ _ _ = pure $ No $ \success =>
   case success of (IsAtomicRefinement _) impossible
 
 public export
@@ -516,51 +528,59 @@ AtomHandlerList =
 public export
 gebCompileCertifiedExpElim :
   (a : GebAtom) -> (l : GebSList) ->
-  TypecheckSuccessList l ->
+  GebContextMonad (TypecheckSuccessList l) ->
   CompileResult (a $* l)
 gebCompileCertifiedExpElim a l li with (listContainsDec HandledAtomsList a)
-  gebCompileCertifiedExpElim a l li | Yes handled =
-    listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
-      handled AtomHandlerList l li handled
+  gebCompileCertifiedExpElim a l mli | Yes handled =
+    let _ = IdentityIsMonad in
+    do
+      li <- mli
+      listForAllGet {l=HandledAtomsList} {ap=AtomHandler}
+        handled AtomHandlerList l li handled
   gebCompileCertifiedExpElim a l li | No notHandled =
-    No $ notHandled . successAtomSucceeds
+    pure $ No $ notHandled . successAtomSucceeds
 
 public export
 gebCompileNotListElim :
   (a : GebAtom) -> (l : GebSList) ->
-  Not (TypecheckSuccessList l) ->
-  Not $ TypecheckSuccess (a $* l)
-gebCompileNotListElim a l listFail expSuccess =
-  listFail $ successListSucceeds expSuccess
+  GebContextMonad $
+    Not (TypecheckSuccessList l) -> Not (TypecheckSuccess (a $* l))
+gebCompileNotListElim a l = let _ = IdentityIsMonad in do
+  pure $ \listFail, expSuccess => listFail $ successListSucceeds expSuccess
 
 public export
 gebCompileNilElim : ListCompileResult []
-gebCompileNilElim = Yes EmptySuccessList
+gebCompileNilElim = pure $ Yes EmptySuccessList
 
 public export
 gebCompileCertifiedConsElim :
   (x : GebSExp) -> (l : GebSList) ->
-  TypecheckSuccess x -> TypecheckSuccessList l -> ListCompileResult (x :: l)
-gebCompileCertifiedConsElim x l i li =
-  Yes $ SuccessListCons x l i li
+  GebContextMonad (TypecheckSuccess x) ->
+  GebContextMonad (TypecheckSuccessList l) ->
+  ListCompileResult (x :: l)
+gebCompileCertifiedConsElim x l mi mli = let _ = IdentityIsMonad in do
+  i <- mi
+  li <- mli
+  pure $ Yes $ SuccessListCons x l i li
 
 public export
 gebCompileNotHeadElim : (x : GebSExp) -> (l : GebSList) ->
-  Not (TypecheckSuccess x) ->
-  Not $ TypecheckSuccessList (x :: l)
-gebCompileNotHeadElim x l headFail listSuccess =
-  headFail $ successHeadSucceeds listSuccess
+  GebContextMonad $
+    Not (TypecheckSuccess x) -> Not (TypecheckSuccessList (x :: l))
+gebCompileNotHeadElim x l =
+  pure $ \headFail, listSuccess => headFail $ successHeadSucceeds listSuccess
 
 public export
 gebCompileNotTailElim : (x : GebSExp) -> (l : GebSList) ->
-  Not (TypecheckSuccessList l) ->
-  Not $ TypecheckSuccessList (x :: l)
-gebCompileNotTailElim x l tailFail listSuccess =
-  tailFail $ successTailSucceeds listSuccess
+  GebContextMonad $
+    Not (TypecheckSuccessList l) -> Not (TypecheckSuccessList (x :: l))
+gebCompileNotTailElim x l =
+  pure $ \tailFail, listSuccess => tailFail $ successTailSucceeds listSuccess
 
 public export
 GebCompileSignature :
-  SExpRefineIntroIdSig
+  SExpRefineIntroSig
+    GebContextMonad
     TypecheckSuccess
     TypecheckSuccessList
 GebCompileSignature =
@@ -574,7 +594,8 @@ GebCompileSignature =
 
 public export
 gebCompile : GebSExp ~> CompileResult
-gebCompile = let _ = IdentityIsMonad in sexpRefineIntro GebCompileSignature
+gebCompile =
+  let _ = IdentityIsMonad in sexpRefineIntroReader GebCompileSignature
 
 public export
 AnyErased : Type

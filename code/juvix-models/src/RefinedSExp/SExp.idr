@@ -397,14 +397,14 @@ record SExpRefineIntroSig
     expElim : (a : atom) -> (l : SList atom) ->
       m (lpl l) -> m $ Dec (spl (a $* l))
     notListElim : (a : atom) -> (l : SList atom) ->
-      m (Not (lpl l)) -> m $ Not (spl (a $* l))
+      m $ Not (lpl l) -> Not (spl (a $* l))
     nilElim : m $ Dec (lpl [])
     consElim : (x : SExp atom) -> (l : SList atom) ->
       m (spl x) -> m (lpl l) -> m $ Dec (lpl (x :: l))
     notHeadElim : (x : SExp atom) -> (l : SList atom) ->
-      m (Not (spl x)) -> m $ Not (lpl (x :: l))
+      m $ Not (spl x) -> Not (lpl (x :: l))
     notTailElim : (x : SExp atom) -> (l : SList atom) ->
-      m (Not (lpl l)) -> m $ Not (lpl (x :: l))
+      m $ Not (lpl l) -> Not (lpl (x :: l))
 
 public export
 sexpRefineIntroExpElim :
@@ -413,9 +413,11 @@ sexpRefineIntroExpElim :
   SExpRefineIntroSig m spl lpl ->
   (a : atom) -> (l : SList atom) ->
   m (Dec (lpl l)) -> m $ Dec (spl (a $* l))
-sexpRefineIntroExpElim signature {m} {spl} {lpl} a l mlpl =
-  map mergeDecNot $
-    (applyDecToEither (expElim signature a l) (notListElim signature a l)) mlpl
+sexpRefineIntroExpElim signature {m} {spl} {lpl} a l mlpl = do
+  dlpl <- mlpl
+  case dlpl of
+    Yes lpl => expElim signature a l $ pure lpl
+    No nlpl => map No $ notListElim signature a l <*> pure nlpl
 
 public export
 sexpRefineIntroConsElim :
@@ -431,8 +433,8 @@ sexpRefineIntroConsElim signature {m} x l mspx mlpl = do
       dlpl <- mlpl
       case dlpl of
         Yes lpl => consElim signature x l (pure spx) (pure lpl)
-        No nlpl => map No $ notTailElim signature x l $ pure nlpl
-    No nspx => map No $ notHeadElim signature x l $ pure nspx
+        No nlpl => map No $ notTailElim signature x l <*> pure nlpl
+    No nspx => map No $ notHeadElim signature x l <*> pure nspx
 
 public export
 SExpRefineIntroSigToEliminatorSig :
