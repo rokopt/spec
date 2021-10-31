@@ -476,6 +476,15 @@ sexpRefineIntroReader signature =
   sexpEliminator (SExpRefineIntroSigToEliminatorSig signature)
 
 public export
+slistRefineIntroReader  :
+  {m : Type -> Type} -> Monad m => {stateType : Type} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  (signature : SExpRefineIntroSig (ReaderT stateType m) spl lpl) ->
+  (l : SList atom) -> (ReaderT stateType m) $ Dec (lpl l)
+slistRefineIntroReader signature =
+  slistEliminator (SExpRefineIntroSigToEliminatorSig signature)
+
+public export
 SExpRefineIntroIdSig : {atom : Type} ->
   (0 spl : SPred atom) -> (0 lpl : SLPred atom) -> Type
 SExpRefineIntroIdSig spl lpl =
@@ -488,6 +497,73 @@ sexpRefineIntroId :
   (x : SExp atom) -> Dec (spl x)
 sexpRefineIntroId signature =
   let _ = IdentityIsMonad in sexpRefineIntro signature
+
+public export
+record SExpRefinePerAtomHandlerSig
+  (m : Type -> Type)
+  {atom : Type} (0 spl : SPred atom) (0 lpl : SLPred atom)
+  where
+    constructor SExpRefinePerAtomHandlerArgs
+    expElim : (a : atom) -> (l : SList atom) ->
+      m (lpl l) -> m $ Dec (spl (a $* l))
+    notListElim : (a : atom) -> (l : SList atom) ->
+      m $ Not (lpl l) -> Not (spl (a $* l))
+    nilElim : m $ Dec (lpl [])
+    consElim : (x : SExp atom) -> (l : SList atom) ->
+      m (spl x) -> m (lpl l) -> m $ Dec (lpl (x :: l))
+    notHeadElim : (x : SExp atom) -> (l : SList atom) ->
+      m $ Not (spl x) -> Not (lpl (x :: l))
+    notTailElim : (x : SExp atom) -> (l : SList atom) ->
+      m $ Not (lpl l) -> Not (lpl (x :: l))
+
+public export
+SExpRefinePerAtomHandlerSigToIntroSig :
+  {m : Type -> Type} -> Monad m =>
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  SExpRefinePerAtomHandlerSig m spl lpl ->
+  SExpRefineIntroSig m spl lpl
+SExpRefinePerAtomHandlerSigToIntroSig signature =
+  SExpRefineIntroArgs
+    (expElim signature)
+    (notListElim signature)
+    (nilElim signature)
+    (consElim signature)
+    (notHeadElim signature)
+    (notTailElim signature)
+
+public export
+sexpRefinePerAtomHandler  :
+  {m : Type -> Type} -> Monad m =>
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  (signature : SExpRefinePerAtomHandlerSig m spl lpl) ->
+  (x : SExp atom) -> m $ Dec (spl x)
+sexpRefinePerAtomHandler signature =
+  sexpRefineIntro (SExpRefinePerAtomHandlerSigToIntroSig signature)
+
+public export
+slistRefinePerAtomHandler :
+  {m : Type -> Type} -> Monad m =>
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  (signature : SExpRefinePerAtomHandlerSig m spl lpl) ->
+  (l : SList atom) -> m $ Dec (lpl l)
+slistRefinePerAtomHandler signature =
+  slistRefineIntro (SExpRefinePerAtomHandlerSigToIntroSig signature)
+
+public export
+sexpRefinePerAtomHandlerReader  :
+  {m : Type -> Type} -> Monad m => {stateType : Type} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  (signature : SExpRefinePerAtomHandlerSig (ReaderT stateType m) spl lpl) ->
+  (x : SExp atom) -> (ReaderT stateType m) $ Dec (spl x)
+sexpRefinePerAtomHandlerReader = sexpRefinePerAtomHandler
+
+public export
+slistRefinePerAtomHandlerReader  :
+  {m : Type -> Type} -> Monad m => {stateType : Type} ->
+  {atom : Type} -> {spl : SPred atom} -> {lpl : SLPred atom} ->
+  (signature : SExpRefinePerAtomHandlerSig (ReaderT stateType m) spl lpl) ->
+  (l : SList atom) -> (ReaderT stateType m) $ Dec (lpl l)
+slistRefinePerAtomHandlerReader = slistRefinePerAtomHandler
 
 mutual
   infixr 7 $~:

@@ -579,12 +579,12 @@ gebCompileNotTailElim x l =
 
 public export
 GebCompileSignature :
-  SExpRefineIntroSig
+  SExpRefinePerAtomHandlerSig
     GebContextMonad
     TypecheckSuccess
     TypecheckSuccessList
 GebCompileSignature =
-  SExpRefineIntroArgs
+  SExpRefinePerAtomHandlerArgs
     gebCompileCertifiedExpElim
     gebCompileNotListElim
     gebCompileNilElim
@@ -595,7 +595,7 @@ GebCompileSignature =
 public export
 gebCompile : GebSExp ~> CompileResult
 gebCompile =
-  let _ = IdentityIsMonad in sexpRefineIntroReader GebCompileSignature
+  let _ = IdentityIsMonad in sexpRefinePerAtomHandlerReader GebCompileSignature
 
 public export
 AnyErased : Type
