@@ -70,12 +70,6 @@ recomposeSList [] = Refl
 recomposeSList (x :: l) =
   rewrite recomposeSList l in rewrite recomposeSExp x in Refl
 
-public export
-recomposeSExpMonad : (m : Type -> Type) -> Monad m =>
-  {atom : Type} -> (mx : m $ SExp atom) ->
-  map ($*) (map ($<) mx) <*> map ($>) mx = mx
-recomposeSExpMonad m mx = ?recomposeSExpMonad_hole
-
 prefix 11 $^
 public export
 ($^) : {atom : Type} -> atom -> SExp atom
@@ -133,29 +127,6 @@ record SExpMonadEliminatorSig
     nilElim : lp $ pure {f=m} []
     consElim : (x : m $ SExp atom) -> (l : m $ SList atom) ->
       sp x -> lp l -> lp (map {f=m} (::) x <*> l)
-
-mutual
-  public export
-  sexpMonadEliminator :
-    {m : Type -> Type} -> {auto isMonad : Monad m} ->
-    {atom : Type} ->
-    {sp : !- (m $ SExp atom)} -> {lp : !- (m $ SList atom)} ->
-    (signature : SExpMonadEliminatorSig m sp lp) ->
-    m (SExp atom) ~> sp
-  sexpMonadEliminator signature {atom} {m} {isMonad} mx =
-    rewrite sym (recomposeSExpMonad m mx) in
-    expElim signature (map ($<) mx) (map ($>) mx) $
-      slistMonadEliminator signature (map ($>) mx)
-
-  public export
-  slistMonadEliminator :
-    {m : Type -> Type} -> {auto isMonad : Monad m} ->
-    {atom : Type} ->
-    {sp : !- (m $ SExp atom)} -> {lp : !- (m $ SList atom)} ->
-    (signature : SExpMonadEliminatorSig m sp lp) ->
-    m (SList atom) ~> lp
-  slistMonadEliminator {m} {isMonad} {atom} {sp} {lp} signature ml =
-    ?slistMonadEliminator_hole
 
 public export
 SPred : (atom : Type) -> Type
