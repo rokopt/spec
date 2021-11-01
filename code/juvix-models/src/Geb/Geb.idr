@@ -414,14 +414,6 @@ HandledAtomsList =
   , GASortSort
   ]
 
-public export
-GARefinementSortHandled : ListContains HandledAtomsList GARefinementSort
-GARefinementSortHandled = Left Refl
-
-public export
-GASortSortHandled : ListContains HandledAtomsList GARefinementSort
-GASortSortHandled = Left Refl
-
 mutual
   public export
   data TypecheckSuccess : GebSExp -> Type where
@@ -494,12 +486,20 @@ AtomHandler a =
   ListContains HandledAtomsList a -> CompileResult (a $* l)
 
 public export
+GARefinementSortHandled : ListContains HandledAtomsList GARefinementSort
+GARefinementSortHandled = Left Refl
+
+public export
 gebRefinementHandler : AtomHandler GARefinementSort
 gebRefinementHandler [] _ _ =
   pure $ Yes $
     CheckedTerm GARefinementSortHandled CheckedEmptyList IsAtomicRefinement
 gebRefinementHandler (_ :: _) _ _ = pure $ No $ \success => case success of
   IsAtomicRefinement (_ $* (_ :: _)) impossible
+
+public export
+GASortSortHandled : ListContains HandledAtomsList GARefinementSort
+GASortSortHandled = Left Refl
 
 public export
 gebSortSortHandler : AtomHandler GASortSort
