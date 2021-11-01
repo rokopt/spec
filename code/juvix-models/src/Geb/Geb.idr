@@ -659,29 +659,31 @@ GebSListTransform l = WellTypedList l -> DPair GebSList WellTypedList
 public export
 record GebTransformSig where
   constructor GebTransformArgs
-  transformExp : (a : GebAtom) -> (l : GebSList) ->
-    (WellTypedList l -> DPair GebSList WellTypedList) ->
-    WellTypedExp (a $* l) -> DPair GebSExp WellTypedExp
+  transformRefinementSort : DPair GebSExp WellTypedExp
   transformNil : WellTypedList [] -> DPair GebSList WellTypedList
   transformCons : (x : GebSExp) -> (l : GebSList) ->
-    (WellTypedExp x -> DPair GebSExp WellTypedExp) ->
-    (WellTypedList l -> DPair GebSList WellTypedList) ->
     WellTypedList (x :: l) -> DPair GebSList WellTypedList
 
-public export
-GebTransformSigToEliminatorSig :
-  GebTransformSig -> SExpEliminatorSig GebSExpTransform GebSListTransform
-GebTransformSigToEliminatorSig signature =
-  SExpEliminatorArgs
-    (transformExp signature)
-    (transformNil signature)
-    (transformCons signature)
+mutual
+  public export
+  gebSExpTransform : GebTransformSig -> GebSExp ~> GebSExpTransform
+  gebSExpTransform signature (GARefinementSort $* []) IsAtomicRefinement =
+    transformRefinementSort signature
+
+  public export
+  gebSListTransform : GebTransformSig -> GebSList ~> GebSListTransform
+  gebSListTransform signature [] EmptyList = transformNil signature EmptyList
+  gebSListTransform signature (x :: l) (ListCons typedExp typedList) =
+    let transformedExp = gebSExpTransform signature x typedExp in
+    let transformedList = gebSListTransform signature l typedList in
+    transformCons signature (fst transformedExp) (fst transformedList) $
+      ListCons (snd transformedExp) (snd transformedList)
 
 public export
 gebTransforms : GebTransformSig ->
   (GebSExp ~> GebSExpTransform, GebSList ~> GebSListTransform)
 gebTransforms signature =
-  sexpEliminators $ GebTransformSigToEliminatorSig signature
+  (gebSExpTransform signature, gebSListTransform signature)
 
 {-
 
