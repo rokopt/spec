@@ -426,9 +426,9 @@ mutual
   public export
   data TypecheckSuccess : GebSExp -> Type where
     CheckedTerm : {a : GebAtom} -> {l : GebSList} ->
-      {handled : ListContains HandledAtomsList a} ->
-      {listSuccess : TypecheckListSuccess l} ->
-      TypecheckedExp a l handled listSuccess ->
+      (handled : ListContains HandledAtomsList a) ->
+      (listSuccess : TypecheckListSuccess l) ->
+      TypecheckedExp a l ->
       TypecheckSuccess (a $* l)
 
   public export
@@ -439,22 +439,19 @@ mutual
       TypecheckListSuccess (x :: l)
 
   public export
-  data TypecheckedExp : (a : GebAtom) -> (l : GebSList) ->
-    ListContains HandledAtomsList a -> TypecheckListSuccess l -> Type where
-      IsAtomicRefinement :
-        TypecheckedExp
-          GARefinementSort [] GARefinementSortHandled CheckedEmptyList
+  data TypecheckedExp : (a : GebAtom) -> (l : GebSList) -> Type where
+    IsAtomicRefinement : TypecheckedExp GARefinementSort []
 
 public export
 successAtomSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
   ListContains HandledAtomsList (($<) x)
-successAtomSucceeds {x=(a $* _)} (CheckedTerm {handled} _) = handled
+successAtomSucceeds {x=(a $* _)} (CheckedTerm handled _ _) = handled
 
 public export
 successListSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
   TypecheckListSuccess (($>) x)
 successListSucceeds {x=(_ $* l)}
-  (CheckedTerm {listSuccess} _) = listSuccess
+  (CheckedTerm _ listSuccess _) = listSuccess
 
 public export
 successHeadSucceeds : {x : GebSExp} -> {l : GebSList} ->
@@ -469,14 +466,6 @@ successTailSucceeds : {x : GebSExp} -> {l : GebSList} ->
   TypecheckListSuccess l
 successTailSucceeds CheckedEmptyList impossible
 successTailSucceeds (CheckedCons _ _ _ success) = success
-
-public export
-TypecheckSuccessWithHandling : {a : GebAtom} -> {l : GebSList} ->
-  {handled : ListContains HandledAtomsList a} ->
-  {listSuccess : TypecheckListSuccess l} ->
-  TypecheckedExp a l handled listSuccess ->
-  TypecheckSuccess (a $* l)
-TypecheckSuccessWithHandling handledSuccess = CheckedTerm $ handledSuccess
 
 public export
 GebMonad : Type -> Type
@@ -507,7 +496,8 @@ AtomHandler a =
 public export
 gebRefinementHandler : AtomHandler GARefinementSort
 gebRefinementHandler [] _ _ =
-  pure $ Yes $ TypecheckSuccessWithHandling $ IsAtomicRefinement
+  pure $ Yes $
+    CheckedTerm GARefinementSortHandled CheckedEmptyList IsAtomicRefinement
 gebRefinementHandler (_ :: _) _ _ = pure $ No $ \success => case success of
   IsAtomicRefinement (_ $* (_ :: _)) impossible
 
@@ -598,7 +588,7 @@ idrisInterpretTypecheckedExp : (a : GebAtom) -> (l : GebSList) ->
   (TypecheckListSuccess l -> List AnyErased) ->
   (handled : ListContains HandledAtomsList a) ->
   (listSuccess : TypecheckListSuccess l) ->
-  TypecheckedExp a l handled listSuccess ->
+  TypecheckedExp a l ->
   AnyErased
 idrisInterpretTypecheckedExp GARefinementSort [] success _
   CheckedEmptyList IsAtomicRefinement =
@@ -610,7 +600,7 @@ idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
   TypecheckSuccess (a $* l) ->
   AnyErased
 idrisInterpretExpElim a l success
-  (CheckedTerm {handled} {listSuccess} refinement) =
+  (CheckedTerm handled listSuccess refinement) =
     idrisInterpretTypecheckedExp
       a l success handled listSuccess refinement
 
