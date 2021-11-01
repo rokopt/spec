@@ -425,58 +425,58 @@ GASortSortHandled = Left Refl
 mutual
   public export
   data TypecheckSuccess : GebSExp -> Type where
-    VerifiedSuccess : {a : GebAtom} -> {l : GebSList} ->
+    CheckedTerm : {a : GebAtom} -> {l : GebSList} ->
       {handled : ListContains HandledAtomsList a} ->
-      {listSuccess : TypecheckSuccessList l} ->
-      TypecheckVerifiedSuccess a l handled listSuccess ->
+      {listSuccess : TypecheckListSuccess l} ->
+      TypecheckedExp a l handled listSuccess ->
       TypecheckSuccess (a $* l)
 
   public export
-  data TypecheckSuccessList : GebSList -> Type where
-    EmptySuccessList : TypecheckSuccessList []
-    SuccessListCons : (x : GebSExp) -> (l : GebSList) ->
-      TypecheckSuccess x -> TypecheckSuccessList l ->
-      TypecheckSuccessList (x :: l)
+  data TypecheckListSuccess : GebSList -> Type where
+    CheckedEmptyList : TypecheckListSuccess []
+    CheckedCons : (x : GebSExp) -> (l : GebSList) ->
+      TypecheckSuccess x -> TypecheckListSuccess l ->
+      TypecheckListSuccess (x :: l)
 
   public export
-  data TypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
-    ListContains HandledAtomsList a -> TypecheckSuccessList l -> Type where
+  data TypecheckedExp : (a : GebAtom) -> (l : GebSList) ->
+    ListContains HandledAtomsList a -> TypecheckListSuccess l -> Type where
       IsAtomicRefinement :
-        TypecheckVerifiedSuccess
-          GARefinementSort [] GARefinementSortHandled EmptySuccessList
+        TypecheckedExp
+          GARefinementSort [] GARefinementSortHandled CheckedEmptyList
 
 public export
 successAtomSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
   ListContains HandledAtomsList (($<) x)
-successAtomSucceeds {x=(a $* _)} (VerifiedSuccess {handled} _) = handled
+successAtomSucceeds {x=(a $* _)} (CheckedTerm {handled} _) = handled
 
 public export
 successListSucceeds : {x : GebSExp} -> TypecheckSuccess x ->
-  TypecheckSuccessList (($>) x)
+  TypecheckListSuccess (($>) x)
 successListSucceeds {x=(_ $* l)}
-  (VerifiedSuccess {listSuccess} _) = listSuccess
+  (CheckedTerm {listSuccess} _) = listSuccess
 
 public export
 successHeadSucceeds : {x : GebSExp} -> {l : GebSList} ->
-  TypecheckSuccessList (x :: l) ->
+  TypecheckListSuccess (x :: l) ->
   TypecheckSuccess x
-successHeadSucceeds EmptySuccessList impossible
-successHeadSucceeds (SuccessListCons _ _ success _) = success
+successHeadSucceeds CheckedEmptyList impossible
+successHeadSucceeds (CheckedCons _ _ success _) = success
 
 public export
 successTailSucceeds : {x : GebSExp} -> {l : GebSList} ->
-  TypecheckSuccessList (x :: l) ->
-  TypecheckSuccessList l
-successTailSucceeds EmptySuccessList impossible
-successTailSucceeds (SuccessListCons _ _ _ success) = success
+  TypecheckListSuccess (x :: l) ->
+  TypecheckListSuccess l
+successTailSucceeds CheckedEmptyList impossible
+successTailSucceeds (CheckedCons _ _ _ success) = success
 
 public export
 TypecheckSuccessWithHandling : {a : GebAtom} -> {l : GebSList} ->
   {handled : ListContains HandledAtomsList a} ->
-  {listSuccess : TypecheckSuccessList l} ->
-  TypecheckVerifiedSuccess a l handled listSuccess ->
+  {listSuccess : TypecheckListSuccess l} ->
+  TypecheckedExp a l handled listSuccess ->
   TypecheckSuccess (a $* l)
-TypecheckSuccessWithHandling handledSuccess = VerifiedSuccess $ handledSuccess
+TypecheckSuccessWithHandling handledSuccess = CheckedTerm $ handledSuccess
 
 public export
 GebMonad : Type -> Type
@@ -496,12 +496,12 @@ CompileResult x = GebContextMonad $ Dec $ TypecheckSuccess x
 
 public export
 ListCompileResult : GebSList -> Type
-ListCompileResult l = GebContextMonad $ Dec $ TypecheckSuccessList l
+ListCompileResult l = GebContextMonad $ Dec $ TypecheckListSuccess l
 
 public export
 AtomHandler : GebAtom -> Type
 AtomHandler a =
-  (l : GebSList) -> GebContextMonad (TypecheckSuccessList l) ->
+  (l : GebSList) -> GebContextMonad (TypecheckListSuccess l) ->
   ListContains HandledAtomsList a -> CompileResult (a $* l)
 
 public export
@@ -534,36 +534,36 @@ public export
 gebCompileNotListElim :
   (a : GebAtom) -> (l : GebSList) ->
   GebContextMonad $
-    Not (TypecheckSuccessList l) -> Not (TypecheckSuccess (a $* l))
+    Not (TypecheckListSuccess l) -> Not (TypecheckSuccess (a $* l))
 gebCompileNotListElim a l = let _ = IdentityIsMonad in do
   pure $ \listFail, expSuccess => listFail $ successListSucceeds expSuccess
 
 public export
 gebCompileNilElim : ListCompileResult []
-gebCompileNilElim = pure $ Yes EmptySuccessList
+gebCompileNilElim = pure $ Yes CheckedEmptyList
 
 public export
 gebCompileCertifiedConsElim :
   (x : GebSExp) -> (l : GebSList) ->
   GebContextMonad (TypecheckSuccess x) ->
-  GebContextMonad (TypecheckSuccessList l) ->
+  GebContextMonad (TypecheckListSuccess l) ->
   ListCompileResult (x :: l)
 gebCompileCertifiedConsElim x l mi mli = let _ = IdentityIsMonad in do
   i <- mi
   li <- mli
-  pure $ Yes $ SuccessListCons x l i li
+  pure $ Yes $ CheckedCons x l i li
 
 public export
 gebCompileNotHeadElim : (x : GebSExp) -> (l : GebSList) ->
   GebContextMonad $
-    Not (TypecheckSuccess x) -> Not (TypecheckSuccessList (x :: l))
+    Not (TypecheckSuccess x) -> Not (TypecheckListSuccess (x :: l))
 gebCompileNotHeadElim x l =
   pure $ \headFail, listSuccess => headFail $ successHeadSucceeds listSuccess
 
 public export
 gebCompileNotTailElim : (x : GebSExp) -> (l : GebSList) ->
   GebContextMonad $
-    Not (TypecheckSuccessList l) -> Not (TypecheckSuccessList (x :: l))
+    Not (TypecheckListSuccess l) -> Not (TypecheckListSuccess (x :: l))
 gebCompileNotTailElim x l =
   pure $ \tailFail, listSuccess => tailFail $ successTailSucceeds listSuccess
 
@@ -572,7 +572,7 @@ GebCompileSignature :
   SExpRefinePerAtomHandlerSig
     GebContextMonad
     TypecheckSuccess
-    TypecheckSuccessList
+    TypecheckListSuccess
 GebCompileSignature =
   SExpRefinePerAtomHandlerArgs
     HandledAtomsList
@@ -594,50 +594,87 @@ AnyErased : Type
 AnyErased = Exists {type=Type} id
 
 public export
-idrisInterpretTypecheckVerifiedSuccess : (a : GebAtom) -> (l : GebSList) ->
-  (TypecheckSuccessList l -> List AnyErased) ->
+idrisInterpretTypecheckedExp : (a : GebAtom) -> (l : GebSList) ->
+  (TypecheckListSuccess l -> List AnyErased) ->
   (handled : ListContains HandledAtomsList a) ->
-  (listSuccess : TypecheckSuccessList l) ->
-  TypecheckVerifiedSuccess a l handled listSuccess ->
+  (listSuccess : TypecheckListSuccess l) ->
+  TypecheckedExp a l handled listSuccess ->
   AnyErased
-idrisInterpretTypecheckVerifiedSuccess GARefinementSort [] success _
-  EmptySuccessList IsAtomicRefinement =
+idrisInterpretTypecheckedExp GARefinementSort [] success _
+  CheckedEmptyList IsAtomicRefinement =
     Evidence Type (GebSExp -> Bool)
 
 public export
 idrisInterpretExpElim : (a : GebAtom) -> (l : GebSList) ->
-  (TypecheckSuccessList l -> List AnyErased) ->
+  (TypecheckListSuccess l -> List AnyErased) ->
   TypecheckSuccess (a $* l) ->
   AnyErased
 idrisInterpretExpElim a l success
-  (VerifiedSuccess {handled} {listSuccess} refinement) =
-    idrisInterpretTypecheckVerifiedSuccess
+  (CheckedTerm {handled} {listSuccess} refinement) =
+    idrisInterpretTypecheckedExp
       a l success handled listSuccess refinement
 
 public export
-idrisInterpretNilElim : TypecheckSuccessList [] -> List AnyErased
-idrisInterpretNilElim EmptySuccessList = []
+idrisInterpretNilElim : TypecheckListSuccess [] -> List AnyErased
+idrisInterpretNilElim CheckedEmptyList = []
 
 public export
 idrisInterpretConsElim : (x : GebSExp) -> (l : GebSList) ->
   (TypecheckSuccess x -> AnyErased) ->
-  (TypecheckSuccessList l -> List AnyErased) ->
-  TypecheckSuccessList (x :: l) ->
+  (TypecheckListSuccess l -> List AnyErased) ->
+  TypecheckListSuccess (x :: l) ->
   List AnyErased
-idrisInterpretConsElim x l i li (SuccessListCons _ _ sx sl) = i sx :: li sl
+idrisInterpretConsElim x l i li (CheckedCons _ _ sx sl) = i sx :: li sl
 
 public export
 idrisInterpretations :
   ((x : GebSExp) -> TypecheckSuccess x -> AnyErased,
-   (l : GebSList) -> TypecheckSuccessList l -> List AnyErased)
+   (l : GebSList) -> TypecheckListSuccess l -> List AnyErased)
 idrisInterpretations =
   sexpEliminators
     {sp=(\x => TypecheckSuccess x -> AnyErased)}
-    {lp=(\l => TypecheckSuccessList l -> List AnyErased)}
+    {lp=(\l => TypecheckListSuccess l -> List AnyErased)}
     $ SExpEliminatorArgs
       idrisInterpretExpElim
       idrisInterpretNilElim
       idrisInterpretConsElim
+
+public export
+GebSExpTransform : GebSExp -> Type
+GebSExpTransform x =
+  TypecheckSuccess x -> DPair GebSExp TypecheckSuccess
+
+public export
+GebSListTransform : GebSList -> Type
+GebSListTransform l =
+  TypecheckListSuccess l -> DPair GebSList TypecheckListSuccess
+
+public export
+record GebTransformSig where
+  constructor GebTransformArgs
+  transformExp : (a : GebAtom) -> (l : GebSList) ->
+    (TypecheckListSuccess l -> DPair GebSList TypecheckListSuccess) ->
+    TypecheckSuccess (a $* l) -> DPair GebSExp TypecheckSuccess
+  transformNil : TypecheckListSuccess [] -> DPair GebSList TypecheckListSuccess
+  transformCons : (x : GebSExp) -> (l : GebSList) ->
+    (TypecheckSuccess x -> DPair GebSExp TypecheckSuccess) ->
+    (TypecheckListSuccess l -> DPair GebSList TypecheckListSuccess) ->
+    TypecheckListSuccess (x :: l) -> DPair GebSList TypecheckListSuccess
+
+public export
+GebTransformSigToEliminatorSig :
+  GebTransformSig -> SExpEliminatorSig GebSExpTransform GebSListTransform
+GebTransformSigToEliminatorSig signature =
+  SExpEliminatorArgs
+    (transformExp signature)
+    (transformNil signature)
+    (transformCons signature)
+
+public export
+gebTransforms : GebTransformSig ->
+  (GebSExp ~> GebSExpTransform, GebSList ~> GebSListTransform)
+gebTransforms signature =
+  sexpEliminators $ GebTransformSigToEliminatorSig signature
 
 {-
 
