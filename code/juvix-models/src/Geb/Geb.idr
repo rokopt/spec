@@ -650,25 +650,23 @@ idrisInterpretations =
 
 public export
 GebSExpTransform : GebSExp -> Type
-GebSExpTransform x =
-  TypecheckExpSuccess x -> DPair GebSExp TypecheckExpSuccess
+GebSExpTransform x = WellTypedExp x -> DPair GebSExp WellTypedExp
 
 public export
 GebSListTransform : GebSList -> Type
-GebSListTransform l =
-  TypecheckListSuccess l -> DPair GebSList TypecheckListSuccess
+GebSListTransform l = WellTypedList l -> DPair GebSList WellTypedList
 
 public export
 record GebTransformSig where
   constructor GebTransformArgs
   transformExp : (a : GebAtom) -> (l : GebSList) ->
-    (TypecheckListSuccess l -> DPair GebSList TypecheckListSuccess) ->
-    TypecheckExpSuccess (a $* l) -> DPair GebSExp TypecheckExpSuccess
-  transformNil : TypecheckListSuccess [] -> DPair GebSList TypecheckListSuccess
+    (WellTypedList l -> DPair GebSList WellTypedList) ->
+    WellTypedExp (a $* l) -> DPair GebSExp WellTypedExp
+  transformNil : WellTypedList [] -> DPair GebSList WellTypedList
   transformCons : (x : GebSExp) -> (l : GebSList) ->
-    (TypecheckExpSuccess x -> DPair GebSExp TypecheckExpSuccess) ->
-    (TypecheckListSuccess l -> DPair GebSList TypecheckListSuccess) ->
-    TypecheckListSuccess (x :: l) -> DPair GebSList TypecheckListSuccess
+    (WellTypedExp x -> DPair GebSExp WellTypedExp) ->
+    (WellTypedList l -> DPair GebSList WellTypedList) ->
+    WellTypedList (x :: l) -> DPair GebSList WellTypedList
 
 public export
 GebTransformSigToEliminatorSig :
