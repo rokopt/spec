@@ -77,6 +77,13 @@ data GebAtom : Type where
   GASortExpression : GebAtom
   GALanguageExpression : GebAtom
 
+  GAAtomObject : GebAtom
+  GASExpObject : GebAtom
+  GASListObject : GebAtom
+  GAContext : GebAtom
+  GAParameterizedContext : GebAtom
+  GAMaybeFunctor : GebAtom
+
   -- | The notion of a morphism of any programming language.
   GAMorphismRefinement : GebAtom
 
@@ -161,6 +168,12 @@ gaEncode GAExponential = 46
 gaEncode GAExponentialEval = 47
 gaEncode GACurry = 48
 gaEncode GARefinementObject = 49
+gaEncode GAAtomObject = 50
+gaEncode GASExpObject = 51
+gaEncode GASListObject = 52
+gaEncode GAContext = 53
+gaEncode GAMaybeFunctor = 54
+gaEncode GAParameterizedContext = 55
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -214,6 +227,12 @@ gaDecode 46 = Just GAExponential
 gaDecode 47 = Just GAExponentialEval
 gaDecode 48 = Just GACurry
 gaDecode 49 = Just GARefinementObject
+gaDecode 50 = Just GAAtomObject
+gaDecode 51 = Just GASExpObject
+gaDecode 52 = Just GASListObject
+gaDecode 53 = Just GAContext
+gaDecode 54 = Just GAMaybeFunctor
+gaDecode 55 = Just GAParameterizedContext
 gaDecode _ = Nothing
 
 export
@@ -268,6 +287,12 @@ gaDecodeEncodeIsJust GAExponential = Refl
 gaDecodeEncodeIsJust GAExponentialEval = Refl
 gaDecodeEncodeIsJust GACurry = Refl
 gaDecodeEncodeIsJust GARefinementObject = Refl
+gaDecodeEncodeIsJust GAAtomObject = Refl
+gaDecodeEncodeIsJust GASExpObject = Refl
+gaDecodeEncodeIsJust GASListObject = Refl
+gaDecodeEncodeIsJust GAContext = Refl
+gaDecodeEncodeIsJust GAMaybeFunctor = Refl
+gaDecodeEncodeIsJust GAParameterizedContext = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -321,6 +346,12 @@ gebAtomToString GAExponential = "Exponential"
 gebAtomToString GAExponentialEval = "ExponentialEval"
 gebAtomToString GACurry = "Curry"
 gebAtomToString GARefinementObject = "RefinementObject"
+gebAtomToString GAAtomObject = "AtomObject"
+gebAtomToString GASExpObject = "SExpObject"
+gebAtomToString GASListObject = "ListObject"
+gebAtomToString GAContext = "Context"
+gebAtomToString GAMaybeFunctor = "MaybeFunctor"
+gebAtomToString GAParameterizedContext = "ParameterizedContext"
 
 public export
 Show GebAtom where
@@ -417,6 +448,30 @@ mutual
     ListCons : {x : GebSExp} -> {l : GebSList} ->
       WellTypedExp x -> WellTypedList l -> WellTypedList (x :: l)
 
+  public export
+  data WellTypedFunctionExp : GebSExp -> Type where
+
+  public export
+  data GebAtomicContext : GebSExp -> Type where
+
+  public export
+  data GebParameterizedContext : GebSExp -> Type where
+    GebContextFunction :
+      {functionRepresentation : GebSExp} ->
+      (gebFunction :
+        WellTypedFunctionExp $
+          GAMorphismRefinement $*
+            [GAExpressionObject $**^ GASExpObject,
+             GAExpressionObject $* [GAMaybeFunctor $**^ GASExpObject]]) ->
+      GebParameterizedContext $
+        GAParameterizedContext $*** functionRepresentation
+
+  public export
+  data GebContext : GebSExp -> Type where
+    AtomicContext : {x : GebSExp} -> GebAtomicContext x -> GebContext x
+    ParameterizedContext : {x : GebSExp} ->
+      GebParameterizedContext x -> GebContext x
+
 public export
 HandledAtomsList : List GebAtom
 HandledAtomsList =
@@ -483,12 +538,8 @@ GebMonad : Type -> Type
 GebMonad = Prelude.Basics.id
 
 public export
-GebContext : Type
-GebContext = ()
-
-public export
 GebContextMonad : Type -> Type
-GebContextMonad = ReaderT GebContext GebMonad
+GebContextMonad = ReaderT (DPair GebSExp GebContext) GebMonad
 
 public export
 CompileResult : GebSExp -> Type
