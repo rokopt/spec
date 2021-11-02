@@ -7,6 +7,7 @@ modules = Library.TypesAndFunctions
     , IdrisSTL.Semiring
     , External.IntegerSquareRoot
     , Library.Decidability
+    , Geb.GebAtom
     , Geb.Geb
     , Geb.Test.GebTest
     , Geb.GebSExp
