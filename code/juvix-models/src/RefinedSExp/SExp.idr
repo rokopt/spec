@@ -249,13 +249,6 @@ SExpGenerateForAllSig {atom} sp =
     (\a, l => Pair $ sp (a $* l)) () (\_, _ => Pair)
 
 public export
-SExpGenerateExistsSig : {0 atom : Type} -> SPred atom ->
-  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
-SExpGenerateExistsSig {atom} sp =
-  SExpEliminatorArgs {atom}
-    (\a, l => Either $ sp (a $* l)) Void (\_, _ => Either)
-
-public export
 SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom
 SExpForAll {atom} sp = sexpEliminator (SExpGenerateForAllSig sp)
 
@@ -274,86 +267,19 @@ sexpForAllTail : {0 atom : Type} -> {0 sp : SPred atom} ->
 sexpForAllTail = snd
 
 public export
+SExpGenerateExistsSig : {0 atom : Type} -> SPred atom ->
+  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
+SExpGenerateExistsSig {atom} sp =
+  SExpEliminatorArgs {atom}
+    (\a, l => Either $ sp (a $* l)) Void (\_, _ => Either)
+
+public export
 SExpExists : {0 atom : Type} -> SPred atom -> SPred atom
 SExpExists {atom} sp = sexpEliminator (SExpGenerateExistsSig sp)
 
 public export
 SListExists : {0 atom : Type} -> SPred atom -> SLPred atom
 SListExists {atom} sp = slistEliminator (SExpGenerateExistsSig sp)
-
-public export
-record SExpForAllEliminatorSig
-  {atom : Type} (0 sp : SPred atom)
-  where
-    constructor SExpForAllEliminatorArgs
-    expElim : (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $* l)
-
-public export
-SExpForAllEliminatorSigToEliminatorSig :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  SExpForAllEliminatorSig sp ->
-  SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
-SExpForAllEliminatorSigToEliminatorSig {sp} signature =
-  SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
-    (\a, l, forAll => (expElim signature a l forAll, forAll))
-    ()
-    (\_, _ => MkPair)
-
-public export
-sexpForAllEliminator :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllEliminatorSig sp) ->
-  SExp atom ~> SExpForAll sp
-sexpForAllEliminator signature =
-  sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
-
-public export
-slistForAllEliminator :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllEliminatorSig sp) ->
-  SList atom ~> SListForAll sp
-slistForAllEliminator signature =
-  slistEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
-
-public export
-sexpGeneralInduction :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllEliminatorSig sp) ->
-  SExp atom ~> sp
-sexpGeneralInduction {sp} signature x =
-  sexpForAllHead {sp} (sexpForAllEliminator {sp} signature x)
-
--- | Allows the use of a predicate on the output of a function -- such
--- | as a proof of some correctness condition(s) -- within the induction
--- | step.  For example, a proof of correctness of the output of the
--- | previous steps might allow the induction step to avoid having to
--- | handle some case that it would not be able to handle correctly if
--- | it ever happened, but which it can prove never happens.
-public export
-record SExpStrengthenedInductionSig
-  {atom : Type} (0 sp : SPred atom)
-  (spp : (x : SExp atom) -> sp x -> Type)
-  where
-    constructor SExpStrengthenedInductionArgs
-    expElim : (a : atom) -> (l : SList atom) ->
-      SListForAll (\x => (spx : sp x ** spp x (spx))) l ->
-      sp (a $* l)
-    stepCorrect : (a : atom) -> (l : SList atom) ->
-      (lforAll : SListForAll (\x => (spx : sp x ** spp x (spx))) l) ->
-      spp (a $* l) (expElim a l lforAll)
-
-public export
-sexpGeneralStrengthenedInduction :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  {spp : (x : SExp atom) -> sp x -> Type} ->
-  (signature : SExpStrengthenedInductionSig sp spp) ->
-  (x : SExp atom) -> DPair (sp x) (spp x)
-sexpGeneralStrengthenedInduction signature =
-  sexpGeneralInduction
-    (SExpForAllEliminatorArgs $
-      \a, l, lforAll =>
-        (expElim signature a l lforAll ** stepCorrect signature a l lforAll)
-    )
 
 public export
 record SExpEitherInductionSig
@@ -604,3 +530,77 @@ slistRefinePerAtomHandlerReader  :
   (signature : SExpRefinePerAtomHandlerSig (ReaderT stateType m) spl lpl) ->
   (l : SList atom) -> (ReaderT stateType m) $ Dec (lpl l)
 slistRefinePerAtomHandlerReader = slistRefinePerAtomHandler
+
+public export
+record SExpForAllEliminatorSig
+  {atom : Type} (0 sp : SPred atom)
+  where
+    constructor SExpForAllEliminatorArgs
+    expElim : (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $* l)
+
+public export
+SExpForAllEliminatorSigToEliminatorSig :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  SExpForAllEliminatorSig sp ->
+  SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
+SExpForAllEliminatorSigToEliminatorSig {sp} signature =
+  SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
+    (\a, l, forAll => (expElim signature a l forAll, forAll))
+    ()
+    (\_, _ => MkPair)
+
+public export
+sexpForAllEliminator :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  (signature : SExpForAllEliminatorSig sp) ->
+  SExp atom ~> SExpForAll sp
+sexpForAllEliminator signature =
+  sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
+
+public export
+slistForAllEliminator :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  (signature : SExpForAllEliminatorSig sp) ->
+  SList atom ~> SListForAll sp
+slistForAllEliminator signature =
+  slistEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
+
+public export
+sexpGeneralInduction :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  (signature : SExpForAllEliminatorSig sp) ->
+  SExp atom ~> sp
+sexpGeneralInduction {sp} signature x =
+  sexpForAllHead {sp} (sexpForAllEliminator {sp} signature x)
+
+-- | Allows the use of a predicate on the output of a function -- such
+-- | as a proof of some correctness condition(s) -- within the induction
+-- | step.  For example, a proof of correctness of the output of the
+-- | previous steps might allow the induction step to avoid having to
+-- | handle some case that it would not be able to handle correctly if
+-- | it ever happened, but which it can prove never happens.
+public export
+record SExpStrengthenedInductionSig
+  {atom : Type} (0 sp : SPred atom)
+  (spp : (x : SExp atom) -> sp x -> Type)
+  where
+    constructor SExpStrengthenedInductionArgs
+    expElim : (a : atom) -> (l : SList atom) ->
+      SListForAll (\x => (spx : sp x ** spp x (spx))) l ->
+      sp (a $* l)
+    stepCorrect : (a : atom) -> (l : SList atom) ->
+      (lforAll : SListForAll (\x => (spx : sp x ** spp x (spx))) l) ->
+      spp (a $* l) (expElim a l lforAll)
+
+public export
+sexpGeneralStrengthenedInduction :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  {spp : (x : SExp atom) -> sp x -> Type} ->
+  (signature : SExpStrengthenedInductionSig sp spp) ->
+  (x : SExp atom) -> DPair (sp x) (spp x)
+sexpGeneralStrengthenedInduction signature =
+  sexpGeneralInduction
+    (SExpForAllEliminatorArgs $
+      \a, l, lforAll =>
+        (expElim signature a l lforAll ** stepCorrect signature a l lforAll)
+    )
