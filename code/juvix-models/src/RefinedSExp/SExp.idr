@@ -340,11 +340,11 @@ slistEitherInduction signature =
   slistEliminator (SExpEitherInductionSigToEliminatorSig signature)
 
 public export
-record SExpMaybeInductionSig
+record SExpMaybeIntroSig
   (0 m : Type -> Type)
   {0 atom : Type} (0 sp : SPred atom) (0 lp : SLPred atom)
   where
-    constructor SExpMaybeInductionArgs
+    constructor SExpMaybeIntroArgs
     leftElim : (a : atom) -> (l : SList atom) -> (mlp : m (lp l)) ->
       m $ Maybe (sp (a $* l))
     nilElim : m $ lp []
@@ -353,12 +353,12 @@ record SExpMaybeInductionSig
       m $ Maybe (lp (x :: l))
 
 public export
-SExpMaybeInductionSigToEliminatorSig :
+SExpMaybeIntroSigToEliminatorSig :
   {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
-  SExpMaybeInductionSig m sp lp ->
+  SExpMaybeIntroSig m sp lp ->
   SExpEliminatorSig (m . Maybe . sp) (m . Maybe . lp)
-SExpMaybeInductionSigToEliminatorSig signature =
+SExpMaybeIntroSigToEliminatorSig signature =
   SExpEliminatorArgs
     (\a, l, mListResult => do
       listResult <- mListResult
@@ -377,26 +377,27 @@ SExpMaybeInductionSigToEliminatorSig signature =
         Nothing => pure Nothing)
 
 public export
-sexpMaybeEliminators : {m : Type -> Type} -> Monad m =>
+sexpMaybeIntros : {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
-  SExpMaybeInductionSig m sp lp ->
+  SExpMaybeIntroSig m sp lp ->
   ((x : SExp atom) -> m $ Maybe (sp x),
    (l : SList atom) -> m $ Maybe (lp l))
-sexpMaybeEliminators = sexpEliminators . SExpMaybeInductionSigToEliminatorSig
+sexpMaybeIntros = sexpEliminators . SExpMaybeIntroSigToEliminatorSig
 
 public export
-sexpMaybeEliminator : {m : Type -> Type} -> Monad m =>
+sexpMaybeIntro : {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
-  (signature : SExpMaybeInductionSig m sp lp) ->
+  (signature : SExpMaybeIntroSig m sp lp) ->
   (x : SExp atom) -> m $ Maybe (sp x)
-sexpMaybeEliminator = fst . sexpMaybeEliminators
+sexpMaybeIntro = fst . sexpMaybeIntros
 
 public export
-slistMaybeEliminator : {m : Type -> Type} -> Monad m =>
+slistMaybeIntro : {m : Type -> Type} -> Monad m =>
   {atom : Type} -> {0 sp : SPred atom} -> {0 lp : SLPred atom} ->
-  (signature : SExpMaybeInductionSig m sp lp) ->
+  (signature : SExpMaybeIntroSig m sp lp) ->
   (l : SList atom) -> m $ Maybe (lp l)
-slistMaybeEliminator = snd . sexpMaybeEliminators
+slistMaybeIntro = snd . sexpMaybeIntros
+
 
 public export
 record SExpRefineIntroSig
