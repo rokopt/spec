@@ -116,19 +116,6 @@ public export
 a $**^ a' = a $* $*^ a'
 
 public export
-record SExpMonadEliminatorSig
-  (0 m : Type -> Type) {auto 0 isMonad : Monad m}
-  {0 atom : Type}
-  (0 sp : !- (m $ SExp atom)) (0 lp : !- (m $ SList atom))
-  where
-    constructor SExpMonadEliminatorArgs
-    expElim : (a : m $ atom) -> (l : m $ SList atom) ->
-      lp l -> sp (map {f=m} ($*) a <*> l)
-    nilElim : lp $ pure {f=m} []
-    consElim : (x : m $ SExp atom) -> (l : m $ SList atom) ->
-      sp x -> lp l -> lp (map {f=m} (::) x <*> l)
-
-public export
 SPred : (atom : Type) -> Type
 SPred atom = SExp atom -> Type
 
