@@ -16,6 +16,29 @@ import public Geb.GebAtom
 
 mutual
   public export
+  data CheckedAs : (type, term : GebSExp) -> Type where
+    ReflectiveObject : CheckedAs ($^ GAObjectReflection) ($^ GAObjectReflection)
+    InitialObject : CheckedAs ($^ GAObjectReflection) ($^ GAInitial)
+
+  public export
+  checkAs : (type, term : GebSExp) -> Maybe (CheckedAs type term)
+  checkAs (GAObjectReflection $* []) (GAObjectReflection $* []) =
+    Just ReflectiveObject
+  checkAs (GAObjectReflection $* []) (GAInitial $* []) =
+    Just InitialObject
+  checkAs _ _ = Nothing
+
+  public export
+  checkAsType : (type : GebSExp) ->
+    Maybe (CheckedAs ($^ GAObjectReflection) type)
+  checkAsType type = checkAs ($^ GAObjectReflection) type
+
+public export
+showChecked : {type, term : GebSExp} -> CheckedAs type term -> String
+showChecked {type} {term} _ = "(" ++ show term ++ " :: " ++ show type ++ ")"
+
+mutual
+  public export
   data GebCategory : GebSExp -> Type where
     MinimalReflective : GebCategory ($^ GAMinimal)
 

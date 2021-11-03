@@ -404,6 +404,10 @@ Show GebSExp using DefaultSExpShow where
   show = show
 
 public export
+gebSExpShow : GebSExp -> String
+gebSExpShow = show
+
+public export
 Show GebSList using DefaultSListShow where
   show = show
 
