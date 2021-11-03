@@ -82,6 +82,8 @@ data GebAtom : Type where
   GAContext : GebAtom
   GAParameterizedContext : GebAtom
   GAMaybeFunctor : GebAtom
+  GAObjectReflection : GebAtom
+  GAMorphismReflection : GebAtom
 
   -- | The notion of a morphism of any programming language.
   GAMorphismRefinement : GebAtom
@@ -101,6 +103,7 @@ data GebAtom : Type where
   GAExpressionElim : GebAtom
   GAExponentialEval : GebAtom
   GACurry : GebAtom
+  GATypecheckObjectElim : GebAtom
 
   -- | The notion of a term of any programming language.
   GATerm : GebAtom
@@ -173,6 +176,9 @@ gaEncode GASListObject = 52
 gaEncode GAContext = 53
 gaEncode GAMaybeFunctor = 54
 gaEncode GAParameterizedContext = 55
+gaEncode GAObjectReflection = 56
+gaEncode GAMorphismReflection = 57
+gaEncode GATypecheckObjectElim = 58
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -232,6 +238,9 @@ gaDecode 52 = Just GASListObject
 gaDecode 53 = Just GAContext
 gaDecode 54 = Just GAMaybeFunctor
 gaDecode 55 = Just GAParameterizedContext
+gaDecode 56 = Just GAObjectReflection
+gaDecode 57 = Just GAMorphismReflection
+gaDecode 58 = Just GATypecheckObjectElim
 gaDecode _ = Nothing
 
 export
@@ -292,6 +301,9 @@ gaDecodeEncodeIsJust GASListObject = Refl
 gaDecodeEncodeIsJust GAContext = Refl
 gaDecodeEncodeIsJust GAMaybeFunctor = Refl
 gaDecodeEncodeIsJust GAParameterizedContext = Refl
+gaDecodeEncodeIsJust GAObjectReflection = Refl
+gaDecodeEncodeIsJust GAMorphismReflection = Refl
+gaDecodeEncodeIsJust GATypecheckObjectElim = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -351,6 +363,9 @@ gebAtomToString GASListObject = "ListObject"
 gebAtomToString GAContext = "Context"
 gebAtomToString GAMaybeFunctor = "MaybeFunctor"
 gebAtomToString GAParameterizedContext = "ParameterizedContext"
+gebAtomToString GAObjectReflection = "ObjectReflection"
+gebAtomToString GAMorphismReflection = "MorphismReflection"
+gebAtomToString GATypecheckObjectElim = "TypecheckObjectElim"
 
 public export
 Show GebAtom where

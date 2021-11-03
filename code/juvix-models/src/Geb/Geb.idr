@@ -16,6 +16,56 @@ import public Geb.GebAtom
 
 mutual
   public export
+  data GebCategory : GebSExp -> Type where
+    MinimalReflective : GebCategory ($^ GAMinimal)
+
+  public export
+  data GebObject : (representation : GebSExp) -> {catRep : GebSExp} ->
+    GebCategory catRep -> Type where
+
+      AtomObject : {catRep : GebSExp} -> (category : GebCategory catRep) ->
+        GebObject (GAAtomObject $*** catRep) category
+      SExpObject : {catRep : GebSExp} -> (category : GebCategory catRep) ->
+        GebObject (GASExpObject $*** catRep) category
+      SListObject : {catRep : GebSExp} -> (category : GebCategory catRep) ->
+        GebObject (GASListObject $*** catRep) category
+
+      ObjectReflection : {hostCatRep, targetCatRep : GebSExp} ->
+        (hostCat : GebCategory hostCatRep) ->
+        (targetCat : GebCategory targetCatRep) ->
+        GebObject (GAObjectReflection $* [hostCatRep, targetCatRep]) hostCat
+      MorphismReflection : {hostCatRep, targetCatRep : GebSExp} ->
+        {hostCat : GebCategory hostCatRep} ->
+        {targetCat : GebCategory targetCatRep} ->
+        {domainRep, codomainRep : GebSExp} ->
+        GebObject domainRep targetCat -> GebObject codomainRep targetCat ->
+        GebObject
+          (GAMorphismReflection $*
+            [hostCatRep, targetCatRep, domainRep, codomainRep]) hostCat
+
+  public export
+  data GebMorphism : (representation : GebSExp) -> {catRep : GebSExp} ->
+    {domainRep, codomainRep : GebSExp} -> {category : GebCategory catRep} ->
+    GebObject domainRep category -> GebObject codomainRep category ->
+    Type where
+      TypecheckObjectElim : {hostCatRep, targetCatRep : GebSExp} ->
+        {hostCat : GebCategory hostCatRep} ->
+        {targetCat : GebCategory targetCatRep} ->
+        {domainRep, codomainRep, inputRep,
+         checkCaseRep, failCaseRep : GebSExp} ->
+        {domain : GebObject domainRep hostCat} ->
+        {codomain : GebObject codomainRep hostCat} ->
+        GebMorphism inputRep domain
+          (SExpObject hostCat) ->
+        GebMorphism checkCaseRep
+          (ObjectReflection hostCat targetCat) codomain ->
+        GebMorphism failCaseRep (SExpObject hostCat) codomain ->
+        GebMorphism (GATypecheckObjectElim $*
+          [hostCatRep, targetCatRep, domainRep, codomainRep,
+           inputRep, checkCaseRep, failCaseRep]) domain codomain
+
+mutual
+  public export
   data WellTypedExp : GebSExp -> Type where
     IsAtomicRefinement : WellTypedExp (GARefinementSort $* [])
 
