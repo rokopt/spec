@@ -619,6 +619,43 @@ sexpGeneralInduction :
 sexpGeneralInduction {sp} signature x =
   sexpForAllHead {sp} (sexpForAllEliminator {sp} signature x)
 
+public export
+STypeSig : (atom : Type) -> Type
+STypeSig atom = SExpForAllEliminatorSig {atom} (\_ => Type)
+
+public export
+STypePred : {atom : Type} -> STypeSig atom -> SPred atom
+STypePred signature = sexpGeneralInduction signature
+
+public export
+SExpTransform : {atom : Type} -> (sp, sp' : STypeSig atom) -> SPred atom
+SExpTransform {atom} sp sp' x = STypePred sp x -> STypePred sp' x
+
+public export
+record SExpTransformSig
+  {0 atom : Type} (0 sp, sp' : STypeSig atom)
+  where
+    constructor SExpTransformArgs
+    sexpTransformStep :
+      (a : atom) -> (l : SList atom) ->
+      SListForAll (SExpTransform sp sp') l ->
+      STypePred sp (a $* l) -> STypePred sp' (a $* l)
+
+public export
+SExpTransformSigToForAllSig : {0 atom : Type} ->
+  {0 sp, sp' : STypeSig atom} ->
+  SExpTransformSig sp sp' ->
+  SExpForAllEliminatorSig (SExpTransform sp sp')
+SExpTransformSigToForAllSig transformSig =
+  SExpForAllEliminatorArgs $ sexpTransformStep transformSig
+
+public export
+sexpTransform : {atom : Type} ->
+  {0 sp, sp' : STypeSig atom} ->
+  SExpTransformSig sp sp' ->
+  (x : SExp atom) -> STypePred sp x -> STypePred sp' x
+sexpTransform = sexpGeneralInduction . SExpTransformSigToForAllSig
+
 -- | Allows the use of a predicate on the output of a function -- such
 -- | as a proof of some correctness condition(s) -- within the induction
 -- | step.  For example, a proof of correctness of the output of the
