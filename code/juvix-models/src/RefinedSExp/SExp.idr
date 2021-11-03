@@ -398,7 +398,6 @@ slistMaybeIntro : {m : Type -> Type} -> Monad m =>
   (l : SList atom) -> m $ Maybe (lp l)
 slistMaybeIntro = snd . sexpMaybeIntros
 
-
 public export
 record SExpRefineIntroSig
   (m : Type -> Type)
