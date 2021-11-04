@@ -69,14 +69,13 @@ mutual
   public export
   data GebTerm :
     {type : GebSExp} -> GebType type -> (term : GebSExp) -> Type where
-      Inject : {type : GebSExp} -> (checkedType : GebType type) ->
+      Inject :
         {matrix : GebSExp} -> (checkedMatrix : GebTypeMatrix matrix) ->
         {index : GebSExp} ->
         (checkedIndex : GebMatrixIndex checkedMatrix index) ->
         {terms : GebSExp} ->
         GebTermList (matrixIndexTypeList checkedMatrix checkedIndex) terms ->
-        GebTerm (PatternType checkedMatrix) $
-          GATerm $* [type, matrix, index, terms]
+        GebTerm (PatternType checkedMatrix) $ GAInjectTerm $* [index, terms]
 
   public export
   data GebTermList : {types : GebSExp} ->
@@ -141,6 +140,16 @@ mutual
   public export
   checkAgainstType : {type : GebSExp} -> (checkedType : GebType type) ->
     (term : GebSExp) -> Maybe (GebTerm checkedType term)
+  checkAgainstType
+    (PatternType checkedMatrix) (GAInjectTerm $* [index, GATermList $* terms]) =
+      case checkMatrixIndex checkedMatrix index of
+        Just checkedIndex =>
+          case checkAgainstTypeList
+            (matrixIndexTypeList checkedMatrix checkedIndex) terms of
+              Just checkedTerms =>
+                Just $ Inject checkedMatrix checkedIndex checkedTerms
+              _ => Nothing
+        _ => Nothing
   checkAgainstType _ _ = Nothing
 
   public export
@@ -202,6 +211,15 @@ compileMatrixIndex : {matrix : GebSExp} ->
   {auto compiles : IsJust $ checkMatrixIndex checkedMatrix $ index} ->
   GebMatrixIndex checkedMatrix index
 compileMatrixIndex {compiles} _ _ = IsJustElim compiles
+
+public export
+gebIndexList : Nat -> GebSList
+gebIndexList 0 = $*^ GAIndexFirst
+gebIndexList (S n) = GAIndexNext $^: gebIndexList n
+
+public export
+gebMatrixIndexExp : Nat -> GebSExp
+gebMatrixIndexExp n = GAMatrixIndex $* gebIndexList n
 
 public export
 compileTerm : {type : GebSExp} -> (checkedType : GebType type) ->

@@ -126,6 +126,7 @@ data GebAtom : Type where
   GAMatrixIndex : GebAtom
   GAIndexFirst : GebAtom
   GAIndexNext : GebAtom
+  GAInjectTerm : GebAtom
 
 public export
 gaEncode : GebAtom -> Nat
@@ -197,6 +198,7 @@ gaEncode GATermList = 64
 gaEncode GAMatrixIndex = 65
 gaEncode GAIndexFirst = 66
 gaEncode GAIndexNext = 67
+gaEncode GAInjectTerm = 68
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -268,6 +270,7 @@ gaDecode 64 = Just GATermList
 gaDecode 65 = Just GAMatrixIndex
 gaDecode 66 = Just GAIndexFirst
 gaDecode 67 = Just GAIndexNext
+gaDecode 68 = Just GAInjectTerm
 gaDecode _ = Nothing
 
 export
@@ -340,6 +343,7 @@ gaDecodeEncodeIsJust GATermList = Refl
 gaDecodeEncodeIsJust GAMatrixIndex = Refl
 gaDecodeEncodeIsJust GAIndexFirst = Refl
 gaDecodeEncodeIsJust GAIndexNext = Refl
+gaDecodeEncodeIsJust GAInjectTerm = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -411,6 +415,7 @@ gebAtomToString GATermList = "TermList"
 gebAtomToString GAMatrixIndex = "MatrixIndex"
 gebAtomToString GAIndexFirst = "IndexFirst"
 gebAtomToString GAIndexNext = "IndexNext"
+gebAtomToString GAInjectTerm = "InjectTerm"
 
 public export
 Show GebAtom where
