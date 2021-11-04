@@ -29,10 +29,24 @@ sexpNotationTest =
     (DNat 4 $*** (DNat 5 $* (DNat 6 $*** (DString "seven" $**^ DNat 8)) $:^
       DString "~Turing")) $:^ DString "*Record"
 
+natFromData : Data -> Nat
+natFromData (DNat n) = n
+natFromData (DString s) = length s
+
+natPred : DExp -> Type
+natPred _ = Nat
+
+natSig : SExpForAllEliminatorSig SExpTest.natPred
+natSig = SExpForAllEliminatorArgs (\d, l, forAll => natFromData d)
+
+natExp : SExpForAll SExpTest.natPred SExpTest.sexpNotationTest
+natExp = sexpForAllEliminator natSig sexpNotationTest
+
 export
 sexpTests : IO ()
 sexpTests = do
   printLn "Begin sexpTests:"
   printLn $ show sexpNotationTest
+  printLn $ show natExp
   printLn "End sexpTests."
   pure ()
