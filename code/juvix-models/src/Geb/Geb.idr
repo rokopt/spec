@@ -48,10 +48,35 @@ mutual
         GebMatrixIndex (ConsTypeMatrix checkedTypeList checkedMatrix)
           (GAMatrixIndex $* $^ GAIndexNext :: indexList)
 
+  public export
+  matrixIndexTypeListExp : {matrix : GebSExp} ->
+    (checkedMatrix : GebTypeMatrix matrix) -> {index : GebSExp} ->
+    GebMatrixIndex checkedMatrix index ->
+    GebSExp
+  matrixIndexTypeListExp (ConsTypeMatrix {row} _ _) MatrixFirst = row
+  matrixIndexTypeListExp (ConsTypeMatrix _ tail) (MatrixNext index) =
+    matrixIndexTypeListExp tail index
+
+  public export
+  matrixIndexTypeList : {matrix : GebSExp} ->
+    (checkedMatrix : GebTypeMatrix matrix) -> {index : GebSExp} ->
+    (checkedIndex : GebMatrixIndex checkedMatrix index) ->
+    GebTypeList (matrixIndexTypeListExp checkedMatrix checkedIndex)
+  matrixIndexTypeList (ConsTypeMatrix head _) MatrixFirst = head
+  matrixIndexTypeList (ConsTypeMatrix _ tail) (MatrixNext index) =
+    matrixIndexTypeList tail index
 
   public export
   data GebTerm :
     {type : GebSExp} -> GebType type -> (term : GebSExp) -> Type where
+      Inject : {type : GebSExp} -> (checkedType : GebType type) ->
+        {matrix : GebSExp} -> (checkedMatrix : GebTypeMatrix matrix) ->
+        {index : GebSExp} ->
+        (checkedIndex : GebMatrixIndex checkedMatrix index) ->
+        {terms : GebSExp} ->
+        GebTermList (matrixIndexTypeList checkedMatrix checkedIndex) terms ->
+        GebTerm (PatternType checkedMatrix) $
+          GATerm $* [type, matrix, index, terms]
 
   public export
   data GebTermList : {types : GebSExp} ->
@@ -98,6 +123,20 @@ mutual
         Just $ ConsTypeMatrix checkedRow checkedMatrix
       _ => Nothing
   checkTypeMatrix _ = Nothing
+
+  public export
+  checkMatrixIndex : {matrix : GebSExp} ->
+    (checkedMatrix : GebTypeMatrix matrix) ->
+    (index : GebSExp) -> Maybe (GebMatrixIndex checkedMatrix index)
+  checkMatrixIndex
+    (ConsTypeMatrix _ _) (GAMatrixIndex $* [GAIndexFirst $* []]) =
+      Just MatrixFirst
+  checkMatrixIndex
+    (ConsTypeMatrix _ tail) (GAMatrixIndex $* (GAIndexNext $* []) :: next) =
+      case checkMatrixIndex tail (GAMatrixIndex $* next) of
+        Just checkedIndex => Just $ MatrixNext checkedIndex
+        _ => Nothing
+  checkMatrixIndex _ _ = Nothing
 
   public export
   checkAgainstType : {type : GebSExp} -> (checkedType : GebType type) ->
