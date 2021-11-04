@@ -35,6 +35,21 @@ mutual
       GebTypeMatrix $ GATypeMatrix $* (row :: matrix)
 
   public export
+  data GebMatrixIndex : {matrix : GebSExp} -> GebTypeMatrix matrix ->
+    GebSExp -> Type where
+      MatrixFirst : {row : GebSExp} -> {matrix : GebSList} ->
+        {checkedMatrix : GebTypeMatrix $ GATypeMatrix $* (row :: matrix)} ->
+        GebMatrixIndex checkedMatrix (GAMatrixIndex $**^ GAIndexFirst)
+      MatrixNext : {row : GebSExp} -> {matrix : GebSList} ->
+        {checkedTypeList : GebTypeList row} ->
+        {checkedMatrix : GebTypeMatrix $ GATypeMatrix $* matrix} ->
+        {indexList : GebSList} ->
+        GebMatrixIndex checkedMatrix (GAMatrixIndex $* indexList) ->
+        GebMatrixIndex (ConsTypeMatrix checkedTypeList checkedMatrix)
+          (GAMatrixIndex $* $^ GAIndexNext :: indexList)
+
+
+  public export
   data GebTerm :
     {type : GebSExp} -> GebType type -> (term : GebSExp) -> Type where
 
