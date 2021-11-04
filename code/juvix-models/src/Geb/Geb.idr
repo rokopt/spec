@@ -197,6 +197,28 @@ compileTypeMatrix : (matrix : GebSExp) ->
 compileTypeMatrix {isTypeMatrix=Refl} {compiles} (_ $* _) = IsJustElim compiles
 
 public export
+compileMatrixIndex : {matrix : GebSExp} ->
+  (checkedMatrix : GebTypeMatrix matrix) -> (index : GebSExp) ->
+  {auto compiles : IsJust $ checkMatrixIndex checkedMatrix $ index} ->
+  GebMatrixIndex checkedMatrix index
+compileMatrixIndex {compiles} _ _ = IsJustElim compiles
+
+public export
+compileTerm : {type : GebSExp} -> (checkedType : GebType type) ->
+  (term : GebSExp) ->
+  {auto compiles : IsJust $ checkAgainstType checkedType term} ->
+  GebTerm checkedType term
+compileTerm _ _ {compiles} = IsJustElim compiles
+
+public export
+compileTermList : {types : GebSExp} -> (checkedTypes : GebTypeList types) ->
+  (terms : GebSExp) ->
+  {auto isTermList : ($<) terms = GATermList} ->
+  {auto compiles : IsJust $ checkAgainstTypeList checkedTypes $ ($>) terms} ->
+  GebTermList checkedTypes terms
+compileTermList {isTermList=Refl} {compiles} _ (_ $* _) = IsJustElim compiles
+
+public export
 showType : {type : GebSExp} -> GebType type -> String
 showType {type} _ = show type
 
