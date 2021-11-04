@@ -17,6 +17,8 @@ import public Geb.GebAtom
 mutual
   public export
   data GebType : (type : GebSExp) -> Type where
+    PatternType : {matrix : GebSExp} -> GebTypeMatrix matrix ->
+      GebType $ GAPatternType $*** matrix
 
   public export
   data GebTypeList : (types : GebSExp) -> Type where
@@ -33,14 +35,22 @@ mutual
       GebTypeMatrix $ GATypeMatrix $* (row :: matrix)
 
   public export
-  data GebTerm : (type, term : GebSExp) -> Type where
+  data GebTerm :
+    {type : GebSExp} -> GebType type -> (term : GebSExp) -> Type where
 
   public export
-  data GebTermList : (types, terms : GebSList) -> Type where
-    EmptyTermList : GebTermList [] []
-    ConsTermList : {type, term : GebSExp} ->
-      GebTerm type term -> GebTermList types terms ->
-      GebTermList (type :: types) (term :: terms)
+  data GebTermList : {types : GebSExp} ->
+    GebTypeList types -> (terms : GebSExp) -> Type where
+      EmptyTermList : GebTermList EmptyTypeList ($^ GATermList)
+      ConsTermList :
+        {type : GebSExp} -> {checkedType : GebType type} ->
+        {term : GebSExp} -> GebTerm checkedType term ->
+        {types : GebSList} ->
+        {checkedTypes : GebTypeList (GATypeList $* types)} ->
+        {terms : GebSList} ->
+        GebTermList checkedTypes (GATermList $* terms) ->
+        GebTermList (ConsTypeList checkedType checkedTypes) $
+          GATermList $* (term :: terms)
 
 mutual
   public export
@@ -69,19 +79,43 @@ mutual
   checkTypeMatrix _ = Nothing
 
   public export
-  checkTerm : (type, term : GebSExp) -> Maybe (GebTerm type term)
-  checkTerm _ _ = Nothing
+  checkAgainstType : {type : GebSExp} -> (checkedType : GebType type) ->
+    (term : GebSExp) -> Maybe (GebTerm checkedType term)
+  checkAgainstType _ _ = Nothing
 
   public export
-  checkTermList : (types, terms : GebSList) -> Maybe $ GebTermList types terms
-  checkTermList [] [] = Just EmptyTermList
-  checkTermList [] (_ :: _) = Nothing
-  checkTermList (_ :: _) [] = Nothing
-  checkTermList (type :: types) (term :: terms) =
-    case (checkTerm type term, checkTermList types terms) of
+  checkAgainstTypeList : {types : GebSExp} ->
+    (checkedTypes : GebTypeList types) -> (terms : GebSList) ->
+    Maybe $ GebTermList checkedTypes $ GATermList $* terms
+  checkAgainstTypeList EmptyTypeList [] = Just EmptyTermList
+  checkAgainstTypeList EmptyTypeList (_ :: _) = Nothing
+  checkAgainstTypeList (ConsTypeList _ _) [] = Nothing
+  checkAgainstTypeList (ConsTypeList type types) (term :: terms) =
+    case (checkAgainstType type term, checkAgainstTypeList types terms) of
       (Just checkedTerm, Just checkedTerms) =>
         Just $ ConsTermList checkedTerm checkedTerms
       _ => Nothing
+
+public export
+checkTerm : (type, term : GebSExp) ->
+  Maybe (checkedType : GebType type ** GebTerm checkedType term)
+checkTerm type term with (checkType type)
+  checkTerm type term | Just checkedType =
+    case checkAgainstType checkedType term of
+      Just checkedTerm => Just (checkedType ** checkedTerm)
+      _ => Nothing
+  checkTerm type term | _ = Nothing
+
+public export
+checkTermList : (types, terms : GebSList) ->
+  Maybe (checkedTypeList : GebTypeList (GATypeList $* types) **
+         GebTermList checkedTypeList $ GATermList $* terms)
+checkTermList types terms with (checkTypeList types)
+  checkTermList types terms | Just checkedTypes =
+    case checkAgainstTypeList checkedTypes terms of
+      Just checkedTerms => Just (checkedTypes ** checkedTerms)
+      _ => Nothing
+  checkTermList types terms | _ = Nothing
 
 public export
 showType : {type : GebSExp} -> GebType type -> String
@@ -96,11 +130,13 @@ showTypeMatrix : {matrix : GebSExp} -> GebTypeMatrix matrix -> String
 showTypeMatrix {matrix} _ = show matrix
 
 public export
-showTerm : {type, term : GebSExp} -> GebTerm type term -> String
+showTerm : {type : GebSExp} -> {checkedType : GebType type} ->
+  {term : GebSExp} -> GebTerm checkedType term -> String
 showTerm {type} {term} _ = "(" ++ show term ++ " :: " ++ show type ++ ")"
 
 public export
-showTerms : {types, terms : GebSList} -> GebTermList types terms -> String
+showTerms : {types, terms : GebSExp} -> {checkedTypes : GebTypeList types} ->
+  GebTermList checkedTypes terms -> String
 showTerms {types} {terms} _ =
   "((" ++ show terms ++ ") :: (" ++ show types ++ "))"
 

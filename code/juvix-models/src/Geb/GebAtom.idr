@@ -121,6 +121,8 @@ data GebAtom : Type where
   GASListTerm : GebAtom
   GATypeList : GebAtom
   GATypeMatrix : GebAtom
+  GAPatternType : GebAtom
+  GATermList : GebAtom
 
 public export
 gaEncode : GebAtom -> Nat
@@ -187,6 +189,8 @@ gaEncode GASExpTerm = 59
 gaEncode GASListTerm = 60
 gaEncode GATypeList = 61
 gaEncode GATypeMatrix = 62
+gaEncode GAPatternType = 63
+gaEncode GATermList = 64
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -253,6 +257,8 @@ gaDecode 59 = Just GASExpTerm
 gaDecode 60 = Just GASListTerm
 gaDecode 61 = Just GATypeList
 gaDecode 62 = Just GATypeMatrix
+gaDecode 63 = Just GAPatternType
+gaDecode 64 = Just GATermList
 gaDecode _ = Nothing
 
 export
@@ -320,6 +326,8 @@ gaDecodeEncodeIsJust GASExpTerm = Refl
 gaDecodeEncodeIsJust GASListTerm = Refl
 gaDecodeEncodeIsJust GATypeList = Refl
 gaDecodeEncodeIsJust GATypeMatrix = Refl
+gaDecodeEncodeIsJust GAPatternType = Refl
+gaDecodeEncodeIsJust GATermList = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -386,6 +394,8 @@ gebAtomToString GASExpTerm = "SExpTerm"
 gebAtomToString GASListTerm = "SListTerm"
 gebAtomToString GATypeList = "TypeList"
 gebAtomToString GATypeMatrix = "TypeMatrix"
+gebAtomToString GAPatternType = "PatternType"
+gebAtomToString GATermList = "TermList"
 
 public export
 Show GebAtom where
