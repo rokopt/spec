@@ -16,26 +16,93 @@ import public Geb.GebAtom
 
 mutual
   public export
-  data CheckedAs : (type, term : GebSExp) -> Type where
-    ReflectiveObject : CheckedAs ($^ GAObjectReflection) ($^ GAObjectReflection)
-    InitialObject : CheckedAs ($^ GAObjectReflection) ($^ GAInitial)
+  data GebType : (type : GebSExp) -> Type where
 
   public export
-  checkAs : (type, term : GebSExp) -> Maybe (CheckedAs type term)
-  checkAs (GAObjectReflection $* []) (GAObjectReflection $* []) =
-    Just ReflectiveObject
-  checkAs (GAObjectReflection $* []) (GAInitial $* []) =
-    Just InitialObject
-  checkAs _ _ = Nothing
+  data GebTypeList : (types : GebSExp) -> Type where
+    EmptyTypeList : GebTypeList ($^ GATypeList)
+    ConsTypeList : {type : GebSExp} -> {types : GebSList} ->
+      GebType type -> GebTypeList (GATypeList $* types) ->
+      GebTypeList $ GATypeList $* (type :: types)
 
   public export
-  checkAsType : (type : GebSExp) ->
-    Maybe (CheckedAs ($^ GAObjectReflection) type)
-  checkAsType type = checkAs ($^ GAObjectReflection) type
+  data GebTypeMatrix : (matrix : GebSExp) -> Type where
+    EmptyTypeMatrix : GebTypeMatrix ($^ GATypeMatrix)
+    ConsTypeMatrix : {row : GebSExp} -> {matrix : GebSList} ->
+      GebTypeList row -> GebTypeMatrix (GATypeMatrix $* matrix) ->
+      GebTypeMatrix $ GATypeMatrix $* (row :: matrix)
+
+  public export
+  data GebTerm : (type, term : GebSExp) -> Type where
+
+  public export
+  data GebTermList : (types, terms : GebSList) -> Type where
+    EmptyTermList : GebTermList [] []
+    ConsTermList : {type, term : GebSExp} ->
+      GebTerm type term -> GebTermList types terms ->
+      GebTermList (type :: types) (term :: terms)
+
+mutual
+  public export
+  checkType : (type : GebSExp) -> Maybe (GebType type)
+  checkType _ = Nothing
+
+  public export
+  checkTypeList : (types : GebSList) ->
+    Maybe (GebTypeList $ GATypeList $* types)
+  checkTypeList [] = Just EmptyTypeList
+  checkTypeList (type :: types) =
+    case (checkType type, checkTypeList types) of
+      (Just checkedType, Just checkedTypeList) =>
+        Just (ConsTypeList checkedType checkedTypeList)
+      _ => Nothing
+
+  public export
+  checkTypeMatrix : (matrix : GebSList) ->
+    Maybe $ GebTypeMatrix (GATypeMatrix $* matrix)
+  checkTypeMatrix [] = Just EmptyTypeMatrix
+  checkTypeMatrix ((GATypeList $* row) :: matrix) =
+    case (checkTypeList row, checkTypeMatrix matrix) of
+      (Just checkedRow, Just checkedMatrix) =>
+        Just $ ConsTypeMatrix checkedRow checkedMatrix
+      _ => Nothing
+  checkTypeMatrix _ = Nothing
+
+  public export
+  checkTerm : (type, term : GebSExp) -> Maybe (GebTerm type term)
+  checkTerm _ _ = Nothing
+
+  public export
+  checkTermList : (types, terms : GebSList) -> Maybe $ GebTermList types terms
+  checkTermList [] [] = Just EmptyTermList
+  checkTermList [] (_ :: _) = Nothing
+  checkTermList (_ :: _) [] = Nothing
+  checkTermList (type :: types) (term :: terms) =
+    case (checkTerm type term, checkTermList types terms) of
+      (Just checkedTerm, Just checkedTerms) =>
+        Just $ ConsTermList checkedTerm checkedTerms
+      _ => Nothing
 
 public export
-showChecked : {type, term : GebSExp} -> CheckedAs type term -> String
-showChecked {type} {term} _ = "(" ++ show term ++ " :: " ++ show type ++ ")"
+showType : {type : GebSExp} -> GebType type -> String
+showType {type} _ = show type
+
+public export
+showTypes : {types : GebSExp} -> GebTypeList types -> String
+showTypes {types} _ = show types
+
+public export
+showTypeMatrix : {matrix : GebSExp} -> GebTypeMatrix matrix -> String
+showTypeMatrix {matrix} _ = show matrix
+
+public export
+showTerm : {type, term : GebSExp} -> GebTerm type term -> String
+showTerm {type} {term} _ = "(" ++ show term ++ " :: " ++ show type ++ ")"
+
+public export
+showTerms : {types, terms : GebSList} -> GebTermList types terms -> String
+showTerms {types} {terms} _ =
+  "((" ++ show terms ++ ") :: (" ++ show types ++ "))"
 
 mutual
   public export

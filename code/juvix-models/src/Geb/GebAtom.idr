@@ -117,6 +117,10 @@ data GebAtom : Type where
   GAExpressionTerm : GebAtom
   GAMorphismTerm : GebAtom
   GAApplication : GebAtom
+  GASExpTerm : GebAtom
+  GASListTerm : GebAtom
+  GATypeList : GebAtom
+  GATypeMatrix : GebAtom
 
 public export
 gaEncode : GebAtom -> Nat
@@ -179,6 +183,10 @@ gaEncode GAParameterizedContext = 55
 gaEncode GAObjectReflection = 56
 gaEncode GAMorphismReflection = 57
 gaEncode GATypecheckObjectElim = 58
+gaEncode GASExpTerm = 59
+gaEncode GASListTerm = 60
+gaEncode GATypeList = 61
+gaEncode GATypeMatrix = 62
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -241,6 +249,10 @@ gaDecode 55 = Just GAParameterizedContext
 gaDecode 56 = Just GAObjectReflection
 gaDecode 57 = Just GAMorphismReflection
 gaDecode 58 = Just GATypecheckObjectElim
+gaDecode 59 = Just GASExpTerm
+gaDecode 60 = Just GASListTerm
+gaDecode 61 = Just GATypeList
+gaDecode 62 = Just GATypeMatrix
 gaDecode _ = Nothing
 
 export
@@ -304,6 +316,10 @@ gaDecodeEncodeIsJust GAParameterizedContext = Refl
 gaDecodeEncodeIsJust GAObjectReflection = Refl
 gaDecodeEncodeIsJust GAMorphismReflection = Refl
 gaDecodeEncodeIsJust GATypecheckObjectElim = Refl
+gaDecodeEncodeIsJust GASExpTerm = Refl
+gaDecodeEncodeIsJust GASListTerm = Refl
+gaDecodeEncodeIsJust GATypeList = Refl
+gaDecodeEncodeIsJust GATypeMatrix = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -366,6 +382,10 @@ gebAtomToString GAParameterizedContext = "ParameterizedContext"
 gebAtomToString GAObjectReflection = "ObjectReflection"
 gebAtomToString GAMorphismReflection = "MorphismReflection"
 gebAtomToString GATypecheckObjectElim = "TypecheckObjectElim"
+gebAtomToString GASExpTerm = "SExpTerm"
+gebAtomToString GASListTerm = "SListTerm"
+gebAtomToString GATypeList = "TypeList"
+gebAtomToString GATypeMatrix = "TypeMatrix"
 
 public export
 Show GebAtom where
@@ -406,10 +426,6 @@ Show GebSExp using DefaultSExpShow where
 public export
 gebSExpShow : GebSExp -> String
 gebSExpShow = show
-
-public export
-Show GebSList using DefaultSListShow where
-  show = show
 
 public export
 DecEq GebSExp using DefaultSExpDecEq where
