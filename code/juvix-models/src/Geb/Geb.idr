@@ -178,6 +178,25 @@ checkTermList types terms with (checkTypeList types)
   checkTermList types terms | _ = Nothing
 
 public export
+compileType : (type : GebSExp) ->{auto compiles : IsJust $ checkType type} ->
+  GebType type
+compileType _ {compiles} = IsJustElim compiles
+
+public export
+compileTypeList : (types : GebSExp) ->
+  {auto isTypeList : ($<) types = GATypeList} ->
+  {auto compiles : IsJust $ checkTypeList $ ($>) types} ->
+  GebTypeList $ types
+compileTypeList {isTypeList=Refl} {compiles} (_ $* _) = IsJustElim compiles
+
+public export
+compileTypeMatrix : (matrix : GebSExp) ->
+  {auto isTypeMatrix : ($<) matrix = GATypeMatrix} ->
+  {auto compiles : IsJust $ checkTypeMatrix $ ($>) matrix} ->
+  GebTypeMatrix $ matrix
+compileTypeMatrix {isTypeMatrix=Refl} {compiles} (_ $* _) = IsJustElim compiles
+
+public export
 showType : {type : GebSExp} -> GebType type -> String
 showType {type} _ = show type
 

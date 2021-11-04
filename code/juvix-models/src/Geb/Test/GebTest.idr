@@ -9,60 +9,46 @@ emptyTypeListExp : GebSExp
 emptyTypeListExp = $^ GATypeList
 
 emptyTypeList : GebTypeList GebTest.emptyTypeListExp
-emptyTypeList = IsJustElim {m=(checkTypeList [])} ItIsJust
-
-emptyTypeMatrixList : GebSList
-emptyTypeMatrixList = []
+emptyTypeList = compileTypeList emptyTypeListExp
 
 emptyTypeMatrixExp : GebSExp
-emptyTypeMatrixExp = GATypeMatrix $* emptyTypeMatrixList
+emptyTypeMatrixExp = $^ GATypeMatrix
 
 emptyTypeMatrix : GebTypeMatrix GebTest.emptyTypeMatrixExp
-emptyTypeMatrix =
-  IsJustElim {m=(checkTypeMatrix emptyTypeMatrixList)} ItIsJust
-
-singletonTypeMatrixList : GebSList
-singletonTypeMatrixList = [emptyTypeListExp]
+emptyTypeMatrix = compileTypeMatrix emptyTypeMatrixExp
 
 singletonTypeMatrixExp : GebSExp
-singletonTypeMatrixExp = GATypeMatrix $* singletonTypeMatrixList
+singletonTypeMatrixExp = GATypeMatrix $*** emptyTypeListExp
 
 singletonTypeMatrix : GebTypeMatrix GebTest.singletonTypeMatrixExp
-singletonTypeMatrix =
-  IsJustElim {m=(checkTypeMatrix singletonTypeMatrixList)} ItIsJust
-
-boolTypeMatrixList : GebSList
-boolTypeMatrixList = [emptyTypeListExp, emptyTypeListExp]
+singletonTypeMatrix = compileTypeMatrix singletonTypeMatrixExp
 
 boolTypeMatrixExp : GebSExp
-boolTypeMatrixExp = GATypeMatrix $* boolTypeMatrixList
+boolTypeMatrixExp = GATypeMatrix $* [emptyTypeListExp, emptyTypeListExp]
 
 boolTypeMatrix : GebTypeMatrix GebTest.boolTypeMatrixExp
-boolTypeMatrix =
-  IsJustElim {m=(checkTypeMatrix boolTypeMatrixList)} ItIsJust
+boolTypeMatrix = compileTypeMatrix boolTypeMatrixExp
 
-boolPatternTypeExp : GebSExp
-boolPatternTypeExp = GAPatternType $*** boolTypeMatrixExp
+boolTypeExp : GebSExp
+boolTypeExp = GAPatternType $*** boolTypeMatrixExp
 
-boolPatternType : GebType GebTest.boolPatternTypeExp
-boolPatternType =
-  IsJustElim {m=(checkType boolPatternTypeExp)} ItIsJust
-
-pairBoolTypeList : GebSList
-pairBoolTypeList = [boolPatternTypeExp, boolPatternTypeExp]
+boolType : GebType GebTest.boolTypeExp
+boolType = compileType boolTypeExp
 
 pairBoolTypeListExp : GebSExp
-pairBoolTypeListExp = GATypeList $* pairBoolTypeList
-
-pairBoolTypeMatrixList : GebSList
-pairBoolTypeMatrixList = [pairBoolTypeListExp]
+pairBoolTypeListExp = GATypeList $* [boolTypeExp, boolTypeExp]
 
 pairBoolTypeMatrixExp : GebSExp
-pairBoolTypeMatrixExp = GATypeMatrix $* pairBoolTypeMatrixList
+pairBoolTypeMatrixExp = GATypeMatrix $*** pairBoolTypeListExp
 
 pairBoolTypeMatrix : GebTypeMatrix GebTest.pairBoolTypeMatrixExp
-pairBoolTypeMatrix =
-  IsJustElim {m=(checkTypeMatrix pairBoolTypeMatrixList)} ItIsJust
+pairBoolTypeMatrix = compileTypeMatrix pairBoolTypeMatrixExp
+
+pairBoolTypeExp : GebSExp
+pairBoolTypeExp = GAPatternType $*** pairBoolTypeMatrixExp
+
+pairBoolType : GebType GebTest.pairBoolTypeExp
+pairBoolType = compileType pairBoolTypeExp
 
 export
 gebTests : IO ()
@@ -73,5 +59,6 @@ gebTests = do
   printLn $ "Singleton type matrix = " ++ showTypeMatrix singletonTypeMatrix
   printLn $ "Bool type matrix = " ++ showTypeMatrix boolTypeMatrix
   printLn $ "Pair-of-bool type matrix = " ++ showTypeMatrix pairBoolTypeMatrix
+  printLn $ "Pair-of-bool type = " ++ showType pairBoolType
   printLn "End gebTests."
   pure ()
