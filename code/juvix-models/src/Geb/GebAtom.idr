@@ -127,6 +127,11 @@ data GebAtom : Type where
   GAIndexFirst : GebAtom
   GAIndexNext : GebAtom
   GAInjectTerm : GebAtom
+  GAOrder : GebAtom
+  GATuringComplete : GebAtom
+  GAPromoteFinite : GebAtom
+  GAPromoteTuringComplete : GebAtom
+  GAFiniteOrder : GebAtom
 
 public export
 gaEncode : GebAtom -> Nat
@@ -199,6 +204,11 @@ gaEncode GAMatrixIndex = 65
 gaEncode GAIndexFirst = 66
 gaEncode GAIndexNext = 67
 gaEncode GAInjectTerm = 68
+gaEncode GAOrder = 69
+gaEncode GATuringComplete = 70
+gaEncode GAPromoteFinite = 71
+gaEncode GAPromoteTuringComplete = 72
+gaEncode GAFiniteOrder = 73
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -271,6 +281,11 @@ gaDecode 65 = Just GAMatrixIndex
 gaDecode 66 = Just GAIndexFirst
 gaDecode 67 = Just GAIndexNext
 gaDecode 68 = Just GAInjectTerm
+gaDecode 69 = Just GAOrder
+gaDecode 70 = Just GATuringComplete
+gaDecode 71 = Just GAPromoteFinite
+gaDecode 72 = Just GAPromoteTuringComplete
+gaDecode 73 = Just GAFiniteOrder
 gaDecode _ = Nothing
 
 export
@@ -344,6 +359,11 @@ gaDecodeEncodeIsJust GAMatrixIndex = Refl
 gaDecodeEncodeIsJust GAIndexFirst = Refl
 gaDecodeEncodeIsJust GAIndexNext = Refl
 gaDecodeEncodeIsJust GAInjectTerm = Refl
+gaDecodeEncodeIsJust GAOrder = Refl
+gaDecodeEncodeIsJust GATuringComplete = Refl
+gaDecodeEncodeIsJust GAPromoteFinite = Refl
+gaDecodeEncodeIsJust GAPromoteTuringComplete = Refl
+gaDecodeEncodeIsJust GAFiniteOrder = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -416,6 +436,11 @@ gebAtomToString GAMatrixIndex = "MatrixIndex"
 gebAtomToString GAIndexFirst = "IndexFirst"
 gebAtomToString GAIndexNext = "IndexNext"
 gebAtomToString GAInjectTerm = "InjectTerm"
+gebAtomToString GAOrder = "Order"
+gebAtomToString GATuringComplete = "TuringComplete"
+gebAtomToString GAPromoteFinite = "PromoteFinite"
+gebAtomToString GAPromoteTuringComplete = "PromoteTuringComplete"
+gebAtomToString GAFiniteOrder = "FiniteOrder"
 
 public export
 Show GebAtom where

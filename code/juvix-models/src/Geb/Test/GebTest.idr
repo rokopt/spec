@@ -5,35 +5,42 @@ import public Geb.Geb
 
 %default total
 
+zerothOrderExp : GebSExp
+zerothOrderExp = GAFiniteOrder $**^ GAIndexFirst
+
+zerothOrder : GebOrder GebTest.zerothOrderExp
+zerothOrder = compileOrder zerothOrderExp
+
 emptyTypeListExp : GebSExp
 emptyTypeListExp = $^ GATypeList
 
-emptyTypeList : GebTypeList GebTest.emptyTypeListExp
-emptyTypeList = compileTypeList emptyTypeListExp
+emptyTypeList : GebTypeList GebTest.zerothOrder GebTest.emptyTypeListExp
+emptyTypeList = compileTypeList zerothOrderExp emptyTypeListExp
 
 emptyTypeMatrixExp : GebSExp
 emptyTypeMatrixExp = $^ GATypeMatrix
 
-emptyTypeMatrix : GebTypeMatrix GebTest.emptyTypeMatrixExp
-emptyTypeMatrix = compileTypeMatrix emptyTypeMatrixExp
+emptyTypeMatrix : GebTypeMatrix GebTest.zerothOrder GebTest.emptyTypeMatrixExp
+emptyTypeMatrix = compileTypeMatrix zerothOrderExp emptyTypeMatrixExp
 
 voidTypeExp : GebSExp
 voidTypeExp = GAPatternType $*** emptyTypeMatrixExp
 
-voidType : GebType GebTest.voidTypeExp
-voidType = compileType voidTypeExp
+voidType : GebType GebTest.zerothOrder GebTest.voidTypeExp
+voidType = compileType zerothOrderExp voidTypeExp
 
 singletonTypeMatrixExp : GebSExp
 singletonTypeMatrixExp = GATypeMatrix $*** emptyTypeListExp
 
-singletonTypeMatrix : GebTypeMatrix GebTest.singletonTypeMatrixExp
-singletonTypeMatrix = compileTypeMatrix singletonTypeMatrixExp
+singletonTypeMatrix : GebTypeMatrix
+  GebTest.zerothOrder GebTest.singletonTypeMatrixExp
+singletonTypeMatrix = compileTypeMatrix zerothOrderExp singletonTypeMatrixExp
 
 unitTypeExp : GebSExp
 unitTypeExp = GAPatternType $*** singletonTypeMatrixExp
 
-unitType : GebType GebTest.unitTypeExp
-unitType = compileType unitTypeExp
+unitType : GebType GebTest.zerothOrder GebTest.unitTypeExp
+unitType = compileType zerothOrderExp unitTypeExp
 
 unitTermIndexExp : GebSExp
 unitTermIndexExp = gebMatrixIndexExp 0
@@ -50,14 +57,14 @@ unitTypeListExp = GATypeList $*** unitTypeExp
 boolTypeMatrixExp : GebSExp
 boolTypeMatrixExp = GATypeMatrix $* [unitTypeListExp, unitTypeListExp]
 
-boolTypeMatrix : GebTypeMatrix GebTest.boolTypeMatrixExp
-boolTypeMatrix = compileTypeMatrix boolTypeMatrixExp
+boolTypeMatrix : GebTypeMatrix GebTest.zerothOrder GebTest.boolTypeMatrixExp
+boolTypeMatrix = compileTypeMatrix zerothOrderExp boolTypeMatrixExp
 
 boolTypeExp : GebSExp
 boolTypeExp = GAPatternType $*** boolTypeMatrixExp
 
-boolType : GebType GebTest.boolTypeExp
-boolType = compileType boolTypeExp
+boolType : GebType GebTest.zerothOrder GebTest.boolTypeExp
+boolType = compileType zerothOrderExp boolTypeExp
 
 unitTermList : GebSExp
 unitTermList = GATermList $* [unitTermExp]
@@ -89,14 +96,15 @@ pairBoolTypeListExp = GATypeList $* [boolTypeExp, boolTypeExp]
 pairBoolTypeMatrixExp : GebSExp
 pairBoolTypeMatrixExp = GATypeMatrix $*** pairBoolTypeListExp
 
-pairBoolTypeMatrix : GebTypeMatrix GebTest.pairBoolTypeMatrixExp
-pairBoolTypeMatrix = compileTypeMatrix pairBoolTypeMatrixExp
+pairBoolTypeMatrix :
+  GebTypeMatrix GebTest.zerothOrder GebTest.pairBoolTypeMatrixExp
+pairBoolTypeMatrix = compileTypeMatrix zerothOrderExp pairBoolTypeMatrixExp
 
 pairBoolTypeExp : GebSExp
 pairBoolTypeExp = GAPatternType $*** pairBoolTypeMatrixExp
 
-pairBoolType : GebType GebTest.pairBoolTypeExp
-pairBoolType = compileType pairBoolTypeExp
+pairBoolType : GebType GebTest.zerothOrder GebTest.pairBoolTypeExp
+pairBoolType = compileType zerothOrderExp pairBoolTypeExp
 
 export
 gebTests : IO ()
