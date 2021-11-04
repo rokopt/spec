@@ -55,6 +55,12 @@ mutual
 mutual
   public export
   checkType : (type : GebSExp) -> Maybe (GebType type)
+  checkType (GAPatternType $* [GATypeMatrix $* matrix]) with
+    (checkTypeMatrix matrix)
+      checkType (GAPatternType $* [GATypeMatrix $* matrix]) |
+        Just checkedMatrix = Just $ PatternType checkedMatrix
+      checkType (GAPatternType $* [GATypeMatrix $* matrix]) | _ =
+        Nothing
   checkType _ = Nothing
 
   public export
@@ -122,8 +128,8 @@ showType : {type : GebSExp} -> GebType type -> String
 showType {type} _ = show type
 
 public export
-showTypes : {types : GebSExp} -> GebTypeList types -> String
-showTypes {types} _ = show types
+showTypeList : {types : GebSExp} -> GebTypeList types -> String
+showTypeList {types} _ = show types
 
 public export
 showTypeMatrix : {matrix : GebSExp} -> GebTypeMatrix matrix -> String
@@ -135,9 +141,9 @@ showTerm : {type : GebSExp} -> {checkedType : GebType type} ->
 showTerm {type} {term} _ = "(" ++ show term ++ " :: " ++ show type ++ ")"
 
 public export
-showTerms : {types, terms : GebSExp} -> {checkedTypes : GebTypeList types} ->
+showTermList : {types, terms : GebSExp} -> {checkedTypes : GebTypeList types} ->
   GebTermList checkedTypes terms -> String
-showTerms {types} {terms} _ =
+showTermList {types} {terms} _ =
   "((" ++ show terms ++ ") :: (" ++ show types ++ "))"
 
 mutual
