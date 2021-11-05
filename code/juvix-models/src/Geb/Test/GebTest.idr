@@ -8,7 +8,7 @@ import public Geb.Geb
 zerothOrderExp : GebSExp
 zerothOrderExp = GAFiniteOrder $**^ GAIndexFirst
 
-zerothOrder : GebOrder GebTest.zerothOrderExp
+zerothOrder : GebPOrder GebTest.zerothOrderExp
 zerothOrder = compileOrder zerothOrderExp
 
 emptyTypeListExp : GebSExp
