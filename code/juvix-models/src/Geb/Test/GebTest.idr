@@ -48,7 +48,7 @@ unitTermIndexExp = gebMatrixIndexExp 0
 unitTermExp : GebSExp
 unitTermExp = GAInjectTerm $* [unitTermIndexExp, $^ GATermList]
 
-unitTerm : GebTerm GebTest.unitType GebTest.unitTermExp
+unitTerm : GebPTerm GebTest.unitType GebTest.unitTermExp
 unitTerm = compileTerm unitType unitTermExp
 
 unitTypeListExp : GebSExp
@@ -84,10 +84,10 @@ falseTermExp = GAInjectTerm $* [falseTermIndexExp, unitTermList]
 trueTermExp : GebSExp
 trueTermExp = GAInjectTerm $* [trueTermIndexExp, unitTermList]
 
-falseTerm : GebTerm GebTest.boolType GebTest.falseTermExp
+falseTerm : GebPTerm GebTest.boolType GebTest.falseTermExp
 falseTerm = compileTerm boolType falseTermExp
 
-trueTerm : GebTerm GebTest.boolType GebTest.trueTermExp
+trueTerm : GebPTerm GebTest.boolType GebTest.trueTermExp
 trueTerm = compileTerm boolType trueTermExp
 
 pairBoolTypeListExp : GebSExp

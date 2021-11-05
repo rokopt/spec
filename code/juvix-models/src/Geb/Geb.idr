@@ -14,10 +14,16 @@ mutual
   public export
   data GebType : Type where
 
+  public export
+  data GebTerm : Type where
+
 mutual
   public export
-  interpretGebType : GebType -> Type
+  interpretGebType : GebType -> Dec Type
   interpretGebType type impossible
+
+  public export
+  interpretGebTerm : Dec Type
 
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
@@ -137,7 +143,7 @@ mutual
     matrixIndexTypeList tail index
 
   public export
-  data GebTerm : {type : GebSExp} -> {order : GebSExp} ->
+  data GebPTerm : {type : GebSExp} -> {order : GebSExp} ->
     {checkedOrder : GebOrder order} ->
     GebPType checkedOrder type -> (term : GebSExp) -> Type where
       Inject : {order : GebSExp} -> {checkedOrder : GebOrder order} ->
@@ -146,23 +152,23 @@ mutual
         {index : GebSExp} ->
         (checkedIndex : GebMatrixIndex checkedMatrix index) ->
         {terms : GebSExp} ->
-        GebTermList (matrixIndexTypeList checkedMatrix checkedIndex) terms ->
-        GebTerm (PatternType checkedMatrix) $ GAInjectTerm $* [index, terms]
+        GebPTermList (matrixIndexTypeList checkedMatrix checkedIndex) terms ->
+        GebPTerm (PatternType checkedMatrix) $ GAInjectTerm $* [index, terms]
 
   public export
-  data GebTermList : {order : GebSExp} -> {checkedOrder : GebOrder order} ->
+  data GebPTermList : {order : GebSExp} -> {checkedOrder : GebOrder order} ->
     {types : GebSExp} ->
     GebPTypeList checkedOrder types -> (terms : GebSExp) -> Type where
       EmptyTermList : {order : GebSExp} -> (checkedOrder : GebOrder order) ->
-        GebTermList (EmptyTypeList checkedOrder) ($^ GATermList)
+        GebPTermList (EmptyTypeList checkedOrder) ($^ GATermList)
       ConsTermList : {order : GebSExp} -> {checkedOrder : GebOrder order} ->
         {type : GebSExp} -> {checkedType : GebPType checkedOrder type} ->
-        {term : GebSExp} -> GebTerm checkedType term ->
+        {term : GebSExp} -> GebPTerm checkedType term ->
         {types : GebSList} ->
         {checkedTypes : GebPTypeList checkedOrder (GATypeList $* types)} ->
         {terms : GebSList} ->
-        GebTermList checkedTypes (GATermList $* terms) ->
-        GebTermList (ConsTypeList checkedType checkedTypes) $
+        GebPTermList checkedTypes (GATermList $* terms) ->
+        GebPTermList (ConsTypeList checkedType checkedTypes) $
           GATermList $* (term :: terms)
 
 mutual
@@ -229,7 +235,7 @@ mutual
   public export
   checkAgainstType : {order : GebSExp} -> {checkedOrder : GebOrder order} ->
     {type : GebSExp} -> (checkedType : GebPType checkedOrder type) ->
-    (term : GebSExp) -> Maybe (GebTerm checkedType term)
+    (term : GebSExp) -> Maybe (GebPTerm checkedType term)
   checkAgainstType
     (PatternType checkedMatrix) (GAInjectTerm $* [index, GATermList $* terms]) =
       case checkMatrixIndex checkedMatrix index of
@@ -246,7 +252,7 @@ mutual
   checkAgainstTypeList : {order : GebSExp} -> {checkedOrder : GebOrder order} ->
     {types : GebSExp} ->
     (checkedTypes : GebPTypeList checkedOrder types) -> (terms : GebSList) ->
-    Maybe $ GebTermList checkedTypes $ GATermList $* terms
+    Maybe $ GebPTermList checkedTypes $ GATermList $* terms
   checkAgainstTypeList (EmptyTypeList checkedOrder) [] =
     Just $ EmptyTermList checkedOrder
   checkAgainstTypeList (EmptyTypeList _) (_ :: _) = Nothing
@@ -271,7 +277,7 @@ public export
 checkTerm : (order, type, term : GebSExp) ->
   Maybe (checkedOrder : GebOrder order **
          checkedType : GebPType checkedOrder type **
-         GebTerm checkedType term)
+         GebPTerm checkedType term)
 checkTerm order type term = case checkOrderAndType order type of
   Just (checkedOrder ** checkedType) =>
     case checkAgainstType checkedType term of
@@ -283,7 +289,7 @@ public export
 checkTermList : (order : GebSExp) -> (types, terms : GebSList) ->
   Maybe (checkedOrder : GebOrder order **
          checkedTypeList : GebPTypeList checkedOrder (GATypeList $* types) **
-         GebTermList checkedTypeList $ GATermList $* terms)
+         GebPTermList checkedTypeList $ GATermList $* terms)
 checkTermList order types terms =
   case checkOrder order of
     Just checkedOrder => case checkTypeList checkedOrder types of
@@ -344,7 +350,7 @@ compileTerm : {order, type : GebSExp} ->
   (checkedType : GebPType (IsJustElim orderCompiles) type) ->
   (term : GebSExp) ->
   {auto compiles : IsJust $ checkAgainstType checkedType term} ->
-  GebTerm checkedType term
+  GebPTerm checkedType term
 compileTerm _ _ {orderCompiles} {compiles} = IsJustElim compiles
 
 public export
@@ -354,7 +360,7 @@ compileTermList : {order, types : GebSExp} ->
   (terms : GebSExp) ->
   {auto isTermList : ($<) terms = GATermList} ->
   {auto compiles : IsJust $ checkAgainstTypeList checkedTypes $ ($>) terms} ->
-  GebTermList checkedTypes terms
+  GebPTermList checkedTypes terms
 compileTermList {isTermList=Refl} {orderCompiles} {compiles} _ (_ $* _) =
   IsJustElim compiles
 
@@ -376,14 +382,14 @@ showTypeMatrix {matrix} _ = show matrix
 public export
 showTerm : {order, type : GebSExp} -> {checkedOrder : GebOrder order} ->
   {checkedType : GebPType checkedOrder type} ->
-  {term : GebSExp} -> GebTerm checkedType term -> String
+  {term : GebSExp} -> GebPTerm checkedType term -> String
 showTerm {type} {term} _ = "(" ++ show term ++ " :: " ++ show type ++ ")"
 
 public export
 showTermList : {order, types, terms : GebSExp} ->
   {checkedOrder : GebOrder order} ->
   {checkedTypes : GebPTypeList checkedOrder types} ->
-  GebTermList checkedTypes terms -> String
+  GebPTermList checkedTypes terms -> String
 showTermList {types} {terms} _ =
   "((" ++ show terms ++ ") :: (" ++ show types ++ "))"
 
