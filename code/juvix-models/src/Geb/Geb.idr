@@ -12,25 +12,50 @@ import public Geb.GebAtom
 
 mutual
   public export
-  data GebType : Type where
-
-  public export
-  data GebTerm : Type where
+  data ZerothOrderType : Type where
+    ZerothInitial : ZerothOrderType
+    ZerothTerminal : ZerothOrderType
+    ZerothProduct : ZerothOrderType -> ZerothOrderType -> ZerothOrderType
+    ZerothCoproduct : ZerothOrderType -> ZerothOrderType -> ZerothOrderType
+    ZerothReflection : ZerothOrderType
 
 mutual
   public export
-  IsType : GebType -> Type
+  data ZerothOrderTerm : Type where
+    ZerothUnit : ZerothOrderTerm
+    ZerothPair : ZerothOrderTerm -> ZerothOrderTerm -> ZerothOrderTerm
+    ZerothLeft : ZerothOrderTerm -> ZerothOrderTerm
+    ZerothRight : ZerothOrderTerm -> ZerothOrderTerm
+    ZerothQuoteTerm : ZerothOrderTerm -> ZerothOrderTerm
+    ZerothQuoteType : ZerothOrderType -> ZerothOrderTerm
 
+mutual
   public export
-  HasType : GebType -> GebTerm -> Type
+  data MatchesType : ZerothOrderType -> ZerothOrderTerm -> Type where
+    MatchesUnit : MatchesType ZerothTerminal ZerothUnit
 
-  public export
-  interpretGebType : GebType -> Type
-  interpretGebType type impossible
+    MatchesPair : (firstTerm, secondTerm : ZerothOrderTerm) ->
+      {firstType, secondType : ZerothOrderType} ->
+      {auto firstMatch : MatchesType firstType firstTerm} ->
+      {auto secondMatch : MatchesType secondType secondTerm} ->
+      MatchesType
+        (ZerothProduct firstType secondType) (ZerothPair firstTerm secondTerm)
 
-  public export
-  interpretGebTerm : {type : GebType} -> {term : GebTerm} ->
-    HasType type term -> interpretGebType type
+    MatchesLeft : (term : ZerothOrderTerm) ->
+      {leftType, rightType : ZerothOrderType} ->
+      {auto leftMatch : MatchesType leftType term} ->
+      MatchesType (ZerothCoproduct leftType rightType) (ZerothLeft term)
+
+    MatchesRight : (term : ZerothOrderTerm) ->
+      {leftType, rightType : ZerothOrderType} ->
+      {auto rightMatch : MatchesType rightType term} ->
+      MatchesType (ZerothCoproduct leftType rightType) (ZerothRight term)
+
+    MatchesQuoteTerm : (term : ZerothOrderTerm) ->
+      MatchesType ZerothReflection (ZerothQuoteTerm term)
+
+    MatchesQuoteType : (type : ZerothOrderType) ->
+      MatchesType ZerothReflection (ZerothQuoteType type)
 
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
