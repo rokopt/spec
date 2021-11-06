@@ -62,6 +62,8 @@ mutual
 -- |   - Add atoms
 -- |   - Convert to S-expressions (my atom + list representation)
 -- | Still to do:
+-- |   - Index them by S-expressions and then write them in S-expressions
+-- |     themselves so that I can use "App" and make them manifestly finitary
 -- |   - Try to uncurry the type and function
 -- |   - Try to make them dependent
 -- |     - If that works, add the restriction to refined well-founded
@@ -97,7 +99,7 @@ mutual
   public export
   data GLFun : (atom, output : Type) -> Type where
     GLCase : {atom, output : Type} -> (nilCase : output) ->
-      (consCase : Lazy (GXFun atom (GLFun atom output))) -> GLFun atom output
+      (consCase : Lazy (GLFun atom (GXFun atom output))) -> GLFun atom output
 
 mutual
   public export
@@ -107,7 +109,7 @@ mutual
   public export
   appGL : {atom, output : Type} -> GLFun atom output -> GList atom -> output
   appGL (GLCase nilCase _) GNil = nilCase
-  appGL (GLCase _ f) (GCons exp list) = appGL (appGX f exp) list
+  appGL (GLCase _ f) (GCons exp list) = appGX (appGL f list) exp
 
 mutual
   public export
