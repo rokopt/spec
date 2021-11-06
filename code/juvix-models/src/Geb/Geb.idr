@@ -79,6 +79,39 @@ mutual
 
 mutual
   public export
+  data GExp : Type -> Type where
+    GAtom : {atom : Type} -> atom -> GExp atom
+    GBranch : {atom : Type} -> GExp atom -> GList atom -> GExp atom
+
+  public export
+  data GList : Type -> Type where
+    GNil : {atom : Type} -> GList atom
+    GCons : {atom : Type} -> GExp atom -> GList atom -> GList atom
+
+mutual
+  public export
+  data GXFun : (atom, output : Type) -> Type where
+    GXCase : {atom, output : Type} -> (atomCase : atom -> output) ->
+      (listCase : Lazy (GXFun atom (GLFun atom output))) -> GXFun atom output
+
+  public export
+  data GLFun : (atom, output : Type) -> Type where
+    GLCase : {atom, output : Type} -> (nilCase : output) ->
+      (consCase : Lazy (GXFun atom (GLFun atom output))) -> GLFun atom output
+
+mutual
+  public export
+  appGX : {atom, output : Type} -> GXFun atom output -> GExp atom -> output
+  appGX (GXCase atomCase _) (GAtom a) = atomCase a
+  appGX (GXCase _ f) (GBranch tree list) = appGL (appGX f tree) list
+
+  public export
+  appGL : {atom, output : Type} -> GLFun atom output -> GList atom -> output
+  appGL (GLCase nilCase _) GNil = nilCase
+  appGL (GLCase _ f) (GCons tree list) = appGL (appGX f tree) list
+
+mutual
+  public export
   data ZerothOrderType : Type where
     ZerothInitial : ZerothOrderType
     ZerothTerminal : ZerothOrderType
