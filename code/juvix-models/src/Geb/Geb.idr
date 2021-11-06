@@ -17,7 +17,6 @@ mutual
     ZerothTerminal : ZerothOrderType
     ZerothProduct : ZerothOrderType -> ZerothOrderType -> ZerothOrderType
     ZerothCoproduct : ZerothOrderType -> ZerothOrderType -> ZerothOrderType
-    ZerothReflection : ZerothOrderType
 
 mutual
   public export
@@ -26,8 +25,6 @@ mutual
     ZerothPair : ZerothOrderTerm -> ZerothOrderTerm -> ZerothOrderTerm
     ZerothLeft : ZerothOrderTerm -> ZerothOrderTerm
     ZerothRight : ZerothOrderTerm -> ZerothOrderTerm
-    ZerothQuoteTerm : ZerothOrderTerm -> ZerothOrderTerm
-    ZerothQuoteType : ZerothOrderType -> ZerothOrderTerm
 
 mutual
   public export
@@ -50,12 +47,6 @@ mutual
       {leftType, rightType : ZerothOrderType} ->
       {auto rightMatch : MatchesType rightType term} ->
       MatchesType (ZerothCoproduct leftType rightType) (ZerothRight term)
-
-    MatchesQuoteTerm : (term : ZerothOrderTerm) ->
-      MatchesType ZerothReflection (ZerothQuoteTerm term)
-
-    MatchesQuoteType : (type : ZerothOrderType) ->
-      MatchesType ZerothReflection (ZerothQuoteType type)
 
 ----------------------------------------------------------------
 ---- General definition of programming language / metalogic ----
