@@ -59,9 +59,9 @@ mutual
 
 -- | My modifications:
 -- | Done below:
--- | Still to do:
 -- |   - Add atoms
 -- |   - Convert to S-expressions (my atom + list representation)
+-- | Still to do:
 -- |   - Try to uncurry the type and function
 -- |   - Try to make them dependent
 -- |     - If that works, add the restriction to refined well-founded
