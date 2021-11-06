@@ -72,7 +72,7 @@ mutual
 -- |   - Interpret them in Idris:
 -- |     - Refined S-expressions with big-step evaluation
 -- |     - Small-step evaluation for well-typed Turing machines using the
--- |       coinductive version?
+-- |       coinductive version
 -- |   - Write them in themselves
 -- |   - Use that reflection together with the duality to implement
 -- |     algebraic effects (perhaps using models and comodels)
@@ -80,8 +80,7 @@ mutual
 mutual
   public export
   data GExp : Type -> Type where
-    GAtom : {atom : Type} -> atom -> GExp atom
-    GBranch : {atom : Type} -> GExp atom -> GList atom -> GExp atom
+    GXIntro : {atom : Type} -> atom -> GList atom -> GExp atom
 
   public export
   data GList : Type -> Type where
@@ -91,8 +90,9 @@ mutual
 mutual
   public export
   data GXFun : (atom, output : Type) -> Type where
-    GXCase : {atom, output : Type} -> (atomCase : atom -> output) ->
-      (listCase : Lazy (GXFun atom (GLFun atom output))) -> GXFun atom output
+    GXCase : {atom, output : Type} ->
+      (expCase : atom -> Lazy (GXFun atom (GLFun atom output))) ->
+      GXFun atom output
 
   public export
   data GLFun : (atom, output : Type) -> Type where
@@ -102,13 +102,12 @@ mutual
 mutual
   public export
   appGX : {atom, output : Type} -> GXFun atom output -> GExp atom -> output
-  appGX (GXCase atomCase _) (GAtom a) = atomCase a
-  appGX (GXCase _ f) (GBranch tree list) = appGL (appGX f tree) list
+  appGX (GXCase f) (GXIntro a list) = appGL (appGX (f a) (GXIntro a list)) list
 
   public export
   appGL : {atom, output : Type} -> GLFun atom output -> GList atom -> output
   appGL (GLCase nilCase _) GNil = nilCase
-  appGL (GLCase _ f) (GCons tree list) = appGL (appGX f tree) list
+  appGL (GLCase _ f) (GCons exp list) = appGL (appGX f exp) list
 
 mutual
   public export
