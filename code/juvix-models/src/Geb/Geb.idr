@@ -10,6 +10,73 @@ import public Geb.GebAtom
 
 %default total
 
+-- | Straight from _Representations of First-Order Function Types
+-- | as Terminal Coalgebras_.
+public export
+data BTree : Type where
+  BTLeaf : BTree
+  BTBranch : BTree -> BTree -> BTree
+
+public export
+data BTFun : Type -> Type where
+  BTCase : {output : Type} -> (leafCase : output) ->
+    (branchCase : Lazy (BTFun (BTFun output))) -> BTFun output
+
+public export
+appBT : {output : Type} -> BTFun output -> BTree -> output
+appBT (BTCase leafCase _) BTLeaf = leafCase
+appBT (BTCase _ f) (BTBranch left right) = appBT (appBT f left) right
+
+-- | Also from the above paper, but for this one they only gave the
+-- | math, not the code.  So here's my attempt at the code.  These
+-- | strongly resemble S-expressions.
+public export
+data FTree : Type where
+  FLeaf : FTree
+  FBranch : FTree -> List FTree -> FTree
+
+mutual
+  public export
+  data FTFun : Type -> Type where
+    FTCase : {output : Type} -> (leafCase : output) ->
+      (branchCase : Lazy (FTFun (LFTFun output))) -> FTFun output
+
+  public export
+  data LFTFun : Type -> Type where
+    LFTCase : {output : Type} -> (nilCase : output) ->
+      (consCase : Lazy (FTFun (LFTFun output))) -> LFTFun output
+
+mutual
+  public export
+  appFT : {output : Type} -> FTFun output -> FTree -> output
+  appFT (FTCase leafCase _) FLeaf = leafCase
+  appFT (FTCase _ f) (FBranch tree list) = appLFT (appFT f tree) list
+
+  public export
+  appLFT : {output : Type} -> LFTFun output -> List FTree -> output
+  appLFT (LFTCase nilCase _) [] = nilCase
+  appLFT (LFTCase _ f) (tree :: list) = appLFT (appFT f tree) list
+
+-- | My modifications:
+-- | Done below:
+-- | Still to do:
+-- |   - Add atoms
+-- |   - Convert to S-expressions (my atom + list representation)
+-- |   - Try to uncurry the type and function
+-- |   - Try to make them dependent
+-- |     - If that works, add the restriction to refined well-founded
+-- |       S-expressions, with the dependent types available to validate
+-- |     - If it fails, do refinement to well-founded trees with finite
+-- |       pattern matches first, and find out whether that makes
+-- |       type dependency easier
+-- |   - Interpret them in Idris:
+-- |     - Refined S-expressions with big-step evaluation
+-- |     - Small-step evaluation for well-typed Turing machines using the
+-- |       coinductive version?
+-- |   - Write them in themselves
+-- |   - Use that reflection together with the duality to implement
+-- |     algebraic effects (perhaps using models and comodels)
+
 mutual
   public export
   data ZerothOrderType : Type where

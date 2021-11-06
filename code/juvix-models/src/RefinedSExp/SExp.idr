@@ -488,7 +488,7 @@ SExpRefinedPerAtomHandler : (m : Type -> Type) ->
   (handledAtoms : List atom) -> atom -> Type
 SExpRefinedPerAtomHandler m {atom} spl lpl handledAtoms a =
   (l : SList atom) -> m (lpl l) -> ListContains handledAtoms a ->
-  m $ Dec (spl (a $*l))
+  m $ Dec (spl (a $* l))
 
 public export
 record SExpRefinePerAtomHandlerSig
