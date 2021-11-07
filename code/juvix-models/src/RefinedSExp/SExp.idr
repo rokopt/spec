@@ -191,11 +191,11 @@ SExpComposeMorphismSigsCorrect : {0 atom, atom', atom'' : Type} ->
   (sigLeft : SExpMorphismSig atom' atom'') ->
   (sigRight : SExpMorphismSig atom atom') ->
   ((x : SExp atom) ->
-    sexpEliminator sigLeft (sexpEliminator sigRight x) =
-      sexpEliminator (SExpComposeMorphismSigs sigLeft sigRight) x,
+    sexpMorphism (SExpComposeMorphismSigs sigLeft sigRight) x =
+      sexpMorphism sigLeft (sexpMorphism sigRight x),
    (l : SList atom) ->
-    slistEliminator sigLeft (slistEliminator sigRight l) =
-      slistEliminator (SExpComposeMorphismSigs sigLeft sigRight) l)
+    slistMorphism (SExpComposeMorphismSigs sigLeft sigRight) l =
+      slistMorphism sigLeft (slistMorphism sigRight l))
 SExpComposeMorphismSigsCorrect sigLeft sigRight =
   sexpEliminators $ SExpEliminatorArgs
     (?SExpComposeMorphismSigsCorrect_hole_expElim)
@@ -258,6 +258,48 @@ slistDepMorphism : {0 atom, atom' : Type} ->
   (l : SList atom) -> slistDepTypeIntro domain l ->
     slistDepTypeIntro codomain $ slistMorphism morphism l
 slistDepMorphism = slistEliminator . SExpDepMorphismSigToEliminatorSig
+
+public export
+SExpComposeDepMorphismSigs :
+  {atom, atom', atom'' : Type} ->
+  {morphism' : SExpMorphismSig atom' atom''} ->
+  {morphism : SExpMorphismSig atom atom'} ->
+  {a : SDepTypeIntroSig atom} ->
+  {b : SDepTypeIntroSig atom'} ->
+  {c : SDepTypeIntroSig atom''} ->
+  SExpDepMorphismSig b c morphism' ->
+  SExpDepMorphismSig a b morphism ->
+  SExpDepMorphismSig a c
+    (SExpComposeMorphismSigs morphism' morphism)
+SExpComposeDepMorphismSigs sigLeft sigRight = SExpDepMorphismArgs
+
+export
+SExpComposeDepMorphismSigsCorrect :
+  {atom, atom', atom'' : Type} ->
+  {morphism' : SExpMorphismSig atom' atom''} ->
+  {morphism : SExpMorphismSig atom atom'} ->
+  {a : SDepTypeIntroSig atom} ->
+  {b : SDepTypeIntroSig atom'} ->
+  {c : SDepTypeIntroSig atom''} ->
+  (sigLeft : SExpDepMorphismSig b c morphism') ->
+  (sigRight : SExpDepMorphismSig a b morphism) ->
+  ((x : SExp atom) -> (spx : sexpDepTypeIntro a x) ->
+   sexpDepMorphism (SExpComposeDepMorphismSigs sigLeft sigRight) x spx =
+    (rewrite fst (SExpComposeMorphismSigsCorrect morphism' morphism) x in
+      sexpDepMorphism sigLeft (sexpMorphism morphism x)
+        (sexpDepMorphism sigRight x spx)
+    ),
+   (l : SList atom) -> (lpl : slistDepTypeIntro a l) ->
+   slistDepMorphism (SExpComposeDepMorphismSigs sigLeft sigRight) l lpl =
+    (rewrite snd (SExpComposeMorphismSigsCorrect morphism' morphism) l in
+      slistDepMorphism sigLeft (slistMorphism morphism l)
+        (slistDepMorphism sigRight l lpl)
+    ))
+SExpComposeDepMorphismSigsCorrect sigLeft sigRight =
+  sexpEliminators $ SExpEliminatorArgs
+    (?SExpComposeDepMorphismSigsCorrect_hole_expElim)
+    (?SExpComposeDepMorphismSigsCorrect_hole_nilElim)
+    (?SExpComposeDepMorphismSigsCorrect_hole_consElim)
 
 public export
 sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
