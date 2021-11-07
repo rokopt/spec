@@ -317,6 +317,40 @@ SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom
 SListForAll {atom} sp = slistEliminator (SExpGenerateForAllSig sp)
 
 public export
+record SExpForAllIntroSig
+  {atom : Type} (0 sp : SPred atom)
+  where
+    constructor SExpForAllIntroArgs
+    expElim : (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $* l)
+
+public export
+SExpForAllIntroSigToEliminatorSig :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  SExpForAllIntroSig sp ->
+  SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
+SExpForAllIntroSigToEliminatorSig {sp} signature =
+  SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
+    (\a, l, forAll => (expElim signature a l forAll, forAll))
+    ()
+    (\_, _ => MkPair)
+
+public export
+sexpForAllIntro :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  (signature : SExpForAllIntroSig sp) ->
+  SExp atom ~> SExpForAll sp
+sexpForAllIntro signature =
+  sexpEliminator (SExpForAllIntroSigToEliminatorSig signature)
+
+public export
+slistForAllIntro :
+  {atom : Type} -> {0 sp : SPred atom} ->
+  (signature : SExpForAllIntroSig sp) ->
+  SList atom ~> SListForAll sp
+slistForAllIntro signature =
+  slistEliminator (SExpForAllIntroSigToEliminatorSig signature)
+
+public export
 sexpForAllHead : {0 atom : Type} -> {0 sp : SPred atom} -> {x : SExp atom} ->
   SExpForAll sp x -> sp x
 sexpForAllHead {x=(_ $* _)} = fst
@@ -359,40 +393,6 @@ public export
 slistExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (l : SList atom) ->
   SListExists sp l -> DPair (SExp atom) sp
 slistExistsFirst = snd sexpExistsFirsts
-
-public export
-record SExpForAllIntroSig
-  {atom : Type} (0 sp : SPred atom)
-  where
-    constructor SExpForAllIntroArgs
-    expElim : (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $* l)
-
-public export
-SExpForAllIntroSigToEliminatorSig :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  SExpForAllIntroSig sp ->
-  SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
-SExpForAllIntroSigToEliminatorSig {sp} signature =
-  SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
-    (\a, l, forAll => (expElim signature a l forAll, forAll))
-    ()
-    (\_, _ => MkPair)
-
-public export
-sexpForAllIntro :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllIntroSig sp) ->
-  SExp atom ~> SExpForAll sp
-sexpForAllIntro signature =
-  sexpEliminator (SExpForAllIntroSigToEliminatorSig signature)
-
-public export
-slistForAllIntro :
-  {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllIntroSig sp) ->
-  SList atom ~> SListForAll sp
-slistForAllIntro signature =
-  slistEliminator (SExpForAllIntroSigToEliminatorSig signature)
 
 public export
 sexpShows : {atom : Type} -> (showAtom : atom -> String) ->

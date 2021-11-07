@@ -36,11 +36,11 @@ natFromData (DString s) = length s
 natPred : DExp -> Type
 natPred _ = Nat
 
-natSig : SExpForAllEliminatorSig SExpTest.natPred
-natSig = SExpForAllEliminatorArgs (\d, l, forAll => natFromData d)
+natSig : SExpForAllIntroSig SExpTest.natPred
+natSig = SExpForAllIntroArgs (\d, l, forAll => natFromData d)
 
 natExp : SExpForAll SExpTest.natPred SExpTest.sexpNotationTest
-natExp = sexpForAllEliminator natSig sexpNotationTest
+natExp = sexpForAllIntro natSig sexpNotationTest
 
 export
 sexpTests : IO ()
