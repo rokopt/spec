@@ -737,50 +737,50 @@ slistRefinePerAtomHandlerReader  :
 slistRefinePerAtomHandlerReader = slistRefinePerAtomHandler
 
 public export
-record SExpForAllEliminatorSig
+record SExpForAllIntroSig
   {atom : Type} (0 sp : SPred atom)
   where
-    constructor SExpForAllEliminatorArgs
+    constructor SExpForAllIntroArgs
     expElim : (a : atom) -> (l : SList atom) -> SListForAll sp l -> sp (a $* l)
 
 public export
-SExpForAllEliminatorSigToEliminatorSig :
+SExpForAllIntroSigToEliminatorSig :
   {atom : Type} -> {0 sp : SPred atom} ->
-  SExpForAllEliminatorSig sp ->
+  SExpForAllIntroSig sp ->
   SExpEliminatorSig (SExpForAll sp) (SListForAll sp)
-SExpForAllEliminatorSigToEliminatorSig {sp} signature =
+SExpForAllIntroSigToEliminatorSig {sp} signature =
   SExpEliminatorArgs {sp=(SExpForAll sp)} {lp=(SListForAll sp)}
     (\a, l, forAll => (expElim signature a l forAll, forAll))
     ()
     (\_, _ => MkPair)
 
 public export
-sexpForAllEliminator :
+sexpForAllIntro :
   {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllEliminatorSig sp) ->
+  (signature : SExpForAllIntroSig sp) ->
   SExp atom ~> SExpForAll sp
-sexpForAllEliminator signature =
-  sexpEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
+sexpForAllIntro signature =
+  sexpEliminator (SExpForAllIntroSigToEliminatorSig signature)
 
 public export
-slistForAllEliminator :
+slistForAllIntro :
   {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllEliminatorSig sp) ->
+  (signature : SExpForAllIntroSig sp) ->
   SList atom ~> SListForAll sp
-slistForAllEliminator signature =
-  slistEliminator (SExpForAllEliminatorSigToEliminatorSig signature)
+slistForAllIntro signature =
+  slistEliminator (SExpForAllIntroSigToEliminatorSig signature)
 
 public export
 sexpGeneralInduction :
   {atom : Type} -> {0 sp : SPred atom} ->
-  (signature : SExpForAllEliminatorSig sp) ->
+  (signature : SExpForAllIntroSig sp) ->
   SExp atom ~> sp
 sexpGeneralInduction {sp} signature x =
-  sexpForAllHead {sp} (sexpForAllEliminator {sp} signature x)
+  sexpForAllHead {sp} (sexpForAllIntro {sp} signature x)
 
 public export
 STypeSig : (atom : Type) -> Type
-STypeSig atom = SExpForAllEliminatorSig {atom} (\_ => Type)
+STypeSig atom = SExpForAllIntroSig {atom} (\_ => Type)
 
 public export
 STypePred : {atom : Type} -> STypeSig atom -> SPred atom
@@ -804,9 +804,9 @@ public export
 SExpTransformSigToForAllSig : {0 atom : Type} ->
   {0 sp, sp' : STypeSig atom} ->
   SExpTransformSig sp sp' ->
-  SExpForAllEliminatorSig (SExpTransform sp sp')
+  SExpForAllIntroSig (SExpTransform sp sp')
 SExpTransformSigToForAllSig transformSig =
-  SExpForAllEliminatorArgs $ sexpTransformStep transformSig
+  SExpForAllIntroArgs $ sexpTransformStep transformSig
 
 public export
 sexpTransform : {atom : Type} ->
@@ -842,7 +842,7 @@ sexpGeneralStrengthenedInduction :
   (x : SExp atom) -> DPair (sp x) (spp x)
 sexpGeneralStrengthenedInduction signature =
   sexpGeneralInduction
-    (SExpForAllEliminatorArgs $
+    (SExpForAllIntroArgs $
       \a, l, lforAll =>
         (expElim signature a l lforAll ** stepCorrect signature a l lforAll)
     )
