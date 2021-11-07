@@ -162,6 +162,104 @@ sexpEliminators signature =
   (sexpEliminator signature, slistEliminator signature)
 
 public export
+SExpMorphismSig : Type -> Type -> Type
+SExpMorphismSig atom atom' =
+  SExpEliminatorSig {atom} (const $ SExp atom') (const $ SList atom')
+
+public export
+sexpMorphism : {atom, atom' : Type} -> SExpMorphismSig atom atom' ->
+  SExp atom -> SExp atom'
+sexpMorphism = sexpEliminator
+
+public export
+slistMorphism : {atom, atom' : Type} -> SExpMorphismSig atom atom' ->
+  SList atom -> SList atom'
+slistMorphism = slistEliminator
+
+public export
+SExpComposeMorphismSigs : {0 atom, atom', atom'' : Type} ->
+  SExpMorphismSig atom' atom'' ->
+  SExpMorphismSig atom atom' ->
+  SExpMorphismSig atom atom''
+SExpComposeMorphismSigs sigLeft sigRight = SExpEliminatorArgs
+  (?SExpComposeMorphismSig_hole_expElim)
+  (?SExpComposeMorphismSig_hole_nilElim)
+  (?SExpComposeMorphismSig_hole_consElim)
+
+export
+SExpComposeMorphismSigsCorrect : {0 atom, atom', atom'' : Type} ->
+  (sigLeft : SExpMorphismSig atom' atom'') ->
+  (sigRight : SExpMorphismSig atom atom') ->
+  ((x : SExp atom) ->
+    sexpEliminator sigLeft (sexpEliminator sigRight x) =
+      sexpEliminator (SExpComposeMorphismSigs sigLeft sigRight) x,
+   (l : SList atom) ->
+    slistEliminator sigLeft (slistEliminator sigRight l) =
+      slistEliminator (SExpComposeMorphismSigs sigLeft sigRight) l)
+SExpComposeMorphismSigsCorrect sigLeft sigRight =
+  sexpEliminators $ SExpEliminatorArgs
+    (?SExpComposeMorphismSigsCorrect_hole_expElim)
+    (?SExpComposeMorphismSigsCorrect_hole_nilElim)
+    (?SExpComposeMorphismSigsCorrect_hole_consElim)
+
+public export
+SDepTypeIntroSig : Type -> Type
+SDepTypeIntroSig atom = SExpEliminatorSig {atom} (const Type) (const Type)
+
+public export
+sexpDepTypeIntro : {0 atom : Type} -> SDepTypeIntroSig atom -> SPred atom
+sexpDepTypeIntro = sexpEliminator
+
+public export
+slistDepTypeIntro : {0 atom : Type} -> SDepTypeIntroSig atom -> SLPred atom
+slistDepTypeIntro = slistEliminator
+
+public export
+record SExpDepMorphismSig
+  {atom, atom' : Type}
+  (domain : SDepTypeIntroSig atom)
+  (codomain : SDepTypeIntroSig atom')
+  (morphism : SExpMorphismSig atom atom')
+  where
+    constructor SExpDepMorphismArgs
+
+public export
+SExpDepMorphismSigToEliminatorSig : {0 atom, atom' : Type} ->
+  {domain : SDepTypeIntroSig atom} ->
+  {codomain : SDepTypeIntroSig atom'} ->
+  {morphism : SExpMorphismSig atom atom'} ->
+  SExpDepMorphismSig domain codomain morphism ->
+  SExpEliminatorSig
+    (\x => sexpDepTypeIntro domain x ->
+      sexpDepTypeIntro codomain $ sexpMorphism morphism x)
+    (\l => slistDepTypeIntro domain l ->
+      slistDepTypeIntro codomain $ slistMorphism morphism l)
+SExpDepMorphismSigToEliminatorSig signature = SExpEliminatorArgs
+  (?SExpDepMorphismSigToEliminatorSig_hole_expElim)
+  (?SExpDepMorphismSigToEliminatorSig_hole_nilElim)
+  (?SExpDepMorphismSigToEliminatorSig_hole_consElim)
+
+public export
+sexpDepMorphism : {0 atom, atom' : Type} ->
+  {domain : SDepTypeIntroSig atom} ->
+  {codomain : SDepTypeIntroSig atom'} ->
+  {morphism : SExpMorphismSig atom atom'} ->
+  SExpDepMorphismSig domain codomain morphism ->
+  (x : SExp atom) -> sexpDepTypeIntro domain x ->
+    sexpDepTypeIntro codomain $ sexpMorphism morphism x
+sexpDepMorphism = sexpEliminator . SExpDepMorphismSigToEliminatorSig
+
+public export
+slistDepMorphism : {0 atom, atom' : Type} ->
+  {domain : SDepTypeIntroSig atom} ->
+  {codomain : SDepTypeIntroSig atom'} ->
+  {morphism : SExpMorphismSig atom atom'} ->
+  SExpDepMorphismSig domain codomain morphism ->
+  (l : SList atom) -> slistDepTypeIntro domain l ->
+    slistDepTypeIntro codomain $ slistMorphism morphism l
+slistDepMorphism = slistEliminator . SExpDepMorphismSigToEliminatorSig
+
+public export
 sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
   (SExp atom -> String, SList atom -> String)
 sexpShows {atom} showAtom =

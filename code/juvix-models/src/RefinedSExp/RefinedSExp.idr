@@ -10,3 +10,19 @@ import public RefinedSExp.SExp
 --  - _Rubaiyat of Omar Khayyam_ (tr. Edward FitzGerald)
 
 %default total
+
+public export
+PureSExpRefinement : Type -> Type
+PureSExpRefinement atom = SExp atom -> Bool
+
+public export
+PureSExpIsRefined : {atom : Type} -> PureSExpRefinement atom -> SPred atom
+PureSExpIsRefined = (.) IsTrue
+
+public export
+SCPred : Type -> Type -> Type
+SCPred atom context = (x : SExp atom) -> (c : context) -> Bool
+
+public export
+SExpRefinementInContext : Type -> Type -> Type
+SExpRefinementInContext atom context = SExp atom -> context -> Bool
