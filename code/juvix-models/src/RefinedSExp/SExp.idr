@@ -302,6 +302,65 @@ SExpComposeDepMorphismSigsCorrect sigLeft sigRight =
     (?SExpComposeDepMorphismSigsCorrect_hole_consElim)
 
 public export
+SExpGenerateForAllSig : {0 atom : Type} -> SPred atom ->
+  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
+SExpGenerateForAllSig {atom} sp =
+  SExpEliminatorArgs {atom}
+    (\a, l => Pair $ sp (a $* l)) () (\_, _ => Pair)
+
+public export
+SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom
+SExpForAll {atom} sp = sexpEliminator (SExpGenerateForAllSig sp)
+
+public export
+SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom
+SListForAll {atom} sp = slistEliminator (SExpGenerateForAllSig sp)
+
+public export
+sexpForAllHead : {0 atom : Type} -> {0 sp : SPred atom} -> {x : SExp atom} ->
+  SExpForAll sp x -> sp x
+sexpForAllHead {x=(_ $* _)} = fst
+
+public export
+sexpForAllTail : {0 atom : Type} -> {0 sp : SPred atom} ->
+  {a : atom} -> {l : SList atom} -> SExpForAll sp (a $* l) -> SListForAll sp l
+sexpForAllTail = snd
+
+public export
+SExpGenerateExistsSig : {0 atom : Type} -> SPred atom ->
+  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
+SExpGenerateExistsSig {atom} sp =
+  SExpEliminatorArgs {atom}
+    (\a, l => Either $ sp (a $* l)) Void (\_, _ => Either)
+
+public export
+SExpExists : {0 atom : Type} -> SPred atom -> SPred atom
+SExpExists {atom} sp = sexpEliminator (SExpGenerateExistsSig sp)
+
+public export
+SListExists : {0 atom : Type} -> SPred atom -> SLPred atom
+SListExists {atom} sp = slistEliminator (SExpGenerateExistsSig sp)
+
+public export
+sexpExistsFirsts : {0 atom : Type} -> {0 sp : SPred atom} ->
+  ((x : SExp atom) -> SExpExists sp x -> DPair (SExp atom) sp,
+   (l : SList atom) -> SListExists sp l -> DPair (SExp atom) sp)
+sexpExistsFirsts = sexpEliminators $ SExpEliminatorArgs
+  (?sexpExistsFirsts_hole_expElim)
+  (?sexpExistsFirsts_hole_nilElim)
+  (?sexpExistsFirsts_hole_consElim)
+
+public export
+sexpExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (x : SExp atom) ->
+  SExpExists sp x -> DPair (SExp atom) sp
+sexpExistsFirst = fst sexpExistsFirsts
+
+public export
+slistExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (l : SList atom) ->
+  SListExists sp l -> DPair (SExp atom) sp
+slistExistsFirst = snd sexpExistsFirsts
+
+public export
 sexpShows : {atom : Type} -> (showAtom : atom -> String) ->
   (SExp atom -> String, SList atom -> String)
 sexpShows {atom} showAtom =
@@ -367,65 +426,6 @@ mutual
   slistLessThan _ (_ :: _) [] = False
   slistLessThan aLessThan (x :: l) (x' :: l') =
     if (sexpLessThan aLessThan x x') then True else slistLessThan aLessThan l l'
-
-public export
-SExpGenerateForAllSig : {0 atom : Type} -> SPred atom ->
-  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
-SExpGenerateForAllSig {atom} sp =
-  SExpEliminatorArgs {atom}
-    (\a, l => Pair $ sp (a $* l)) () (\_, _ => Pair)
-
-public export
-SExpForAll : {0 atom : Type} -> SPred atom -> SPred atom
-SExpForAll {atom} sp = sexpEliminator (SExpGenerateForAllSig sp)
-
-public export
-SListForAll : {0 atom : Type} -> SPred atom -> SLPred atom
-SListForAll {atom} sp = slistEliminator (SExpGenerateForAllSig sp)
-
-public export
-sexpForAllHead : {0 atom : Type} -> {0 sp : SPred atom} -> {x : SExp atom} ->
-  SExpForAll sp x -> sp x
-sexpForAllHead {x=(_ $* _)} = fst
-
-public export
-sexpForAllTail : {0 atom : Type} -> {0 sp : SPred atom} ->
-  {a : atom} -> {l : SList atom} -> SExpForAll sp (a $* l) -> SListForAll sp l
-sexpForAllTail = snd
-
-public export
-SExpGenerateExistsSig : {0 atom : Type} -> SPred atom ->
-  SExpEliminatorSig {atom} (\_ => Type) (\_ => Type)
-SExpGenerateExistsSig {atom} sp =
-  SExpEliminatorArgs {atom}
-    (\a, l => Either $ sp (a $* l)) Void (\_, _ => Either)
-
-public export
-SExpExists : {0 atom : Type} -> SPred atom -> SPred atom
-SExpExists {atom} sp = sexpEliminator (SExpGenerateExistsSig sp)
-
-public export
-SListExists : {0 atom : Type} -> SPred atom -> SLPred atom
-SListExists {atom} sp = slistEliminator (SExpGenerateExistsSig sp)
-
-public export
-sexpExistsFirsts : {0 atom : Type} -> {0 sp : SPred atom} ->
-  ((x : SExp atom) -> SExpExists sp x -> DPair (SExp atom) sp,
-   (l : SList atom) -> SListExists sp l -> DPair (SExp atom) sp)
-sexpExistsFirsts = sexpEliminators $ SExpEliminatorArgs
-  (?sexpExistsFirsts_hole_expElim)
-  (?sexpExistsFirsts_hole_nilElim)
-  (?sexpExistsFirsts_hole_consElim)
-
-public export
-sexpExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (x : SExp atom) ->
-  SExpExists sp x -> DPair (SExp atom) sp
-sexpExistsFirst = fst sexpExistsFirsts
-
-public export
-slistExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (l : SList atom) ->
-  SListExists sp l -> DPair (SExp atom) sp
-slistExistsFirst = snd sexpExistsFirsts
 
 public export
 record SExpEitherInductionSig
