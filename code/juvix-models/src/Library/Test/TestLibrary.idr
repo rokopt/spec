@@ -1,6 +1,7 @@
 module Library.Test.TestLibrary
 
 import public Library.Decidability
+import public RefinedSExp.Data
 
 %default total
 

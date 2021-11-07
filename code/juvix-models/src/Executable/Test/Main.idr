@@ -50,10 +50,11 @@ export
 main : IO ()
 main = do
   RefinedSExp.Test.SExpTest.sexpTests
+  RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
   Geb.Test.GebTest.gebTests
-  Geb.Test.GebSExpTest.gebSExpTests
   Geb.Test.CExpTest.cexpTests
   {-
+  Geb.Test.GebSExpTest.gebSExpTests
   RefinedSExp.Test.ListTest.listTests
   RefinedSExp.PairVariant.Test.SExpTest.sExpTests
   RefinedSExp.Test.ComputableFunctionsTest.computableFunctionsTests
