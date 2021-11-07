@@ -32,13 +32,13 @@ appBT (BTCase _ f) (BTBranch left right) = appBT (appBT f left) right
 -- | strongly resemble S-expressions.
 public export
 data FTree : Type -> Type where
-  FLeaf : {atom : Type} -> FTree atom
+  FLeaf : {atom : Type} -> atom -> FTree atom
   FBranch : {atom : Type} -> FTree atom -> List (FTree atom) -> FTree atom
 
 mutual
   public export
   data FTFun : Type -> Type -> Type where
-    FTCase : {atom, output : Type} -> (leafCase : output) ->
+    FTCase : {atom, output : Type} -> (leafCase : atom -> output) ->
       (branchCase : Lazy (FTFun atom (LFTFun atom output))) -> FTFun atom output
 
   public export
@@ -49,7 +49,7 @@ mutual
 mutual
   public export
   appFT : {atom, output : Type} -> FTFun atom output -> FTree atom -> output
-  appFT (FTCase leafCase _) FLeaf = leafCase
+  appFT (FTCase leafCase _) (FLeaf a) = leafCase a
   appFT (FTCase _ f) (FBranch tree list) = appLFT (appFT f tree) list
 
   public export
