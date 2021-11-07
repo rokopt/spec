@@ -409,6 +409,25 @@ SListExists : {0 atom : Type} -> SPred atom -> SLPred atom
 SListExists {atom} sp = slistEliminator (SExpGenerateExistsSig sp)
 
 public export
+sexpExistsFirsts : {0 atom : Type} -> {0 sp : SPred atom} ->
+  ((x : SExp atom) -> SExpExists sp x -> DPair (SExp atom) sp,
+   (l : SList atom) -> SListExists sp l -> DPair (SExp atom) sp)
+sexpExistsFirsts = sexpEliminators $ SExpEliminatorArgs
+  (?sexpExistsFirsts_hole_expElim)
+  (?sexpExistsFirsts_hole_nilElim)
+  (?sexpExistsFirsts_hole_consElim)
+
+public export
+sexpExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (x : SExp atom) ->
+  SExpExists sp x -> DPair (SExp atom) sp
+sexpExistsFirst = fst sexpExistsFirsts
+
+public export
+slistExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (l : SList atom) ->
+  SListExists sp l -> DPair (SExp atom) sp
+slistExistsFirst = snd sexpExistsFirsts
+
+public export
 record SExpEitherInductionSig
   (m : Type -> Type)
   {atom : Type} (0 spl, spr : SPred atom) (0 lpl, lpr : SLPred atom)
