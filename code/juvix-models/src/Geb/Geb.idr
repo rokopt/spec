@@ -31,29 +31,30 @@ appBT (BTCase _ f) (BTBranch left right) = appBT (appBT f left) right
 -- | math, not the code.  So here's my attempt at the code.  These
 -- | strongly resemble S-expressions.
 public export
-data FTree : Type where
-  FLeaf : FTree
-  FBranch : FTree -> List FTree -> FTree
+data FTree : Type -> Type where
+  FLeaf : {atom : Type} -> FTree atom
+  FBranch : {atom : Type} -> FTree atom -> List (FTree atom) -> FTree atom
 
 mutual
   public export
-  data FTFun : Type -> Type where
-    FTCase : {output : Type} -> (leafCase : output) ->
-      (branchCase : Lazy (FTFun (LFTFun output))) -> FTFun output
+  data FTFun : Type -> Type -> Type where
+    FTCase : {atom, output : Type} -> (leafCase : output) ->
+      (branchCase : Lazy (FTFun atom (LFTFun atom output))) -> FTFun atom output
 
   public export
-  data LFTFun : Type -> Type where
-    LFTCase : {output : Type} -> (nilCase : output) ->
-      (consCase : Lazy (FTFun (LFTFun output))) -> LFTFun output
+  data LFTFun : Type -> Type -> Type where
+    LFTCase : {atom, output : Type} -> (nilCase : output) ->
+      (consCase : Lazy (FTFun atom (LFTFun atom output))) -> LFTFun atom output
 
 mutual
   public export
-  appFT : {output : Type} -> FTFun output -> FTree -> output
+  appFT : {atom, output : Type} -> FTFun atom output -> FTree atom -> output
   appFT (FTCase leafCase _) FLeaf = leafCase
   appFT (FTCase _ f) (FBranch tree list) = appLFT (appFT f tree) list
 
   public export
-  appLFT : {output : Type} -> LFTFun output -> List FTree -> output
+  appLFT : {atom, output : Type} -> LFTFun atom output -> List (FTree atom) ->
+    output
   appLFT (LFTCase nilCase _) [] = nilCase
   appLFT (LFTCase _ f) (tree :: list) = appLFT (appFT f tree) list
 
