@@ -12,6 +12,8 @@ modules = Library.TypesAndFunctions
     , Geb.Test.GebTest
     , Geb.GebSExp
     , Geb.Test.GebSExpTest
+    , Geb.CExp
+    , Geb.Test.CExpTest
     , Category.Category
     , Library.List
     , Theories.SimplyTypedLambdaCalculus
