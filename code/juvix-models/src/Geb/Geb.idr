@@ -22,6 +22,13 @@ data BTFun : Type -> Type where
   BTCase : {output : Type} -> (leafCase : output) ->
     (branchCase : Lazy (BTFun (BTFun output))) -> BTFun output
 
+{-
+ - Not total.
+public export
+lamBT : {a : Type} -> (BTree -> a) -> BTFun a
+lamBT f = BTCase (f BTLeaf) (lamBT (\t => lamBT (\u => f (BTBranch t u)))
+-}
+
 public export
 appBT : {output : Type} -> BTFun output -> BTree -> output
 appBT (BTCase leafCase _) BTLeaf = leafCase
