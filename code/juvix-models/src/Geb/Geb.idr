@@ -76,9 +76,9 @@ data GebCategoryObject : {reflection : ConcreteReflection} ->
       {auto canPromote : CanPromote category oldOrder newOrder} ->
       GebCategoryObject category oldOrder -> GebCategoryObject category newOrder
 
-    GebVoid : GebCategoryObject category ZeroOrder
+    GebVoid : GebCategoryObject category gebOrder
 
-    GebUnit : GebCategoryObject category ZeroOrder
+    GebUnit : GebCategoryObject category gebOrder
 
     GebProduct : List (GebCategoryObject category gebOrder) ->
       GebCategoryObject category gebOrder
@@ -115,6 +115,26 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
       (morphismOrder : GebOrder category) ->
       {auto canPromote : CanPromote category objectOrder morphismOrder} ->
       GebCategoryMorphism {category} {objectOrder} object object morphismOrder
+
+    GebCompose : {a, b, c : GebCategoryObject category objectOrder} ->
+      {morphismOrder : GebOrder category} ->
+      GebCategoryMorphism b c morphismOrder ->
+      GebCategoryMorphism a b morphismOrder ->
+      GebCategoryMorphism a c morphismOrder
+
+    GebFromVoid : {codomainOrder : GebOrder category} ->
+      {codomain : GebCategoryObject category codomainOrder} ->
+      (morphismOrder : GebOrder category) ->
+      {auto canPromote : CanPromote category codomainOrder morphismOrder} ->
+      GebCategoryMorphism
+        {objectOrder=codomainOrder} GebVoid codomain morphismOrder
+
+    GebToUnit : {domainOrder : GebOrder category} ->
+      {domain : GebCategoryObject category domainOrder} ->
+      (morphismOrder : GebOrder category) ->
+      {auto canPromote : CanPromote category domainOrder morphismOrder} ->
+      GebCategoryMorphism
+        {objectOrder=domainOrder} domain GebUnit morphismOrder
 
 public export
 data GebCategoryDependentObject : {reflection : ConcreteReflection} ->
