@@ -2,6 +2,7 @@ module Datatypes.AlgebraicTypes
 
 import public Library.FunctionsAndRelations
 import public RefinedSExp.List
+import public RefinedSExp.SExp
 
 %default total
 

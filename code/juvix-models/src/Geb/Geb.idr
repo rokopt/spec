@@ -13,6 +13,7 @@ import public Data.SortedSet
 import public Data.SortedMap
 import public Data.DPair
 import public Geb.GebAtom
+import public Datatypes.AlgebraicTypes
 
 %default total
 
