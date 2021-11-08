@@ -177,6 +177,29 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
       GebCategoryMorphism
         (GebCoproduct (map DPair.fst morphisms)) codomain morphismOrder
 
+    GebAlgebraicEval :
+      {objectOrder : GebOrder category} ->
+      {auto canPromote : CanPromote category objectOrder morphismOrder} ->
+      {domain, codomain : GebCategoryObject category objectOrder} ->
+      GebCategoryMorphism
+        (GebProduct {gebOrder=morphismOrder}
+         [GebExponential {canPromote} domain codomain,
+          PromoteObject {canPromote} domain])
+        codomain morphismOrder
+
+    GebCurry :
+      {objectOrder, oldOrder, newOrder : GebOrder category} ->
+      {domLeft, domRight, codomain : GebCategoryObject category objectOrder} ->
+      GebCategoryMorphism
+        (GebProduct [domLeft, domRight]) codomain oldOrder ->
+      {auto morphismHigherOrderThanObjects :
+        CanPromote category objectOrder oldOrder} ->
+      {auto canPromote : CanPromote category oldOrder newOrder} ->
+      GebCategoryMorphism domLeft
+        (GebExponential {canPromote=morphismHigherOrderThanObjects}
+          domRight codomain)
+        newOrder
+
     GebDecideEquality :
       {testQuantity : GebCategoryObject category ZeroOrder} ->
       (leftInput, rightInput : GebCategoryMorphism domain testQuantity
