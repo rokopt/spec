@@ -101,8 +101,9 @@ data GebCategoryObject : {reflection : ConcreteReflection} ->
 public export
 data GebCategoryMorphism : {reflection : ConcreteReflection} ->
   {category : CategoryGenerator reflection} ->
-  {objectOrder : GebOrder category} ->
-  (domain, codomain : GebCategoryObject {reflection} category objectOrder) ->
+  {domainOrder, codomainOrder : GebOrder category} ->
+  (domain : GebCategoryObject {reflection} category domainOrder) ->
+  (codomain : GebCategoryObject {reflection} category codomainOrder) ->
   (morphismOrder : GebOrder category) ->
   Type where
 
@@ -111,13 +112,13 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
       GebCategoryMorphism domain codomain oldOrder ->
       GebCategoryMorphism domain codomain newOrder
 
-    GebIdentity : (object : GebCategoryObject category objectOrder) ->
+    GebIdentity : {objectOrder : GebOrder category} ->
+      (object : GebCategoryObject category objectOrder) ->
       (morphismOrder : GebOrder category) ->
       {auto canPromote : CanPromote category objectOrder morphismOrder} ->
-      GebCategoryMorphism {category} {objectOrder} object object morphismOrder
+      GebCategoryMorphism {category} object object morphismOrder
 
-    GebCompose : {a, b, c : GebCategoryObject category objectOrder} ->
-      {morphismOrder : GebOrder category} ->
+    GebCompose :
       GebCategoryMorphism b c morphismOrder ->
       GebCategoryMorphism a b morphismOrder ->
       GebCategoryMorphism a c morphismOrder
@@ -127,21 +128,30 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
       (morphismOrder : GebOrder category) ->
       {auto canPromote : CanPromote category codomainOrder morphismOrder} ->
       GebCategoryMorphism
-        {objectOrder=codomainOrder} GebVoid codomain morphismOrder
+        {domainOrder=ZeroOrder} GebVoid codomain morphismOrder
 
     GebToUnit : {domainOrder : GebOrder category} ->
       {domain : GebCategoryObject category domainOrder} ->
       (morphismOrder : GebOrder category) ->
       {auto canPromote : CanPromote category domainOrder morphismOrder} ->
       GebCategoryMorphism
-        {objectOrder=domainOrder} domain GebUnit morphismOrder
+        {codomainOrder=ZeroOrder} domain GebUnit morphismOrder
+
+    GebDecideEquality :
+      {testQuantity : GebCategoryObject category ZeroOrder} ->
+      (leftInput, rightInput : GebCategoryMorphism domain testQuantity
+        morphismOrder) ->
+      (equalCase : GebCategoryMorphism testQuantity codomain morphismOrder) ->
+      (notEqualCase : GebCategoryMorphism
+        (GebProduct [testQuantity, testQuantity]) codomain morphismOrder) ->
+      GebCategoryMorphism domain codomain morphismOrder
 
 public export
 data GebCategoryDependentObject : {reflection : ConcreteReflection} ->
   {category : CategoryGenerator reflection} ->
   (termObject : GebCategoryObject {reflection} category ZeroOrder) ->
   (morphism : GebCategoryMorphism {reflection} {category}
-    {objectOrder=ZeroOrder} termObject GebObjectReflection FirstOrder) ->
+    termObject GebObjectReflection FirstOrder) ->
   Type where
 
 public export
@@ -150,13 +160,11 @@ data GebCategoryDependentMorphism : {reflection : ConcreteReflection} ->
   {domainTermObject, codomainTermObject :
     GebCategoryObject {reflection} category ZeroOrder} ->
   (domainTermMorphism : GebCategoryMorphism {reflection} {category}
-    {objectOrder=ZeroOrder} domainTermObject GebObjectReflection
-    FirstOrder) ->
+    domainTermObject GebObjectReflection FirstOrder) ->
   (codomainTermMorphism : GebCategoryMorphism {reflection} {category}
-    {objectOrder=ZeroOrder} codomainTermObject GebObjectReflection
-    FirstOrder) ->
+    codomainTermObject GebObjectReflection FirstOrder) ->
   (termFunctor : GebCategoryMorphism {reflection} {category}
-    {objectOrder=ZeroOrder} domainTermObject codomainTermObject FirstOrder) ->
+    domainTermObject codomainTermObject FirstOrder) ->
   Type where
 
 -- | Straight from _Representations of First-Order Function Types
