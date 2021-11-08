@@ -137,6 +137,22 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
       GebCategoryMorphism
         {codomainOrder=ZeroOrder} domain GebUnit morphismOrder
 
+    GebProductIntro :
+      {domain : GebCategoryObject category domainOrder} ->
+      (morphisms : List
+        (codomain : GebCategoryObject category codomainOrder **
+         GebCategoryMorphism domain codomain morphismOrder)) ->
+      GebCategoryMorphism
+        domain (GebProduct (map DPair.fst morphisms)) morphismOrder
+
+    GebCoproductElim :
+      {codomain : GebCategoryObject category codomainOrder} ->
+      (morphisms : List
+        (domain : GebCategoryObject category domainOrder **
+         GebCategoryMorphism domain codomain morphismOrder)) ->
+      GebCategoryMorphism
+        (GebCoproduct (map DPair.fst morphisms)) codomain morphismOrder
+
     GebDecideEquality :
       {testQuantity : GebCategoryObject category ZeroOrder} ->
       (leftInput, rightInput : GebCategoryMorphism domain testQuantity
