@@ -215,6 +215,30 @@ slistDepTypeIntro : {0 atom : Type} -> SDepTypeIntroSig atom -> SLPred atom
 slistDepTypeIntro = slistEliminator
 
 public export
+record SPiIntroSig {0 atom : Type} (depType : SDepTypeIntroSig atom) where
+  constructor SPiIntroArgs
+
+public export
+SPiIntroSigToEliminatorSig : {0 atom : Type} ->
+  {depType : SDepTypeIntroSig atom} ->
+  SPiIntroSig depType ->
+  SExpEliminatorSig (sexpDepTypeIntro depType) (slistDepTypeIntro depType)
+SPiIntroSigToEliminatorSig signature = SExpEliminatorArgs
+  (?SPiIntroSigToEliminatorSig_hole_expElim)
+  (?SPiIntroSigToEliminatorSig_hole_nilElim)
+  (?SPiIntroSigToEliminatorSig_hole_consElim)
+
+public export
+sexpPiIntro : {0 atom : Type} -> {depType : SDepTypeIntroSig atom} ->
+  SPiIntroSig depType -> (x : SExp atom) -> sexpDepTypeIntro depType x
+sexpPiIntro = sexpEliminator . SPiIntroSigToEliminatorSig
+
+public export
+slistPiIntro : {0 atom : Type} -> {depType : SDepTypeIntroSig atom} ->
+  SPiIntroSig depType -> (l : SList atom) -> slistDepTypeIntro depType l
+slistPiIntro = slistEliminator . SPiIntroSigToEliminatorSig
+
+public export
 record SExpDepMorphismSig
   {atom, atom' : Type}
   (domain : SDepTypeIntroSig atom)
