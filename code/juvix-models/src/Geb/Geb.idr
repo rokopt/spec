@@ -145,6 +145,30 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
       GebCategoryMorphism
         domain (GebProduct (map DPair.fst morphisms)) morphismOrder
 
+    GebProductElim :
+      {objectOrder : GebOrder category} ->
+      (domains : List (GebCategoryObject category objectOrder)) ->
+      (morphismOrder : GebOrder category) ->
+      (projection : Nat) ->
+      {auto canPromote : CanPromote category objectOrder morphismOrder} ->
+      {auto projectionValid : InBounds projection domains} ->
+      GebCategoryMorphism
+        (GebProduct domains)
+        (index projection domains {ok=projectionValid})
+        morphismOrder
+
+    GebCoproductIntro :
+      {objectOrder : GebOrder category} ->
+      (codomains : List (GebCategoryObject category objectOrder)) ->
+      (morphismOrder : GebOrder category) ->
+      (injection : Nat) ->
+      {auto canPromote : CanPromote category objectOrder morphismOrder} ->
+      {auto injectionValid : InBounds injection codomains} ->
+      GebCategoryMorphism
+        (index injection codomains {ok=injectionValid})
+        (GebCoproduct codomains)
+        morphismOrder
+
     GebCoproductElim :
       {codomain : GebCategoryObject category codomainOrder} ->
       (morphisms : List
