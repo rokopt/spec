@@ -26,8 +26,11 @@ data CategoryGenerator : ConcreteReflection -> Type where
 public export
 data GebOrder : {reflection : ConcreteReflection} ->
   (category : CategoryGenerator reflection) -> Type where
+
     NatOrder : Nat -> GebOrder category
+
     HigherOrder : GebOrder category
+
     TuringComplete : GebOrder category
 
 public export
@@ -50,29 +53,75 @@ public export
 data CanPromote : {reflection : ConcreteReflection} ->
   (category : CategoryGenerator reflection) ->
   (oldOrder, newOrder : GebOrder category) -> Type where
+
     PromoteFinite : (n : Nat) ->
       CanPromote category (NatOrder n) (NatOrder $ S n)
+
     PromoteToHigher : (n : Nat) -> CanPromote category (NatOrder n) HigherOrder
+
     PromoteToTuring : CanPromote category HigherOrder TuringComplete
 
 public export
 data GebCategoryObject : {reflection : ConcreteReflection} ->
   (category : CategoryGenerator reflection) -> (gebOrder : GebOrder category) ->
   Type where
+
     PromoteObject : {oldOrder, newOrder : GebOrder category} ->
       {auto canPromote : CanPromote category oldOrder newOrder} ->
       GebCategoryObject category oldOrder -> GebCategoryObject category newOrder
+
     GebVoid : GebCategoryObject category ZeroOrder
+
     GebUnit : GebCategoryObject category ZeroOrder
+
     GebProduct : List (GebCategoryObject category gebOrder) ->
       GebCategoryObject category gebOrder
+
     GebCoproduct : List (GebCategoryObject category gebOrder) ->
       GebCategoryObject category gebOrder
+
     GebExponential :
       {oldOrder, newOrder : GebOrder category} ->
       {auto canPromote : CanPromote category oldOrder newOrder} ->
       (domain, codomain : GebCategoryObject category oldOrder) ->
       GebCategoryObject category newOrder
+
+    GebObjectReflection : GebCategoryObject category ZeroOrder
+
+    GebMorphismReflection :
+      (domain, codomain : GebCategoryObject category gebOrder) ->
+      GebCategoryObject category ZeroOrder
+
+public export
+data GebCategoryMorphism : {reflection : ConcreteReflection} ->
+  {category : CategoryGenerator reflection} ->
+  {objectOrder : GebOrder category} ->
+  (domain, codomain : GebCategoryObject {reflection} category objectOrder) ->
+  (morphismOrder : GebOrder category) ->
+  Type where
+
+public export
+data GebCategoryDependentObject : {reflection : ConcreteReflection} ->
+  {category : CategoryGenerator reflection} ->
+  (termObject : GebCategoryObject {reflection} category ZeroOrder) ->
+  (morphism : GebCategoryMorphism {reflection} {category}
+    {objectOrder=ZeroOrder} termObject GebObjectReflection FirstOrder) ->
+  Type where
+
+public export
+data GebCategoryDependentMorphism : {reflection : ConcreteReflection} ->
+  {category : CategoryGenerator reflection} ->
+  {domainTermObject, codomainTermObject :
+    GebCategoryObject {reflection} category ZeroOrder} ->
+  (domainTermMorphism : GebCategoryMorphism {reflection} {category}
+    {objectOrder=ZeroOrder} domainTermObject GebObjectReflection
+    FirstOrder) ->
+  (codomainTermMorphism : GebCategoryMorphism {reflection} {category}
+    {objectOrder=ZeroOrder} codomainTermObject GebObjectReflection
+    FirstOrder) ->
+  (termFunctor : GebCategoryMorphism {reflection} {category}
+    {objectOrder=ZeroOrder} domainTermObject codomainTermObject FirstOrder) ->
+  Type where
 
 -- | Straight from _Representations of First-Order Function Types
 -- | as Terminal Coalgebras_.
