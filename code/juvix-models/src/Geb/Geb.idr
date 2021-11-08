@@ -59,7 +59,13 @@ data CanPromote : {reflection : ConcreteReflection} ->
 
     PromoteToHigher : (n : Nat) -> CanPromote category (NatOrder n) HigherOrder
 
+    HigherOrderIsCartesianClosed :
+      CanPromote category HigherOrder HigherOrder
+
     PromoteToTuring : CanPromote category HigherOrder TuringComplete
+
+    TuringCompleteIsCartesianClosed :
+      CanPromote category TuringComplete TuringComplete
 
 public export
 data GebCategoryObject : {reflection : ConcreteReflection} ->
@@ -99,6 +105,16 @@ data GebCategoryMorphism : {reflection : ConcreteReflection} ->
   (domain, codomain : GebCategoryObject {reflection} category objectOrder) ->
   (morphismOrder : GebOrder category) ->
   Type where
+
+    PromoteMorphism : {oldOrder, newOrder : GebOrder category} ->
+      {auto canPromote : CanPromote category oldOrder newOrder} ->
+      GebCategoryMorphism domain codomain oldOrder ->
+      GebCategoryMorphism domain codomain newOrder
+
+    GebIdentity : (object : GebCategoryObject category objectOrder) ->
+      (morphismOrder : GebOrder category) ->
+      {auto canPromote : CanPromote category objectOrder morphismOrder} ->
+      GebCategoryMorphism {category} {objectOrder} object object morphismOrder
 
 public export
 data GebCategoryDependentObject : {reflection : ConcreteReflection} ->
