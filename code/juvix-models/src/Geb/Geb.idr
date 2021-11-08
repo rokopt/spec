@@ -8,14 +8,59 @@ module Geb.Geb
 
 import Library.FunctionsAndRelations
 import Library.Decidability
+import public RefinedSExp.List
 import public RefinedSExp.SExp
 import public Data.SortedSet
 import public Data.SortedMap
 import public Data.DPair
 import public Geb.GebAtom
-import public Datatypes.AlgebraicTypes
 
 %default total
+
+public export
+data GebOrder : Type where
+  NatOrder : Nat -> GebOrder
+  HigherOrder : GebOrder
+  TuringComplete : GebOrder
+
+public export
+ZeroOrder : GebOrder
+ZeroOrder = NatOrder 0
+
+public export
+FirstOrder : GebOrder
+FirstOrder = NatOrder 1
+
+public export
+SecondOrder : GebOrder
+SecondOrder = NatOrder 2
+
+public export
+ThirdOrder : GebOrder
+ThirdOrder = NatOrder 3
+
+public export
+data CanPromote : (oldOrder, newOrder : GebOrder) -> Type where
+  PromoteFinite : (n : Nat) -> CanPromote (NatOrder n) (NatOrder $ S n)
+  PromoteToHigher : (n : Nat) -> CanPromote (NatOrder n) HigherOrder
+  PromoteToTuring : CanPromote HigherOrder TuringComplete
+
+public export
+data GebCategoryObject : (order : GebOrder) -> Type where
+  PromoteObject : {oldOrder, newOrder : GebOrder} ->
+    {auto canPromote : CanPromote oldOrder newOrder} ->
+    GebCategoryObject oldOrder -> GebCategoryObject newOrder
+  GebVoid : GebCategoryObject ZeroOrder
+  GebUnit : GebCategoryObject ZeroOrder
+  GebProduct : {order : GebOrder} -> List (GebCategoryObject order) ->
+    GebCategoryObject order
+  GebCoproduct : {order : GebOrder} -> List (GebCategoryObject order) ->
+    GebCategoryObject order
+  GebExponential :
+    {oldOrder, newOrder : GebOrder} ->
+    {auto canPromote : CanPromote oldOrder newOrder} ->
+    (domain, codomain : GebCategoryObject oldOrder) ->
+    GebCategoryObject newOrder
 
 -- | Straight from _Representations of First-Order Function Types
 -- | as Terminal Coalgebras_.
@@ -203,19 +248,19 @@ checkIndexListConsistent just with (checkIndexListCertified indexList) proof p
 mutual
   public export
   data GebPOrder : GebSExp -> Type where
-    FiniteOrder : (n : Nat) ->
+    FinitePOrder : (n : Nat) ->
       GebPOrder $ GAFiniteOrder $* (gebIndexList n)
-    TuringComplete : GebPOrder $ $^ GATuringComplete
+    TuringCompleteP : GebPOrder $ $^ GATuringComplete
 
   public export
   data GebPType : {order : GebSExp} -> (checkedOrder : GebPOrder order) ->
     (type : GebSExp) -> Type where
-      PromoteFinite : {order : GebSExp} -> {n : Nat} -> {type : GebSExp} ->
-        GebPType (FiniteOrder n) type ->
-        GebPType (FiniteOrder (S n)) $ (GAPromoteFinite $*** type)
-      PromoteTuringComplete : {order : GebSExp} -> {n : Nat} ->
-        {type : GebSExp} -> GebPType (FiniteOrder n) type ->
-        GebPType TuringComplete $ (GAPromoteTuringComplete $*** type)
+      PromoteFiniteP : {order : GebSExp} -> {n : Nat} -> {type : GebSExp} ->
+        GebPType (FinitePOrder n) type ->
+        GebPType (FinitePOrder (S n)) $ (GAPromoteFinite $*** type)
+      PromoteTuringCompleteP : {order : GebSExp} -> {n : Nat} ->
+        {type : GebSExp} -> GebPType (FinitePOrder n) type ->
+        GebPType TuringCompleteP $ (GAPromoteTuringComplete $*** type)
       PatternType : {matrix : GebSExp} -> {order : GebSExp} ->
         {checkedOrder : GebPOrder order} ->
         GebPTypeMatrix checkedOrder matrix ->
@@ -317,9 +362,9 @@ mutual
   checkOrder (GAFiniteOrder $* indexList) with
     (checkIndexListCertified indexList)
       checkOrder (GAFiniteOrder $* indexList) | Just (n ** consistentIndex) =
-        case consistentIndex of Refl => Just $ FiniteOrder n
+        case consistentIndex of Refl => Just $ FinitePOrder n
       checkOrder (GAFiniteOrder $* indexList) | Nothing = Nothing
-  checkOrder (GATuringComplete $* []) = Just TuringComplete
+  checkOrder (GATuringComplete $* []) = Just TuringCompleteP
   checkOrder _ = Nothing
 
   public export
