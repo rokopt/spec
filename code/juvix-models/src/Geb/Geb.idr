@@ -18,49 +18,61 @@ import public Geb.GebAtom
 %default total
 
 public export
-data GebOrder : Type where
-  NatOrder : Nat -> GebOrder
-  HigherOrder : GebOrder
-  TuringComplete : GebOrder
+data ConcreteReflection : Type where
 
 public export
-ZeroOrder : GebOrder
+data CategoryGenerator : ConcreteReflection -> Type where
+
+public export
+data GebOrder : {reflection : ConcreteReflection} ->
+  (category : CategoryGenerator reflection) -> Type where
+    NatOrder : Nat -> GebOrder category
+    HigherOrder : GebOrder category
+    TuringComplete : GebOrder category
+
+public export
+ZeroOrder : GebOrder category
 ZeroOrder = NatOrder 0
 
 public export
-FirstOrder : GebOrder
+FirstOrder : GebOrder category
 FirstOrder = NatOrder 1
 
 public export
-SecondOrder : GebOrder
+SecondOrder : GebOrder category
 SecondOrder = NatOrder 2
 
 public export
-ThirdOrder : GebOrder
+ThirdOrder : GebOrder category
 ThirdOrder = NatOrder 3
 
 public export
-data CanPromote : (oldOrder, newOrder : GebOrder) -> Type where
-  PromoteFinite : (n : Nat) -> CanPromote (NatOrder n) (NatOrder $ S n)
-  PromoteToHigher : (n : Nat) -> CanPromote (NatOrder n) HigherOrder
-  PromoteToTuring : CanPromote HigherOrder TuringComplete
+data CanPromote : {reflection : ConcreteReflection} ->
+  (category : CategoryGenerator reflection) ->
+  (oldOrder, newOrder : GebOrder category) -> Type where
+    PromoteFinite : (n : Nat) ->
+      CanPromote category (NatOrder n) (NatOrder $ S n)
+    PromoteToHigher : (n : Nat) -> CanPromote category (NatOrder n) HigherOrder
+    PromoteToTuring : CanPromote category HigherOrder TuringComplete
 
 public export
-data GebCategoryObject : (order : GebOrder) -> Type where
-  PromoteObject : {oldOrder, newOrder : GebOrder} ->
-    {auto canPromote : CanPromote oldOrder newOrder} ->
-    GebCategoryObject oldOrder -> GebCategoryObject newOrder
-  GebVoid : GebCategoryObject ZeroOrder
-  GebUnit : GebCategoryObject ZeroOrder
-  GebProduct : {order : GebOrder} -> List (GebCategoryObject order) ->
-    GebCategoryObject order
-  GebCoproduct : {order : GebOrder} -> List (GebCategoryObject order) ->
-    GebCategoryObject order
-  GebExponential :
-    {oldOrder, newOrder : GebOrder} ->
-    {auto canPromote : CanPromote oldOrder newOrder} ->
-    (domain, codomain : GebCategoryObject oldOrder) ->
-    GebCategoryObject newOrder
+data GebCategoryObject : {reflection : ConcreteReflection} ->
+  (category : CategoryGenerator reflection) -> (gebOrder : GebOrder category) ->
+  Type where
+    PromoteObject : {oldOrder, newOrder : GebOrder category} ->
+      {auto canPromote : CanPromote category oldOrder newOrder} ->
+      GebCategoryObject category oldOrder -> GebCategoryObject category newOrder
+    GebVoid : GebCategoryObject category ZeroOrder
+    GebUnit : GebCategoryObject category ZeroOrder
+    GebProduct : List (GebCategoryObject category gebOrder) ->
+      GebCategoryObject category gebOrder
+    GebCoproduct : List (GebCategoryObject category gebOrder) ->
+      GebCategoryObject category gebOrder
+    GebExponential :
+      {oldOrder, newOrder : GebOrder category} ->
+      {auto canPromote : CanPromote category oldOrder newOrder} ->
+      (domain, codomain : GebCategoryObject category oldOrder) ->
+      GebCategoryObject category newOrder
 
 -- | Straight from _Representations of First-Order Function Types
 -- | as Terminal Coalgebras_.
