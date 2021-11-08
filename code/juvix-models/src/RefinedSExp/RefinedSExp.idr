@@ -3,12 +3,6 @@ module RefinedSExp.RefinedSExp
 import public Library.Decidability
 import public RefinedSExp.SExp
 
--- “Ah Love! could thou and I with Fate conspire
--- To grasp this sorry Scheme of Things entire,
--- Would not we shatter it to bits -- and then
--- Re-mould it nearer to the Heart's Desire!”
---  - _Rubaiyat of Omar Khayyam_ (tr. Edward FitzGerald)
-
 %default total
 
 public export
@@ -17,12 +11,22 @@ PureSExpRefinement atom = SExp atom -> Bool
 
 public export
 PureSExpIsRefined : {atom : Type} -> PureSExpRefinement atom -> SPred atom
-PureSExpIsRefined = (.) IsTrue
+PureSExpIsRefined refinement x = IsTrue $ refinement x
 
 public export
-SCPred : Type -> Type -> Type
-SCPred atom context = (x : SExp atom) -> (c : context) -> Bool
+RespectsEndpoints : {atom, atom' : Type} ->
+  (domain : PureSExpRefinement atom) ->
+  (codomain : PureSExpRefinement atom') ->
+  (f : SExp atom -> SExp atom') ->
+  Type
+RespectsEndpoints {atom} {atom'} domain codomain f = (x : SExp atom) ->
+  PureSExpIsRefined domain x -> PureSExpIsRefined codomain (f x)
 
 public export
 SExpRefinementInContext : Type -> Type -> Type
 SExpRefinementInContext atom context = SExp atom -> context -> Bool
+
+public export
+SExpIsRefinedInContext : {atom, context : Type} ->
+  SExpRefinementInContext atom context -> SExp atom -> context -> Type
+SExpIsRefinedInContext refinement x context = IsTrue $ refinement x context

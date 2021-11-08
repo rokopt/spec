@@ -1,7 +1,7 @@
 module Datatypes.AlgebraicTypes
 
 import public Library.FunctionsAndRelations
-import public Library.List
+import public RefinedSExp.List
 
 %default total
 
@@ -156,10 +156,16 @@ AlgebraicFunctionListProduct : {penv : PrimitiveEnv} ->
   {domain : AlgebraicType penv} -> {codomains : List (AlgebraicType penv)} ->
   ListForAll (AlgebraicFunction pfenv domain) codomains ->
   AlgebraicFunction pfenv domain (AlgebraicListProduct codomains)
-AlgebraicFunctionListProduct ListForAllEmpty =
-  AlgebraicConstant
-AlgebraicFunctionListProduct (ListForAllCons f fs) =
-  AlgebraicFunctionProduct f (AlgebraicFunctionListProduct fs)
+AlgebraicFunctionListProduct {domain} {codomains} =
+  listEliminator
+    {lp=(\codomains' =>
+      ListForAll (AlgebraicFunction pfenv domain) codomains' ->
+      AlgebraicFunction pfenv domain (AlgebraicListProduct codomains'))}
+    (ListEliminatorArgs
+     (\_ => AlgebraicConstant)
+     (\a, l, product, forAll =>
+      AlgebraicFunctionProduct (fst forAll) (product (snd forAll)))
+    ) codomains
 
 public export
 AlgebraicFunctionListCoproduct : {penv : PrimitiveEnv} ->
@@ -167,10 +173,16 @@ AlgebraicFunctionListCoproduct : {penv : PrimitiveEnv} ->
   {domains : List (AlgebraicType penv)} -> {codomain : AlgebraicType penv} ->
   ListForAll (flip (AlgebraicFunction pfenv) codomain) domains ->
   AlgebraicFunction pfenv (AlgebraicListCoproduct domains) codomain
-AlgebraicFunctionListCoproduct ListForAllEmpty =
-  AlgebraicExFalso
-AlgebraicFunctionListCoproduct (ListForAllCons f fs) =
-  AlgebraicFunctionCoproduct f (AlgebraicFunctionListCoproduct fs)
+AlgebraicFunctionListCoproduct {domains} {codomain} =
+  listEliminator
+    {lp=(\domains' =>
+      ListForAll (flip (AlgebraicFunction pfenv) codomain) domains' ->
+      AlgebraicFunction pfenv (AlgebraicListCoproduct domains') codomain)}
+    (ListEliminatorArgs
+      (\_ => AlgebraicExFalso)
+      (\a, l, coproduct, forAll =>
+        AlgebraicFunctionCoproduct (fst forAll) (coproduct (snd forAll)))
+    ) domains
 
 public export
 GeneralizedElement : {penv : PrimitiveEnv} -> (pfenv : PrimitiveFuncEnv penv) ->
