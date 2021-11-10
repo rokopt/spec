@@ -42,6 +42,8 @@ mutual
 
   public export
   data GebObjectRepresentation : Type where
+    GebReflectiveObjectRepresentation :
+      GebCategoryRepresentation -> GebObjectRepresentation
 
   public export
   data GebMorphismRepresentation : Type where
@@ -78,7 +80,9 @@ mutual
   public export
   gebObjectRepToSExp : GebObjectRepresentation -> GebCategoryRepresentation ->
     GebSExp
-  gebObjectRepToSExp objRep catRep impossible
+  gebObjectRepToSExp (GebReflectiveObjectRepresentation catRep) catRep' =
+    GAReflectiveObject $*
+      [gebCategoryRepToSExp catRep, gebCategoryRepToSExp catRep']
 
   public export
   gebMorphismRepToSExp : GebMorphismRepresentation ->
@@ -87,10 +91,28 @@ mutual
   gebMorphismRepToSExp morphismRep catRep domainRep codomainRep impossible
 
   public export
+  gebCategoryRepListToSList : List GebCategoryRepresentation -> GebSList
+  gebCategoryRepListToSList = map gebCategoryRepToSExp
+
+  public export
   gebConceptRepListToSList : List GebConceptRepresentation -> GebSList
-  gebConceptRepListToSList [] = []
-  gebConceptRepListToSList (rep :: reps) =
-    gebConceptRepToSExp rep :: gebConceptRepListToSList reps
+  gebConceptRepListToSList = map gebConceptRepToSExp
+
+public export
+gebExpToCategoryRepCertified :
+  ((x : GebSExp) -> Maybe
+    (rep : GebCategoryRepresentation **
+      gebCategoryRepToSExp rep = x),
+   (l : GebSList) -> Maybe
+    (reps: List GebCategoryRepresentation **
+      gebCategoryRepListToSList reps = l))
+gebExpToCategoryRepCertified = decodeFromSExpOrListCertified
+  gebCategoryRepToSExp
+  (\a, l, categories => case a of
+    GAGeb => case l of
+      [] => Just $ (GebSelfRepresentation ** Refl)
+      _ :: _ => Nothing
+    _ => Nothing)
 
 public export
 gebExpToConceptRepCertified :
@@ -100,20 +122,65 @@ gebExpToConceptRepCertified :
    (l : GebSList) -> Maybe
     (reps: List GebConceptRepresentation **
       gebConceptRepListToSList reps = l))
-gebExpToConceptRepCertified = sexpEliminators $ SExpEliminatorArgs
-  (\a, l, maybeConcepts => case maybeConcepts of
-    Just concepts => case a of
-      GAGeb => case l of
-        [] => Just $
-          (GebConceptCategoryRepresentation GebSelfRepresentation ** Refl)
-        _ :: _ => Nothing
-      _ => Nothing
-    Nothing => Nothing)
-  (Just ([] ** Refl))
-  (\_, _, maybeConcept, maybeConcepts => case (maybeConcept, maybeConcepts) of
-    (Just (concept ** Refl), Just (concepts ** Refl)) =>
-      Just $ ((concept :: concepts) ** Refl)
+gebExpToConceptRepCertified = decodeFromSExpOrListCertified
+  gebConceptRepToSExp
+  (\a, l, concepts => case a of
+    GAGeb => case l of
+      [] => Just $
+        (GebConceptCategoryRepresentation GebSelfRepresentation ** Refl)
+      _ :: _ => Nothing
     _ => Nothing)
+
+public export
+gebSExpToCategoryRep : GebSExp -> Maybe GebCategoryRepresentation
+gebSExpToCategoryRep x = case (fst gebExpToCategoryRepCertified x) of
+  Just (rep ** _) => Just rep
+  Nothing => Nothing
+
+public export
+gebSListToCategoryRepList : GebSList -> Maybe (List GebCategoryRepresentation)
+gebSListToCategoryRepList l = case (snd gebExpToCategoryRepCertified l) of
+  Just (reps ** _) => Just reps
+  Nothing => Nothing
+
+public export
+gebSExpToCategoryRepToSExp_correct :
+  (x : GebSExp) -> (rep : GebCategoryRepresentation) ->
+  gebSExpToCategoryRep x = Just rep -> gebCategoryRepToSExp rep = x
+gebSExpToCategoryRepToSExp_correct x rep eq with
+  (fst gebExpToCategoryRepCertified x) proof p
+    gebSExpToCategoryRepToSExp_correct _ _ eq |
+      Just (_ ** correct) = case eq of Refl => correct
+    gebSExpToCategoryRepToSExp_correct x rep eq |
+      Nothing = case eq of Refl impossible
+
+public export
+gebSListToCategoryRepListToSList_correct :
+  (l : GebSList) -> (reps : List GebCategoryRepresentation) ->
+  gebSListToCategoryRepList l = Just reps -> gebCategoryRepListToSList reps = l
+gebSListToCategoryRepListToSList_correct l reps eq with
+  (snd gebExpToCategoryRepCertified l) proof p
+    gebSListToCategoryRepListToSList_correct l reps eq |
+      Just (_ ** correct) = case eq of Refl => correct
+    gebSListToCategoryRepListToSList_correct l reps eq |
+      Nothing = case eq of Refl impossible
+
+mutual
+  public export
+  gebCategoryRepToSExpToCategoryRep_correct :
+    (rep : GebCategoryRepresentation) ->
+    gebSExpToCategoryRep (gebCategoryRepToSExp rep) = Just rep
+  gebCategoryRepToSExpToCategoryRep_correct =
+    ?gebCategoryRepToSExpToCategoryRep_correct_hole
+
+  public export
+  gebCategoryRepListToSListToCategoryRepList_correct :
+    (reps : List GebCategoryRepresentation) ->
+    gebSListToCategoryRepList (gebCategoryRepListToSList reps) = Just reps
+  gebCategoryRepListToSListToCategoryRepList_correct =
+    ?gebCategoryRepListToSListToCategoryRepList_correct_hole
+
+--------------------------------------------------------------------------------
 
 public export
 gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
@@ -153,11 +220,36 @@ mutual
   public export
   gebConceptRepToSExpToConceptRep_correct : (rep : GebConceptRepresentation) ->
     gebSExpToConceptRep (gebConceptRepToSExp rep) = Just rep
+  gebConceptRepToSExpToConceptRep_correct =
+    ?gebConceptRepToSExpToConceptRep_correct_hole
 
   public export
   gebConceptRepListToSListToConceptRepList_correct :
     (reps : List GebConceptRepresentation) ->
     gebSListToConceptRepList (gebConceptRepListToSList reps) = Just reps
+  gebConceptRepListToSListToConceptRepList_correct =
+    ?gebConceptRepListToSListToConceptRepList_correct_hole
+
+--------------------------------------------------------------------------------
+
+public export
+Show GebCategoryRepresentation where
+  show = show . gebCategoryRepToSExp
+
+public export
+Eq GebCategoryRepresentation where
+  rep == rep' = gebCategoryRepToSExp rep == gebCategoryRepToSExp rep'
+
+public export
+DecEq GebCategoryRepresentation where
+  decEq =
+    encodingDecEq
+      gebCategoryRepToSExp gebSExpToCategoryRep
+      gebCategoryRepToSExpToCategoryRep_correct decEq
+
+public export
+Ord GebCategoryRepresentation where
+  rep < rep' = gebCategoryRepToSExp rep < gebCategoryRepToSExp rep'
 
 --------------------------------------------------------------------------------
 
@@ -208,6 +300,9 @@ mutual
   public export
   data GebObject : GebObjectRepresentation -> GebCategoryRepresentation -> Type
     where
+      GebReflectiveObject : {catRep : GebCategoryRepresentation} ->
+        GebCategory catRep ->
+        GebObject (GebReflectiveObjectRepresentation catRep) catRep
 
   public export
   data GebMorphism : GebMorphismRepresentation -> GebCategoryRepresentation ->
@@ -252,8 +347,11 @@ mutual
   checkGebConceptRepresentation
     (GebConceptCategoryRepresentation GebSelfRepresentation) =
       Just $ GebConceptCategory GebInGeb
-  checkGebConceptRepresentation (GebConceptObjectRepresentation _ _)
-    impossible
+  checkGebConceptRepresentation (GebConceptObjectRepresentation
+    (GebReflectiveObjectRepresentation catRep) catRep') =
+      case decEq catRep catRep' of
+        Yes Refl => ?checkGebConceptRepresentation_hole
+        No _ => Nothing
   checkGebConceptRepresentation (GebConceptMorphismRepresentation _ _ _ _)
     impossible
 
@@ -264,7 +362,9 @@ mutual
     (concept : GebConcept representation) ->
     checkGebConceptRepresentation representation = Just concept
   checkGebConceptRepresentation_complete (GebConceptCategory GebInGeb) = Refl
-  checkGebConceptRepresentation_complete (GebConceptObject _) impossible
+  checkGebConceptRepresentation_complete (GebConceptObject
+    (GebReflectiveObject category)) =
+      ?checkGebConceptRepresentation_complete_hole
   checkGebConceptRepresentation_complete (GebConceptMorphism _) impossible
 
 mutual
@@ -276,7 +376,8 @@ mutual
   gebConcept_uniquelyDeterminedByRepresentation
     (GebConceptCategory GebInGeb) (GebConceptCategory GebInGeb) = Refl
   gebConcept_uniquelyDeterminedByRepresentation
-    (GebConceptObject _) _ impossible
+    (GebConceptObject (GebReflectiveObjectRepresentation catRep)) catRep
+      impossible
   gebConcept_uniquelyDeterminedByRepresentation
     (GebConceptMorphism _) impossible
 
@@ -287,7 +388,7 @@ gebObjectCategory : {objRep : GebObjectRepresentation} ->
   {catRep : GebCategoryRepresentation} ->
   GebObject objRep catRep ->
   GebCategory catRep
-gebObjectCategory object impossible
+gebObjectCategory (GebReflectiveObject category) = ?gebObjectCategory_hole
 
 public export
 gebMorphismCategory : {morphismRep : GebMorphismRepresentation} ->
@@ -366,7 +467,8 @@ mutual
     (category : GebCategory catRep) ->
     GebObject objRep catRep ->
     interpretGebCategory category
-  interpretGebObject _ impossible
+  interpretGebObject category' (GebReflectiveObject category) =
+    ?interpretGetObject_hole
 
   public export
   interpretGebMorphism : {morphismRep : GebMorphismRepresentation} ->
