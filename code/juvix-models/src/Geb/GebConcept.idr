@@ -177,3 +177,16 @@ mutual
   typecheckGebConcept_complete = ?typecheckGebConcept_complete_hole
 
 --------------------------------------------------------------------------------
+
+mutual
+  public export
+  interpretGebConceptType : {representation : GebConceptRepresentation} ->
+    GebConcept representation -> Type
+  interpretGebConceptType = ?interpretGebConceptType_hole
+
+  public export
+  interpretGebConcept : {representation : GebConceptRepresentation} ->
+    (concept : GebConcept representation) -> interpretGebConceptType concept
+  interpretGebConcept = ?interpretGebConcept_hole
+
+--------------------------------------------------------------------------------
