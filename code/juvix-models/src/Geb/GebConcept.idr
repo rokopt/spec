@@ -14,6 +14,7 @@ import public Data.SortedSet
 import public Data.SortedMap
 import public Data.DPair
 import public Geb.GebAtom
+import Category.Composition
 
 %default total
 
