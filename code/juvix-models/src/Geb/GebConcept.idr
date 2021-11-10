@@ -18,6 +18,7 @@ import public Geb.GebAtom
 %default total
 
 --------------------------------------------------------------------------------
+
 mutual
   public export
   data GebConceptRepresentation : Type where
@@ -43,6 +44,8 @@ mutual
 
   public export
   data GebMorphismRepresentation : Type where
+
+--------------------------------------------------------------------------------
 
 mutual
   public export
@@ -103,6 +106,29 @@ gebSListToConceptRepListToSList_correct :
   gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l
 gebSListToConceptRepListToSList_correct = snd gebExpToConceptRepToExp_correct
 
+--------------------------------------------------------------------------------
+
+public export
+Show GebConceptRepresentation where
+  show = show . gebConceptRepToSExp
+
+public export
+Eq GebConceptRepresentation where
+  rep == rep' = gebConceptRepToSExp rep == gebConceptRepToSExp rep'
+
+public export
+DecEq GebConceptRepresentation where
+  decEq =
+    encodingDecEq
+      gebConceptRepToSExp gebSExpToConceptRep
+      gebConceptRepToSExpToConceptRep_correct decEq
+
+public export
+Ord GebConceptRepresentation where
+  rep < rep' = gebConceptRepToSExp rep < gebConceptRepToSExp rep'
+
+--------------------------------------------------------------------------------
+
 mutual
   public export
   data GebConcept : GebConceptRepresentation -> Type
@@ -134,4 +160,20 @@ mutual
   data GebMorphism : GebMorphismRepresentation -> GebCategoryRepresentation ->
     (domain, codomain : GebObjectRepresentation) -> Type
     where
+
+--------------------------------------------------------------------------------
+
+mutual
+  public export
+  typecheckGebConcept : (representation : GebConceptRepresentation) ->
+    Maybe (GebConcept representation)
+  typecheckGebConcept = ?typecheckGebConcept_hole
+
+mutual
+  public export
+  typecheckGebConcept_complete : {representation : GebConceptRepresentation} ->
+    (concept : GebConcept representation) ->
+    typecheckGebConcept representation = Just concept
+  typecheckGebConcept_complete = ?typecheckGebConcept_complete_hole
+
 --------------------------------------------------------------------------------
