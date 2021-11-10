@@ -303,6 +303,24 @@ FreeCategories
     (<-^) head tail =
         GeneratorMultipleValid head tail Refl (GeneratorSingletonValid tail)
 
+    public export
+    record FreeCategory where
+        constructor MkFreeCategory
+        FreeObject : Type
+        FreeGenerator : Morphism FreeObject
+
+    public export
+    FreeGeneratorList : FreeCategory -> Type
+    FreeGeneratorList cat = GeneratorList (FreeGenerator cat)
+
+    public export
+    FreeSignature : FreeCategory -> Type
+    FreeSignature cat = Signature (FreeObject cat)
+
+    public export
+    FreeMorphism : {cat : FreeCategory} -> Signature (FreeObject cat) -> Type
+    FreeMorphism {cat} = GeneratedMorphism (FreeGenerator cat)
+
 {-
     public export
     generatorListValidDec :
@@ -381,25 +399,6 @@ FreeCategories
         (^<~~) {domain} {codomain} head tail | No _ = ()
 -}
 
-    public export
-    record FreeCategory where
-        constructor MkFreeCategory
-        FreeObject : Type
-        FreeGenerator : Morphism FreeObject
-
-    public export
-    FreeGeneratorList : FreeCategory -> Type
-    FreeGeneratorList cat = GeneratorList (FreeGenerator cat)
-
-    public export
-    FreeSignature : FreeCategory -> Type
-    FreeSignature cat = Signature (FreeObject cat)
-
-    public export
-    FreeMorphism : {cat : FreeCategory} -> Signature (FreeObject cat) -> Type
-    FreeMorphism {cat} = GeneratedMorphism (FreeGenerator cat)
-
-{-
 namespace
 ContractCategories
     Slice : {cat : FreeCategory} -> FreeObject cat -> Type
@@ -720,4 +719,3 @@ namespace Subcategories
     Subcategory : {cat : FreeCategory} -> CategorySelection cat -> FreeCategory
     Subcategory selection = MkFreeCategory
         (SubcategoryObject selection) (SubcategoryMorphism selection)
--}
