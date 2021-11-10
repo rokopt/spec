@@ -880,8 +880,14 @@ mutual
       map encode vs = l ->
       Maybe (v : type ** encode v = (a $* l))) ->
     (x : SExp atom) -> Maybe (value : type ** encode value = x)
-  decodeFromSExpCertified encode decode =
-    ?decodeCertified_hole
+  decodeFromSExpCertified encode decode (a $* l) with
+    (decodeFromSListCertified encode decode l)
+      decodeFromSExpCertified encode decode (a $* _)
+        | Just (values ** Refl) =
+          decode a _ values Refl
+      decodeFromSExpCertified encode decode (_ $* _)
+        | Nothing =
+          Nothing
 
   public export
   decodeFromSListCertified : {type : Type} -> {atom : Type} ->
@@ -891,8 +897,16 @@ mutual
       map encode vs = l ->
       Maybe (v : type ** encode v = (a $* l))) ->
     (l : SList atom) -> Maybe (values: List type ** map encode values = l)
-  decodeFromSListCertified encode decode =
-    ?decodeFromSListCertified_hole
+  decodeFromSListCertified encode decode [] =
+    Just ([] ** Refl)
+  decodeFromSListCertified encode decode (x :: l) with
+    (decodeFromSExpCertified encode decode x,
+     decodeFromSListCertified encode decode l)
+      decodeFromSListCertified encode decode (_ :: _) |
+        (Just (v ** Refl), Just (vs ** Refl)) =
+          Just (v :: vs ** Refl)
+      decodeFromSListCertified encode decode (x :: l) |
+        _ = Nothing
 
 public export
 decodeFromSExp : {type : Type} -> {atom : Type} ->
@@ -902,8 +916,9 @@ decodeFromSExp : {type : Type} -> {atom : Type} ->
     map encode vs = l ->
     Maybe (v : type ** encode v = (a $* l))) ->
   (x : SExp atom) -> Maybe type
-decodeFromSExp encode decode =
-  ?decode_hole
+decodeFromSExp encode decode x with (decodeFromSExpCertified encode decode x)
+  decodeFromSExp encode decode x | Just (v ** _) = Just v
+  decodeFromSExp encode decode x | Nothing = Nothing
 
 public export
 decodeFromSList : {type : Type} -> {atom : Type} ->
@@ -913,31 +928,9 @@ decodeFromSList : {type : Type} -> {atom : Type} ->
     map encode vs = l ->
     Maybe (v : type ** encode v = (a $* l))) ->
   (l : SList atom) -> Maybe (List type)
-decodeFromSList encode decode =
-  ?decodeFromSList_hole
-
-mutual
-  public export
-  sexpEncodeThenDecode_correct : {type : Type} -> {atom : Type} ->
-    (encode : type -> SExp atom) ->
-    (decode :
-      (a : atom) -> (l : SList atom) -> (vs : List type) ->
-      map encode vs = l ->
-      Maybe (v : type ** encode v = (a $* l))) ->
-    (v : type) -> decodeFromSExp encode decode (encode v) = Just v
-  sexpEncodeThenDecode_correct encode decode =
-    ?sexpEncodeThenDecodeThenEncode_correct_hole
-
-  public export
-  slistEncodeThenDecode_correct : {type : Type} -> {atom : Type} ->
-    (encode : type -> SExp atom) ->
-    (decode :
-      (a : atom) -> (l : SList atom) -> (vs : List type) ->
-      map encode vs = l ->
-      Maybe (v : type ** encode v = (a $* l))) ->
-    (vs : List type) -> decodeFromSList encode decode (map encode vs) = Just vs
-  slistEncodeThenDecode_correct encode decode =
-    ?slistEncodeThenDecodeThenEncode_correct_hole
+decodeFromSList encode decode l with (decodeFromSListCertified encode decode l)
+  decodeFromSList encode decode l | Just (vs ** _) = Just vs
+  decodeFromSList encode decode l | Nothing = Nothing
 
 mutual
   public export
@@ -949,8 +942,12 @@ mutual
       Maybe (v : type ** encode v = (a $* l))) ->
     (x : SExp atom) -> (v : type) ->
     decodeFromSExp encode decode x = Just v -> encode v = x
-  sexpDecodeThenEncode_correct encode decode =
-    ?sexpDecodeThenEncode_correct_hole
+  sexpDecodeThenEncode_correct encode decode x v isjust with
+    (decodeFromSExpCertified encode decode x) proof p
+      sexpDecodeThenEncode_correct encode decode x v isjust |
+        Just (v' ** correct) = rewrite sym (justInjective isjust) in correct
+      sexpDecodeThenEncode_correct encode decode x v Refl |
+        Nothing impossible
 
   public export
   slistDecodeThenEncode_correct : {type : Type} -> {atom : Type} ->
@@ -961,5 +958,9 @@ mutual
       Maybe (v : type ** encode v = (a $* l))) ->
     (l : SList atom) -> (vs : List type) ->
     decodeFromSList encode decode l = Just vs -> map encode vs = l
-  slistDecodeThenEncode_correct encode decode =
-    ?slistDecodeThenEncode_correct_hole
+  slistDecodeThenEncode_correct encode decode l vs isjust with
+    (decodeFromSListCertified encode decode l) proof p
+      slistDecodeThenEncode_correct encode decode l vs isjust |
+        Just (vs' ** correct) = rewrite sym (justInjective isjust) in correct
+      slistDecodeThenEncode_correct encode decode l vs Refl |
+        Nothing impossible
