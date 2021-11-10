@@ -10,6 +10,8 @@ modules = Library.TypesAndFunctions
     , Geb.GebAtom
     , Geb.Geb
     , Geb.Test.GebTest
+    , Geb.GebConcept
+    , Geb.Test.GebConceptTest
     , Geb.GebSExp
     , Geb.Test.GebSExpTest
     , Geb.CExp

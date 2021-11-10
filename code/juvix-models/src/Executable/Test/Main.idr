@@ -2,6 +2,7 @@ module Executable.Test.Main
 
 import Library.Test.TestLibrary
 import Geb.Test.GebTest
+import Geb.Test.GebConceptTest
 import Geb.Test.GebSExpTest
 import Geb.Test.CExpTest
 import RefinedSExp.Test.ListTest
@@ -49,6 +50,7 @@ import ReflectiveLanguages.Interpretations.Test.QExpInterpretationTest
 export
 main : IO ()
 main = do
+  Geb.Test.GebConceptTest.gebConceptTests
   RefinedSExp.Test.SExpTest.sexpTests
   RefinedSExp.Test.RefinedSExpTest.refinedSExpTests
   Geb.Test.GebTest.gebTests
