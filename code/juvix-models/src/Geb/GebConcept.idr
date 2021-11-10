@@ -267,6 +267,18 @@ mutual
   checkGebConceptRepresentation_complete (GebConceptObject _) impossible
   checkGebConceptRepresentation_complete (GebConceptMorphism _) impossible
 
+mutual
+  public export
+  gebConcept_uniquelyDeterminedByRepresentation :
+    {representation : GebConceptRepresentation} ->
+    (concept, concept' : GebConcept representation) ->
+    concept = concept'
+  gebConcept_uniquelyDeterminedByRepresentation
+    (GebConceptCategory GebInGeb) (GebConceptCategory GebInGeb) = Refl
+  gebConcept_uniquelyDeterminedByRepresentation
+    (GebConceptObject _) _ impossible
+  gebConcept_uniquelyDeterminedByRepresentation
+    (GebConceptMorphism _) impossible
 --------------------------------------------------------------------------------
 
 mutual
