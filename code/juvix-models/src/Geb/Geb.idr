@@ -766,7 +766,7 @@ mutual
       ObjectReflection : {hostCatRep, targetCatRep : GebSExp} ->
         (hostCat : GebCategory hostCatRep) ->
         (targetCat : GebCategory targetCatRep) ->
-        GebObject (GAObjectReflection $* [hostCatRep, targetCatRep]) hostCat
+        GebObject (GAReflectiveObject $* [hostCatRep, targetCatRep]) hostCat
       MorphismReflection : {hostCatRep, targetCatRep : GebSExp} ->
         {hostCat : GebCategory hostCatRep} ->
         {targetCat : GebCategory targetCatRep} ->
