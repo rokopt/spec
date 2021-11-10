@@ -279,15 +279,93 @@ mutual
     (GebConceptObject _) _ impossible
   gebConcept_uniquelyDeterminedByRepresentation
     (GebConceptMorphism _) impossible
+
+--------------------------------------------------------------------------------
+
+public export
+gebObjectCategory : {objRep : GebObjectRepresentation} ->
+  {catRep : GebCategoryRepresentation} ->
+  GebObject objRep catRep ->
+  GebCategory catRep
+gebObjectCategory object impossible
+
+public export
+gebMorphismCategory : {morphismRep : GebMorphismRepresentation} ->
+  {catRep : GebCategoryRepresentation} ->
+  {domainRep, codomainRep : GebObjectRepresentation} ->
+  GebMorphism morphismRep catRep domainRep codomainRep ->
+  GebCategory catRep
+gebMorphismCategory morphism impossible
+
+public export
+gebMorphismDomain : {morphismRep : GebMorphismRepresentation} ->
+  {catRep : GebCategoryRepresentation} ->
+  {domainRep, codomainRep : GebObjectRepresentation} ->
+  GebMorphism morphismRep catRep domainRep codomainRep ->
+  GebObject domainRep catRep
+gebMorphismDomain morphism impossible
+
+public export
+gebMorphismCodomain : {morphismRep : GebMorphismRepresentation} ->
+  {catRep : GebCategoryRepresentation} ->
+  {domainRep, codomainRep : GebObjectRepresentation} ->
+  GebMorphism morphismRep catRep domainRep codomainRep ->
+  GebObject codomainRep catRep
+gebMorphismCodomain morphism impossible
+
 --------------------------------------------------------------------------------
 
 mutual
+  public export
+  interpretGebConceptType : {conceptRep : GebConceptRepresentation} ->
+    GebConcept conceptRep ->
+    Type
+  interpretGebConceptType (GebConceptCategory _) = Type
+  interpretGebConceptType (GebConceptObject _) = Type
+  interpretGebConceptType (GebConceptMorphism morphism) =
+    (rewrite
+      sym (interpretGebCategory_isUniverse (gebMorphismCategory morphism)) in
+     interpretGebObject (gebMorphismCategory morphism)
+      (gebMorphismDomain morphism)) ->
+    (rewrite
+      sym (interpretGebCategory_isUniverse (gebMorphismCategory morphism)) in
+     interpretGebObject (gebMorphismCategory morphism)
+      (gebMorphismCodomain morphism))
+
+  public export
+  interpretGebCategory : {catRep : GebCategoryRepresentation} ->
+    -- This should really be "Universe", but Idris doesn't have that as a type.
+    GebCategory catRep ->
+    Type
+  interpretGebCategory _ = Type
+
+  public export
+  interpretGebCategory_isUniverse : {catRep : GebCategoryRepresentation} ->
+    (category : GebCategory catRep) ->
+    interpretGebCategory category = Type
+  interpretGebCategory_isUniverse _ = Refl
+
+  public export
+  interpretGebConcept : {conceptRep : GebConceptRepresentation} ->
+    (concept : GebConcept conceptRep) ->
+    interpretGebConceptType concept
+  interpretGebConcept (GebConceptCategory category) =
+    interpretGebCategory category
+  interpretGebConcept (GebConceptObject object) =
+    interpretGebObject (gebObjectCategory object) object
+  interpretGebConcept (GebConceptMorphism morphism) =
+    interpretGebMorphism
+      (gebMorphismCategory morphism)
+      (gebMorphismDomain morphism)
+      (gebMorphismCodomain morphism)
+      morphism
+
   public export
   interpretGebObject : {objRep : GebObjectRepresentation} ->
     {catRep : GebCategoryRepresentation} ->
     (category : GebCategory catRep) ->
     GebObject objRep catRep ->
-    Type
+    interpretGebCategory category
   interpretGebObject _ impossible
 
   public export
@@ -298,7 +376,10 @@ mutual
     (domain : GebObject domainRep catRep) ->
     (codomain : GebObject codomainRep catRep) ->
     GebMorphism morphismRep catRep domainRep codomainRep ->
-    interpretGebObject category domain -> interpretGebObject category codomain
+    (rewrite sym (interpretGebCategory_isUniverse category) in
+     interpretGebObject category domain) ->
+    (rewrite sym (interpretGebCategory_isUniverse category) in
+     interpretGebObject category codomain)
   interpretGebMorphism _ impossible
 
 --------------------------------------------------------------------------------
