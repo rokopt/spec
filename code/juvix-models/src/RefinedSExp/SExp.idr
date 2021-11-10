@@ -870,3 +870,23 @@ sexpGeneralStrengthenedInduction signature =
       \a, l, lforAll =>
         (expElim signature a l lforAll ** stepCorrect signature a l lforAll)
     )
+
+public export
+decodeFromSExpOrListCertified : {type : Type} -> {atom : Type} ->
+  (encodeAsSExp : type -> SExp atom) ->
+  (decodeFromSExp :
+    (a : atom) -> (l : SList atom) ->
+    (vs : List type ** map encodeAsSExp vs = l) ->
+    Maybe (v : type ** encodeAsSExp v = (a $* l))) ->
+  ((x : SExp atom) -> Maybe (value : type ** encodeAsSExp value = x),
+   (l : SList atom) -> Maybe (values: List type ** map encodeAsSExp values = l))
+decodeFromSExpOrListCertified encodeAsSexp decodeFromSExp =
+  sexpEliminators $ SExpEliminatorArgs
+    (\a, l, maybeValues => case maybeValues of
+      Just vs => decodeFromSExp a l vs
+      Nothing => Nothing)
+    (Just ([] ** Refl))
+    (\_, _, maybeValue, maybeValues => case (maybeValue, maybeValues) of
+      (Just (value ** Refl), Just (values ** Refl)) =>
+        Just $ ((value :: values) ** Refl)
+      _ => Nothing)
