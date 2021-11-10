@@ -46,6 +46,65 @@ mutual
 
 mutual
   public export
+  gebConceptRepToSExp : GebConceptRepresentation -> GebSExp
+  gebConceptRepToSExp = ?gebConceptRepToSExp_hole
+
+  public export
+  gebConceptRepListToSList : List GebConceptRepresentation -> GebSList
+  gebConceptRepListToSList = ?gebConceptRepListToSList_hole
+
+public export
+gebExpToConceptRep :
+  (GebSExp -> Maybe GebConceptRepresentation,
+   GebSList -> Maybe (List GebConceptRepresentation))
+gebExpToConceptRep = sexpEliminators $ SExpEliminatorArgs
+  (?gebExpToConceptRep_hole_expElim)
+  (?gebExpToConceptRep_hole_nilElim)
+  (?gebExpToConceptRep_hole_consElim)
+
+public export
+gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
+gebSExpToConceptRep = fst gebExpToConceptRep
+
+public export
+gebSListToConceptRepList : GebSList -> Maybe (List GebConceptRepresentation)
+gebSListToConceptRepList = snd gebExpToConceptRep
+
+mutual
+  public export
+  gebConceptRepToSExpToConceptRep_correct : (rep : GebConceptRepresentation) ->
+    gebSExpToConceptRep (gebConceptRepToSExp rep) = Just rep
+
+  public export
+  gebConceptRepListToSListToConceptRepList_correct :
+    (reps : List GebConceptRepresentation) ->
+    gebSListToConceptRepList (gebConceptRepListToSList reps) = Just reps
+
+public export
+gebExpToConceptRepToExp_correct :
+  ((x : GebSExp) -> (rep : GebConceptRepresentation) ->
+   gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x,
+   (l: GebSList) -> (reps : List GebConceptRepresentation) ->
+   gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l)
+gebExpToConceptRepToExp_correct = sexpEliminators $ SExpEliminatorArgs
+  (?gebExpToConceptRepToExp_correct_hole_expElim)
+  (?gebExpToConceptRepToExp_correct_hole_nilElim)
+  (?gebExpToConceptRepToExp_correct_hole_consElim)
+
+public export
+gebSExpToConceptRepToSExp_correct :
+  (x : GebSExp) -> (rep : GebConceptRepresentation) ->
+  gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x
+gebSExpToConceptRepToSExp_correct = fst gebExpToConceptRepToExp_correct
+
+public export
+gebSListToConceptRepListToSList_correct :
+  (l : GebSList) -> (reps : List GebConceptRepresentation) ->
+  gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l
+gebSListToConceptRepListToSList_correct = snd gebExpToConceptRepToExp_correct
+
+mutual
+  public export
   data GebConcept : GebConceptRepresentation -> Type
     where
       GebConceptCategory : {representation : GebCategoryRepresentation} ->
