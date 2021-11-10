@@ -271,13 +271,22 @@ mutual
 
 mutual
   public export
-  interpretGebConceptType : {representation : GebConceptRepresentation} ->
-    GebConcept representation -> Type
-  interpretGebConceptType concept = ?interpretGebConceptType_hole
+  interpretGebObject : {objRep : GebObjectRepresentation} ->
+    {catRep : GebCategoryRepresentation} ->
+    (category : GebCategory catRep) ->
+    GebObject objRep catRep ->
+    Type
+  interpretGebObject _ impossible
 
   public export
-  interpretGebConcept : {representation : GebConceptRepresentation} ->
-    (concept : GebConcept representation) -> interpretGebConceptType concept
-  interpretGebConcept concept = ?interpretGebConcept_hole
+  interpretGebMorphism : {morphismRep : GebMorphismRepresentation} ->
+    {catRep : GebCategoryRepresentation} ->
+    {domainRep, codomainRep : GebObjectRepresentation} ->
+    (category : GebCategory catRep) ->
+    (domain : GebObject domainRep catRep) ->
+    (codomain : GebObject codomainRep catRep) ->
+    GebMorphism morphismRep catRep domainRep codomainRep ->
+    interpretGebObject category domain -> interpretGebObject category codomain
+  interpretGebMorphism _ impossible
 
 --------------------------------------------------------------------------------
