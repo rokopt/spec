@@ -48,6 +48,18 @@ mutual
 
 --------------------------------------------------------------------------------
 
+public export
+record GebConceptRepresentationFunctor where
+  constructor GebConceptRepresentationMaps
+  GebCategoryRepresentationMap :
+    GebCategoryRepresentation -> GebCategoryRepresentation
+  GebObjectRepresentationMap :
+    GebObjectRepresentation -> GebObjectRepresentation
+  GebMorphismRepresentationMap :
+    GebMorphismRepresentation -> GebMorphismRepresentation
+
+--------------------------------------------------------------------------------
+
 mutual
   public export
   gebConceptRepToSExp : GebConceptRepresentation -> GebSExp
@@ -161,6 +173,35 @@ mutual
   data GebMorphism : GebMorphismRepresentation -> GebCategoryRepresentation ->
     (domain, codomain : GebObjectRepresentation) -> Type
     where
+
+--------------------------------------------------------------------------------
+
+public export
+record GebConceptFunctor
+  (representationFunctor : GebConceptRepresentationFunctor) where
+    constructor GebConceptMaps
+    GebCategoryMap : (catRep : GebCategoryRepresentation) ->
+      GebCategory catRep ->
+      GebCategory (GebCategoryRepresentationMap representationFunctor catRep)
+    GebObjectMap : (catRep : GebCategoryRepresentation) ->
+      (category : GebCategory catRep) ->
+      (objRep : GebObjectRepresentation) ->
+      GebObject objRep catRep ->
+      GebObject
+        (GebObjectRepresentationMap representationFunctor objRep)
+        (GebCategoryRepresentationMap representationFunctor catRep)
+    GebMorphismMap : (catRep : GebCategoryRepresentation) ->
+      (category : GebCategory catRep) ->
+      (domainRep, codomainRep : GebObjectRepresentation) ->
+      (domain : GebObject domainRep catRep) ->
+      (codomain : GebObject codomainRep catRep) ->
+      (morphimRep : GebMorphismRepresentation) ->
+      GebMorphism morphismRep catRep domainRep codomainRep ->
+      GebMorphism
+        (GebMorphismRepresentationMap representationFunctor morphismRep)
+        (GebCategoryRepresentationMap representationFunctor catRep)
+        (GebObjectRepresentationMap representationFunctor domainRep)
+        (GebObjectRepresentationMap representationFunctor codomainRep)
 
 --------------------------------------------------------------------------------
 
