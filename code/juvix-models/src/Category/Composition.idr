@@ -1,7 +1,7 @@
 module Category.Composition
 
 import public Library.FunctionsAndRelations
-import Library.List
+import RefinedSExp.List
 import Library.Decidability
 
 %default total
