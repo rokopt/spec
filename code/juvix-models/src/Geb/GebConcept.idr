@@ -98,137 +98,75 @@ mutual
   gebConceptRepListToSList : List GebConceptRepresentation -> GebSList
   gebConceptRepListToSList = map gebConceptRepToSExp
 
-public export
-gebExpToCategoryRepCertified :
-  ((x : GebSExp) -> Maybe
-    (rep : GebCategoryRepresentation **
-      gebCategoryRepToSExp rep = x),
-   (l : GebSList) -> Maybe
-    (reps: List GebCategoryRepresentation **
-      gebCategoryRepListToSList reps = l))
-gebExpToCategoryRepCertified = decodeFromSExpOrListCertified
-  gebCategoryRepToSExp
-  (\a, l, categories => case a of
-    GAGeb => case l of
-      [] => Just $ (GebSelfRepresentation ** Refl)
-      _ :: _ => Nothing
-    _ => Nothing)
+--------------------------------------------------------------------------------
 
 public export
-gebExpToConceptRepCertified :
-  ((x : GebSExp) -> Maybe
-    (rep : GebConceptRepresentation **
-      gebConceptRepToSExp rep = x),
-   (l : GebSList) -> Maybe
-    (reps: List GebConceptRepresentation **
-      gebConceptRepListToSList reps = l))
-gebExpToConceptRepCertified = decodeFromSExpOrListCertified
-  gebConceptRepToSExp
-  (\a, l, concepts => case a of
-    GAGeb => case l of
-      [] => Just $
-        (GebConceptCategoryRepresentation GebSelfRepresentation ** Refl)
-      _ :: _ => Nothing
-    _ => Nothing)
+gebDecodeCategoryRep :
+  (a : GebAtom) -> (l : GebSList) ->
+  (categories : List GebCategoryRepresentation) ->
+  map GebConcept.gebCategoryRepToSExp categories = l ->
+  Maybe (rep : GebCategoryRepresentation ** gebCategoryRepToSExp rep = (a $* l))
+gebDecodeCategoryRep = ?gebDecodeCategoryRep_hole
+
+public export
+gebSExpToCategoryRepCertified :
+  (x : GebSExp) ->
+  Maybe (rep : GebCategoryRepresentation ** gebCategoryRepToSExp rep = x)
+gebSExpToCategoryRepCertified =
+  decodeFromSExpCertified gebCategoryRepToSExp gebDecodeCategoryRep
 
 public export
 gebSExpToCategoryRep : GebSExp -> Maybe GebCategoryRepresentation
-gebSExpToCategoryRep x = case (fst gebExpToCategoryRepCertified x) of
-  Just (rep ** _) => Just rep
-  Nothing => Nothing
-
-public export
-gebSListToCategoryRepList : GebSList -> Maybe (List GebCategoryRepresentation)
-gebSListToCategoryRepList l = case (snd gebExpToCategoryRepCertified l) of
-  Just (reps ** _) => Just reps
-  Nothing => Nothing
+gebSExpToCategoryRep = decodeFromSExp gebCategoryRepToSExp gebDecodeCategoryRep
 
 public export
 gebSExpToCategoryRepToSExp_correct :
   (x : GebSExp) -> (rep : GebCategoryRepresentation) ->
   gebSExpToCategoryRep x = Just rep -> gebCategoryRepToSExp rep = x
-gebSExpToCategoryRepToSExp_correct x rep eq with
-  (fst gebExpToCategoryRepCertified x) proof p
-    gebSExpToCategoryRepToSExp_correct _ _ eq |
-      Just (_ ** correct) = case eq of Refl => correct
-    gebSExpToCategoryRepToSExp_correct x rep eq |
-      Nothing = case eq of Refl impossible
+gebSExpToCategoryRepToSExp_correct =
+  sexpDecodeThenEncode_correct gebCategoryRepToSExp gebDecodeCategoryRep
 
 public export
-gebSListToCategoryRepListToSList_correct :
-  (l : GebSList) -> (reps : List GebCategoryRepresentation) ->
-  gebSListToCategoryRepList l = Just reps -> gebCategoryRepListToSList reps = l
-gebSListToCategoryRepListToSList_correct l reps eq with
-  (snd gebExpToCategoryRepCertified l) proof p
-    gebSListToCategoryRepListToSList_correct l reps eq |
-      Just (_ ** correct) = case eq of Refl => correct
-    gebSListToCategoryRepListToSList_correct l reps eq |
-      Nothing = case eq of Refl impossible
-
-mutual
-  public export
-  gebCategoryRepToSExpToCategoryRep_correct :
-    (rep : GebCategoryRepresentation) ->
-    gebSExpToCategoryRep (gebCategoryRepToSExp rep) = Just rep
-  gebCategoryRepToSExpToCategoryRep_correct =
-    ?gebCategoryRepToSExpToCategoryRep_correct_hole
-
-  public export
-  gebCategoryRepListToSListToCategoryRepList_correct :
-    (reps : List GebCategoryRepresentation) ->
-    gebSListToCategoryRepList (gebCategoryRepListToSList reps) = Just reps
-  gebCategoryRepListToSListToCategoryRepList_correct =
-    ?gebCategoryRepListToSListToCategoryRepList_correct_hole
+gebCategoryRepToSExpToCategoryRep_correct :
+  (rep : GebCategoryRepresentation) ->
+  gebSExpToCategoryRep (gebCategoryRepToSExp rep) = Just rep
+gebCategoryRepToSExpToCategoryRep_correct =
+  sexpEncodeThenDecode_correct gebCategoryRepToSExp gebDecodeCategoryRep
 
 --------------------------------------------------------------------------------
 
 public export
-gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
-gebSExpToConceptRep x = case (fst gebExpToConceptRepCertified x) of
-  Just (rep ** _) => Just rep
-  Nothing => Nothing
+gebDecodeConceptRep :
+  (a : GebAtom) -> (l : GebSList) ->
+  (categories : List GebConceptRepresentation) ->
+  map GebConcept.gebConceptRepToSExp categories = l ->
+  Maybe (rep : GebConceptRepresentation ** gebConceptRepToSExp rep = (a $* l))
+gebDecodeConceptRep = ?gebDecodeConceptRep_hole
 
 public export
-gebSListToConceptRepList : GebSList -> Maybe (List GebConceptRepresentation)
-gebSListToConceptRepList l = case (snd gebExpToConceptRepCertified l) of
-  Just (reps ** _) => Just reps
-  Nothing => Nothing
+gebSExpToConceptRepCertified :
+  (x : GebSExp) ->
+  Maybe (rep : GebConceptRepresentation ** gebConceptRepToSExp rep = x)
+gebSExpToConceptRepCertified =
+  decodeFromSExpCertified gebConceptRepToSExp gebDecodeConceptRep
+
+public export
+gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
+gebSExpToConceptRep = decodeFromSExp gebConceptRepToSExp gebDecodeConceptRep
 
 public export
 gebSExpToConceptRepToSExp_correct :
   (x : GebSExp) -> (rep : GebConceptRepresentation) ->
   gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x
-gebSExpToConceptRepToSExp_correct x rep eq with
-  (fst gebExpToConceptRepCertified x) proof p
-    gebSExpToConceptRepToSExp_correct _ _ eq |
-      Just (_ ** correct) = case eq of Refl => correct
-    gebSExpToConceptRepToSExp_correct x rep eq |
-      Nothing = case eq of Refl impossible
+gebSExpToConceptRepToSExp_correct =
+  sexpDecodeThenEncode_correct gebConceptRepToSExp gebDecodeConceptRep
 
 public export
-gebSListToConceptRepListToSList_correct :
-  (l : GebSList) -> (reps : List GebConceptRepresentation) ->
-  gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l
-gebSListToConceptRepListToSList_correct l reps eq with
-  (snd gebExpToConceptRepCertified l) proof p
-    gebSListToConceptRepListToSList_correct l reps eq |
-      Just (_ ** correct) = case eq of Refl => correct
-    gebSListToConceptRepListToSList_correct l reps eq |
-      Nothing = case eq of Refl impossible
-
-mutual
-  public export
-  gebConceptRepToSExpToConceptRep_correct : (rep : GebConceptRepresentation) ->
-    gebSExpToConceptRep (gebConceptRepToSExp rep) = Just rep
-  gebConceptRepToSExpToConceptRep_correct =
-    ?gebConceptRepToSExpToConceptRep_correct_hole
-
-  public export
-  gebConceptRepListToSListToConceptRepList_correct :
-    (reps : List GebConceptRepresentation) ->
-    gebSListToConceptRepList (gebConceptRepListToSList reps) = Just reps
-  gebConceptRepListToSListToConceptRepList_correct =
-    ?gebConceptRepListToSListToConceptRepList_correct_hole
+gebConceptRepToSExpToConceptRep_correct :
+  (rep : GebConceptRepresentation) ->
+  gebSExpToConceptRep (gebConceptRepToSExp rep) = Just rep
+gebConceptRepToSExpToConceptRep_correct =
+  sexpEncodeThenDecode_correct gebConceptRepToSExp gebDecodeConceptRep
 
 --------------------------------------------------------------------------------
 

@@ -871,22 +871,95 @@ sexpGeneralStrengthenedInduction signature =
         (expElim signature a l lforAll ** stepCorrect signature a l lforAll)
     )
 
+mutual
+  public export
+  decodeFromSExpCertified : {type : Type} -> {atom : Type} ->
+    (encode : type -> SExp atom) ->
+    (decode :
+      (a : atom) -> (l : SList atom) -> (vs : List type) ->
+      map encode vs = l ->
+      Maybe (v : type ** encode v = (a $* l))) ->
+    (x : SExp atom) -> Maybe (value : type ** encode value = x)
+  decodeFromSExpCertified encode decode =
+    ?decodeCertified_hole
+
+  public export
+  decodeFromSListCertified : {type : Type} -> {atom : Type} ->
+    (encode : type -> SExp atom) ->
+    (decode :
+      (a : atom) -> (l : SList atom) -> (vs : List type) ->
+      map encode vs = l ->
+      Maybe (v : type ** encode v = (a $* l))) ->
+    (l : SList atom) -> Maybe (values: List type ** map encode values = l)
+  decodeFromSListCertified encode decode =
+    ?decodeFromSListCertified_hole
+
 public export
-decodeFromSExpOrListCertified : {type : Type} -> {atom : Type} ->
-  (encodeAsSExp : type -> SExp atom) ->
-  (decodeFromSExp :
-    (a : atom) -> (l : SList atom) ->
-    (vs : List type ** map encodeAsSExp vs = l) ->
-    Maybe (v : type ** encodeAsSExp v = (a $* l))) ->
-  ((x : SExp atom) -> Maybe (value : type ** encodeAsSExp value = x),
-   (l : SList atom) -> Maybe (values: List type ** map encodeAsSExp values = l))
-decodeFromSExpOrListCertified encodeAsSexp decodeFromSExp =
-  sexpEliminators $ SExpEliminatorArgs
-    (\a, l, maybeValues => case maybeValues of
-      Just vs => decodeFromSExp a l vs
-      Nothing => Nothing)
-    (Just ([] ** Refl))
-    (\_, _, maybeValue, maybeValues => case (maybeValue, maybeValues) of
-      (Just (value ** Refl), Just (values ** Refl)) =>
-        Just $ ((value :: values) ** Refl)
-      _ => Nothing)
+decodeFromSExp : {type : Type} -> {atom : Type} ->
+  (encode : type -> SExp atom) ->
+  (decode :
+    (a : atom) -> (l : SList atom) -> (vs : List type) ->
+    map encode vs = l ->
+    Maybe (v : type ** encode v = (a $* l))) ->
+  (x : SExp atom) -> Maybe type
+decodeFromSExp encode decode =
+  ?decode_hole
+
+public export
+decodeFromSList : {type : Type} -> {atom : Type} ->
+  (encode : type -> SExp atom) ->
+  (decode :
+    (a : atom) -> (l : SList atom) -> (vs : List type) ->
+    map encode vs = l ->
+    Maybe (v : type ** encode v = (a $* l))) ->
+  (l : SList atom) -> Maybe (List type)
+decodeFromSList encode decode =
+  ?decodeFromSList_hole
+
+mutual
+  public export
+  sexpEncodeThenDecode_correct : {type : Type} -> {atom : Type} ->
+    (encode : type -> SExp atom) ->
+    (decode :
+      (a : atom) -> (l : SList atom) -> (vs : List type) ->
+      map encode vs = l ->
+      Maybe (v : type ** encode v = (a $* l))) ->
+    (v : type) -> decodeFromSExp encode decode (encode v) = Just v
+  sexpEncodeThenDecode_correct encode decode =
+    ?sexpEncodeThenDecodeThenEncode_correct_hole
+
+  public export
+  slistEncodeThenDecode_correct : {type : Type} -> {atom : Type} ->
+    (encode : type -> SExp atom) ->
+    (decode :
+      (a : atom) -> (l : SList atom) -> (vs : List type) ->
+      map encode vs = l ->
+      Maybe (v : type ** encode v = (a $* l))) ->
+    (vs : List type) -> decodeFromSList encode decode (map encode vs) = Just vs
+  slistEncodeThenDecode_correct encode decode =
+    ?slistEncodeThenDecodeThenEncode_correct_hole
+
+mutual
+  public export
+  sexpDecodeThenEncode_correct : {type : Type} -> {atom : Type} ->
+    (encode : type -> SExp atom) ->
+    (decode :
+      (a : atom) -> (l : SList atom) -> (vs : List type) ->
+      map encode vs = l ->
+      Maybe (v : type ** encode v = (a $* l))) ->
+    (x : SExp atom) -> (v : type) ->
+    decodeFromSExp encode decode x = Just v -> encode v = x
+  sexpDecodeThenEncode_correct encode decode =
+    ?sexpDecodeThenEncode_correct_hole
+
+  public export
+  slistDecodeThenEncode_correct : {type : Type} -> {atom : Type} ->
+    (encode : type -> SExp atom) ->
+    (decode :
+      (a : atom) -> (l : SList atom) -> (vs : List type) ->
+      map encode vs = l ->
+      Maybe (v : type ** encode v = (a $* l))) ->
+    (l : SList atom) -> (vs : List type) ->
+    decodeFromSList encode decode l = Just vs -> map encode vs = l
+  slistDecodeThenEncode_correct encode decode =
+    ?slistDecodeThenEncode_correct_hole
