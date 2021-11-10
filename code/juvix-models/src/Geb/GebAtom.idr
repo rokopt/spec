@@ -133,6 +133,10 @@ data GebAtom : Type where
   GAPromoteTuringComplete : GebAtom
   GAFiniteOrder : GebAtom
 
+  GAConceptCategory : GebAtom
+  GAConceptObject : GebAtom
+  GAConceptMorphism : GebAtom
+
 public export
 gaEncode : GebAtom -> Nat
 gaEncode GALanguageRefinement = 0
@@ -209,6 +213,9 @@ gaEncode GATuringComplete = 70
 gaEncode GAPromoteFinite = 71
 gaEncode GAPromoteTuringComplete = 72
 gaEncode GAFiniteOrder = 73
+gaEncode GAConceptCategory = 74
+gaEncode GAConceptObject = 75
+gaEncode GAConceptMorphism = 76
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -286,6 +293,9 @@ gaDecode 70 = Just GATuringComplete
 gaDecode 71 = Just GAPromoteFinite
 gaDecode 72 = Just GAPromoteTuringComplete
 gaDecode 73 = Just GAFiniteOrder
+gaDecode 74 = Just GAConceptCategory
+gaDecode 75 = Just GAConceptObject
+gaDecode 76 = Just GAConceptMorphism
 gaDecode _ = Nothing
 
 export
@@ -364,6 +374,9 @@ gaDecodeEncodeIsJust GATuringComplete = Refl
 gaDecodeEncodeIsJust GAPromoteFinite = Refl
 gaDecodeEncodeIsJust GAPromoteTuringComplete = Refl
 gaDecodeEncodeIsJust GAFiniteOrder = Refl
+gaDecodeEncodeIsJust GAConceptCategory = Refl
+gaDecodeEncodeIsJust GAConceptObject = Refl
+gaDecodeEncodeIsJust GAConceptMorphism = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -441,6 +454,9 @@ gebAtomToString GATuringComplete = "TuringComplete"
 gebAtomToString GAPromoteFinite = "PromoteFinite"
 gebAtomToString GAPromoteTuringComplete = "PromoteTuringComplete"
 gebAtomToString GAFiniteOrder = "FiniteOrder"
+gebAtomToString GAConceptCategory = "ConceptCategory"
+gebAtomToString GAConceptObject = "ConceptObject"
+gebAtomToString GAConceptMorphism = "ConceptMorphism"
 
 public export
 Show GebAtom where
