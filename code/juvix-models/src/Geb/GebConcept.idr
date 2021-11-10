@@ -63,28 +63,91 @@ record GebConceptRepresentationFunctor where
 mutual
   public export
   gebConceptRepToSExp : GebConceptRepresentation -> GebSExp
-  gebConceptRepToSExp = ?gebConceptRepToSExp_hole
+  gebConceptRepToSExp (GebConceptCategoryRepresentation catRep) =
+    gebCategoryRepToSExp catRep
+  gebConceptRepToSExp (GebConceptObjectRepresentation objRep catRep) =
+    gebObjectRepToSExp objRep catRep
+  gebConceptRepToSExp (GebConceptMorphismRepresentation
+    morphismRep catRep domainRep codomainRep) =
+      gebMorphismRepToSExp morphismRep catRep domainRep codomainRep
+
+  public export
+  gebCategoryRepToSExp : GebCategoryRepresentation -> GebSExp
+  gebCategoryRepToSExp GebSelfRepresentation = $^ GAGeb
+
+  public export
+  gebObjectRepToSExp : GebObjectRepresentation -> GebCategoryRepresentation ->
+    GebSExp
+  gebObjectRepToSExp objRep catRep impossible
+
+  public export
+  gebMorphismRepToSExp : GebMorphismRepresentation ->
+    GebCategoryRepresentation ->
+    GebObjectRepresentation -> GebObjectRepresentation -> GebSExp
+  gebMorphismRepToSExp morphismRep catRep domainRep codomainRep impossible
 
   public export
   gebConceptRepListToSList : List GebConceptRepresentation -> GebSList
-  gebConceptRepListToSList = ?gebConceptRepListToSList_hole
+  gebConceptRepListToSList [] = []
+  gebConceptRepListToSList (rep :: reps) =
+    gebConceptRepToSExp rep :: gebConceptRepListToSList reps
 
 public export
-gebExpToConceptRep :
-  (GebSExp -> Maybe GebConceptRepresentation,
-   GebSList -> Maybe (List GebConceptRepresentation))
-gebExpToConceptRep = sexpEliminators $ SExpEliminatorArgs
-  (?gebExpToConceptRep_hole_expElim)
-  (?gebExpToConceptRep_hole_nilElim)
-  (?gebExpToConceptRep_hole_consElim)
+gebExpToConceptRepCertified :
+  ((x : GebSExp) -> Maybe
+    (rep : GebConceptRepresentation **
+      gebConceptRepToSExp rep = x),
+   (l : GebSList) -> Maybe
+    (reps: List GebConceptRepresentation **
+      gebConceptRepListToSList reps = l))
+gebExpToConceptRepCertified = sexpEliminators $ SExpEliminatorArgs
+  (\a, l, maybeConcepts => case maybeConcepts of
+    Just concepts => case a of
+      GAGeb => case l of
+        [] => Just $
+          (GebConceptCategoryRepresentation GebSelfRepresentation ** Refl)
+        _ :: _ => Nothing
+      _ => Nothing
+    Nothing => Nothing)
+  (Just ([] ** Refl))
+  (\_, _, maybeConcept, maybeConcepts => case (maybeConcept, maybeConcepts) of
+    (Just (concept ** Refl), Just (concepts ** Refl)) =>
+      Just $ ((concept :: concepts) ** Refl)
+    _ => Nothing)
 
 public export
 gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
-gebSExpToConceptRep = fst gebExpToConceptRep
+gebSExpToConceptRep x = case (fst gebExpToConceptRepCertified x) of
+  Just (rep ** _) => Just rep
+  Nothing => Nothing
 
 public export
 gebSListToConceptRepList : GebSList -> Maybe (List GebConceptRepresentation)
-gebSListToConceptRepList = snd gebExpToConceptRep
+gebSListToConceptRepList l = case (snd gebExpToConceptRepCertified l) of
+  Just (reps ** _) => Just reps
+  Nothing => Nothing
+
+public export
+gebSExpToConceptRepToSExp_correct :
+  (x : GebSExp) -> (rep : GebConceptRepresentation) ->
+  gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x
+gebSExpToConceptRepToSExp_correct x rep eq with
+  (fst gebExpToConceptRepCertified x) proof p
+    gebSExpToConceptRepToSExp_correct _ _ eq |
+      Just (_ ** correct) = case eq of Refl => correct
+    gebSExpToConceptRepToSExp_correct x rep eq |
+      Nothing = case eq of Refl impossible
+
+public export
+gebSListToConceptRepListToSList_correct :
+  (l : GebSList) -> (reps : List GebConceptRepresentation) ->
+  gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l
+gebSListToConceptRepListToSList_correct l reps eq with
+  (snd gebExpToConceptRepCertified l) proof p
+    gebSListToConceptRepListToSList_correct l reps eq |
+      Just (_ ** correct) = case eq of Refl => correct
+    gebSListToConceptRepListToSList_correct l reps eq |
+      Nothing = case eq of Refl impossible
 
 mutual
   public export
@@ -95,29 +158,6 @@ mutual
   gebConceptRepListToSListToConceptRepList_correct :
     (reps : List GebConceptRepresentation) ->
     gebSListToConceptRepList (gebConceptRepListToSList reps) = Just reps
-
-public export
-gebExpToConceptRepToExp_correct :
-  ((x : GebSExp) -> (rep : GebConceptRepresentation) ->
-   gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x,
-   (l: GebSList) -> (reps : List GebConceptRepresentation) ->
-   gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l)
-gebExpToConceptRepToExp_correct = sexpEliminators $ SExpEliminatorArgs
-  (?gebExpToConceptRepToExp_correct_hole_expElim)
-  (?gebExpToConceptRepToExp_correct_hole_nilElim)
-  (?gebExpToConceptRepToExp_correct_hole_consElim)
-
-public export
-gebSExpToConceptRepToSExp_correct :
-  (x : GebSExp) -> (rep : GebConceptRepresentation) ->
-  gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x
-gebSExpToConceptRepToSExp_correct = fst gebExpToConceptRepToExp_correct
-
-public export
-gebSListToConceptRepListToSList_correct :
-  (l : GebSList) -> (reps : List GebConceptRepresentation) ->
-  gebSListToConceptRepList l = Just reps -> gebConceptRepListToSList reps = l
-gebSListToConceptRepListToSList_correct = snd gebExpToConceptRepToExp_correct
 
 --------------------------------------------------------------------------------
 
