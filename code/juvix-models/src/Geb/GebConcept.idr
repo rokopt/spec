@@ -247,16 +247,25 @@ record GebConceptFunctor
 
 mutual
   public export
-  typecheckGebConcept : (representation : GebConceptRepresentation) ->
+  checkGebConceptRepresentation : (representation : GebConceptRepresentation) ->
     Maybe (GebConcept representation)
-  typecheckGebConcept = ?typecheckGebConcept_hole
+  checkGebConceptRepresentation
+    (GebConceptCategoryRepresentation GebSelfRepresentation) =
+      Just $ GebConceptCategory GebInGeb
+  checkGebConceptRepresentation (GebConceptObjectRepresentation _ _)
+    impossible
+  checkGebConceptRepresentation (GebConceptMorphismRepresentation _ _ _ _)
+    impossible
 
 mutual
   public export
-  typecheckGebConcept_complete : {representation : GebConceptRepresentation} ->
+  checkGebConceptRepresentation_complete :
+    {representation : GebConceptRepresentation} ->
     (concept : GebConcept representation) ->
-    typecheckGebConcept representation = Just concept
-  typecheckGebConcept_complete = ?typecheckGebConcept_complete_hole
+    checkGebConceptRepresentation representation = Just concept
+  checkGebConceptRepresentation_complete (GebConceptCategory GebInGeb) = Refl
+  checkGebConceptRepresentation_complete (GebConceptObject _) impossible
+  checkGebConceptRepresentation_complete (GebConceptMorphism _) impossible
 
 --------------------------------------------------------------------------------
 
@@ -264,11 +273,11 @@ mutual
   public export
   interpretGebConceptType : {representation : GebConceptRepresentation} ->
     GebConcept representation -> Type
-  interpretGebConceptType = ?interpretGebConceptType_hole
+  interpretGebConceptType concept = ?interpretGebConceptType_hole
 
   public export
   interpretGebConcept : {representation : GebConceptRepresentation} ->
     (concept : GebConcept representation) -> interpretGebConceptType concept
-  interpretGebConcept = ?interpretGebConcept_hole
+  interpretGebConcept concept = ?interpretGebConcept_hole
 
 --------------------------------------------------------------------------------
