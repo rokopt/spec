@@ -115,6 +115,16 @@ public export
 ($**^) : {atom : Type} -> atom -> atom -> SExp atom
 a $**^ a' = a $* $*^ a'
 
+export
+sexpInjectiveAtom : {atom : Type} -> {a, a' : atom} -> {l, l' : SList atom} ->
+  (a $* l) = (a' $* l') -> a = a'
+sexpInjectiveAtom Refl = Refl
+
+export
+sexpInjectiveList : {atom : Type} -> {a, a' : atom} -> {l, l' : SList atom} ->
+  (a $* l) = (a' $* l') -> l = l'
+sexpInjectiveList Refl = Refl
+
 public export
 SPred : (atom : Type) -> Type
 SPred atom = SExp atom -> Type
