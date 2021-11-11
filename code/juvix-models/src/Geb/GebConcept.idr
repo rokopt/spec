@@ -30,10 +30,16 @@ mutual
       GebObjectRepresentation ->
       GebCategoryRepresentation ->
       GebConceptRepresentation
-    GebConceptMorphismRepresentation:
+    GebConceptMorphismRepresentation :
       GebMorphismRepresentation ->
       GebCategoryRepresentation ->
       GebObjectRepresentation -> GebObjectRepresentation ->
+      GebConceptRepresentation
+    GebConceptDependentTypeRepresentation :
+      GebDependentTypeRepresentation ->
+      GebCategoryRepresentation ->
+      GebObjectRepresentation ->
+      GebMorphismRepresentation ->
       GebConceptRepresentation
 
   public export
@@ -48,6 +54,9 @@ mutual
   public export
   data GebMorphismRepresentation : Type where
 
+  public export
+  data GebDependentTypeRepresentation : Type where
+
 --------------------------------------------------------------------------------
 
 public export
@@ -59,6 +68,8 @@ record GebConceptRepresentationFunctor where
     GebObjectRepresentation -> GebObjectRepresentation
   GebMorphismRepresentationMap :
     GebMorphismRepresentation -> GebMorphismRepresentation
+  GebDependentTypeRepresentationMap :
+    GebDependentTypeRepresentation -> GebDependentTypeRepresentation
 
 --------------------------------------------------------------------------------
 
@@ -76,6 +87,13 @@ mutual
          gebCategoryRepToSExp catRep,
          gebObjectRepToSExp domainRep,
          gebObjectRepToSExp codomainRep]
+  gebConceptRepToSExp (GebConceptDependentTypeRepresentation
+    dependentTypeRep catRep domainRep morphismRep) =
+      GAConceptDependentType $*
+        [gebDependentTypeRepToSExp dependentTypeRep,
+         gebCategoryRepToSExp catRep,
+         gebObjectRepToSExp domainRep,
+         gebMorphismRepToSExp morphismRep]
 
   public export
   gebCategoryRepToSExp : GebCategoryRepresentation -> GebSExp
@@ -89,6 +107,10 @@ mutual
   public export
   gebMorphismRepToSExp : GebMorphismRepresentation -> GebSExp
   gebMorphismRepToSExp morphismRep impossible
+
+  public export
+  gebDependentTypeRepToSExp : GebDependentTypeRepresentation -> GebSExp
+  gebDependentTypeRepToSExp depTypeRep impossible
 
 --------------------------------------------------------------------------------
 
@@ -257,6 +279,54 @@ mutual
 --------------------------------------------------------------------------------
 
   public export
+  gebSExpToDependentTypeRepCertified :
+    (x : GebSExp) ->
+    Dec (rep : GebDependentTypeRepresentation **
+         gebDependentTypeRepToSExp rep = x)
+  gebSExpToDependentTypeRepCertified (a $* l) = No $ \p => case p of
+    ((GebConceptCategoryRepresentation _) ** Refl) impossible
+    ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+    ((GebConceptDependentTypeRepresentation _ _ _ _) ** Refl) impossible
+
+  public export
+  gebDependentTypeRepToSExpToDependentTypeRepCertified_correct :
+    (rep : GebDependentTypeRepresentation) ->
+    gebSExpToDependentTypeRepCertified (gebDependentTypeRepToSExp rep) =
+      Yes (rep ** Refl)
+  gebDependentTypeRepToSExpToDependentTypeRepCertified_correct _ impossible
+
+  public export
+  gebSExpToDependentTypeRep : GebSExp -> Maybe GebDependentTypeRepresentation
+  gebSExpToDependentTypeRep = decMapToMaybe gebSExpToDependentTypeRepCertified
+
+  public export
+  gebDependentTypeRepToSExpToDependentTypeRep_correct :
+    (rep : GebDependentTypeRepresentation) ->
+    gebSExpToDependentTypeRep (gebDependentTypeRepToSExp rep) = Just rep
+  gebDependentTypeRepToSExpToDependentTypeRep_correct rep =
+    rewrite gebDependentTypeRepToSExpToDependentTypeRepCertified_correct rep in
+    Refl
+
+  public export
+  gebSExpToDependentTypeRepToSExp_correct :
+    (x : GebSExp) -> (rep : GebDependentTypeRepresentation) ->
+    gebSExpToDependentTypeRep x = Just rep -> gebDependentTypeRepToSExp rep = x
+  gebSExpToDependentTypeRepToSExp_correct =
+    decMapToMaybe_correct gebSExpToDependentTypeRepCertified
+
+  public export
+  gebDependentTypeRepToSExp_injective :
+    (rep, rep' : GebDependentTypeRepresentation) ->
+    gebDependentTypeRepToSExp rep = gebDependentTypeRepToSExp rep' ->
+    rep = rep'
+  gebDependentTypeRepToSExp_injective =
+    decMapToMaybe_injective
+      gebSExpToDependentTypeRepCertified
+      gebDependentTypeRepToSExpToDependentTypeRep_correct
+
+--------------------------------------------------------------------------------
+
+  public export
   gebSExpToConceptRepCertified :
     (x : GebSExp) ->
     Dec (rep : GebConceptRepresentation ** gebConceptRepToSExp rep = x)
@@ -381,8 +451,9 @@ mutual
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
               ((GebConceptObjectRepresentation _ _) ** Refl) impossible
               ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
-          No notMorphism =>
-            No $ \p => case p of
+          No notMorphism => case decEq a GAConceptDependentType of
+            Yes Refl => ?gebConceptDependentTypeRepresentation_hole
+            No notDependentType => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) => notCategory Refl
               ((GebConceptObjectRepresentation _ _) ** Refl) => notObject Refl
               ((GebConceptMorphismRepresentation _ _ _ _) ** correct) =>
@@ -557,6 +628,29 @@ Ord GebMorphismRepresentation where
 --------------------------------------------------------------------------------
 
 public export
+Show GebDependentTypeRepresentation where
+  show = show . gebDependentTypeRepToSExp
+
+public export
+Eq GebDependentTypeRepresentation where
+  rep == rep' = gebDependentTypeRepToSExp rep == gebDependentTypeRepToSExp rep'
+
+public export
+DecEq GebDependentTypeRepresentation where
+  decEq =
+    encodingDecEq
+      gebDependentTypeRepToSExp gebSExpToDependentTypeRep
+      gebDependentTypeRepToSExpToDependentTypeRep_correct decEq
+
+public export
+Ord GebDependentTypeRepresentation where
+  rep < rep' = gebDependentTypeRepToSExp rep < gebDependentTypeRepToSExp rep'
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+
+public export
 Show GebConceptRepresentation where
   show = show . gebConceptRepToSExp
 
@@ -610,6 +704,12 @@ mutual
   public export
   data GebMorphism : GebMorphismRepresentation -> GebCategoryRepresentation ->
     (domain, codomain : GebObjectRepresentation) -> Type
+    where
+
+  public export
+  data GebDependentType : GebDependentTypeRepresentation ->
+    GebCategoryRepresentation -> GebObjectRepresentation ->
+    GebMorphismRepresentation -> Type
     where
 
 --------------------------------------------------------------------------------
