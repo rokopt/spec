@@ -257,6 +257,15 @@ mutual
         (GebReflectiveObjectRepresentation category ** repIsReflective) =>
           case repIsReflective of Refl => void $ isNotReflective Refl
 
+  public export
+  gebSExpToMorphismRepCertified :
+    (x : GebSExp) ->
+    Dec (rep : GebMorphismRepresentation ** gebMorphismRepToSExp rep = x)
+  gebSExpToMorphismRepCertified (a $* l) = No $ \p => case p of
+    ((GebConceptCategoryRepresentation _) ** Refl) impossible
+    ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+    ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+
 --------------------------------------------------------------------------------
 
   public export
@@ -338,7 +347,9 @@ mutual
               ((GebConceptObjectRepresentation _ _) ** Refl) impossible
               ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
             ([morphism, category, domain, codomain]) =>
-              ?gebSExpToConceptRepCertified_hole_maybemorphism
+              case gebSExpToMorphismRepCertified morphism of
+                Yes (morphismRep ** correct) => ?gebSExpToConceptRepCertified_hole_maybemorphism
+                No notMorphism => ?gebSExpToConceptRepCertified_hole_notmorphismafterall
             (_ :: _ :: _ :: _ :: _ :: _) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
               ((GebConceptObjectRepresentation _ _) ** Refl) impossible
