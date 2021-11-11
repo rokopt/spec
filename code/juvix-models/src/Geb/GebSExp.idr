@@ -18,7 +18,7 @@ data GebAtom : Type where
 
   -- | The object in a reflective category which can represent the
   -- | category itself.
-  GAReflectiveObject : GebAtom
+  GAObjectReflector : GebAtom
 
   -- | The minimal reflective category, with substitution (pattern-matching)
   -- | only.
@@ -78,7 +78,7 @@ gaEncode GAAtomTerm = 15
 gaEncode GASExpTerm = 16
 gaEncode GASListTerm = 17
 gaEncode GAReflective = 18
-gaEncode GAReflectiveObject = 19
+gaEncode GAObjectReflector = 19
 gaEncode GARefinement = 20
 
 public export
@@ -102,7 +102,7 @@ gaDecode 15 = Just GAAtomTerm
 gaDecode 16 = Just GASExpTerm
 gaDecode 17 = Just GASListTerm
 gaDecode 18 = Just GAReflective
-gaDecode 19 = Just GAReflectiveObject
+gaDecode 19 = Just GAObjectReflector
 gaDecode 20 = Just GARefinement
 gaDecode _ = Nothing
 
@@ -127,7 +127,7 @@ gaDecodeEncodeIsJust GAAtomTerm = Refl
 gaDecodeEncodeIsJust GASExpTerm = Refl
 gaDecodeEncodeIsJust GASListTerm = Refl
 gaDecodeEncodeIsJust GAReflective = Refl
-gaDecodeEncodeIsJust GAReflectiveObject = Refl
+gaDecodeEncodeIsJust GAObjectReflector = Refl
 gaDecodeEncodeIsJust GARefinement = Refl
 
 public export
@@ -151,7 +151,7 @@ gebAtomToString GAAtomTerm = "AtomTerm"
 gebAtomToString GASExpTerm = "SExpTerm"
 gebAtomToString GASListTerm = "SListTerm"
 gebAtomToString GAReflective = "Reflective"
-gebAtomToString GAReflectiveObject = "ReflectiveObject"
+gebAtomToString GAObjectReflector = "ReflectiveObject"
 gebAtomToString GARefinement = "Refinement"
 
 public export
@@ -296,7 +296,7 @@ mutual
   public export
   data IsObject : GebSExp -> Type where
     ReflectiveObject : {x : GebSExp} ->
-      (IsCategory x) -> IsObject (GAReflectiveObject $*** x)
+      (IsCategory x) -> IsObject (GAObjectReflector $*** x)
 
   public export
   Object : Type
@@ -306,7 +306,7 @@ mutual
   data HasCategory : (object, category : GebSExp) -> Type where
     ReflectiveObjectCategory : (category : GebSExp) ->
       {auto isCategory : IsCategory category} ->
-      HasCategory (GAReflectiveObject $*** category) category
+      HasCategory (GAObjectReflector $*** category) category
 
   public export
   data IsMorphism : GebSExp -> Type where
@@ -424,7 +424,7 @@ mutual
 
   public export
   objectCategory : {x : GebSExp} -> IsObject x -> Category
-  objectCategory {x=(GAReflectiveObject $* [cat])}
+  objectCategory {x=(GAObjectReflector $* [cat])}
     (ReflectiveObject isCategory) = (cat ** isCategory)
 
   public export

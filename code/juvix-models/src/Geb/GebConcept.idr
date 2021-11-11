@@ -42,7 +42,7 @@ mutual
 
   public export
   data GebObjectRepresentation : Type where
-    GebReflectiveObjectRepresentation :
+    GebObjectReflectorRepresentation :
       GebCategoryRepresentation -> GebObjectRepresentation
 
   public export
@@ -83,8 +83,8 @@ mutual
 
   public export
   gebObjectRepToSExp : GebObjectRepresentation -> GebSExp
-  gebObjectRepToSExp (GebReflectiveObjectRepresentation catRep) =
-    GAReflectiveObject $*** gebCategoryRepToSExp catRep
+  gebObjectRepToSExp (GebObjectReflectorRepresentation catRep) =
+    GAObjectReflector $*** gebCategoryRepToSExp catRep
 
   public export
   gebMorphismRepToSExp : GebMorphismRepresentation -> GebSExp
@@ -150,7 +150,7 @@ mutual
     (x : GebSExp) ->
     Dec (rep : GebObjectRepresentation ** gebObjectRepToSExp rep = x)
   gebSExpToObjectRepCertified (a $* l) =
-    case decEq a GAReflectiveObject of
+    case decEq a GAObjectReflector of
       Yes Refl => case l of
         [] => No $ \p => case p of
           ((GebConceptCategoryRepresentation _) ** Refl) impossible
@@ -158,7 +158,7 @@ mutual
           ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
         [cat] => case gebSExpToCategoryRepCertified cat of
           Yes (catRep ** Refl) =>
-            Yes (GebReflectiveObjectRepresentation catRep ** Refl)
+            Yes (GebObjectReflectorRepresentation catRep ** Refl)
           No notCategory => No $ \p => case p of
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
             ((GebConceptObjectRepresentation _ _) ** Refl) impossible
@@ -168,7 +168,7 @@ mutual
           ((GebConceptObjectRepresentation _ _) ** Refl) impossible
           ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
       No isNotReflective => No $ \p => case p of
-        (GebReflectiveObjectRepresentation category ** repIsReflective) =>
+        (GebObjectReflectorRepresentation category ** repIsReflective) =>
           case repIsReflective of Refl => void $ isNotReflective Refl
 
   public export
@@ -176,8 +176,8 @@ mutual
     (rep : GebObjectRepresentation) ->
     gebSExpToObjectRepCertified (gebObjectRepToSExp rep) = Yes (rep ** Refl)
   gebObjectRepToSExpToObjectRepCertified_correct
-    (GebReflectiveObjectRepresentation catRep) =
-      rewrite decEqRefl decEq GAReflectiveObject in
+    (GebObjectReflectorRepresentation catRep) =
+      rewrite decEqRefl decEq GAObjectReflector in
       rewrite gebCategoryRepToSExpToCategoryRepCertified_correct catRep in
       Refl
 
@@ -603,9 +603,9 @@ mutual
   public export
   data GebObject : GebObjectRepresentation -> GebCategoryRepresentation -> Type
     where
-      GebReflectiveObject : {catRep : GebCategoryRepresentation} ->
+      GebObjectReflector : {catRep : GebCategoryRepresentation} ->
         GebCategory catRep ->
-        GebObject (GebReflectiveObjectRepresentation catRep) catRep
+        GebObject (GebObjectReflectorRepresentation catRep) catRep
 
   public export
   data GebMorphism : GebMorphismRepresentation -> GebCategoryRepresentation ->
@@ -648,7 +648,7 @@ gebObjectCategory : {objRep : GebObjectRepresentation} ->
   {catRep : GebCategoryRepresentation} ->
   GebObject objRep catRep ->
   GebCategory catRep
-gebObjectCategory (GebReflectiveObject category) = category
+gebObjectCategory (GebObjectReflector category) = category
 
 public export
 gebMorphismCategory : {morphismRep : GebMorphismRepresentation} ->
@@ -698,14 +698,14 @@ mutual
     (catRep : GebCategoryRepresentation) ->
     Dec (GebObject objRep catRep)
   checkGebObjectRepresentation
-    (GebReflectiveObjectRepresentation catRep) catRep' =
+    (GebObjectReflectorRepresentation catRep) catRep' =
       case decEq catRep catRep' of
         Yes Refl => case checkGebCategoryRepresentation catRep' of
-          Yes category => Yes $ GebReflectiveObject category
+          Yes category => Yes $ GebObjectReflector category
           No notCategory => No $ \category =>
             void $ notCategory $ gebObjectCategory category
         No neq => No $ \object => case object of
-          GebReflectiveObject catRep'' => void $ neq Refl
+          GebObjectReflector catRep'' => void $ neq Refl
 
   public export
   checkGebObjectRepresentation_complete :
@@ -714,7 +714,7 @@ mutual
     (object : GebObject objRep catRep) ->
     checkGebObjectRepresentation objRep catRep = Yes object
   checkGebObjectRepresentation_complete
-    (GebReflectiveObject {catRep} category) =
+    (GebObjectReflector {catRep} category) =
       rewrite decEqRefl decEq catRep in
       rewrite checkGebCategoryRepresentation_complete category in
       Refl
@@ -881,8 +881,8 @@ mutual
     (category : GebCategory catRep) ->
     GebObject objRep catRep ->
     interpretGebCategory category
-  interpretGebObject _ (GebReflectiveObject _) =
-    GebConceptRepresentation
+  interpretGebObject _ (GebObjectReflector _) =
+    GebObjectRepresentation
 
   public export
   interpretGebMorphism : {morphismRep : GebMorphismRepresentation} ->
