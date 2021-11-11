@@ -46,6 +46,10 @@ isNoExtract : {type : Type} -> (dec : Dec type) -> isYes dec = False -> Not type
 isNoExtract (Yes _) Refl impossible
 isNoExtract (No isNo) _ = isNo
 
+export
+yesInjective : Yes x = Yes y -> x = y
+yesInjective Refl = Refl
+
 public export
 DecPred : {A: Type} -> (pred: A -> Type) -> Type
 DecPred pred = ((a : A) -> Dec (pred a))
