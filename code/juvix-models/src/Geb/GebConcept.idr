@@ -253,10 +253,33 @@ mutual
             ((GebConceptObjectRepresentation objRep catRep) ** Refl) impossible
             ((GebConceptMorphismRepresentation
               morphismRep catRep domainRep codomainRep) ** Refl) impossible
-        (_ :: _ :: _) => ?gebSExpToConceptRepCertified_category_two_or_more
+        (_ :: _ :: _) => No $ \p => case p of
+          ((GebConceptCategoryRepresentation _) ** Refl) impossible
+          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
       No notCategory => case decEq a GAConceptObject of
-        Yes Refl => ?gebSExpToConceptRepCertified_hole_notcat_maybeobj
-        No notObject => ?gebSExpToConceptRepCertified_hole_notcat_or_obj
+        Yes Refl => case l of
+          [] => No $ \p => case p of
+            ((GebConceptCategoryRepresentation _) ** Refl) impossible
+            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+          ([_]) => No $ \p => case p of
+            ((GebConceptCategoryRepresentation _) ** Refl) impossible
+            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+          (_ :: _ :: []) => ?gebSExpToConceptRepCertified_hole_maybecat
+          (_ :: _ :: _ :: _) => No $ \p => case p of
+            ((GebConceptCategoryRepresentation _) ** Refl) impossible
+            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+        No notObject => case decEq a GAConceptMorphism of
+          Yes Refl => ?gebSExpToConceptRepCertified_hole_maybemorphism
+          No notMorphism =>
+            No $ \p => case p of
+              ((GebConceptCategoryRepresentation _) ** Refl) => notCategory Refl
+              ((GebConceptObjectRepresentation _ _) ** Refl) => notObject Refl
+              ((GebConceptMorphismRepresentation _ _ _ _) ** correct) =>
+                notMorphism $ sym $ sexpInjectiveAtom correct
 
   public export
   gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
