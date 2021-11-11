@@ -256,7 +256,6 @@ mutual
 
 --------------------------------------------------------------------------------
 
-mutual
   public export
   gebSExpToConceptRepCertified :
     (x : GebSExp) ->
@@ -644,75 +643,6 @@ record GebConceptFunctor
 
 --------------------------------------------------------------------------------
 
-mutual
-  public export
-  checkGebCategoryRepresentation :
-    (representation : GebCategoryRepresentation) ->
-    Dec (GebCategory representation)
-  checkGebCategoryRepresentation GebSelfRepresentation = Yes GebInGeb
-
-  public export
-  checkGebConceptRepresentation : (representation : GebConceptRepresentation) ->
-    Dec (GebConcept representation)
-  checkGebConceptRepresentation
-    (GebConceptCategoryRepresentation GebSelfRepresentation) =
-      Yes $ GebConceptCategory GebInGeb
-  checkGebConceptRepresentation (GebConceptObjectRepresentation
-    (GebReflectiveObjectRepresentation catRep) catRep') =
-      case decEq catRep catRep' of
-        Yes Refl => case checkGebCategoryRepresentation catRep' of
-          Yes category => Yes $ GebConceptObject $ GebReflectiveObject category
-          No notCategory => No $ \concept => case concept of
-            GebConceptObject (GebReflectiveObject category) =>
-              void $ notCategory category
-        No neq => No $ \concept => case concept of
-          GebConceptObject (GebReflectiveObject category) => void $ neq Refl
-  checkGebConceptRepresentation (GebConceptMorphismRepresentation _ _ _ _)
-    impossible
-
-mutual
-  public export
-  checkGebCategoryRepresentation_complete :
-    {representation : GebCategoryRepresentation} ->
-    (category : GebCategory representation) ->
-    checkGebCategoryRepresentation representation = Yes category
-  checkGebCategoryRepresentation_complete GebInGeb = Refl
-
-  public export
-  checkGebConceptRepresentation_complete :
-    {representation : GebConceptRepresentation} ->
-    (concept : GebConcept representation) ->
-    checkGebConceptRepresentation representation = Yes concept
-  checkGebConceptRepresentation_complete (GebConceptCategory GebInGeb) = Refl
-  checkGebConceptRepresentation_complete (GebConceptObject
-    (GebReflectiveObject {catRep} category)) =
-      rewrite decEqRefl decEq catRep in
-      rewrite checkGebCategoryRepresentation_complete category in
-      Refl
-  checkGebConceptRepresentation_complete (GebConceptMorphism _) impossible
-
-public export
-gebCategory_uniquelyDeterminedByRepresentation :
-  {representation : GebCategoryRepresentation} ->
-  (category, category' : GebCategory representation) ->
-  category = category'
-gebCategory_uniquelyDeterminedByRepresentation =
-  depDecComplete_implies_unique
-    checkGebCategoryRepresentation
-    checkGebCategoryRepresentation_complete
-
-public export
-gebConcept_uniquelyDeterminedByRepresentation :
-  {representation : GebConceptRepresentation} ->
-  (category, category' : GebConcept representation) ->
-  category = category'
-gebConcept_uniquelyDeterminedByRepresentation =
-  depDecComplete_implies_unique
-    checkGebConceptRepresentation
-    checkGebConceptRepresentation_complete
-
---------------------------------------------------------------------------------
-
 public export
 gebObjectCategory : {objRep : GebObjectRepresentation} ->
   {catRep : GebCategoryRepresentation} ->
@@ -743,6 +673,160 @@ gebMorphismCodomain : {morphismRep : GebMorphismRepresentation} ->
   GebMorphism morphismRep catRep domainRep codomainRep ->
   GebObject codomainRep catRep
 gebMorphismCodomain morphism impossible
+
+--------------------------------------------------------------------------------
+
+mutual
+  public export
+  checkGebCategoryRepresentation :
+    (representation : GebCategoryRepresentation) ->
+    Dec (GebCategory representation)
+  checkGebCategoryRepresentation GebSelfRepresentation = Yes GebInGeb
+
+  public export
+  checkGebCategoryRepresentation_complete :
+    {representation : GebCategoryRepresentation} ->
+    (category : GebCategory representation) ->
+    checkGebCategoryRepresentation representation = Yes category
+  checkGebCategoryRepresentation_complete GebInGeb = Refl
+
+--------------------------------------------------------------------------------
+
+  public export
+  checkGebObjectRepresentation :
+    (objRep : GebObjectRepresentation) ->
+    (catRep : GebCategoryRepresentation) ->
+    Dec (GebObject objRep catRep)
+  checkGebObjectRepresentation
+    (GebReflectiveObjectRepresentation catRep) catRep' =
+      case decEq catRep catRep' of
+        Yes Refl => case checkGebCategoryRepresentation catRep' of
+          Yes category => Yes $ GebReflectiveObject category
+          No notCategory => No $ \category =>
+            void $ notCategory $ gebObjectCategory category
+        No neq => No $ \object => case object of
+          GebReflectiveObject catRep'' => void $ neq Refl
+
+  public export
+  checkGebObjectRepresentation_complete :
+    {objRep : GebObjectRepresentation} ->
+    {catRep : GebCategoryRepresentation} ->
+    (object : GebObject objRep catRep) ->
+    checkGebObjectRepresentation objRep catRep = Yes object
+  checkGebObjectRepresentation_complete
+    (GebReflectiveObject {catRep} category) =
+      rewrite decEqRefl decEq catRep in
+      rewrite checkGebCategoryRepresentation_complete category in
+      Refl
+
+--------------------------------------------------------------------------------
+
+  public export
+  checkGebMorphismRepresentation :
+    (morphismRep : GebMorphismRepresentation) ->
+    (catRep : GebCategoryRepresentation) ->
+    (domainRep, codomainRep : GebObjectRepresentation) ->
+    Dec (GebMorphism morphismRep catRep domainRep codomainRep)
+  checkGebMorphismRepresentation _ _ _ _ impossible
+
+  public export
+  checkGebMorphismRepresentation_complete :
+    {morphismRep : GebMorphismRepresentation} ->
+    {catRep : GebCategoryRepresentation} ->
+    {domainRep, codomainRep : GebObjectRepresentation} ->
+    (morphism : GebMorphism morphismRep catRep domainRep codomainRep) ->
+    checkGebMorphismRepresentation morphismRep catRep domainRep codomainRep =
+      Yes morphism
+  checkGebMorphismRepresentation_complete _ impossible
+
+--------------------------------------------------------------------------------
+
+  public export
+  checkGebConceptRepresentation : (representation : GebConceptRepresentation) ->
+    Dec (GebConcept representation)
+  checkGebConceptRepresentation (GebConceptCategoryRepresentation catRep) =
+    case checkGebCategoryRepresentation catRep of
+      Yes category => Yes $ GebConceptCategory category
+      No notCategory => No $ \concept => case concept of
+        GebConceptCategory category => void $ notCategory category
+  checkGebConceptRepresentation (GebConceptObjectRepresentation objRep catRep) =
+    case checkGebObjectRepresentation objRep catRep of
+      Yes object => Yes $ GebConceptObject object
+      No notObject => No $ \concept => case concept of
+        GebConceptObject object => void $ notObject object
+  checkGebConceptRepresentation
+    (GebConceptMorphismRepresentation
+      morphismRep catRep domainRep codomainRep) =
+        case checkGebMorphismRepresentation
+          morphismRep catRep domainRep codomainRep of
+            Yes morphism => Yes $ GebConceptMorphism morphism
+            No notMorphism => No $ \concept => case concept of
+              GebConceptMorphism morphism => void $ notMorphism morphism
+
+  public export
+  checkGebConceptRepresentation_complete :
+    {representation : GebConceptRepresentation} ->
+    (concept : GebConcept representation) ->
+    checkGebConceptRepresentation representation = Yes concept
+  checkGebConceptRepresentation_complete (GebConceptCategory category) =
+    rewrite checkGebCategoryRepresentation_complete category in
+    Refl
+  checkGebConceptRepresentation_complete (GebConceptObject object) =
+    rewrite checkGebObjectRepresentation_complete object in
+    Refl
+  checkGebConceptRepresentation_complete (GebConceptMorphism morphism) =
+    rewrite checkGebMorphismRepresentation_complete morphism in
+    Refl
+
+--------------------------------------------------------------------------------
+
+public export
+gebCategory_uniquelyDeterminedByRepresentation :
+  {representation : GebCategoryRepresentation} ->
+  (category, category' : GebCategory representation) ->
+  category = category'
+gebCategory_uniquelyDeterminedByRepresentation =
+  depDecComplete_implies_unique
+    checkGebCategoryRepresentation
+    checkGebCategoryRepresentation_complete
+
+public export
+gebObject_uniquelyDeterminedByRepresentation :
+  {objRep : GebObjectRepresentation} ->
+  {catRep : GebCategoryRepresentation} ->
+  (object, object' : GebObject objRep catRep) ->
+  object = object'
+gebObject_uniquelyDeterminedByRepresentation object object' with
+  (checkGebObjectRepresentation_complete object,
+   checkGebObjectRepresentation_complete object')
+    gebObject_uniquelyDeterminedByRepresentation object object' |
+      (complete, complete') =
+        yesInjective $ trans (sym complete) complete'
+
+public export
+gebMorphism_uniquelyDeterminedByRepresentation :
+  {morphismRep : GebMorphismRepresentation} ->
+  {catRep : GebCategoryRepresentation} ->
+  {domainRep, codomainRep : GebObjectRepresentation} ->
+  (morphism, morphism' :
+    GebMorphism morphismRep catRep domainRep codomainRep) ->
+  morphism = morphism'
+gebMorphism_uniquelyDeterminedByRepresentation morphism morphism' with
+  (checkGebMorphismRepresentation_complete morphism,
+   checkGebMorphismRepresentation_complete morphism')
+    gebMorphism_uniquelyDeterminedByRepresentation morphism morphism' |
+      (complete, complete') =
+        yesInjective $ trans (sym complete) complete'
+
+public export
+gebConcept_uniquelyDeterminedByRepresentation :
+  {representation : GebConceptRepresentation} ->
+  (category, category' : GebConcept representation) ->
+  category = category'
+gebConcept_uniquelyDeterminedByRepresentation =
+  depDecComplete_implies_unique
+    checkGebConceptRepresentation
+    checkGebConceptRepresentation_complete
 
 --------------------------------------------------------------------------------
 
