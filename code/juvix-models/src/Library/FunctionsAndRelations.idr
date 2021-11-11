@@ -129,20 +129,20 @@ pipe : {a, b, c : Type} -> (a -> b) -> (b -> c) -> (a -> c)
 pipe = swap (.)
 
 public export
-PairFstEq : {a, b : Type} -> {p, p' : (a, b)} -> p = p' -> fst p = fst p'
+PairFstEq : {0 a, b : Type} -> {p, p' : (a, b)} -> p = p' -> fst p = fst p'
 PairFstEq Refl = Refl
 
 public export
-PairSndEq : {a, b : Type} -> {p, p' : (a, b)} -> p = p' -> snd p = snd p'
+PairSndEq : {0 a, b : Type} -> {p, p' : (a, b)} -> p = p' -> snd p = snd p'
 PairSndEq Refl = Refl
 
 public export
-DPairFstEq : {a : Type} -> {b : a -> Type} -> {p, p' : DPair a b} ->
+DPairFstEq : {0 a : Type} -> {0 b : a -> Type} -> {p, p' : DPair a b} ->
   p = p' -> fst p = fst p'
 DPairFstEq Refl = Refl
 
 public export
-DPairSndEq : {a : Type} -> {b : a -> Type} -> {p, p' : DPair a b} ->
+DPairSndEq : {0 a : Type} -> {0 b : a -> Type} -> {p, p' : DPair a b} ->
   (p_eq : p = p') ->
   DPair.snd p ~=~ DPair.snd p'
 DPairSndEq Refl = Refl

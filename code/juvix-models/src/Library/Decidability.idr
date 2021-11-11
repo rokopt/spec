@@ -506,6 +506,54 @@ decToEither (Yes y) = Left y
 decToEither (No n) = Right n
 
 public export
+decToMaybe : {0 a : Type} -> Dec a -> Maybe a
+decToMaybe (Yes x) = Just x
+decToMaybe (No _) = Nothing
+
+public export
+decMapToMaybe : {0 a, b : Type} ->
+  {inverse : b -> a} ->
+  ((x : a) -> Dec (y : b ** inverse y = x)) ->
+  (x : a) -> Maybe b
+decMapToMaybe dec x = map fst $ decToMaybe (dec x)
+
+public export
+decMapToMaybe_correct : {0 a, b : Type} ->
+  {inverse : b -> a} ->
+  (dec : ((x : a) -> Dec (y : b ** inverse y = x))) ->
+  (x : a) -> (y : b) ->
+  decMapToMaybe dec x = Just y -> inverse y = x
+decMapToMaybe_correct dec x y isjust with (dec x)
+  decMapToMaybe_correct dec x y isjust | Yes (_ ** isyes) =
+    rewrite sym (justInjective isjust) in isyes
+  decMapToMaybe_correct dec x y Refl | No _ impossible
+
+public export
+decMapToMaybe_injective : {0 a, b : Type} ->
+  {inverse : b -> a} ->
+  (dec : ((x : a) -> Dec (y : b ** inverse y = x))) ->
+  (inverseCorrect : (y : b) -> decMapToMaybe dec (inverse y) = Just y) ->
+  (y, y' : b) -> inverse y = inverse y' ->
+  y = y'
+decMapToMaybe_injective {a} {b} dec inverseCorrect y y' eq =
+  justInjective $
+    trans
+      (sym $
+        replace {p=(\y'' => decMapToMaybe dec y'' = Just y)}
+          eq (inverseCorrect y))
+      (inverseCorrect y')
+
+public export
+depDecComplete_implies_unique : {0 a : Type} -> {0 b : a -> Type} ->
+  (dec : (x : a) -> Dec (b x)) ->
+  (complete : {x : a} -> (y : b x) -> dec x = Yes y) ->
+  {x : a} -> (y, y' : b x) -> y = y'
+depDecComplete_implies_unique dec complete {x} y y' with
+  (complete {x} y, complete {x} y')
+    depDecComplete_implies_unique dec complete {x} y y' | (c, c') =
+      yesInjective $ trans (sym c) c'
+
+public export
 eitherIntroLeft : {a, b, c : Type} -> (a -> b) -> (a -> Either b c)
 eitherIntroLeft f = Left . f
 

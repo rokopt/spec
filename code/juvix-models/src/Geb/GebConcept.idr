@@ -82,101 +82,13 @@ mutual
   gebCategoryRepToSExp GebSelfRepresentation = $^ GAGeb
 
   public export
-  gebCategoryRepToSExp_injective : (rep, rep' : GebCategoryRepresentation) ->
-    gebCategoryRepToSExp rep = gebCategoryRepToSExp rep' ->
-    rep = rep'
-  gebCategoryRepToSExp_injective
-    GebSelfRepresentation GebSelfRepresentation Refl = Refl
-
-  public export
   gebObjectRepToSExp : GebObjectRepresentation -> GebSExp
   gebObjectRepToSExp (GebReflectiveObjectRepresentation catRep) =
     GAReflectiveObject $*** gebCategoryRepToSExp catRep
 
   public export
-  gebObjectRepToSExp_injective : (rep, rep' : GebObjectRepresentation) ->
-    gebObjectRepToSExp rep = gebObjectRepToSExp rep' ->
-    rep = rep'
-  gebObjectRepToSExp_injective
-    (GebReflectiveObjectRepresentation cat)
-    (GebReflectiveObjectRepresentation cat')
-    eq =
-      rewrite
-        gebCategoryRepToSExp_injective cat cat'
-          (fst (consInjective (sexpInjectiveList eq))) in
-      Refl
-
-  public export
   gebMorphismRepToSExp : GebMorphismRepresentation -> GebSExp
   gebMorphismRepToSExp morphismRep impossible
-
-  public export
-  gebMorphismRepToSExp_injective : (rep, rep' : GebMorphismRepresentation) ->
-    gebMorphismRepToSExp rep = gebMorphismRepToSExp rep' ->
-    rep = rep'
-  gebMorphismRepToSExp_injective _ _ _ impossible
-
-  public export
-  gebConceptRepToSExp_injective : (rep, rep' : GebConceptRepresentation) ->
-    gebConceptRepToSExp rep = gebConceptRepToSExp rep' ->
-    rep = rep'
-  gebConceptRepToSExp_injective
-    (GebConceptCategoryRepresentation cat)
-    (GebConceptCategoryRepresentation cat')
-    eq =
-      rewrite gebCategoryRepToSExp_injective cat cat'
-        (fst (consInjective (sexpInjectiveList eq))) in
-      Refl
-  gebConceptRepToSExp_injective
-    (GebConceptCategoryRepresentation cat)
-    (GebConceptObjectRepresentation obj' cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptCategoryRepresentation cat)
-    (GebConceptMorphismRepresentation morphism' cat' domain' codomain')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptObjectRepresentation obj cat)
-    (GebConceptCategoryRepresentation cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptObjectRepresentation obj cat)
-    (GebConceptObjectRepresentation obj' cat')
-    eq =
-      let listEq = sexpInjectiveList eq in
-      rewrite gebObjectRepToSExp_injective obj obj'
-        (fst (consInjective listEq)) in
-      rewrite gebCategoryRepToSExp_injective cat cat'
-        (fst (consInjective (snd (consInjective listEq)))) in
-      Refl
-  gebConceptRepToSExp_injective
-    (GebConceptObjectRepresentation obj cat)
-    (GebConceptMorphismRepresentation morphism' cat' domain' codomain')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptMorphismRepresentation morphism cat domain codomain)
-    (GebConceptCategoryRepresentation cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptMorphismRepresentation morphism cat domain codomain)
-    (GebConceptObjectRepresentation obj' cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptMorphismRepresentation morphism cat domain codomain)
-    (GebConceptMorphismRepresentation morphism' cat' domain' codomain')
-    eq =
-      let listEq = sexpInjectiveList eq in
-      rewrite gebMorphismRepToSExp_injective morphism morphism'
-        (fst (consInjective listEq)) in
-      rewrite gebCategoryRepToSExp_injective cat cat'
-        (fst (consInjective (snd (consInjective listEq)))) in
-      rewrite gebObjectRepToSExp_injective domain domain'
-        (fst (consInjective (snd (consInjective
-          (snd (consInjective listEq)))))) in
-      rewrite gebObjectRepToSExp_injective codomain codomain'
-        (fst (consInjective (snd (consInjective
-          (snd (consInjective (snd (consInjective listEq)))))))) in
-      Refl
 
 --------------------------------------------------------------------------------
 
@@ -197,37 +109,39 @@ mutual
           Refl => void $ isNotGeb Refl
 
   public export
-  gebSExpToCategoryRep : GebSExp -> Maybe GebCategoryRepresentation
-  gebSExpToCategoryRep x = case gebSExpToCategoryRepCertified x of
-    Yes (rep ** eq) => Just rep
-    No neq => Nothing
+  gebCategoryRepToSExpToCategoryRepCertified_correct :
+    (rep : GebCategoryRepresentation) ->
+    gebSExpToCategoryRepCertified (gebCategoryRepToSExp rep) = Yes (rep ** Refl)
+  gebCategoryRepToSExpToCategoryRepCertified_correct GebSelfRepresentation =
+    rewrite decEqRefl decEq GAGeb in Refl
 
   public export
-  gebSExpToCategoryRepToSExp_correct :
-    (x : GebSExp) -> (rep : GebCategoryRepresentation) ->
-    gebSExpToCategoryRep x = Just rep -> gebCategoryRepToSExp rep = x
-  gebSExpToCategoryRepToSExp_correct x rep isjust with
-    (gebSExpToCategoryRepCertified x)
-      gebSExpToCategoryRepToSExp_correct x rep isjust |
-        Yes (_ ** isyes) = rewrite sym (justInjective isjust) in isyes
-      gebSExpToCategoryRepToSExp_correct x rep Refl |
-        No _ impossible
+  gebSExpToCategoryRep : GebSExp -> Maybe GebCategoryRepresentation
+  gebSExpToCategoryRep = decMapToMaybe gebSExpToCategoryRepCertified
 
   public export
   gebCategoryRepToSExpToCategoryRep_correct :
     (rep : GebCategoryRepresentation) ->
     gebSExpToCategoryRep (gebCategoryRepToSExp rep) = Just rep
-  gebCategoryRepToSExpToCategoryRep_correct rep with
-    (gebCategoryRepToSExp rep,
-     gebSExpToCategoryRepCertified (gebCategoryRepToSExp rep)) proof p
-      gebCategoryRepToSExpToCategoryRep_correct rep |
-        (x, Yes (rep' ** correct)) =
-          let psnd = PairSndEq p in
-          rewrite PairSndEq p in
-          rewrite gebCategoryRepToSExp_injective rep' rep correct in
-          Refl
-      gebCategoryRepToSExpToCategoryRep_correct rep |
-        (x, No neq) = void $ neq (rep ** Refl)
+  gebCategoryRepToSExpToCategoryRep_correct rep =
+    rewrite gebCategoryRepToSExpToCategoryRepCertified_correct rep in
+    Refl
+
+  public export
+  gebSExpToCategoryRepToSExp_correct :
+    (x : GebSExp) -> (rep : GebCategoryRepresentation) ->
+    gebSExpToCategoryRep x = Just rep -> gebCategoryRepToSExp rep = x
+  gebSExpToCategoryRepToSExp_correct =
+    decMapToMaybe_correct gebSExpToCategoryRepCertified
+
+  public export
+  gebCategoryRepToSExp_injective : (rep, rep' : GebCategoryRepresentation) ->
+    gebCategoryRepToSExp rep = gebCategoryRepToSExp rep' ->
+    rep = rep'
+  gebCategoryRepToSExp_injective =
+    decMapToMaybe_injective
+      gebSExpToCategoryRepCertified
+      gebCategoryRepToSExpToCategoryRep_correct
 
 --------------------------------------------------------------------------------
 
@@ -258,6 +172,46 @@ mutual
           case repIsReflective of Refl => void $ isNotReflective Refl
 
   public export
+  gebObjectRepToSExpToObjectRepCertified_correct :
+    (rep : GebObjectRepresentation) ->
+    gebSExpToObjectRepCertified (gebObjectRepToSExp rep) = Yes (rep ** Refl)
+  gebObjectRepToSExpToObjectRepCertified_correct
+    (GebReflectiveObjectRepresentation catRep) =
+      rewrite decEqRefl decEq GAReflectiveObject in
+      rewrite gebCategoryRepToSExpToCategoryRepCertified_correct catRep in
+      Refl
+
+  public export
+  gebSExpToObjectRep : GebSExp -> Maybe GebObjectRepresentation
+  gebSExpToObjectRep = decMapToMaybe gebSExpToObjectRepCertified
+
+  public export
+  gebObjectRepToSExpToObjectRep_correct :
+    (rep : GebObjectRepresentation) ->
+    gebSExpToObjectRep (gebObjectRepToSExp rep) = Just rep
+  gebObjectRepToSExpToObjectRep_correct rep =
+    rewrite gebObjectRepToSExpToObjectRepCertified_correct rep in
+    Refl
+
+  public export
+  gebSExpToObjectRepToSExp_correct :
+    (x : GebSExp) -> (rep : GebObjectRepresentation) ->
+    gebSExpToObjectRep x = Just rep -> gebObjectRepToSExp rep = x
+  gebSExpToObjectRepToSExp_correct =
+    decMapToMaybe_correct gebSExpToObjectRepCertified
+
+  public export
+  gebObjectRepToSExp_injective : (rep, rep' : GebObjectRepresentation) ->
+    gebObjectRepToSExp rep = gebObjectRepToSExp rep' ->
+    rep = rep'
+  gebObjectRepToSExp_injective =
+    decMapToMaybe_injective
+      gebSExpToObjectRepCertified
+      gebObjectRepToSExpToObjectRep_correct
+
+--------------------------------------------------------------------------------
+
+  public export
   gebSExpToMorphismRepCertified :
     (x : GebSExp) ->
     Dec (rep : GebMorphismRepresentation ** gebMorphismRepToSExp rep = x)
@@ -265,6 +219,40 @@ mutual
     ((GebConceptCategoryRepresentation _) ** Refl) impossible
     ((GebConceptObjectRepresentation _ _) ** Refl) impossible
     ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+
+  public export
+  gebMorphismRepToSExpToMorphismRepCertified_correct :
+    (rep : GebMorphismRepresentation) ->
+    gebSExpToMorphismRepCertified (gebMorphismRepToSExp rep) = Yes (rep ** Refl)
+  gebMorphismRepToSExpToMorphismRepCertified_correct _ impossible
+
+  public export
+  gebSExpToMorphismRep : GebSExp -> Maybe GebMorphismRepresentation
+  gebSExpToMorphismRep = decMapToMaybe gebSExpToMorphismRepCertified
+
+  public export
+  gebMorphismRepToSExpToMorphismRep_correct :
+    (rep : GebMorphismRepresentation) ->
+    gebSExpToMorphismRep (gebMorphismRepToSExp rep) = Just rep
+  gebMorphismRepToSExpToMorphismRep_correct rep =
+    rewrite gebMorphismRepToSExpToMorphismRepCertified_correct rep in
+    Refl
+
+  public export
+  gebSExpToMorphismRepToSExp_correct :
+    (x : GebSExp) -> (rep : GebMorphismRepresentation) ->
+    gebSExpToMorphismRep x = Just rep -> gebMorphismRepToSExp rep = x
+  gebSExpToMorphismRepToSExp_correct =
+    decMapToMaybe_correct gebSExpToMorphismRepCertified
+
+  public export
+  gebMorphismRepToSExp_injective : (rep, rep' : GebMorphismRepresentation) ->
+    gebMorphismRepToSExp rep = gebMorphismRepToSExp rep' ->
+    rep = rep'
+  gebMorphismRepToSExp_injective =
+    decMapToMaybe_injective
+      gebSExpToMorphismRepCertified
+      gebMorphismRepToSExpToMorphismRep_correct
 
 --------------------------------------------------------------------------------
 
@@ -401,36 +389,39 @@ mutual
                 notMorphism $ sym $ sexpInjectiveAtom correct
 
   public export
-  gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
-  gebSExpToConceptRep x with (gebSExpToConceptRepCertified x)
-    gebSExpToConceptRep x | Yes (rep ** _) = Just rep
-    gebSExpToConceptRep x | No _ = Nothing
+  gebConceptRepToSExpToConceptRepCertified_correct :
+    (rep : GebConceptRepresentation) ->
+    gebSExpToConceptRepCertified (gebConceptRepToSExp rep) = Yes (rep ** Refl)
+  gebConceptRepToSExpToConceptRepCertified_correct rep =
+    ?gebConceptRepToSExpToConceptRepCertified_correct_hole
 
   public export
-  gebSExpToConceptRepToSExp_correct :
-    (x : GebSExp) -> (rep : GebConceptRepresentation) ->
-    gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x
-  gebSExpToConceptRepToSExp_correct x rep isjust with
-    (gebSExpToConceptRepCertified x)
-      gebSExpToConceptRepToSExp_correct x rep isjust | Yes (_ ** isyes) =
-        rewrite sym (justInjective isjust) in isyes
-      gebSExpToConceptRepToSExp_correct x rep Refl | No _ impossible
+  gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
+  gebSExpToConceptRep = decMapToMaybe gebSExpToConceptRepCertified
 
   public export
   gebConceptRepToSExpToConceptRep_correct :
     (rep : GebConceptRepresentation) ->
     gebSExpToConceptRep (gebConceptRepToSExp rep) = Just rep
-  gebConceptRepToSExpToConceptRep_correct rep with
-    (gebConceptRepToSExp rep,
-     gebSExpToConceptRepCertified (gebConceptRepToSExp rep)) proof p
-      gebConceptRepToSExpToConceptRep_correct rep |
-        (x, Yes (rep' ** correct)) =
-          let psnd = PairSndEq p in
-          rewrite PairSndEq p in
-          rewrite gebConceptRepToSExp_injective rep' rep correct in
-          Refl
-      gebConceptRepToSExpToConceptRep_correct rep |
-        (x, No neq) = void $ neq (rep ** Refl)
+  gebConceptRepToSExpToConceptRep_correct rep =
+    rewrite gebConceptRepToSExpToConceptRepCertified_correct rep in
+    Refl
+
+  public export
+  gebSExpToConceptRepToSExp_correct :
+    (x : GebSExp) -> (rep : GebConceptRepresentation) ->
+    gebSExpToConceptRep x = Just rep -> gebConceptRepToSExp rep = x
+  gebSExpToConceptRepToSExp_correct =
+    decMapToMaybe_correct gebSExpToConceptRepCertified
+
+  public export
+  gebConceptRepToSExp_injective : (rep, rep' : GebConceptRepresentation) ->
+    gebConceptRepToSExp rep = gebConceptRepToSExp rep' ->
+    rep = rep'
+  gebConceptRepToSExp_injective =
+    decMapToMaybe_injective
+      gebSExpToConceptRepCertified
+      gebConceptRepToSExpToConceptRep_correct
 
 --------------------------------------------------------------------------------
 
@@ -452,6 +443,48 @@ DecEq GebCategoryRepresentation where
 public export
 Ord GebCategoryRepresentation where
   rep < rep' = gebCategoryRepToSExp rep < gebCategoryRepToSExp rep'
+
+--------------------------------------------------------------------------------
+
+public export
+Show GebObjectRepresentation where
+  show = show . gebObjectRepToSExp
+
+public export
+Eq GebObjectRepresentation where
+  rep == rep' = gebObjectRepToSExp rep == gebObjectRepToSExp rep'
+
+public export
+DecEq GebObjectRepresentation where
+  decEq =
+    encodingDecEq
+      gebObjectRepToSExp gebSExpToObjectRep
+      gebObjectRepToSExpToObjectRep_correct decEq
+
+public export
+Ord GebObjectRepresentation where
+  rep < rep' = gebObjectRepToSExp rep < gebObjectRepToSExp rep'
+
+--------------------------------------------------------------------------------
+
+public export
+Show GebMorphismRepresentation where
+  show = show . gebMorphismRepToSExp
+
+public export
+Eq GebMorphismRepresentation where
+  rep == rep' = gebMorphismRepToSExp rep == gebMorphismRepToSExp rep'
+
+public export
+DecEq GebMorphismRepresentation where
+  decEq =
+    encodingDecEq
+      gebMorphismRepToSExp gebSExpToMorphismRep
+      gebMorphismRepToSExpToMorphismRep_correct decEq
+
+public export
+Ord GebMorphismRepresentation where
+  rep < rep' = gebMorphismRepToSExp rep < gebMorphismRepToSExp rep'
 
 --------------------------------------------------------------------------------
 
@@ -589,28 +622,25 @@ mutual
       Refl
   checkGebConceptRepresentation_complete (GebConceptMorphism _) impossible
 
-mutual
-  public export
-  gebCategory_uniquelyDeterminedByRepresentation :
-    {representation : GebCategoryRepresentation} ->
-    (category, category' : GebCategory representation) ->
-    category = category'
-  gebCategory_uniquelyDeterminedByRepresentation category category' with
-    (checkGebCategoryRepresentation_complete category,
-     checkGebCategoryRepresentation_complete category')
-      gebCategory_uniquelyDeterminedByRepresentation category category' |
-        (isyes, isyes') = yesInjective $ trans (sym isyes) isyes'
+public export
+gebCategory_uniquelyDeterminedByRepresentation :
+  {representation : GebCategoryRepresentation} ->
+  (category, category' : GebCategory representation) ->
+  category = category'
+gebCategory_uniquelyDeterminedByRepresentation =
+  depDecComplete_implies_unique
+    checkGebCategoryRepresentation
+    checkGebCategoryRepresentation_complete
 
-  public export
-  gebConcept_uniquelyDeterminedByRepresentation :
-    {representation : GebConceptRepresentation} ->
-    (concept, concept' : GebConcept representation) ->
-    concept = concept'
-  gebConcept_uniquelyDeterminedByRepresentation concept concept' with
-    (checkGebConceptRepresentation_complete concept,
-     checkGebConceptRepresentation_complete concept')
-      gebConcept_uniquelyDeterminedByRepresentation concept concept' |
-        (isyes, isyes') = yesInjective $ trans (sym isyes) isyes'
+public export
+gebConcept_uniquelyDeterminedByRepresentation :
+  {representation : GebConceptRepresentation} ->
+  (category, category' : GebConcept representation) ->
+  category = category'
+gebConcept_uniquelyDeterminedByRepresentation =
+  depDecComplete_implies_unique
+    checkGebConceptRepresentation
+    checkGebConceptRepresentation_complete
 
 --------------------------------------------------------------------------------
 
