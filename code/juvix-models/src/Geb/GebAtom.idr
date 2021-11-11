@@ -503,8 +503,8 @@ DecEq GebSExp using DefaultSExpDecEq where
   decEq = decEq
 
 public export
-DecEq GebSList using DefaultSListDecEq where
-  decEq = decEq
+[DefaultGebSListDecEq] DecEq GebSList where
+  decEq = slistDecEq gaDecEq
 
 public export
 gsDecEq : DecEqPred GebSExp
