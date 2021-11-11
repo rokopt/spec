@@ -347,9 +347,48 @@ mutual
               ((GebConceptObjectRepresentation _ _) ** Refl) impossible
               ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
             ([morphism, category, domain, codomain]) =>
-              case gebSExpToMorphismRepCertified morphism of
-                Yes (morphismRep ** correct) => ?gebSExpToConceptRepCertified_hole_maybemorphism
-                No notMorphism => ?gebSExpToConceptRepCertified_hole_notmorphismafterall
+              case (gebSExpToMorphismRepCertified morphism,
+                    gebSExpToCategoryRepCertified category,
+                    gebSExpToObjectRepCertified domain,
+                    gebSExpToObjectRepCertified codomain) of
+                (Yes (morphismRep ** Refl),
+                 Yes (catRep ** Refl),
+                 Yes (domainRep ** Refl),
+                 Yes (codomainRep ** Refl)) => No $ \p => case p of
+                  ((GebConceptCategoryRepresentation _) ** Refl)
+                    impossible
+                  ((GebConceptObjectRepresentation _ _) ** Refl)
+                    impossible
+                  ((GebConceptMorphismRepresentation _ _ _ _) ** correct)
+                    impossible
+                (No notMorphism, _, _, _) => No $ \p => case p of
+                  ((GebConceptCategoryRepresentation _) ** Refl)
+                    impossible
+                  ((GebConceptObjectRepresentation _ _) ** Refl)
+                    impossible
+                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
+                    impossible
+                (_, No notCategory, _, _) => No $ \p => case p of
+                  ((GebConceptCategoryRepresentation _) ** Refl)
+                    impossible
+                  ((GebConceptObjectRepresentation _ _) ** Refl)
+                    impossible
+                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
+                    impossible
+                (_, _, No domainNotObject, _) => No $ \p => case p of
+                  ((GebConceptCategoryRepresentation _) ** Refl)
+                    impossible
+                  ((GebConceptObjectRepresentation _ _) ** Refl)
+                    impossible
+                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
+                    impossible
+                (_, _, _, No codomainNotObject) => No $ \p => case p of
+                  ((GebConceptCategoryRepresentation _) ** Refl)
+                    impossible
+                  ((GebConceptObjectRepresentation _ _) ** Refl)
+                    impossible
+                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
+                    impossible
             (_ :: _ :: _ :: _ :: _ :: _) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
               ((GebConceptObjectRepresentation _ _) ** Refl) impossible
