@@ -176,19 +176,13 @@ mutual
       Yes Refl => case l of
         [] => No $ \p => case p of
           ((GebConceptCategoryRepresentation _) ** Refl) impossible
-          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
         [cat] => case gebSExpToCategoryRepCertified cat of
           Yes (catRep ** Refl) =>
             Yes (GebObjectReflectorRepresentation catRep ** Refl)
           No notCategory => No $ \p => case p of
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
-            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
         (_ :: _ :: _) => No $ \p => case p of
           ((GebConceptCategoryRepresentation _) ** Refl) impossible
-          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
       No isNotReflective => No $ \p => case p of
         (GebObjectReflectorRepresentation category ** repIsReflective) =>
           case repIsReflective of Refl => void $ isNotReflective Refl
@@ -238,8 +232,6 @@ mutual
     (x : GebSExp) ->
     Dec (rep : GebMorphismRepresentation ** gebMorphismRepToSExp rep = x)
   gebSExpToMorphismRepCertified (a $* l) = No $ \p => case p of
-    ((GebConceptCategoryRepresentation _) ** Refl) impossible
-    ((GebConceptObjectRepresentation _ _) ** Refl) impossible
     ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
 
   public export
@@ -284,8 +276,6 @@ mutual
     Dec (rep : GebDependentTypeRepresentation **
          gebDependentTypeRepToSExp rep = x)
   gebSExpToDependentTypeRepCertified (a $* l) = No $ \p => case p of
-    ((GebConceptCategoryRepresentation _) ** Refl) impossible
-    ((GebConceptObjectRepresentation _ _) ** Refl) impossible
     ((GebConceptDependentTypeRepresentation _ _ _ _) ** Refl) impossible
 
   public export
@@ -335,8 +325,6 @@ mutual
       Yes Refl => case l of
         [] => No $ \p => case p of
           ((GebConceptCategoryRepresentation _) ** Refl) impossible
-          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
         [category] => case gebSExpToCategoryRepCertified category of
           Yes (catRep ** Refl) =>
             Yes (GebConceptCategoryRepresentation catRep ** Refl)
@@ -345,23 +333,14 @@ mutual
               void $ notCategory (catRep **
                 rewrite (fst (consInjective (sexpInjectiveList correct))) in
                 Refl)
-            ((GebConceptObjectRepresentation objRep catRep) ** Refl) impossible
-            ((GebConceptMorphismRepresentation
-              morphismRep catRep domainRep codomainRep) ** Refl) impossible
         (_ :: _ :: _) => No $ \p => case p of
           ((GebConceptCategoryRepresentation _) ** Refl) impossible
-          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
       No notCategory => case decEq a GAConceptObject of
         Yes Refl => case l of
           [] => No $ \p => case p of
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
-            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
           ([_]) => No $ \p => case p of
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
-            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
           (object :: category :: []) =>
             case gebSExpToObjectRepCertified object of
               Yes (objRep ** Refl) =>
@@ -384,26 +363,16 @@ mutual
                 ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
           (_ :: _ :: _ :: _) => No $ \p => case p of
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
-            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
         No notObject => case decEq a GAConceptMorphism of
           Yes Refl => case l of
             [] => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
-              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
             ([_]) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
-              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
             ([_, _]) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
-              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
             ([_, _, _]) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
-              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
             ([morphism, category, domain, codomain]) =>
               case (gebSExpToMorphismRepCertified morphism,
                     gebSExpToCategoryRepCertified category,
@@ -415,42 +384,20 @@ mutual
                  Yes (codomainRep ** Refl)) => No $ \p => case p of
                   ((GebConceptCategoryRepresentation _) ** Refl)
                     impossible
-                  ((GebConceptObjectRepresentation _ _) ** Refl)
-                    impossible
-                  ((GebConceptMorphismRepresentation _ _ _ _) ** correct)
-                    impossible
                 (No notMorphism, _, _, _) => No $ \p => case p of
                   ((GebConceptCategoryRepresentation _) ** Refl)
-                    impossible
-                  ((GebConceptObjectRepresentation _ _) ** Refl)
-                    impossible
-                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
                     impossible
                 (_, No notCategory, _, _) => No $ \p => case p of
                   ((GebConceptCategoryRepresentation _) ** Refl)
                     impossible
-                  ((GebConceptObjectRepresentation _ _) ** Refl)
-                    impossible
-                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
-                    impossible
                 (_, _, No domainNotObject, _) => No $ \p => case p of
                   ((GebConceptCategoryRepresentation _) ** Refl)
-                    impossible
-                  ((GebConceptObjectRepresentation _ _) ** Refl)
-                    impossible
-                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
                     impossible
                 (_, _, _, No codomainNotObject) => No $ \p => case p of
                   ((GebConceptCategoryRepresentation _) ** Refl)
                     impossible
-                  ((GebConceptObjectRepresentation _ _) ** Refl)
-                    impossible
-                  ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
-                    impossible
             (_ :: _ :: _ :: _ :: _ :: _) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
-              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
-              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
           No notMorphism => case decEq a GAConceptDependentType of
             Yes Refl => ?gebConceptDependentTypeRepresentation_hole
             No notDependentType => No $ \p => case p of
@@ -471,18 +418,6 @@ mutual
         (fst (consInjective (sexpInjectiveList eq))) in
       Refl
   gebConceptRepToSExp_injective
-    (GebConceptCategoryRepresentation cat)
-    (GebConceptObjectRepresentation obj' cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptCategoryRepresentation cat)
-    (GebConceptMorphismRepresentation morphism' cat' domain' codomain')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptObjectRepresentation obj cat)
-    (GebConceptCategoryRepresentation cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
     (GebConceptObjectRepresentation obj cat)
     (GebConceptObjectRepresentation obj' cat')
     eq =
@@ -492,18 +427,6 @@ mutual
       rewrite gebCategoryRepToSExp_injective cat cat'
         (fst (consInjective (snd (consInjective listEq)))) in
       Refl
-  gebConceptRepToSExp_injective
-    (GebConceptObjectRepresentation obj cat)
-    (GebConceptMorphismRepresentation morphism' cat' domain' codomain')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptMorphismRepresentation morphism cat domain codomain)
-    (GebConceptCategoryRepresentation cat')
-    Refl impossible
-  gebConceptRepToSExp_injective
-    (GebConceptMorphismRepresentation morphism cat domain codomain)
-    (GebConceptObjectRepresentation obj' cat')
-    Refl impossible
   gebConceptRepToSExp_injective
     (GebConceptMorphismRepresentation morphism cat domain codomain)
     (GebConceptMorphismRepresentation morphism' cat' domain' codomain')
