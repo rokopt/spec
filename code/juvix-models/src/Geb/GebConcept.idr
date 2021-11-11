@@ -232,6 +232,34 @@ mutual
 --------------------------------------------------------------------------------
 
   public export
+  gebSExpToObjectRepCertified :
+    (x : GebSExp) ->
+    Dec (rep : GebObjectRepresentation ** gebObjectRepToSExp rep = x)
+  gebSExpToObjectRepCertified (a $* l) =
+    case decEq a GAReflectiveObject of
+      Yes Refl => case l of
+        [] => No $ \p => case p of
+          ((GebConceptCategoryRepresentation _) ** Refl) impossible
+          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+        [cat] => case gebSExpToCategoryRepCertified cat of
+          Yes (catRep ** Refl) =>
+            Yes (GebReflectiveObjectRepresentation catRep ** Refl)
+          No notCategory => No $ \p => case p of
+            ((GebConceptCategoryRepresentation _) ** Refl) impossible
+            ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+            ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+        (_ :: _ :: _) => No $ \p => case p of
+          ((GebConceptCategoryRepresentation _) ** Refl) impossible
+          ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+          ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+      No isNotReflective => No $ \p => case p of
+        (GebReflectiveObjectRepresentation category ** repIsReflective) =>
+          case repIsReflective of Refl => void $ isNotReflective Refl
+
+--------------------------------------------------------------------------------
+
+  public export
   gebSExpToConceptRepCertified :
     (x : GebSExp) ->
     Dec (rep : GebConceptRepresentation ** gebConceptRepToSExp rep = x)
@@ -267,13 +295,54 @@ mutual
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
             ((GebConceptObjectRepresentation _ _) ** Refl) impossible
             ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
-          (_ :: _ :: []) => ?gebSExpToConceptRepCertified_hole_maybecat
+          (object :: category :: []) =>
+            case gebSExpToObjectRepCertified object of
+              Yes (objRep ** Refl) =>
+                case gebSExpToCategoryRepCertified category of
+                  Yes (catRep ** Refl) =>
+                    Yes (GebConceptObjectRepresentation objRep catRep ** Refl)
+                  No notCategory => No $ \p => case p of
+                    ((GebConceptCategoryRepresentation _) ** Refl)
+                      impossible
+                    ((GebConceptObjectRepresentation objRep catRep) ** correct) =>
+                      void $ notCategory (catRep **
+                        fst (consInjective (snd
+                           (consInjective (sexpInjectiveList correct)))))
+                    ((GebConceptMorphismRepresentation _ _ _ _) ** Refl)
+                      impossible
+              No notObject => No $ \p => case p of
+                ((GebConceptCategoryRepresentation _) ** Refl) impossible
+                ((GebConceptObjectRepresentation objRep catRep) ** Refl) =>
+                  notObject $ (objRep ** Refl)
+                ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
           (_ :: _ :: _ :: _) => No $ \p => case p of
             ((GebConceptCategoryRepresentation _) ** Refl) impossible
             ((GebConceptObjectRepresentation _ _) ** Refl) impossible
             ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
         No notObject => case decEq a GAConceptMorphism of
-          Yes Refl => ?gebSExpToConceptRepCertified_hole_maybemorphism
+          Yes Refl => case l of
+            [] => No $ \p => case p of
+              ((GebConceptCategoryRepresentation _) ** Refl) impossible
+              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+            ([_]) => No $ \p => case p of
+              ((GebConceptCategoryRepresentation _) ** Refl) impossible
+              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+            ([_, _]) => No $ \p => case p of
+              ((GebConceptCategoryRepresentation _) ** Refl) impossible
+              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+            ([_, _, _]) => No $ \p => case p of
+              ((GebConceptCategoryRepresentation _) ** Refl) impossible
+              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
+            ([morphism, category, domain, codomain]) =>
+              ?gebSExpToConceptRepCertified_hole_maybemorphism
+            (_ :: _ :: _ :: _ :: _ :: _) => No $ \p => case p of
+              ((GebConceptCategoryRepresentation _) ** Refl) impossible
+              ((GebConceptObjectRepresentation _ _) ** Refl) impossible
+              ((GebConceptMorphismRepresentation _ _ _ _) ** Refl) impossible
           No notMorphism =>
             No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) => notCategory Refl
