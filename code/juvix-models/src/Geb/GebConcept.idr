@@ -392,18 +392,10 @@ mutual
   gebConceptRepToSExpToConceptRepCertified_correct :
     (rep : GebConceptRepresentation) ->
     gebSExpToConceptRepCertified (gebConceptRepToSExp rep) = Yes (rep ** Refl)
-  gebConceptRepToSExpToConceptRepCertified_correct
-    (GebConceptCategoryRepresentation catRep) =
-      rewrite decEqRefl decEq GAConceptCategory in
-      rewrite gebCategoryRepToSExpToCategoryRepCertified_correct catRep in
-      Refl
-  gebConceptRepToSExpToConceptRepCertified_correct
-    (GebConceptObjectRepresentation objectRep catRep) =
-      ?gebConceptRepToSExpToConceptRepCertified_correct_hole_object
-  gebConceptRepToSExpToConceptRepCertified_correct
-    (GebConceptMorphismRepresentation
-      morphismRep catRep domainRep codomainRep) =
-        ?gebConceptRepToSExpToConceptRepCertified_correct_hole_morphism
+  gebConceptRepToSExpToConceptRepCertified_correct rep with
+    (gebConceptRepToSExp rep) proof p
+      gebConceptRepToSExpToConceptRepCertified_correct rep | (a $* l) =
+        ?gebConceptRepToSExpToConceptRepCertified_correct_hole
 
   public export
   gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
