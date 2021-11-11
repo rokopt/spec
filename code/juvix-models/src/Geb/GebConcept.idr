@@ -245,9 +245,18 @@ mutual
         [category] => case gebSExpToCategoryRepCertified category of
           Yes (catRep ** Refl) =>
             Yes (GebConceptCategoryRepresentation catRep ** Refl)
-          No notCategory => ?gebSExpToConceptRepCertified_wrong_list
+          No notCategory => No $ \p => case p of
+            ((GebConceptCategoryRepresentation catRep) ** correct) =>
+              void $ notCategory (catRep **
+                rewrite (fst (consInjective (sexpInjectiveList correct))) in
+                Refl)
+            ((GebConceptObjectRepresentation objRep catRep) ** Refl) impossible
+            ((GebConceptMorphismRepresentation
+              morphismRep catRep domainRep codomainRep) ** Refl) impossible
         (_ :: _ :: _) => ?gebSExpToConceptRepCertified_category_two_or_more
-      No notCategory => ?gebSExpToConceptRepCertified_hole_notcat
+      No notCategory => case decEq a GAConceptObject of
+        Yes Refl => ?gebSExpToConceptRepCertified_hole_notcat_maybeobj
+        No notObject => ?gebSExpToConceptRepCertified_hole_notcat_or_obj
 
   public export
   gebSExpToConceptRep : GebSExp -> Maybe GebConceptRepresentation
@@ -409,7 +418,9 @@ mutual
       case decEq catRep catRep' of
         Yes Refl => case checkGebCategoryRepresentation catRep' of
           Yes category => Yes $ GebConceptObject $ GebReflectiveObject category
-          No notCategory => ?checkGebConceptRepresentation_hole_not_category
+          No notCategory => No $ \concept => case concept of
+            GebConceptObject (GebReflectiveObject category) =>
+              void $ notCategory category
         No neq => No $ \concept => case concept of
           GebConceptObject (GebReflectiveObject category) => void $ neq Refl
   checkGebConceptRepresentation (GebConceptMorphismRepresentation _ _ _ _)
@@ -417,17 +428,37 @@ mutual
 
 mutual
   public export
+  checkGebCategoryRepresentation_complete :
+    {representation : GebCategoryRepresentation} ->
+    (category : GebCategory representation) ->
+    checkGebCategoryRepresentation representation = Yes category
+  checkGebCategoryRepresentation_complete GebInGeb = Refl
+
+  public export
   checkGebConceptRepresentation_complete :
     {representation : GebConceptRepresentation} ->
     (concept : GebConcept representation) ->
     checkGebConceptRepresentation representation = Yes concept
   checkGebConceptRepresentation_complete (GebConceptCategory GebInGeb) = Refl
   checkGebConceptRepresentation_complete (GebConceptObject
-    (GebReflectiveObject category)) =
-      ?checkGebConceptRepresentation_complete_hole
+    (GebReflectiveObject {catRep} category)) =
+      rewrite decEqRefl decEq catRep in
+      rewrite checkGebCategoryRepresentation_complete category in
+      Refl
   checkGebConceptRepresentation_complete (GebConceptMorphism _) impossible
 
 mutual
+  public export
+  gebCategory_uniquelyDeterminedByRepresentation :
+    {representation : GebCategoryRepresentation} ->
+    (category, category' : GebCategory representation) ->
+    category = category'
+  gebCategory_uniquelyDeterminedByRepresentation category category' with
+    (checkGebCategoryRepresentation_complete category,
+     checkGebCategoryRepresentation_complete category')
+      gebCategory_uniquelyDeterminedByRepresentation category category' |
+        (isyes, isyes') = yesInjective $ trans (sym isyes) isyes'
+
   public export
   gebConcept_uniquelyDeterminedByRepresentation :
     {representation : GebConceptRepresentation} ->
@@ -446,7 +477,7 @@ gebObjectCategory : {objRep : GebObjectRepresentation} ->
   {catRep : GebCategoryRepresentation} ->
   GebObject objRep catRep ->
   GebCategory catRep
-gebObjectCategory (GebReflectiveObject category) = ?gebObjectCategory_hole
+gebObjectCategory (GebReflectiveObject category) = category
 
 public export
 gebMorphismCategory : {morphismRep : GebMorphismRepresentation} ->
@@ -525,8 +556,8 @@ mutual
     (category : GebCategory catRep) ->
     GebObject objRep catRep ->
     interpretGebCategory category
-  interpretGebObject category' (GebReflectiveObject category) =
-    ?interpretGetObject_hole
+  interpretGebObject _ (GebReflectiveObject _) =
+    GebConceptRepresentation
 
   public export
   interpretGebMorphism : {morphismRep : GebMorphismRepresentation} ->
