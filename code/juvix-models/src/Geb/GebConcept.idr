@@ -492,7 +492,7 @@ mutual
         {domainRep, codomainRep : GebObjectRepresentation} ->
         GebMorphism morphismRep catRep domainRep codomainRep ->
         GebConcept (GebConceptMorphismRepresentation
-          morphismRep catRepd domainRep codomainRep)
+          morphismRep catRep domainRep codomainRep)
 
   public export
   data GebCategory : GebCategoryRepresentation -> Type
