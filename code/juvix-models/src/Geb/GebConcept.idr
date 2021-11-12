@@ -399,7 +399,8 @@ mutual
             (_ :: _ :: _ :: _ :: _ :: _) => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) impossible
           No notMorphism => case decEq a GAConceptDependentType of
-            Yes Refl => ?gebConceptDependentTypeRepresentation_hole
+            Yes Refl => No $ \p => case p of
+              ((GebDependentTypeRepresentation _ _ _ _) ** Refl) impossible
             No notDependentType => No $ \p => case p of
               ((GebConceptCategoryRepresentation _) ** Refl) => notCategory Refl
               ((GebConceptObjectRepresentation _ _) ** Refl) => notObject Refl
