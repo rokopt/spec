@@ -612,6 +612,13 @@ mutual
         GebMorphism morphismRep catRep domainRep codomainRep ->
         GebConcept (GebConceptMorphismRepresentation
           morphismRep catRep domainRep codomainRep)
+      GebConceptDependentType : {depTypeRep : GebDependentTypeRepresentation} ->
+        {catRep : GebCategoryRepresentation} ->
+        {domainRep : GebObjectRepresentation} ->
+        {morphismRep : GebMorphismRepresentation} ->
+        GebDependentType depTypeRep catRep domainRep morphismRep ->
+        GebConcept (GebConceptDependentTypeRepresentation
+          depTypeRep catRep domainRep morphismRep)
 
   public export
   data GebCategory : GebCategoryRepresentation -> Type
