@@ -342,13 +342,34 @@ SListExists : {0 atom : Type} -> SPred atom -> SLPred atom
 SListExists {atom} sp = slistEliminator (SExpGenerateExistsSig sp)
 
 public export
+sexpExistsFirsts_expElim : {0 atom : Type} -> {0 sp : SPred atom} ->
+  (a : atom) -> (l : SList atom) ->
+  (SListExists sp l -> DPair (SExp atom) sp) ->
+  Either (sp (a $* l)) (SListExists sp l) -> DPair (SExp atom) sp
+sexpExistsFirsts_expElim a l listExistsStep either =
+  case either of
+    Left sexpExists => ((a $* l) ** sexpExists)
+    Right listExists => listExistsStep listExists
+
+public export
+sexpExistsFirsts_consElim : {0 atom : Type} -> {0 sp : SPred atom} ->
+  (x : SExp atom) -> (l : SList atom) ->
+  (SExpExists sp x -> DPair (SExp atom) sp) ->
+  (SListExists sp l -> DPair (SExp atom) sp) ->
+  Either (SExpExists sp x) (SListExists sp l) -> DPair (SExp atom) sp
+sexpExistsFirsts_consElim x l sexpExistsStep listExistsStep either =
+  case either of
+    Left sexpExists => sexpExistsStep sexpExists
+    Right listExists => listExistsStep listExists
+
+public export
 sexpExistsFirsts : {0 atom : Type} -> {0 sp : SPred atom} ->
   ((x : SExp atom) -> SExpExists sp x -> DPair (SExp atom) sp,
    (l : SList atom) -> SListExists sp l -> DPair (SExp atom) sp)
 sexpExistsFirsts = sexpEliminators $ SExpEliminatorArgs
-  (?sexpExistsFirsts_hole_expElim)
-  (?sexpExistsFirsts_hole_nilElim)
-  (?sexpExistsFirsts_hole_consElim)
+  (sexpExistsFirsts_expElim)
+  (\v => void v)
+  (sexpExistsFirsts_consElim)
 
 public export
 sexpExistsFirst : {0 atom : Type} -> {0 sp : SPred atom} -> (x : SExp atom) ->
