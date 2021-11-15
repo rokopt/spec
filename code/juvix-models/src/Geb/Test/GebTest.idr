@@ -5,6 +5,8 @@ import public Geb.Geb
 
 %default total
 
+{-
+
 zerothOrderExp : GebSExp
 zerothOrderExp = GAFiniteOrder $**^ GAIndexFirst
 
@@ -105,16 +107,19 @@ pairBoolTypeExp = GAPatternType $*** pairBoolTypeMatrixExp
 
 pairBoolType : GebPType GebTest.zerothOrder GebTest.pairBoolTypeExp
 pairBoolType = compileType zerothOrderExp pairBoolTypeExp
+-}
 
 export
 gebTests : IO ()
 gebTests = do
   printLn "Begin gebTests:"
+  {-
   printLn $ "Empty type list = " ++ showTypeList emptyTypeList
   printLn $ "Empty type matrix = " ++ showTypeMatrix emptyTypeMatrix
   printLn $ "Singleton type matrix = " ++ showTypeMatrix singletonTypeMatrix
   printLn $ "Bool type matrix = " ++ showTypeMatrix boolTypeMatrix
   printLn $ "Pair-of-bool type matrix = " ++ showTypeMatrix pairBoolTypeMatrix
   printLn $ "Pair-of-bool type = " ++ showType pairBoolType
+  -}
   printLn "End gebTests."
   pure ()

@@ -138,6 +138,9 @@ data GebAtom : Type where
   GAConceptMorphism : GebAtom
   GAConceptDependentType : GebAtom
 
+  GAZerothOrderType : GebAtom
+  GAZerothOrderTerm : GebAtom
+
 public export
 gaEncode : GebAtom -> Nat
 gaEncode GALanguageRefinement = 0
@@ -218,6 +221,8 @@ gaEncode GAConceptCategory = 74
 gaEncode GAConceptObject = 75
 gaEncode GAConceptMorphism = 76
 gaEncode GAConceptDependentType = 77
+gaEncode GAZerothOrderType = 78
+gaEncode GAZerothOrderTerm = 79
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -299,6 +304,8 @@ gaDecode 74 = Just GAConceptCategory
 gaDecode 75 = Just GAConceptObject
 gaDecode 76 = Just GAConceptMorphism
 gaDecode 77 = Just GAConceptDependentType
+gaDecode 78 = Just GAZerothOrderType
+gaDecode 79 = Just GAZerothOrderTerm
 gaDecode _ = Nothing
 
 export
@@ -381,6 +388,8 @@ gaDecodeEncodeIsJust GAConceptCategory = Refl
 gaDecodeEncodeIsJust GAConceptObject = Refl
 gaDecodeEncodeIsJust GAConceptMorphism = Refl
 gaDecodeEncodeIsJust GAConceptDependentType = Refl
+gaDecodeEncodeIsJust GAZerothOrderType = Refl
+gaDecodeEncodeIsJust GAZerothOrderTerm = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -462,6 +471,8 @@ gebAtomToString GAConceptCategory = "ConceptCategory"
 gebAtomToString GAConceptObject = "ConceptObject"
 gebAtomToString GAConceptMorphism = "ConceptMorphism"
 gebAtomToString GAConceptDependentType = "ConceptDependentType"
+gebAtomToString GAZerothOrderType = "ZerothOrderType"
+gebAtomToString GAZerothOrderTerm = "ZerothOrderTerm"
 
 public export
 Show GebAtom where

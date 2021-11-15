@@ -3,8 +3,71 @@ module Geb.GebSExp
 import Library.FunctionsAndRelations
 import Library.Decidability
 import public RefinedSExp.SExp
+import public RefinedSExp.List
+import public Geb.GebAtom
 
 %default total
+
+mutual
+  {- XXX generalize over order -}
+  {- XXX generalize over a newly-defined generator type, AKA over free category -}
+  {- XXX switch to uniform 3-sexp-parameter form: representation, 1st-order-datatype parameter, output-type parameter -}
+  public export
+  data ZerothOrderType :
+    (representation : GebSExp) -> (interpretation : Type) -> Type where
+      ZerothOrderInitial : ZerothOrderType ($^ GAInitial) Void
+      ZerothOrderTerminal : ZerothOrderType ($^ GATerminal) ()
+
+  public export
+  data ZerothOrderTerm : (termRep : GebSExp) -> {typeRep : GebSExp} ->
+    {typeInterpretation : Type} -> ZerothOrderType typeRep typeInterpretation ->
+    (termInterpretation : typeInterpretation) -> Type where
+      ZerothOrderUnit : ZerothOrderTerm ($^ GAUnitTerm) ZerothOrderTerminal ()
+
+  public export
+  data WellTypedExpression : (representation : GebSExp) ->
+    (typeInterpretation : Type) -> (expressionInterpretation : type) ->
+    Type where
+      ZerothOrderTypeExpression : {typeRep : GebSExp} ->
+        {interpretation : Type} -> ZerothOrderType typeRep interpretation ->
+        WellTypedExpression (GAZerothOrderType $*** typeRep) Type interpretation
+      ZerothOrderTermExpression : {termRep, typeRep : GebSExp} ->
+        {typeInterpretation : Type} ->
+        {zerothOrderType : ZerothOrderType typeRep typeInterpretation} ->
+        {termInterpretation : typeInterpretation} ->
+        ZerothOrderTerm termRep zerothOrderType termInterpretation ->
+        WellTypedExpression
+          (GAZerothOrderTerm $*** termRep) typeInterpretation termInterpretation
+
+mutual
+  {- XXX factor out into individual checks -}
+  {- XXX fill in holes before checking in -}
+  public export
+  checkGebSExp : (x : GebSExp) ->
+    Maybe $
+      (typeInterpretation : Type **
+       expressionInterpretation : typeInterpretation **
+       WellTypedExpression x typeInterpretation expressionInterpretation)
+  checkGebSExp (GAZerothOrderType $* [GAInitial $* []]) =
+    Just (Type ** Void ** ZerothOrderTypeExpression ZerothOrderInitial)
+  checkGebSExp _ = Nothing
+
+  public export
+  gebSExpRepresentationComplete : {x : GebSExp} ->
+    {typeInterpretation : Type} ->
+    {expressionInterpretation : typeInterpretation} ->
+    (wellTypedExpression :
+      WellTypedExpression x typeInterpretation expressionInterpretation) ->
+    checkGebSExp x = Just
+      (typeInterpretation **
+       expressionInterpretation **
+       wellTypedExpression)
+  gebSExpRepresentationComplete
+    {typeInterpretation = (Type)} {expressionInterpretation = expressionInterpretation} (ZerothOrderTypeExpression y) =
+      ?gebSExpRepresentationComplete_hole_2
+  gebSExpRepresentationComplete
+    {typeInterpretation = typeInterpretation} {expressionInterpretation = expressionInterpretation} (ZerothOrderTermExpression y) =
+      ?gebSExpRepresentationComplete_hole
 
 {-
 

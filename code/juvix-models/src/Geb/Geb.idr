@@ -18,6 +18,21 @@ import public Geb.GebAtom
 %default total
 
 public export
+data CoreObjectOrder : Type where
+  CoreFirstOrder : CoreObjectOrder
+  CoreSecondOrder : CoreObjectOrder
+
+public export
+data CoreObject : CoreObjectOrder -> Type where
+  CoreInitial : CoreObject CoreFirstOrder
+  CoreTerminal : CoreObject CoreFirstOrder
+  CoreProduct : {coreOrder : CoreObjectOrder} ->
+    (first, second : CoreObject coreOrder) -> CoreObject coreOrder
+  CoreCoproduct : {coreOrder : CoreObjectOrder} ->
+    (left, right : CoreObject coreOrder) -> CoreObject coreOrder
+
+{-
+public export
 data ConcreteReflection : Type where
 
 public export
@@ -1095,6 +1110,7 @@ gebTransforms : GebTransformSig ->
   (GebSExp ~> GebSExpTransform, GebSList ~> GebSListTransform)
 gebTransforms signature =
   (gebSExpTransform signature, gebSListTransform signature)
+-}
 
 {-
 
