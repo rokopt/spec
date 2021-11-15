@@ -308,6 +308,13 @@ CoreSignedMorphism =
    CoreMorphism (snd domain) (snd codomain))
 
 public export
+MkCoreSignedMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  CoreMorphism domain codomain -> CoreSignedMorphism
+MkCoreSignedMorphism {domain} {codomain} morphism =
+  (MkCoreOrderedObject domain ** MkCoreOrderedObject codomain ** morphism)
+
+public export
 coreMorphismToSExp : CoreSignedMorphism -> GebSExp
 coreMorphismToSExp (domain ** codomain ** morphism) = ?coreMorphismToSExp_hole
 
@@ -339,10 +346,50 @@ coreMorphismEncodingComplete morphism = ?coreMorphismEncodingComplete_hole
 --------------------------------------------------------------------------------
 
 public export
+Show CoreSignedMorphism where
+  show = show . coreMorphismToSExp
+
+public export
+Eq CoreSignedMorphism where
+  m == m' = coreMorphismToSExp m == coreMorphismToSExp m'
+
+public export
+DecEq CoreSignedMorphism where
+  decEq =
+    encodingDecEq
+      coreMorphismToSExp coreMorphismFromSExp
+      coreMorphismEncodingComplete decEq
+
+public export
+Ord CoreSignedMorphism where
+  m < m' = coreMorphismToSExp m < coreMorphismToSExp m'
+
+public export
 coreMorphismDecEq : {domainOrder, codomainOrder : CoreObjectOrder} ->
   {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
-  DecEqPred $ CoreMorphism domain codomain
-coreMorphismDecEq m m' = ?coreMorphismDecEq_hole
+  DecEqPred (CoreMorphism domain codomain)
+coreMorphismDecEq m m' with
+  (decEq (MkCoreSignedMorphism m) (MkCoreSignedMorphism m'))
+    coreMorphismDecEq _ _ | Yes Refl = Yes Refl
+    coreMorphismDecEq m m' | No neq = No $ \eq => case eq of Refl => neq Refl
+
+public export
+showMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  CoreMorphism domain codomain -> String
+showMorphism morphism = show (MkCoreSignedMorphism morphism)
+
+public export
+eqMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  (m, m' : CoreMorphism domain codomain) -> Bool
+eqMorphism m m' = isYes $ coreMorphismDecEq m m'
+
+public export
+ltMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  (m, m' : CoreMorphism domain codomain) -> Bool
+ltMorphism m m' = MkCoreSignedMorphism m < MkCoreSignedMorphism m'
 
 --------------------------------------------------------------------------------
 ---- Metalanguage interpretation of core logic objects -------------------------
