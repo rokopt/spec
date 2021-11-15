@@ -13,6 +13,7 @@ import public RefinedSExp.SExp
 import public Data.SortedSet
 import public Data.SortedMap
 import public Data.DPair
+import public Data.Either
 import public Geb.GebAtom
 
 %default total
@@ -213,20 +214,28 @@ coreDecideFirstOrderEquality : (object : CoreObject CoreFirstOrder) ->
   DecEqPred $ interpretCoreObject object
 coreDecideFirstOrderEquality CoreInitial term _ = void term
 coreDecideFirstOrderEquality CoreTerminal () () = Yes Refl
-coreDecideFirstOrderEquality (CoreProduct first second) term term' =
-  let (left, right) = term in let (left', right') = term' in
-  case
-    (coreDecideFirstOrderEquality first left left',
-     coreDecideFirstOrderEquality second right right') of
-      (Yes Refl, Yes Refl) => Yes Refl
-      (No neq, _) => No $ \eq => case eq of Refl => neq Refl
-      (_, No neq) => No $ \eq => case eq of Refl => neq Refl
-coreDecideFirstOrderEquality (CoreCoproduct left right) term term' =
-  case (term, term') of
-    (Left left, Left left') => ?h1
-    (Left left, Right right) => ?h2
-    (Right right, Left left) => ?h3
-    (Right right, Right right') => ?h4
+coreDecideFirstOrderEquality (CoreProduct first second)
+  (left, right) (left', right') =
+    case
+      (coreDecideFirstOrderEquality first left left',
+      coreDecideFirstOrderEquality second right right') of
+        (Yes Refl, Yes Refl) => Yes Refl
+        (No neq, _) => No $ \eq => case eq of Refl => neq Refl
+        (_, No neq) => No $ \eq => case eq of Refl => neq Refl
+coreDecideFirstOrderEquality (CoreCoproduct left right)
+  (Left leftTerm) (Left leftTerm') =
+    case coreDecideFirstOrderEquality left leftTerm leftTerm' of
+      Yes Refl => Yes Refl
+      No neq => No $ \eq => neq $ leftInjective eq
+coreDecideFirstOrderEquality (CoreCoproduct left right)
+  (Left _) (Right _) = No $ \eq => case eq of Refl impossible
+coreDecideFirstOrderEquality (CoreCoproduct left right)
+  (Right _) (Left _) = No $ \eq => case eq of Refl impossible
+coreDecideFirstOrderEquality (CoreCoproduct left right)
+  (Right rightTerm) (Right rightTerm') =
+    case coreDecideFirstOrderEquality right rightTerm rightTerm' of
+      Yes Refl => Yes Refl
+      No neq => No $ \eq => neq $ rightInjective eq
 coreDecideFirstOrderEquality (CoreObjectReflector coreOrder) term term' =
   coreObjectDecEq term term'
 coreDecideFirstOrderEquality (CoreMorphismReflector domain codomain)
