@@ -23,6 +23,10 @@ data CoreObjectOrder : Type where
   CoreSecondOrder : CoreObjectOrder
 
 public export
+coreObjectOrderDecEq : DecEqPred CoreObjectOrder
+coreObjectOrderDecEq o o' = ?coreObjectOrderDecEq_hole
+
+public export
 data CoreObject : CoreObjectOrder -> Type where
 
     CorePromote : CoreObject CoreFirstOrder -> CoreObject CoreSecondOrder
@@ -52,6 +56,11 @@ data CoreObject : CoreObjectOrder -> Type where
     {- XXX initial algebras -}
 
     {- XXX terminal algebras -}
+
+public export
+coreObjectDecEq : {coreOrder : CoreObjectOrder} ->
+  DecEqPred $ CoreObject coreOrder
+coreObjectDecEq o o' = ?coreObjectDecEq_hole
 
 public export
 data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -116,13 +125,13 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
           (CoreExponential domain codomain) (CorePromote domain)) codomain
 
     CoreAlgebraicCurry :
-      {domainOrder, codomainOrder : CoreObjectOrder} ->
-      {domainLeft, domainRight : CoreObject domainOrder} ->
+      {codomainOrder : CoreObjectOrder} ->
+      {domainLeft, domainRight : CoreObject CoreFirstOrder} ->
       {codomain : CoreObject codomainOrder} ->
       CoreMorphism (CoreProduct domainLeft domainRight) codomain ->
-      CoreMorphism domLeft (CoreExponential domRight codomain)
+      CoreMorphism domainLeft (CoreExponential domainRight codomain)
 
-    CoreDecideNormalizedEquality :
+    CoreDecideEquality :
       {domainOrder, codomainOrder : CoreObjectOrder} ->
       {domain : CoreObject domainOrder} ->
       {codomain : CoreObject codomainOrder} ->
@@ -157,23 +166,41 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- or could they be defined by interpretation; or will these be -}
     {- new to the Geb syntax, defined by translation to constructors -}
 
+public export
+coreMorphismDecEq : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  DecEqPred $ CoreMorphism domain codomain
+coreMorphismDecEq m m' = ?coreMorphismDecEq_hole
+
 mutual
   public export
   interpretCoreObject : {coreOrder : CoreObjectOrder} ->
     CoreObject coreOrder -> Type
-  interpretCoreObject (CorePromote object) = interpretCoreObject object
-  interpretCoreObject CoreInitial = Void
-  interpretCoreObject CoreTerminal = ()
-  interpretCoreObject (CoreProduct first second) =
-    Pair (interpretCoreObject first) (interpretCoreObject second)
+  interpretCoreObject (CoreProduct {coreOrder} first second) =
+    interpretCoreProduct {coreOrder} first second
   interpretCoreObject (CoreCoproduct left right) =
-    Either (interpretCoreObject left) (interpretCoreObject right)
+    interpretCoreCoproduct left right
   interpretCoreObject (CoreExponential domain codomain) =
     interpretCoreExponential domain codomain
+  interpretCoreObject CoreInitial = Void
+  interpretCoreObject CoreTerminal = Unit
   interpretCoreObject (CoreObjectReflector coreOrder) =
     CoreObject coreOrder
   interpretCoreObject (CoreMorphismReflector domain codomain) =
     CoreMorphism domain codomain
+  interpretCoreObject (CorePromote object) = interpretCoreObject object
+
+  public export
+  interpretCoreProduct : {coreOrder : CoreObjectOrder} ->
+    (first, second : CoreObject coreOrder) -> Type
+  interpretCoreProduct first second =
+    Pair (interpretCoreObject first) (interpretCoreObject second)
+
+  public export
+  interpretCoreCoproduct : {coreOrder : CoreObjectOrder} ->
+    (left, right : CoreObject coreOrder) -> Type
+  interpretCoreCoproduct left right =
+    Either (interpretCoreObject left) (interpretCoreObject right)
 
   public export
   interpretCoreExponential : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -181,13 +208,72 @@ mutual
   interpretCoreExponential domain codomain =
     interpretCoreObject domain -> interpretCoreObject codomain
 
+public export
+coreDecideFirstOrderEquality : (object : CoreObject CoreFirstOrder) ->
+  DecEqPred $ interpretCoreObject object
+coreDecideFirstOrderEquality CoreInitial term _ = void term
+coreDecideFirstOrderEquality CoreTerminal () () = Yes Refl
+coreDecideFirstOrderEquality (CoreProduct first second) term term' =
+  let (left, right) = term in let (left', right') = term' in
+  case
+    (coreDecideFirstOrderEquality first left left',
+     coreDecideFirstOrderEquality second right right') of
+      (Yes Refl, Yes Refl) => Yes Refl
+      (No neq, _) => No $ \eq => case eq of Refl => neq Refl
+      (_, No neq) => No $ \eq => case eq of Refl => neq Refl
+coreDecideFirstOrderEquality (CoreCoproduct left right) term term' =
+  case (term, term') of
+    (Left left, Left left') => ?h1
+    (Left left, Right right) => ?h2
+    (Right right, Left left) => ?h3
+    (Right right, Right right') => ?h4
+coreDecideFirstOrderEquality (CoreObjectReflector coreOrder) term term' =
+  coreObjectDecEq term term'
+coreDecideFirstOrderEquality (CoreMorphismReflector domain codomain)
+  term term' =
+    coreMorphismDecEq term term'
+
+mutual
   public export
   interpretCoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {domain : CoreObject domainOrder} ->
     {codomain : CoreObject codomainOrder} ->
     CoreMorphism domain codomain ->
     interpretCoreExponential domain codomain
-  interpretCoreMorphism morphism = ?interpretCoreMorphism_hole
+  interpretCoreMorphism (CoreIdentity _) =
+    id
+  interpretCoreMorphism (CoreCompose g f) =
+    interpretCoreMorphism g . interpretCoreMorphism f
+  interpretCoreMorphism CoreFromInitial =
+    \v => void v
+  interpretCoreMorphism CoreToTerminal =
+    \_ => ()
+  interpretCoreMorphism (CoreProductIntro first second) = \term =>
+    (interpretCoreMorphism first term, interpretCoreMorphism second term)
+  interpretCoreMorphism (CoreProductElimLeft {domainOrder} leftDomain codomain) =
+    fst
+  interpretCoreMorphism (CoreProductElimRight rightDomain codomain) =
+    snd
+  interpretCoreMorphism (CoreCoproductIntroLeft domain leftCodomain) =
+    Left
+  interpretCoreMorphism (CoreCoproductIntroRight domain rightCodomain) =
+    Right
+  interpretCoreMorphism (CoreCoproductElim left right) = \term =>
+    case term of
+      Left leftTerm => interpretCoreMorphism left leftTerm
+      Right rightTerm => interpretCoreMorphism right rightTerm
+  interpretCoreMorphism CoreAlgebraicEval = \p => fst p $ snd p
+  interpretCoreMorphism (CoreAlgebraicCurry f) =
+    \x, y => interpretCoreMorphism f (x, y)
+  interpretCoreMorphism
+    (CoreDecideEquality
+      {comparedType} leftInput rightInput equalCase notEqualCase) = \term =>
+        case coreDecideFirstOrderEquality
+          comparedType
+          (interpretCoreMorphism leftInput term)
+          (interpretCoreMorphism rightInput term) of
+            Yes _ => interpretCoreMorphism equalCase term
+            No _ => interpretCoreMorphism notEqualCase term
 
 {-
 public export
