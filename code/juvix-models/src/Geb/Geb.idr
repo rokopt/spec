@@ -59,23 +59,6 @@ data CoreObject : CoreObjectOrder -> Type where
     {- XXX terminal algebras -}
 
 --------------------------------------------------------------------------------
----- S-expression representation of core logic objects 00-----------------------
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
----- Instances derived from S-expression object representation -----------------
---------------------------------------------------------------------------------
-
-public export
-coreObjectOrderDecEq : DecEqPred CoreObjectOrder
-coreObjectOrderDecEq o o' = ?coreObjectOrderDecEq_hole
-
-public export
-coreObjectDecEq : {coreOrder : CoreObjectOrder} ->
-  DecEqPred $ CoreObject coreOrder
-coreObjectDecEq o o' = ?coreObjectDecEq_hole
-
---------------------------------------------------------------------------------
 ---- Morphisms of the "core" logic (which underlies Geb) -----------------------
 --------------------------------------------------------------------------------
 
@@ -184,8 +167,112 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- new to the Geb syntax, defined by translation to constructors -}
 
 --------------------------------------------------------------------------------
+---- S-expression representation of core logic objects -------------------------
+--------------------------------------------------------------------------------
+
+public export
+coreOrderToSExp : CoreObjectOrder -> GebSExp
+coreOrderToSExp o = ?coreOrderToSExp_hole
+
+public export
+coreOrderFromSExp_certified : (x : GebSExp) ->
+  Maybe (coreOrder : CoreObjectOrder ** coreOrderToSExp coreOrder = x)
+coreOrderFromSExp_certified x = ?coreOrderFromSExp_certified_hole
+
+public export
+coreOrderFromSExp : GebSExp -> Maybe CoreObjectOrder
+coreOrderFromSExp =
+  certifiedMaybeToMaybe coreOrderToSExp coreOrderFromSExp_certified
+
+public export
+coreOrderEncodingCorrect : (x : GebSExp) -> (coreOrder : CoreObjectOrder) ->
+  coreOrderFromSExp x = Just coreOrder -> coreOrderToSExp coreOrder = x
+coreOrderEncodingCorrect =
+  certifiedMaybeToCorrectness coreOrderToSExp coreOrderFromSExp_certified
+
+public export
+coreOrderEncodingComplete : (coreOrder : CoreObjectOrder) ->
+  coreOrderFromSExp (coreOrderToSExp coreOrder) = Just coreOrder
+coreOrderEncodingComplete coreOrder = ?coreOrderEncodingComplete_hole
+
+public export
+CoreOrderedObject : Type
+CoreOrderedObject = DPair CoreObjectOrder CoreObject
+
+public export
+coreObjectToSExp : CoreOrderedObject -> GebSExp
+coreObjectToSExp (coreOrder ** object) = ?coreObjectToSExp_hole
+
+public export
+coreObjectFromSExp_certified : (x : GebSExp) ->
+  Maybe (object : CoreOrderedObject ** coreObjectToSExp object = x)
+coreObjectFromSExp_certified x = ?coreObjectFromSExp_certified_hole
+
+public export
+coreObjectFromSExp : GebSExp -> Maybe CoreOrderedObject
+coreObjectFromSExp =
+  certifiedMaybeToMaybe coreObjectToSExp coreObjectFromSExp_certified
+
+public export
+coreObjectEncodingCorrect : (x : GebSExp) -> (object : CoreOrderedObject) ->
+  coreObjectFromSExp x = Just object -> coreObjectToSExp object = x
+coreObjectEncodingCorrect =
+  certifiedMaybeToCorrectness coreObjectToSExp coreObjectFromSExp_certified
+
+public export
+coreObjectEncodingComplete : (object : CoreOrderedObject) ->
+  coreObjectFromSExp (coreObjectToSExp object) = Just object
+coreObjectEncodingComplete object = ?coreObjectEncodingComplete_hole
+
+--------------------------------------------------------------------------------
+---- Instances derived from S-expression object representation -----------------
+--------------------------------------------------------------------------------
+
+public export
+coreObjectOrderDecEq : DecEqPred CoreObjectOrder
+coreObjectOrderDecEq o o' = ?coreObjectOrderDecEq_hole
+
+public export
+coreObjectDecEq : {coreOrder : CoreObjectOrder} ->
+  DecEqPred $ CoreObject coreOrder
+coreObjectDecEq o o' = ?coreObjectDecEq_hole
+
+--------------------------------------------------------------------------------
 ---- S-expression representation of core logic morphisms -----------------------
 --------------------------------------------------------------------------------
+
+public export
+CoreSignedMorphism : Type
+CoreSignedMorphism =
+  (domain : CoreOrderedObject ** codomain : CoreOrderedObject **
+   CoreMorphism (snd domain) (snd codomain))
+
+public export
+coreMorphismToSExp : CoreSignedMorphism -> GebSExp
+coreMorphismToSExp (domain ** codomain ** morphism) = ?coreMorphismToSExp_hole
+
+public export
+coreMorphismFromSExp_certified : (x : GebSExp) ->
+  Maybe (morphism : CoreSignedMorphism ** coreMorphismToSExp morphism = x)
+coreMorphismFromSExp_certified x = ?coreMorphismFromSExp_certified_hole
+
+public export
+coreMorphismFromSExp : GebSExp -> Maybe CoreSignedMorphism
+coreMorphismFromSExp =
+  certifiedMaybeToMaybe coreMorphismToSExp coreMorphismFromSExp_certified
+
+public export
+coreMorphismEncodingCorrect : (x : GebSExp) ->
+  (morphism : CoreSignedMorphism) ->
+  coreMorphismFromSExp x = Just morphism ->
+  coreMorphismToSExp morphism = x
+coreMorphismEncodingCorrect =
+  certifiedMaybeToCorrectness coreMorphismToSExp coreMorphismFromSExp_certified
+
+public export
+coreMorphismEncodingComplete : (morphism : CoreSignedMorphism) ->
+  coreMorphismFromSExp (coreMorphismToSExp morphism) = Just morphism
+coreMorphismEncodingComplete morphism = ?coreMorphismEncodingComplete_hole
 
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression morphism representation ---------------

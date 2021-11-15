@@ -486,6 +486,24 @@ IsLeftElim {x=(Left x')} ItIsLeft = x'
 IsLeftElim {x=(Right _)} ItIsLeft impossible
 
 public export
+certifiedMaybeToMaybe : {0 a, b : Type} ->
+  (inverse : b -> a) ->
+  ((x : a) -> Maybe (y : b ** inverse y = x)) ->
+  (x : a) -> Maybe b
+certifiedMaybeToMaybe _ certified x = map fst $ certified x
+
+public export
+certifiedMaybeToCorrectness : {0 a, b : Type} ->
+  (inverse : b -> a) ->
+  (certified : (x : a) -> Maybe (y : b ** inverse y = x)) ->
+  (x : a) -> (y : b) ->
+  certifiedMaybeToMaybe inverse certified x = Just y -> inverse y = x
+certifiedMaybeToCorrectness _ certified x y isjust with (certified x)
+  certifiedMaybeToCorrectness _ certified x y isjust | Just (_ ** correct) =
+    rewrite sym (justInjective isjust) in correct
+  certifiedMaybeToCorrectness _ certified x y ItIsJust | Nothing impossible
+
+public export
 maybeToEither : {0 a : Type} -> Maybe a -> Either a ()
 maybeToEither (Just x) = Left x
 maybeToEither Nothing = Right ()
