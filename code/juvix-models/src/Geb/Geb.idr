@@ -107,25 +107,25 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
       CoreMorphism (CoreCoproduct leftDomain rightDomain) codomain
 
     CoreAlgebraicEval :
-      {domainOrder, codomainOrder : CoreObjectOrder} ->
-      {domain : CoreObject domainOrder} ->
+      {codomainOrder : CoreObjectOrder} ->
+      {domain : CoreObject CoreFirstOrder} ->
       {codomain : CoreObject codomainOrder} ->
       CoreMorphism
-        (CoreProduct (CoreExponential domain codomain) domain) codomain
+        (CoreProduct
+          (CoreExponential domain codomain) (CorePromote domain)) codomain
 
     CoreAlgebraicCurry :
-      {domainLeftOrder, domainRightOrder, codomainOrder : CoreObjectOrder} ->
-      {domainLeft : CoreObject domainLeftOrder} ->
-      {domainRight : CoreObject domainRightOrder} ->
+      {domainOrder, codomainOrder : CoreObjectOrder} ->
+      {domainLeft, domainRight : CoreObject domainOrder} ->
       {codomain : CoreObject codomainOrder} ->
-      CoreMorphism (GebProduct [domainLeft, domainRight]) codomain ->
+      CoreMorphism (CoreProduct domainLeft domainRight) codomain ->
       CoreMorphism domLeft (CoreExponential domRight codomain)
 
     CoreDecideNormalizedEquality :
       {domainOrder, codomainOrder : CoreObjectOrder} ->
       {domain : CoreObject domainOrder} ->
       {codomain : CoreObject codomainOrder} ->
-      {comparedType : CoreMorphism FirstOrder} ->
+      {comparedType : CoreObject CoreFirstOrder} ->
       (leftInput, rightInput : CoreMorphism domain comparedType) ->
       (equalCase, notEqualCase : CoreMorphism domain codomain) ->
       CoreMorphism domain codomain
