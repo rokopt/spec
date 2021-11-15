@@ -130,9 +130,9 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
       (equalCase, notEqualCase : CoreMorphism domain codomain) ->
       CoreMorphism domain codomain
 
-    {- XXX object reflector intro (quote) -- use CoreObject itself -}
+    {- XXX object reflector intro (quote) - use CoreObject itself -}
 
-    {- XXX morphism reflector intro (quote) -- use CoreObject itself -}
+    {- XXX morphism reflector intro (quote) - use CoreObject itself -}
 
     {- XXX reflector elim (Lisp eval) -}
 
