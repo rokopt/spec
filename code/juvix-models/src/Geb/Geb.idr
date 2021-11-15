@@ -41,10 +41,11 @@ data CoreObject : CoreObjectOrder -> Type where
       CoreObject CoreFirstOrder -> CoreObject codomainOrder ->
       CoreObject CoreSecondOrder
 
-    CoreObjectReflector : CoreObject CoreFirstOrder
+    CoreObjectReflector : CoreObjectOrder -> CoreObject CoreFirstOrder
 
-    CoreMorphismReflector : {coreOrder : CoreObjectOrder} ->
-      (domain, codomain : CoreObject coreOrder) -> CoreObject CoreFirstOrder
+    CoreMorphismReflector : {domainOrder, codomainOrder : CoreObjectOrder} ->
+      CoreObject domainOrder -> CoreObject codomainOrder ->
+      CoreObject CoreFirstOrder
 
     {- XXX polymorphic endofunctors -}
 
@@ -155,6 +156,38 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- do these require individual rules for each intro/elim pair, -}
     {- or could they be defined by interpretation; or will these be -}
     {- new to the Geb syntax, defined by translation to constructors -}
+
+mutual
+  public export
+  interpretCoreObject : {coreOrder : CoreObjectOrder} ->
+    CoreObject coreOrder -> Type
+  interpretCoreObject (CorePromote object) = interpretCoreObject object
+  interpretCoreObject CoreInitial = Void
+  interpretCoreObject CoreTerminal = ()
+  interpretCoreObject (CoreProduct first second) =
+    Pair (interpretCoreObject first) (interpretCoreObject second)
+  interpretCoreObject (CoreCoproduct left right) =
+    Either (interpretCoreObject left) (interpretCoreObject right)
+  interpretCoreObject (CoreExponential domain codomain) =
+    interpretCoreExponential domain codomain
+  interpretCoreObject (CoreObjectReflector coreOrder) =
+    CoreObject coreOrder
+  interpretCoreObject (CoreMorphismReflector domain codomain) =
+    CoreMorphism domain codomain
+
+  public export
+  interpretCoreExponential : {domainOrder, codomainOrder : CoreObjectOrder} ->
+    CoreObject domainOrder -> CoreObject codomainOrder -> Type
+  interpretCoreExponential domain codomain =
+    interpretCoreObject domain -> interpretCoreObject codomain
+
+  public export
+  interpretCoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
+    {domain : CoreObject domainOrder} ->
+    {codomain : CoreObject codomainOrder} ->
+    CoreMorphism domain codomain ->
+    interpretCoreExponential domain codomain
+  interpretCoreMorphism morphism = ?interpretCoreMorphism_hole
 
 {-
 public export
