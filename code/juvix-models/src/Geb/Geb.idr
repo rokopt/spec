@@ -144,19 +144,17 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- XXX initial and terminal algebra elims through isomorphic evaluators  -}
 
     {- XXX typecheck type; typecheck term (unit->codomain) against
-     - constructor? -}
+     - constructor -}
 
     {- XXX tensor product and coproduct for endofunctors; or are those
-     - derivable? -}
+     - derivable -}
 
-    {- XXX morphisms which prescribe the input-output behavior of
-     -     morphisms on first-order objects (at least with first-order
-     -     domains; must codomains be first-order too?  probably.
-     -     Do these require individual rules for each intro/elim pair,
-     -     or could they be defined by interpretation?)
-     - or will these be new to the Geb syntax, defined by translation to
-     - constructors?
-     -}
+    {- XXX morphisms which prescribe the input-output behavior of -}
+    {- morphisms on first-order objects, at least with first-order -}
+    {- domains; must codomains be first-order too - probably; -}
+    {- do these require individual rules for each intro/elim pair, -}
+    {- or could they be defined by interpretation; or will these be -}
+    {- new to the Geb syntax, defined by translation to constructors -}
 
 {-
 public export
