@@ -200,6 +200,11 @@ CoreOrderedObject : Type
 CoreOrderedObject = DPair CoreObjectOrder CoreObject
 
 public export
+MkCoreOrderedObject : {coreOrder : CoreObjectOrder} -> CoreObject coreOrder ->
+  CoreOrderedObject
+MkCoreOrderedObject {coreOrder} object = (coreOrder ** object)
+
+public export
 coreObjectToSExp : CoreOrderedObject -> GebSExp
 coreObjectToSExp (coreOrder ** object) = ?coreObjectToSExp_hole
 
@@ -229,13 +234,68 @@ coreObjectEncodingComplete object = ?coreObjectEncodingComplete_hole
 --------------------------------------------------------------------------------
 
 public export
-coreObjectOrderDecEq : DecEqPred CoreObjectOrder
-coreObjectOrderDecEq o o' = ?coreObjectOrderDecEq_hole
+Show CoreObjectOrder where
+  show = show . coreOrderToSExp
+
+public export
+Eq CoreObjectOrder where
+  o == o' = coreOrderToSExp o == coreOrderToSExp o'
+
+public export
+DecEq CoreObjectOrder where
+  decEq =
+    encodingDecEq
+      coreOrderToSExp coreOrderFromSExp
+      coreOrderEncodingComplete decEq
+
+public export
+Ord CoreObjectOrder where
+  o < o' = coreOrderToSExp o < coreOrderToSExp o'
+
+public export
+[CoreOrderedObjectShow] Show CoreOrderedObject where
+  show = show . coreObjectToSExp
+
+public export
+Eq CoreOrderedObject where
+  o == o' = coreObjectToSExp o == coreObjectToSExp o'
+
+public export
+DecEq CoreOrderedObject where
+  decEq =
+    encodingDecEq
+      coreObjectToSExp coreObjectFromSExp
+      coreObjectEncodingComplete decEq
+
+public export
+Ord CoreOrderedObject where
+  o < o' = coreObjectToSExp o < coreObjectToSExp o'
 
 public export
 coreObjectDecEq : {coreOrder : CoreObjectOrder} ->
-  DecEqPred $ CoreObject coreOrder
-coreObjectDecEq o o' = ?coreObjectDecEq_hole
+  DecEqPred (CoreObject coreOrder)
+coreObjectDecEq o o' with
+  (decEq (MkCoreOrderedObject o) (MkCoreOrderedObject o'))
+    coreObjectDecEq _ _ | Yes Refl = Yes Refl
+    coreObjectDecEq o o' | No neq = No $ \eq => case eq of Refl => neq Refl
+
+public export
+(coreOrder : CoreObjectOrder) => Show (CoreObject coreOrder)
+  using CoreOrderedObjectShow where
+    show object = show (MkCoreOrderedObject object)
+
+public export
+(coreOrder : CoreObjectOrder) => DecEq (CoreObject coreOrder) where
+  decEq = coreObjectDecEq
+
+public export
+(coreOrder : CoreObjectOrder) => Eq (CoreObject coreOrder)
+  using decEqToEq where
+    (==) = (==)
+
+public export
+(coreOrder : CoreObjectOrder) => Ord (CoreObject coreOrder) where
+  o < o' = MkCoreOrderedObject o < MkCoreOrderedObject o'
 
 --------------------------------------------------------------------------------
 ---- S-expression representation of core logic morphisms -----------------------
