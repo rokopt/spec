@@ -18,14 +18,14 @@ import public Geb.GebAtom
 
 %default total
 
+--------------------------------------------------------------------------------
+---- Objects of the "core" logic (which underlies Geb) -------------------------
+--------------------------------------------------------------------------------
+
 public export
 data CoreObjectOrder : Type where
   CoreFirstOrder : CoreObjectOrder
   CoreSecondOrder : CoreObjectOrder
-
-public export
-coreObjectOrderDecEq : DecEqPred CoreObjectOrder
-coreObjectOrderDecEq o o' = ?coreObjectOrderDecEq_hole
 
 public export
 data CoreObject : CoreObjectOrder -> Type where
@@ -58,10 +58,26 @@ data CoreObject : CoreObjectOrder -> Type where
 
     {- XXX terminal algebras -}
 
+--------------------------------------------------------------------------------
+---- S-expression representation of core logic objects 00-----------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+---- Instances derived from S-expression object representation -----------------
+--------------------------------------------------------------------------------
+
+public export
+coreObjectOrderDecEq : DecEqPred CoreObjectOrder
+coreObjectOrderDecEq o o' = ?coreObjectOrderDecEq_hole
+
 public export
 coreObjectDecEq : {coreOrder : CoreObjectOrder} ->
   DecEqPred $ CoreObject coreOrder
 coreObjectDecEq o o' = ?coreObjectDecEq_hole
+
+--------------------------------------------------------------------------------
+---- Morphisms of the "core" logic (which underlies Geb) -----------------------
+--------------------------------------------------------------------------------
 
 public export
 data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -167,11 +183,23 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- or could they be defined by interpretation; or will these be -}
     {- new to the Geb syntax, defined by translation to constructors -}
 
+--------------------------------------------------------------------------------
+---- S-expression representation of core logic morphisms -----------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+---- Instances derived from S-expression morphism representation ---------------
+--------------------------------------------------------------------------------
+
 public export
 coreMorphismDecEq : {domainOrder, codomainOrder : CoreObjectOrder} ->
   {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
   DecEqPred $ CoreMorphism domain codomain
 coreMorphismDecEq m m' = ?coreMorphismDecEq_hole
+
+--------------------------------------------------------------------------------
+---- Metalanguage interpretation of core logic objects -------------------------
+--------------------------------------------------------------------------------
 
 mutual
   public export
@@ -241,6 +269,10 @@ coreDecideFirstOrderEquality (CoreObjectReflector coreOrder) term term' =
 coreDecideFirstOrderEquality (CoreMorphismReflector domain codomain)
   term term' =
     coreMorphismDecEq term term'
+
+--------------------------------------------------------------------------------
+---- Metalanguage interpretation of core logic morphisms -----------------------
+--------------------------------------------------------------------------------
 
 mutual
   public export
