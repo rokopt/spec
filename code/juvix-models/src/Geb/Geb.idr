@@ -137,7 +137,7 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- XXX reflector elim (Lisp eval) -}
 
     {- XXX endofunctor intro (first-order object to reflectors, for
-     - object map and fmap -}
+     - object map and fmap) -}
 
     {- XXX endofunctor elims, which are initial and terminal algebra intros -}
 
