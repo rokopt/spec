@@ -24,12 +24,139 @@ data CoreObjectOrder : Type where
 
 public export
 data CoreObject : CoreObjectOrder -> Type where
-  CoreInitial : CoreObject CoreFirstOrder
-  CoreTerminal : CoreObject CoreFirstOrder
-  CoreProduct : {coreOrder : CoreObjectOrder} ->
-    (first, second : CoreObject coreOrder) -> CoreObject coreOrder
-  CoreCoproduct : {coreOrder : CoreObjectOrder} ->
-    (left, right : CoreObject coreOrder) -> CoreObject coreOrder
+
+    CorePromote : CoreObject CoreFirstOrder -> CoreObject CoreSecondOrder
+
+    CoreInitial : CoreObject CoreFirstOrder
+
+    CoreTerminal : CoreObject CoreFirstOrder
+
+    CoreProduct : {coreOrder : CoreObjectOrder} ->
+      (first, second : CoreObject coreOrder) -> CoreObject coreOrder
+
+    CoreCoproduct : {coreOrder : CoreObjectOrder} ->
+      (left, right : CoreObject coreOrder) -> CoreObject coreOrder
+
+    CoreExponential : {codomainOrder : CoreObjectOrder} ->
+      CoreObject CoreFirstOrder -> CoreObject codomainOrder ->
+      CoreObject CoreSecondOrder
+
+    CoreObjectReflector : CoreObject CoreFirstOrder
+
+    CoreMorphismReflector : {coreOrder : CoreObjectOrder} ->
+      (domain, codomain : CoreObject coreOrder) -> CoreObject CoreFirstOrder
+
+    {- XXX polymorphic endofunctors -}
+
+    {- XXX initial algebras -}
+
+    {- XXX terminal algebras -}
+
+public export
+data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  CoreObject domainOrder -> CoreObject codomainOrder -> Type where
+
+    CoreIdentity : {coreOrder : CoreObjectOrder} ->
+      (object : CoreObject coreOrder) ->
+      CoreMorphism object object
+
+    CoreCompose : {orderA, orderB, orderC : CoreObjectOrder} ->
+      {a : CoreObject orderA} ->
+      {b : CoreObject orderB} ->
+      {c : CoreObject orderC} ->
+      CoreMorphism b c -> CoreMorphism a b -> CoreMorphism a c
+
+    CoreFromInitial : {codomainOrder : CoreObjectOrder} ->
+      {codomain : CoreObject codomainOrder} ->
+      CoreMorphism CoreInitial codomain
+
+    CoreToTerminal : {domainOrder : CoreObjectOrder} ->
+      {domain : CoreObject domainOrder} ->
+      CoreMorphism domain CoreTerminal
+
+    CoreProductIntro : {domainOrder, codomainOrder : CoreObjectOrder} ->
+      {domain : CoreObject domainOrder} ->
+      {leftCodomain, rightCodomain : CoreObject codomainOrder} ->
+      CoreMorphism domain leftCodomain -> CoreMorphism domain rightCodomain ->
+      CoreMorphism domain (CoreProduct leftCodomain rightCodomain)
+
+    CoreProductElimLeft :
+      {domainOrder : CoreObjectOrder} ->
+      (leftDomain, rightDomain : CoreObject domainOrder) ->
+      CoreMorphism (CoreProduct leftDomain rightDomain) leftDomain
+
+    CoreProductElimRight :
+      {domainOrder : CoreObjectOrder} ->
+      (leftDomain, rightDomain : CoreObject domainOrder) ->
+      CoreMorphism (CoreProduct leftDomain rightDomain) rightDomain
+
+    CoreCoproductIntroLeft :
+      {codomainOrder : CoreObjectOrder} ->
+      (leftCodomain, rightCodomain : CoreObject codomainOrder) ->
+      CoreMorphism leftCodomain (CoreCoproduct leftCodomain rightCodomain)
+
+    CoreCoproductIntroRight :
+      {codomainOrder : CoreObjectOrder} ->
+      (leftCodomain, rightCodomain : CoreObject codomainOrder) ->
+      CoreMorphism rightCodomain (CoreCoproduct leftCodomain rightCodomain)
+
+    CoreCoproductElim : {domainOrder, codomainOrder : CoreObjectOrder} ->
+      {leftDomain, rightDomain : CoreObject domainOrder} ->
+      {codomain : CoreObject codomainOrder} ->
+      CoreMorphism leftDomain codomain -> CoreMorphism rightDomain codomain ->
+      CoreMorphism (CoreCoproduct leftDomain rightDomain) codomain
+
+    CoreAlgebraicEval :
+      {domainOrder, codomainOrder : CoreObjectOrder} ->
+      {domain : CoreObject domainOrder} ->
+      {codomain : CoreObject codomainOrder} ->
+      CoreMorphism
+        (CoreProduct (CoreExponential domain codomain) domain) codomain
+
+    CoreAlgebraicCurry :
+      {domainLeftOrder, domainRightOrder, codomainOrder : CoreObjectOrder} ->
+      {domainLeft : CoreObject domainLeftOrder} ->
+      {domainRight : CoreObject domainRightOrder} ->
+      {codomain : CoreObject codomainOrder} ->
+      CoreMorphism (GebProduct [domainLeft, domainRight]) codomain ->
+      CoreMorphism domLeft (CoreExponential domRight codomain)
+
+    CoreDecideNormalizedEquality :
+      {domainOrder, codomainOrder : CoreObjectOrder} ->
+      {domain : CoreObject domainOrder} ->
+      {codomain : CoreObject codomainOrder} ->
+      {comparedType : CoreMorphism FirstOrder} ->
+      (leftInput, rightInput : CoreMorphism domain comparedType) ->
+      (equalCase, notEqualCase : CoreMorphism domain codomain) ->
+      CoreMorphism domain codomain
+
+    {- XXX object reflector intro (quote) -- use CoreObject itself -}
+
+    {- XXX morphism reflector intro (quote) -- use CoreObject itself -}
+
+    {- XXX reflector elim (Lisp eval) -}
+
+    {- XXX endofunctor intro (first-order object to reflectors, for
+     - object map and fmap -}
+
+    {- XXX endofunctor elims, which are initial and terminal algebra intros -}
+
+    {- XXX initial and terminal algebra elims through isomorphic evaluators  -}
+
+    {- XXX typecheck type; typecheck term (unit->codomain) against
+     - constructor? -}
+
+    {- XXX tensor product and coproduct for endofunctors; or are those
+     - derivable? -}
+
+    {- XXX morphisms which prescribe the input-output behavior of
+     -     morphisms on first-order objects (at least with first-order
+     -     domains; must codomains be first-order too?  probably.
+     -     Do these require individual rules for each intro/elim pair,
+     -     or could they be defined by interpretation?)
+     - or will these be new to the Geb syntax, defined by translation to
+     - constructors?
+     -}
 
 {-
 public export
