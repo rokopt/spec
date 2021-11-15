@@ -172,12 +172,17 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
 
 public export
 coreOrderToSExp : CoreObjectOrder -> GebSExp
-coreOrderToSExp o = ?coreOrderToSExp_hole
+coreOrderToSExp CoreFirstOrder = $^ GAFirstOrder
+coreOrderToSExp CoreSecondOrder = $^ GASecondOrder
 
 public export
 coreOrderFromSExp_certified : (x : GebSExp) ->
   Maybe (coreOrder : CoreObjectOrder ** coreOrderToSExp coreOrder = x)
-coreOrderFromSExp_certified x = ?coreOrderFromSExp_certified_hole
+coreOrderFromSExp_certified (GAFirstOrder $* []) =
+  Just (CoreFirstOrder ** Refl)
+coreOrderFromSExp_certified (GASecondOrder $* []) =
+  Just (CoreSecondOrder ** Refl)
+coreOrderFromSExp_certified _ = Nothing
 
 public export
 coreOrderFromSExp : GebSExp -> Maybe CoreObjectOrder
@@ -193,7 +198,8 @@ coreOrderEncodingCorrect =
 public export
 coreOrderEncodingComplete : (coreOrder : CoreObjectOrder) ->
   coreOrderFromSExp (coreOrderToSExp coreOrder) = Just coreOrder
-coreOrderEncodingComplete coreOrder = ?coreOrderEncodingComplete_hole
+coreOrderEncodingComplete CoreFirstOrder = Refl
+coreOrderEncodingComplete CoreSecondOrder = Refl
 
 public export
 CoreOrderedObject : Type

@@ -140,6 +140,8 @@ data GebAtom : Type where
 
   GAZerothOrderType : GebAtom
   GAZerothOrderTerm : GebAtom
+  GAFirstOrder : GebAtom
+  GASecondOrder : GebAtom
 
 public export
 gaEncode : GebAtom -> Nat
@@ -223,6 +225,8 @@ gaEncode GAConceptMorphism = 76
 gaEncode GAConceptDependentType = 77
 gaEncode GAZerothOrderType = 78
 gaEncode GAZerothOrderTerm = 79
+gaEncode GAFirstOrder = 80
+gaEncode GASecondOrder = 81
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -306,6 +310,8 @@ gaDecode 76 = Just GAConceptMorphism
 gaDecode 77 = Just GAConceptDependentType
 gaDecode 78 = Just GAZerothOrderType
 gaDecode 79 = Just GAZerothOrderTerm
+gaDecode 80 = Just GAFirstOrder
+gaDecode 81 = Just GASecondOrder
 gaDecode _ = Nothing
 
 export
@@ -390,6 +396,8 @@ gaDecodeEncodeIsJust GAConceptMorphism = Refl
 gaDecodeEncodeIsJust GAConceptDependentType = Refl
 gaDecodeEncodeIsJust GAZerothOrderType = Refl
 gaDecodeEncodeIsJust GAZerothOrderTerm = Refl
+gaDecodeEncodeIsJust GAFirstOrder = Refl
+gaDecodeEncodeIsJust GASecondOrder = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -473,6 +481,8 @@ gebAtomToString GAConceptMorphism = "ConceptMorphism"
 gebAtomToString GAConceptDependentType = "ConceptDependentType"
 gebAtomToString GAZerothOrderType = "ZerothOrderType"
 gebAtomToString GAZerothOrderTerm = "ZerothOrderTerm"
+gebAtomToString GAFirstOrder = "FirstOrder"
+gebAtomToString GASecondOrder = "SecondOrder"
 
 public export
 Show GebAtom where
