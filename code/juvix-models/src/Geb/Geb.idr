@@ -458,7 +458,11 @@ coreMorphismEliminator {domain}
     curryElim signature f (coreMorphismEliminator signature f)
 coreMorphismEliminator {domainOrder} {codomainOrder} {domain} {codomain}
   signature (CoreDecideEquality leftInput rightInput equalCase notEqualCase) =
-    ?coreMorphismEliminator_hole_deceq
+    decideEqualityElim signature leftInput rightInput equalCase notEqualCase
+      (coreMorphismEliminator signature leftInput)
+      (coreMorphismEliminator signature rightInput)
+      (coreMorphismEliminator signature equalCase)
+      (coreMorphismEliminator signature notEqualCase)
 
 public export
 CoreSignedMorphism : Type
