@@ -396,6 +396,39 @@ coreMorphismPredIntro :
   Type
 coreMorphismPredIntro signature = coreMorphismEliminator signature
 
+public export
+CoreMorphismFunctorPred : CoreObjectFunctorSig -> CoreMorphismPred
+CoreMorphismFunctorPred
+  objectFunctor domainOrder codomainOrder domain codomain morphism =
+    CoreMorphism
+      {domainOrder=
+        (fst $ coreObjectFunctor objectFunctor domainOrder domain)}
+      {codomainOrder=
+        (fst $ coreObjectFunctor objectFunctor codomainOrder codomain)}
+      (snd $ coreObjectFunctor objectFunctor domainOrder domain)
+      (snd $ coreObjectFunctor objectFunctor codomainOrder codomain)
+
+public export
+CoreMorphismFunctorSig : CoreObjectFunctorSig -> Type
+CoreMorphismFunctorSig = CoreMorphismEliminatorSig . CoreMorphismFunctorPred
+
+public export
+coreMorphismFunctor :
+  (objectFunctor : CoreObjectFunctorSig) ->
+  CoreMorphismFunctorSig objectFunctor ->
+  {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  (morphism : CoreMorphism domain codomain) ->
+  CoreMorphism
+    {domainOrder=
+      (fst $ coreObjectFunctor objectFunctor domainOrder domain)}
+    {codomainOrder=
+      (fst $ coreObjectFunctor objectFunctor codomainOrder codomain)}
+    (snd $ coreObjectFunctor objectFunctor domainOrder domain)
+    (snd $ coreObjectFunctor objectFunctor codomainOrder codomain)
+coreMorphismFunctor objectFunctor signature morphism =
+  coreMorphismEliminator signature morphism
+
 --------------------------------------------------------------------------------
 ---- S-expression representation of core orders --------------------------------
 --------------------------------------------------------------------------------
