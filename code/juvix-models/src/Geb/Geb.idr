@@ -443,6 +443,41 @@ CoreMorphismDepFunctor depDomain depCodomain objectFunctor morphismFunctor =
   coreMorphismPredIntro depCodomain
     (coreMorphismFunctor objectFunctor morphismFunctor morphism)
 
+public export
+record CoreMorphismDepFunctorSig
+  (depDomain, depCodomain : CoreMorphismPredIntroSig)
+  (objectFunctor : CoreObjectFunctorSig)
+  (morphismFunctor : CoreMorphismFunctorSig objectFunctor)
+  where
+    constructor CoreMorphismDepFunctorArgs
+
+public export
+CoreMorphismDepFunctorSigToEliminatorSig :
+  {depDomain, depCodomain : CoreMorphismPredIntroSig} ->
+  {objectFunctor : CoreObjectFunctorSig} ->
+  {morphismFunctor : CoreMorphismFunctorSig objectFunctor} ->
+  CoreMorphismDepFunctorSig
+    depDomain depCodomain objectFunctor morphismFunctor ->
+  CoreMorphismEliminatorSig
+    (\domainOrder, codomainOrder, domain, codomain, morphism =>
+      coreMorphismPredIntro depDomain morphism ->
+      coreMorphismPredIntro depCodomain
+        (coreMorphismFunctor objectFunctor morphismFunctor morphism))
+CoreMorphismDepFunctorSigToEliminatorSig
+  {depDomain} {depCodomain} {objectFunctor} {morphismFunctor} signature =
+    ?CoreMorphismDepFunctorSigToEliminatorSig_hole
+
+public export
+coreMorphismDepFunctor :
+  {depDomain, depCodomain : CoreMorphismPredIntroSig} ->
+  {objectFunctor : CoreObjectFunctorSig} ->
+  {morphismFunctor : CoreMorphismFunctorSig objectFunctor} ->
+  CoreMorphismDepFunctorSig
+    depDomain depCodomain objectFunctor morphismFunctor ->
+  CoreMorphismDepFunctor depDomain depCodomain objectFunctor morphismFunctor
+coreMorphismDepFunctor signature =
+  coreMorphismEliminator (CoreMorphismDepFunctorSigToEliminatorSig signature)
+
 --------------------------------------------------------------------------------
 ---- S-expression representation of core orders --------------------------------
 --------------------------------------------------------------------------------
@@ -802,7 +837,7 @@ coreMorphismFromSExp_certified (GAToTerminal $* [domain]) =
     Just ((_ ** domainObject) ** correct) =>
       Just (MkCoreSignedMorphism (CoreToTerminal domainObject) **
             case correct of
-              Refl => ?coreMorphismFromSExp_certified_hole_terminal)
+              Refl => ?coreMorphismFromSExp_certified_hole_terminal_correct)
     Nothing => Nothing
 coreMorphismFromSExp_certified (GAProductIntro $* [left, right]) =
   case (coreMorphismFromSExp_certified left,
@@ -821,7 +856,8 @@ coreMorphismFromSExp_certified (GAProductIntro $* [left, right]) =
                     (CoreProductIntro leftMorphism rightMorphism) **
                   case leftCorrect of
                     Refl => case rightCorrect of
-                      Refl => ?coreMorphismFromSExpCertified_hole_product_intro)
+                      Refl =>
+                        ?coreMorphismFromSExpCertified_hole_prod_intro_correct)
           No _ => Nothing
         _ => Nothing
     _ => Nothing
@@ -846,7 +882,8 @@ coreMorphismFromSExp_certified (GACoproductElim $* [left, right]) =
                     (CoreCoproductElim leftMorphism rightMorphism) **
                   case leftCorrect of
                     Refl => case rightCorrect of
-                      Refl => ?coreMorphismFromSExpCertified_hole_coproduct_elm)
+                      Refl =>
+                        ?coreMorphismFromSExpCertified_hole_copr_elim_correct)
           No _ => Nothing
         _ => Nothing
     _ => Nothing
