@@ -207,10 +207,10 @@ SPiIntroSigToEliminatorSig : {0 atom : Type} ->
   {depType : SDepTypeIntroSig atom} ->
   SPiIntroSig depType ->
   SExpEliminatorSig (sexpDepTypeIntro depType) (slistDepTypeIntro depType)
-SPiIntroSigToEliminatorSig signature = SExpEliminatorArgs
-  (?SPiIntroSigToEliminatorSig_hole_expElim)
+SPiIntroSigToEliminatorSig {depType} signature = SExpEliminatorArgs
+  (\a, l, listPi => ?SPiIntroSigToEliminatorSig_hole_expElim)
   (?SPiIntroSigToEliminatorSig_hole_nilElim)
-  (?SPiIntroSigToEliminatorSig_hole_consElim)
+  (\x, l, expPi, listPi => ?SPiIntroSigToEliminatorSig_hole_consElim)
 
 public export
 sexpPiIntro : {0 atom : Type} -> {depType : SDepTypeIntroSig atom} ->
@@ -242,10 +242,13 @@ SExpDepMorphismSigToEliminatorSig : {0 atom, atom' : Type} ->
       sexpDepTypeIntro codomain $ sexpMorphism morphism x)
     (\l => slistDepTypeIntro domain l ->
       slistDepTypeIntro codomain $ slistMorphism morphism l)
-SExpDepMorphismSigToEliminatorSig signature = SExpEliminatorArgs
-  (?SExpDepMorphismSigToEliminatorSig_hole_expElim)
-  (?SExpDepMorphismSigToEliminatorSig_hole_nilElim)
-  (?SExpDepMorphismSigToEliminatorSig_hole_consElim)
+SExpDepMorphismSigToEliminatorSig {domain} {codomain} {morphism} signature =
+  SExpEliminatorArgs
+    (\a, l, listDepMorphism, domainPi =>
+      ?SExpDepMorphismSigToEliminatorSig_hole_expElim)
+    (\nilDomainPi => ?SExpDepMorphismSigToEliminatorSig_hole_nilElim)
+    (\x, l, expDepMorphism, listDepMorphism, domainPi =>
+      ?SExpDepMorphismSigToEliminatorSig_hole_consElim)
 
 public export
 sexpDepMorphism : {0 atom, atom' : Type} ->
