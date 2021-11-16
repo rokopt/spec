@@ -58,6 +58,73 @@ data CoreObject : CoreObjectOrder -> Type where
 
     {- XXX terminal algebras -}
 
+public export
+CoreObjectPred : Type
+CoreObjectPred = (coreOrder : CoreObjectOrder) -> CoreObject coreOrder -> Type
+
+public export
+record CoreObjectEliminatorSig (pred : CoreObjectPred) where
+  constructor CoreObjectEliminatorArgs
+  promoteElim : (object : CoreObject CoreFirstOrder) ->
+    pred CoreFirstOrder object -> pred CoreSecondOrder (CorePromote object)
+  initialElim : pred CoreFirstOrder CoreInitial
+  terminalElim : pred CoreFirstOrder CoreTerminal
+  productElim : (coreOrder : CoreObjectOrder) ->
+    (first, second : CoreObject coreOrder) ->
+    pred coreOrder first -> pred coreOrder second ->
+    pred coreOrder (CoreProduct first second)
+  coproductElim : (coreOrder : CoreObjectOrder) ->
+    (left, right : CoreObject coreOrder) ->
+    pred coreOrder left -> pred coreOrder right ->
+    pred coreOrder (CoreCoproduct left right)
+  exponentialElim : (codomainOrder : CoreObjectOrder) ->
+    (domain : CoreObject CoreFirstOrder) ->
+    (codomain : CoreObject codomainOrder) ->
+    pred CoreFirstOrder domain -> pred codomainOrder codomain ->
+    pred CoreSecondOrder (CoreExponential domain codomain)
+  objectReflectorElim : (objectOrder : CoreObjectOrder) ->
+    pred CoreFirstOrder (CoreObjectReflector objectOrder)
+  morphismReflectorElim : (domainOrder, codomainOrder : CoreObjectOrder) ->
+    (domain : CoreObject domainOrder) ->
+    (codomain : CoreObject codomainOrder) ->
+    pred domainOrder domain -> pred codomainOrder codomain ->
+    pred CoreFirstOrder
+      (CoreMorphismReflector {domainOrder} {codomainOrder} domain codomain)
+
+public export
+coreObjectEliminator : {pred : CoreObjectPred} ->
+  CoreObjectEliminatorSig pred ->
+  (coreOrder : CoreObjectOrder) -> (coreObject : CoreObject coreOrder) ->
+  pred coreOrder coreObject
+coreObjectEliminator signature CoreSecondOrder (CorePromote object) =
+  promoteElim signature object $
+    coreObjectEliminator signature CoreFirstOrder object
+coreObjectEliminator signature CoreFirstOrder CoreInitial =
+  initialElim signature
+coreObjectEliminator signature CoreFirstOrder CoreTerminal =
+  terminalElim signature
+coreObjectEliminator signature coreOrder (CoreProduct first second) =
+  productElim signature coreOrder first second
+    (coreObjectEliminator signature coreOrder first)
+    (coreObjectEliminator signature coreOrder second)
+coreObjectEliminator signature coreOrder (CoreCoproduct left right) =
+  coproductElim signature coreOrder left right
+    (coreObjectEliminator signature coreOrder left)
+    (coreObjectEliminator signature coreOrder right)
+coreObjectEliminator signature
+  CoreSecondOrder (CoreExponential {codomainOrder} domain codomain) =
+    exponentialElim signature codomainOrder domain codomain
+      (coreObjectEliminator signature CoreFirstOrder domain)
+      (coreObjectEliminator signature codomainOrder codomain)
+coreObjectEliminator signature CoreFirstOrder
+  (CoreObjectReflector objectOrder) =
+    objectReflectorElim signature objectOrder
+coreObjectEliminator signature CoreFirstOrder
+  (CoreMorphismReflector {domainOrder} {codomainOrder} domain codomain) =
+    morphismReflectorElim signature domainOrder codomainOrder domain codomain
+      (coreObjectEliminator signature domainOrder domain)
+      (coreObjectEliminator signature codomainOrder codomain)
+
 --------------------------------------------------------------------------------
 ---- Morphisms of the "core" logic (which underlies Geb) -----------------------
 --------------------------------------------------------------------------------
