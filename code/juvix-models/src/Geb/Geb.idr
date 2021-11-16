@@ -167,7 +167,7 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- new to the Geb syntax, defined by translation to constructors -}
 
 --------------------------------------------------------------------------------
----- S-expression representation of core logic objects -------------------------
+---- S-expression representation of core orders --------------------------------
 --------------------------------------------------------------------------------
 
 public export
@@ -201,6 +201,33 @@ coreOrderEncodingComplete : (coreOrder : CoreObjectOrder) ->
 coreOrderEncodingComplete CoreFirstOrder = Refl
 coreOrderEncodingComplete CoreSecondOrder = Refl
 
+--------------------------------------------------------------------------------
+---- Instances derived from S-expression order representation ------------------
+--------------------------------------------------------------------------------
+
+public export
+Show CoreObjectOrder where
+  show = show . coreOrderToSExp
+
+public export
+Eq CoreObjectOrder where
+  o == o' = coreOrderToSExp o == coreOrderToSExp o'
+
+public export
+DecEq CoreObjectOrder where
+  decEq =
+    encodingDecEq
+      coreOrderToSExp coreOrderFromSExp
+      coreOrderEncodingComplete decEq
+
+public export
+Ord CoreObjectOrder where
+  o < o' = coreOrderToSExp o < coreOrderToSExp o'
+
+--------------------------------------------------------------------------------
+---- S-expression representation of core logic objects -------------------------
+--------------------------------------------------------------------------------
+
 public export
 CoreOrderedObject : Type
 CoreOrderedObject = DPair CoreObjectOrder CoreObject
@@ -213,16 +240,16 @@ MkCoreOrderedObject {coreOrder} object = (coreOrder ** object)
 public export
 coreObjectToSExp : {coreOrder : CoreObjectOrder} -> CoreObject coreOrder ->
   GebSExp
-coreObjectToSExp (CorePromote object) =
-  GAPromoteToSecond $*** coreObjectToSExp object
-coreObjectToSExp CoreInitial = $^ GAInitial
-coreObjectToSExp CoreTerminal = $^ GATerminal
 coreObjectToSExp (CoreProduct first second) =
   GAProduct $* [coreObjectToSExp first, coreObjectToSExp second]
 coreObjectToSExp (CoreCoproduct left right) =
   GACoproduct $* [coreObjectToSExp left, coreObjectToSExp right]
 coreObjectToSExp (CoreExponential domain codomain) =
   GAExponential $* [coreObjectToSExp domain, coreObjectToSExp codomain]
+coreObjectToSExp (CorePromote object) =
+  GAPromoteToSecond $*** coreObjectToSExp object
+coreObjectToSExp CoreInitial = $^ GAInitial
+coreObjectToSExp CoreTerminal = $^ GATerminal
 coreObjectToSExp (CoreObjectReflector coreOrder) =
   GAObjectReflector $*** coreOrderToSExp coreOrder
 coreObjectToSExp (CoreMorphismReflector domain codomain) =
@@ -242,6 +269,50 @@ coreObjectFromSExp_certified (GAPromoteToSecond $* [object]) =
         ((CoreSecondOrder ** CorePromote firstOrderObject) **
          rewrite correct in Refl)
     _ => Nothing
+coreObjectFromSExp_certified (GAInitial $* []) =
+  Just ((CoreFirstOrder ** CoreInitial) ** Refl)
+coreObjectFromSExp_certified (GATerminal $* []) =
+  Just ((CoreFirstOrder ** CoreTerminal) ** Refl)
+coreObjectFromSExp_certified (GAProduct $* [first, second]) =
+  case
+    (coreObjectFromSExp_certified first,
+     coreObjectFromSExp_certified second) of
+      (Just ((coreOrder ** firstObject) ** firstCorrect),
+       Just ((coreOrder' ** secondObject) ** secondCorrect)) =>
+        case decEq coreOrder coreOrder' of
+          Yes Refl =>
+            Just ((coreOrder ** CoreProduct firstObject secondObject) **
+                  rewrite sym firstCorrect in
+                  rewrite sym secondCorrect in
+                  Refl)
+          No _ => Nothing
+      _ => Nothing
+coreObjectFromSExp_certified (GACoproduct $* [left, right]) =
+  case
+    (coreObjectFromSExp_certified left,
+     coreObjectFromSExp_certified right) of
+      (Just ((coreOrder ** leftObject) ** leftCorrect),
+       Just ((coreOrder' ** rightObject) ** rightCorrect)) =>
+        case decEq coreOrder coreOrder' of
+          Yes Refl =>
+            Just ((coreOrder ** CoreCoproduct leftObject rightObject) **
+                  rewrite sym leftCorrect in
+                  rewrite sym rightCorrect in
+                  Refl)
+          No _ => Nothing
+      _ => Nothing
+coreObjectFromSExp_certified (GAExponential $* [domain, codomain]) =
+  case
+    (coreObjectFromSExp_certified domain,
+     coreObjectFromSExp_certified codomain) of
+      (Just ((CoreFirstOrder ** domainObject) ** domainCorrect),
+       Just ((codomainOrder ** codomainObject) ** codomainCorrect)) =>
+        Just ((CoreSecondOrder **
+               CoreExponential domainObject codomainObject) **
+              rewrite sym domainCorrect in
+              rewrite sym codomainCorrect in
+              Refl)
+      _ => Nothing
 coreObjectFromSExp_certified _ = Nothing
 
 public export
@@ -265,25 +336,6 @@ coreObjectEncodingComplete object = ?coreObjectEncodingComplete_hole
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression object representation -----------------
 --------------------------------------------------------------------------------
-
-public export
-Show CoreObjectOrder where
-  show = show . coreOrderToSExp
-
-public export
-Eq CoreObjectOrder where
-  o == o' = coreOrderToSExp o == coreOrderToSExp o'
-
-public export
-DecEq CoreObjectOrder where
-  decEq =
-    encodingDecEq
-      coreOrderToSExp coreOrderFromSExp
-      coreOrderEncodingComplete decEq
-
-public export
-Ord CoreObjectOrder where
-  o < o' = coreOrderToSExp o < coreOrderToSExp o'
 
 public export
 [CoreOrderedObjectShow] Show CoreOrderedObject where
