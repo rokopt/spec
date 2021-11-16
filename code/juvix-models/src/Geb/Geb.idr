@@ -233,6 +233,70 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
     {- or could they be defined by interpretation; or will these be -}
     {- new to the Geb syntax, defined by translation to constructors -}
 
+public export
+CoreMorphismPred : Type
+CoreMorphismPred = (domainOrder, codomainOrder : CoreObjectOrder) ->
+  (domain : CoreObject domainOrder) -> (codomain : CoreObject codomainOrder) ->
+  CoreMorphism domain codomain -> Type
+
+public export
+record CoreMorphismEliminatorSig (pred : CoreMorphismPred) where
+  constructor CoreMorphismEliminatorArgs
+  identityElim : (coreOrder : CoreObjectOrder) ->
+    (object : CoreObject coreOrder) ->
+    pred coreOrder coreOrder object object (CoreIdentity object)
+  composeElim : (orderA, orderB, orderC: CoreObjectOrder) ->
+    (a : CoreObject orderA) ->
+    (b : CoreObject orderB) ->
+    (c : CoreObject orderC) ->
+    (g : CoreMorphism b c) -> (f : CoreMorphism a b) ->
+    pred orderB orderC b c g ->
+    pred orderA orderB a b f ->
+    pred orderA orderC a c (CoreCompose g f)
+
+public export
+coreMorphismEliminator : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  {pred : CoreMorphismPred} -> CoreMorphismEliminatorSig pred ->
+  (morphism : CoreMorphism domain codomain) ->
+  pred domainOrder codomainOrder domain codomain morphism
+coreMorphismEliminator signature (CoreIdentity {coreOrder} object) =
+  identityElim signature coreOrder object
+coreMorphismEliminator
+  signature (CoreCompose {orderA} {orderB} {orderC} {a} {b} {c} g f) =
+    composeElim signature orderA orderB orderC a b c g f
+      (coreMorphismEliminator signature g)
+      (coreMorphismEliminator signature f)
+coreMorphismEliminator signature (CoreFromInitial {codomainOrder} codomain) =
+  ?coreMorphismEliminator_hole_frominit
+coreMorphismEliminator signature (CoreToTerminal {domainOrder} domain) =
+  ?coreMorphismEliminator_hole_toterm
+coreMorphismEliminator {domainOrder} {codomainOrder} {domain}
+  signature (CoreProductIntro {leftCodomain} {rightCodomain} first second) =
+    ?coreMorphismEliminator_hole_prointro
+coreMorphismEliminator signature (CoreProductElimLeft leftDomain rightDomain) =
+  ?coreMorphismEliminator_hole_proelimleft
+coreMorphismEliminator signature (CoreProductElimRight leftDomain rightDomain) =
+  ?coreMorphismEliminator_hole_proelimright
+coreMorphismEliminator
+  signature (CoreCoproductIntroLeft leftCodomain rightCodomain) =
+    ?coreMorphismEliminator_hole_coprointroleft
+coreMorphismEliminator
+  signature (CoreCoproductIntroRight leftCodomain rightCodomain) =
+    ?coreMorphismEliminator_hole_coprointroright
+coreMorphismEliminator
+  signature (CoreCoproductElim leftCodomain rightCodomain) =
+    ?coreMorphismEliminator_hole_coproelim
+coreMorphismEliminator {codomainOrder} {codomain}
+  signature (CoreAlgebraicEval domain codomain) =
+    ?coreMorphismEliminator_hole_algeval
+coreMorphismEliminator {domain}
+  {pred} signature (CoreAlgebraicCurry f) =
+    ?coreMorphismEliminator_hole_curry
+coreMorphismEliminator {domainOrder} {codomainOrder} {domain} {codomain}
+  signature (CoreDecideEquality leftInput rightInput equalCase notEqualCase) =
+    ?coreMorphismEliminator_hole_deceq
+
 --------------------------------------------------------------------------------
 ---- S-expression representation of core orders --------------------------------
 --------------------------------------------------------------------------------
