@@ -1032,13 +1032,84 @@ coreMorphismFromSExp_certified (GACoproductIntroRight $* [left, right]) =
                                 ?cMFSExp_cert_hole_coprod_intro_right_correct)
         No _ => Nothing
     _ => Nothing
-coreMorphismFromSExp_certified (GAExponentialEval $* []) =
-  ?coreMorphismFromSExp_certified_hole_exponential_eval
+coreMorphismFromSExp_certified (GAExponentialEval $* [domain, codomain]) =
+  case (coreObjectFromSExp_certified domain,
+        coreObjectFromSExp_certified codomain) of
+    (Just ((domainOrder ** domain) ** domainCorrect),
+     Just ((codomainOrder ** codomain) ** codomainCorrect)) =>
+      case decEq domainOrder CoreFirstOrder of
+        Yes Refl => Just (MkCoreSignedMorphism
+                            (CoreAlgebraicEval domain codomain) **
+                          case domainCorrect of
+                            Refl => case codomainCorrect of
+                              Refl =>
+                                ?cMFSExp_cert_hole_eval_correct)
+        No _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified (GACurry $* [f]) =
-  ?coreMorphismFromSExp_certified_hole_curry
+  case (coreMorphismFromSExp_certified f) of
+    Just (((domainOrder ** domain) **
+           (codomainOrder ** codomain) **
+           mf) **
+          correct) =>
+      case decEq domainOrder CoreFirstOrder of
+        Yes Refl => case domain of
+          CoreProduct domainLeft domainRight =>
+            Just (MkCoreSignedMorphism
+                  (CoreAlgebraicCurry mf) **
+                  case correct of Refl => ?cMFSExp_cert_hole_curry_correct)
+          _ => Nothing
+        No _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified
-  (GADecideEquality $* [leftInput, rightInput, equalCase, notEqualCase]) =
-    ?coreMorphismFromSExp_certified_hole_decide_equality
+  (GADecideEquality $*
+    [leftInputExp, rightInputExp, equalCaseExp, notEqualCaseExp]) =
+  case (coreMorphismFromSExp_certified leftInputExp,
+        coreMorphismFromSExp_certified rightInputExp,
+        coreMorphismFromSExp_certified equalCaseExp,
+        coreMorphismFromSExp_certified notEqualCaseExp) of
+    (Just (((leftDomainOrder ** leftDomain) **
+            (leftCodomainOrder ** leftCodomain) ** leftInput) **
+           leftCorrect),
+     Just (((rightDomainOrder ** rightDomain) **
+            (rightCodomainOrder ** rightCodomain) ** rightInput) **
+           rightCorrect),
+     Just (((equalDomainOrder ** equalDomain) **
+            (equalCodomainOrder ** equalCodomain) ** equalCase) **
+           equalCorrect),
+     Just (((notEqualDomainOrder ** notEqualDomain) **
+            (notEqualCodomainOrder ** notEqualCodomain) ** notEqualCase) **
+           notEqualCorrect)) =>
+      case (decEq leftDomainOrder rightDomainOrder,
+            decEq leftDomainOrder equalDomainOrder,
+            decEq leftDomainOrder notEqualDomainOrder) of
+        (Yes Refl, Yes Refl, Yes Refl) =>
+          case (decEq leftCodomainOrder CoreFirstOrder,
+                decEq rightCodomainOrder CoreFirstOrder,
+                decEq equalCodomainOrder notEqualCodomainOrder) of
+            (Yes Refl, Yes Refl, Yes Refl) =>
+              case (decEq leftDomain rightDomain,
+                    decEq leftDomain equalDomain,
+                    decEq leftDomain notEqualDomain) of
+                (Yes Refl, Yes Refl, Yes Refl) =>
+                  case (decEq leftCodomain rightCodomain,
+                        decEq equalCodomain notEqualCodomain) of
+                    (Yes Refl, Yes Refl) =>
+                      Just (MkCoreSignedMorphism
+                              (CoreDecideEquality
+                                leftInput rightInput
+                                equalCase notEqualCase) **
+                            case leftCorrect of
+                              Refl => case rightCorrect of
+                                Refl => case equalCorrect of
+                                  Refl => case notEqualCorrect of
+                                    Refl =>
+                                      ?cMFSExp_cert_hole_dec_equality_correct)
+                    _ => Nothing
+                _ => Nothing
+            _ => Nothing
+        _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified _ = Nothing
 
 public export
