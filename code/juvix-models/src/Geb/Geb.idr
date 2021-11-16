@@ -461,7 +461,37 @@ public export
 coreMorphismToSExp : {domainOrder, codomainOrder : CoreObjectOrder} ->
   {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
   CoreMorphism domain codomain -> GebSExp
-coreMorphismToSExp m = ?coreMorphismToSExp_hole
+coreMorphismToSExp (CoreIdentity domain) =
+  GAIdentity $*** coreObjectToSExp domain
+coreMorphismToSExp (CoreCompose g f) =
+  GACompose $* [coreMorphismToSExp g, coreMorphismToSExp f]
+coreMorphismToSExp CoreFromInitial = $^ GAFromInitial
+coreMorphismToSExp CoreToTerminal = $^ GAToTerminal
+coreMorphismToSExp (CoreProductIntro first second) =
+  GAProductIntro $* [coreMorphismToSExp first, coreMorphismToSExp second]
+coreMorphismToSExp (CoreProductElimLeft leftDomain rightDomain) =
+  GAProductElimLeft $*
+    [coreObjectToSExp leftDomain, coreObjectToSExp rightDomain]
+coreMorphismToSExp (CoreProductElimRight leftDomain rightDomain) =
+  GAProductElimRight $*
+    [coreObjectToSExp leftDomain, coreObjectToSExp rightDomain]
+coreMorphismToSExp (CoreCoproductIntroLeft leftCodomain rightCodomain) =
+  GACoproductIntroLeft $*
+    [coreObjectToSExp leftCodomain, coreObjectToSExp rightCodomain]
+coreMorphismToSExp (CoreCoproductIntroRight leftCodomain rightCodomain) =
+  GACoproductIntroRight $*
+    [coreObjectToSExp leftCodomain, coreObjectToSExp rightCodomain]
+coreMorphismToSExp (CoreCoproductElim left right) =
+  GACoproductElim $* [coreMorphismToSExp left, coreMorphismToSExp right]
+coreMorphismToSExp CoreAlgebraicEval = $^ GAExponentialEval
+coreMorphismToSExp (CoreAlgebraicCurry f) = GACurry $*** coreMorphismToSExp f
+coreMorphismToSExp
+  (CoreDecideEquality leftInput rightInput equalCase notEqualCase) =
+    GADecideEquality $*
+      [coreMorphismToSExp leftInput,
+       coreMorphismToSExp rightInput,
+       coreMorphismToSExp equalCase,
+       coreMorphismToSExp notEqualCase]
 
 public export
 coreSignedMorphismToSExp : CoreSignedMorphism -> GebSExp
