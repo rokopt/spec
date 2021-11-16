@@ -77,11 +77,11 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
       CoreMorphism b c -> CoreMorphism a b -> CoreMorphism a c
 
     CoreFromInitial : {codomainOrder : CoreObjectOrder} ->
-      {codomain : CoreObject codomainOrder} ->
+      (codomain : CoreObject codomainOrder) ->
       CoreMorphism CoreInitial codomain
 
     CoreToTerminal : {domainOrder : CoreObjectOrder} ->
-      {domain : CoreObject domainOrder} ->
+      (domain : CoreObject domainOrder) ->
       CoreMorphism domain CoreTerminal
 
     CoreProductIntro : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -465,8 +465,10 @@ coreMorphismToSExp (CoreIdentity domain) =
   GAIdentity $*** coreObjectToSExp domain
 coreMorphismToSExp (CoreCompose g f) =
   GACompose $* [coreMorphismToSExp g, coreMorphismToSExp f]
-coreMorphismToSExp CoreFromInitial = $^ GAFromInitial
-coreMorphismToSExp CoreToTerminal = $^ GAToTerminal
+coreMorphismToSExp (CoreFromInitial codomain) =
+  GAFromInitial $*** coreObjectToSExp codomain
+coreMorphismToSExp (CoreToTerminal domain) =
+  GAToTerminal $*** coreObjectToSExp domain
 coreMorphismToSExp (CoreProductIntro first second) =
   GAProductIntro $* [coreMorphismToSExp first, coreMorphismToSExp second]
 coreMorphismToSExp (CoreProductElimLeft leftDomain rightDomain) =
@@ -520,6 +522,61 @@ coreMorphismFromSExp_certified (GACompose $* [g, f]) =
                   rewrite gCorrect in rewrite fCorrect in Refl)
           No _ => Nothing
         No _ => Nothing
+    _ => Nothing
+coreMorphismFromSExp_certified (GAFromInitial $* [codomain]) =
+  case coreObjectFromSExp_certified codomain of
+    Just ((_ ** codomainObject) ** correct) =>
+      Just (MkCoreSignedMorphism (CoreFromInitial codomainObject) **
+            rewrite correct in Refl)
+    Nothing => Nothing
+coreMorphismFromSExp_certified (GAToTerminal $* [domain]) =
+  case coreObjectFromSExp_certified domain of
+    Just ((_ ** domainObject) ** correct) =>
+      Just (MkCoreSignedMorphism (CoreToTerminal domainObject) **
+            case correct of
+              Refl => ?coreMorphismFromSExp_certified_hole_terminal)
+    Nothing => Nothing
+coreMorphismFromSExp_certified (GAProductIntro $* [left, right]) =
+  case (coreMorphismFromSExp_certified left,
+        coreMorphismFromSExp_certified right) of
+    (Just (((leftDomainOrder ** leftDomain) **
+            (leftCodomainOrder ** _) ** leftMorphism) **
+           leftCorrect),
+     Just (((rightDomainOrder ** rightDomain) **
+            (rightCodomainOrder ** _) ** rightMorphism) **
+           rightCorrect)) =>
+      case (decEq leftDomainOrder rightDomainOrder,
+            decEq leftCodomainOrder rightCodomainOrder) of
+        (Yes Refl, Yes Refl) => case decEq leftDomain rightDomain of
+          Yes Refl =>
+            Just (MkCoreSignedMorphism
+                    (CoreProductIntro leftMorphism rightMorphism) **
+                  case leftCorrect of
+                    Refl => case rightCorrect of
+                      Refl => ?coreMorphismFromSExpCertified_hole_product_intro)
+          No _ => Nothing
+        _ => Nothing
+    _ => Nothing
+coreMorphismFromSExp_certified (GACoproductElim $* [left, right]) =
+  case (coreMorphismFromSExp_certified left,
+        coreMorphismFromSExp_certified right) of
+    (Just (((leftDomainOrder ** _) **
+            (leftCodomainOrder ** leftCodomain) ** leftMorphism) **
+           leftCorrect),
+     Just (((rightDomainOrder ** _) **
+            (rightCodomainOrder ** rightCodomain) ** rightMorphism) **
+           rightCorrect)) =>
+      case (decEq leftDomainOrder rightDomainOrder,
+            decEq leftCodomainOrder rightCodomainOrder) of
+        (Yes Refl, Yes Refl) => case decEq leftCodomain rightCodomain of
+          Yes Refl =>
+            Just (MkCoreSignedMorphism
+                    (CoreCoproductElim leftMorphism rightMorphism) **
+                  case leftCorrect of
+                    Refl => case rightCorrect of
+                      Refl => ?coreMorphismFromSExpCertified_hole_coproduct_elm)
+          No _ => Nothing
+        _ => Nothing
     _ => Nothing
 coreMorphismFromSExp_certified _ = Nothing
 
@@ -689,9 +746,9 @@ mutual
     id
   interpretCoreMorphism (CoreCompose g f) =
     interpretCoreMorphism g . interpretCoreMorphism f
-  interpretCoreMorphism CoreFromInitial =
+  interpretCoreMorphism (CoreFromInitial _) =
     \v => void v
-  interpretCoreMorphism CoreToTerminal =
+  interpretCoreMorphism (CoreToTerminal _) =
     \_ => ()
   interpretCoreMorphism (CoreProductIntro first second) = \term =>
     (interpretCoreMorphism first term, interpretCoreMorphism second term)
