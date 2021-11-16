@@ -125,6 +125,82 @@ coreObjectEliminator signature CoreFirstOrder
       (coreObjectEliminator signature domainOrder domain)
       (coreObjectEliminator signature codomainOrder codomain)
 
+public export
+CoreOrderedObject : Type
+CoreOrderedObject = DPair CoreObjectOrder CoreObject
+
+public export
+CoreObjectPredIntroPred : CoreObjectPred
+CoreObjectPredIntroPred _ _ = Type
+
+public export
+CoreObjectPredIntroSig : Type
+CoreObjectPredIntroSig = CoreObjectEliminatorSig CoreObjectPredIntroPred
+
+public export
+coreObjectPredIntro :
+  CoreObjectPredIntroSig ->
+  (coreOrder : CoreObjectOrder) -> (coreObject : CoreObject coreOrder) ->
+  Type
+coreObjectPredIntro = coreObjectEliminator
+
+public export
+CoreObjectFunctorPred : CoreObjectPred
+CoreObjectFunctorPred _ _ = CoreOrderedObject
+
+public export
+CoreObjectFunctorSig : Type
+CoreObjectFunctorSig = CoreObjectEliminatorSig CoreObjectFunctorPred
+
+public export
+coreObjectFunctor :
+  CoreObjectFunctorSig ->
+  (coreOrder : CoreObjectOrder) -> (coreObject : CoreObject coreOrder) ->
+  CoreOrderedObject
+coreObjectFunctor = coreObjectEliminator
+
+public export
+CoreObjectDepFunctor :
+  (depDomain, depCodomain : CoreObjectPredIntroSig) ->
+  CoreObjectFunctorSig ->
+  Type
+CoreObjectDepFunctor depDomain depCodomain functor =
+  (coreOrder : CoreObjectOrder) -> (object : CoreObject coreOrder) ->
+  coreObjectPredIntro depDomain coreOrder object ->
+  coreObjectPredIntro depCodomain
+    (fst $ coreObjectFunctor functor coreOrder object)
+    (snd $ coreObjectFunctor functor coreOrder object)
+
+public export
+record CoreObjectDepFunctorSig
+  (depDomain, depCodomain : CoreObjectPredIntroSig)
+  (functor : CoreObjectFunctorSig) where
+    constructor CoreObjectDepFunctorArgs
+
+public export
+CoreObjectDepFunctorSigToEliminatorSig :
+  {depDomain, depCodomain : CoreObjectPredIntroSig} ->
+  {functor : CoreObjectFunctorSig} ->
+  CoreObjectDepFunctorSig depDomain depCodomain functor ->
+  CoreObjectEliminatorSig
+    (\coreOrder, object =>
+      coreObjectPredIntro depDomain coreOrder object ->
+      coreObjectPredIntro depCodomain
+        (fst $ coreObjectFunctor functor coreOrder object)
+        (snd $ coreObjectFunctor functor coreOrder object))
+CoreObjectDepFunctorSigToEliminatorSig {depDomain} {depCodomain} {functor}
+  signature =
+    ?CoreObjectDepFunctorSigToEliminatorSig_hole
+
+public export
+coreObjectDepFunctor :
+  {depDomain, depCodomain : CoreObjectPredIntroSig} ->
+  {functor : CoreObjectFunctorSig} ->
+  CoreObjectDepFunctorSig depDomain depCodomain functor ->
+  CoreObjectDepFunctor depDomain depCodomain functor
+coreObjectDepFunctor signature =
+  coreObjectEliminator (CoreObjectDepFunctorSigToEliminatorSig signature)
+
 --------------------------------------------------------------------------------
 ---- Morphisms of the "core" logic (which underlies Geb) -----------------------
 --------------------------------------------------------------------------------
@@ -365,10 +441,6 @@ Ord CoreObjectOrder where
 --------------------------------------------------------------------------------
 ---- S-expression representation of core logic objects -------------------------
 --------------------------------------------------------------------------------
-
-public export
-CoreOrderedObject : Type
-CoreOrderedObject = DPair CoreObjectOrder CoreObject
 
 public export
 MkCoreOrderedObject : {coreOrder : CoreObjectOrder} -> CoreObject coreOrder ->
