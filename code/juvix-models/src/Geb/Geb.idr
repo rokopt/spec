@@ -500,7 +500,28 @@ coreSignedMorphismToSExp (_ ** _ ** morphism) = coreMorphismToSExp morphism
 public export
 coreMorphismFromSExp_certified : (x : GebSExp) ->
   Maybe (morphism : CoreSignedMorphism ** coreSignedMorphismToSExp morphism = x)
-coreMorphismFromSExp_certified x = ?coreMorphismFromSExp_certified_hole
+coreMorphismFromSExp_certified (GAIdentity $* [object]) =
+  case coreObjectFromSExp_certified object of
+    Just ((_ ** coreObject) ** correct) =>
+      Just (MkCoreSignedMorphism (CoreIdentity coreObject) **
+            rewrite correct in Refl)
+    Nothing => Nothing
+coreMorphismFromSExp_certified (GACompose $* [g, f]) =
+  case (coreMorphismFromSExp_certified g,
+        coreMorphismFromSExp_certified f) of
+    (Just (((domainOrder ** domain) ** (codomainOrder ** codomain) ** mg) **
+           gCorrect),
+     Just (((domainOrder' ** domain') ** (codomainOrder' ** codomain') ** mf) **
+           fCorrect)) =>
+      case decEq domainOrder codomainOrder' of
+        Yes Refl => case decEq domain codomain' of
+          Yes Refl =>
+            Just (MkCoreSignedMorphism (CoreCompose mg mf) **
+                  rewrite gCorrect in rewrite fCorrect in Refl)
+          No _ => Nothing
+        No _ => Nothing
+    _ => Nothing
+coreMorphismFromSExp_certified _ = Nothing
 
 public export
 coreMorphismFromSExp : GebSExp -> Maybe CoreSignedMorphism
