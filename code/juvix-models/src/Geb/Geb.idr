@@ -347,9 +347,17 @@ coreObjectEncodingCorrect =
     coreObjectFromSExp_certified
 
 public export
-coreObjectEncodingComplete : (object : CoreOrderedObject) ->
-  coreObjectFromSExp (coreOrderedObjectToSExp object) = Just object
+coreObjectEncodingComplete : {coreOrder : CoreObjectOrder} ->
+  (object : CoreObject coreOrder) ->
+  coreObjectFromSExp (coreObjectToSExp object) =
+    Just (MkCoreOrderedObject object)
 coreObjectEncodingComplete object = ?coreObjectEncodingComplete_hole
+
+public export
+coreOrderedObjectEncodingComplete : (object : CoreOrderedObject) ->
+  coreObjectFromSExp (coreOrderedObjectToSExp object) = Just object
+coreOrderedObjectEncodingComplete (_ ** object) =
+  coreObjectEncodingComplete object
 
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression object representation -----------------
@@ -368,7 +376,7 @@ DecEq CoreOrderedObject where
   decEq =
     encodingDecEq
       coreOrderedObjectToSExp coreObjectFromSExp
-      coreObjectEncodingComplete decEq
+      coreOrderedObjectEncodingComplete decEq
 
 public export
 Ord CoreOrderedObject where
@@ -447,9 +455,18 @@ coreMorphismEncodingCorrect =
     coreSignedMorphismToSExp coreMorphismFromSExp_certified
 
 public export
-coreMorphismEncodingComplete : (morphism : CoreSignedMorphism) ->
-  coreMorphismFromSExp (coreSignedMorphismToSExp morphism) = Just morphism
+coreMorphismEncodingComplete : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  (morphism : CoreMorphism domain codomain) ->
+  coreMorphismFromSExp (coreMorphismToSExp morphism) =
+    Just (MkCoreSignedMorphism morphism)
 coreMorphismEncodingComplete morphism = ?coreMorphismEncodingComplete_hole
+
+public export
+coreSignedMorphismEncodingComplete : (morphism : CoreSignedMorphism) ->
+  coreMorphismFromSExp (coreSignedMorphismToSExp morphism) = Just morphism
+coreSignedMorphismEncodingComplete ((_ ** _) ** (_ ** _) ** morphism) =
+  coreMorphismEncodingComplete morphism
 
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression morphism representation ---------------
@@ -468,7 +485,7 @@ DecEq CoreSignedMorphism where
   decEq =
     encodingDecEq
       coreSignedMorphismToSExp coreMorphismFromSExp
-      coreMorphismEncodingComplete decEq
+      coreSignedMorphismEncodingComplete decEq
 
 public export
 Ord CoreSignedMorphism where
