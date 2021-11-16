@@ -429,6 +429,20 @@ coreMorphismFunctor :
 coreMorphismFunctor objectFunctor signature morphism =
   coreMorphismEliminator signature morphism
 
+public export
+CoreMorphismDepFunctor :
+  (depDomain, depCodomain : CoreMorphismPredIntroSig) ->
+  (objectFunctor : CoreObjectFunctorSig) ->
+  CoreMorphismFunctorSig objectFunctor ->
+  Type
+CoreMorphismDepFunctor depDomain depCodomain objectFunctor morphismFunctor =
+  {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  (morphism : CoreMorphism domain codomain) ->
+  coreMorphismPredIntro depDomain morphism ->
+  coreMorphismPredIntro depCodomain
+    (coreMorphismFunctor objectFunctor morphismFunctor morphism)
+
 --------------------------------------------------------------------------------
 ---- S-expression representation of core orders --------------------------------
 --------------------------------------------------------------------------------
