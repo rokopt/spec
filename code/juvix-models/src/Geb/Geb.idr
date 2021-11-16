@@ -118,8 +118,8 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
 
     CoreAlgebraicEval :
       {codomainOrder : CoreObjectOrder} ->
-      {domain : CoreObject CoreFirstOrder} ->
-      {codomain : CoreObject codomainOrder} ->
+      (domain : CoreObject CoreFirstOrder) ->
+      (codomain : CoreObject codomainOrder) ->
       CoreMorphism
         (CoreProduct
           (CoreExponential domain codomain) (CorePromote domain)) codomain
@@ -485,7 +485,8 @@ coreMorphismToSExp (CoreCoproductIntroRight leftCodomain rightCodomain) =
     [coreObjectToSExp leftCodomain, coreObjectToSExp rightCodomain]
 coreMorphismToSExp (CoreCoproductElim left right) =
   GACoproductElim $* [coreMorphismToSExp left, coreMorphismToSExp right]
-coreMorphismToSExp CoreAlgebraicEval = $^ GAExponentialEval
+coreMorphismToSExp (CoreAlgebraicEval domain codomain) =
+  GAExponentialEval $* [coreObjectToSExp domain, coreObjectToSExp codomain]
 coreMorphismToSExp (CoreAlgebraicCurry f) = GACurry $*** coreMorphismToSExp f
 coreMorphismToSExp
   (CoreDecideEquality leftInput rightInput equalCase notEqualCase) =
@@ -557,6 +558,10 @@ coreMorphismFromSExp_certified (GAProductIntro $* [left, right]) =
           No _ => Nothing
         _ => Nothing
     _ => Nothing
+coreMorphismFromSExp_certified (GAProductElimLeft $* [left, right]) =
+  ?coreMorphismFromSExp_certified_hole_product_elim_left
+coreMorphismFromSExp_certified (GAProductElimRight $* [left, right]) =
+  ?coreMorphismFromSExp_certified_hole_product_elim_right
 coreMorphismFromSExp_certified (GACoproductElim $* [left, right]) =
   case (coreMorphismFromSExp_certified left,
         coreMorphismFromSExp_certified right) of
@@ -578,6 +583,17 @@ coreMorphismFromSExp_certified (GACoproductElim $* [left, right]) =
           No _ => Nothing
         _ => Nothing
     _ => Nothing
+coreMorphismFromSExp_certified (GACoproductIntroLeft $* [left, right]) =
+  ?coreMorphismFromSExp_certified_hole_coproduct_intro_left
+coreMorphismFromSExp_certified (GACoproductIntroRight $* [left, right]) =
+  ?coreMorphismFromSExp_certified_hole_coproduct_intro_right
+coreMorphismFromSExp_certified (GAExponentialEval $* []) =
+  ?coreMorphismFromSExp_certified_hole_exponential_eval
+coreMorphismFromSExp_certified (GACurry $* [f]) =
+  ?coreMorphismFromSExp_certified_hole_curry
+coreMorphismFromSExp_certified
+  (GADecideEquality $* [leftInput, rightInput, equalCase, notEqualCase]) =
+    ?coreMorphismFromSExp_certified_hole_decide_equality
 coreMorphismFromSExp_certified _ = Nothing
 
 public export
@@ -764,7 +780,7 @@ mutual
     case term of
       Left leftTerm => interpretCoreMorphism left leftTerm
       Right rightTerm => interpretCoreMorphism right rightTerm
-  interpretCoreMorphism CoreAlgebraicEval = \p => fst p $ snd p
+  interpretCoreMorphism (CoreAlgebraicEval _ _) = \p => fst p $ snd p
   interpretCoreMorphism (CoreAlgebraicCurry f) =
     \x, y => interpretCoreMorphism f (x, y)
   interpretCoreMorphism
