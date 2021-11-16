@@ -130,6 +130,7 @@ data GebAtom : Type where
   GAOrder : GebAtom
   GATuringComplete : GebAtom
   GAPromoteFinite : GebAtom
+  GAPromoteToSecond : GebAtom
   GAPromoteTuringComplete : GebAtom
   GAFiniteOrder : GebAtom
 
@@ -227,6 +228,7 @@ gaEncode GAZerothOrderType = 78
 gaEncode GAZerothOrderTerm = 79
 gaEncode GAFirstOrder = 80
 gaEncode GASecondOrder = 81
+gaEncode GAPromoteToSecond = 82
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -312,6 +314,7 @@ gaDecode 78 = Just GAZerothOrderType
 gaDecode 79 = Just GAZerothOrderTerm
 gaDecode 80 = Just GAFirstOrder
 gaDecode 81 = Just GASecondOrder
+gaDecode 82 = Just GAPromoteToSecond
 gaDecode _ = Nothing
 
 export
@@ -398,6 +401,7 @@ gaDecodeEncodeIsJust GAZerothOrderType = Refl
 gaDecodeEncodeIsJust GAZerothOrderTerm = Refl
 gaDecodeEncodeIsJust GAFirstOrder = Refl
 gaDecodeEncodeIsJust GASecondOrder = Refl
+gaDecodeEncodeIsJust GAPromoteToSecond = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -483,6 +487,7 @@ gebAtomToString GAZerothOrderType = "ZerothOrderType"
 gebAtomToString GAZerothOrderTerm = "ZerothOrderTerm"
 gebAtomToString GAFirstOrder = "FirstOrder"
 gebAtomToString GASecondOrder = "SecondOrder"
+gebAtomToString GAPromoteToSecond = "PromoteToSecond"
 
 public export
 Show GebAtom where

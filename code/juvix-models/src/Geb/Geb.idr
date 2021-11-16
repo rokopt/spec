@@ -211,28 +211,35 @@ MkCoreOrderedObject : {coreOrder : CoreObjectOrder} -> CoreObject coreOrder ->
 MkCoreOrderedObject {coreOrder} object = (coreOrder ** object)
 
 public export
-coreObjectToSExp : CoreOrderedObject -> GebSExp
-coreObjectToSExp (coreOrder ** object) = ?coreObjectToSExp_hole
+coreObjectToSExp : {coreOrder : CoreObjectOrder} -> CoreObject coreOrder ->
+  GebSExp
+coreObjectToSExp object = ?coreObjectToSExp_hole
+
+public export
+coreOrderedObjectToSExp : CoreOrderedObject -> GebSExp
+coreOrderedObjectToSExp (_ ** object) = coreObjectToSExp object
 
 public export
 coreObjectFromSExp_certified : (x : GebSExp) ->
-  Maybe (object : CoreOrderedObject ** coreObjectToSExp object = x)
+  Maybe (object : CoreOrderedObject ** coreOrderedObjectToSExp object = x)
 coreObjectFromSExp_certified x = ?coreObjectFromSExp_certified_hole
 
 public export
 coreObjectFromSExp : GebSExp -> Maybe CoreOrderedObject
 coreObjectFromSExp =
-  certifiedMaybeToMaybe coreObjectToSExp coreObjectFromSExp_certified
+  certifiedMaybeToMaybe coreOrderedObjectToSExp coreObjectFromSExp_certified
 
 public export
 coreObjectEncodingCorrect : (x : GebSExp) -> (object : CoreOrderedObject) ->
-  coreObjectFromSExp x = Just object -> coreObjectToSExp object = x
+  coreObjectFromSExp x = Just object -> coreOrderedObjectToSExp object = x
 coreObjectEncodingCorrect =
-  certifiedMaybeToCorrectness coreObjectToSExp coreObjectFromSExp_certified
+  certifiedMaybeToCorrectness
+    coreOrderedObjectToSExp
+    coreObjectFromSExp_certified
 
 public export
 coreObjectEncodingComplete : (object : CoreOrderedObject) ->
-  coreObjectFromSExp (coreObjectToSExp object) = Just object
+  coreObjectFromSExp (coreOrderedObjectToSExp object) = Just object
 coreObjectEncodingComplete object = ?coreObjectEncodingComplete_hole
 
 --------------------------------------------------------------------------------
@@ -260,22 +267,22 @@ Ord CoreObjectOrder where
 
 public export
 [CoreOrderedObjectShow] Show CoreOrderedObject where
-  show = show . coreObjectToSExp
+  show = show . coreOrderedObjectToSExp
 
 public export
 Eq CoreOrderedObject where
-  o == o' = coreObjectToSExp o == coreObjectToSExp o'
+  o == o' = coreOrderedObjectToSExp o == coreOrderedObjectToSExp o'
 
 public export
 DecEq CoreOrderedObject where
   decEq =
     encodingDecEq
-      coreObjectToSExp coreObjectFromSExp
+      coreOrderedObjectToSExp coreObjectFromSExp
       coreObjectEncodingComplete decEq
 
 public export
 Ord CoreOrderedObject where
-  o < o' = coreObjectToSExp o < coreObjectToSExp o'
+  o < o' = coreOrderedObjectToSExp o < coreOrderedObjectToSExp o'
 
 public export
 coreObjectDecEq : {coreOrder : CoreObjectOrder} ->
@@ -321,30 +328,37 @@ MkCoreSignedMorphism {domain} {codomain} morphism =
   (MkCoreOrderedObject domain ** MkCoreOrderedObject codomain ** morphism)
 
 public export
-coreMorphismToSExp : CoreSignedMorphism -> GebSExp
-coreMorphismToSExp (domain ** codomain ** morphism) = ?coreMorphismToSExp_hole
+coreMorphismToSExp : {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  CoreMorphism domain codomain -> GebSExp
+coreMorphismToSExp m = ?coreMorphismToSExp_hole
+
+public export
+coreSignedMorphismToSExp : CoreSignedMorphism -> GebSExp
+coreSignedMorphismToSExp (_ ** _ ** morphism) = coreMorphismToSExp morphism
 
 public export
 coreMorphismFromSExp_certified : (x : GebSExp) ->
-  Maybe (morphism : CoreSignedMorphism ** coreMorphismToSExp morphism = x)
+  Maybe (morphism : CoreSignedMorphism ** coreSignedMorphismToSExp morphism = x)
 coreMorphismFromSExp_certified x = ?coreMorphismFromSExp_certified_hole
 
 public export
 coreMorphismFromSExp : GebSExp -> Maybe CoreSignedMorphism
 coreMorphismFromSExp =
-  certifiedMaybeToMaybe coreMorphismToSExp coreMorphismFromSExp_certified
+  certifiedMaybeToMaybe coreSignedMorphismToSExp coreMorphismFromSExp_certified
 
 public export
 coreMorphismEncodingCorrect : (x : GebSExp) ->
   (morphism : CoreSignedMorphism) ->
   coreMorphismFromSExp x = Just morphism ->
-  coreMorphismToSExp morphism = x
+  coreSignedMorphismToSExp morphism = x
 coreMorphismEncodingCorrect =
-  certifiedMaybeToCorrectness coreMorphismToSExp coreMorphismFromSExp_certified
+  certifiedMaybeToCorrectness
+    coreSignedMorphismToSExp coreMorphismFromSExp_certified
 
 public export
 coreMorphismEncodingComplete : (morphism : CoreSignedMorphism) ->
-  coreMorphismFromSExp (coreMorphismToSExp morphism) = Just morphism
+  coreMorphismFromSExp (coreSignedMorphismToSExp morphism) = Just morphism
 coreMorphismEncodingComplete morphism = ?coreMorphismEncodingComplete_hole
 
 --------------------------------------------------------------------------------
@@ -353,22 +367,22 @@ coreMorphismEncodingComplete morphism = ?coreMorphismEncodingComplete_hole
 
 public export
 Show CoreSignedMorphism where
-  show = show . coreMorphismToSExp
+  show = show . coreSignedMorphismToSExp
 
 public export
 Eq CoreSignedMorphism where
-  m == m' = coreMorphismToSExp m == coreMorphismToSExp m'
+  m == m' = coreSignedMorphismToSExp m == coreSignedMorphismToSExp m'
 
 public export
 DecEq CoreSignedMorphism where
   decEq =
     encodingDecEq
-      coreMorphismToSExp coreMorphismFromSExp
+      coreSignedMorphismToSExp coreMorphismFromSExp
       coreMorphismEncodingComplete decEq
 
 public export
 Ord CoreSignedMorphism where
-  m < m' = coreMorphismToSExp m < coreMorphismToSExp m'
+  m < m' = coreSignedMorphismToSExp m < coreSignedMorphismToSExp m'
 
 public export
 coreMorphismDecEq : {domainOrder, codomainOrder : CoreObjectOrder} ->
