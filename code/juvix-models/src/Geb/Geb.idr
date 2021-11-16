@@ -196,10 +196,17 @@ coreOrderEncodingCorrect =
   certifiedMaybeToCorrectness coreOrderToSExp coreOrderFromSExp_certified
 
 public export
+coreOrderEncodingComplete_certified : (coreOrder : CoreObjectOrder) ->
+  coreOrderFromSExp_certified (coreOrderToSExp coreOrder) =
+    Just (coreOrder ** Refl)
+coreOrderEncodingComplete_certified CoreFirstOrder = Refl
+coreOrderEncodingComplete_certified CoreSecondOrder = Refl
+
+public export
 coreOrderEncodingComplete : (coreOrder : CoreObjectOrder) ->
   coreOrderFromSExp (coreOrderToSExp coreOrder) = Just coreOrder
-coreOrderEncodingComplete CoreFirstOrder = Refl
-coreOrderEncodingComplete CoreSecondOrder = Refl
+coreOrderEncodingComplete coreOrder =
+  cong (map DPair.fst) (coreOrderEncodingComplete_certified coreOrder)
 
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression order representation ------------------
@@ -262,17 +269,6 @@ coreOrderedObjectToSExp (_ ** object) = coreObjectToSExp object
 public export
 coreObjectFromSExp_certified : (x : GebSExp) ->
   Maybe (object : CoreOrderedObject ** coreOrderedObjectToSExp object = x)
-coreObjectFromSExp_certified (GAPromoteToSecond $* [object]) =
-  case coreObjectFromSExp_certified object of
-    Just ((CoreFirstOrder ** firstOrderObject) ** correct) =>
-      Just
-        ((CoreSecondOrder ** CorePromote firstOrderObject) **
-         rewrite correct in Refl)
-    _ => Nothing
-coreObjectFromSExp_certified (GAInitial $* []) =
-  Just ((CoreFirstOrder ** CoreInitial) ** Refl)
-coreObjectFromSExp_certified (GATerminal $* []) =
-  Just ((CoreFirstOrder ** CoreTerminal) ** Refl)
 coreObjectFromSExp_certified (GAProduct $* [first, second]) =
   case
     (coreObjectFromSExp_certified first,
@@ -313,6 +309,17 @@ coreObjectFromSExp_certified (GAExponential $* [domain, codomain]) =
               rewrite sym codomainCorrect in
               Refl)
       _ => Nothing
+coreObjectFromSExp_certified (GAPromoteToSecond $* [object]) =
+  case coreObjectFromSExp_certified object of
+    Just ((CoreFirstOrder ** firstOrderObject) ** correct) =>
+      Just
+        ((CoreSecondOrder ** CorePromote firstOrderObject) **
+         rewrite correct in Refl)
+    _ => Nothing
+coreObjectFromSExp_certified (GAInitial $* []) =
+  Just ((CoreFirstOrder ** CoreInitial) ** Refl)
+coreObjectFromSExp_certified (GATerminal $* []) =
+  Just ((CoreFirstOrder ** CoreTerminal) ** Refl)
 coreObjectFromSExp_certified (GAObjectReflector $* [coreOrder]) =
   case coreOrderFromSExp_certified coreOrder of
     Just (reflectedObjectOrder ** correct) =>
@@ -349,15 +356,40 @@ coreObjectEncodingCorrect =
 public export
 coreObjectEncodingComplete : {coreOrder : CoreObjectOrder} ->
   (object : CoreObject coreOrder) ->
-  coreObjectFromSExp (coreObjectToSExp object) =
-    Just (MkCoreOrderedObject object)
-coreObjectEncodingComplete object = ?coreObjectEncodingComplete_hole
+  coreObjectFromSExp_certified (coreObjectToSExp object) =
+    Just ((MkCoreOrderedObject object) ** Refl)
+coreObjectEncodingComplete (CorePromote object) =
+  rewrite coreObjectEncodingComplete object in
+  Refl
+coreObjectEncodingComplete CoreInitial = Refl
+coreObjectEncodingComplete CoreTerminal = Refl
+coreObjectEncodingComplete (CoreProduct {coreOrder} first second) =
+  rewrite coreObjectEncodingComplete first in
+  rewrite coreObjectEncodingComplete second in
+  rewrite decEqRefl decEq coreOrder in
+  Refl
+coreObjectEncodingComplete (CoreCoproduct {coreOrder} left right) =
+  rewrite coreObjectEncodingComplete left in
+  rewrite coreObjectEncodingComplete right in
+  rewrite decEqRefl decEq coreOrder in
+  Refl
+coreObjectEncodingComplete (CoreExponential domain codomain) =
+  rewrite coreObjectEncodingComplete domain in
+  rewrite coreObjectEncodingComplete codomain in
+  Refl
+coreObjectEncodingComplete (CoreObjectReflector coreOrder) =
+  rewrite coreOrderEncodingComplete_certified coreOrder in
+  Refl
+coreObjectEncodingComplete (CoreMorphismReflector domain codomain) =
+  rewrite coreObjectEncodingComplete domain in
+  rewrite coreObjectEncodingComplete codomain in
+  Refl
 
 public export
 coreOrderedObjectEncodingComplete : (object : CoreOrderedObject) ->
   coreObjectFromSExp (coreOrderedObjectToSExp object) = Just object
 coreOrderedObjectEncodingComplete (_ ** object) =
-  coreObjectEncodingComplete object
+  cong (map DPair.fst) (coreObjectEncodingComplete object)
 
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression object representation -----------------
@@ -458,15 +490,15 @@ public export
 coreMorphismEncodingComplete : {domainOrder, codomainOrder : CoreObjectOrder} ->
   {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
   (morphism : CoreMorphism domain codomain) ->
-  coreMorphismFromSExp (coreMorphismToSExp morphism) =
-    Just (MkCoreSignedMorphism morphism)
+  coreMorphismFromSExp_certified (coreMorphismToSExp morphism) =
+    Just ((MkCoreSignedMorphism morphism) ** Refl)
 coreMorphismEncodingComplete morphism = ?coreMorphismEncodingComplete_hole
 
 public export
 coreSignedMorphismEncodingComplete : (morphism : CoreSignedMorphism) ->
   coreMorphismFromSExp (coreSignedMorphismToSExp morphism) = Just morphism
 coreSignedMorphismEncodingComplete ((_ ** _) ** (_ ** _) ** morphism) =
-  coreMorphismEncodingComplete morphism
+  cong (map DPair.fst) (coreMorphismEncodingComplete morphism)
 
 --------------------------------------------------------------------------------
 ---- Instances derived from S-expression morphism representation ---------------
