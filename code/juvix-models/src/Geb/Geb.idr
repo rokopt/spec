@@ -313,6 +313,24 @@ coreObjectFromSExp_certified (GAExponential $* [domain, codomain]) =
               rewrite sym codomainCorrect in
               Refl)
       _ => Nothing
+coreObjectFromSExp_certified (GAObjectReflector $* [coreOrder]) =
+  case coreOrderFromSExp_certified coreOrder of
+    Just (reflectedObjectOrder ** correct) =>
+      Just ((CoreFirstOrder ** CoreObjectReflector reflectedObjectOrder) **
+            rewrite correct in Refl)
+    _ => Nothing
+coreObjectFromSExp_certified (GAMorphismReflector $* [domain, codomain]) =
+  case
+    (coreObjectFromSExp_certified domain,
+     coreObjectFromSExp_certified codomain) of
+      (Just ((domainOrder ** domainObject) ** domainCorrect),
+       Just ((codomainOrder ** codomainObject) ** codomainCorrect)) =>
+        Just ((CoreFirstOrder **
+               CoreMorphismReflector domainObject codomainObject) **
+              rewrite sym domainCorrect in
+              rewrite sym codomainCorrect in
+              Refl)
+      _ => Nothing
 coreObjectFromSExp_certified _ = Nothing
 
 public export
