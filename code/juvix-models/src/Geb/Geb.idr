@@ -953,9 +953,33 @@ coreMorphismFromSExp_certified (GAProductIntro $* [left, right]) =
         _ => Nothing
     _ => Nothing
 coreMorphismFromSExp_certified (GAProductElimLeft $* [left, right]) =
-  ?coreMorphismFromSExp_certified_hole_product_elim_left
+  case (coreObjectFromSExp_certified left,
+        coreObjectFromSExp_certified right) of
+    (Just ((leftDomainOrder ** leftDomain) ** leftCorrect),
+     Just ((rightDomainOrder ** rightDomain) ** rightCorrect)) =>
+      case decEq leftDomainOrder rightDomainOrder of
+        Yes Refl => Just (MkCoreSignedMorphism
+                            (CoreProductElimLeft leftDomain rightDomain) **
+                          case leftCorrect of
+                            Refl => case rightCorrect of
+                              Refl =>
+                                ?cMFSExp_certified_hole_prod_elim_left_correct)
+        No _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified (GAProductElimRight $* [left, right]) =
-  ?coreMorphismFromSExp_certified_hole_product_elim_right
+  case (coreObjectFromSExp_certified left,
+        coreObjectFromSExp_certified right) of
+    (Just ((leftDomainOrder ** leftDomain) ** leftCorrect),
+     Just ((rightDomainOrder ** rightDomain) ** rightCorrect)) =>
+      case decEq leftDomainOrder rightDomainOrder of
+        Yes Refl => Just (MkCoreSignedMorphism
+                            (CoreProductElimRight leftDomain rightDomain) **
+                          case leftCorrect of
+                            Refl => case rightCorrect of
+                              Refl =>
+                                ?cMFSExp_certified_hole_prod_elim_right_correct)
+        No _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified (GACoproductElim $* [left, right]) =
   case (coreMorphismFromSExp_certified left,
         coreMorphismFromSExp_certified right) of
@@ -979,9 +1003,35 @@ coreMorphismFromSExp_certified (GACoproductElim $* [left, right]) =
         _ => Nothing
     _ => Nothing
 coreMorphismFromSExp_certified (GACoproductIntroLeft $* [left, right]) =
-  ?coreMorphismFromSExp_certified_hole_coproduct_intro_left
+  case (coreObjectFromSExp_certified left,
+        coreObjectFromSExp_certified right) of
+    (Just ((leftCodomainOrder ** leftCodomain) ** leftCorrect),
+     Just ((rightCodomainOrder ** rightCodomain) ** rightCorrect)) =>
+      case decEq leftCodomainOrder rightCodomainOrder of
+        Yes Refl => Just (MkCoreSignedMorphism
+                            (CoreCoproductIntroLeft
+                              leftCodomain rightCodomain) **
+                          case leftCorrect of
+                            Refl => case rightCorrect of
+                              Refl =>
+                                ?cMFSExp_cert_hole_coprod_intro_left_correct)
+        No _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified (GACoproductIntroRight $* [left, right]) =
-  ?coreMorphismFromSExp_certified_hole_coproduct_intro_right
+  case (coreObjectFromSExp_certified left,
+        coreObjectFromSExp_certified right) of
+    (Just ((leftCodomainOrder ** leftCodomain) ** leftCorrect),
+     Just ((rightCodomainOrder ** rightCodomain) ** rightCorrect)) =>
+      case decEq leftCodomainOrder rightCodomainOrder of
+        Yes Refl => Just (MkCoreSignedMorphism
+                            (CoreCoproductIntroRight
+                              leftCodomain rightCodomain) **
+                          case leftCorrect of
+                            Refl => case rightCorrect of
+                              Refl =>
+                                ?cMFSExp_cert_hole_coprod_intro_right_correct)
+        No _ => Nothing
+    _ => Nothing
 coreMorphismFromSExp_certified (GAExponentialEval $* []) =
   ?coreMorphismFromSExp_certified_hole_exponential_eval
 coreMorphismFromSExp_certified (GACurry $* [f]) =
