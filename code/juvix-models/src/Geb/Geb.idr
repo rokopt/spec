@@ -373,6 +373,29 @@ coreMorphismEliminator {domainOrder} {codomainOrder} {domain} {codomain}
   signature (CoreDecideEquality leftInput rightInput equalCase notEqualCase) =
     ?coreMorphismEliminator_hole_deceq
 
+public export
+CoreSignedMorphism : Type
+CoreSignedMorphism =
+  (domain : CoreOrderedObject ** codomain : CoreOrderedObject **
+   CoreMorphism (snd domain) (snd codomain))
+
+public export
+CoreMorphismPredIntroPred : CoreMorphismPred
+CoreMorphismPredIntroPred _ _ _ _ _ = Type
+
+public export
+CoreMorphismPredIntroSig : Type
+CoreMorphismPredIntroSig = CoreMorphismEliminatorSig CoreMorphismPredIntroPred
+
+public export
+coreMorphismPredIntro :
+  CoreMorphismPredIntroSig ->
+  {domainOrder, codomainOrder : CoreObjectOrder} ->
+  {domain : CoreObject domainOrder} -> {codomain : CoreObject codomainOrder} ->
+  (morphism : CoreMorphism domain codomain) ->
+  Type
+coreMorphismPredIntro signature = coreMorphismEliminator signature
+
 --------------------------------------------------------------------------------
 ---- S-expression representation of core orders --------------------------------
 --------------------------------------------------------------------------------
@@ -646,12 +669,6 @@ public export
 --------------------------------------------------------------------------------
 ---- S-expression representation of core logic morphisms -----------------------
 --------------------------------------------------------------------------------
-
-public export
-CoreSignedMorphism : Type
-CoreSignedMorphism =
-  (domain : CoreOrderedObject ** codomain : CoreOrderedObject **
-   CoreMorphism (snd domain) (snd codomain))
 
 public export
 MkCoreSignedMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
