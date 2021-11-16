@@ -329,6 +329,55 @@ record CoreMorphismEliminatorSig (pred : CoreMorphismPred) where
     pred orderB orderC b c g ->
     pred orderA orderB a b f ->
     pred orderA orderC a c (CoreCompose g f)
+  fromInitElim : (codomainOrder : CoreObjectOrder) ->
+    (codomain : CoreObject codomainOrder) ->
+    pred CoreFirstOrder codomainOrder CoreInitial codomain
+      (CoreFromInitial codomain)
+  toTerminalElim : (domainOrder : CoreObjectOrder) ->
+    (domain : CoreObject domainOrder) ->
+    pred domainOrder CoreFirstOrder domain CoreTerminal
+      (CoreToTerminal domain)
+  productIntroElim :
+    (domainOrder, codomainOrder : CoreObjectOrder) ->
+    (domain : CoreObject domainOrder) ->
+    (leftCodomain, rightCodomain : CoreObject codomainOrder) ->
+    (first : CoreMorphism domain leftCodomain) ->
+    (second : CoreMorphism domain rightCodomain) ->
+    pred domainOrder codomainOrder domain leftCodomain first ->
+    pred domainOrder codomainOrder domain rightCodomain second ->
+    pred domainOrder codomainOrder domain
+      (CoreProduct leftCodomain rightCodomain) (CoreProductIntro first second)
+  prodElimLeftElim : (domainOrder : CoreObjectOrder) ->
+    (leftDomain, rightDomain : CoreObject domainOrder) ->
+    pred domainOrder domainOrder
+      (CoreProduct leftDomain rightDomain) leftDomain
+      (CoreProductElimLeft leftDomain rightDomain)
+  prodElimRightElim : (domainOrder : CoreObjectOrder) ->
+    (leftDomain, rightDomain : CoreObject domainOrder) ->
+    pred domainOrder domainOrder
+      (CoreProduct leftDomain rightDomain) rightDomain
+      (CoreProductElimRight leftDomain rightDomain)
+  coprodIntroLeftElim : (codomainOrder : CoreObjectOrder) ->
+    (leftCodomain, rightCodomain : CoreObject codomainOrder) ->
+    pred codomainOrder codomainOrder
+      leftCodomain (CoreCoproduct leftCodomain rightCodomain)
+      (CoreCoproductIntroLeft leftCodomain rightCodomain)
+  coprodIntroRightElim : (codomainOrder : CoreObjectOrder) ->
+    (leftCodomain, rightCodomain : CoreObject codomainOrder) ->
+    pred codomainOrder codomainOrder
+      rightCodomain (CoreCoproduct leftCodomain rightCodomain)
+      (CoreCoproductIntroRight leftCodomain rightCodomain)
+  coproductElimElim :
+    (domainOrder, codomainOrder : CoreObjectOrder) ->
+    (leftDomain, rightDomain : CoreObject domainOrder) ->
+    (codomain : CoreObject codomainOrder) ->
+    (left : CoreMorphism leftDomain codomain) ->
+    (right : CoreMorphism rightDomain codomain) ->
+    pred domainOrder codomainOrder leftDomain codomain left ->
+    pred domainOrder codomainOrder rightDomain codomain right ->
+    pred domainOrder codomainOrder
+      (CoreCoproduct leftDomain rightDomain) codomain
+      (CoreCoproductElim left right)
 
 public export
 coreMorphismEliminator : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -344,25 +393,33 @@ coreMorphismEliminator
       (coreMorphismEliminator signature g)
       (coreMorphismEliminator signature f)
 coreMorphismEliminator signature (CoreFromInitial {codomainOrder} codomain) =
-  ?coreMorphismEliminator_hole_frominit
+  fromInitElim signature codomainOrder codomain
 coreMorphismEliminator signature (CoreToTerminal {domainOrder} domain) =
-  ?coreMorphismEliminator_hole_toterm
+  toTerminalElim signature domainOrder domain
 coreMorphismEliminator {domainOrder} {codomainOrder} {domain}
   signature (CoreProductIntro {leftCodomain} {rightCodomain} first second) =
-    ?coreMorphismEliminator_hole_prointro
-coreMorphismEliminator signature (CoreProductElimLeft leftDomain rightDomain) =
-  ?coreMorphismEliminator_hole_proelimleft
-coreMorphismEliminator signature (CoreProductElimRight leftDomain rightDomain) =
-  ?coreMorphismEliminator_hole_proelimright
+    productIntroElim signature
+      domainOrder codomainOrder domain leftCodomain rightCodomain first second
+      (coreMorphismEliminator signature first)
+      (coreMorphismEliminator signature second)
+coreMorphismEliminator signature
+  (CoreProductElimLeft {domainOrder} leftDomain rightDomain) =
+    prodElimLeftElim signature domainOrder leftDomain rightDomain
+coreMorphismEliminator signature
+  (CoreProductElimRight {domainOrder} leftDomain rightDomain) =
+    prodElimRightElim signature domainOrder leftDomain rightDomain
 coreMorphismEliminator
   signature (CoreCoproductIntroLeft leftCodomain rightCodomain) =
-    ?coreMorphismEliminator_hole_coprointroleft
+    coprodIntroLeftElim signature codomainOrder leftCodomain rightCodomain
 coreMorphismEliminator
   signature (CoreCoproductIntroRight leftCodomain rightCodomain) =
-    ?coreMorphismEliminator_hole_coprointroright
-coreMorphismEliminator
-  signature (CoreCoproductElim leftCodomain rightCodomain) =
-    ?coreMorphismEliminator_hole_coproelim
+    coprodIntroRightElim signature codomainOrder leftCodomain rightCodomain
+coreMorphismEliminator {domainOrder} {codomainOrder} {codomain}
+  signature (CoreCoproductElim {leftDomain} {rightDomain} left right) =
+    coproductElimElim signature
+      domainOrder codomainOrder leftDomain rightDomain codomain left right
+      (coreMorphismEliminator signature left)
+      (coreMorphismEliminator signature right)
 coreMorphismEliminator {codomainOrder} {codomain}
   signature (CoreAlgebraicEval domain codomain) =
     ?coreMorphismEliminator_hole_algeval
