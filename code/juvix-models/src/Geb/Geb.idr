@@ -378,6 +378,36 @@ record CoreMorphismEliminatorSig (pred : CoreMorphismPred) where
     pred domainOrder codomainOrder
       (CoreCoproduct leftDomain rightDomain) codomain
       (CoreCoproductElim left right)
+  algebraicEvalElim :
+    (codomainOrder : CoreObjectOrder) ->
+    (domain : CoreObject CoreFirstOrder) ->
+    (codomain : CoreObject codomainOrder) ->
+    pred CoreSecondOrder codomainOrder
+      (CoreProduct (CoreExponential domain codomain) (CorePromote domain))
+      codomain
+      (CoreAlgebraicEval domain codomain)
+  curryElim :
+    {codomainOrder : CoreObjectOrder} ->
+    {domainLeft, domainRight : CoreObject CoreFirstOrder} ->
+    {codomain : CoreObject codomainOrder} ->
+    (f : CoreMorphism (CoreProduct domainLeft domainRight) codomain) ->
+    pred CoreFirstOrder codomainOrder
+      (CoreProduct domainLeft domainRight) codomain f ->
+    pred CoreFirstOrder CoreSecondOrder
+      domainLeft (CoreExponential domainRight codomain) (CoreAlgebraicCurry f)
+  decideEqualityElim :
+    {domainOrder, codomainOrder : CoreObjectOrder} ->
+    {domain : CoreObject domainOrder} ->
+    {codomain : CoreObject codomainOrder} ->
+    {comparedType : CoreObject CoreFirstOrder} ->
+    (leftInput, rightInput : CoreMorphism domain comparedType) ->
+    (equalCase, notEqualCase : CoreMorphism domain codomain) ->
+    pred domainOrder CoreFirstOrder domain comparedType leftInput ->
+    pred domainOrder CoreFirstOrder domain comparedType rightInput ->
+    pred domainOrder codomainOrder domain codomain equalCase ->
+    pred domainOrder codomainOrder domain codomain notEqualCase ->
+    pred domainOrder codomainOrder domain codomain
+      (CoreDecideEquality leftInput rightInput equalCase notEqualCase)
 
 public export
 coreMorphismEliminator : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -420,12 +450,12 @@ coreMorphismEliminator {domainOrder} {codomainOrder} {codomain}
       domainOrder codomainOrder leftDomain rightDomain codomain left right
       (coreMorphismEliminator signature left)
       (coreMorphismEliminator signature right)
-coreMorphismEliminator {codomainOrder} {codomain}
+coreMorphismEliminator {codomainOrder}
   signature (CoreAlgebraicEval domain codomain) =
-    ?coreMorphismEliminator_hole_algeval
+    algebraicEvalElim signature codomainOrder domain codomain
 coreMorphismEliminator {domain}
-  {pred} signature (CoreAlgebraicCurry f) =
-    ?coreMorphismEliminator_hole_curry
+  signature (CoreAlgebraicCurry f) =
+    curryElim signature f (coreMorphismEliminator signature f)
 coreMorphismEliminator {domainOrder} {codomainOrder} {domain} {codomain}
   signature (CoreDecideEquality leftInput rightInput equalCase notEqualCase) =
     ?coreMorphismEliminator_hole_deceq
