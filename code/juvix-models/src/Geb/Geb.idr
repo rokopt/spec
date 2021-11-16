@@ -213,7 +213,20 @@ MkCoreOrderedObject {coreOrder} object = (coreOrder ** object)
 public export
 coreObjectToSExp : {coreOrder : CoreObjectOrder} -> CoreObject coreOrder ->
   GebSExp
-coreObjectToSExp object = ?coreObjectToSExp_hole
+coreObjectToSExp (CorePromote object) =
+  GAPromoteToSecond $*** coreObjectToSExp object
+coreObjectToSExp CoreInitial = $^ GAInitial
+coreObjectToSExp CoreTerminal = $^ GATerminal
+coreObjectToSExp (CoreProduct first second) =
+  GAProduct $* [coreObjectToSExp first, coreObjectToSExp second]
+coreObjectToSExp (CoreCoproduct left right) =
+  GACoproduct $* [coreObjectToSExp left, coreObjectToSExp right]
+coreObjectToSExp (CoreExponential domain codomain) =
+  GAExponential $* [coreObjectToSExp domain, coreObjectToSExp codomain]
+coreObjectToSExp (CoreObjectReflector coreOrder) =
+  GAObjectReflector $*** coreOrderToSExp coreOrder
+coreObjectToSExp (CoreMorphismReflector domain codomain) =
+  GAMorphismReflector $* [coreObjectToSExp domain, coreObjectToSExp codomain]
 
 public export
 coreOrderedObjectToSExp : CoreOrderedObject -> GebSExp
@@ -222,7 +235,14 @@ coreOrderedObjectToSExp (_ ** object) = coreObjectToSExp object
 public export
 coreObjectFromSExp_certified : (x : GebSExp) ->
   Maybe (object : CoreOrderedObject ** coreOrderedObjectToSExp object = x)
-coreObjectFromSExp_certified x = ?coreObjectFromSExp_certified_hole
+coreObjectFromSExp_certified (GAPromoteToSecond $* [object]) =
+  case coreObjectFromSExp_certified object of
+    Just ((CoreFirstOrder ** firstOrderObject) ** correct) =>
+      Just
+        ((CoreSecondOrder ** CorePromote firstOrderObject) **
+         rewrite correct in Refl)
+    _ => Nothing
+coreObjectFromSExp_certified _ = Nothing
 
 public export
 coreObjectFromSExp : GebSExp -> Maybe CoreOrderedObject
@@ -1287,7 +1307,7 @@ mutual
         {domainRep, codomainRep : GebSExp} ->
         GebObject domainRep targetCat -> GebObject codomainRep targetCat ->
         GebObject
-          (GAMorphismReflection $*
+          (GAMorphismReflector $*
             [hostCatRep, targetCatRep, domainRep, codomainRep]) hostCat
 
   public export
