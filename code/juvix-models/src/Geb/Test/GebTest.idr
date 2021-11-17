@@ -109,10 +109,19 @@ pairBoolType : GebPType GebTest.zerothOrder GebTest.pairBoolTypeExp
 pairBoolType = compileType zerothOrderExp pairBoolTypeExp
 -}
 
+coreConstUnit : CoreMorphism CoreTerminal CoreTerminal
+coreConstUnit = CoreToTerminal CoreTerminal
+
+coreConstUnitToSExpAndBackCorrect :
+  Geb.coreMorphismFromSExp (Geb.coreMorphismToSExp GebTest.coreConstUnit) =
+    Just (MkCoreSignedMorphism GebTest.coreConstUnit)
+coreConstUnitToSExpAndBackCorrect = Refl
+
 export
 gebTests : IO ()
 gebTests = do
   printLn "Begin gebTests:"
+  printLn $ "Core const unit = " ++ showMorphism coreConstUnit
   {-
   printLn $ "Empty type list = " ++ showTypeList emptyTypeList
   printLn $ "Empty type matrix = " ++ showTypeMatrix emptyTypeMatrix

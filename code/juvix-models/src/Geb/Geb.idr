@@ -471,6 +471,21 @@ CoreSignedMorphism =
    CoreMorphism (snd domain) (snd codomain))
 
 public export
+coreSignedMorphismDomain : CoreSignedMorphism -> CoreOrderedObject
+coreSignedMorphismDomain (domain ** _ ** _) = domain
+
+public export
+coreSignedMorphismCodomain : CoreSignedMorphism -> CoreOrderedObject
+coreSignedMorphismCodomain (_ ** codomain ** _) = codomain
+
+public export
+coreMorphismFromSigned : (morphism : CoreSignedMorphism) ->
+  CoreMorphism
+    (snd $ coreSignedMorphismDomain morphism)
+    (snd $ coreSignedMorphismCodomain morphism)
+coreMorphismFromSigned (_ ** _ ** morphism) = morphism
+
+public export
 CoreMorphismPredIntroPred : CoreMorphismPred
 CoreMorphismPredIntroPred _ _ _ _ _ = Type
 
