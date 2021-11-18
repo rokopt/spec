@@ -145,6 +145,13 @@ data GebAtom : Type where
   GASecondOrder : GebAtom
 
   GADecideEquality : GebAtom
+  GAReflectedObject : GebAtom
+  GAReflectedMorphism : GebAtom
+  GAEndoFixpoint : GebAtom
+  GAEndoCofixpoint : GebAtom
+  GAFixpointEval : GebAtom
+  GACofixpointEval : GebAtom
+  GAComputedType : GebAtom
 
 public export
 gaEncode : GebAtom -> Nat
@@ -232,6 +239,13 @@ gaEncode GAFirstOrder = 80
 gaEncode GASecondOrder = 81
 gaEncode GAPromoteToSecond = 82
 gaEncode GADecideEquality = 83
+gaEncode GAReflectedObject = 84
+gaEncode GAReflectedMorphism = 85
+gaEncode GAEndoFixpoint = 86
+gaEncode GAEndoCofixpoint = 87
+gaEncode GAFixpointEval = 88
+gaEncode GACofixpointEval = 89
+gaEncode GAComputedType = 90
 
 public export
 gaDecode : Nat -> Maybe GebAtom
@@ -319,6 +333,13 @@ gaDecode 80 = Just GAFirstOrder
 gaDecode 81 = Just GASecondOrder
 gaDecode 82 = Just GAPromoteToSecond
 gaDecode 83 = Just GADecideEquality
+gaDecode 84 = Just GAReflectedObject
+gaDecode 85 = Just GAReflectedMorphism
+gaDecode 86 = Just GAEndoFixpoint
+gaDecode 87 = Just GAEndoCofixpoint
+gaDecode 88 = Just GAFixpointEval
+gaDecode 89 = Just GACofixpointEval
+gaDecode 90 = Just GAComputedType
 gaDecode _ = Nothing
 
 export
@@ -407,6 +428,13 @@ gaDecodeEncodeIsJust GAFirstOrder = Refl
 gaDecodeEncodeIsJust GASecondOrder = Refl
 gaDecodeEncodeIsJust GAPromoteToSecond = Refl
 gaDecodeEncodeIsJust GADecideEquality = Refl
+gaDecodeEncodeIsJust GAReflectedObject = Refl
+gaDecodeEncodeIsJust GAReflectedMorphism = Refl
+gaDecodeEncodeIsJust GAEndoFixpoint = Refl
+gaDecodeEncodeIsJust GAEndoCofixpoint = Refl
+gaDecodeEncodeIsJust GAFixpointEval = Refl
+gaDecodeEncodeIsJust GACofixpointEval = Refl
+gaDecodeEncodeIsJust GAComputedType = Refl
 
 public export
 gebAtomToString : GebAtom -> String
@@ -494,6 +522,13 @@ gebAtomToString GAFirstOrder = "FirstOrder"
 gebAtomToString GASecondOrder = "SecondOrder"
 gebAtomToString GAPromoteToSecond = "PromoteToSecond"
 gebAtomToString GADecideEquality = "DecideEquality"
+gebAtomToString GAReflectedObject = "ReflectedObject"
+gebAtomToString GAReflectedMorphism = "ReflectedMorphism"
+gebAtomToString GAEndoFixpoint = "EndoFixpoint"
+gebAtomToString GAEndoCofixpoint = "EndoCofixpoint"
+gebAtomToString GAFixpointEval = "FixpointEval"
+gebAtomToString GACofixpointEval = "CofixpointEval"
+gebAtomToString GAComputedType = "ComputedType"
 
 public export
 Show GebAtom where

@@ -117,11 +117,33 @@ coreConstUnitToSExpAndBackCorrect :
     Just (MkCoreSignedMorphism GebTest.coreConstUnit)
 coreConstUnitToSExpAndBackCorrect = Refl
 
+FirstOrderReflector : CoreObject CoreFirstOrder
+FirstOrderReflector = CoreObjectReflector CoreFirstOrder
+
+SecondOrderReflector : CoreObject CoreFirstOrder
+SecondOrderReflector = CoreObjectReflector CoreSecondOrder
+
+endoIdentity : CoreMorphism FirstOrderReflector FirstOrderReflector
+endoIdentity = CoreIdentity _
+
+endoIdentityExp : GebSExp
+endoIdentityExp = GAIdentity $*** GAObjectReflector $**^ GAFirstOrder
+
+endoIdentityExpIsCorrect :
+  Geb.coreMorphismToSExp GebTest.endoIdentity = GebTest.endoIdentityExp
+endoIdentityExpIsCorrect = Refl
+
+endoIdentityCompiles :
+  Geb.coreMorphismFromSExp (Geb.coreMorphismToSExp GebTest.endoIdentity) =
+    Just (MkCoreSignedMorphism GebTest.endoIdentity)
+endoIdentityCompiles = Refl
+
 export
 gebTests : IO ()
 gebTests = do
   printLn "Begin gebTests:"
   printLn $ "Core const unit = " ++ showMorphism coreConstUnit
+  printLn $ "Core first-order reflector ID = " ++ showMorphism endoIdentity
   {-
   printLn $ "Empty type list = " ++ showTypeList emptyTypeList
   printLn $ "Empty type matrix = " ++ showTypeMatrix emptyTypeMatrix

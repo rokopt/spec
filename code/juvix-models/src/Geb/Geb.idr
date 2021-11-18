@@ -283,7 +283,9 @@ data CoreMorphism : {domainOrder, codomainOrder : CoreObjectOrder} ->
       (equalCase, notEqualCase : CoreMorphism domain codomain) ->
       CoreMorphism domain codomain
 
-    {- XXX object reflector intro (quote) - use CoreObject itself -}
+    CoreReflectedObject : {objectOrder : CoreObjectOrder} ->
+      CoreObject objectOrder ->
+      CoreMorphism CoreTerminal (CoreObjectReflector objectOrder)
 
     {- XXX morphism reflector intro (quote) - use CoreObject itself -}
 
@@ -408,6 +410,13 @@ record CoreMorphismEliminatorSig (pred : CoreMorphismPred) where
     pred domainOrder codomainOrder domain codomain notEqualCase ->
     pred domainOrder codomainOrder domain codomain
       (CoreDecideEquality leftInput rightInput equalCase notEqualCase)
+  reflectedObjectElim :
+    (objectOrder : CoreObjectOrder) ->
+    (reflectedObject : CoreObject objectOrder) ->
+    pred
+      CoreFirstOrder CoreFirstOrder
+      CoreTerminal (CoreObjectReflector objectOrder)
+      (CoreReflectedObject reflectedObject)
 
 public export
 coreMorphismEliminator : {domainOrder, codomainOrder : CoreObjectOrder} ->
@@ -463,6 +472,9 @@ coreMorphismEliminator {domainOrder} {codomainOrder} {domain} {codomain}
       (coreMorphismEliminator signature rightInput)
       (coreMorphismEliminator signature equalCase)
       (coreMorphismEliminator signature notEqualCase)
+coreMorphismEliminator signature
+  (CoreReflectedObject {objectOrder} reflectedObject) =
+    reflectedObjectElim signature objectOrder reflectedObject
 
 public export
 CoreSignedMorphism : Type
@@ -903,6 +915,8 @@ coreMorphismToSExp
        coreMorphismToSExp rightInput,
        coreMorphismToSExp equalCase,
        coreMorphismToSExp notEqualCase]
+coreMorphismToSExp (CoreReflectedObject reflectedObject) =
+  GAReflectedObject $*** coreObjectToSExp reflectedObject
 
 public export
 coreSignedMorphismToSExp : CoreSignedMorphism -> GebSExp
@@ -1299,10 +1313,12 @@ mutual
     \_ => ()
   interpretCoreMorphism (CoreProductIntro first second) = \term =>
     (interpretCoreMorphism first term, interpretCoreMorphism second term)
-  interpretCoreMorphism (CoreProductElimLeft {domainOrder} leftDomain codomain) =
-    fst
-  interpretCoreMorphism (CoreProductElimRight rightDomain codomain) =
-    snd
+  interpretCoreMorphism
+    (CoreProductElimLeft {domainOrder} leftDomain codomain) =
+      fst
+  interpretCoreMorphism
+    (CoreProductElimRight rightDomain codomain) =
+      snd
   interpretCoreMorphism (CoreCoproductIntroLeft domain leftCodomain) =
     Left
   interpretCoreMorphism (CoreCoproductIntroRight domain rightCodomain) =
@@ -1323,6 +1339,7 @@ mutual
           (interpretCoreMorphism rightInput term) of
             Yes _ => interpretCoreMorphism equalCase term
             No _ => interpretCoreMorphism notEqualCase term
+  interpretCoreMorphism (CoreReflectedObject object) = \_ => object
 
 {-
 public export
