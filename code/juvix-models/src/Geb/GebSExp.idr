@@ -237,7 +237,7 @@ export
 gaDecEq : (a, a' : GebAtom) -> Dec (a = a')
 gaDecEq a a' with (decEq (gaEncode a) (gaEncode a'))
   gaDecEq a a' | Yes eq = Yes $
-    justInjective $
+    injective $
       trans
         (sym (gaDecodeEncodeIsJust a))
         (trans (cong gaDecode eq) (gaDecodeEncodeIsJust a'))

@@ -879,7 +879,7 @@ indexEqualLength (x :: la) (y :: lb) eq nInBounds =
   case nInBounds of
     InFirst => InFirst
     InLater nInBounds' =>
-      InLater (indexEqualLength la lb (succInjective _ _ eq) nInBounds')
+      InLater (indexEqualLength la lb (injective eq) nInBounds')
 
 public export
 indexesIndex : {a : Type} -> {l : List a} -> {n : Nat} ->
@@ -1005,7 +1005,7 @@ mkListPairForAll mk [] [] Refl = ListPairForAllEmpty
 mkListPairForAll mk [] (_ :: _) Refl impossible
 mkListPairForAll mk (_ :: _) [] Refl impossible
 mkListPairForAll mk (x :: xs) (y :: ys) eq =
-  ListPairForAllCons (mk x y) (mkListPairForAll mk xs ys (succInjective _ _ eq))
+  ListPairForAllCons (mk x y) (mkListPairForAll mk xs ys (injective eq))
 
 public export
 (~!) : {a : Type} -> {b : a -> Type} ->

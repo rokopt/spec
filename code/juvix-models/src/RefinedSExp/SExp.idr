@@ -910,8 +910,8 @@ mutual
     decodeFromSExp encode decode x = Just v -> encode v = x
   sexpDecodeThenEncode_correct encode decode x v isjust with
     (decodeFromSExpCertified encode decode x) proof p
-      sexpDecodeThenEncode_correct encode decode x v isjust |
-        Just (v' ** correct) = rewrite sym (justInjective isjust) in correct
+      sexpDecodeThenEncode_correct encode decode x v Refl |
+        Just (v ** correct) = correct
       sexpDecodeThenEncode_correct encode decode x v Refl |
         Nothing impossible
 
@@ -926,7 +926,7 @@ mutual
     decodeFromSList encode decode l = Just vs -> map encode vs = l
   slistDecodeThenEncode_correct encode decode l vs isjust with
     (decodeFromSListCertified encode decode l) proof p
-      slistDecodeThenEncode_correct encode decode l vs isjust |
-        Just (vs' ** correct) = rewrite sym (justInjective isjust) in correct
+      slistDecodeThenEncode_correct encode decode l vs Refl |
+        Just (vs ** correct) = correct
       slistDecodeThenEncode_correct encode decode l vs Refl |
         Nothing impossible

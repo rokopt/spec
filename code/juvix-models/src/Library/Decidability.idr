@@ -93,7 +93,7 @@ encodingDecEq : {a, b : Type} ->
 encodingDecEq encode decode encodingIsCorrect bDecEq x x' with
   (bDecEq (encode x) (encode x'))
     encodingDecEq encode decode encodingIsCorrect bDecEq x x' | Yes eq = Yes $
-      justInjective $
+      injective $
         trans
           (sym (encodingIsCorrect x))
           (trans
@@ -364,7 +364,7 @@ numberingDecEq (g ** (inv ** isInverse)) x x' with (decEq (g x) (g x'))
       eqx = replace {p=(\y => inv y = Just x)} eq invx
       eqx' = replace {p=(\y => y = Just x')} eqx invx'
     in
-    Yes (justInjective eqx')
+    Yes (injective eqx')
   numberingDecEq (g ** (inv ** isInverse)) x x' | No neq =
     No (\eq => case eq of Refl => neq Refl)
 
@@ -499,8 +499,8 @@ certifiedMaybeToCorrectness : {0 a, b : Type} ->
   (x : a) -> (y : b) ->
   certifiedMaybeToMaybe inverse certified x = Just y -> inverse y = x
 certifiedMaybeToCorrectness _ certified x y isjust with (certified x)
-  certifiedMaybeToCorrectness _ certified x y isjust | Just (_ ** correct) =
-    rewrite sym (justInjective isjust) in correct
+  certifiedMaybeToCorrectness _ certified x y Refl | Just (_ ** correct) =
+    correct
   certifiedMaybeToCorrectness _ certified x y ItIsJust | Nothing impossible
 
 public export
@@ -542,8 +542,8 @@ decMapToMaybe_correct : {0 a, b : Type} ->
   (x : a) -> (y : b) ->
   decMapToMaybe dec x = Just y -> inverse y = x
 decMapToMaybe_correct dec x y isjust with (dec x)
-  decMapToMaybe_correct dec x y isjust | Yes (_ ** isyes) =
-    rewrite sym (justInjective isjust) in isyes
+  decMapToMaybe_correct dec x y Refl | Yes (_ ** isyes) =
+    isyes
   decMapToMaybe_correct dec x y Refl | No _ impossible
 
 public export
@@ -554,7 +554,7 @@ decMapToMaybe_injective : {0 a, b : Type} ->
   (y, y' : b) -> inverse y = inverse y' ->
   y = y'
 decMapToMaybe_injective {a} {b} dec inverseCorrect y y' eq =
-  justInjective $
+  injective $
     trans
       (sym $
         replace {p=(\y'' => decMapToMaybe dec y'' = Just y)}

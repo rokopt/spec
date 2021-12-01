@@ -1276,7 +1276,7 @@ coreDecideFirstOrderEquality (CoreCoproduct left right)
   (Left leftTerm) (Left leftTerm') =
     case coreDecideFirstOrderEquality left leftTerm leftTerm' of
       Yes Refl => Yes Refl
-      No neq => No $ \eq => neq $ leftInjective eq
+      No neq => No $ \eq => neq $ injective eq
 coreDecideFirstOrderEquality (CoreCoproduct left right)
   (Left _) (Right _) = No $ \eq => case eq of Refl impossible
 coreDecideFirstOrderEquality (CoreCoproduct left right)
