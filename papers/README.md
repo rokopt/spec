@@ -34,11 +34,16 @@ Organised by category. Feel free to append papers you read and review. Please ch
 | --------------------------------- | ------------------------- | ------------- | ---- | ---------------- |
 | Zerocash                          | 2014                      | 0.8           | [PDF](./old-weekly-papers/2019-07-03-zerocash/paper.pdf) | Description of Zerocash circuit & mint-pour system |
 
-### Languages & type theory
+### Programming languages, type theory, category theory
 
 | Name of paper                     | Year published or updated | Ratings (0-1) | Link | Summary or notes |
 | --------------------------------- | ------------------------- | ------------- | ---- | ---------------- |
 | Idris                             | 2013                      | 0.8           | [PDF](./old-weekly-papers/2019-08-23-idris/paper.pdf) | Detailed exposition of Idris design & internals |
+| Latent Effects for Reusable Language Components | 2021                      | 0.9           | [PDF](./plt/latent-effects-for-reusable-language-components.pdf) | Modular language construction with effect-based generalization of "datatypes ̀a la carte" |
+| Adjoint Folds and Unfolds -- An Extended Study | 2011                      | 0.8           | [PDF](./plt/adjoint-folds-unfolds-extended-study.pdf) | Unification of many recursive schemes in a single category-theoretic framework |
+| Categorical Pairs and the Indicative Shift | 2011                      | 0.8           | [PDF](./plt/categorical-pairs-and-the-indicative-shift.pdf) | Category-theoretic formalization of Gödelian self-reference |
+| Effect Handlers in Scope | 2014                      | 0.8           | [PDF](./plt/effect-handlers-in-scope.pdf) | Separating handler ordering (semantics) from scoping (syntax) |
+| Generic Programming with Adjunctions | 2012                      | 0.8           | [PDF](./plt/generic-programming-with-adjunctions.pdf) | Friendly introduction to "adjoint folds and unfolds" |
 
 ### Machine learning
 
