@@ -4,6 +4,10 @@
 -- Correct compiler from While language to intermediate Loop language
 --
 ----------------------------------------------------------------------
+
+
+```agda
+{-# OPTIONS --allow-unsolved-metas #-}
 module CompWhileLoop where
 
 open import Data.Nat
@@ -112,3 +116,4 @@ comp-corr : ∀ {e t} → (ty : ⊢ e ∶ t) →
             (∀ st → Σ[ t ∈ (st ⊢ c ↝ (t ∷ st)) ] -- ... well typed and
               (∀ cl σ s → ⟪ c ⇡cₜ t ⟫ cl (s , σ) ≡ just ((⟦ e ⇡ₜ ty ⟧ σ ▹ s) , σ))) -- ... it preserves semantics.
 comp-corr {e} ty = compe e , λ st → (comp-ty st ty , comp-sem ty)
+```

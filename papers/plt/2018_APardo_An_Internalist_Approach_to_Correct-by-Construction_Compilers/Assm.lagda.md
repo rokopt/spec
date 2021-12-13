@@ -5,6 +5,8 @@
 --
 ----------------------------------------------------------------------
 
+```agda
+{-# OPTIONS --allow-unsolved-metas #-}
 module Assm where
 
 open import Data.Nat
@@ -85,7 +87,7 @@ data 【_】_⇝ᵢ_ : Instr → Machine → Machine → Set where
                         (suc k , σ , s)
   ⇝load  : ∀ {k σ s x} → 【 load x 】 (k , σ , s) ⇝ᵢ (suc k , σ , σ x ∷ s)
   ⇝store : ∀ {k σ s x n} → 【 store x 】 (k , σ , n ∷ s) ⇝ᵢ
-                                        ((suc k) , ( _[_⟶_] σ x n) , s)
+                                        ((suc k) , ({! [_→_]_ !}) , s)
 
 
 {- Transitive closure of a relation -}
@@ -245,3 +247,4 @@ data 【_】_⇝〔_〕_ (c : Assm) : Machine → ℕ → Machine → Set where
 --           (prop++₂ {l₁ = γ}) tr₂)
 
 -- -}
+```

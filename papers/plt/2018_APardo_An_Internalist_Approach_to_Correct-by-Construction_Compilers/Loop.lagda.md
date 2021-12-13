@@ -4,6 +4,9 @@
 -- Intermediate language
 --
 ----------------------------------------------------------------------
+
+
+```agda
 module Loop where
 
 open import Data.Nat
@@ -277,3 +280,4 @@ postulate
 -- floopInv {cl} {st} {fb} {fc} {sσ} {sσ'} () | just ((true ▹ sb) , σb) | nothing | _
 -- floopInv {cl} {st} {fb} {fc} {sσ} {sσ'} p | just ((true ▹ sb) , σb) | (just sσc) | [ p' ] =
 --                    inj₂ (sb , σb , (refl , (sσc , p' , p)))
+```

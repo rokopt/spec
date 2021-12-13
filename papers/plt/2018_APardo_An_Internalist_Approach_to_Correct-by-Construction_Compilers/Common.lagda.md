@@ -4,6 +4,10 @@
 -- Types and functions used by several languages
 -- 
 ----------------------------------------------------------------------
+
+
+```agda
+{-# OPTIONS --allow-unsolved-metas #-}
 module Common where
 
 open import Data.String renaming (_==_ to _==ₛ_)
@@ -73,4 +77,4 @@ suc n ==ₙ suc m = n ==ₙ m
            ( _,_ {B = λ a₀ → P i a₀ i''} (a ⊕ a') (p ⊗ p')) ≅ (b ⊕ b' , q ⊗ q')
 ≡-×-prop _⊕_ _⊗_ i i' i'' a a' b b' p p' q q' refl refl =
              hcong₂ _,_ refl refl
-           
+```           

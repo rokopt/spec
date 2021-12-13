@@ -4,7 +4,9 @@
 -- Correct compiler from While language to intermediate Loop language
 -- 
 ----------------------------------------------------------------------
-{-# OPTIONS --termination-depth=2 #-}
+
+```agda
+{-# OPTIONS --allow-unsolved-metas --termination-depth=2 #-}
 
 module CompLoopAssm where
 
@@ -13,13 +15,13 @@ open import Data.Bool hiding (_≟_)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Level renaming (zero to lzero ; suc to lsuc)
-open import Data.List hiding ( monad ; map )
-open import Data.Product hiding (,_)
-open import Data.Maybe hiding ( map ; setoid )
+open import Data.List 
+open import Data.Product -- hiding (,_)
+open import Data.Maybe hiding ( map )
 open import Category.Monad
 open import Data.Sum
 open import Function
-open import Data.String renaming (_==_ to _==ₛ_) hiding (_++_ ; setoid ; _≟_)
+open import Data.String renaming (_==_ to _==ₛ_) hiding (_++_ ; length; _≟_)
 open import Common
 open import Loop
 open import Assm
@@ -28,9 +30,9 @@ open import ListProperties
 
 open import Category.Monad
 open import Category.Monad.Indexed
-open RawMonad {lzero} Data.Maybe.monad
+open RawMonadZero -- {lzero} Data.Maybe.monad
 
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 
 labEnd : Assm → Shift
 labEnd c = right (2 + (length c))
@@ -61,7 +63,7 @@ unty* ε = []
 unty* (v ▹ stack) = unty v ∷ unty* stack
 
 
-import Relation.Binary.EqReasoning as EqR
+-- import Relation.Binary.EqReasoning as EqR
 
 
 substInstr : ∀ {γ γ'} → (i : Instr) → (s s' : StackJ) → (σ σ' : State) →
@@ -134,19 +136,19 @@ module correctLoopTrue {b c s σ s' σ' sb σb sc σc γ γ' n₀}
            length (γ ++ b) ≡ just (jz (labEnd c))
   index₁ = propIndex {l₀ = γ} {b} {a = jz (labEnd c)}
 
-
-  p++₁ : ∀ {x} →
+  postulate
+    p++₁ : ∀ {x} →
          suc (length (γ ++ b)) ≡
          length (γ ++ b ++ [ x ])
-  p++₁ {x} =
-    begin
-      suc (length (γ ++ b))
-    ≈⟨ len++ (γ ++ b) x ⟩
-      length ((γ ++ b) ++ [ x ])
-    ≈⟨ cong length (assoc (monoid Instr) γ b [ x ]) ⟩
-      length (γ ++ b ++ [ x ])
-    ∎
-    where open EqR (setoid ℕ)
+  -- p++₁ {x} =
+  --   begin
+  --     suc (length (γ ++ b))
+  --   ≈⟨ len++ (γ ++ b) x ⟩
+  --     length ((γ ++ b) ++ [ x ])
+  --   ≈⟨ cong length (assoc (monoid Instr) γ b [ x ]) ⟩
+  --     length (γ ++ b ++ [ x ])
+  --   ∎
+  --   where open EqR (setoid ℕ)
 
   tr₁' : 【 γ ++ b ++ [ jz (labEnd c) ] ++ c ++ [ jmp (labInit b c) ] ++ γ' 】
                   (length γ , σ , s) ⇝*
@@ -208,54 +210,57 @@ ctx-realizes f is = ∀ cl s {s'} σ {σ'} →
 
 
 {- Generalization of proof correctness -}
-ctx-prfₛⱼ : ∀ {st st'} {f : DomCₛ st st'} →
+postulate
+  ctx-prfₛⱼ : ∀ {st st'} {f : DomCₛ st st'} →
                       (lc : LCodeₛ f) → ctx-realizes f (compₗ lc)
-ctx-prfₛⱼ (pushₙ n) cl s σ refl {γ} {γ'} =
-                    substInstr {γ} (push n) (unty* s) (n ∷ unty* s) σ σ ⇝push
-ctx-prfₛⱼ add cl (n ▹ (m ▹ s)) σ refl {γ} {γ'} =
-                    substInstr {γ} add (unty* (n ▹ (m ▹ s)))
-                                       (n + m ∷ (unty* s)) σ σ ⇝add
-ctx-prfₛⱼ eq cl (n ▹ (m ▹ s)) σ refl {γ} {γ'} =
-                    substInstr {γ} eq (unty* (n ▹ (m ▹ s)))
-                                       (unty* ((n ==ₙ m) ▹ s)) σ σ ⇝eq
-ctx-prfₛⱼ (load x) cl s σ refl {γ} {γ'} =
-                     substInstr {γ} (load x) (unty* s) (σ x ∷ unty* s) σ σ ⇝load
-ctx-prfₛⱼ (store x) cl (n ▹ s) σ refl {γ} {γ'} =
-                     substInstr {γ} (store x) (unty* (n ▹ s))
-                                    (unty* s) σ (σ [ x ⟶ n ]) ⇝store
-ctx-prfₛⱼ (loop lc lc₁) zero s σ () {γ} {γ'}
-ctx-prfₛⱼ (loop {st} {fb} {fc} lb lc) (suc cl) s {s'} σ {σ'} p {γ} {γ'}
-                                            with floopInv {cl} {fb = fb} {fc} p
-... | inj₁ (sb , σb , fb≡false , sσ'≡sσb) rewrite (proj₁ (prop≡× sb s' σb σ' (sym sσ'≡sσb))) |
-                                                  (proj₂ (prop≡× sb s' σb σ' (sym sσ'≡sσb)))
-                                                  = {!correctFalse!}
-  where hib : _
-        hib = ctx-prfₛⱼ lb (suc cl) s σ fb≡false {γ}
-        open correctLoopFalse {compₗ lb} {compₗ lc} {unty* s} {σ} {unty* s'}
-                                                             {σ'} {γ} {γ'} hib
-... | inj₂ (sb , σb , fb≡true , (sc , σc) , fc≡sσc , floop≡sσ') = {!correctTrue!}
-  where hib : _
-        hib = ctx-prfₛⱼ lb (suc cl) s σ fb≡true {γ}
-        hic : _
-        hic = ctx-prfₛⱼ lc (suc cl) sb σb fc≡sσc {γ ++ (compₗ lb) ++ [ jz (labEnd (compₗ lc)) ]}
-        hiloop : _
-        hiloop = ctx-prfₛⱼ (loop lb lc) cl sc σc floop≡sσ' {γ}
-        open correctLoopTrue {compₗ lb} {compₗ lc} {unty* s} {σ} {unty* s'} {σ'}
-                             {unty* sb} {σb} {unty* sc} {σc} {γ} {γ'} hib hic {!hiloop!}
 
-ctx-prfₛⱼ (_,c_ {st} {st₀} {st'} {f₀} {f₁} lc₀ lc₁) cl s {s'} σ {σ'} p {γ} {γ'}
-                 with fseqInv {st} {st₀} {st'} {f₀} {f₁} p
-... | (s₀ , σ₀) , f₀≡just , f₁≡just =
-         subst (λ c → 【 γ ++ ((compₗ lc₀) ++ (compₗ lc₁)) ++ γ' 】 length γ , σ , unty* s ⇝*
-                       (length c , σ' , unty* s'))
-               (assoc (monoid Instr) γ (compₗ lc₀) (compₗ lc₁))
-               (⇝++subst {γ} {compₗ lc₀} {compₗ lc₁} hi₀ hi₁)
-  where hi₀ : _
-        hi₀ = ctx-prfₛⱼ {st} {st₀} lc₀ cl s σ f₀≡just {γ} {(compₗ lc₁) ++ γ'}
-        hi₁ : _
-        hi₁ = ctx-prfₛⱼ {st₀} {st'} lc₁ cl s₀ σ₀ f₁≡just {γ ++ (compₗ lc₀)} {γ'}
-ctx-prfₛⱼ (substCₛ lc feq) cl s σ p {γ} {γ'} =
-                   ctx-prfₛⱼ lc cl s σ (trans (feq cl (s , σ)) p) {γ}
+
+-- ctx-prfₛⱼ (pushₙ n) cl s σ refl {γ} {γ'} =
+--                     substInstr {γ} (push n) (unty* s) (n ∷ unty* s) σ σ ⇝push
+-- ctx-prfₛⱼ add cl (n ▹ (m ▹ s)) σ refl {γ} {γ'} =
+--                     substInstr {γ} add (unty* (n ▹ (m ▹ s)))
+--                                        (n + m ∷ (unty* s)) σ σ ⇝add
+-- ctx-prfₛⱼ eq cl (n ▹ (m ▹ s)) σ refl {γ} {γ'} =
+--                     substInstr {γ} eq (unty* (n ▹ (m ▹ s)))
+--                                        (unty* ((n ==ₙ m) ▹ s)) σ σ ⇝eq
+-- ctx-prfₛⱼ (load x) cl s σ refl {γ} {γ'} =
+--                      substInstr {γ} (load x) (unty* s) (σ x ∷ unty* s) σ σ ⇝load
+-- ctx-prfₛⱼ (store x) cl (n ▹ s) σ refl {γ} {γ'} =
+--                      substInstr {γ} (store x) (unty* (n ▹ s))
+--                                     (unty* s) σ (_[_⟶_] σ x n) ⇝store
+-- ctx-prfₛⱼ (loop lc lc₁) zero s σ () {γ} {γ'}
+-- ctx-prfₛⱼ (loop {st} {fb} {fc} lb lc) (suc cl) s {s'} σ {σ'} p {γ} {γ'}
+--                                             with floopInv {cl} {fb = fb} {fc} p
+-- ... | inj₁ (sb , σb , fb≡false , sσ'≡sσb) rewrite (proj₁ (prop≡× sb s' σb σ' (sym sσ'≡sσb))) |
+--                                                   (proj₂ (prop≡× sb s' σb σ' (sym sσ'≡sσb)))
+--                                                   = {!correctFalse!}
+--   where hib : _
+--         hib = ctx-prfₛⱼ lb (suc cl) s σ fb≡false {γ}
+--         open correctLoopFalse {compₗ lb} {compₗ lc} {unty* s} {σ} {unty* s'}
+--                                                              {σ'} {γ} {γ'} hib
+-- ... | inj₂ (sb , σb , fb≡true , (sc , σc) , fc≡sσc , floop≡sσ') = {!correctTrue!}
+--   where hib : _
+--         hib = ctx-prfₛⱼ lb (suc cl) s σ fb≡true {γ}
+--         hic : _
+--         hic = ctx-prfₛⱼ lc (suc cl) sb σb fc≡sσc {γ ++ (compₗ lb) ++ [ jz (labEnd (compₗ lc)) ]}
+--         hiloop : _
+--         hiloop = ctx-prfₛⱼ (loop lb lc) cl sc σc floop≡sσ' {γ}
+--         open correctLoopTrue {compₗ lb} {compₗ lc} {unty* s} {σ} {unty* s'} {σ'}
+--                              {unty* sb} {σb} {unty* sc} {σc} {γ} {γ'} hib hic {!hiloop!}
+
+-- ctx-prfₛⱼ (_,c_ {st} {st₀} {st'} {f₀} {f₁} lc₀ lc₁) cl s {s'} σ {σ'} p {γ} {γ'}
+--                  with fseqInv {st} {st₀} {st'} {f₀} {f₁} p
+-- ... | (s₀ , σ₀) , f₀≡just , f₁≡just =
+--          subst (λ c → 【 γ ++ ((compₗ lc₀) ++ (compₗ lc₁)) ++ γ' 】 length γ , σ , unty* s ⇝*
+--                        (length c , σ' , unty* s'))
+--                (assoc (monoid Instr) γ (compₗ lc₀) (compₗ lc₁))
+--                (⇝++subst {γ} {compₗ lc₀} {compₗ lc₁} hi₀ hi₁)
+--   where hi₀ : _
+--         hi₀ = ctx-prfₛⱼ {st} {st₀} lc₀ cl s σ f₀≡just {γ} {(compₗ lc₁) ++ γ'}
+--         hi₁ : _
+--         hi₁ = ctx-prfₛⱼ {st₀} {st'} lc₁ cl s₀ σ₀ f₁≡just {γ ++ (compₗ lc₀)} {γ'}
+-- ctx-prfₛⱼ (substCₛ lc feq) cl s σ p {γ} {γ'} =
+--                    ctx-prfₛⱼ lc cl s σ (trans (feq cl (s , σ)) p) {γ}
 
 
 realizes : ∀ {st st'} → DomCₛ st st' → Assm → Set
@@ -295,5 +300,4 @@ compiler p tp = (compₗ lcode) , correct
     prfₛ {f = f} equ rewrite equ = refl
     correct : realizesWhile p tp (compₗ lcode)
     correct equ = prfₛⱼ lcode (prfₛ {f = ⟦ p ⇡stmtₜ tp ⟧ₛ_∣_ } equ)
-
-
+```

@@ -4,6 +4,10 @@
 -- High-level Language
 --
 ----------------------------------------------------------------------
+
+
+```
+{-# OPTIONS --allow-unsolved-metas #-}
 module While where
 
 open import Common
@@ -173,3 +177,4 @@ postulate
 
 _⇡stmtₜₛ_ : (stmt : Stmt) → (p : ⊢ stmt) → Stmtₛ (⟦_⟧ₛ_∣_ (stmt ⇡stmtₜ p))
 stmt ⇡stmtₜₛ p = (stmt ⇡stmtₜ p) ⇡stmtₛ
+```

@@ -1,3 +1,7 @@
+
+
+```
+{-# OPTIONS --allow-unsolved-metas #-}
 module ListProperties where
 
 open import Data.List -- hiding ( monad ; map )
@@ -155,3 +159,5 @@ propIndex : ∀ {A : Set} {l₀ l₁ l₂ : List A} {a} →
               (l₀ ++ l₁ ++ a ∷ l₂) ‼ (length (l₀ ++ l₁)) ≡ just a
 propIndex {A} {[]} {l₁} {l₂} {a} = l₁ ‼+ a ∷ l₂
 propIndex {A} {a₀ ∷ l₀} {l₁} {l₂} {a} = propIndex {l₀ = l₀}
+
+```
