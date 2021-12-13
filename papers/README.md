@@ -45,6 +45,7 @@ Organised by category. Feel free to append papers you read and review. Please ch
 | Effect Handlers in Scope | 2014                      | 0.8           | [PDF](./plt/effect-handlers-in-scope.pdf) |  | Separating handler ordering (semantics) from scoping (syntax) |
 | Generic Programming with Adjunctions | 2012                      | 0.8           | [PDF](./plt/generic-programming-with-adjunctions.pdf) |  | Friendly introduction to "adjoint folds and unfolds" |
 | [An Internalist Approach to Correct-by-Construction Compilers](https://dl.acm.org/doi/10.1145/3236950.3236965) | 2018 |  | [PDF](./plt/2018_APardo_An_Internalist_Approach_to_Correct-by-Construction_Compilers.pdf) [Agda](./plt/2018_APardo_An_Internalist_Approach_to_Correct-by-Construction_Compilers/README.lagda.md) | @jonathan | Metodology to construct verified compilers
+| [Bidirectional Typing](https://arxiv.org/abs/1908.05839) | 2020 | 0.9 | [PDF](./plt/2020-Bidirectional-Typing.pdf) [Slides](./plt/2020_Bidirectional-Typing/) | @jonathan | Design advices on bidirectional typecheckers
 
 ### Machine learning
 
