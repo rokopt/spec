@@ -1,5 +1,4 @@
-
-# Agda formalisation of "An Internalist Approach to Correct-by-Construction Compilers"
+# Fixing Agda formalisation of "An Internalist Approach to Correct-by-Construction Compilers"
 
 **Authors**
 

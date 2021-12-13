@@ -36,14 +36,15 @@ Organised by category. Feel free to append papers you read and review. Please ch
 
 ### Programming languages, type theory, category theory
 
-| Name of paper                     | Year published or updated | Ratings (0-1) | Link | Summary or notes |
-| --------------------------------- | ------------------------- | ------------- | ---- | ---------------- |
-| Idris                             | 2013                      | 0.8           | [PDF](./old-weekly-papers/2019-08-23-idris/paper.pdf) | Detailed exposition of Idris design & internals |
-| Latent Effects for Reusable Language Components | 2021                      | 0.9           | [PDF](./plt/latent-effects-for-reusable-language-components.pdf) | Modular language construction with effect-based generalization of "datatypes ̀a la carte" |
-| Adjoint Folds and Unfolds -- An Extended Study | 2011                      | 0.8           | [PDF](./plt/adjoint-folds-unfolds-extended-study.pdf) | Unification of many recursive schemes in a single category-theoretic framework |
-| Categorical Pairs and the Indicative Shift | 2011                      | 0.8           | [PDF](./plt/categorical-pairs-and-the-indicative-shift.pdf) | Category-theoretic formalization of Gödelian self-reference |
-| Effect Handlers in Scope | 2014                      | 0.8           | [PDF](./plt/effect-handlers-in-scope.pdf) | Separating handler ordering (semantics) from scoping (syntax) |
-| Generic Programming with Adjunctions | 2012                      | 0.8           | [PDF](./plt/generic-programming-with-adjunctions.pdf) | Friendly introduction to "adjoint folds and unfolds" |
+| Name of paper                     | Year published or updated | Ratings (0-1) | Link | Lead |  Summary or notes |
+| --------------------------------- | ------------------------- | ------------- | ---- | --------- | ----------------- |
+| Idris                             | 2013                      | 0.8           | [PDF](./old-weekly-papers/2019-08-23-idris/paper.pdf) | | Detailed exposition of Idris design & internals |
+| Latent Effects for Reusable Language Components | 2021                      | 0.9           | [PDF](./plt/latent-effects-for-reusable-language-components.pdf) | @terence | Modular language construction with effect-based generalization of "datatypes ̀a la carte" |
+| Adjoint Folds and Unfolds -- An Extended Study | 2011                      | 0.8           | [PDF](./plt/adjoint-folds-unfolds-extended-study.pdf) |   | Unification of many recursive schemes in a single category-theoretic framework |
+| Categorical Pairs and the Indicative Shift | 2011                      | 0.8           | [PDF](./plt/categorical-pairs-and-the-indicative-shift.pdf) |  | Category-theoretic formalization of Gödelian self-reference |
+| Effect Handlers in Scope | 2014                      | 0.8           | [PDF](./plt/effect-handlers-in-scope.pdf) |  | Separating handler ordering (semantics) from scoping (syntax) |
+| Generic Programming with Adjunctions | 2012                      | 0.8           | [PDF](./plt/generic-programming-with-adjunctions.pdf) |  | Friendly introduction to "adjoint folds and unfolds" |
+| [An Internalist Approach to Correct-by-Construction Compilers](https://dl.acm.org/doi/10.1145/3236950.3236965) | 2018 |  | [PDF](./plt/2018_APardo_An_Internalist_Approach_to_Correct-by-Construction_Compilers.pdf) [Agda](./plt/2018_APardo_An_Internalist_Approach_to_Correct-by-Construction_Compilers/README.lagda.md) | @jonathan | Metodology to construct verified compilers
 
 ### Machine learning
 
