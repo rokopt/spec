@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+    \PYG{k+kt}{Case} \PYG{p}{(}\PYG{k+kt}{Arg} \PYG{l+m+mi}{0}\PYG{p}{)}
+      \PYG{p}{[} \PYG{k+kt}{Branch}
+          \PYG{p}{(}\PYG{k+kt}{PCon} \PYG{l+s}{\PYGZdq{}Nat.zero\PYGZdq{}} \PYG{k+kt}{[]}\PYG{p}{))}
+          \PYG{p}{(}\PYG{k+kt}{Done} \PYG{k+kt}{[]} \PYG{p}{(}\PYG{k+kt}{Lam} \PYG{p}{(}\PYG{k+kt}{Elim} \PYG{p}{(}\PYG{k+kt}{Bound} \PYG{l+m+mi}{0}\PYG{p}{)))}
+      \PYG{p}{,} \PYG{k+kt}{Branch}
+          \PYG{p}{(}\PYG{k+kt}{PCon} \PYG{l+s}{\PYGZdq{}Nat.succ\PYGZdq{}} \PYG{p}{[}\PYG{k+kt}{PVar} \PYG{l+m+mi}{0}\PYG{p}{])}
+          \PYG{p}{(}\PYG{k+kt}{Case} \PYG{p}{(}\PYG{k+kt}{Arg} \PYG{l+m+mi}{1}\PYG{p}{)}
+            \PYG{p}{[} \PYG{k+kt}{Branch}
+                \PYG{p}{(}\PYG{k+kt}{PCon} \PYG{l+s}{\PYGZdq{}Nat.zero\PYGZdq{}} \PYG{k+kt}{[]}\PYG{p}{)}
+                \PYG{p}{(}\PYG{k+kt}{Done} \PYG{k+kt}{[]} \PYG{p}{(}\PYG{k+kt}{App} \PYG{p}{(}\PYG{k+kt}{Global} \PYG{l+s}{\PYGZdq{}Nat.succ) (Pat 0)))}
+\PYG{l+s}{            , Branch}
+\PYG{l+s}{                (PCon \PYGZdq{}}\PYG{k+kt}{Nat}\PYG{o}{.}\PYG{n}{succ}\PYG{l+s}{\PYGZdq{} [PVar 1])}
+\PYG{l+s}{                (Done [] (App (App (Global \PYGZdq{}}\PYG{n}{max}\PYG{l+s}{\PYGZdq{}) (Pat 0)) (Pat 1)))}
+\PYG{l+s}{            ])]}
+\end{Verbatim}

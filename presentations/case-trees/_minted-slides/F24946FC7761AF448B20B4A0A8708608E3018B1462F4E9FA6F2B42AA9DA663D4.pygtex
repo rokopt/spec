@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kr}{open} \PYG{k+kr}{import} \PYG{n}{Bound} Type \PYG{k+kr}{hiding} \PYG{o}{(}\PYGZus{},\PYGZus{}\PYG{o}{)}
+
+\PYG{n+nf}{Ctxt} \PYG{o+ow}{:} ℕ \PYG{o+ow}{→} \PYG{k+kt}{Set}
+Ctxt \PYG{o+ow}{=} Vec Type
+
+\PYG{n+nf}{\PYGZus{},\PYGZus{}} \PYG{o+ow}{:} \PYG{o+ow}{∀} \PYG{o}{\PYGZob{}}n\PYG{o}{\PYGZcb{}} \PYG{o+ow}{→} Ctxt n \PYG{o+ow}{→} Type \PYG{o+ow}{→} Ctxt \PYG{o}{(}suc n\PYG{o}{)}
+Γ , x \PYG{o+ow}{=} x ∷ Γ
+
+\PYG{k+kr}{data} \PYGZus{}⊢\PYGZus{}∶\PYGZus{} \PYG{o+ow}{:} \PYG{o+ow}{∀} \PYG{o}{\PYGZob{}}n\PYG{o}{\PYGZcb{}} \PYG{o+ow}{→} Ctxt n \PYG{o+ow}{→} Expr n \PYG{o+ow}{→} Type \PYG{o+ow}{→} \PYG{k+kt}{Set} \PYG{k+kr}{where}
+
+  \PYG{n+nf}{tVar} \PYG{o+ow}{:} \PYG{o+ow}{∀} \PYG{o}{\PYGZob{}}n Γ\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}x \PYG{o+ow}{:} Fin n\PYG{o}{\PYGZcb{}}
+       \PYG{o+ow}{→} Γ ⊢ var x ∶ lookup x Γ
+
+  \PYG{n+nf}{tLam} \PYG{o+ow}{:} \PYG{o+ow}{∀} \PYG{o}{\PYGZob{}}n\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}Γ \PYG{o+ow}{:} Ctxt n\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}t\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}τ σ\PYG{o}{\PYGZcb{}}
+       \PYG{o+ow}{→} Γ , τ ⊢ t ∶ σ
+       \PYG{o+ow}{→} Γ ⊢ lam τ t ∶ τ ↣ σ
+
+  \PYG{n+nf}{\PYGZus{}∙\PYGZus{}}  \PYG{o+ow}{:} \PYG{o+ow}{∀} \PYG{o}{\PYGZob{}}n\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}Γ \PYG{o+ow}{:} Ctxt n\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}t₁ t₂\PYG{o}{\PYGZcb{}} \PYG{o}{\PYGZob{}}τ σ\PYG{o}{\PYGZcb{}}
+       \PYG{o+ow}{→} Γ ⊢ t₁ ∶ τ ↣ σ
+       \PYG{o+ow}{→} Γ ⊢ t₂ ∶ τ
+       \PYG{o+ow}{→} Γ ⊢ t₁ ∙ t₂ ∶ σ
+\end{Verbatim}

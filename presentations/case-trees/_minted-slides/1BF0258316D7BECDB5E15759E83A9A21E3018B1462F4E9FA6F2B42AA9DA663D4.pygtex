@@ -1,0 +1,26 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{∅} \PYG{o+ow}{:} Binder \PYG{l+m+mi}{0}
+∅ \PYG{o+ow}{=} []
+
+\PYG{n+nf}{Γ} \PYG{o+ow}{:} Binder \PYG{l+m+mi}{2}
+Γ \PYG{o+ow}{=} \PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∷ \PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∷ []
+
+\PYG{n+nf}{e1} \PYG{o+ow}{:} \PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∷ \PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∷ [] ⊢ var \PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ⇝ var \PYG{o}{(}\PYGZsh{} \PYG{l+m+mi}{0}\PYG{o}{)}
+e1 \PYG{o+ow}{=} var\PYGZhy{}zero
+
+\PYG{n+nf}{I} \PYG{o+ow}{:} [] ⊢ lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}var \PYG{l+s}{\PYGZdq{}x\PYGZdq{}}\PYG{o}{)}
+       ⇝ lam A \PYG{o}{(}var \PYG{o}{(}\PYGZsh{} \PYG{l+m+mi}{0}\PYG{o}{))}
+I \PYG{o+ow}{=} lam var\PYGZhy{}zero
+
+\PYG{n+nf}{K} \PYG{o+ow}{:} [] ⊢ lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}var \PYG{l+s}{\PYGZdq{}x\PYGZdq{}}\PYG{o}{))}
+       ⇝ lam A \PYG{o}{(}lam A \PYG{o}{(}var \PYG{o}{(}\PYGZsh{} \PYG{l+m+mi}{1}\PYG{o}{)))}
+K \PYG{o+ow}{=} lam \PYG{o}{(}lam \PYG{o}{(}var\PYGZhy{}suc var\PYGZhy{}zero\PYG{o}{))}
+
+\PYG{n+nf}{K₂} \PYG{o+ow}{:} [] ⊢ lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}var \PYG{l+s}{\PYGZdq{}y\PYGZdq{}}\PYG{o}{))}
+        ⇝ lam A \PYG{o}{(}lam A \PYG{o}{(}var \PYG{o}{(}\PYGZsh{} \PYG{l+m+mi}{0}\PYG{o}{)))}
+K₂ \PYG{o+ow}{=} lam \PYG{o}{(}lam var\PYGZhy{}zero\PYG{o}{)}
+
+\PYG{n+nf}{P} \PYG{o+ow}{:} Γ ⊢ lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}z\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}var \PYG{l+s}{\PYGZdq{}x\PYGZdq{}}\PYG{o}{)))}
+      ⇝ lam A \PYG{o}{(}lam A \PYG{o}{(}lam A \PYG{o}{(}var \PYG{o}{(}\PYGZsh{} \PYG{l+m+mi}{2}\PYG{o}{))))}
+P \PYG{o+ow}{=} \PYG{c+cDirective}{\PYGZob{}!!\PYGZcb{}}   \PYG{c+c1}{\PYGZhy{}\PYGZhy{} complete!!}
+\end{Verbatim}

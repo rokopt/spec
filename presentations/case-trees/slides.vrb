@@ -1,0 +1,26 @@
+\frametitle{Case Tree: Example}
+
+  \begin{minted}{haskell}
+    sig max : nat -> nat -> nat
+    let max zero y = y
+    let max x zero = x
+    let (suc x) (suc y) = suc (max x y)
+  \end{minted}
+
+
+  \begin{minted}{haskell}
+    Case (Arg 0)
+      [ Branch
+          (PCon "Nat.zero" []))
+          (Done [] (Lam (Elim (Bound 0)))
+      , Branch
+          (PCon "Nat.succ" [PVar 0])
+          (Case (Arg 1)
+            [ Branch
+                (PCon "Nat.zero" [])
+                (Done [] (App (Global "Nat.succ) (Pat 0)))
+            , Branch
+                (PCon "Nat.succ" [PVar 1])
+                (Done [] (App (App (Global "max") (Pat 0)) (Pat 1)))
+            ])]
+  \end{minted}

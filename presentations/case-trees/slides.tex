@@ -1,0 +1,535 @@
+% !TEX program = latexmk
+% !TEX options = -pdf -xelatex -shell-escape -halt-on-error
+
+\documentclass[10pt, xelatex, hyperref={pdfpagelabels=false,breaklinks}]{beamer}
+
+% --------------------------------------------------------------------------
+% Packages
+% --------------------------------------------------------------------------
+\usepackage[english]{babel}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{bussproofs}
+\EnableBpAbbreviations
+\def\extraVskip{3pt}
+
+\usepackage{fancyvrb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{lmodern}
+
+\usepackage{url}
+
+% Graphics
+\graphicspath{ {./img/} }
+
+% --------------------------------------------------------------------------
+% Tikz Configuration
+% --------------------------------------------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usepackage{rotating}
+
+
+% --------------------------------------------------------------------------
+% My palette.
+% --------------------------------------------------------------------------
+\definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
+\definecolor{energy}{RGB}{49,247,250}
+\definecolor{delicate}{RGB}{67,179,223}
+\definecolor{faded}{RGB}{76,117,195}
+\definecolor{blu}{RGB}{1,0,102}
+\definecolor{plum}{RGB}{87,78,164}
+\definecolor{petunias}{RGB}{109,80,139}
+\definecolor{letour}{RGB}{101,41,105}
+\definecolor{carmine}{rgb}{0.59, 0.0, 0.09}
+\definecolor{darkgreen}{rgb}{0.0, 0.2, 0.13}
+% --------------------------------------------------------------------------
+
+% --------------------------------------------------------------------------
+% Beamer configuration.
+% --------------------------------------------------------------------------
+\usetheme{default}
+\usecolortheme{default}
+\usefonttheme{serif}
+
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{navigation symbols}{}
+\hypersetup{pdfpagemode=UseNone}
+
+% footer.
+% \setbeamercolor{headFoot}{fg=white, bg=blu}
+% \setbeamertemplate{footline}{
+%   \leavevmode%
+%   \hbox{%
+%   \begin{beamercolorbox}
+%     [wd=.8\paperwidth,ht=2.3ex,dp=1ex,left]{headFoot}%
+%     \hspace*{2ex}\textbf\insertshorttitle\hspace*{2mm}|
+%     \hspace*{2mm}\textbf\insertshortauthor
+%   \end{beamercolorbox}%
+%   \begin{beamercolorbox}
+%     [wd=.2\paperwidth,ht=2.3ex,dp=1ex,right]{headFoot}%
+%     \insertframenumber{}/\inserttotalframenumber\hspace*{2ex}
+%   \end{beamercolorbox}}%
+%   \vskip 0pt%
+% }
+
+\setbeamerfont{frametitle}{size=\small,series=\bfseries}
+\setbeamercolor{frametitle}{fg=white,bg=blu}
+
+\setbeamerfont{framesubtitle}{size=\normalfont\scriptsize}
+\setbeamercolor{framesubtitle}{fg=white, bg=blu}
+
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{normal text}{fg=black}
+
+% \setbeamercolor{institute}{fg=blu}
+\setbeamercolor{title}{fg=blu}
+\setbeamercolor{bibliography item}{fg=blu}
+% \setbeamercolor{subtitle}{fg=blu}
+
+% \setbeamercolor{titlelike}{fg=blu}
+\setbeamerfont{footnote}{size=\tiny}
+\setbeamercolor{footnote}{fg=gray}
+\setbeamercolor{block title}{bg=white,fg=blu}
+% \setbeamercolor{block body}{bg=aliceblue}
+\setbeamercolor{item}{fg=blu} % color of bullets
+\setbeamercolor{subitem}{fg=blu}
+% \setbeamercolor{itemize/enumerate subbody}{fg=blu}
+% \setbeamertemplate{itemize subitem}{{\textendash}}
+% \setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+% \setbeamerfont{itemize/enumerate subitem}{size=\footnotesize}
+\setbeamertemplate{itemize item}{{$\bullet$}}
+\setbeamertemplate{itemize subitem}{{-}}
+\setbeamertemplate{itemize subsubitem}{{+}}
+% 
+% --------------------------------------------------------------------------
+% Fonts
+% --------------------------------------------------------------------------
+% \usefonttheme{professionalfonts}
+% \usefonttheme{serif}
+\usepackage{fontspec}
+\usepackage{mathtools}
+\usepackage{unicode-math}
+
+\defaultfontfeatures{Ligatures=TeX,Numbers=OldStyle}
+
+\RequirePackage[tt=false]{libertine}
+% \RequirePackage[libertine]{newtxmath}
+% TODO: Here, I used a specific font for listing,
+% you can use the one by default.
+%\setmonofont[Scale=0.85]{PragmataPro Mono Liga}
+
+% \setmonofont[ExternalLocation=fonts/
+% , BoldFont=DejaVuSansMono-Bold.ttf
+% , BoldItalicFont=DejaVuSansMono-BoldOblique.ttf
+% , ItalicFont=DejaVuSansMono-Oblique.ttf
+% ]{DejaVuSansMono.ttf}
+
+% \setmathfont[ExternalLocation=fonts/
+%   , Colour=blu
+%   ]{DejaVuMathTeXGyre.ttf}
+% \newfontfamily\mathfont{fonts/DejaVuMathTeXGyre.ttf}
+
+% \setmainfont[ExternalLocation=fonts/
+%   , BoldFont=SourceSansPro-Semibold.otf
+%   , BoldItalicFont=SourceSansPro-SemiboldIt.otf
+%   , ItalicFont=SourceSansPro-It.otf
+%   ]{SourceSansPro-Regular.otf}
+
+\definecolor{darker}{rgb}{0.64, 0.0, 0.0}
+\everymath{\color{darkgreen}}
+%\everydisplay{\color{darker}}
+
+% --------------------------------------------------------------------------
+% Agda Source code
+% --------------------------------------------------------------------------
+
+\usepackage{minted}
+\setminted[haskell]{
+  bgcolor   = aliceblue
+, fontsize  = \footnotesize
+, frame     = none
+% , framerule = 0.4pt
+% , framesep  = 0pt
+, style     = haskell
+}
+
+
+% --------------------------------------------------------------------------
+% References
+% --------------------------------------------------------------------------
+
+\usepackage[autostyle]{csquotes}
+\usepackage[
+    backend=biber
+  , doi=false
+  , eprint=false
+  , isbn=false
+  , natbib=true
+  , sortlocale=en_US
+  , style=authoryear-icomp
+  , url=true
+  , block=ragged
+]{biblatex}
+\addbibresource{ref.bib}
+\renewcommand*{\nameyeardelim}{\addcomma\addspace}
+\usepackage{silence}
+\WarningFilter{biblatex}{Patching footnotes failed}
+\WarningFilter{hyperref}{Token not allowed in a PDF string}
+
+% --------------------------------------------------------------------------
+% Title and Author
+% --------------------------------------------------------------------------
+
+\title[TS]{Elaborating dependent (co)pattern matching: No pattern left behind}
+
+\date{\today}
+\author[Alberto Centelles]{Alberto Centelles}
+\institute{heliaxdev/plt}
+% --------------------------------------------------------------------------
+
+\newsavebox\agdapragma
+
+\begin{document}
+
+\setcounter{page}{1}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+
+\begin{frame}{Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]{Introduction}
+  % A definition by copattern matching consists of \textbf{a list of clauses that are elaborated to a case tree}, which can be further translated to primitive eliminators.
+  Why not clauses (for a core language)?
+  \begin{itemize}
+    \item It is hard to see whether a set of clauses is covering all cases (Coquand, 1992) 
+    \item Evaluating the clauses directly can be slow for deeply nested patterns (Cardelli, 1984)
+    \item For type-checking dependent types, we need to decide equality of open terms which requires computing weak head normal forms efficiently.
+  \end{itemize}
+
+  Thus, instead of using clauses, we represent \textbf{functions by a case tree} in our core language.
+
+  In Juvix, clauses are not a \textbf{Term}.
+\end{frame}
+
+\begin{frame}[fragile]{Introduction}
+  
+
+  The elaboration of dependent pattern matching goes in two steps:
+   \begin{enumerate}
+     \item The list of clauses given by the user is translated to a case tree
+     \item The case tree is further translated to a term that only uses the primitive data type eliminators
+   \end{enumerate}
+
+  The paper proves that the translation from a list of clauses to a case tree preserves the first-match semantics of the clauses.
+  \begin{minted}{haskell}
+    sig max : nat -> nat -> nat
+    let max zero y = y
+    let max x zero = x
+    let (suc x) (suc y) = suc (max x y)
+  \end{minted}
+  We do not get \textbf{max x zero = x} but only \textbf{max (suc x') zero = suc x'}.
+
+  % * (Implemented in Agda 2.5.4).
+\end{frame}
+
+\begin{frame}[fragile]{Introduction}
+  The elaboration works on a configuration $\Gamma ⊢ P | u : C$, called a lhs problem, consisting of:
+  \begin{itemize}
+    \item A context $\Gamma$, i.e. a list of variables annotated with types. Initially, $\Gamma$ is the empty context $\epsilon$.
+    \item The current target type C. This type may depend on variables bound in $\Gamma$. Initially, C is the type of the function being defined.
+    \item A representation of the ‘self’ object \textit{u}, which is a term of type C in context $\Gamma$. Initially, \textit{u} is the function being defined itself. In each leaf of the case tree, \textit{u} will represent the left-hand side of the clause, where certain variables might be specialized due to overlap with previous clauses.
+    \item A list of partially deconstructed user clauses P. Initially, these are the clauses as written by the user.
+  \end{itemize}
+
+
+\end{frame}
+
+\section{Example}
+\begin{frame}[fragile]
+  \frametitle{Example}
+  \begin{minted}{haskell}
+    sig max : nat -> nat -> nat
+    let max zero y = y
+    let max x zero = x
+    let (suc x) (suc y) = suc (max x y)
+  \end{minted}
+
+  The initial lhs problem is $⊢ P_0\ |\ max: nat \to nat \to nat$ where:
+  \begin{align*}
+    P_0 =
+      \begin{cases}
+        zero & j \hookrightarrow j \\
+        i & zero \hookrightarrow i \\
+        (suc\ k) & (suc\ l) \hookrightarrow suc\ (max\ k\ l) 
+      \end{cases}       
+  \end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Rule: INTRO}
+  The first operation we need is to introduce a new variable m (rule \textbf{INTRO}). It transforms the initial problem into $(m: nat) ⊢ P_1\ |\ max\ m\ :\ nat → nat$ where
+  \begin{align*}
+    P_1 =
+      \begin{cases}
+        [m /^? {zero}] & j \hookrightarrow j \\
+        [m /^? i] & zero \hookrightarrow i \\
+        [m /^? {(suc\ k)}] & (suc\ l) \hookrightarrow suc\ (max\ k\ l) 
+      \end{cases}       
+  \end{align*}
+  This operation strips the first user pattern from each clause and replaces it by a constraint $m /^? p$ that it should be equal to the newly introduced variable $m$. We write these constraints between brackets in front of each individual clause.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Rule: SPLITCON}
+  The next operation we need is to perform a case analysis on the variable m (rule \textbf{SPLITCON}) This transforms the problem into two subproblems
+  \begin{itemize}
+    \item $⊢\ P_2\ |\ max\ zero\ :\ nat → nat$
+    \item $(p\ :\ nat)\ ⊢\ P_3\ |\ max\ (suc\ p)\ :\ nat → nat$
+  \end{itemize}
+  \begin{align*}
+    P_2 =
+      \begin{cases}
+        [zero /^? {zero}] & j \hookrightarrow j \\
+        [zero /^? i] & zero \hookrightarrow i \\
+        [zero /^? {(suc\ k)}] & (suc\ l) \hookrightarrow suc\ (max\ k\ l) 
+      \end{cases}       
+  \end{align*}
+  \begin{align*}
+    P_3 =
+      \begin{cases}
+        [suc\ p /^? {zero}] & j \hookrightarrow j \\
+        [suc\ p /^? i] & zero \hookrightarrow i \\
+        [suc\ p /^? {(suc\ k)}] & (suc\ l) \hookrightarrow suc\ (max\ k\ l) 
+      \end{cases}       
+  \end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Simplify}
+  We simplify the constraints as follows: clauses with absurd constraints (such as $zero /^?\ suc\ k$) are removed; trivial constraints (such as $zero\ /^?\ zero$) are dropped; and constraints between equal constructors (such as $suc\ p\ /^?\ suc\ k$) are simplified (i.e. to $p\ /^?\ k$):
+  \begin{align*}
+    P_2 =
+      \begin{cases}
+         & j \hookrightarrow j \\
+        [zero /^? i] & zero \hookrightarrow i
+      \end{cases}       
+  \end{align*}
+  \begin{align*}
+    P_3 =
+      \begin{cases}
+        [suc\ p /^? i] & zero \hookrightarrow i \\
+        [p /^? k] & (suc\ l) \hookrightarrow suc\ (max\ k\ l) 
+      \end{cases}       
+  \end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Repeat}
+  We continue applying these operations INTRO and SPLITCON (introducing a new variable and case analysis on a variable) until the first clause has no more user patterns and no more constraints where the user-written pattern on the left is a constructor.
+
+  For example, for $P_2$, we get after one more introduction step $(n\ :\ nat) ⊢ P_4\ |\ max\ zero\ n\ :\ nat$ where:
+  \begin{align*}
+    P_4 =
+      \begin{cases}
+        [n /^? j] &  \hookrightarrow j \\
+        [zero /^? i, n /^? zero] & \hookrightarrow i 
+      \end{cases}       
+  \end{align*}
+  We solve the remaining constraint in the first clause by instantiating $j := n$. This means we are done and we have $max\ zero\ n\ =\ j[n / j] = n$ (rule \textbf{DONE}). The second clause of $P_4$ still has unsolved constraints, but this is not a problem since it is not used for the construction of this branch of the case tree.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Case Tree}
+  We record the operations used when elaborating the clauses in a case tree. Our syntax for case trees is close to the normal term syntax in other languages: 
+  \begin{itemize}
+    \item $λx.$ for introducing a new variable
+    \item $case_x\{\}$ for a case split
+  \end{itemize}
+  For \textbf{max}, we get the following case tree:
+
+  For example, for $P_2$, we get after one more introduction step $(n\ :\ nat) ⊢ P_4\ |\ max\ zero\ n\ :\ nat$ where:
+  \begin{align*}
+    λm. case_m 
+      \begin{cases}
+        zero ↦ λ n. n \\
+        suc\ p ↦ λ n. case_n
+        \begin{cases}
+          zero ↦ suc p \\
+          suc\ q ↦ suc\ (max\ p\ q)
+        \end{cases}       
+      \end{cases}       
+  \end{align*}
+  We solve the remaining constraint in the first clause by instantiating $j := n$. This means we are done and we have $max\ zero\ n\ =\ j[n / j] = n$ (rule \textbf{DONE}). The second clause of $P_4$ still has unsolved constraints, but this is not a problem since it is not used for the construction of this branch of the case tree.
+\end{frame}
+
+\section{Elaboration}
+\begin{frame}[fragile]
+  \frametitle{Elaboration}
+  The inputs to the algorithm are the following:
+  \begin{itemize}
+    \item A signature $\Sigma$ containing previous declarations, as well as clauses for the branches of the case tree that have already been checked.
+    \item A context $\Gamma$ containing the types of the pattern variables: $dom(\Gamma)=PV(\bar{q})$.
+    \item The function $f$ currently being checked.
+    \item The copatterns $\bar{q}$ for the current branch of the case tree.
+    \item The refined target type C of the current branch.
+    \item The user input P.
+  \end{itemize}
+
+  The outputs of the algorithm are a signature $\Sigma'$ extending $\Sigma$ with new clauses and a well-typed case tree $Q$ such that $\Sigma;\Gamma ⊢ f\bar{q} := Q\ :\ C ⇝ \Sigma'$.
+
+  We represent the user input P to the algorithm as an (ordered) list of partially decom- posed clauses
+\end{frame}
+
+\section{Juvix}
+\begin{frame}[fragile]
+  \frametitle{Case Tree: AST}
+
+  \begin{minted}{haskell}
+  newtype Arg a = Arg a
+  \end{minted}
+
+  \begin{minted}{haskell}
+  -- | Branches in a case tree.
+  data Branch primTy primVal = Branch 
+    { patBranch :: Pattern primTy primVal
+    , caseBranch :: CaseTree primTy primVal
+    }
+  \end{minted}
+
+
+  \begin{minted}{haskell}
+  -- | Case tree with bodies.
+  data CaseTree primTy primVal
+    = Case (Arg Int) [Branch primTy primVal]
+      -- ^ @Case n bs@ stands for a match on the @n@-th argument
+      -- (counting from zero) with @bs@ as the case branches.
+    | Done [Arg NameSymbol.T] (Term primTy primVal)
+      -- ^ @Done xs b@ stands for the body @b@ where the @xs@ contains
+      -- hiding and name suggestions for the free variables. 
+      -- This is needed to build lambdas on the right hand side 
+      -- for partial applications which can still reduce.
+    | Fail [Arg NameSymbol.T]
+  \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Case Tree: AST}
+
+  \begin{minted}{haskell}
+    data Elim primTy primVal
+    = -- | Bound variables, in de Bruijn indices
+      Bound BoundVar
+    | -- | Free variables of type name (see above)
+      Free Name
+    | -- | elimination rule of PI (APP).
+      App (Elim primTy primVal) (Term primTy primVal)
+    | -- | Annotation with usage.
+      Ann Usage (Term primTy primVal) (Term primTy primVal)
+    
+    | CaseTree (CaseTree primTy primVal)
+  \end{minted}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Case Tree: Example}
+
+  \begin{minted}{haskell}
+    type SomePoint = P3 int int int | P2 int int 
+
+    sig f : SomePoint -> SomePoint -> int
+    let f (P3 x y z) (P3 u v w) = y + v
+    let f (P2 x y) (P2 u v) = y + u
+
+    sig main : int
+    let main = f (P3 2 3 4) (P3 5 6 7)
+  \end{minted}
+
+
+  \begin{minted}{haskell}
+    [ Clause
+        pat = [ PCon "P3" [PVar 0, PVar 1, PVar 2]
+              , PCon "P3" [PVar 3, PVar 4, PVar 5]
+              ]
+        body = App (App (Global "+") (Pattern 1)) (Pattern 4) 
+    , Clause
+        pat = [ PCon "P2" [PVar 6, PVar 7]
+              , PCon "P2" [PVar 8, PVar 9]
+              ]
+        body = App (App (Global "+") (Pattern 7)) (Pattern 8)
+    ]
+  \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Case Tree: Example}
+
+  \begin{minted}{haskell}
+    sig f : SomePoint -> SomePoint -> int
+    let f (P3 x y z) (P3 u v w) = y + v
+    let f (P2 x y) (P2 u v) = y + u
+  \end{minted}
+
+  \begin{minted}{haskell}
+    Case (Arg 0) 
+        [ Branch 
+            (PCon "P3" [PVar 0, PVar 1, PVar 2])
+            (Case (Arg 1)
+              [ Branch
+                  (PCon "P3" [PVar 3, PVar 4, PVar 5])
+                  (Done [] App (App (Global "+") (Pat 1)) (Pat 4))
+              , Branch (PCon "P2" [PVar 8, PVar 9]) (Fail [])])
+        , Branch 
+            (PCon "P2" [PVar 6, PVar 7]])
+            (Case (Arg 1)
+              [ Branch
+                  (PCon "P3" [PVar 3, PVar 4, PVar 5])
+                  (Fail [])
+              , Branch
+                  (PCon "P2" [PVar 8, PVar 9])
+                  (Done [] (App (App (Global "+") (Pat 7)) (Pat 8)))
+              ])]
+  \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Case Tree: Example}
+
+  \begin{minted}{haskell}
+    sig max : nat -> nat -> nat
+    let max zero y = y
+    let max x zero = x
+    let (suc x) (suc y) = suc (max x y)
+  \end{minted}
+
+
+  \begin{minted}{haskell}
+    Case (Arg 0) 
+      [ Branch 
+          (PCon "Nat.zero" [])) 
+          (Done [] (Lam (Elim (Bound 0)))
+      , Branch 
+          (PCon "Nat.succ" [PVar 0])
+          (Case (Arg 1) 
+            [ Branch 
+                (PCon "Nat.zero" [])
+                (Done [] (App (Global "Nat.succ) (Pat 0)))
+            , Branch 
+                (PCon "Nat.succ" [PVar 1])
+                (Done [] (App (App (Global "max") (Pat 0)) (Pat 1)))
+            ])]
+  \end{minted}
+\end{frame}
+
+
+\end{document}

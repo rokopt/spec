@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZhy{}\PYGZhy{} Application case part I.}
+infer Γ \PYG{o}{(}t₁ ∙ t₂\PYG{o}{)} \PYG{k+kr}{with} infer Γ t₁ \PYG{o+ow}{|} infer Γ t₂
+\PYG{o+ow}{...} \PYG{o+ow}{|} no  ∄τ⟨Γ⊢t₁:τ⟩ \PYG{o+ow}{|} \PYGZus{} \PYG{o+ow}{=} no helper
+    \PYG{k+kr}{where}
+      \PYG{n+nf}{helper} \PYG{o+ow}{:} ∄[ σ ] \PYG{o}{(}Γ ⊢ t₁ ∙ t₂ ∶ σ\PYG{o}{)}
+      helper \PYG{o}{(}τ \PYGZhy{}and\PYGZhy{} Γ⊢t₁:τ ∙ \PYGZus{}\PYG{o}{)}
+        \PYG{o+ow}{=} ∄τ⟨Γ⊢t₁:τ⟩ \PYG{o}{(}\PYGZus{} ↣ τ \PYGZhy{}and\PYGZhy{} Γ⊢t₁:τ\PYG{o}{)}
+
+\PYG{o+ow}{...} \PYG{o+ow}{|} yes \PYG{o}{(}base x \PYGZhy{}and\PYGZhy{} Γ⊢t₁:base\PYG{o}{)} \PYG{o+ow}{|} \PYGZus{} \PYG{o+ow}{=} no helper
+    \PYG{k+kr}{where}
+      \PYG{n+nf}{helper} \PYG{o+ow}{:} ∄[ σ ] \PYG{o}{(}Γ ⊢ t₁ ∙ t₂ ∶ σ\PYG{o}{)}
+      helper \PYG{o}{(}τ \PYGZhy{}and\PYGZhy{} Γ⊢t₁:\PYGZus{}↣\PYGZus{} ∙ \PYGZus{}\PYG{o}{)}
+        \PYG{k+kr}{with} ⊢\PYGZhy{}inj Γ⊢t₁:\PYGZus{}↣\PYGZus{} Γ⊢t₁:base
+      \PYG{o+ow}{...}  \PYG{o+ow}{|} \PYG{o}{()}
+\end{Verbatim}

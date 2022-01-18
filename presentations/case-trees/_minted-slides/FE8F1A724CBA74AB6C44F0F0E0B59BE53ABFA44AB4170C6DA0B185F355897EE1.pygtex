@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+  \PYG{c+c1}{\PYGZhy{}\PYGZhy{} | Case tree with bodies.}
+  \PYG{k+kr}{data} \PYG{k+kt}{CaseTree} \PYG{n}{primTy} \PYG{n}{primVal}
+    \PYG{o+ow}{=} \PYG{k+kt}{Case} \PYG{p}{(}\PYG{k+kt}{Arg} \PYG{k+kt}{Int}\PYG{p}{)} \PYG{p}{[}\PYG{k+kt}{Branch} \PYG{n}{primTy} \PYG{n}{primVal}\PYG{p}{]}
+      \PYG{c+c1}{\PYGZhy{}\PYGZhy{} \PYGZca{} @Case n bs@ stands for a match on the @n@\PYGZhy{}th argument}
+      \PYG{c+c1}{\PYGZhy{}\PYGZhy{} (counting from zero) with @bs@ as the case branches.}
+    \PYG{o}{|} \PYG{k+kt}{Done} \PYG{p}{[}\PYG{k+kt}{Arg} \PYG{k+kt}{NameSymbol}\PYG{o}{.}\PYG{k+kt}{T}\PYG{p}{]} \PYG{p}{(}\PYG{k+kt}{Term} \PYG{n}{primTy} \PYG{n}{primVal}\PYG{p}{)}
+      \PYG{c+c1}{\PYGZhy{}\PYGZhy{} \PYGZca{} @Done xs b@ stands for the body @b@ where the @xs@ contains}
+      \PYG{c+c1}{\PYGZhy{}\PYGZhy{} hiding and name suggestions for the free variables.}
+      \PYG{c+c1}{\PYGZhy{}\PYGZhy{} This is needed to build lambdas on the right hand side}
+      \PYG{c+c1}{\PYGZhy{}\PYGZhy{} for partial applications which can still reduce.}
+    \PYG{o}{|} \PYG{k+kt}{Fail} \PYG{p}{[}\PYG{k+kt}{Arg} \PYG{k+kt}{NameSymbol}\PYG{o}{.}\PYG{k+kt}{T}\PYG{p}{]}
+\end{Verbatim}

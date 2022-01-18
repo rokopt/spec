@@ -1,0 +1,20 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kr}{open} \PYG{k+kr}{import} \PYG{n}{Syntax} Type
+
+\PYG{k+kr}{postulate} A \PYG{o+ow}{:} Type
+
+x \PYG{o+ow}{=} var \PYG{l+s}{\PYGZdq{}x\PYGZdq{}}
+y \PYG{o+ow}{=} var \PYG{l+s}{\PYGZdq{}y\PYGZdq{}}
+z \PYG{o+ow}{=} var \PYG{l+s}{\PYGZdq{}z\PYGZdq{}}
+
+\PYG{c+c1}{\PYGZhy{}\PYGZhy{} Combinators.}
+\PYG{c+c1}{\PYGZhy{}\PYGZhy{} I, K, S : Expr}
+
+I \PYG{o+ow}{=} lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)} x                  \PYG{c+c1}{\PYGZhy{}\PYGZhy{} λx.x, x : A}
+K \PYG{o+ow}{=} lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)} \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∶ A\PYG{o}{)} x\PYG{o}{)}  \PYG{c+c1}{\PYGZhy{}\PYGZhy{} λxy.x, x,y : A}
+S \PYG{o+ow}{=}
+  lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}x\PYGZdq{}} ∶ A\PYG{o}{)}
+    \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}y\PYGZdq{}} ∶ A\PYG{o}{)}
+      \PYG{o}{(}lam \PYG{o}{(}\PYG{l+s}{\PYGZdq{}z\PYGZdq{}} ∶ A\PYG{o}{)}
+        \PYG{o}{((}x ∙ z\PYG{o}{)} ∙ \PYG{o}{(}y ∙ z\PYG{o}{))))}        \PYG{c+c1}{\PYGZhy{}\PYGZhy{} λxyz.xz(yz), x,y,z : A}
+\end{Verbatim}

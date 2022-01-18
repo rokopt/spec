@@ -1,0 +1,24 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{\PYGZus{}T≟\PYGZus{}} \PYG{o+ow}{:} \PYG{o}{(}τ τ′ \PYG{o+ow}{:} Type\PYG{o}{)} \PYG{o+ow}{→} Dec \PYG{o}{(}τ ≡ τ′\PYG{o}{)}
+base A T≟ base B \PYG{k+kr}{with} A ≟ B
+\PYG{o+ow}{...} \PYG{o+ow}{|} yes A≡B \PYG{o+ow}{=} yes \PYG{o}{(}cong base A≡B\PYG{o}{)}
+\PYG{o+ow}{...} \PYG{o+ow}{|} no  A≢B \PYG{o+ow}{=} no \PYG{o}{(}A≢B ∘ helper\PYG{o}{)}
+  \PYG{k+kr}{where}
+    \PYG{n+nf}{helper} \PYG{o+ow}{:} base A ≡ base B \PYG{o+ow}{→} A ≡ B
+    helper refl \PYG{o+ow}{=} refl
+base A T≟ \PYG{o}{(}\PYGZus{} ↣ \PYGZus{}\PYG{o}{)} \PYG{o+ow}{=} no \PYG{o}{(}\PYG{o+ow}{λ} \PYG{o}{())}
+
+\PYG{o}{(}τ₁ ↣ τ₂\PYG{o}{)} T≟ base B \PYG{o+ow}{=} no \PYG{o}{(}\PYG{o+ow}{λ} \PYG{o}{())}
+\PYG{o}{(}τ₁ ↣ τ₂\PYG{o}{)} T≟ \PYG{o}{(}τ₁′ ↣ τ₂′\PYG{o}{)} \PYG{k+kr}{with} τ₁ T≟ τ₁′
+\PYG{o+ow}{...} \PYG{o+ow}{|} no  τ₁≢τ₁′ \PYG{o+ow}{=} no \PYG{o}{(}τ₁≢τ₁′ ∘ helper\PYG{o}{)}
+  \PYG{k+kr}{where}
+    \PYG{n+nf}{helper} \PYG{o+ow}{:}  τ₁ ↣ τ₂ ≡ τ₁′ ↣ τ₂′ \PYG{o+ow}{→} τ₁ ≡ τ₁′
+    helper refl \PYG{o+ow}{=} refl
+\PYG{o+ow}{...} \PYG{o+ow}{|} yes τ₁≡τ₁′
+  \PYG{k+kr}{with} τ₂ T≟ τ₂′
+\PYG{o+ow}{...}  \PYG{o+ow}{|} yes τ₂≡τ₂′ \PYG{o+ow}{=} yes \PYG{o}{(}cong₂ \PYGZus{}↣\PYGZus{} τ₁≡τ₁′ τ₂≡τ₂′\PYG{o}{)}
+\PYG{o+ow}{...}  \PYG{o+ow}{|} no  τ₂≢τ₂′ \PYG{o+ow}{=} no \PYG{o}{(}τ₂≢τ₂′ ∘ helper\PYG{o}{)}
+  \PYG{k+kr}{where}
+    \PYG{n+nf}{helper} \PYG{o+ow}{:} τ₁ ↣ τ₂ ≡ τ₁′ ↣ τ₂′ \PYG{o+ow}{→} τ₂ ≡ τ₂′
+    helper refl \PYG{o+ow}{=} refl
+\end{Verbatim}

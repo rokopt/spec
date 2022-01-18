@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{infer} \PYG{o+ow}{:} \PYG{o+ow}{∀} \PYG{o}{\PYGZob{}}n\PYG{o}{\PYGZcb{}} Γ \PYG{o}{(}t \PYG{o+ow}{:} Expr n\PYG{o}{)} \PYG{o+ow}{→} Dec \PYG{o}{(}∃[ τ ] \PYG{o}{(}Γ ⊢ t ∶ τ\PYG{o}{))}
+
+\PYG{c+c1}{\PYGZhy{}\PYGZhy{} Var case.}
+infer Γ \PYG{o}{(}var x\PYG{o}{)} \PYG{o+ow}{=} yes \PYG{o}{(}lookup x Γ \PYGZhy{}and\PYGZhy{} tVar\PYG{o}{)}
+
+\PYG{c+c1}{\PYGZhy{}\PYGZhy{} Abstraction case.}
+infer Γ \PYG{o}{(}lam τ t\PYG{o}{)} \PYG{k+kr}{with} infer \PYG{o}{(}τ ∷ Γ\PYG{o}{)} t
+\PYG{o+ow}{...} \PYG{o+ow}{|} yes \PYG{o}{(}σ \PYGZhy{}and\PYGZhy{} Γ,τ⊢t:σ\PYG{o}{)} \PYG{o+ow}{=} yes \PYG{o}{(}τ ↣ σ \PYGZhy{}and\PYGZhy{} tLam Γ,τ⊢t:σ\PYG{o}{)}
+\PYG{o+ow}{...} \PYG{o+ow}{|} no  Γ,τ⊬t:σ \PYG{o+ow}{=} no helper
+  \PYG{k+kr}{where}
+    \PYG{n+nf}{helper} \PYG{o+ow}{:} ∄[ τ′ ] \PYG{o}{(}Γ ⊢ lam τ t ∶ τ′\PYG{o}{)}
+    helper \PYG{o}{(}base A \PYGZhy{}and\PYGZhy{} \PYG{o}{())}
+    helper \PYG{o}{(}\PYG{o+ow}{.}τ ↣ σ \PYGZhy{}and\PYGZhy{} tLam Γ,τ⊢t:σ\PYG{o}{)}
+      \PYG{o+ow}{=} Γ,τ⊬t:σ \PYG{o}{(}σ \PYGZhy{}and\PYGZhy{} Γ,τ⊢t:σ\PYG{o}{)}
+\end{Verbatim}

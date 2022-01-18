@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+    \PYG{n}{sig} \PYG{n}{max} \PYG{k+kt}{:} \PYG{n}{nat} \PYG{o+ow}{\PYGZhy{}\PYGZgt{}} \PYG{n}{nat} \PYG{o+ow}{\PYGZhy{}\PYGZgt{}} \PYG{n}{nat}
+    \PYG{k+kr}{let} \PYG{n}{max} \PYG{n}{zero} \PYG{n}{y} \PYG{o+ow}{=} \PYG{n}{y}
+    \PYG{k+kr}{let} \PYG{n}{max} \PYG{n}{x} \PYG{n}{zero} \PYG{o+ow}{=} \PYG{n}{x}
+    \PYG{k+kr}{let} \PYG{p}{(}\PYG{n}{suc} \PYG{n}{x}\PYG{p}{)} \PYG{p}{(}\PYG{n}{suc} \PYG{n}{y}\PYG{p}{)} \PYG{o+ow}{=} \PYG{n}{suc} \PYG{p}{(}\PYG{n}{max} \PYG{n}{x} \PYG{n}{y}\PYG{p}{)}
+\end{Verbatim}
