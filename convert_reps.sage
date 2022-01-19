@@ -66,9 +66,6 @@ fan1 = I1.groebner_fan()
 print_gb_fan_stats(fan1)
 
 print()
-def dumb_inclusion_check(gb, fan):
-	return sorted(gb).__repr__() in [sorted(gb).__repr__() for gb in fan]
-print(f"fans share gb: {any([dumb_inclusion_check(gb, fan0) for gb in fan1])}")
 
 elim_ideal_0 = I0.elimination_ideal(R.gens()[1:]).groebner_basis()
 elim_ideal_1 = I1.elimination_ideal(R.gens()[1:]).groebner_basis()
