@@ -1,5 +1,17 @@
 # import fgb_sage
 
+'''
+The Question.
+Given
+    • set of constraints c
+    • target function w
+    • ideal I
+find set of polynomials f_0, …, f_k such that
+    • c holds ∀f_i
+    • w(f_0, …, f_k) is minimized
+    • I is the elimination ideal of <f_i> when eliminating vars(<f_i>) - vars(I)
+'''
+
 p = previous_prime(2^15)
 field = GF(p)
 
