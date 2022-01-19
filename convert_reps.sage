@@ -38,16 +38,15 @@ print()
 print(" == Gröbner Fan of 'roots of nullifier' ==")
 
 polys0 = [
-	(x-0) * (x-1) - a,
-	(x-2) * (x-3) - b,
-	(x-4) * (x-5) - c,
-	(x-6) * (x-7) - d,
-	a * b - e,
-	c * d - f,
-	e * f,
+    (x-0) * (x-1) - a,
+    (x-2) * (x-3) - b,
+    (x-4) * (x-5) - c,
+    (x-6) * (x-7) - d,
+    a * b - e,
+    c * d - f,
+    e * f,
 ]
 I0 = Ideal(polys0)
-# gb0 = fgb_sage.groebner_basis(I0)
 fan0 = I0.groebner_fan()
 print_gb_fan_stats(fan0)
 
@@ -55,13 +54,12 @@ print()
 print(" == Gröbner Fan of 'binary decomposition' ==")
 
 polys1 = [
-	a * a - a,
-	b * b - b,
-	c * c - c,
-	4*a + 2*b + c - x,
+    a * a - a,
+    b * b - b,
+    c * c - c,
+    4*a + 2*b + c - x,
 ]
 I1 = Ideal(polys1)
-# gb1 = fgb_sage.groebner_basis(I1)
 fan1 = I1.groebner_fan()
 print_gb_fan_stats(fan1)
 
