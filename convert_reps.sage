@@ -21,10 +21,10 @@ R.inject_variables()
 def print_gb_fan_stats(gb_fan):
     gbs = gb_fan.reduced_groebner_bases()
     lens_of_gbs = [len(gb) for gb in gbs]
-    print(f"num GBs in Fan:   {(len(gbs))}")
-    print(f"min #polys in GB:  {min(lens_of_gbs)}")
-    print(f"max #polys in GB:  {max(lens_of_gbs)}")
-    print(f"mean #polys in GB: {mean(lens_of_gbs).n(digits=3)}")
+    print(f"num GBs in Fan:         {(len(gbs))}")
+    print(f"min #polys in GB:       {min(lens_of_gbs)}")
+    print(f"max #polys in GB:       {max(lens_of_gbs)}")
+    print(f"mean #polys in GB:      {mean(lens_of_gbs).n(digits=3)}")
 
 
 print(" ===============")
@@ -48,6 +48,7 @@ polys0 = [
 ]
 I0 = Ideal(polys0)
 fan0 = I0.groebner_fan()
+print(f"#polys in input system: {len(polys0)}")
 print_gb_fan_stats(fan0)
 
 print()
@@ -61,6 +62,7 @@ polys1 = [
 ]
 I1 = Ideal(polys1)
 fan1 = I1.groebner_fan()
+print(f"#polys in input system: {len(polys1)}")
 print_gb_fan_stats(fan1)
 
 print()
@@ -78,6 +80,7 @@ reduced_poly_3 = reduced_poly_1.reduce([reductor_3])
 polys2 = [reduced_poly_3, reductor_0, reductor_1, reductor_2, reductor_3]
 I2 = Ideal(polys2)
 fan2 = I2.groebner_fan()
+print(f"#polys in input system: {len(polys2)}")
 print_gb_fan_stats(fan2)
 
 # == comparison of above fans & gbs
