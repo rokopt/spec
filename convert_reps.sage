@@ -30,6 +30,11 @@ def print_gb_fan_stats(gb_fan):
 print(" ===============")
 print(" == 0 ≤ x < 8 ==")
 print(" ===============")
+
+target_poly = prod([x-i for i in range(8)])
+print(f"Target polynomial: {target_poly}")
+
+print()
 print(" == Gröbner Fan of 'roots of nullifier' ==")
 
 polys0 = [
