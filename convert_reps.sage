@@ -18,6 +18,15 @@ field = GF(p)
 R = PolynomialRing(field, 'x,a,b,c,d,e,f')
 R.inject_variables()
 
+def print_gb_fan_stats(gb_fan):
+    gbs = gb_fan.reduced_groebner_bases()
+    lens_of_gbs = [len(gb) for gb in gbs]
+    print(f"num GBs in Fan:   {(len(gbs))}")
+    print(f"min #polys in GB:  {min(lens_of_gbs)}")
+    print(f"max #polys in GB:  {max(lens_of_gbs)}")
+    print(f"mean #polys in GB: {mean(lens_of_gbs).n(digits=3)}")
+
+
 print(" ===============")
 print(" == 0 ≤ x < 8 ==")
 print(" ===============")
@@ -35,12 +44,7 @@ polys0 = [
 I0 = Ideal(polys0)
 # gb0 = fgb_sage.groebner_basis(I0)
 fan0 = I0.groebner_fan()
-gbs0 = fan0.reduced_groebner_bases()
-
-print(f"num GBs in Fan:   {(len(gbs0))}")
-print(f"min #polys in GB:  {min([len(gb) for gb in gbs0])}")
-print(f"max #polys in GB:  {max([len(gb) for gb in gbs0])}")
-print(f"mean #polys in GB: {mean([len(gb) for gb in gbs0]).n(digits=3)}")
+print_gb_fan_stats(fan0)
 
 print()
 print(" == Gröbner Fan of 'binary decomposition' ==")
@@ -54,12 +58,7 @@ polys1 = [
 I1 = Ideal(polys1)
 # gb1 = fgb_sage.groebner_basis(I1)
 fan1 = I1.groebner_fan()
-gbs1 = fan1.reduced_groebner_bases()
-
-print(f"num GBs in Fan:   {(len(gbs0))}")
-print(f"min #polys in GB:  {min([len(gb) for gb in gbs1])}")
-print(f"max #polys in GB:  {max([len(gb) for gb in gbs1])}")
-print(f"mean #polys in GB: {mean([len(gb) for gb in gbs1]).n(digits=3)}")
+print_gb_fan_stats(fan1)
 
 print()
 def dumb_inclusion_check(gb, fan):
