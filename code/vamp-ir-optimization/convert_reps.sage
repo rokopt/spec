@@ -70,10 +70,10 @@ print()
 print(" == Gröbner Fan of 'binary decomposition' ==")
 
 polys1 = [
-    a * a - a,
-    b * b - b,
-    c * c - c,
-    4*a + 2*b + c - x,
+    a^2 - a, # 'a' is a bit
+    b^2 - b,
+    c^2 - c,
+    2^2*a + 2^1*b + 2^0*c - x,
 ]
 I1 = Ideal(polys1)
 print_gb_fan_stats(I1)
