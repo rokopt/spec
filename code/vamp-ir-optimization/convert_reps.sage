@@ -95,9 +95,9 @@ print()
 print(f"Elimination Ideal I0: {elim_ideal_0}")
 print(f"Elimination Ideal I1: {elim_ideal_1}")
 print(f"Elimination Ideal I2: {elim_ideal_2}")
-print(f"Identical elimination ideals: {elim_ideal_0 == elim_ideal_1 and elim_ideal_1 == elim_ideal_2}")
+print(f"Elim ideals are same: {elim_ideal_0 == elim_ideal_1 and elim_ideal_1 == elim_ideal_2}")
 
 f = elim_ideal_0[0].univariate_polynomial()
 
 print()
-print(f"Factors of that poly: {f.factor()}")
+print(f"Roots of that poly:   {sorted([r[0] for r in f.roots()])}")
