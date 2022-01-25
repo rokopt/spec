@@ -19,6 +19,7 @@ Intermediate Questions:
 • Is there a better way than Approach 3 for particular input shapes / problems?
 • How can we frame Approach 2 (binary decomposition) in a more mathematical / algebraic way?
 • For Approach 3, how can we identify if / are there different choices of which reduction to apply that are equivalent (e.g., commutative, or something)?
+• Are the ideals that we're dealing with radical?
 '''
 
 p = previous_prime(2^15)
