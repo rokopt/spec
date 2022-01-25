@@ -25,7 +25,7 @@ Intermediate Questions:
 p = previous_prime(2^15)
 field = GF(p)
 
-R = PolynomialRing(field, 'x,a,b,c,d,e,f')
+R = PolynomialRing(field, 'x,a,b,c,d,e,f,g')
 R.inject_variables()
 
 num_variables_in_gb = lambda gb : len(set.union(*[set(p.variables()) for p in gb]))
@@ -45,20 +45,25 @@ def print_gb_fan_stats(I):
     print(f"mean #polys in GB:      {mean(lens_of_gbs).n(digits=3)}")
 
 
-print(" ===============")
-print(" == 3 ≤ x < 6 ==")
-print(" ===============")
+print(" ================")
+print(" == 3 ≤ x < 12 ==")
+print(" ================")
 
-target_poly = prod([x-i for i in range(3,6)])
+target_poly = prod([x-i for i in range(3,12)])
 print(f"Target polynomial: {target_poly}")
 
 print()
 print(" == Gröbner Fan of 'roots of nullifier' ==")
 
 polys0 = [
-    (x-3) * (x-4) - a,
-    (x-5) * a - b,
-    b,
+    (x- 3) * (x- 4) - a,
+    (x- 5) * a - b,
+    (x- 6) * b - c,
+    (x- 7) * c - d,
+    (x- 8) * d - e,
+    (x- 9) * e - f,
+    (x-10) * f - g,
+    (x-11) * g,
 ]
 I0 = Ideal(polys0)
 print_gb_fan_stats(I0)
@@ -67,31 +72,39 @@ print()
 print(" == Gröbner Fan of 'binary decomposition' ==")
 
 polys1 = [
-    # a, b, and c are bits
+    # a, b, c, and d are bits
     (a-0) * (a-1),
     (b-0) * (b-1),
     (c-0) * (c-1),
+    (d-0) * (d-1),
 
-    # x is the binary decomposition of a, b, c
-    2^2*a + 2^1*b + 2^0*c - x,
+    # x is the binary decomposition of a, b, c, d
+    2^3*a + 2^2*b + 2^1*c + 2^0*d - x,
 
-    # x  a b c  f
-    # 0  0 0 0
-    # 1  0 0 1
-    # 2  0 1 0
-    # 3  0 1 1  0
-    # 4  1 0 0  0
-    # 5  1 0 1  0
-    # 6  1 1 0
-    # 7  1 1 1
-
-    # DNF
-    # (a or not b or not c) and (not a or b)
-    # (a + 1-b + 1-c) * (1-a + b),
+    #  x  a b c d  f
+    #  0  0 0 0 0
+    #  1  0 0 0 1
+    #  2  0 0 1 0
+    #  3  0 0 1 1  0
+    #  4  0 1 0 0  0
+    #  5  0 1 0 1  0
+    #  6  0 1 1 0  0
+    #  7  0 1 1 1  0
+    #  8  1 0 0 0  0
+    #  9  1 0 0 1  0
+    # 10  1 0 1 0  0
+    # 11  1 0 1 1  0
+    # 12  1 1 0 0
+    # 13  1 1 0 1
+    # 14  1 1 1 0
+    # 15  1 1 1 1
 
     # CNF
-    # (not a and not b) or (a and b) or (not a and not c)
-    ((1-a) * (1-b)) + (a * b) + ((1-a) * (1-c)),
+    # ((1-a) * (1-b) * (1-c)) + ((1-a) * (1-b) * (1-d)) + (a * b),
+
+    # DNF
+    (a + 1-b) * (1-a + b) - e,
+    e * (a + 1-c + 1-d)
 ]
 I1 = Ideal(polys1)
 print_gb_fan_stats(I1)
@@ -100,9 +113,15 @@ print()
 print(" == Gröbner Fan using reduction by square polynomials ==")
 
 reductor_0 = x^2 - a
+reductor_1 = a^2 - b
+reductor_2 = b^2 - c
+reductor_3 = a*b - d
 reduced_poly_0 = target_poly.reduce([reductor_0])
+reduced_poly_1 = reduced_poly_0.reduce([reductor_1])
+reduced_poly_2 = reduced_poly_1.reduce([reductor_2])
+reduced_poly_3 = reduced_poly_2.reduce([reductor_3])
 
-polys2 = [reduced_poly_0, reductor_0]
+polys2 = [reduced_poly_3, reductor_0, reductor_1, reductor_2, reductor_3]
 I2 = Ideal(polys2)
 print_gb_fan_stats(I2)
 
