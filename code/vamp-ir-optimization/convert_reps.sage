@@ -28,21 +28,30 @@ field = GF(p)
 R = PolynomialRing(field, 'x,a,b,c,d,e,f,g')
 R.inject_variables()
 
+target_constraints_met = lambda system : all([poly.degree() <= 2 for poly in system])
+
 num_variables_in_gb = lambda gb : len(set.union(*[set(p.variables()) for p in gb]))
 
 def print_gb_fan_stats(I):
     gb_fan = I.groebner_fan()
     gbs = gb_fan.reduced_groebner_bases()
+    gbs_cnstrd = [gb for gb in gbs if target_constraints_met(gb)]
     lens_of_gbs = [len(gb) for gb in gbs]
+    lens_of_gbs_cnstrd = [len(gb) for gb in gbs_cnstrd]
     nums_of_vars = [num_variables_in_gb(gb) for gb in gbs]
     if min(nums_of_vars) != max(nums_of_vars):
         print(f" !!! something is weird with the number of vars! Start your investigation…")
+    print(f"sys meets constraints:  {target_constraints_met(I.basis)}")
+    print(f"input sys is GB:        {I.basis_is_groebner()}")
     print(f"#polys in input system: {len(I.basis)}")
     print(f"#vars in input system:  {nums_of_vars[0]}")
-    print(f"#GBs in Fan:            {(len(gbs))}")
+    print(f"#GBs in Fan:            {len(gbs)}")
     print(f"min #polys in GB:       {min(lens_of_gbs)}")
     print(f"max #polys in GB:       {max(lens_of_gbs)}")
     print(f"mean #polys in GB:      {mean(lens_of_gbs).n(digits=3)}")
+    print(f"#GBs in Fan (cnstrd):   {len(gbs_cnstrd)}")
+    print(f"min #polys (cnstrd):    {min(lens_of_gbs_cnstrd)}")
+    print(f"max #polys (cnstrd):    {max(lens_of_gbs_cnstrd)}")
 
 
 print(" ================")
