@@ -124,13 +124,11 @@ print(" == Gröbner Fan using reduction by square polynomials ==")
 reductor_0 = x^2 - a
 reductor_1 = a^2 - b
 reductor_2 = b^2 - c
-reductor_3 = a*b - d
 reduced_poly_0 = target_poly.reduce([reductor_0])
 reduced_poly_1 = reduced_poly_0.reduce([reductor_1])
 reduced_poly_2 = reduced_poly_1.reduce([reductor_2])
-reduced_poly_3 = reduced_poly_2.reduce([reductor_3])
 
-polys2 = [reduced_poly_3, reductor_0, reductor_1, reductor_2, reductor_3]
+polys2 = [reduced_poly_2, reductor_0, reductor_1, reductor_2]
 I2 = Ideal(polys2)
 print_gb_fan_stats(I2)
 
