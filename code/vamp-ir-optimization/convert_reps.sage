@@ -22,7 +22,7 @@ Intermediate Questions:
 • Are the ideals that we're dealing with radical?
 '''
 
-p = previous_prime(2^15)
+p = 17
 field = GF(p)
 
 R = PolynomialRing(field, 'x,a,b,c,d,e,f,g')
