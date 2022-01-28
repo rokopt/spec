@@ -48,10 +48,9 @@ def print_gb_fan_stats(I):
     print(f"#GBs in Fan:            {len(gbs)}")
     print(f"min #polys in GB:       {min(lens_of_gbs)}")
     print(f"max #polys in GB:       {max(lens_of_gbs)}")
-    print(f"mean #polys in GB:      {mean(lens_of_gbs).n(digits=3)}")
-    print(f"#GBs in Fan (cnstrd):   {len(gbs_cnstrd)}")
-    print(f"min #polys (cnstrd):    {min(lens_of_gbs_cnstrd)}")
-    print(f"max #polys (cnstrd):    {max(lens_of_gbs_cnstrd)}")
+    print(f"#GBs in Fan (constrained):   {len(gbs_cnstrd)}")
+    print(f"min #polys (constrained):    {min(lens_of_gbs_cnstrd, default='N/A')}")
+    print(f"max #polys (constrained):    {max(lens_of_gbs_cnstrd, default='N/A')}")
 
 
 print(" ================")
