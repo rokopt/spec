@@ -51,6 +51,7 @@ def print_gb_fan_stats(I):
     print(f"#GBs in Fan (constrained):   {len(gbs_cnstrd)}")
     print(f"min #polys (constrained):    {min(lens_of_gbs_cnstrd, default='N/A')}")
     print(f"max #polys (constrained):    {max(lens_of_gbs_cnstrd, default='N/A')}")
+    print(f"Dimension of I:         {I.dimension()}")
 
 
 print(" ================")
