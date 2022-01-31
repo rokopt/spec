@@ -25,12 +25,15 @@ Intermediate Questions:
 p = 17
 field = GF(p)
 
-R = PolynomialRing(field, 'x,a,b,c,d,e,f,g')
+variable_names = ['x', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']
+R = PolynomialRing(field, variable_names)
 R.inject_variables()
 
 target_constraints_met = lambda system : all([poly.degree() <= 2 for poly in system])
 
 num_variables_in_gb = lambda gb : len(set.union(*[set(p.variables()) for p in gb]))
+
+trim_variables = lambda I : I.change_ring(PolynomialRing(field, variable_names[:num_variables_in_gb(I.basis)]))
 
 def print_gb_fan_stats(I):
     gb_fan = I.groebner_fan()
@@ -74,7 +77,7 @@ polys0 = [
     (x-10) * f - g,
     (x-11) * g,
 ]
-I0 = Ideal(polys0)
+I0 = trim_variables(Ideal(polys0))
 print_gb_fan_stats(I0)
 
 print()
@@ -121,7 +124,7 @@ polys1 = [
     # the following is weird:
     # (a * (1-b)) + ((1-a) * b) + (a * (1-c) * (1-d))
 ]
-I1 = Ideal(polys1)
+I1 = trim_variables(Ideal(polys1))
 print_gb_fan_stats(I1)
 
 print()
@@ -135,14 +138,14 @@ reduced_poly_1 = reduced_poly_0.reduce([reductor_1])
 reduced_poly_2 = reduced_poly_1.reduce([reductor_2])
 
 polys2 = [reduced_poly_2, reductor_0, reductor_1, reductor_2]
-I2 = Ideal(polys2)
+I2 = trim_variables(Ideal(polys2))
 print_gb_fan_stats(I2)
 
 # == comparison of above fans & gbs
 
-elim_ideal_0 = I0.elimination_ideal(R.gens()[1:]).groebner_basis()
-elim_ideal_1 = I1.elimination_ideal(R.gens()[1:]).groebner_basis()
-elim_ideal_2 = I2.elimination_ideal(R.gens()[1:]).groebner_basis()
+elim_ideal_0 = I0.elimination_ideal(I0.ring().gens()[1:]).groebner_basis()
+elim_ideal_1 = I1.elimination_ideal(I1.ring().gens()[1:]).groebner_basis()
+elim_ideal_2 = I2.elimination_ideal(I2.ring().gens()[1:]).groebner_basis()
 
 print()
 print(f"Elimination Ideal I0: {elim_ideal_0}")
