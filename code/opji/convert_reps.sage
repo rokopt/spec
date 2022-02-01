@@ -113,16 +113,13 @@ polys1 = [
 
     # DNF
     # (not a and not b and not c) or (not a and not b and not d) or (a and b)
-    # ((1-a) * (1-b) * (1-c)) + ((1-a) * (1-b) * (1-d)) + (a * b),
-    # the following is weird:
-    # ((1-a) + (1-b) + (1-c)) * ((1-a) + (1-b) + (1-d)) * (a + b),
+    (e * (1-c)) + (e * (1-d)) + (a * b),
+    (1-a) * (1-b) - e,
 
     # CNF
     # (a or not b) and (not a or b) and (a or not c or not d)
-    (a + 1-b) * (1-a + b) - e,
-    e * (a + 1-c + 1-d)
-    # the following is weird:
-    # (a * (1-b)) + ((1-a) * b) + (a * (1-c) * (1-d))
+    # (a + 1-b) * (1-a + b) - e,
+    # e * (a + 1-c + 1-d)
 ]
 I1 = trim_variables(Ideal(polys1))
 print_gb_fan_stats(I1)
