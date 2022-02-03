@@ -29,7 +29,8 @@ variable_names = ['x', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l
 R = PolynomialRing(field, variable_names)
 R.inject_variables()
 
-target_constraints_met = lambda system : all([poly.degree() <= 2 for poly in system])
+target_degree = 3
+target_constraints_met = lambda system : all([poly.degree() <= target_degree for poly in system])
 
 num_variables_in_gb = lambda gb : len(set.union(*[set(p.variables()) for p in gb]))
 
@@ -61,22 +62,24 @@ print(" ================")
 print(" == 3 ≤ x < 12 ==")
 print(" ================")
 
-target_poly = prod([x-i for i in range(3,12)])
+target_roots = range(3,12)
+target_poly = prod([x-i for i in target_roots])
 print(f"Target polynomial: {target_poly}")
 
 print()
 print(" == Gröbner Fan of 'roots of nullifier' ==")
 
-polys0 = [
-    (x- 3) * (x- 4) - a,
-    (x- 5) * a - b,
-    (x- 6) * b - c,
-    (x- 7) * c - d,
-    (x- 8) * d - e,
-    (x- 9) * e - f,
-    (x-10) * f - g,
-    (x-11) * g,
-]
+curr_var = R.gens()[1] # a
+initial_poly = prod([R.gens()[0]-i for i in target_roots[:target_degree]]) - curr_var
+polys0 = [initial_poly]
+root_idx_for_next_polys = range(target_degree, len(target_roots), target_degree - 1)
+num_next_polys = len(root_idx_for_next_polys)
+for var_idx, root_idx in zip(range(2, num_next_polys + 2), root_idx_for_next_polys):
+    curr_var = R.gens()[var_idx]
+    prev_var = R.gens()[var_idx - 1]
+    next_poly = prod([R.gens()[0]-i for i in target_roots[root_idx: root_idx + target_degree - 1]]) * prev_var - curr_var
+    polys0 += [next_poly]
+polys0[-1] += curr_var # don't introduce new variable for the last polynomial
 I0 = trim_variables(Ideal(polys0))
 print_gb_fan_stats(I0)
 
