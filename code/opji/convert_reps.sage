@@ -138,17 +138,45 @@ polys2 = [reduced_poly_2, reductor_0, reductor_1, reductor_2]
 I2 = trim_variables(Ideal(polys2))
 print_gb_fan_stats(I2)
 
+print()
+print(" == Unification attempt ==")
+
+reductors = [
+    (a-0)*(a-1),
+    (b-0)*(b-1),
+    (c-0)*(c-1),
+    (d-0)*(d-1),
+    2^3*a + 2^2*b + 2^1*c + 2^0*d - x,
+]
+
+polys3 = [target_poly] + reductors
+I3 = trim_variables(Ideal(polys3))
+I3 = Ideal(I3.groebner_basis())
+print_gb_fan_stats(I3)
+
+print()
+print(" === Unification attempt: Is this a normal form?")
+for p in [p for p in I3.basis if not (p in polys3 or -p in polys3)]:
+    print(p)
+
+print()
+print(" == Variety")
+for v in sorted(I3.variety(), key=lambda v: v['x']):
+    print(v)
+
 # == comparison of above fans & gbs
 
 elim_ideal_0 = I0.elimination_ideal(I0.ring().gens()[1:]).groebner_basis()
 elim_ideal_1 = I1.elimination_ideal(I1.ring().gens()[1:]).groebner_basis()
 elim_ideal_2 = I2.elimination_ideal(I2.ring().gens()[1:]).groebner_basis()
+elim_ideal_3 = I3.elimination_ideal(I3.ring().gens()[1:]).groebner_basis()
 
 print()
 print(f"Elimination Ideal I0: {elim_ideal_0}")
 print(f"Elimination Ideal I1: {elim_ideal_1}")
 print(f"Elimination Ideal I2: {elim_ideal_2}")
-print(f"Elim ideals are same: {elim_ideal_0 == elim_ideal_1 and elim_ideal_1 == elim_ideal_2}")
+print(f"Elimination Ideal I2: {elim_ideal_3}")
+print(f"Elim ideals are same: {elim_ideal_0 == elim_ideal_1 and elim_ideal_0 == elim_ideal_2 and elim_ideal_0 == elim_ideal_3}")
 
 f = elim_ideal_0[0].univariate_polynomial()
 
