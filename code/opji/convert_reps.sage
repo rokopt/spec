@@ -96,33 +96,10 @@ polys1 = [
     # x is the binary decomposition of a, b, c, d
     2^3*a + 2^2*b + 2^1*c + 2^0*d - x,
 
-    #  x  a b c d  f
-    #  0  0 0 0 0
-    #  1  0 0 0 1
-    #  2  0 0 1 0
-    #  3  0 0 1 1  0
-    #  4  0 1 0 0  0
-    #  5  0 1 0 1  0
-    #  6  0 1 1 0  0
-    #  7  0 1 1 1  0
-    #  8  1 0 0 0  0
-    #  9  1 0 0 1  0
-    # 10  1 0 1 0  0
-    # 11  1 0 1 1  0
-    # 12  1 1 0 0
-    # 13  1 1 0 1
-    # 14  1 1 1 0
-    # 15  1 1 1 1
-
     # DNF
-    # (not a and not b and not c) or (not a and not b and not d) or (a and b)
-    (e * (1-c)) + (e * (1-d)) + (a * b),
-    (1-a) * (1-b) - e,
-
-    # CNF
     # (a or not b) and (not a or b) and (a or not c or not d)
-    # (a + 1-b) * (1-a + b) - e,
-    # e * (a + 1-c + 1-d)
+    (a + 1-b) * (1-a + b) - e,
+    e * (a + 1-c + 1-d)
 ]
 I1 = trim_variables(Ideal(polys1))
 print_gb_fan_stats(I1)
