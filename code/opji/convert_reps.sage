@@ -125,11 +125,11 @@ print()
 print(" == Unification attempt ==")
 
 reductors = [
-    (a-0)*(a-1),
-    (b-0)*(b-1),
-    (c-0)*(c-1),
-    (d-0)*(d-1),
-    2^3*a + 2^2*b + 2^1*c + 2^0*d - x,
+    prod([a - i for i in range(target_degree)]),
+    prod([b - i for i in range(target_degree)]),
+    prod([c - i for i in range(target_degree)]),
+    prod([d - i for i in range(target_degree)]),
+    target_degree^3*a + target_degree^2*b + target_degree^1*c + target_degree^0*d - x,
 ]
 
 polys3 = [target_poly] + reductors
