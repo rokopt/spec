@@ -36,7 +36,7 @@ num_variables_in_gb = lambda gb : len(set.union(*[set(p.variables()) for p in gb
 
 trim_variables = lambda I : I.change_ring(PolynomialRing(field, variable_names[:num_variables_in_gb(I.basis)]))
 
-field_eqs = lambda vs : [v^p - v for v in vs]
+field_eqs = lambda vs : [v^len(field) - v for v in vs]
 remove_field_eqs = lambda ps, vs : [p for p in ps if not (p in field_eqs(vs) or -p in field_eqs(vs))]
 
 def print_gb_fan_stats(I):
