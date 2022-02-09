@@ -1,0 +1,27 @@
+[book]
+authors = ["Anoma Contributors"]
+edit-url-template = "https://github.com/anoma/spec/edit/master/{path}"
+git-repository-url = "https://github.com/anoma/spec"
+language = "en"
+multilingual = false
+site-url = "https://spec.anoma.network"
+src = "src"
+title = "Anoma Specification"
+
+[output.html]
+additional-css = ["assets/custom.css"]
+additional-js = ["assets/mermaid.min.js", "assets/mermaid-init.js"]
+mathjax-support = true
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+expand = true
+
+[output.linkcheck]
+
+[preprocessor]
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
