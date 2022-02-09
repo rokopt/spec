@@ -1,0 +1,43 @@
+name: Build and Deploy
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: nschloe/action-cached-lfs-checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo
+    - name: Install cargo deps
+      run: |
+        which mdbook || cargo install mdbook &&
+        which mdbook-mermaid || cargo install mdbook-mermaid &&
+        which mdbook-linkcheck || cargo install mdbook-linkcheck
+    - name: Generate website
+      run: make build
+    - name: Create tag folder
+      run: |
+        mkdir -p docs/master && mv book/html/* docs/master
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@v4.2.3
+      with:
+        branch: gh-pages 
+        folder: docs

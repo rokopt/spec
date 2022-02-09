@@ -1,0 +1,49 @@
+name: Build and Deploy
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: nschloe/action-cached-lfs-checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo
+    - name: Install cargo deps
+      run: |
+        which mdbook || cargo install mdbook &&
+        which mdbook-mermaid || cargo install mdbook-mermaid &&
+        which mdbook-linkcheck || cargo install mdbook-linkcheck
+    - name: Generate website
+      run: make build
+    - uses: olegtarasov/get-tag@v2.1
+      id: tagName
+      with:
+        tagRegex: "v(.*)"
+    - name: Create tag folder
+      env: 
+        TAG_NAME: ${{ steps.tagName.outputs.tag }}
+      run: |
+        mkdir $TAG_NAME && mv book/html/* $TAG_NAME
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@v4.2.3
+      with:
+        branch: gh-pages
+        folder: ${{ steps.tagName.outputs.tag }}
