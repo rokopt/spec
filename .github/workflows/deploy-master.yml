@@ -35,9 +35,9 @@ jobs:
       run: make build
     - name: Create tag folder
       run: |
-        mkdir master && mv book/html/* master
+        mkdir docs/master && mv book/html/* docs/master
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4.2.3
       with:
         branch: gh-pages 
-        folder: master
+        folder: docs

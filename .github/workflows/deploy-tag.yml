@@ -41,9 +41,9 @@ jobs:
       env: 
         TAG_NAME: ${{ steps.tagName.outputs.tag }}
       run: |
-        mkdir $TAG_NAME && mv book/html/* $TAG_NAME
+        mkdir docs/$TAG_NAME && mv book/html/* docs/$TAG_NAME
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4.2.3
       with:
         branch: gh-pages
-        folder: ${{ steps.tagName.outputs.tag }}
+        folder: docs
