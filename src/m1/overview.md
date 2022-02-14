@@ -1,0 +1,119 @@
+# M1 Overview
+
+M1 is a sovereign chain that enables full multi-asset privacy for all connected
+assets. In order to make M1 a reality, we not only need a name but we also need
+a lot of features besides the ZKP circuits. Over time the set of supported
+features my be extended to include things like fully programmable VPs and more
+advanced circuits.
+
+## Raison d'être
+
+True multi-asset privacy doesn't exist at the moment anywhere. Up until now you
+had the choice to build a sovereign chain that reissues assets (ie ZCash) or to
+build a privacy preserving solution on existing chains (ie Tornado Cash on
+Ethereum). Both have large trade-offs; in the former case users don't have
+assets that they actually want to use and in the latter case users leak a ton of
+metadata, it's expensive and clunky to use.
+
+In 2022 the timing is right to launch M1, because interoperability in the form 
+of IBC is starting to work in practice and that we are ready tech-wise in order
+to launch something like M1.
+
+Moreover M1 also presents a very good stepping stone to launch before mainnet
+Anoma as the first chain in the Anoma ecosystem. It is expected that M1 is long
+lived and supports actual assets and real value after launch; or in other words,
+it's a full-fledged public blockchain.
+
+## Proposed Features
+
+### Cryptography
+
+* MASP circuit
+  * Support arbitrary assets
+* Trusted setup for the circuit
+  * Secure and publicly accepted setup (with more than 100 participants)
+
+### Base Ledger
+
+* Proof of Stake
+  * Validators can stake assets
+  * Delegators can delegate assets to validators
+  * Creation of a community pool that is spendable by governance
+* Governance
+  * Validators can vote and delegators can override their validators vote
+  * Election of a technical committee that can propose and review community
+    funding
+* Gas/Fee system
+  * Transactions can't spam the network
+* Execution system
+  * VPs with initial whitelisting
+
+### Bridges
+
+* Bridge to IBC chains (Osmosis, Cosmos, E-Money, Terra)
+* Bridge to Ethereum
+* All bridges need to be thoroughly tested and running on internal testnets
+
+### Front-ends
+
+* Multi-chain/Multi-asset wallet that supports moving assets across bridges
+  * Enables ETH to be moved to M1 and back
+  * Supports staking and governance on M1
+  * Enables multi-asset transfers involving the MASP
+  * Integrates with existing key solutions (Ledger, Metamask, Keplr)
+  * Supports whatever incentives schemes we want to have
+
+* Block explorer
+  * Display PoS state
+  * Display governance state
+  * Display transparent transfers
+  * Display transfers in and out of the MASP
+  * Display total values for the MASP
+  * Allows tx hashes of shielded transfers to be looked up for confirmation
+
+### Testnets
+
+* Private testnets
+  * Just us
+* Internal testnets
+  * Small select group of people
+* Public testnets
+  * Anyone that wants to join
+* Incentivized testnets
+
+### Integrations
+
+* Indexer for M1 to integrate with block explorers
+* Validator tooling
+* Stakeholder support
+  * Rosetta integration
+  * Datahub integration
+
+## Proposed Timeline
+
+I'm proposing an aggressive timeline, because we have to acknowledge that if we 
+ship M1 in 2023, then it's too late. The goal is to publically launch M1 in
+summer 2022, around August.
+
+The major milestones that we can focus around are the testnets and other things,
+such as UIs and Trusted Setups can be timelined based on the testnets.
+
+* Private testnets
+  * End of February
+  * Things can still be janky but we should have a working chain on which we can
+    test the majority of functionality
+* Internal testnets
+  * End of March
+  * Friends and family can start running our testnets
+  * We are starting to have the first UIs that are working and Ledger apps are
+    in testing
+* Public testnets
+  * End of April
+  * The software is stable enough and we have enough documentation that 
+    strangers on the internet can run it
+  * Trusted setup should be done.
+* Incentivized testnets
+  * End of May
+  * The incentivized testnets can run for the next 2 months while the last 
+    remaining bits are polished. Participants receive tokens and we are spending
+    those 2 months gearing up for launch.
