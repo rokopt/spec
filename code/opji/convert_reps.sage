@@ -22,14 +22,14 @@ Intermediate Questions:
 • Are the ideals that we're dealing with radical?
 '''
 
-p = 17
+p = 101
 field = GF(p)
 
 variable_names = ['x', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']
 R = PolynomialRing(field, variable_names)
 R.inject_variables()
 
-target_degree = 3
+target_degree = 2
 target_constraints_met = lambda system : all([poly.degree() <= target_degree for poly in system])
 
 num_variables_in_gb = lambda gb : len(set.union(*[set(p.variables()) for p in gb]))
@@ -113,11 +113,13 @@ print(" == Gröbner Fan using reduction by square polynomials ==")
 reductor_0 = x^2 - a
 reductor_1 = a^2 - b
 reductor_2 = b^2 - c
+reductor_3 = a*b - d
 reduced_poly_0 = target_poly.reduce([reductor_0])
 reduced_poly_1 = reduced_poly_0.reduce([reductor_1])
 reduced_poly_2 = reduced_poly_1.reduce([reductor_2])
+reduced_poly_3 = reduced_poly_2.reduce([reductor_3])
 
-polys2 = [reduced_poly_2, reductor_0, reductor_1, reductor_2]
+polys2 = [reduced_poly_3, reductor_0, reductor_1, reductor_2, reductor_3]
 I2 = trim_variables(Ideal(polys2))
 print_gb_fan_stats(I2)
 
@@ -141,7 +143,8 @@ print_gb_fan_stats(I3)
 
 print()
 print(" === Unification attempt: Is this a normal form?")
-for p in [p for p in I3.basis if not (p in polys3 or -p in polys3)]:
+potential_nf = [p for p in I3.basis if not (p in polys3 or -p in polys3)]
+for p in potential_nf:
     print(p)
 
 print()
@@ -160,7 +163,7 @@ print()
 print(f"Elimination Ideal I0: {elim_ideal_0}")
 print(f"Elimination Ideal I1: {elim_ideal_1}")
 print(f"Elimination Ideal I2: {elim_ideal_2}")
-print(f"Elimination Ideal I2: {elim_ideal_3}")
+print(f"Elimination Ideal I3: {elim_ideal_3}")
 print(f"Elim ideals are same: {elim_ideal_0 == elim_ideal_1 and elim_ideal_0 == elim_ideal_2 and elim_ideal_0 == elim_ideal_3}")
 
 f = elim_ideal_0[0].univariate_polynomial()
