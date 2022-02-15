@@ -7,9 +7,9 @@ We will follow the EIP 1559 scheme, where the transaction fee consists of a base
 
 To make sure validators are incentivized we only burn (or transfer to treasury) 80% of the base fee rather than the 100% suggested by Ethereum. The remaining 20% is reserved for paying future (6 blocks ahead) block producers. Depending on how full the blocks are, validators get portions of these fees. For example, if the block is 75 % full, the validators get the full fees whereas if the block they produce is only 25% full, they get 1/3 of the full fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
 
-The change in base fee cannot be too fast or too frequent either. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied. 
+The change in base fees cannot be too fast or too frequent either. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied. 
 
-TODO: To calculate base fee we need to define the gas fee for the following types of transactions.
+TODO: To calculate base fees we need to define the gas fees for the following types of transactions.
 1. Sending proposal for governance  (every delegator/validators can propose a governance proposal: say "we want to increase gas fees")
 2. Voting for governance
 3. Create accounts
