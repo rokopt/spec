@@ -3,7 +3,7 @@
 This specification should cover:
 - Fee & gas system for M1
 
-We will follow the EIP 1559 scheme, where the transaction fee consists of a base fee and a tip. The base fee increases whenever blocks are fuller than the desired capacity, which is defined to be 50 % in Ethereum and decreases when the blocks are less than 50% full . Our desired block fullness will also be 50 %. However, for privacy reasons, we adopt a [tipless version](https://arxiv.org/pdf/2106.01340.pdf) suggested by Tim Roughgarden.  
+We will follow the EIP 1559 scheme, where the transaction fee consists of a base fee and a tip. The base fee increases whenever blocks are fuller than the desired capacity, which is defined to be 50% in Ethereum and decreases when the blocks are less than 50% full. Our desired block fullness will also be 50%. However, for privacy reasons, we adopt a [tipless version](https://arxiv.org/pdf/2106.01340.pdf) suggested by Tim Roughgarden.  
 
 To make sure validators are incentivized we only burn (or transfer to treasury) 80% of the base fee rather than the 100% suggested by Ethereum. The remaining 20% is reserved for paying future (6 blocks ahead) block producers. Depending on how full the blocks are, validators get portions of these fees. For example, if the block is 75 % full, the validators get the full fees whereas if the block they produce is only 25% full, they get 1/3 of the full fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
 
