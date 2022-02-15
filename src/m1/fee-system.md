@@ -10,7 +10,7 @@ To make sure validators are incentivized we only burn (or transfer to treasury) 
 The change in base fee cannot be too fast or too frequent either. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied. 
 
 TODO: To calculate base fee we need to define the gas fee for the following types of transactions.
-1. Sending proposal for governance  (every delegator/validators can propose a governance proposal: say "we want to improve gas fees")
+1. Sending proposal for governance  (every delegator/validators can propose a governance proposal: say "we want to increase gas fees")
 2. Voting for governance
 3. Create accounts
 4. Delete accounts
