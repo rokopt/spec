@@ -23,5 +23,42 @@ TODO: To calculate base fees we need to define the gas fees for the following ty
 
 TODO: We also need to determine the block capacity (engineering decision), which refers to the total gas a block can process. 
 
-Test
+## Inflation and Validarors Rewards and Slashing
+### Inflation
+Locked tokens serve as security of the system while liquidity supports activity and liveness of the system.  
+
+Desired 33%-66%: Locked for validating
+Rest %: Liquid
+
+In Cosmos the ideal locking is 2/3 in Polkadot it is 50%. In Ethereum the goal is to have 8,388,608 total ETH staked  by validators which would be 47%. On Solana its about 77 % of tokens. We can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
+
+TODO: inflation curve
+
+### Staking Rewards 
+The rewards are given to validators for voting on finalzing blocks: the fund for these rewards can come from **minting** ([Cosmos](https://blog.cosmos.network/economics-of-proof-of-stake-bridging-the-economic-system-of-old-into-the-new-age-of-blockchains-3f17824e91db) and [Polkadot](https://research.web3.foundation/en/latest/polkadot/overview/2-token-economics.html) do this).
+ 
+When total token staked is very low, the return rate per validator needs to increase, but as the total amount of stake rises validators will receive less rewards. 
+
+Once we have calculated the total that needs to be minted at the end of the epoch, we split the minted tokens according to the stake they contributed (i.e., Cosmos) and distribute them to validators and their delegators. The validator and the delegator must have agreed on a commission rate between themselves. Once a certain amount is determined for a validator, it is paid out to them according to their agreement. 
+
+### Slashing for misbehavior 
+* Equivocation in consensus 
+    * voting: meaning that a validator has submitted two votes that are confliciting 
+    * block production: a block producer has created two different blocks for the same hight
+    * chimera voting: a validator has submitted two votes on finalizing chimera blocks that are conflicting 
+    * chimera block production: a validator has created two different blocks for the same hight of chimera chain
+* Invalidity: 
+    * block production: block producers has produced invalid block
+    * voting: other validators have voted on invalid block
+   
+Slashing is detected by a report from someone or by a vote. 
+
+Once an offence has been reported
+1. Kicking out
+2. Slashing as individual: Once someone has reported an offence it is reviewed by validarors and if confirmed the offender is slashed. The funds that are taken from the offender either need to be burnt or go to treasury after a small cut (10%) of it goes to the person who reported the offence. 
+3. Escalated Slashing: If more than a treshold commit an offence, then slashing will get escalate. If more than the offence has happened by validator who hold more than 10 % of the network stake the slashing is multiplied by 10 fold. 
+
+
+
+
 
