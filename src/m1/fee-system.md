@@ -45,8 +45,6 @@ Once we have calculated the total that needs to be minted at the end of the epoc
 * Equivocation in consensus 
     * voting: meaning that a validator has submitted two votes that are confliciting 
     * block production: a block producer has created two different blocks for the same hight
-    * chimera voting: a validator has submitted two votes on finalizing chimera blocks that are conflicting 
-    * chimera block production: a validator has created two different blocks for the same hight of chimera chain
 * Invalidity: 
     * block production: block producers has produced invalid block
     * voting: other validators have voted on invalid block
