@@ -19,6 +19,8 @@ TODO: To calculate base fees we need to define the gas fees for the following ty
 7. Transfer funds
 8. Propose blocks
 9. Vote on blocks
+
+
 TODO: We also need to determine the block capacity (engineering decision), which refers to the total gas a block can process. 
 
 Test
