@@ -5,6 +5,8 @@
   - [Execution system](./m1/execution-system.md)
   - [Multi-asset shielded pool](./m1/masp.md)
     - [Trusted setup](./m1/masp/trusted-setup.md)
+    - [Ledger integration](./m1/masp/ledger-integration.md)
+    - [Shielded pool incentives](./m1/masp/shielded-pool-incentives.md)
   - [Governance](./m1/governance.md)
   - [Proof of stake](./m1/proof-of-stake.md)
   - [Fee system](./m1/fee-system.md)
