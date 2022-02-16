@@ -23,3 +23,4 @@
     - [Decentralised proof-of-identity](./architecture/a1/decentralised-proof-of-identity.md)
     - [Public goods funding](./architecture/a1/public-goods-funding.md)
     - [Fee system](./architecture/a1/fee-system.md)
+  - [J1](./architecture/j1.md)
