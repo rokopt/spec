@@ -43,24 +43,24 @@ and the following data which is ancillary from the ledger's perspective:
 
 - spend descriptions, which destroy old notes:
 ```
-SpendDescription {
+struct SpendDescription {
   // Value commitment to amount of the asset in the note being spent
   cv: jubjub::ExtendedPoint,
   // Last block's commitment tree root
   anchor: bls12_381::Scalar,
   // Nullifier for the note being nullified
-  nullifier: bytes,
+  nullifier: [u8; 32],
   // Re-randomized version of the spend authorization key
-  rk,
+  rk: PublicKey,
   // Spend authorization signature
-  sighash_value, spend_auth_sig,
+  spend_auth_sig: Signature,
   // Zero-knowledge proof of the note and proof-authorizing key
-  zkproof,
+  zkproof: Proof<Bls12>,
 }
 ```
 - output descriptions, which create new notes:
 ```
-OutputDescription {
+struct OutputDescription {
   // Value commitment to amount of the asset in the note being created
   cv: jubjub::ExtendedPoint,
   // Derived commitment tree location for the output note
@@ -68,11 +68,11 @@ OutputDescription {
   // Note encryption public key
   epk: jubjub::ExtendedPoint,
   // Encrypted note ciphertext
-  c_enc: bytes,
+  c_enc: [u8; ENC_CIPHERTEXT_SIZE],
   // Encrypted note key recovery ciphertext
-  c_out: bytes,
+  c_out: [u8; OUT_CIPHERTEXT_SIZE],
   // Zero-knowledge proof of the new encrypted note's location (?)
-  zkproof,
+  zkproof: Proof<Bls12>,
 }
 ```
 
@@ -120,17 +120,17 @@ simply being able to link against the MASP crates, unlike the VP.
 
 The client, unlike the VP, needs a concept of a plaintext note:
 ```
-Note {
+struct Note {
   // Diversifier for recipient address
-  d,
+  d: jubjub::SubgroupPoint,
   // Diversified public transmission key for recipient address
-  pkd,
+  pk_d: jubjub::SubgroupPoint,
   // Asset value in the note
-  v,
+  value: u64,
   // Pedersen commitment trapdoor
-  rcm,
+  rseed: Rseed,
   // Asset identifier for this note
-  t,
+  asset_type: AssetType,
 }
 ```
 
