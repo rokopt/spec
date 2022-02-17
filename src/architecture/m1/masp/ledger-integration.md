@@ -140,3 +140,60 @@ asset type and value. Asset identifiers are derived from asset names,
 which are arbitrary strings (in this case, token/other asset VP
 addresses). The derivation must deterministically result in an
 identifier which hashes to a valid curve point.
+
+## Transaction Format
+The transaction data structure comprises a list of transparent inputs
+and outputs as well as a list of shielded inputs and outputs. More
+precisely:
+```
+struct Transaction {
+    // Transaction version
+    version: u32,
+    // Transparent inputs
+    tx_in: Vec<TxIn>,
+    // Transparent outputs
+    tx_in: Vec<TxOut>,
+    // The net value of Sapling spends minus outputs
+    value_balance_sapling: Vec<(u64, AssetType)>,
+    // A sequence ofSpend descriptions
+    spends_sapling: Vec<SpendDescription>,
+    // A sequence ofOutput descriptions
+    outputs_sapling: Vec<OutputDescription>,
+    // A binding signature on the SIGHASH transaction hash,
+    binding_sig_sapling: [u8; 64],
+}
+```
+This structure slightly deviates from Sapling due to the fact that
+`value_balance_sapling` needs to be provided for each asset type.
+## Input/Output Format
+The input/output data structures decribe how much of each asset is
+being deducted from certain accounts and how much is being added to
+others. More precisely, the inputs are as follows:
+```
+struct TxIn {
+    // Source address
+    address: Address,
+    // Asset identifier for this input
+    token: AssetType,
+    // Asset value in the input
+    amount: u64,
+    // A signature over the hash of the transaction
+    sig: Signature,
+    // Used to verify the owner's signature
+    pk: PublicKey,
+}
+```
+And the outputs are as follows:
+```
+struct TxOut {
+    // Destination address
+    address: Address,
+    // Asset identifier for this output
+    token: AssetType,
+    // Asset value in the output
+    amount: u64,
+}
+```
+Note that in contrast to Sapling's UTXO based approach, our
+transparent inputs/outputs are based on the account model used
+in the rest of Anoma.
