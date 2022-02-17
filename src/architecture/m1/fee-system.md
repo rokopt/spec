@@ -34,9 +34,7 @@ In Cosmos the ideal locking is 2/3 in Polkadot it is 50%. In Ethereum the goal i
 TODO: inflation curve
 
 ### Staking Rewards 
-The rewards are given to validators for voting on finalzing blocks: the fund for these rewards can come from **minting** ([Cosmos](https://blog.cosmos.network/economics-of-proof-of-stake-bridging-the-economic-system-of-old-into-the-new-age-of-blockchains-3f17824e91db) and [Polkadot](https://research.web3.foundation/en/latest/polkadot/overview/2-token-economics.html) do this).
- 
-When total token staked is very low, the return rate per validator needs to increase, but as the total amount of stake rises validators will receive less rewards. 
+The rewards are given to validators for voting on finalzing blocks: the fund for these rewards can come from **minting**. The amount that is minted depends on how much is staked and our desired yearly inflation. When total token staked is very low, the return rate per validator needs to increase, but as the total amount of stake rises validators will receive less rewards. Once we have aquired the desired stake in %, the amount minted will just be the desired yearly inflation. 
 
 Once we have calculated the total that needs to be minted at the end of the epoch, we split the minted tokens according to the stake they contributed (i.e., Cosmos) and distribute them to validators and their delegators. The validator and the delegator must have agreed on a commission rate between themselves. Once a certain amount is determined for a validator, it is paid out to them according to their agreement. The minted rewards are auto-bonded and only transferred when the funds are unbonded. 
 
