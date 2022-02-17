@@ -101,6 +101,10 @@ VP is not run as described above, and cannot be because the shielded
 pool is asset-hiding.
 
 ## Client capabilities
+The client should be able to:
+* Move assets between Anoma accounts and the shielded pool
+* Move assets around within the shielded pool
+* Scan the blockchain to determine shielded assets in one's possession
 
 To make shielded transactions, the client has to be capable of creating
 and spending notes, and generating proofs which the pool VP verifies.
@@ -118,7 +122,9 @@ of the pool. The client needs the capability to create notes,
 transactions, and proofs of transactions, but it has the advantage of
 simply being able to link against the MASP crates, unlike the VP.
 
-The client, unlike the VP, needs a concept of a plaintext note:
+## Note Format
+The note structure encodes an asset's type, its quantity and its owner.
+More precisely, it has the following format:
 ```
 struct Note {
   // Diversifier for recipient address
@@ -133,6 +139,8 @@ struct Note {
   asset_type: AssetType,
 }
 ```
+Note that this structure is required only by the client; the VP only
+handles commitments to this data.
 
 Diversifiers are selected (randomly?) by the client and used to
 diversify addresses and their associated keys. `v` and `t` identify the
@@ -165,10 +173,10 @@ struct Transaction {
 ```
 This structure slightly deviates from Sapling due to the fact that
 `value_balance_sapling` needs to be provided for each asset type.
-## Input/Output Format
-The input/output data structures decribe how much of each asset is
-being deducted from certain accounts and how much is being added to
-others. More precisely, the inputs are as follows:
+
+## Input Format
+The input data structure decribes how much of each asset is
+being deducted from certain accounts. More precisely, it is as follows:
 ```
 struct TxIn {
     // Source address
@@ -183,7 +191,11 @@ struct TxIn {
     pk: PublicKey,
 }
 ```
-And the outputs are as follows:
+Note that the signature and public key are required to authenticate
+the deductions.
+## Output Format
+The output data structure decribes how much is being added to
+certain accounts. More precisely, it is as follows:
 ```
 struct TxOut {
     // Destination address
