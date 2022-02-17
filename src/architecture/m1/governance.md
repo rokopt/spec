@@ -35,7 +35,7 @@ struct VoteOnChain {
 }
 ```
 
-```rust=
+```rust
 struct VoteOffChain {
     proposalHash: Vec<u8>
     signature: Vec<u8>
