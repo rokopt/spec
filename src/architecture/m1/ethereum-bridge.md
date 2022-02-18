@@ -65,11 +65,11 @@ by at least 2/3 of the staking validators as usual.
 M1 requires a validity predicate with dedicated storage to mint wrapped
 ETH. This validity predicate should be called on every inclusion of Ethereum
 state above. Its storage contains a queue of messages from the Ethereum
-bridge contracts. It also mints corresponding assets on M1, where the asset denom corresponds to 
-`{token address on etheruem} || {min number of confirmations}`.
+bridge contracts. It also mints corresponding assets on M1, where the asset denomination corresponds to 
+`{token address on ethereum} || {minimum number of confirmations}`.
 
 The minimum number of confirmations indicated in the outgoing Ethereum message 
-(maybe defaulting to 25 or 50 if unspecified) means the minimum number of 
+(maybe defaulting to 25 or 50 if unspecified) specifies the minimum number of 
 confirmations in block depth that must be reached before the assets will be
 minted on M1. This is the purpose of the message queue for this validity
 predicate.
@@ -83,7 +83,7 @@ struct MintEthToken {
     receiver: Address,
     // the amount of ETH token to mint
     amount: Amount,
-    // min number of confirmations needed for mints
+    // minimum number of confirmations needed for mints
     min_confirmations: u8,
     // height of the block at which the message appeared
     height: u64,
@@ -120,7 +120,7 @@ actions:
  3. For each message that is confirmed, transfer the appropriate tokens to 
     the address in the `receiver` field.
 
-Note that this means that a transfer initiated on Ethereum will be automatically
+Note that this means that a transfer initiated on Ethereum will automatically
 be seen and acted upon by M1. The appropriate protocol transactions to 
 credit tokens to the given user will be included on chain free of charge
 and requires no additional actions from the end user.
@@ -151,8 +151,8 @@ The set of Ethereum contracts should perform the following functions:
    unescrow on the Ethereum side
  - Allow for message batching
 
-Furthermore, the Ethereum contracts will whitelist EtTH and tokens that
-flow across the bridge as well as limits on transfer volume per epoch.
+Furthermore, the Ethereum contracts will whitelist ETTH and tokens that
+flow across the bridge as well as ensure limits on transfer volume per epoch.
  
 
 ## Resources which may be helpful:
