@@ -14,4 +14,4 @@ Interaction with the M1 ledger are made possible via [Anoma transactions](https:
 
 ## Transaction and validity predicate whitelist
 
-While Anoma ledger aims to be a fully programmable ledger, for M1 only a selected subset of provided validity predicates and transaction will be permitted through pre-defined whitelists configured for the M1 network.
+While Anoma ledger aims to be a fully programmable ledger, for M1 only a selected subset of provided validity predicates and transactions will be permitted through pre-defined whitelists configured for the M1 network.
