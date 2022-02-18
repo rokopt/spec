@@ -12,6 +12,7 @@
     - [Governance](./architecture/m1/governance.md)
     - [Proof of stake](./architecture/m1/proof-of-stake.md)
     - [Fee system](./architecture/m1/fee-system.md)
+    - [IBC integration](./architecture/m1/ibc.md)
     - [Ethereum bridge](./architecture/m1/ethereum-bridge.md)
   - [M2](./architecture/m2.md)
     - [Ferveo](./architecture/m2/ferveo.md)
