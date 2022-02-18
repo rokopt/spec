@@ -5,9 +5,9 @@ can be redeemed on Ethereum at a later time. It does not allow the minting
 of XAN tokens (Anoma's native tokens) on Ethereum.
 
 The M1 Ethereum bridge system consists of:
-* Ethereum state inclusion onto M1
-* A set of validity predicates on M1 which roughly implements ICS20
-* A set of Ethereum smart contracts
+* Ethereum state inclusion onto M1.
+* A set of validity predicates on M1 which roughly implements [ICS20](https://docs.cosmos.network/v0.42/modules/ibc/) fungible token transfers.
+* A set of Ethereum smart contracts.
 
 This basic bridge architecture should provide for almost-M1 consensus 
 security for the bridge and free Ethereum state reads on M1, plus 
