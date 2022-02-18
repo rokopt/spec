@@ -2,7 +2,7 @@
 
 The M1 Ethereum bridge exists to mint wrapped ETH tokens on M1 which naturally
 can be redeemed on Ethereum at a later time. It does not allow the minting
-of XAN tokens on Ethereum.
+of XAN tokens (Anoma's native tokens) on Ethereum.
 
 The M1 Ethereum bridge system consists of:
 * Ethereum state inclusion onto M1
