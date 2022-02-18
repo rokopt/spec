@@ -137,8 +137,12 @@ struct Note {
   rseed: Rseed,
   // Asset identifier for this note
   asset_type: AssetType,
+  // Arbitrary data chosen by note sender
+  memo: [u8; 512],
 }
 ```
+For cryptographic details and further information, see
+[Note Plaintexts and Memo Fields](https://zips.z.cash/protocol/protocol.pdf#noteptconcept).
 Note that this structure is required only by the client; the VP only
 handles commitments to this data.
 
@@ -160,7 +164,7 @@ struct Transaction {
     // Transparent inputs
     tx_in: Vec<TxIn>,
     // Transparent outputs
-    tx_in: Vec<TxOut>,
+    tx_out: Vec<TxOut>,
     // The net value of Sapling spends minus outputs
     value_balance_sapling: Vec<(u64, AssetType)>,
     // A sequence ofSpend descriptions
@@ -171,10 +175,13 @@ struct Transaction {
     binding_sig_sapling: [u8; 64],
 }
 ```
-This structure slightly deviates from Sapling due to the fact that
-`value_balance_sapling` needs to be provided for each asset type.
+For the cryptographic constraints and further information, see
+[Transaction Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#txnencoding).
+Note that this structure slightly deviates from Sapling due to
+the fact that `value_balance_sapling` needs to be provided for
+each asset type.
 
-## Input Format
+## Transparent Input Format
 The input data structure decribes how much of each asset is
 being deducted from certain accounts. More precisely, it is as follows:
 ```
@@ -193,7 +200,7 @@ struct TxIn {
 ```
 Note that the signature and public key are required to authenticate
 the deductions.
-## Output Format
+## Transparent Output Format
 The output data structure decribes how much is being added to
 certain accounts. More precisely, it is as follows:
 ```
