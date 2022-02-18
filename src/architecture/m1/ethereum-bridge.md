@@ -1,12 +1,12 @@
 # Ethereum bridge
 
-The M1 Ethereum bridge exists to mint wrapped eth tokens on M1 which naturally
+The M1 Ethereum bridge exists to mint wrapped ETH tokens on M1 which naturally
 can be redeemed on Ethereum at a later time. It does not allow the minting
 of XAN tokens on Ethereum.
 
 The M1 Ethereum bridge system consists of:
 * Ethereum state inclusion onto M1
-* A set validity predicate on M1 which roughly implements ICS20
+* A set of validity predicates on M1 which roughly implements ICS20
 * A set of Ethereum smart contracts
 
 This basic bridge architecture should provide for almost-M1 consensus 
@@ -45,7 +45,7 @@ are:
 ```
 
 For every M1 block proposal, the vote of a validator should include 
-the headers, hash, & smart contract messages (possibly with Merckle proofs)
+the headers, hash, & smart contract messages (possibly with Merkle proofs)
 of the Ethereum blocks they have seen via their full node such that:
 
 1. Has not been marked as `seen` by M1
@@ -61,12 +61,12 @@ by at least 2/3 staking validators as usual.
 
 ## M1 Validity Predicates
 
-### Minting wrapped Eth tokens on M1
+### Minting wrapped ETH tokens on M1
 M1 requires a validity predicate with dedicated storage to mint wrapped
-eth. This validity predicate should be called on every inclusion of Ethereum
+ETH. This validity predicate should be called on every inclusion of Ethereum
 state above. Its storage contains a queue of messages from the Ethereum
 bridge contracts. It also mints corresponding assets on M1, where the asset denom corresponds to 
-`{token address on eth} || {min number of confirmations}`.
+`{token address on etheruem} || {min number of confirmations}`.
 
 The minimum number of confirmations indicated in the outgoing Ethereum message 
 (maybe defaulting to 25 or 50 if unspecified) means the minimum number of 
@@ -81,7 +81,7 @@ struct MintEthToken {
     ethereum_address: Address,
     // the address on M1 receiving the tokens
     receiver: Address,
-    // the amount of Eth token to mint
+    // the amount of ETH token to mint
     amount: Amount,
     // min number of confirmations needed for mints
     min_confirmations: u8,
@@ -94,7 +94,7 @@ struct MintEthToken {
 impl MintEthToken {
     /// Update the hash and height of the block `B` marked as `seen` in M1
     /// storage such that 
-    ///   1. `B` is a descendant of the block containing the original messaga
+    ///   1. `B` is a descendant of the block containing the original message
     ///   2. `B` has the maximum height of all blocks satisfying 1.
     fn update_latest_descendant(&mut self, hash: [u8; 32], height: u64) {
         if height > self.latest_descendant.1 {
@@ -125,16 +125,16 @@ be seen and acted upon by M1. The appropriate protocol transactions to
 credit tokens to the given user will be included on chain free of charge
 and requires no additional actions from the end user.
 
-### Redeeming Eth by burning tokens on M1
+### Redeeming ETH by burning tokens on M1
 
-For redeeming wrapped Eth, the M1 side will need another validity predicate
+For redeeming wrapped ETH, the M1 side will need another validity predicate
 that is called only when the appropriate user tx lands on chain. This validity
 predicate will simply burn the tokens.
 
 Once, this transaction is approved, it is incumbent on the end user to 
 request an appropriate light client proof of the transaction. This light
 client proof must be submitted to the appropriate Ethereum smart contract
-by the user to redeem their Eth. This also means all Ethereum gas costs
+by the user to redeem their ETH. This also means all Ethereum gas costs
 are the responsibility of the end user.
 
 Producing light client proofs for transactions is available directly in
@@ -151,7 +151,7 @@ The set of Ethereum contracts should perform the following functions:
    unescrow on the Ethereum side
  - Allow for message batching
 
-Furthermore, the Ethereum contracts will whitelist Eth and tokens that
+Furthermore, the Ethereum contracts will whitelist EtTH and tokens that
 flow across the bridge as well as limits on transfer volume per epoch.
  
 
