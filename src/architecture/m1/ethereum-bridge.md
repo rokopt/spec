@@ -16,19 +16,19 @@ Ethereum side.
 
 ## Ethereum State Inclusion
 We want to store data identifying which Ethereum blocks have been seen by
-2/3 staking validators in the blockchain storage. These will be Ethereum
-block headers along with messages from the Ethereum smart contracts relevant
-to the bridge. We may also we to include Merkle proofs of inclusion of 
+at least 2/3 of the staking validators in the blockchain storage. These will be Ethereum
+block headers, along with messages from the Ethereum smart contracts relevant
+to the bridge. We may also want to include Merkle proofs of inclusion of 
 these messages in the relevant blocks. We might also implement policies to
-prune old / irrelevant data or do checkpointing.
+prune old/irrelevant data or do checkpointing.
 
 Each piece of block data should have a list of the validators that have seen
 this block and the current amount of stake associated with it. This
 will need to be appropriately adjusted across epoch boundaries. However, 
-once a block has been seen by 2/3 staking validators, it is locked into a 
+once a block has been seen by 2/3 of the staking validators, it is locked into a 
 `seen` state. Thus, even if after an epoch that block has no longer been
-reported as seen by 2/3 of the new staking validator set, it is still
-considered `seen`. 
+reported as seen by 2/3 of the new staking validators set, it is still
+considered as `seen`. 
 
 To make this easy, we take the approach of always overwriting the state with
 the new state rather than applying state diffs. The storage keys involved
@@ -57,7 +57,7 @@ After an M1 block is committed, the next block proposer receives the
 aggregate of the vote extensions. From that, they should craft the proposed
 state change of the above form. They subsequently include a tx to that end 
 in their block proposal. This aggregated state change needs to be validated
-by at least 2/3 staking validators as usual.
+by at least 2/3 of the staking validators as usual.
 
 ## M1 Validity Predicates
 
