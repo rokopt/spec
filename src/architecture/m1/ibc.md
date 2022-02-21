@@ -1,6 +1,7 @@
 # IBC integration
 
 * [IBC (Inter-blockchain communication protocol) spec](https://github.com/cosmos/ibc)
+* [IBC integration in Anoma](https://github.com/anoma/anoma/blob/yuji/design_ibc/docs/src/explore/design/ledger/ibc.md) (Need to be updated)
 
 ## IBC transaction
 An IBC transaction [`tx_ibc.wasm`](https://github.com/anoma/anoma/blob/fd4b7ab36929f47369ae82c82966891cb0ccc625/wasm/wasm_source/src/lib.rs#L224-L233) is provided. We have to set an [IBC message](./ibc/message.md) to the transaction data corresponding to execute an IBC operation.
