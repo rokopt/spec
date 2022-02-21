@@ -1,8 +1,9 @@
 # Ethereum bridge
 
 The M1 Ethereum bridge exists to mint wrapped ETH tokens on M1 which naturally
-can be redeemed on Ethereum at a later time. It does not allow the minting
-of XAN tokens on Ethereum.
+can be redeemed on Ethereum at a later time. The M1 Ethereum bridge might
+allow for transferring tokens from M1 to Ethereum in the future, but that
+will be added in a future version of the bridge spec.
 
 The M1 Ethereum bridge system consists of:
 * Ethereum state inclusion onto M1
@@ -15,10 +16,14 @@ bidirectional message passing with reasonably low gas costs on the
 Ethereum side.
 
 ## Ethereum State Inclusion
-We want to store data identifying which Ethereum blocks have been seen by
-2/3 staking validators in the blockchain storage. These will be Ethereum
-block headers along with messages from the Ethereum smart contracts relevant
-to the bridge. We may also we to include Merkle proofs of inclusion of 
+We want to store data identifying which Ethereum blocks have been seen 
+and validated by at least 2/3 staking validators in the blockchain storage. 
+The data stored from each Ethereum block will be:
+ * The block header
+ * The block hash
+ * Messages from the Ethereum smart contracts relevant
+    to the bridge.
+We may also we to include Merkle proofs of inclusion of 
 these messages in the relevant blocks. We might also implement policies to
 prune old / irrelevant data or do checkpointing.
 
@@ -51,7 +56,7 @@ of the Ethereum blocks they have seen via their full node such that:
 1. Has not been marked as `seen` by M1
 2. The storage value `/eth_block/$block_hash/seen_by` does not include their
    address.
-3. Is a descendant of a block marked `seen`
+3. Is a descendant of a block they have seen (even if it is not marked `seen`)
 
 After an M1 block is committed, the next block proposer receives the 
 aggregate of the vote extensions. From that, they should craft the proposed
