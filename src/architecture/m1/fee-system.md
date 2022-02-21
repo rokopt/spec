@@ -38,29 +38,3 @@ The rewards are given to validators for voting on finalzing blocks: the fund for
 
 Once we have calculated the total that needs to be minted at the end of the epoch, we split the minted tokens according to the stake they contributed (i.e., Cosmos) and distribute them to validators and their delegators. The validator and the delegator must have agreed on a commission rate between themselves. Once a certain amount is determined for a validator, it is paid out to them according to their agreement. The minted rewards are auto-bonded and only transferred when the funds are unbonded. 
 
-### Slashing for misbehavior 
-An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who have bonded stake will be slashed once an offence has been detected. 
-
-Slashing is detected by a report from someone or by a vote. 
-
-Once an offence has been reported:
-1. Kicking out
-2. Slashing as individual: Once someone has reported an offence it is reviewed by validarors and if confirmed the offender is slashed. The funds that are taken from the offender either need to be burnt or go to treasury after a small cut (10%) of it goes to the person who reported the offence. 
-3. Escalated Slashing: If more than a treshold commit an offence, then slashing will get escalate. We want to quadratic slashing. If the offender is holding less than 1% of stake the slashing will be small and it will escalate to 100 % if the offenders hold up to 1/3 of the total stake.
-
-These are the types of offences: 
-* Equivocation in consensus 
-    * voting: meaning that a validator has submitted two votes that are confliciting 
-    * block production: a block producer has created two different blocks for the same hight
-* Invalidity: 
-    * block production: block producers has produced invalid block
-    * voting: other validators have voted on invalid block
-   
-Unavailability is not slashed directly, but if a validator has not partcipated in voting it will not receive rewards. 
-
-
-
-
-
-
-
