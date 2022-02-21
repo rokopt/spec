@@ -115,8 +115,25 @@ Until we have programmable validity predicates, rewards can use the mechanism ou
 To a validator who proposed a block, the system rewards tokens based on the `block_proposer_reward` [system parameter](#system-parameters) and each validator that voted on a block receives `block_vote_reward`.
 
 ### Slashing
+An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who have bonded stake will be slashed once an offence has been detected. 
 
-See [here](https://github.com/anoma/spec/blob/master/src/architecture/m1/fee-system.md) for more details slashing. 
+Slashing is detected by a report from someone or by a vote. 
+
+Once an offence has been reported:
+1. Kicking out
+2. Slashing as individual: Once someone has reported an offence it is reviewed by validarors and if confirmed the offender is slashed. The funds that are taken from the offender either need to be burnt or go to treasury after a small cut (10%) of it goes to the person who reported the offence. 
+3. Escalated Slashing: If more than a treshold commit an offence, then slashing will get escalate. We want to quadratic slashing. If the offender is holding less than 1% of stake the slashing will be small and it will escalate to 100 % if the offenders hold up to 1/3 of the total stake.
+
+These are the types of offences: 
+* Equivocation in consensus 
+    * voting: meaning that a validator has submitted two votes that are confliciting 
+    * block production: a block producer has created two different blocks for the same hight
+* Invalidity: 
+    * block production: block producers has produced invalid block
+    * voting: other validators have voted on invalid block
+   
+Unavailability is not slashed directly, but if a validator has not partcipated in voting it will not receive rewards. 
+
 
 Instead of absolute values, validators' total bonded token amounts and bonds' and unbonds' token amounts are stored as their deltas (i.e. the change of quantity from a previous epoch) to allow distinguishing changes for different epoch, which is essential for determining whether tokens should be slashed. However, because slashes for a fault that occurred in epoch `n` may only be applied before the beginning of epoch `n + unbonding_length`, in epoch `m` we can sum all the deltas of total bonded token amounts and bonds and unbond with the same source and validator for epoch equal or less than `m - unboding_length` into a single total bonded token amount, single bond and single unbond record. This is to keep the total number of total bonded token amounts for a unique validator and bonds and unbonds for a unique pair of source and validator bound to a maximum number (equal to `unbonding_length`).
 
@@ -125,6 +142,7 @@ To disincentivize validators misbehaviour in the PoS system a validator may be s
 A valid evidence reduces the validator's total bonded token amount by the slash rate in and before the epoch in which the fault occurred. The validator's voting power must also be adjusted to the slashed total bonded token amount. Additionally, a slash is stored with the misbehaving validator's address and the relevant epoch in which the fault occurred. When an unbond is being withdrawn, we first look-up if any slash occurred within the range of epochs in which these were active and if so, reduce its token amount by the slash rate. Note that bonds and unbonds amounts are not slashed until their tokens are withdrawn.
 
 The invariant is that the sum of amounts that may be withdrawn from a misbehaving validator must always add up to the total bonded token amount.
+
 
 ## System parameters
 
