@@ -2,22 +2,25 @@
 
 The M1 Ethereum bridge exists to mint wrapped ETH tokens on M1 which naturally
 can be redeemed on Ethereum at a later time. The M1 Ethereum bridge might
-allow for transferring tokens from M1 to Ethereum in the future, but that
+allow for transferring XAN tokens (Anoma's native tokens) from M1 to Ethereum in the future, but that
 will be added in a future version of the bridge spec.
 
 The M1 Ethereum bridge system consists of:
-* Ethereum state inclusion onto M1
-* A set of validity predicates on M1 which roughly implements ICS20
-* A set of Ethereum smart contracts
+* Ethereum state inclusion onto M1.
+* A set of validity predicates on M1 which roughly implements [ICS20](https://docs.cosmos.network/v0.42/modules/ibc/) fungible token transfers.
+* A set of Ethereum smart contracts.
 
 This basic bridge architecture should provide for almost-M1 consensus 
 security for the bridge and free Ethereum state reads on M1, plus 
 bidirectional message passing with reasonably low gas costs on the 
 Ethereum side.
 
-## Ethereum State Inclusion
+## Security
+On M1, the validators are full nodes of Ethereum and their stake is also accounting for security of the bridge. If they carry out a forking attack on M1 to steal locked tokens of Ethereum their stake will be slashed on M1. On the Ethereum side, we will add a limit to the amount of ETH that can be locked to limit the damage a forking attack on M1 can do. To make an attack more cumbersome we will also add a limit on how fast wrappen ETH can be redeemed. This will not add more security, but rather make the attack more inconvenient. 
+
+## Ethereum State Inclusion 
 We want to store data identifying which Ethereum blocks have been seen 
-and validated by at least 2/3 staking validators in the blockchain storage. 
+and validated by at least 2/3 of the staking validators in the blockchain storage. 
 The data stored from each Ethereum block will be:
  * The block header
  * The block hash
@@ -25,15 +28,15 @@ The data stored from each Ethereum block will be:
     to the bridge.
 We may also we to include Merkle proofs of inclusion of 
 these messages in the relevant blocks. We might also implement policies to
-prune old / irrelevant data or do checkpointing.
+prune old/irrelevant data or do checkpointing.
 
 Each piece of block data should have a list of the validators that have seen
 this block and the current amount of stake associated with it. This
 will need to be appropriately adjusted across epoch boundaries. However, 
-once a block has been seen by 2/3 staking validators, it is locked into a 
+once a block has been seen by 2/3 of the staking validators, it is locked into a 
 `seen` state. Thus, even if after an epoch that block has no longer been
-reported as seen by 2/3 of the new staking validator set, it is still
-considered `seen`. 
+reported as seen by 2/3 of the new staking validators set, it is still
+considered as `seen`. 
 
 To make this easy, we take the approach of always overwriting the state with
 the new state rather than applying state diffs. The storage keys involved
@@ -62,7 +65,7 @@ After an M1 block is committed, the next block proposer receives the
 aggregate of the vote extensions. From that, they should craft the proposed
 state change of the above form. They subsequently include a tx to that end 
 in their block proposal. This aggregated state change needs to be validated
-by at least 2/3 staking validators as usual.
+by at least 2/3 of the staking validators as usual.
 
 ## M1 Validity Predicates
 
@@ -70,11 +73,11 @@ by at least 2/3 staking validators as usual.
 M1 requires a validity predicate with dedicated storage to mint wrapped
 ETH. This validity predicate should be called on every inclusion of Ethereum
 state above. Its storage contains a queue of messages from the Ethereum
-bridge contracts. It also mints corresponding assets on M1, where the asset denom corresponds to 
-`{token address on etheruem} || {min number of confirmations}`.
+bridge contracts. It also mints corresponding assets on M1, where the asset denomination corresponds to 
+`{token address on ethereum} || {minimum number of confirmations}`.
 
 The minimum number of confirmations indicated in the outgoing Ethereum message 
-(maybe defaulting to 25 or 50 if unspecified) means the minimum number of 
+(maybe defaulting to 25 or 50 if unspecified) specifies the minimum number of 
 confirmations in block depth that must be reached before the assets will be
 minted on M1. This is the purpose of the message queue for this validity
 predicate.
@@ -88,7 +91,7 @@ struct MintEthToken {
     receiver: Address,
     // the amount of ETH token to mint
     amount: Amount,
-    // min number of confirmations needed for mints
+    // minimum number of confirmations needed for mints
     min_confirmations: u8,
     // height of the block at which the message appeared
     height: u64,
@@ -125,7 +128,7 @@ actions:
  3. For each message that is confirmed, transfer the appropriate tokens to 
     the address in the `receiver` field.
 
-Note that this means that a transfer initiated on Ethereum will be automatically
+Note that this means that a transfer initiated on Ethereum will automatically
 be seen and acted upon by M1. The appropriate protocol transactions to 
 credit tokens to the given user will be included on chain free of charge
 and requires no additional actions from the end user.
@@ -156,8 +159,8 @@ The set of Ethereum contracts should perform the following functions:
    unescrow on the Ethereum side
  - Allow for message batching
 
-Furthermore, the Ethereum contracts will whitelist EtTH and tokens that
-flow across the bridge as well as limits on transfer volume per epoch.
+Furthermore, the Ethereum contracts will whitelist ETTH and tokens that
+flow across the bridge as well as ensure limits on transfer volume per epoch.
  
 
 ## Resources which may be helpful:

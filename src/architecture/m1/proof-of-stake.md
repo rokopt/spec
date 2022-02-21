@@ -5,6 +5,21 @@ This specification should cover
 - Slashing mechanism & infractions for all of the Tendermint-recognised faults.
 - Rewards & distribution
 
+## Introduction
+Blockchain system rely on economic security to prevent abuse and for actors to behave according to protocol. The aim is that economic incentive promote correct and long-term operation of the system and economic punishments would discourage diverting from correct protocol execution either by mistake or with the intent to carrying out attacks. Many PoS blockcains rely on the 1/3 Byzantine rule, where they make the assumption the adversary cannot control more 2/3 of the total stake or 2/3 of the actors. 
+
+## Goals of Rewards and Slashing: Liveness and Security
+
+* **Security: Delegation and Slashing**: we want to make sure  validators backed by enough funds to make misbehaviour very expensive. Security is achieved by punishing (slashing) if they do. *Slashing* locked funds (stake) intends to disintensivize diverting from correct execution of protocol, which is this case is voting to finalize valid blocks. 
+* **Liveness: Paying Rewards**. For continued operation of M1 we want to incentivize participating in consensus and delegation, which helps security.
+
+
+### Security 
+In blockchain system we do not rely on altruistic behavior but rather economic security. We expect the validators to execute the protocol correctly. They get rewarded for doing so and punished otherwise. Each validator has some self-stake and some stake that is delegated to it by other token holders. The validator and delegators share the reward and risk of slashing impact with each other. 
+
+The total stake behind consensus should be taken into account when value is transferred via a transaction. The total value transferred cannot exceed 2/3 of the total stake. For example, if we have 1 billion tokens, we aim that 300 Million of these tokens is backing validators. This means that users should not transfer more than 200 million of this token within a block. 
+
+
 ## Epoch
 
 An epoch is a range of blocks or time that is defined by the base ledger and made available to the PoS system. This document assumes that epochs are identified by consecutive natural numbers. All the data relevant to PoS are [associated with epochs](#epoched-data).
@@ -94,12 +109,34 @@ Any unbonds created in epoch `n` decrements the bond's validator's total bonded 
 An "unbond" with epoch set to `n` may be withdrawn by the bond's source address in or any time after the epoch `n`. Once withdrawn, the unbond is deleted and the tokens are credited to the source account.
 
 ### Staking rewards
+The rewards are given to validators for voting on finalzing blocks: the fund for these rewards can come from **minting**. The amount that is minted depends on how much is staked and our desired yearly inflation. When total token staked is very low, the return rate per validator needs to increase, but as the total amount of stake rises validators will receive less rewards. Once we have aquired the desired stake in %, the amount minted will just be the desired yearly inflation. 
+
+Once we have calculated the total that needs to be minted at the end of the epoch, we split the minted tokens according to the stake they contributed (i.e., Cosmos) and distribute them to validators and their delegators. The validator and the delegator must have agreed on a commission rate between themselves. Once a certain amount is determined for a validator, it is paid out to them according to their agreement. The minted rewards are auto-bonded and only transferred when the funds are unbonded. 
 
 Until we have programmable validity predicates, rewards can use the mechanism outlined in the [F1 paper](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf), but it should use the exponential model, so that withdrawing rewards more frequently provides no additional benefit (this is a design constraint we should follow in general, we don't want to accidentally encourage transaction spam). This should be written in a way that allows for a natural upgrade to a validator-customisable rewards model (defaulting to this one) if possible.
 
 To a validator who proposed a block, the system rewards tokens based on the `block_proposer_reward` [system parameter](#system-parameters) and each validator that voted on a block receives `block_vote_reward`.
 
 ### Slashing
+An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who have bonded stake will be slashed once an offence has been detected. 
+
+Slashing is detected by a report from someone or by a vote. 
+
+Once an offence has been reported:
+1. Kicking out
+2. Slashing as individual: Once someone has reported an offence it is reviewed by validarors and if confirmed the offender is slashed. The funds that are taken from the offender either need to be burnt or go to treasury after a small cut (10%) of it goes to the person who reported the offence. 
+3. Escalated Slashing: If more than a treshold commit an offence, then slashing will get escalate. We want to quadratic slashing. If the offender is holding less than 1% of stake the slashing will be small and it will escalate to 100 % if the offenders hold up to 1/3 of the total stake.
+
+These are the types of offences: 
+* Equivocation in consensus 
+    * voting: meaning that a validator has submitted two votes that are confliciting 
+    * block production: a block producer has created two different blocks for the same hight
+* Invalidity: 
+    * block production: block producers has produced invalid block
+    * voting: other validators have voted on invalid block
+   
+Unavailability is not slashed directly, but if a validator has not partcipated in voting it will not receive rewards. 
+
 
 Instead of absolute values, validators' total bonded token amounts and bonds' and unbonds' token amounts are stored as their deltas (i.e. the change of quantity from a previous epoch) to allow distinguishing changes for different epoch, which is essential for determining whether tokens should be slashed. However, because slashes for a fault that occurred in epoch `n` may only be applied before the beginning of epoch `n + unbonding_length`, in epoch `m` we can sum all the deltas of total bonded token amounts and bonds and unbond with the same source and validator for epoch equal or less than `m - unboding_length` into a single total bonded token amount, single bond and single unbond record. This is to keep the total number of total bonded token amounts for a unique validator and bonds and unbonds for a unique pair of source and validator bound to a maximum number (equal to `unbonding_length`).
 
@@ -108,6 +145,7 @@ To disincentivize validators misbehaviour in the PoS system a validator may be s
 A valid evidence reduces the validator's total bonded token amount by the slash rate in and before the epoch in which the fault occurred. The validator's voting power must also be adjusted to the slashed total bonded token amount. Additionally, a slash is stored with the misbehaving validator's address and the relevant epoch in which the fault occurred. When an unbond is being withdrawn, we first look-up if any slash occurred within the range of epochs in which these were active and if so, reduce its token amount by the slash rate. Note that bonds and unbonds amounts are not slashed until their tokens are withdrawn.
 
 The invariant is that the sum of amounts that may be withdrawn from a misbehaving validator must always add up to the total bonded token amount.
+
 
 ## System parameters
 
