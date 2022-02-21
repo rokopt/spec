@@ -5,6 +5,21 @@ This specification should cover
 - Slashing mechanism & infractions for all of the Tendermint-recognised faults.
 - Rewards & distribution
 
+## Introduction
+Blockchain system rely on economic security to prevent abuse and for actors to behave according to protocol. The aim is that economic incentive promote correct and long-term operation of the system and economic punishments would discourage diverting from correct protocol execution either by mistake or with the intent to carrying out attacks. Many PoS blockcains rely on the 1/3 Byzantine rule, where they make the assumption the adversary cannot control more 2/3 of the total stake or 2/3 of the actors. 
+
+## Goals of Rewards and Slashing: Liveness and Security
+
+* **Security: delegation and slashing**: we want to make sure  validators backed by enough funds to make misbehaviour very expensive. Security is achieved by punishing (slashing) if they do. *Slashing* locked funds (stake) intends to disintensivize diverting from correct execution of protocol, which is this case is voting to finalize valid blocks. 
+* **Liveness: Continued operation of Anoma**. We want to incentivize participating in consensus and delegation, which helps security.
+
+
+## Security 
+In blockchain system we do not rely on altruistic behavior but rather economic security. We expect the validators to execute the protocol correctly. They get rewarded for doing so and punished otherwise. Each validator has some self-stake and some stake that is delegated to it by other token holders. The validator and delegators share the reward and risk of slashing impact with each other. 
+
+The total stake behind consensus should be taken into account when value is transferred via a transaction. The total value transferred cannot exceed 2/3 of the total stake. For example, if we have 1 billion tokens, we aim that 300 Million of these tokens is backing validators. This means that users should not transfer more than 200 million of this token within a block. 
+
+
 ## Epoch
 
 An epoch is a range of blocks or time that is defined by the base ledger and made available to the PoS system. This document assumes that epochs are identified by consecutive natural numbers. All the data relevant to PoS are [associated with epochs](#epoched-data).
