@@ -1,8 +1,5 @@
 # Typhon
 $$
-%DEFINE SOME USEFUL COMMANDS
-% THIS MUST GO BEFORE ALL THE MATH THAT USES THESE COMMANDS
-%
 \require{color}
 \definecolor{DarkGreen}{rgb}{0,0.5,0}
 \definecolor{LightBlue}{rgb}{0.9,0.9,1.0}
