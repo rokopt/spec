@@ -14,6 +14,9 @@ security for the bridge and free Ethereum state reads on M1, plus
 bidirectional message passing with reasonably low gas costs on the 
 Ethereum side.
 
+## Security
+On M1, the validators are full nodes of Ethereum and their stake is also accounting for security of the bridge. If they carry out a forking attack on M1 to steal locked tokens of Ethereum their stake will be slashed on M1. On the Ethereum side, we will add a limit to the amount of ETH that can be locked to limit the damage a forking attack on M1 can do. To make an attack more cumbersome we will also add a limit on how fast wrappen ETH can be redeemed. This will not add more security, but rather make the attack more inconvenient. 
+
 ## Ethereum State Inclusion
 We want to store data identifying which Ethereum blocks have been seen by
 at least 2/3 of the staking validators in the blockchain storage. These will be Ethereum
