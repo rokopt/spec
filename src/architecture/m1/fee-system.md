@@ -5,11 +5,15 @@
 This specification should cover:
 - Fee & gas system for M1
 
-We will follow the EIP 1559 scheme, where the transaction fee consists of a base fee and a tip. The base fee increases whenever blocks are fuller than the desired capacity, which is defined to be 50% in Ethereum and decreases when the blocks are less than 50% full. Our desired block fullness will also be 50%. However, for privacy reasons, we adopt a [tipless version](https://arxiv.org/pdf/2106.01340.pdf) suggested by Tim Roughgarden.  
+# Introduction
 
-To make sure validators are incentivized we only burn (or transfer to treasury) 80% of the base fee rather than the 100% suggested by Ethereum. The remaining 20% is reserved for paying future (6 blocks ahead) block producers. Depending on how full the blocks are, validators get portions of these fees. For example, if the block is 75 % full, the validators get the full fees whereas if the block they produce is only 25% full, they get 1/3 of the full fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
+(_some general nonsense here_)
 
-The change in base fees cannot be too fast or too frequent either. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied. 
+We will follow a [tipless version](https://arxiv.org/pdf/2106.01340.pdf) of the EIP 1559 scheme. In contrast with the original EIP 1559, the transaction fee of this tipless version consists solely of a base fee, with no tip. The base fee increases whenever blocks are fuller than the desired capacity and  decreases when the blocks haven't reached this capacity. Akin to Ethereum, our desired block fullness will also be 50%.   
+
+To ensure incentivisation for validators we only burn (or transfer to treasury) 80% of the base fee rather than the 100% suggested by Ethereum. The remaining 20% is reserved for paying future block producers (6 blocks ahead). Validators are apportioned fees depending on the fullness of the blocks they produce. For example, if the block is 75% full, the validators received full fees whereas if the block they produce is only 25% full, they only receive a third of the full fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
+
+The change in base fees cannot be too fast or too frequent. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied. 
 
 TODO: To calculate base fees we need to define the gas fees for the following types of transactions.
 1. Send governance proposals (every delegator/validator can propose a governance proposal: say "we want to increase gas fees")
@@ -72,7 +76,7 @@ Once an offence has been reported:
   - collective (escalated slashing) : If more than a certain threshold of users commit an offence, then slashing will be escalated. We would like to implement quadratic slashing (_does this mean the growth of slashing is O(n^2)?_). If the offender is holding less than 1% of stake the slashing will be small and it will escalate to 100 % if the offenders hold up to 1/3 of the total stake.
 
 
-
+<!---
 OLDER VERSION BELOW 
 
 # Fee system
@@ -111,7 +115,7 @@ In Cosmos the ideal locking is 2/3 in Polkadot it is 50%. In Ethereum the goal i
 TODO: inflation curve
 
 
-
+---!>
 
 
 
