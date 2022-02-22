@@ -43,5 +43,7 @@ Here are some numbers from other projects
 
 Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
+Inflation needs to be a function 
+
 TODO: inflation curve (_does this need to be plotted? I can do it with Inkscape_)Yes, please. Thanks!
 
