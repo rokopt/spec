@@ -28,7 +28,7 @@ TODO: To calculate base fees we need to define the gas fees for the following ty
 
 TODO: We also need to determine the block capacity (engineering decision), which refers to the total gas a block can process. 
 
-## Inflation
+## Token Economics and Inflation
 Locked tokens help secure the system while liquidity supports its activity and liveness. We need to choose the ratio between locked and liquid token carefully. Liquid tokens make sure the price of the token is not increasing out of scarcity and user have access to tokens to pay transaction fees, while locked tokens are the guaranteeing attacking the system is expensive for an adversary. 
 
 Here are some numbers from other projects
@@ -42,9 +42,8 @@ Here are some numbers from other projects
 
 Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
-Inflation needs to be a function 
+The total inflation is impacted by of the tokens minted for PoS (paid to validators and their delegators), tokens that are burnt at treasury, tokens that are burnt from transction fees and tokens that are burnt for offences. 
 
 TODO: inflation curve (_does this need to be plotted? I can do it with Inkscape_)Yes, please. Thanks!
 
 
-The minted tokens for inflation are spent by paying them to validators and their delegators as explained in PoS description. 
