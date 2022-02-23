@@ -28,7 +28,25 @@ TODO: To calculate base fees we need to define the gas fees for the following ty
 
 TODO: We also need to determine the block capacity (engineering decision), which refers to the total gas a block can process. 
 
+## Token flow
+
+The protocol controls M1T (the native staking token) sourced from two locations:
+
+1. Fees (80%) paid for transactions per the description above.
+1. Inflation, as in tokens directly printed by the protocol (which we can do arbitrarily).
+
+These tokens then flow to many different sinks:
+
+1. Proof-of-stake rewards, which are paid into the reward distribution mechanism in order to distribute them to validators and delegators.
+1. Shielded pool rewards, which are locked in a way such they can be eventually paid to users who kept tokens in the shielded pool.
+1. A governance pool.
+  1. These tokens are slowly burned at a fixed fraction per epoch.
+1. A set of configurable custom sinks, which can be addresses on M1, addresses on Ethereum (over the Ethereum bridge), or addresses on other chains connected over IBC.
+  1. These can be paid fixed amounts per epoch.
+  1. Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
+
 ## Token Economics and Inflation
+
 Locked tokens help secure the system while liquidity supports its activity and liveness. We need to choose the ratio between locked and liquid token carefully. Liquid tokens make sure the price of the token is not increasing out of scarcity and user have access to tokens to pay transaction fees, while locked tokens are the guaranteeing attacking the system is expensive for an adversary. 
 
 Here are some numbers from other projects
@@ -45,5 +63,3 @@ Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33
 The total inflation is impacted by of the tokens minted for PoS (paid to validators and their delegators), tokens that are burnt at treasury, tokens that are burnt from transction fees and tokens that are burnt for offences. 
 
 TODO: inflation curve (_does this need to be plotted? I can do it with Inkscape_)Yes, please. Thanks!
-
-

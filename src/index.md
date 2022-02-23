@@ -1,6 +1,6 @@
 # Anoma
 
-Anoma is a platform for self-contained self-sovereign coordination.
+Anoma is a suite of protocols and mechanisms for self-contained self-sovereign coordination.
 
 - _Coordination_ means that Anoma concerns itself with actions requiring agreement and/or exchange between parties.
 - _Self-sovereign_ means that the Anoma protocol aims to foster alignment between users, operators, and developers.
