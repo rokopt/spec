@@ -40,10 +40,10 @@ These tokens then flow to many different sinks:
 1. Proof-of-stake rewards, which are paid into the reward distribution mechanism in order to distribute them to validators and delegators.
 1. Shielded pool rewards, which are locked in a way such they can be eventually paid to users who kept tokens in the shielded pool.
 1. A governance pool.
-  1. These tokens are slowly burned at a fixed fraction per epoch.
+    - These tokens are slowly burned at a fixed fraction per epoch.
 1. A set of configurable custom sinks, which can be addresses on M1, addresses on Ethereum (over the Ethereum bridge), or addresses on other chains connected over IBC.
-  1. These can be paid fixed amounts per epoch.
-  1. Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
+    - These can be paid fixed amounts per epoch.
+    - Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
 
 ## Token Economics and Inflation
 
