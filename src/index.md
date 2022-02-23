@@ -12,4 +12,6 @@ Anoma is free, in both the senses of "free speech" and "free beer". The source f
 
 This specification is designed be readable in both breadth-first and depth-first manners. If you want to understand the broad motivation and architecture of Anoma, read the [motivation](./motivation.md) and [architecture](./architecture.md) overviews. If you want to dive into the protocol details of a particular aspect of Anoma, such as the [state architecture](./architecture/a1/state-architecture.md), or release, such as [M1](./architecture/m1.md), you can start directly with the document in question; overview documents are self-contained and/or crosslinked where necessary, and contain pointers to subprotocols and details thereof. A sitewide search function is available at the upper left.
 
+> **NOTE:** These documents are not yet complete. If you're reading this page right now, there's a high chance you might be interested in the [M1 specification](./architecture/m1.md).
+
 Happy reading!
