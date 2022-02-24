@@ -11,7 +11,7 @@ title = "Anoma Specification"
 [output.html]
 additional-css = ["assets/custom.css"]
 additional-js = ["assets/mermaid.min.js", "assets/mermaid-init.js"]
-mathjax-support = true
+# mathjax-support = true
 
 [output.html.fold]
 enable = true
@@ -20,8 +20,14 @@ level = 1
 [output.html.search]
 expand = true
 
-[output.linkcheck]
+# [output.linkcheck]
+
+[output.katex]
 
 [preprocessor]
+
+[preprocessor.katex]
+macros = "src/macros.latex"
+
 [preprocessor.mermaid]
 command = "mdbook-mermaid"
