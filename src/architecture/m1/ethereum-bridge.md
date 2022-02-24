@@ -1,9 +1,8 @@
 # Ethereum bridge
 
 The M1 Ethereum bridge exists to mint wrapped ETH tokens on M1 which naturally
-can be redeemed on Ethereum at a later time. The M1 Ethereum bridge might
-allow for transferring XAN tokens (Anoma's native tokens) from M1 to Ethereum in the future, but that
-will be added in a future version of the bridge spec.
+can be redeemed on Ethereum at a later time. Furthermore, it allows the
+minting of wrapped tokens on Ethereum backed by escrowed assets on M1.
 
 The M1 Ethereum bridge system consists of:
 * Ethereum state inclusion onto M1.
@@ -16,7 +15,14 @@ bidirectional message passing with reasonably low gas costs on the
 Ethereum side.
 
 ## Security
-On M1, the validators are full nodes of Ethereum and their stake is also accounting for security of the bridge. If they carry out a forking attack on M1 to steal locked tokens of Ethereum their stake will be slashed on M1. On the Ethereum side, we will add a limit to the amount of ETH that can be locked to limit the damage a forking attack on M1 can do. To make an attack more cumbersome we will also add a limit on how fast wrappen ETH can be redeemed. This will not add more security, but rather make the attack more inconvenient. 
+On M1, the validators are full nodes of Ethereum and their stake is also
+accounting for security of the bridge. If they carry out a forking attack
+on M1 to steal locked tokens of Ethereum their stake will be slashed on M1.
+On the Ethereum side, we will add a limit to the amount of ETH that can be
+locked to limit the damage a forking attack on M1 can do. To make an attack
+more cumbersome we will also add a limit on how fast wrapped ETH can be
+redeemed. This will not add more security, but rather make the attack more
+inconvenient. 
 
 ## Ethereum State Inclusion 
 We want to store data identifying which Ethereum blocks have been seen 
@@ -82,24 +88,25 @@ confirmations in block depth that must be reached before the assets will be
 minted on M1. This is the purpose of the message queue for this validity
 predicate.
 
-This queue contains instances of the following struct
+This queue contains instances of the `MintEthToken` struct below.
 ```rust
-struct MintEthToken {
-    // token address on Ethereum
+/// Generic struct for transferring value from Ethereum
+struct TransferFromEthereum {
+    /// token address on Ethereum
     ethereum_address: Address,
-    // the address on M1 receiving the tokens
+    /// the address on M1 receiving the tokens
     receiver: Address,
-    // the amount of ETH token to mint
+    /// the amount of ETH token to mint
     amount: Amount,
-    // minimum number of confirmations needed for mints
+    /// minimum number of confirmations needed for mints
     min_confirmations: u8,
-    // height of the block at which the message appeared
+    /// height of the block at which the message appeared
     height: u64,
-    // the hash & height of the last descendant block marked as `seen`
+    /// the hash & height of the last descendant block marked as `seen`
     latest_descendant: ([u8; 32], u64)
 }
 
-impl MintEthToken {
+impl TransferFromEthereum {
     /// Update the hash and height of the block `B` marked as `seen` in M1
     /// storage such that 
     ///   1. `B` is a descendant of the block containing the original message
@@ -117,6 +124,11 @@ impl MintEthToken {
         self.latest_descendant.1 - self.height >= self.min_confirmations
     }
 }
+
+/// Struct for minting wrapped ETH tokens on M1
+pub struct MintEthToken(TransferFromEthereum);
+/// Struct for redeeming wrapped XAN tokens from Ethereum
+pub struct RedeemXan(TransferFromEthereum);
 ```
 Every time this validity predicate is called, it must perform the following
 actions:
@@ -139,7 +151,7 @@ For redeeming wrapped ETH, the M1 side will need another validity predicate
 that is called only when the appropriate user tx lands on chain. This validity
 predicate will simply burn the tokens.
 
-Once, this transaction is approved, it is incumbent on the end user to 
+Once this transaction is approved, it is incumbent on the end user to 
 request an appropriate light client proof of the transaction. This light
 client proof must be submitted to the appropriate Ethereum smart contract
 by the user to redeem their ETH. This also means all Ethereum gas costs
@@ -150,6 +162,50 @@ tendermint via the [`tx_search` rpc endpoint](https://docs.tendermint.com/master
 The M1 client should use this to provide a convenient means for end users
 to request the proofs for their burned tokens.
 
+### Minting wrapped M1 tokens on Ethereum
+
+If a user wishes to mint a wrapped XAN (M1's native token) token on Ethereum,
+they first must submit a special transaction on M1. This transaction
+should be an instance of the following:
+
+```rust
+struct MintWrappedXan {
+    /// The M1 address owning the XAN
+    source: Address,
+    /// The address on Ethereum receiving the wrapped tokens
+    ethereum_address: Address,
+    /// The number of tokens to mint
+    amount: Amount,
+}
+```
+A special M1 validity predicate will be called on this transaction. If the
+transaction is valid, the corresponding amount of XAN will be transferred
+from the `source` address and deposited in an escrow account by the
+validity predicate. 
+
+Just as in redeeming ETH above, it is incumbent on the end user to
+request an appropriate light client proof of the transaction. This light
+client proof must be submitted to the appropriate Ethereum smart contract
+by the user. The corresponding amount of wrapped XAN tokens will be 
+transferred to the `ethereum_address` by the smart contract.
+
+### Redeeming M1 tokens 
+
+Redeeming wrapped M1 tokens from Ethereum works much the same way as sending
+ETH over the bridge. In fact, it may be handled by the same validity
+predicate.
+
+Every time Ethereum state is included, this validity predicate is called .
+It keeps a queue of messages from the Ethereum bridge contracts that 
+indicate wrapped XAN has been burned by said contract Ethereum side.
+
+The messages should be instances of the `RedeemXan` struct defined in [the 
+above section](#minting-wrapped-eth-tokens-on-m1). Once such a message
+has reached the requisite number of confirmations, a free protocol 
+transaction should be included by the next block proposer. This transaction
+should transfer the appropriate amount of XAN tokens from the M1 escrow account
+to the address of the recipient.
+
 ## Ethereum Smart Contracts
 The set of Ethereum contracts should perform the following functions:
  - Verify Tendermint light client proofs from M1 so that M1 messages can
@@ -159,7 +215,7 @@ The set of Ethereum contracts should perform the following functions:
    unescrow on the Ethereum side
  - Allow for message batching
 
-Furthermore, the Ethereum contracts will whitelist ETTH and tokens that
+Furthermore, the Ethereum contracts will whitelist ETH and tokens that
 flow across the bridge as well as ensure limits on transfer volume per epoch.
  
 
