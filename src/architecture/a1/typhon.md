@@ -1,5 +1,5 @@
 # Typhon
-$
+$$
 \require{color}
 \definecolor{DarkGreen}{rgb}{0,0.5,0}
 \definecolor{LightBlue}{rgb}{0.9,0.9,1.0}
@@ -70,7 +70,7 @@ $
   \colorbox{LightBlue}{#1}%
 } 
 \newcommand{\hetdiff}[1]{\hetdifftext{$\displaystyle#1$}} 
-$
+$$
 
 
 
