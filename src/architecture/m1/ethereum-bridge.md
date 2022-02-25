@@ -90,12 +90,35 @@ predicate.
 
 This queue contains instances of the `MintEthToken` struct below.
 ```rust
+/// The token address for wrapped ETH tokens
+const WRAPPED_ETH_ADDRESS: Address = ... 
+pub struct WrappedETHAddress;
+pub struct M1TokenAddress(Address);
+
+pub trait MintingAddress {
+    fn get_address(&self) -> &Address;
+}
+
+impl MintingAddress for WrappedETHAddress {
+    fn get_address(&self) -> &Address {
+        &WRAPPED_ETH_ADDRESS
+    }
+}
+
+impl MintingAddress for M1TokenAddress {
+    fn get_address(&self) -> &Address {
+        &self.0
+    }
+}
+
 /// Generic struct for transferring value from Ethereum
-struct TransferFromEthereum {
+struct TransferFromEthereum<Token: MintingAddress> {
     /// token address on Ethereum
     ethereum_address: Address,
     /// the address on M1 receiving the tokens
     receiver: Address,
+    /// The M1 token that will be minted
+    token: Token, 
     /// the amount of ETH token to mint
     amount: Amount,
     /// minimum number of confirmations needed for mints
@@ -126,9 +149,9 @@ impl TransferFromEthereum {
 }
 
 /// Struct for minting wrapped ETH tokens on M1
-pub struct MintEthToken(TransferFromEthereum);
-/// Struct for redeeming wrapped XAN tokens from Ethereum
-pub struct RedeemXan(TransferFromEthereum);
+pub type MintEthToken = TransferFromEthereum<WrappedETHAddress>;
+/// Struct for redeeming wrapped M1 tokens from Ethereum
+pub type RedeemM1Token = TransferFromEthereum<M1TokenAddress>;
 ```
 Every time this validity predicate is called, it must perform the following
 actions:
@@ -137,7 +160,8 @@ actions:
     can be done by finding Ethereum block headers marked as `seen` in the new
     storage data (the input from finalizing the block, it isn't necessary to 
     access M1 storage) that are descendants of the `latest_descendant` field.
- 3. For each message that is confirmed, transfer the appropriate tokens to 
+ 3. For each message that is confirmed, transfer the appropriate tokens 
+    (as determined by the `get_address` method of the `token` field) to 
     the address in the `receiver` field.
 
 Note that this means that a transfer initiated on Ethereum will automatically
@@ -164,29 +188,31 @@ to request the proofs for their burned tokens.
 
 ### Minting wrapped M1 tokens on Ethereum
 
-If a user wishes to mint a wrapped XAN (M1's native token) token on Ethereum,
-they first must submit a special transaction on M1. This transaction
+If a user wishes to mint a wrapped token on Ethereum backed by a token on 
+M1, (including M1T, M1's native token), they first must submit a special transaction on M1. This transaction
 should be an instance of the following:
 
 ```rust
-struct MintWrappedXan {
-    /// The M1 address owning the XAN
+struct MintWrappedM1Token {
+    /// The M1 address owning the token
     source: Address,
     /// The address on Ethereum receiving the wrapped tokens
     ethereum_address: Address,
+    /// The address of the token to be wrapped 
+    token: Address,
     /// The number of tokens to mint
     amount: Amount,
 }
 ```
 A special M1 validity predicate will be called on this transaction. If the
-transaction is valid, the corresponding amount of XAN will be transferred
+transaction is valid, the corresponding amount of the M1 token will be transferred
 from the `source` address and deposited in an escrow account by the
 validity predicate. 
 
 Just as in redeeming ETH above, it is incumbent on the end user to
 request an appropriate light client proof of the transaction. This light
 client proof must be submitted to the appropriate Ethereum smart contract
-by the user. The corresponding amount of wrapped XAN tokens will be 
+by the user. The corresponding amount of wrapped M1T tokens will be 
 transferred to the `ethereum_address` by the smart contract.
 
 ### Redeeming M1 tokens 
@@ -197,13 +223,13 @@ predicate.
 
 Every time Ethereum state is included, this validity predicate is called .
 It keeps a queue of messages from the Ethereum bridge contracts that 
-indicate wrapped XAN has been burned by said contract Ethereum side.
+indicate wrapped M1 toekns have been burned by said contract Ethereum side.
 
-The messages should be instances of the `RedeemXan` struct defined in [the 
+The messages should be instances of the `RedeemM1Token` struct defined in [the 
 above section](#minting-wrapped-eth-tokens-on-m1). Once such a message
 has reached the requisite number of confirmations, a free protocol 
 transaction should be included by the next block proposer. This transaction
-should transfer the appropriate amount of XAN tokens from the M1 escrow account
+should transfer the appropriate amount of M1 tokens from the M1 escrow account
 to the address of the recipient.
 
 ## Ethereum Smart Contracts
