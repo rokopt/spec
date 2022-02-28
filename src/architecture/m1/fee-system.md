@@ -28,6 +28,13 @@ TODO: To calculate base fees we need to define the gas fees for the following ty
 
 TODO: We also need to determine the block capacity (engineering decision), which refers to the total gas a block can process. 
 
+
+
+Hence, an increased inflation rate translates to greater rewards for users with staked assets (sometimes also called _staking yield_).
+
+### Transaction fees in other projects
+Similar to Solana, Ethereum 2.0, Near, Polkadot, and Cosmos we will be taking away block producers tokens from transactions fees. In Eth2.0, 100 % of tx fees are burned, in Solana 50%-100% are burned and in Near protocol also 70 % is burned and 30 % goes to smart contract authors. In our case, 50% is burned and the rest goes to future validators for block producution. 
+
 ## Token flow
 
 The protocol controls M1T (the native staking token) sourced from two locations:
@@ -99,9 +106,7 @@ $$
 
 
 
-Hence, an increased inflation rate translates to greater rewards for users with staked assets (sometimes also called _staking yield_).
 
-Similar to Solana, Ethereum 2.0, Near and Cosmos we will be burning tokens from transactions fees. This needs to be taken into consideration to calculate the total inflation of the system. In Eth20, 100 % of tx fees are burned, in Solana 50%-100% are burned and in Near protocol also 100% is burned (this needs cheking since I read somewhere that 30 % goes to smart contract authors _the 30% figure is correct, also 10% of epoch rewards goes to the treasury._ ). In our case, 70% is burned and the rest goes to future validators for block protcution. 
 
 ## Chris Feedback:
 - bound the total inflation, but also let it vary a bit so that incentives for proof-of-stake, shielded pool, and governance can be reasonably predictable
@@ -164,7 +169,7 @@ $$
 
 The ratio between staking and locking in shielded pool is a trade off between security and privacy. A higher staking ratio means more security, a higher locking ratio means more privacy. It would be easier to consider these separatly, for example, setting the target staking ratio to 50 % and the target locking ratio to 25 %. 
 
-Funds going to treasury can either be a % of the total infation or we can determine how much of total inflation goes to validator rewards and send the rest to treasury, in this case total inflation stays constant.
+Funds going to treasury can either be a % of the total infation (such as Near protocol where 5 % goes to treasury) or we can determine how much of total inflation goes to validator rewards and send the rest to treasury (such as Polkadot), in this case total inflation stays constant.
 
 We need to define $max(I_{PoS})$, $max(I_L)$, and $I_T$ to bound total inflation. 
 
