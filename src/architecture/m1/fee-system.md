@@ -60,6 +60,123 @@ Here are some numbers from other projects
 
 Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
-The total inflation is impacted by of the tokens minted for PoS (paid to validators and their delegators), tokens that are burnt at treasury, tokens that are burnt from transction fees and tokens that are burnt for offences. 
+# PoS inflation
 
-TODO: inflation curve (_does this need to be plotted? I can do it with Inkscape_)Yes, please. Thanks!
+
+## Introduction
+
+In general, inflation refers to the process of a currency losing its purchasing power over time. While this is a classical economic phenomenon, the way cryptocurrencies are produced permits great control over money supply, and doing so cleverly can have positive effects such as increasing incentives.
+
+
+## Proposed inflation rates
+### Related work
+Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol and Ethereum 2.0 (Ajinkya, could you please double check this?)have a fixed inflation rates, while Solana start with a high inflation rate that decreases over time, as less transaction fees are burned. 
+<!--## Inflation rates for popular platforms
+_insert table here_
+Solana has the following model where the inflation that is produced for rewards is independent of the staking ratio:
+1. Define a starting inflation rate for year 1.
+2. The inflation rate decreases thereon at a fixed pace until it reaches a desired rate.
+3. Once this desired rate is attained, the inflation rate remains constant.-->
+
+In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. 
+
+<!--### Inflation model
+
+The total inflation consists of $I_{PoS}$, the inflation rate that is minted to be paid to validators, and the deflation rate, $D_T$.
+$$I=I_{PoS} - D_T$$
+Where $D_T$ are the funds that are burned from transaction fees. Instead of burning we also can send them to treasury. Same goes with funds that are taken away in form of slashing. We will ignore it and only focus on the calcualtion of $I_{PoS}$.
+
+Let us assume $I_{target}$ is the target of total inflation rate. We want to limit our total inflation as follows. 
+$$I_{target}<I_{PoS}<2*I_{target}$$
+
+Moreover, let us assume the staked ratio, $R$, is calculated as 
+$$ R = \frac{\textrm{total tokens staked}}{\textrm{total current supply of tokens}}.$$
+
+$R_{target}$ is the target staking ratio that will be important for the PoS security. In Polkadot it is set to be 50% in Cosmos 66%. 
+
+
+The desired rate is ideally reached after a large number of tokens is generated. Initially, we propose a high inflation rate to generate interest among potential token-holders. The inflation rate would depend on the staked ratio $R$ as follows.
+ 
+$$ I_{PoS} =
+  \begin{cases}
+   I_{target} (1 + \frac{R}{R_{target} })      & \quad R<R_{target}\\
+   \\
+   2I_{target}  * 2 ^{-\frac{R-R_{target}}{1-R_{target}}} & \quad R>=R_{target}
+  \end{cases}
+$$
+
+
+
+Hence, an increased inflation rate translates to greater rewards for users with staked assets (sometimes also called _staking yield_).
+
+Similar to Solana, Ethereum 2.0, Near and Cosmos we will be burning tokens from transactions fees. This needs to be taken into consideration to calculate the total inflation of the system. In Eth20, 100 % of tx fees are burned, in Solana 50%-100% are burned and in Near protocol also 100% is burned (this needs cheking since I read somewhere that 30 % goes to smart contract authors _the 30% figure is correct, also 10% of epoch rewards goes to the treasury._ ). In our case, 70% is burned and the rest goes to future validators for block protcution. 
+
+## Chris Feedback:
+- bound the total inflation, but also let it vary a bit so that incentives for proof-of-stake, shielded pool, and governance can be reasonably predictable
+
+- inputs: target staking ratio, target locked tokens for different assets in the shielded pool, target governance public goods funding (rate?), target total inflation rate
+
+- outputs: staking rewards, locked token rewards for different assets, treasury pool
+
+- there is a dependence between staking ratio, shielded pool incentives, governance PGF & the total inflation rate, but basically we should allow the total inflation rate to vary based on the individual P controllers for the first 3 things as long as it stays within bounds
+-->
+
+## Inflation Model
+
+Let us assume $T$ is the total token supply and $I$ is total inflation of M1. 
+
+$$I=\frac{T_\textrm{end of year}-T_\textrm{beginning of year}}{T_\textrm{beginning of year}}$$
+
+We assume further assume $I_{target}$ is our target total inflation that we want to achieve on the long term. 
+
+The total inflation consists fo several components as follows. 
+
+$I=I_{PoS}+I_L+I_T$
+
+where $I_T$ is our inflation that goes to treasury, $I_{PoS}$ is inlation that is paid as PoS rewards, and $I_L$ is the inflation for locking that is pait to accounts in shielded pool. We can extend the $I_L$ be extended to be for many other types of $I_L1,...,I_Ln$. For simplicity we only assume to have one $I_L$. 
+
+<!--$I_{target}-\alpha<I_t<I_{target}+\alpha$-->
+
+These coponents are each varying depending on independent factors as follows. The $I_{PoS}$ depends on the staking ratio $R_t$. The locking inflation $I_L$ depends on 
+the locking ratio $L_t$. Ideally we want the total token supply cocnsists of tokens locked for staking and shielded pool and the rest are liquid tokens $Y$. 
+
+$T=T*R_t+T*L_t+Y$
+
+where $R_t$ is the target staking ratio and $L_t$ is the target locking of asset in the shielded pool.
+  
+We define $I_{PoS}$ as follows. 
+
+$$ I_{PoS} =
+  \begin{cases}
+   (max(I_{PoS})/2) (1 + \frac{R}{R_{target} })      & \quad R<R_{target}\\
+   \\
+   max(I_{PoS})  * 2 ^{-\frac{R-R_{target}}{1-R_{target}}} & \quad R>=R_{target}
+  \end{cases}
+$$
+
+![](https://hackmd.io/_uploads/HJpRfOYl9.jpg)
+
+We define $I_{L}$ as follows. 
+
+
+$$ I_{L} =
+  \begin{cases}
+   max(I_L)(\frac{L_{target}-L_t}{L_{target}})      & \quad L<L_{target}\\
+   \\
+   0 & \quad L>=L_{target}
+  \end{cases}
+$$
+
+
+![](https://hackmd.io/_uploads/BkR4Qdtg9.jpg)
+
+The ratio between staking and locking in shielded pool is a trade off between security and privacy. A higher staking ratio means more security, a higher locking ratio means more privacy. It would be easier to consider these separatly, for example, setting the target staking ratio to 50 % and the target locking ratio to 25 %. 
+
+Funds going to treasury can either be a % of the total infation or we can determine how much of total inflation goes to validator rewards and send the rest to treasury, in this case total inflation stays constant.
+
+We need to define $max(I_{PoS})$, $max(I_L)$, and $I_T$ to bound total inflation. 
+
+$max(I_{PoS})+max(I_L)+I_T=<max(I)$
+
+The bounds give us a max and the target bounds gove us a min for the total inflation can have, where the total inflation depends on $L_t$ and $R_t$ independently. 
+
