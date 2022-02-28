@@ -168,7 +168,9 @@ Funds going to treasury can either be a % of the total infation or we can determ
 
 We need to define $max(I_{PoS})$, $max(I_L)$, and $I_T$ to bound total inflation. 
 
-$max(I_{PoS})+max(I_L)+I_T=<max(I)$
+$max(I_{PoS})+max(I_L)+I_T=<max(I)$ 
 
-The bounds give us a max and the target bounds gove us a min for the total inflation can have, where the total inflation depends on $L_t$ and $R_t$ independently. 
+The sum of $I_L$ and other $I_L1,...,I_Ln$ will also be limited. If their sum would exceed the limit, then we need to scale them down to stay within the limit. 
+
+These bounds on $I_{PoS}$ and $I_L$ give us a min and max bound on the total inflation, where the total inflation depends on $L_t$ and $R_t$ independently. 
 
