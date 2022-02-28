@@ -45,7 +45,10 @@ These tokens then flow to many different sinks:
     - These can be paid fixed amounts per epoch.
     - Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
 
-## Token Economics and Inflation
+## Token Inflation
+###  Introduction
+
+In general, inflation refers to the process of a currency losing its purchasing power over time. While this is a classical economic phenomenon, the way cryptocurrencies are produced permits great control over money supply, and doing so cleverly can have positive effects such as increasing incentives.
 
 Locked tokens help secure the system while liquidity supports its activity and liveness. We need to choose the ratio between locked and liquid token carefully. Liquid tokens make sure the price of the token is not increasing out of scarcity and user have access to tokens to pay transaction fees, while locked tokens are the guaranteeing attacking the system is expensive for an adversary. 
 
@@ -60,16 +63,7 @@ Here are some numbers from other projects
 
 Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
-##  Inflation
-
-
-###  Introduction
-
-In general, inflation refers to the process of a currency losing its purchasing power over time. While this is a classical economic phenomenon, the way cryptocurrencies are produced permits great control over money supply, and doing so cleverly can have positive effects such as increasing incentives.
-
-
-###  Proposed inflation rates
-### # Related work
+### Related work
 Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol and Ethereum 2.0 (Ajinkya, could you please double check this?)have a fixed inflation rates, while Solana start with a high inflation rate that decreases over time, as less transaction fees are burned. 
 <!--## Inflation rates for popular platforms
 _insert table here_
