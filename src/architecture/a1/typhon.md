@@ -1,6 +1,6 @@
 # Typhon
 
-[TOC]
+[[_TOC_]]
 
 ## Summary 
 
