@@ -60,16 +60,16 @@ Here are some numbers from other projects
 
 Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
-# PoS inflation
+##  Inflation
 
 
-## Introduction
+###  Introduction
 
 In general, inflation refers to the process of a currency losing its purchasing power over time. While this is a classical economic phenomenon, the way cryptocurrencies are produced permits great control over money supply, and doing so cleverly can have positive effects such as increasing incentives.
 
 
-## Proposed inflation rates
-### Related work
+###  Proposed inflation rates
+### # Related work
 Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol and Ethereum 2.0 (Ajinkya, could you please double check this?)have a fixed inflation rates, while Solana start with a high inflation rate that decreases over time, as less transaction fees are burned. 
 <!--## Inflation rates for popular platforms
 _insert table here_
@@ -121,7 +121,7 @@ Similar to Solana, Ethereum 2.0, Near and Cosmos we will be burning tokens from 
 - there is a dependence between staking ratio, shielded pool incentives, governance PGF & the total inflation rate, but basically we should allow the total inflation rate to vary based on the individual P controllers for the first 3 things as long as it stays within bounds
 -->
 
-## Inflation Model
+###  Model
 
 Let us assume $T$ is the total token supply and $I$ is total inflation of M1. 
 
