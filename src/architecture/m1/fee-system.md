@@ -11,7 +11,7 @@ Tansaction fees im at incentivizing the operation of the blockchain. We want blo
 
 We will follow a [tipless version](https://arxiv.org/pdf/2106.01340.pdf) of the EIP 1559 scheme. In contrast with the original EIP 1559, the transaction fee of this tipless version consists solely of a base fee, with no tip. The base fee increases whenever blocks are fuller than the desired capacity and  decreases when the blocks haven't reached this capacity. Akin to Ethereum, our desired block fullness will also be 50%.   
 
-To ensure incentivisation for validators we only burn (or transfer to treasury) 50% of the base fee rather than the 100% suggested by Ethereum. The remaining 20% is reserved for paying future block producers (6 blocks ahead). Validators are apportioned fees depending on the fullness of the blocks they produce. For example, if the block is 75% full, the validators received full fees whereas if the block they produce is only 25% full, they only receive a third of the full fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
+To ensure incentivisation for validators we only transfer to treasury (instead of burning) 50% of the base fee rather than the 100% suggested by Ethereum. The other 50 % is reserved for paying future block producers (6 blocks ahead). Validators are apportioned fees depending on the fullness of the blocks they produce. For example, if the block is 75% full, the validators received full fees whereas if the block they produce is only 25% full, they only receive a third of the full fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
 
 The change in base fees cannot be too fast or too frequent. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied. 
 
@@ -46,8 +46,6 @@ These tokens then flow to many different sinks:
     - Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
 
 ## Token Inflation
-###  Introduction
-
 In general, inflation refers to the process of a currency losing its purchasing power over time. While this is a classical economic phenomenon, the way cryptocurrencies are produced permits great control over money supply, and doing so cleverly can have positive effects such as increasing incentives.
 
 Locked tokens help secure the system while liquidity supports its activity and liveness. We need to choose the ratio between locked and liquid token carefully. Liquid tokens make sure the price of the token is not increasing out of scarcity and user have access to tokens to pay transaction fees, while locked tokens are the guaranteeing attacking the system is expensive for an adversary. 
