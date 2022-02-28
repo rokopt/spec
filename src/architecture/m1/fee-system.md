@@ -39,7 +39,7 @@ Similar to Solana, Ethereum 2.0, Near, Polkadot, and Cosmos we will be taking aw
 
 The protocol controls M1T (the native staking token) sourced from two locations:
 
-1. Fees (80%) paid for transactions per the description above.
+1. Fees (50%) paid for transactions per the description above.
 1. Inflation, as in tokens directly printed by the protocol (which we can do arbitrarily).
 
 These tokens then flow to many different sinks:
