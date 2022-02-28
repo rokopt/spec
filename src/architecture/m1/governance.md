@@ -7,7 +7,7 @@ Anoma introduce a governance mechanism to propose and apply protocol changes wit
 ### Governance Address
 Governance adds 2 internal addresses:
 - GovernanceAddress
-- PublicGoodsPool
+- TreasuryAddress
 
 The first address contains all the proposals under his address space.
 The second address holds the funds of rejected proposals.
@@ -123,7 +123,7 @@ fn current_epoch_is_2_3(addr: Address, id: u64) -> bool {
     
 fn is_allowed_transfer(verifiers: Vec<Address>) -> bool {
     // check if the transfer to towards a whitelisted address. 
-    // Transfer can be towers PublicGoodsPool if the proposal is rejected 
+    // Transfer can be towers TreasuryAddress if the proposal is rejected 
     // or author if proposal is accepted
     // this method must be called only if currentEpoch > proposal.endEpoch
     return ....
@@ -209,7 +209,7 @@ fn compute_tally(proposal_id: u64) {
 ```
 
 ### Refund and Proposal Execution mechanism
-Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `PublicGoodsPool`. Moreover, if the proposal had a positive outcome and `proposalTxCode` was defined, these changes will be executed. Changes are execute in the first block of the `GraceEpoch` defined in the proposal.
+Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `TreasuryAddress`. Moreover, if the proposal had a positive outcome and `proposalTxCode` was defined, these changes will be executed. Changes are execute in the first block of the `GraceEpoch` defined in the proposal.
 
 
 If the proposal outcome is positive and current epoch is equal to the proposal `graceEpoch`, the `BeginBlock`
@@ -217,36 +217,37 @@ If the proposal outcome is positive and current epoch is equal to the proposal `
 - execute any changes to storage specified by `proposalCode`
 
 A `RejectProposal` transaction must:
-- transfer the locked funds to the `PublicGoodsPool`
+- transfer the locked funds to the `TreasuryAddress`
 
 **NOTE**: we need a way to signal the fulfillment of an accepted proposal inside the block in which it is applied to the state. We could do that by using `Events` https://github.com/tendermint/tendermint/blob/ab0835463f1f89dcadf83f9492e98d85583b0e71/docs/spec/abci/abci.md#events (see https://github.com/anoma/anoma/issues/930).
 
-## PublicGoodsPool
-Funds locked in `PublicGoodsPool` address should be spendable only if a 2/3+ voting power accept a proposal which modifies its balance.
+## TreasuryAddress
+Funds locked in `TreasuryAddress` address should be spendable only if a 2/3+ voting power accept a proposal which modifies its balance.
 
-### PublicGoodsPool storage
+### TreasuryAddress storage
 ```
-/$PublicGoodsPool/balance: u64
-/$PublicGoodsPool/?: Vec<u8>
+/$TreasuryAddress/balance: u64
+/$TreasuryAddress/?: Vec<u8>
 ```
 
-### PublicGoodsPool VP
+### TreasuryAddress VP
 ```rust=
 pub fn governance_fund_pool_vp(tx_data: Vec<u8>, addr: Address, keys_changed: HashSet<Key>, verifiers: HashSet<Address>) {
     for key in keys_changed {
         if is_balance_key(key) {
             let pre_balance = read_pre(key);
             let post_balance = read_post(key);
+            let to_be_spent = post_balance - pre_balance;
             let proposal_min_lock_funds = read_min_proposal_fund();
             // if credit
-            if post_balance - pre_balance >= proposal_min_lock_funds {
+            if to_be_spent >= proposal_min_lock_funds {
                 return true
             }
             // if debit
             let proposal_id = get_proposal_id();
             let current_epoch = get_current_epoch();
             let proposal_grace_epoch = get_proposal_grace_epoch();
-            return is_tally_positive(proposal_id) && current_epoch == proposal_grace_epoch;
+            return is_tally_positive(proposal_id) && current_epoch == proposal_grace_epoch && abs(to_be_spent) < MAX_SPENDABLE_SUM;
         } else {
             return false;   
         }
@@ -258,6 +259,8 @@ fn is_tally_positive(proposal_id: u64) -> bool {
     return ...
 }
 ```
+
+`MAX_SPENDABLE_SUM` is a parameter in of the anoma protocol.
 
 ## ParameterAddress
 Protocol parameter are described under the $ParameterAddress internal address. Proposals can modify them if 2/3+ voting power agree.
