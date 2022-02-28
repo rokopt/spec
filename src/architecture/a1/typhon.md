@@ -1,6 +1,8 @@
 # Typhon
 
-[[_TOC_]]
+## Consensus Mechanism
+
+## Chimera Chains
 
 ## Summary 
 
