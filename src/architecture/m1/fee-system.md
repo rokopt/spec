@@ -5,7 +5,7 @@
 This specification should cover:
 - Fee & gas system for M1
 
-# Introduction
+## Transaction Fees 
 
 Tansaction fees im at incentivizing the operation of the blockchain. We want block producers to have incentive to add transactions to the blocks and publish blocks.
 
