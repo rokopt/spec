@@ -118,6 +118,8 @@ Until we have programmable validity predicates, rewards can use the mechanism ou
 
 To a validator who proposed a block, the system rewards tokens based on the `block_proposer_reward` [system parameter](#system-parameters) and each validator that voted on a block receives `block_vote_reward`.
 
+(In Near protocol where also 10% of epoch rewards goes to the treasury.) 
+
 ### Slashing
 
 An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who has bonded stake will be slashed once an offence has been detected. 
