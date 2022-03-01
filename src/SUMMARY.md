@@ -4,6 +4,8 @@
 - [Motivation](./motivation.md)
 - [Architecture](./architecture.md)
   - [M1](./architecture/m1.md)
+    - [Consensus](./architecture/m1/consensus.md)
+    - [P2P layer](./architecture/m1/p2p.md)
     - [Execution system](./architecture/m1/execution-system.md)
     - [Multi-asset shielded pool](./architecture/m1/masp.md)
       - [Trusted setup](./architecture/m1/masp/trusted-setup.md)
