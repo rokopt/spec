@@ -124,23 +124,22 @@ Let us assume $T$ is the total token supply and $I$ is total inflation of M1.
 
 $$I=\frac{T_\textrm{end of year}-T_\textrm{beginning of year}}{T_\textrm{beginning of year}}$$
 
-We assume further assume $I_{target}$ is our target total inflation that we want to achieve on the long term. 
-
 The total inflation consists fo several components as follows. 
 
-$I=I_{PoS}+I_L+I_T$
+$I=I_{PoS}+I_L+I_T-D_T$
 
-where $I_T$ is our inflation that goes to treasury, $I_{PoS}$ is inlation that is paid as PoS rewards, and $I_L$ is the inflation for locking that is pait to accounts in shielded pool. We can extend the $I_L$ be extended to be for many other types of $I_L1,...,I_Ln$. For simplicity we only assume to have one $I_L$. 
+where $I_T$ is our inflation that goes to treasury, $I_{PoS}$ is inlation that is paid as PoS rewards, and $I_L$ is the inflation for locking that is pait to accounts in shielded pool. We can extend the $I_L$ be extended to be for many other types of $I_L1,...,I_Ln$. For simplicity we only assume to have one $I_L$. $D_T$ is the constant deflation of the treasury. This is applied to incentivize governance voter to spend treasury funds. 
 
 <!--$I_{target}-\alpha<I_t<I_{target}+\alpha$-->
 
-These coponents are each varying depending on independent factors as follows. The $I_{PoS}$ depends on the staking ratio $R_t$. The locking inflation $I_L$ depends on 
-the locking ratio $L_t$. Ideally we want the total token supply cocnsists of tokens locked for staking and shielded pool and the rest are liquid tokens $Y$. 
+These coponents are each varying depending on independent factors as follows. The $I_{PoS}$ depends on the staking ratio $R_t$. The locking inflation $I_L$ depends on the locking ratio $L_t$. Ideally we want the total token supply cocnsists of tokens locked for staking and shielded pool and the rest are liquid tokens $Y$. 
 
 $T=T*R_t+T*L_t+Y$
 
 where $R_t$ is the target staking ratio and $L_t$ is the target locking of asset in the shielded pool.
   
+We assume further assume $I_{target}$ is our target total inflation that we want to achieve on the long term. 
+
 We define $I_{PoS}$ as follows. 
 
 $$ I_{PoS} =
