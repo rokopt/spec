@@ -20,6 +20,7 @@ Each proposal will be stored in a sub-key under the internal proposal address. T
 /$GovernanceAddress/proposal/$id/author : Address
 /$GovernanceAddress/proposal/$id/startEpoch: Epoch
 /$GovernanceAddress/proposal/$id/endEpoch: Epoch
+/$GovernanceAddress/proposal/$id/graceEpoch: Epoch
 /$GovernanceAddress/proposal/$id/proposalCode: Option<Vec<u8>>
 /$GovernanceAddress/proposal/$id/funds: u64
 ```
