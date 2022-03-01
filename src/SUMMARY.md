@@ -19,7 +19,7 @@
     - [Ethereum bridge](./architecture/m1/ethereum-bridge.md)
     - [Web wallet interface](./architecture/m1/web-wallet-interface.md)
     - [Web explorer interface](./architecture/m1/web-explorer-interface.md)
-    - [Testnets](./archicture/m1/testnets.md)
+    - [Testnets](./architecture/m1/testnets.md)
     - [External integrations](./architecture/m1/external-integrations.md)
   - [M2](./architecture/m2.md)
     - [Ferveo](./architecture/m2/ferveo.md)
