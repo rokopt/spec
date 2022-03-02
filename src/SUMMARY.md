@@ -13,6 +13,7 @@
       - [Shielded pool incentives](./architecture/m1/masp/shielded-pool-incentives.md)
     - [Governance](./architecture/m1/governance.md)
     - [Proof of stake](./architecture/m1/proof-of-stake.md)
+      - [Bonding mechanism](./architecture/m1/proof-of-stake/bonding-mechanism.md)
       - [Cubic slashing](./architecture/m1/proof-of-stake/cubic-slashing.md)
       - [Reward distribution](./architecture/m1/proof-of-stake/reward-distribution.md)
     - [Inflation system](./architecture/m1/inflation-system.md)
