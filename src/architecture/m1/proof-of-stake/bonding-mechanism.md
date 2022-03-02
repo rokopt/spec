@@ -95,25 +95,6 @@ To a validator who proposed a block, the system rewards tokens based on the `blo
 
 ### Slashing
 
-An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who has bonded stake will be slashed once an offence has been detected. 
-
-These are the types of offences: 
-* Equivocation in consensus 
-    * voting: meaning that a validator has submitted two votes that are confliciting 
-    * block production: a block producer has created two different blocks for the same height
-* Invalidity: 
-    * block production: a block producer has produced invalid block
-    * voting: validators have voted on invalid block
-   
-Unavailability is not considered an offense, but a validator who hasn't voted will not receive rewards. 
-
-Once an offence has been reported: 
-1. Kicking out
-2. Slashing
-  - individual: Once someone has reported an offence it is reviewed by validarors and if confirmed the offender is slashed. The funds that are taken from the offender are either burnt or sent to the treasury after a small cut (10%) of it goes to the person who reported the offence. 
-  - collective (escalated slashing) : If more than a certain threshold of users commit an offence, then slashing will be escalated. We would like to implement quadratic slashing (_does this mean the growth of slashing is O(n^2)?_). If the offender is holding less than 1% of stake the slashing will be small and it will escalate to 100 % if the offenders hold up to 1/3 of the total stake.
-
-
 Instead of absolute values, validators' total bonded token amounts and bonds' and unbonds' token amounts are stored as their deltas (i.e. the change of quantity from a previous epoch) to allow distinguishing changes for different epoch, which is essential for determining whether tokens should be slashed. However, because slashes for a fault that occurred in epoch `n` may only be applied before the beginning of epoch `n + unbonding_length`, in epoch `m` we can sum all the deltas of total bonded token amounts and bonds and unbond with the same source and validator for epoch equal or less than `m - unboding_length` into a single total bonded token amount, single bond and single unbond record. This is to keep the total number of total bonded token amounts for a unique validator and bonds and unbonds for a unique pair of source and validator bound to a maximum number (equal to `unbonding_length`).
 
 To disincentivize validators misbehaviour in the PoS system a validator may be slashed for any fault that it has done. An evidence of misbehaviour may be submitted by any account for a fault that occurred in epoch `n` anytime before the beginning of epoch `n + unbonding_length`.
