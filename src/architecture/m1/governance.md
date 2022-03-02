@@ -27,6 +27,22 @@ Each proposal will be stored in a sub-key under the internal proposal address. T
 
 `Author` address field will be used to credit the locked funds if the proposal is approved.
 
+The `content` value should follow a standard format. We leverage something similar to what is described in the [BIP2](https://github.com/bitcoin/bips/blob/master/bip-0002.mediawiki#bip-format-and-structure) document:
+
+```
+  Title: <text>
+  Authors: <authors email addresses> 
+  Discussions-To: <email address / link>
+  Created: <date created on, in ISO 8601 (yyyy-mm-dd) format>
+  License: <abbreviation for approved license(s)>
+  Abstract: <text>
+  Motivation: <text>
+  Details: <text>
+  Requires: <AIP number(s)> - optional field
+  Replaces: <AIP number> - optional field
+  Superseded-By: <AIP number> - optional field
+```
+
 `GovernanceAddress` global storage keys are:
 
 ```
@@ -210,7 +226,7 @@ fn compute_tally(proposal_id: u64) {
 ```
 
 ### Refund and Proposal Execution mechanism
-Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `TreasuryAddress`. Moreover, if the proposal had a positive outcome and `proposalTxCode` was defined, these changes will be executed. Changes are execute in the first block of the `GraceEpoch` defined in the proposal.
+Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `TreasuryAddress`. Moreover, if the proposal had a positive outcome and `proposalCode` was defined, these changes will be executed. Changes are execute in the first block of the `GraceEpoch` defined in the proposal.
 
 
 If the proposal outcome is positive and current epoch is equal to the proposal `graceEpoch`, the `BeginBlock`
