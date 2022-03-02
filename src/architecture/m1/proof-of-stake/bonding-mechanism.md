@@ -111,7 +111,7 @@ Once an offence has been reported:
 1. Kicking out
 2. Slashing
   - Individual: Once someone has reported an offence it is reviewed by validarors and if confirmed the offender is slashed. 
-  - Cubic (escalated slashing) 
+  - [cubic slashing](./proof-of-stake/cubic-slashing.md): escalated slashing
 
 
 Instead of absolute values, validators' total bonded token amounts and bonds' and unbonds' token amounts are stored as their deltas (i.e. the change of quantity from a previous epoch) to allow distinguishing changes for different epoch, which is essential for determining whether tokens should be slashed. However, because slashes for a fault that occurred in epoch `n` may only be applied before the beginning of epoch `n + unbonding_length`, in epoch `m` we can sum all the deltas of total bonded token amounts and bonds and unbond with the same source and validator for epoch equal or less than `m - unboding_length` into a single total bonded token amount, single bond and single unbond record. This is to keep the total number of total bonded token amounts for a unique validator and bonds and unbonds for a unique pair of source and validator bound to a maximum number (equal to `unbonding_length`).
