@@ -1,3 +1,3 @@
-# P2P   
+# P2P
 
-TODO: Writeup on how the peer-to-peer layer works.
+M1 uses the P2P layer built into Tendermint Go.
