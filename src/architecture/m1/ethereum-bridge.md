@@ -8,6 +8,7 @@ The M1 Ethereum bridge system consists of:
 * Ethereum state inclusion onto M1.
 * A set of validity predicates on M1 which roughly implements [ICS20](https://docs.cosmos.network/v0.42/modules/ibc/) fungible token transfers.
 * A set of Ethereum smart contracts.
+* An M1 bridge process
 
 This basic bridge architecture should provide for almost-M1 consensus 
 security for the bridge and free Ethereum state reads on M1, plus 
@@ -176,15 +177,50 @@ that is called only when the appropriate user tx lands on chain. This validity
 predicate will simply burn the tokens.
 
 Once this transaction is approved, it is incumbent on the end user to 
-request an appropriate light client proof of the transaction. This light
-client proof must be submitted to the appropriate Ethereum smart contract
-by the user to redeem their ETH. This also means all Ethereum gas costs
-are the responsibility of the end user.
+request an appropriate "proof" of the transaction. This proof must be 
+submitted to the appropriate Ethereum smart contract by the user to 
+redeem their ETH. This also means all Ethereum gas costs are the 
+responsibility of the end user.
 
-Producing light client proofs for transactions is available directly in
-tendermint via the [`tx_search` rpc endpoint](https://docs.tendermint.com/master/rpc/#/Info/tx_search).
-The M1 client should use this to provide a convenient means for end users
-to request the proofs for their burned tokens.
+The proofs to be used will be custom bridge headers that are calculated
+deterministically from the block. They will be designed for maximally
+efficient Ethereum decoding and verification. 
+
+For each block on M1, validators must submit the corresponding bridge
+header signed with a special secp256k1 key as part of their vote extension.
+The finalized bridge header with aggregated signatures will appear in the
+next block as a protocol transaction. Aggregation of signatures is the 
+responsibility of the next block proposer. 
+
+The bridge headers need only be produced when the proposed block contains
+requests to transfer value over the bridge to Ethereum. The exception is 
+when validator sets change.  Since the Ethereum smart contract should
+accept any header signed by bridge header signed by 2 / 3 of the staking
+validators, it needs up-to-date knowledge of:
+ - The current validators' public keys
+ - The current stake of each validator
+
+This means the at the end of every M1 epoch, a special transaction must be
+sent to the Ethereum contract detailing the new public keys and stake of the
+new validator set. This message must also be signed by at least 2 / 3 of the
+current validators as a "transfer of power". 
+
+Due to asynchronicity concerns, this message should be submitted well in
+advance of the actual epoch change, perhaps even at the beginning of each
+new epoch. Bridge headers to ethereum should include the current M1 epoch
+so that the smart contract knows how to verify the headers. In short, there
+is a pipelining mechanism in the smart contract. 
+
+Such a message is not prompted by any user transaction and thus will have
+to be carried out by an _M1 bridge relayer_. Once the transfer of power 
+message is on chain, any time afterwards an M1 bridge process may take it
+to craft the appropriate message to the Ethereum smart contracts. 
+
+The details on the M1 bridge relayers are below in the corresponding section.
+
+Signing incorrect headers is considered a slashable offense. Anyone witnessing
+an incorrect header that is signed may submit a complaint (a type of transaction)
+to initiate slashing of the validator who made the signature.
 
 ### Minting wrapped M1 tokens on Ethereum
 
@@ -210,10 +246,10 @@ from the `source` address and deposited in an escrow account by the
 validity predicate. 
 
 Just as in redeeming ETH above, it is incumbent on the end user to
-request an appropriate light client proof of the transaction. This light
-client proof must be submitted to the appropriate Ethereum smart contract
-by the user. The corresponding amount of wrapped M1T tokens will be 
-transferred to the `ethereum_address` by the smart contract.
+request an appropriate proof of the transaction. This proof must be
+submitted to the appropriate Ethereum smart contract by the user.
+The corresponding amount of wrapped M1T tokens will be transferred to the
+`ethereum_address` by the smart contract.
 
 ### Redeeming M1 tokens 
 
@@ -223,7 +259,7 @@ predicate.
 
 Every time Ethereum state is included, this validity predicate is called .
 It keeps a queue of messages from the Ethereum bridge contracts that 
-indicate wrapped M1 toekns have been burned by said contract Ethereum side.
+indicate wrapped M1 tokens have been burned by said contract Ethereum side.
 
 The messages should be instances of the `RedeemM1Token` struct defined in [the 
 above section](#minting-wrapped-eth-tokens-on-m1). Once such a message
@@ -244,6 +280,30 @@ The set of Ethereum contracts should perform the following functions:
 Furthermore, the Ethereum contracts will whitelist ETH and tokens that
 flow across the bridge as well as ensure limits on transfer volume per epoch.
  
+## M1 Bridge Relayers
+
+Validator changes must be turned into a message that can be communicated to
+smart contracts on Ethereum. These smart contracts need this information
+to verify proofs of actions taken on M1. 
+
+Since this is protocol level information, it is not user prompted and thus
+should not be the responsibility of any user to submit such a transaction.
+
+This necessitates M1 nodes whose job it is to submit these transactions on
+Ethereum at the conclusion of each M1 epoch. In theory, since this message
+is publicly available on the blockchain, anyone can submit this transaction.
+
+Nevertheless, M1 full nodes will have an option to serve as bridge relayer.
+M1 governance will vote on a full node to act as relayer. The governance
+treasury will be used to compensate the relayer for the gas fees incurred
+as well as extra fees as payment for their trouble.
+
+Since all M1 validators are running Ethereum full nodes, they can monitor
+the performance of the relayer. If the performance is deemed unsatisfactory,
+a governance vote can be used to replace them.
+
+Additionally, it is likely desirable to rotate the designated relayer on a
+regular basis.
 
 ## Resources which may be helpful:
 - [Gravity Bridge Solidity contracts](https://github.com/Gravity-Bridge/Gravity-Bridge/tree/main/solidity)
