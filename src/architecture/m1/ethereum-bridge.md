@@ -268,23 +268,11 @@ transaction should be included by the next block proposer. This transaction
 should transfer the appropriate amount of M1 tokens from the M1 escrow account
 to the address of the recipient.
 
-## Ethereum Smart Contracts
-The set of Ethereum contracts should perform the following functions:
- - Verify Tendermint light client proofs from M1 so that M1 messages can
-   be submitted to the contract.
- - Emit log messages readable by M1
- - Handle ICS20-style token transfer messages appropriately with escrow & 
-   unescrow on the Ethereum side
- - Allow for message batching
-
-Furthermore, the Ethereum contracts will whitelist ETH and tokens that
-flow across the bridge as well as ensure limits on transfer volume per epoch.
- 
 ## M1 Bridge Relayers
 
 Validator changes must be turned into a message that can be communicated to
 smart contracts on Ethereum. These smart contracts need this information
-to verify proofs of actions taken on M1. 
+to verify proofs of actions taken on M1.
 
 Since this is protocol level information, it is not user prompted and thus
 should not be the responsibility of any user to submit such a transaction.
@@ -305,13 +293,36 @@ a governance vote can be used to replace them.
 Additionally, it is likely desirable to rotate the designated relayer on a
 regular basis.
 
+## Ethereum Smart Contracts
+The set of Ethereum contracts should perform the following functions:
+ - Verify Tendermint proofs from M1 so that M1 messages can
+   be submitted to the contract.
+ - Verify and maintain evolving validator sets with corresponding stake
+   and public keys.
+ - Emit log messages readable by M1
+ - Handle ICS20-style token transfer messages appropriately with escrow & 
+   unescrow on the Ethereum side
+ - Allow for message batching
+
+Furthermore, the Ethereum contracts will whitelist ETH and tokens that
+flow across the bridge as well as ensure limits on transfer volume per epoch.
+
+An Ethereum smart contract should perform the following steps to verify
+a proof from M1:
+ 1. Check the epoch included in the proof.
+ 2. Look up the validator set corresponding to said epoch.
+ 3. Verify that the signatures included amount to at least 2 / 3 of the 
+    total stake.
+ 4. Check the validity of each signature.
+
+If all the above verifications succeed, the contract may affect the 
+appropriate state change, emit logs, etc.
+
 ## Resources which may be helpful:
 - [Gravity Bridge Solidity contracts](https://github.com/Gravity-Bridge/Gravity-Bridge/tree/main/solidity)
 - [ICS20](https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer)
 - [Rainbow Bridge contracts](https://github.com/aurora-is-near/rainbow-bridge/tree/master/contracts)
 - [IBC in Solidity](https://github.com/hyperledger-labs/yui-ibc-solidity)
-
-One caveat is that we should check the cost of Tendermint header verification on Ethereum; it can be amortised across packets but this still may be quite high. If it is too high we could try to use a threshold key with Ferveo instead.
 
 Operational notes:
 1. We should bundle the Ethereum full node with the `m1` daemon executable.
