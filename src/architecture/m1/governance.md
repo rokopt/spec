@@ -29,18 +29,19 @@ Each proposal will be stored in a sub-key under the internal proposal address. T
 
 The `content` value should follow a standard format. We leverage something similar to what is described in the [BIP2](https://github.com/bitcoin/bips/blob/master/bip-0002.mediawiki#bip-format-and-structure) document:
 
-```
-  Title: <text>
-  Authors: <authors email addresses> 
-  Discussions-To: <email address / link>
-  Created: <date created on, in ISO 8601 (yyyy-mm-dd) format>
-  License: <abbreviation for approved license(s)>
-  Abstract: <text>
-  Motivation: <text>
-  Details: <text>
-  Requires: <AIP number(s)> - optional field
-  Replaces: <AIP number> - optional field
-  Superseded-By: <AIP number> - optional field
+```json
+{
+    "title": "<text>",
+    "authors": "<authors email addresses> ",
+    "discussions-to": "<email address / link>",
+    "created": "<date created on, in ISO 8601 (yyyy-mm-dd) format>",
+    "license": "<abbreviation for approved license(s)>",
+    "abstract": "<text>",
+    "motivation": "<text>",
+    "details": "<AIP number(s)> - optional field",
+    "requires": "<AIP number(s)> - optional field",
+    "replaces": "<AIP number> - optional field",
+}
 ```
 
 `GovernanceAddress` global storage keys are:
