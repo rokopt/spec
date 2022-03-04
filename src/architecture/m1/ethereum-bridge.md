@@ -183,12 +183,14 @@ redeem their ETH. This also means all Ethereum gas costs are the
 responsibility of the end user.
 
 The proofs to be used will be custom bridge headers that are calculated
-deterministically from the block. They will be designed for maximally
+deterministically from the block contents, including messages snet by M1 and
+possibly validator set updates. They will be designed for maximally
 efficient Ethereum decoding and verification. 
 
 For each block on M1, validators must submit the corresponding bridge
 header signed with a special secp256k1 key as part of their vote extension.
-The finalized bridge header with aggregated signatures will appear in the
+Validators must reject votes which do not contain correctly signed bridge
+headers. The finalized bridge header with aggregated signatures will appear in the
 next block as a protocol transaction. Aggregation of signatures is the 
 responsibility of the next block proposer. 
 
@@ -203,7 +205,9 @@ validators, it needs up-to-date knowledge of:
 This means the at the end of every M1 epoch, a special transaction must be
 sent to the Ethereum contract detailing the new public keys and stake of the
 new validator set. This message must also be signed by at least 2 / 3 of the
-current validators as a "transfer of power". 
+current validators as a "transfer of power". It is to be included in validators
+vote extensions as part of the bridge header. Signing an invalid validator
+transition set will be consider a slashable offense.
 
 Due to asynchronicity concerns, this message should be submitted well in
 advance of the actual epoch change, perhaps even at the beginning of each
@@ -275,20 +279,24 @@ smart contracts on Ethereum. These smart contracts need this information
 to verify proofs of actions taken on M1.
 
 Since this is protocol level information, it is not user prompted and thus
-should not be the responsibility of any user to submit such a transaction.
+should not be the responsibility of any user to submit such a transaction. 
+However, any user may choose to submit this transaction anyway.
 
-This necessitates M1 nodes whose job it is to submit these transactions on
-Ethereum at the conclusion of each M1 epoch. In theory, since this message
-is publicly available on the blockchain, anyone can submit this transaction.
+This necessitates an M1 node whose job it is to submit these transactions on
+Ethereum at the conclusion of each M1 epoch. This node is called the 
+__Designated Relayer__. In theory, since this message is publicly available on the blockchain, 
+anyone can submit this transaction, but only the Designated Relayer will be 
+directly compensated by M1. 
 
-Nevertheless, M1 full nodes will have an option to serve as bridge relayer.
-M1 governance will vote on a full node to act as relayer. The governance
-treasury will be used to compensate the relayer for the gas fees incurred
-as well as extra fees as payment for their trouble.
+All M1 full nodes will have an option to serve as bridge relayer and run the 
+relayer program. M1 governance will vote on a single full node to act as 
+Designated Relayer. The governance treasury will be used to compensate the
+Designated Relayer for the gas fees incurred as well as extra fees as 
+payment for their trouble.
 
 Since all M1 validators are running Ethereum full nodes, they can monitor
-the performance of the relayer. If the performance is deemed unsatisfactory,
-a governance vote can be used to replace them.
+the performance of the Designated Relayer. If the performance is deemed 
+unsatisfactory, a governance vote can be used to replace them.
 
 Additionally, it is likely desirable to rotate the designated relayer on a
 regular basis.
