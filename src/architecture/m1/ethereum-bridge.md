@@ -295,7 +295,7 @@ regular basis.
 
 ## Ethereum Smart Contracts
 The set of Ethereum contracts should perform the following functions:
- - Verify Tendermint proofs from M1 so that M1 messages can
+ - Verify bridge header proofs from M1 so that M1 messages can
    be submitted to the contract.
  - Verify and maintain evolving validator sets with corresponding stake
    and public keys.
