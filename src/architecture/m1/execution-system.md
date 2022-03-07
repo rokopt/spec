@@ -1,7 +1,5 @@
 # Execution system
 
-- TODO: some links to Anoma spec here depend on <https://github.com/anoma/anoma/pull/887>
-
 M1 chain is running on the [Anoma ledger](https://docs.anoma.network/master/specs/ledger.html). M1 is set out to initially only leverage a selected subset of Anoma's features and e.g. Anoma Intent gossiper and Matchmaker systems will not be supported. The main component specified on this page is the Tendermint-based Anoma ledger with a WASM-based transaction and validity predicate system, that powers many other components of M1 (such as IBC, PoS and MASP integrations).
 
 ## Anoma Ledger
