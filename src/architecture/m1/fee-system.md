@@ -11,7 +11,15 @@ We will follow a [tipless version](https://arxiv.org/pdf/2106.01340.pdf) of the 
 
 To ensure incentivisation for validators we only transfer to treasury (instead of burning) 50% of the base fee rather than the 100% suggested by Ethereum. The other 50 % is reserved for paying future block producers (6 blocks ahead). Validators are apportioned fees depending on the fullness of the blocks they produce. For example, if the block is 10% full, the validators received full fees whereas if the block they produce is only 25% full, they only receive a forth of the fees. Moreover, we need to make sure all the tx suggested by wallets are equal, hence the changes announced to the base fee will be carried out with a delay of 6 blocks or more. 
 
-The change in base fees cannot be too fast or too frequent. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied, where ar each change the transaction fee can change by 10 % of its current value. 
+The change in base fees cannot be too fast or too frequent. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied, where each change of the transaction fee follows the function below. 
+
+$$
+Tx_fee'=Tx_fee*(1+ch_{max}(F-0.5))
+$$
+where $Tx_fee$ is the previous transaction fee, $Tx_fee'$ is the new transcation fee, $ch_{max}$ is the max change the transaction fee can have, and $F$ is the block fullness. We decided that our target block fullness is 50 %.  
+
+![](https://i.imgur.com/p3qeWw3.jpg)
+
 
 TODO: To calculate base fees we need to define the gas fees for the following types of transactions.
 1. Send governance proposals (every delegator/validator can propose a governance proposal: say "we want to increase gas fees")
