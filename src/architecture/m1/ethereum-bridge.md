@@ -298,33 +298,83 @@ Since all M1 validators are running Ethereum full nodes, they can monitor
 the performance of the Designated Relayer. If the performance is deemed 
 unsatisfactory, a governance vote can be used to replace them.
 
-Additionally, it is likely desirable to rotate the designated relayer on a
-regular basis.
+### Choosing the Designated Relayer
+The Designated Relayer shall be chosen via governance. Candidates for the
+position must be proposed via a special governance transaction of the form
+ ```rust
+  struct Proposal { relayer: Address, rewards: Option<Address> }
+```
+This transaction: 
+- must be approved by the validity predicate associated to the `relayer` address
+  being proposed
+- must send some funds from the `relayer` address to lock into the governance VP
+
+Voting for relayer follows the starndard governance voting mechanisms.
+Ballots are cast of the form
+  ```rust
+  struct Ballot { relayer: Address, source: Address }
+  ```
+
+A Designated Relayer will be active for a fixed _term_. The _voting period_
+for the next Designated Relayer will take place during the term of the 
+current Designated Relayer. The time between voting ending and term of the
+newly elected Designated Relayer beginning is the _pipeline period_. Thus
+term = voting period + pipeline period. All of these are measured in epochs.
+
+To handle this logic, a simple state machine should be used. 
+  - the possible states are: waiting for proposal, in voting period, or in pipeline period
+      - when we're waiting for proposal, check on every epoch for a new proposal
+      - in voting period, nothing happens until it's finished
+          - at the end, write or delete relayer into the VP (the current relayer storage key)
+      - in pipeline period, wait for next term to start new voting period
+      - on beginning of new term, if there's a current relayer, if should be automatically proposed for the next term
+          - the current relayer can opt-out from being re-proposed by sending a tx to this VP (again must be approved by the relayer's VP)
+
+        ```rust
+        struct StopProposal { relayer: Address }
+        ```
+
+      - refund proposals that didn't win
+
+### Monitoring the relayer
+    - If there's validator set change in ETH, we'll want to validate it and reward is correct or slash their deposit if incorrect
+    - TODO: how
+
+### Compensation (refunds & rewards)
+    - can be sent directly to the relayer
+    - TODO: how
+
+### Additional protocol parameters
+    - term duration in number of epochs
+    - voting duration or pipeline duration (voting duration + pipeline = term)
+    - required funds to be locked in M1T for proposal
+    - ETH update timeout
 
 ## Ethereum Smart Contracts
 The set of Ethereum contracts should perform the following functions:
- - Verify bridge header proofs from M1 so that M1 messages can
-   be submitted to the contract.
- - Verify and maintain evolving validator sets with corresponding stake
-   and public keys.
- - Emit log messages readable by M1
- - Handle ICS20-style token transfer messages appropriately with escrow & 
-   unescrow on the Ethereum side
- - Allow for message batching
+- Verify bridge header proofs from M1 so that M1 messages can
+  be submitted to the contract.
+- Verify and maintain evolving validator sets with corresponding stake
+  and public keys.
+- Emit log messages readable by M1
+- Handle ICS20-style token transfer messages appropriately with escrow &
+  unescrow on the Ethereum side
+- Allow for message batching
 
 Furthermore, the Ethereum contracts will whitelist ETH and tokens that
 flow across the bridge as well as ensure limits on transfer volume per epoch.
 
 An Ethereum smart contract should perform the following steps to verify
 a proof from M1:
- 1. Check the epoch included in the proof.
- 2. Look up the validator set corresponding to said epoch.
- 3. Verify that the signatures included amount to at least 2 / 3 of the 
-    total stake.
- 4. Check the validity of each signature.
+1. Check the epoch included in the proof.
+2. Look up the validator set corresponding to said epoch.
+3. Verify that the signatures included amount to at least 2 / 3 of the
+   total stake.
+4. Check the validity of each signature.
 
-If all the above verifications succeed, the contract may affect the 
+If all the above verifications succeed, the contract may affect the
 appropriate state change, emit logs, etc.
+
 
 ## Resources which may be helpful:
 - [Gravity Bridge Solidity contracts](https://github.com/Gravity-Bridge/Gravity-Bridge/tree/main/solidity)
