@@ -10,6 +10,18 @@ I'm not yet sure whether (2) is quite as we need it.
 TODO: prove that tools in (1) are correct
 '''
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--inspect", help="give a subset of circuit-satisfying inputs over smaller field for manual inspection", action="store_true")
+parser.add_argument("-e", "--equality", help="check functional equality between original and hand-optimized circuits", action="store_true")
+args = parser.parse_args()
+
+# If no arguments are specified, both inspection and equality checking are performed
+if not args.inspect and not args.equality:
+    args.inspect = True
+    args.equality = True
+
 p = 101
 small_p = 3
 field = GF(p)
@@ -47,26 +59,25 @@ polys_opti = [
 ]
 
 I_orig = trim_variables(Ideal(polys_orig))
-I_opti = trim_variables(Ideal(polys_opti))
-
-# variables introduced when optimizing the circuit that were not needed previously
-introduced_vars = [v for v in used_vars(polys_opti) if not v in used_vars(polys_orig)]
-
-print(f"Introduced vars: {introduced_vars}")
-
 gb_orig = I_orig.groebner_basis()
-gb_opti = I_opti.elimination_ideal(introduced_vars).groebner_basis()
 
-print(f"Ideals are same: {gb_orig == gb_opti}")
+if args.inspect:
+    small_R = PolynomialRing(GF(small_p), used_vars(gb_orig))
+    gb_orig_with_field_eqs = [small_R(f) for f in gb_orig]
+    gb_orig_with_field_eqs += [small_R(v)^small_p - small_R(v) for v in used_vars(gb_orig)]
 
-small_R = PolynomialRing(GF(small_p), used_vars(gb_orig))
-gb_orig_with_field_eqs = [small_R(f) for f in gb_orig]
-gb_orig_with_field_eqs += [small_R(v)^small_p - small_R(v) for v in used_vars(gb_orig)]
+    V = Ideal(gb_orig_with_field_eqs).variety()
 
-V = Ideal(gb_orig_with_field_eqs).variety()
+    print()
+    for v in V:
+        print(v)
 
-print()
-for v in V:
-    print(v)
+    print(f"\n#elements in V:  {len(V)}")
 
-print(f"\n#elements in V:  {len(V)}")
+if args.equality:
+    I_opti = trim_variables(Ideal(polys_opti))
+    # variables introduced when optimizing the circuit that were not needed originally
+    introduced_vars = [v for v in used_vars(polys_opti) if not v in used_vars(polys_orig)]
+    print(f"Introduced vars: {introduced_vars}")
+    gb_opti = I_opti.elimination_ideal(introduced_vars).groebner_basis()
+    print(f"Ideals are same: {gb_orig == gb_opti}")
