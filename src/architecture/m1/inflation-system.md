@@ -117,7 +117,7 @@ $$
 
 As an example, we plot the inflation of locked assets $I_L$ with respect to the locking ratio $R_t$ where we assume $R_{target} = 0.5$ and $max(I_{PoS}) = 12%$. 
 
-![](https://hackmd.io/_uploads/Hk49PAvZc.png)
+![](https://hackmd.io/_uploads/Hk49PAvZc.png =x200)
 
 We define $I_{L}$ as follows. 
 
@@ -132,7 +132,7 @@ $$
 
 As an example, we plot the inflation of locked assets $I_L$ with respect to the locking ratio $L_t$ with the assumed $L_{target} = 0.5$.
 
-![](https://hackmd.io/_uploads/SJDN_0wbq.png)
+![](https://hackmd.io/_uploads/SJDN_0wbq.png =x200)
 
 The ratio between staking and locking in shielded pool is a trade off between security and privacy. A higher staking ratio means more security, a higher locking ratio means more privacy. It would be easier to consider these separatly, for example, setting the target staking ratio to 50 % and the target locking ratio to 25 %. 
 
