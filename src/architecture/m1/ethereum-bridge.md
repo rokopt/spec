@@ -307,9 +307,10 @@ position must be proposed via a special governance transaction of the form
 This transaction: 
 - must be approved by the validity predicate associated to the `relayer` address
   being proposed
-- must send some funds from the `relayer` address to lock into the governance VP
+- must send some funds from the `relayer` address to lock into the
+  Designated Relayer VP
 
-Voting for relayer follows the starndard governance voting mechanisms.
+Voting for the Designated Relayer follows the standard governance voting mechanisms.
 Ballots are cast of the form
   ```rust
   struct Ballot { relayer: Address, source: Address }
@@ -319,26 +320,62 @@ A Designated Relayer will be active for a fixed _term_. The _voting period_
 for the next Designated Relayer will take place during the term of the 
 current Designated Relayer. The time between voting ending and term of the
 newly elected Designated Relayer beginning is the _pipeline period_. Thus
-term = voting period + pipeline period. All of these are measured in epochs.
+`term = voting period + pipeline period`. All of these are measured in epochs.
 
-To handle this logic, a simple state machine should be used. 
-  - the possible states are: waiting for proposal, in voting period, or in pipeline period
-      - when we're waiting for proposal, check on every epoch for a new proposal
-      - in voting period, nothing happens until it's finished
-          - at the end, write or delete relayer into the VP (the current relayer storage key)
-      - in pipeline period, wait for next term to start new voting period
-      - on beginning of new term, if there's a current relayer, if should be automatically proposed for the next term
-          - the current relayer can opt-out from being re-proposed by sending a tx to this VP (again must be approved by the relayer's VP)
+Note that when proposing an address for the position of Designated Relayer,
+certain funds are locked immediately. If the proposal does not win, its funds
+will be refunded at the end of voting.
 
-        ```rust
-        struct StopProposal { relayer: Address }
-        ```
+The locking of these funds will trigger the Designated Relayer VP will
+perform extra checks on the proposal other than those required by
+governance. This should include checking, e.g. the voting period is of correct
+length and that the proposal goes into effect at the correct time.
 
-      - refund proposals that didn't win
+The proposal also needs code to be executed if it is accepted. This code
+should insert the proposal fields under the `next_relayer` key of the Designated
+Relayer VP. This piece of code should be completely standard and hash-checkable
+by the ledger. This checkout will be carried out the Designated Relayer VP.
+
+Note that in the event of ties, several of these proposals will be enacted.
+The last enacted will overwrite the `next_relayer` key, giving a tie-break
+mechanism.
+
+---
+To handle this logic, M1 validators will keep a simple state machine in memory.
+It should work as follows:
+
+- At the end of voting period release any funds not belonging to either
+  the `next_relayer` or `current_relayer` address.
+- At the end of the pipeline period, _copy_ the value of the `next_relayer`
+  key to the `current_relayer` key.
+- Release any funds in the Designated Relayer vault belonging to addresses
+  other than the `current_relayer` key.
+
+Note that this state machine is designed to automatically keep the current 
+validator if no new address wins enough votes in the voting period. If an 
+address wishes to stop being the designated relayer, they must submit the
+following tx:
+```rust
+struct StopProposal { relayer: Address }
+```
+If this tx is approved, validators add this address and the current term
+number to their state machine. This validator (unless replaced or removed due
+to malfeasance) must serve the remainder of the current term as well as the 
+entire next term before they will stop being automatically kept in the running.
+
 
 ### Monitoring the relayer
-    - If there's validator set change in ETH, we'll want to validate it and reward is correct or slash their deposit if incorrect
-    - TODO: how
+
+At the end of each epoch, if there has been a change to M1 validator set,
+a flag should be set on the M1 state machine (described above) that alerts
+validators to watch for a confirmation log emitted from the Ethereum smart
+contracts indicated that processed a validator set update.
+
+There should be a timeout parameter in which this log must be seen or else
+a fine is levied against the Designated Relayer from their locked funds. If
+their locked funds reaches zero, their address is removed from the `current_relayer`
+field and also from the `next_relayer` field if necessary. They are 
+thus immediately removed from the position of Designated Relayer.
 
 ### Compensation (refunds & rewards)
     - can be sent directly to the relayer
