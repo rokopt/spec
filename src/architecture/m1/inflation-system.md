@@ -24,8 +24,8 @@ Locked tokens help secure the system while liquidity supports its activity and l
 
 Here are some numbers from other projects
 
-| Blockchain platform | Approximate locking %       | Remarks |
-|--------------------------------------------------|------|-----|
+| Blockchain platform | Approximate locking %       |
+|--------------------------------------------------|------|
 | Cosmos                                           | 66.7 |
 | Polkadot                                         | 50   |
 | Ethereum                                         | 47   |
