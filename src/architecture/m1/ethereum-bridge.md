@@ -363,6 +363,10 @@ number to their state machine. This validator (unless replaced or removed due
 to malfeasance) must serve the remainder of the current term as well as the 
 entire next term before they will stop being automatically kept in the running.
 
+If the current Designate relayer has requested to stop, an extra step appears in the
+state machine after all the other steps. This step happens at the beginning
+of the current Designated Relayers last term. Their address is removed 
+from the `next_relayer` field in storage.
 
 ### Monitoring the relayer
 
