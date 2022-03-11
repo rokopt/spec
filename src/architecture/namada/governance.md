@@ -49,9 +49,28 @@ The `content` value should follow a standard format. We leverage something simil
 ```
 /$GovernanceAddress/?: Vec<u8> 
 /$GovernanceAddress/counter: u64
+/$GovernanceAddress/min_proposal_fund: u64
+/$GovernanceAddress/max_proposal_code_size: u64
+/$GovernanceAddress/min_proposal_period: u64
+/$GovernanceAddress/max_proposal_content: u64
+/$GovernanceAddress/min_proposal_grace_epochs: u64
 ```
 
-`Counter` is used to assign a unique, incremental ID to each proposal.
+`counter` is used to assign a unique, incremental ID to each proposal.\
+`min_proposal_fund` represents the minimum amount of locked tokens to submit a proposal.\
+`max_proposal_code_size` is the maximum allowed size (in kilobytes) of the proposal wasm code.\
+`min_proposal_period` sets the minimum voting time window (in `Epoch`).\
+`max_proposal_content` tells the maximum number of characters allowed in the proposal content.\
+`min_proposal_grace_epochs` is the minimum required number of `Epoch` between `start_epoch` and `end_epoch`.
+
+The governance machinery also relies on a subkey stored under the `M1T` token address:
+
+```
+/$M1TAddress/balance/governance: u64
+```
+
+This is to leverage the `M1T` VP to check that the funds were correctly locked.
+The governance subkey, `/$GovernanceAddress/proposal/$id/funds` will be used after the tally step to know the exact amount of tokens to refund/slash.
 
 ### GovernanceAddress VP
 Just like Pos, also governance has his own storage space. The `GovernanceAddress` validity predicate task is to check the integrity and correctness of new proposals. A proposal, to be correct, must satisfy the followings:
@@ -228,7 +247,7 @@ fn compute_tally(proposal_id: u64) {
 ```
 
 ### Refund and Proposal Execution mechanism
-Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `TreasuryAddress`. Moreover, if the proposal had a positive outcome and `proposalCode` was defined, these changes will be executed. Changes are execute in the first block of the `GraceEpoch` defined in the proposal.
+Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `TreasuryAddress`. Moreover, if the proposal had a positive outcome and `proposalCode` was defined, these changes will be executed. Changes are executed in the first block of the `GraceEpoch` defined in the proposal.
 
 
 If the proposal outcome is positive and current epoch is equal to the proposal `graceEpoch`, the `BeginBlock`
