@@ -15,7 +15,6 @@ The second address holds the funds of rejected proposals.
 ### Governance storage
 Each proposal will be stored in a sub-key under the internal proposal address. The storage keys involved are:
 ```
-/$GovernanceAddress/proposal/$id: u64
 /$GovernanceAddress/proposal/$id/content : Vec<u8>
 /$GovernanceAddress/proposal/$id/author : Address
 /$GovernanceAddress/proposal/$id/startEpoch: Epoch
@@ -40,11 +39,10 @@ The `content` value should follow a standard format. We leverage something simil
     "motivation": "<text>",
     "details": "<AIP number(s)> - optional field",
     "requires": "<AIP number(s)> - optional field",
-    "replaces": "<AIP number> - optional field",
 }
 ```
 
-`GovernanceAddress` global storage keys are:
+`GovernanceAddress` parameters and global storage keys are:
 
 ```
 /$GovernanceAddress/?: Vec<u8> 
@@ -60,13 +58,13 @@ The `content` value should follow a standard format. We leverage something simil
 `min_proposal_fund` represents the minimum amount of locked tokens to submit a proposal.\
 `max_proposal_code_size` is the maximum allowed size (in kilobytes) of the proposal wasm code.\
 `min_proposal_period` sets the minimum voting time window (in `Epoch`).\
-`max_proposal_content` tells the maximum number of characters allowed in the proposal content.\
+`max_proposal_content_size` tells the maximum number of characters allowed in the proposal content.\
 `min_proposal_grace_epochs` is the minimum required number of `Epoch` between `start_epoch` and `end_epoch`.
 
 The governance machinery also relies on a subkey stored under the `M1T` token address:
 
 ```
-/$M1TAddress/balance/governance: u64
+/$M1TAddress/balance/$GovernanceAddress: u64
 ```
 
 This is to leverage the `M1T` VP to check that the funds were correctly locked.
@@ -78,100 +76,16 @@ Just like Pos, also governance has his own storage space. The `GovernanceAddress
 - Contains a unique ID
 - Contains a start, end and grace Epoch
 - The difference between StartEpoch and EndEpoch should be >= `MIN_PROPOSAL_PERIOD` * constant.
-- Should contain a text describing the proposal with length < `MAX_PROPOSAL_CONTENT_LENGTH` characters.
+- Should contain a text describing the proposal with length < `MAX_PROPOSAL_CONTENT_SIZE` characters.
 - Vote can be done only by a delegator or validator
 - Validator can vote only in the initial 2/3 of the whole proposal duration (`EndEpoch` - `StartEpoch`)
 - Due to the previous requirement, the following must be true,`(EndEpoch - StartEpoch) % 3 == 0` 
 - If defined `proposalCode`, should be the wasm bytecode rappresentation of the changes. This code is triggered in case the proposal has a position outcome.
+- `GraceEpoch` should be greater than `EndEpoch` of at least `MIN_PROPOSAL_GRACE_EPOCHS`
 
-`MIN_PROPOSAL_FUND`, `MAX_PROPOSAL_CODE_SIZE` and `MIN_PROPOSAL_PERIOD` are parameters of the protocol.
+`MIN_PROPOSAL_FUND`, `MAX_PROPOSAL_CODE_SIZE`, `MIN_PROPOSAL_GRACE_EPOCHS`, `MAX_PROPOSAL_CONTENT_SIZE` and `MIN_PROPOSAL_PERIOD` are parameters of the protocol.
 Once a proposal has been created, nobody can modify any of its fields.
 If `proposalCode`  is `Emtpy` or `None` , the proposal upgrade will need to be done via hard fork.
-
-Here an example of such validity predicate.
-
-
-```rust=
-pub fn proposal_vp(tx_data: Vec<u8>, addr: Address, keys_changed: HashSet<Key>, verifiers: HashSet<Address>) {
-    for key in keys_changed {
-        if is_proposal_key_id(key) {
-            let current_id = read_counter();
-            let proposal_id = get_current_proposal_id();
-            let post_value_counter = read_post(COUNTER_STORAGE_KEY);
-            return !has_pre(key) && current_id == proposal_id && post_value_counter == current_id++;
-        } else if is_vote_key(key) {
-             return (is_delegator(verifiers) || (is_validator(verifiers) && current_epoch_is_2_3(addr, id))) && is_valid_signature(tx_data);
-        } else if is_content_key(key) {
-            let post_content = read_post(key)
-            return !has_pre(key) && post_content.len() < MAX_PROPOSAL_CONTENT_LENGTH;
-        } else if is_author_key(key) {
-            return !has_pre(key)  
-        } else if is_proposa_code_key(key) {
-            let proposal_code_size = get_proposal_code_size();
-            return !has_pre(key) && proposal_code_size < MAX_PROPOSAL_CODE_SIZE;
-        } else if is_grace_epoch(key) {
-            let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
-            let graceEpoch = read_post_grace_epoch(addr, id, GRACE_EPOCH_KEY)
-            return !has_pre(key) && graceEpoch > endEpoch;
-        } else if is_balance_key(key) {
-            let has_pre_funds = has_pre_key(key)
-            let pre_funds = read_funds_pre(key)
-            let post_funds = read_funds_post(key)
-            let minFunds = read_min_funds_parameter()
-            // if new proposal
-            if !has_pre_funds {
-                return post_funds - pre_funds >= MIN_PROPOSAL_FUND;        
-            } else {
-                // return funds to owner or governance fund pool
-                let currentEpoch = read_current_epoch()
-                let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
-                return currentEpoch >= endEpoch && is_allowed_transfer(verifiers);
-            }   
-        } else if is_start_or_end_epoch_key(key) {
-            let id = get_id_from_epoch_key(key);
-            let currentEpoch = read_current_epoch();
-            let minPeriod = read_min_period_parameter();
-            let startEpoch = read_post_start_epoch(addr, id, START_EPOCH_KEY);
-            let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
-            return !has_pre(key) && startEpoch - currentEpoch >= MIN_PROPOSAL_PERIOD && (startEpoch - currentEpoch) % MIN_PROPOSAL_PERIOD == 0;
-        } else {
-            return false;
-        }
-    }
-}
-
-fn is_delegator(verifiers: HashSet<Address>, tx_data: Vec<u8>) -> bool {
-    // check if tx_data has been signed by a delegator
-    return ...
-}
-
-fn is_validator(verifiers: HashSet<Address>, tx_data: Vec<u8>) -> bool {
-    // check if tx_data has been signed by a validator
-    return ...
-}
-
-fn current_epoch_is_2_3(addr: Address, id: u64) -> bool {
-    let currentEpoch = read_current_epoch()
-    let startEpoch = read_post_start_epoch(addr, id, START_EPOCH_KEY) 
-    let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
-    
-    return ((endEpoch - startEpoch) * 2) / 3 <= (currentEpoch - startEpoch);
-}
-    
-fn is_allowed_transfer(verifiers: Vec<Address>) -> bool {
-    // check if the transfer to towards a whitelisted address. 
-    // Transfer can be towers TreasuryAddress if the proposal is rejected 
-    // or author if proposal is accepted
-    // this method must be called only if currentEpoch > proposal.endEpoch
-    return ....
-}
-
-fn is_tally_positive() -> bool {
-    // compute if 2/3 voting power voted yay
-    return ...
-}
-
-```
 
 Example of `proposalCode` could be:
 - storage writes to change some protocol parameter
@@ -225,37 +139,41 @@ The tally can also be manually computed via CLI command. The tally method behavi
 
 ```rust=
 fn compute_tally(proposal_id: u64) {
-    let vote_addresses = get_proposal_vote_iter(proposal_id).map(|addr| addr)
-    // NAM is the native token
-    let total_nam: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
-    
-    let delegators =  vote_addresses.filter(|addr| addr.is_delegator())
-    let yay_addresses = vote_addresses.filter(|addr| read_vote(proposal_id, addr) == 'yay')
-    
-    let yay_validators = yay_addresses.filter(|addr| addr.is_validator())
-    let yay_validators_nam = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
-    
-    for delegator in delegators {
-        if yay_validators.contains(delegator.get_correspoding_validator()) {
-            if read_vote(proposal_id, delegator) == 'nay' {
-                yay_validators_nam -= get_addr_balance(delegator)
-            }
+    let end_epoch = get_proposal_end_epoch(proposal_id);
+    let total_voting_power = get_total_voting_power();
+    let vote_addresses = get_proposal_vote_iter(proposal_id).map(|addr| addr);
+    let voting_validators = vote_addresses.filter(|addr| addr.is_validator());
+    let voting_delegators = vote_addresses.filter(|addr| addr.is_delagator());
+
+    let validators_power: HashMap<Address, VotingPower> = voting_validators.map(|addr| {
+        (addr, get_voting_power(addr, end_epoch))
+    });
+
+    let yay_validators = voting_validators.filter(|addr| {
+        return get_vote_for(addr) == "yay"
+    })
+
+    for delegator in voting_delegators {
+        let validator: Address = get_validator_for(delegaor);
+        let delagator_vote = get_vote_for(delagator);
+        if delagator_vote == "yay" && !yay_validators.contains(validator) {
+            validators_power[validator] -= get_delegator_voting_power(delegator);
         }
     }
-    return yay_validators_nam / total_nam >= 0.66;
+
+    return sum(validators_power.iter_values()) / total_voting_power >= 0.66;
 }
 ```
 
 ### Refund and Proposal Execution mechanism
 Together with the talling, in the first block at the beginning of each epoch, in the `BeginBlock` event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from `GovernanceAddress` to the proposal author address (specified in the proposal `author` field). For each proposal that has been rejected, instead, the locked funds will be moved to the `TreasuryAddress`. Moreover, if the proposal had a positive outcome and `proposalCode` was defined, these changes will be executed. Changes are executed in the first block of the `GraceEpoch` defined in the proposal.
 
-
-If the proposal outcome is positive and current epoch is equal to the proposal `graceEpoch`, the `BeginBlock`
-- transfer the locked funds to the proposal author (no tx, directly write keys to storage)
+If the proposal outcome is positive and current epoch is equal to the proposal `graceEpoch`, in the `BeginBlock` event:
+- transfer the locked funds to the proposal author
 - execute any changes to storage specified by `proposalCode`
 
-A `RejectProposal` transaction must:
-- transfer the locked funds to the `TreasuryAddress`
+In case the proposal was rejected, in the `BeginBlock` event:
+- transfer the locked funds to `TreasuryAddress`
 
 **NOTE**: we need a way to signal the fulfillment of an accepted proposal inside the block in which it is applied to the state. We could do that by using `Events` https://github.com/tendermint/tendermint/blob/ab0835463f1f89dcadf83f9492e98d85583b0e71/docs/spec/abci/abci.md#events (see https://github.com/anoma/anoma/issues/930).
 
@@ -264,30 +182,26 @@ Funds locked in `TreasuryAddress` address should be spendable only if a 2/3+ vot
 
 ### TreasuryAddress storage
 ```
-/$TreasuryAddress/balance: u64
+/$TreasuryAddress/max_spendable_sum: u64
 /$TreasuryAddress/?: Vec<u8>
+```
+
+The funds will be stored under:
+```
+/$M1TAddress/balance/$TreasuryAddress: u64
 ```
 
 ### TreasuryAddress VP
 ```rust=
 pub fn governance_fund_pool_vp(tx_data: Vec<u8>, addr: Address, keys_changed: HashSet<Key>, verifiers: HashSet<Address>) {
     for key in keys_changed {
-        if is_balance_key(key) {
-            let pre_balance = read_pre(key);
-            let post_balance = read_post(key);
-            let to_be_spent = post_balance - pre_balance;
-            let proposal_min_lock_funds = read_min_proposal_fund();
-            // if credit
-            if to_be_spent >= proposal_min_lock_funds {
-                return true
-            }
-            // if debit
+        if is_parameter_key(key) {
             let proposal_id = get_proposal_id();
             let current_epoch = get_current_epoch();
-            let proposal_grace_epoch = get_proposal_grace_epoch();
-            return is_tally_positive(proposal_id) && current_epoch == proposal_grace_epoch && abs(to_be_spent) < MAX_SPENDABLE_SUM;
+            let proposal_grace_epoch = get_proposal_grace_epoch(proposal_id);
+            return is_tally_positive(proposal_id) && current_epoch == proposal_grace_epoch;
         } else {
-            return false;   
+            return false;
         }
     }
 }
@@ -305,10 +219,9 @@ Protocol parameter are described under the $ParameterAddress internal address. P
 
 ### ParameterAddress storage
 ```
-/$ParamaterAddress/$param: String
+/$ParamaterAddress/<param>: String
 /$ParamaterAddress/?: Vec<u8>
 ```
-We need to keep track of already executed proposals.
 
 ### ParameterAddress VP
 ```rust=
