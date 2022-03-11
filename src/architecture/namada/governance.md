@@ -87,6 +87,73 @@ Just like Pos, also governance has his own storage space. The `GovernanceAddress
 Once a proposal has been created, nobody can modify any of its fields.
 If `proposalCode`  is `Emtpy` or `None` , the proposal upgrade will need to be done via hard fork.
 
+Here an example of such validity predicate.
+
+
+```rust=
+pub fn proposal_vp(tx_data: Vec<u8>, addr: Address, keys_changed: HashSet<Key>, verifiers: HashSet<Address>) {
+    for key in keys_changed {
+        if is_vote_key(key) {
+             return (is_delegator(verifiers) || (is_validator(verifiers) && current_epoch_is_2_3(addr, id))) && is_valid_signature(tx_data);
+        } else if is_content_key(key) {
+            let post_content = read_post(key)
+            return !has_pre(key) && post_content.len() < MAX_PROPOSAL_CONTENT_LENGTH;
+        } else if is_author_key(key) {
+            return !has_pre(key)  
+        } else if is_proposa_code_key(key) {
+            let proposal_code_size = get_proposal_code_size();
+            return !has_pre(key) && proposal_code_size < MAX_PROPOSAL_CODE_SIZE;
+        } else if is_grace_epoch_key(key) {
+            let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+            let graceEpoch = read_post_grace_epoch(addr, id, GRACE_EPOCH_KEY)
+            return !has_pre(key) && graceEpoch > endEpoch;
+        } else if is_balance_key(key) {
+            let pre_funds = read_funds_pre(key)
+            let post_funds = read_funds_post(key)
+            let minFunds = read_min_funds_parameter()
+            return post_funds - pre_funds >= MIN_PROPOSAL_FUND;          
+        } else if is_start_or_end_epoch_key(key) {
+            let id = get_id_from_epoch_key(key);
+            let currentEpoch = read_current_epoch();
+            let minPeriod = read_min_period_parameter();
+            let startEpoch = read_post_start_epoch(addr, id, START_EPOCH_KEY);
+            let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+            return !has_pre(key) && startEpoch - currentEpoch >= MIN_PROPOSAL_PERIOD && (startEpoch - currentEpoch) % MIN_PROPOSAL_PERIOD == 0;
+        } else if is_param_key(key) {
+            let proposal_id = get_proposal_id();
+            return is_tally_positive(proposal_id);
+        }
+        } else {
+            return false;
+        }
+    }
+}
+
+fn is_delegator(verifiers: HashSet<Address>, tx_data: Vec<u8>) -> bool {
+    // check if tx_data has been signed by a delegator
+    return ...
+}
+
+fn is_validator(verifiers: HashSet<Address>, tx_data: Vec<u8>) -> bool {
+    // check if tx_data has been signed by a validator
+    return ...
+}
+
+fn current_epoch_is_2_3(addr: Address, id: u64) -> bool {
+    let currentEpoch = read_current_epoch()
+    let startEpoch = read_post_start_epoch(addr, id, START_EPOCH_KEY) 
+    let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+    
+    return ((endEpoch - startEpoch) * 2) / 3 <= (currentEpoch - startEpoch);
+}
+
+fn is_tally_positive() -> bool {
+    // compute if 2/3 voting power voted yay
+    return ...
+}
+
+```
+
 Example of `proposalCode` could be:
 - storage writes to change some protocol parameter
 - storage writes to restore a slash
