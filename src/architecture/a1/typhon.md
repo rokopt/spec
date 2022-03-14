@@ -13,20 +13,21 @@ The protocol involves three kinds of agents: proposers, acceptors and learners. 
 
 Blocks are agreed upon in rounds. 
 
-**Proposer** initate a round by a  proposing a block. Each block contains atomic batches of transactions (or even a single transaction). An atomic batch of transactions means that either all transactions in the batch are executed or none of them are executed.
+**Proposers** initate a round by a  proposing a block. Each block contains atomic batches of transactions (or even a single transaction). An atomic batch of transactions means that either all transactions in the batch are executed or none of them are executed.
 
-**Acceptors** are agents who agree on the proposed blocks and an agent may be acceptor for more than one chain. No correct acceptor acts on any invalid block. This requires checking the validation of blocks or state transition function. 
+**Acceptors** are agents who vote on the proposed blocks (subject to certain conditions discussed further). An agent may be an acceptor for more than one chain. Correct acceptors check the validity of blocks, ignoring invalid ones, and the correctness of the attendant state transition functions. Only blocks that are valid and correct may be voted for by an acceptor.
 
-**Learners** are set of agents where this set is intrested in a particualar (combination of?) chain(s) meaning what the voting process decides for these chain(s). The definition of learners is based on the quorums and defined by the protocol, meaning that agents are not free not choose their own quorum setups. <!--For example, there might be three well-defined learners $l_x$ and $l_y$, and $l_xy$ which are agents who are interetsted in chain $x$ alone, chain $y$ alone, and both chain $x$ chain $y$.--> Acceptors need to be aware of the different definitions of learners in order to be able to know what correct behavior is defined as. This set of the agents for learners, might empty or have overlaps, the acceptors have to follow the deifnition regardless. <!--Acceptor of chain are considered also part of learners of that chain.-->
+**Learners** are a set of agents which is interested in deciding on a block based on the votes of acceptors for that particular block. To wit, a learner $l$ has set of quorums $q_x$,each quorum being a set of acceptors. The learner $l$ will decide on a value if any correct quorum in $q_l$ votes for that value. Quorums are defined by the protocol and learners are not free not choose their own quorum setups. <!--For example, there might be three well-defined learners $l_x$ and $l_y$, and $l_xy$ which are agents who are interetsted in chain $x$ alone, chain $y$ alone, and both chain $x$ chain $y$.--> In Heterogeneous Paxos, learners are typically a heterogenous set, and thus acceptors need to be aware of the different definitions of learners in order to know what is defined as correct behavior. 
+<!--This set of the agents for learners, might empty or have overlaps, the acceptors have to follow the deifnition regardless. <!--Acceptor of chain are considered also part of learners of that chain.-->
 
-We briefly describe how the communication for a consensus round works. Suppose we have two learners $l_x$ and $l_y$ which refer to agents that are interested in blockchain $x$ and blockchain $y$. Proposers propose a chimera block, by sending $1a$ messages, each carrying a value and unique ballot number (round identifier), to acceptors. All acceptors in all involved chains ($S$) send $1b$ messages to each other to communicate that they’ve received a $1a$ message. When an acceptor receives a $1b$ message for the highest ballot number it has seen from a learner $l_x$’s quorum of acceptors, it sends a $2a$ message labeled with $l_x$ and that ballot number. There is one exception: once a safe acceptor sends a $2a$ message $m$ for a learner $l_x$, it never sends a $2a$ message with a different value for a learner $l_y$, unless one of the following is true: 
+We briefly describe how the communication for a consensus round works. Suppose we have two learners $l_x$ and $l_y$, i.e.,  agents that are interested in blockchain $x$ and blockchain $y$. Proposers propose a chimera block, by sending $1a$ messages, each carrying a value and unique ballot number (round identifier), to acceptors. All acceptors in all involved chains ($S$) send $1b$ messages to each other to communicate that they’ve received a $1a$ message. When an acceptor receives a $1b$ message for the highest ballot number it has seen from a learner $l_x$’s quorum of acceptors, it sends a $2a$ message labeled with $l_x$ and that ballot number. There is one exception: once a safe acceptor sends a $2a$ message $m$ for a learner $l_x$, it never sends a $2a$ message with a different value for a learner $l_y$, unless one of the following is true: 
 * It knows that a quorum of acceptors has seen $2a$ messages with learner $l_x$ and ballot number higher than $m$. 
 * It has seen Byzantine behavior that proves $l_x$ and $l_y$ do not have to agree. 
 
 A learner $l_x$ decides on a block when it receives $2a$ messages with the same proposed block and ballot number from one of its quorums of acceptors.
 
 ## Preliminaries
-- _Base chains_ are two or more independent chains between which we would like to carry out atomic transactions. The chains must protocol-wise adhere to some  specific set of requirements to be compatible. For example, IBC support.  
+- _Base chains_ are two or more independent chains between which we would like to carry out atomic transactions. The chains must protocol-wise adhere to some specific set of requirements to be compatible e.g. [IBC](https://ibcprotocol.org/) support.  
 <!-- These chains are programmed with chimera chains in mind: for example, they may all be Anoma chains. -->
 
 - A _chimera chain_ is a chain that allows atomic transactions to be carried out on [objects](https://en.wikipedia.org/wiki/Object_(computer_science)) from the base chains. It carries an additional consensus mechanism, that is dependent on the consensus of the base chains. 
@@ -38,17 +39,17 @@ A learner $l_x$ decides on a block when it receives $2a$ messages with the same 
 <!--We denote a set of acceptors by `Acceptor`.-->
 
 - A _quorum_ is a subset of acceptors sufficient to make a learner decide on a value. For a learner to maintain consistency (avoid deciding on two contradictory values), any two of its quorums must have a common real acceptor. Most chains achieve this practically by making the intersection of the quorums big enough, i.e. the acceptors in the intersection being backed by more than >1/3 stake of each chain under <1/3 Byzantine assumption. For example, suppose:
-    - Base chain A has a total stake of $60 Astake$.
-    - Base chain B has a total stake of $300Bstake$.
-    - Any set of acceptors backed by $>40Astake$ is a quorum of chain A. This means $>20 Astake$ would have to back unsafe acceptors for chain A to fork.
-    - Any set of acceptors backed by $>200Bstake$ is a quorum of chain B. This means $>100Bstake$ woudl have to back unsafe acceptors for chain B to fork.
-    - Suppose that, for every quorum $q_a$ of chain A, and every quorum $q_b$ of chain B, the acceptors in $q_a\cap q_b$ are backed by $>10Astake$, and $>50 Bstake$. This would mean that, in order for atomic batches on the chimera chain to lose atomicity, $>10Astake$ and $>50Bstake$ would have to back unsafe acceptors.
+    - Base chain A has a total stake of $60$ A-stake.
+    - Base chain B has a total stake of $300$ B-stake.
+    - Any set of acceptors backed by $>40$ A-stake is a quorum of chain A. This means $>20$ A-stake would have to back unsafe acceptors for chain A to fork.
+    - Any set of acceptors backed by $>200$ B-stake is a quorum of chain B. This means $>100$ B-stake would have to back unsafe acceptors for chain B to fork.
+    - Suppose that for every quorum $q_a$ of chain A, and every quorum $q_b$ of chain B, the acceptors in $q_a\cap q_b$ are backed by $>10$ A-stake, and $>50$ B-stake. This would mean that in order for atomic batches on the chimera chain to lose atomicity, $>10$ A-stake and $>50$ B-stake would have to back unsafe acceptors.
         - When a batch loses atomicity, the transactions on one state machine (say, A) are executed, but not the transactions on the other state machine (say, B). However, each state machine itself remains consistent: neither A nor B forks.
         - This means some chimera chains offer atomicity with lower (yet well-defined) levels of integrity than their base chains' no-fork guarantees.
 
 
-- A _proposer_ is an acceptor that may propose a new block according to the rules of the blockchain. A potential proposer would need (a) data availability, (b) the ability to sign messages, ( c) something at stake (to prevent spam) and (d) the ability to communicate with the acceptors. Acceptors that are in the overlaps of quorums may especially well suited to be proposers, but other Acceptors (or even other machines) might be proposers as well.
- The Heterogeneous Paxos technical report effectively uses weighted voting for select proposer, but perhaps there are interesting tricks with VRFs that would improve efficiency. 
+- A _proposer_ is an acceptor that may propose a new block according to the rules of the blockchain. A potential proposer would need (a) data availability, (b) the ability to sign messages, ( c) something at stake (to prevent spam) and (d) the ability to communicate with the acceptors. Acceptors that are in the overlaps of quorums may be especially well suited to be proposers, but other acceptors (or even other machines) might be proposers as well.
+ The Heterogeneous Paxos technical report effectively uses weighted voting to select a proposer, but perhaps there are interesting tricks with VRFs that would improve efficiency. 
  
 
 ### Assumptions 
@@ -65,7 +66,9 @@ $$
 \forall q_1, q_2 : Quorum. \exists a : Acceptor. a \in q_1 \land a \in q_2 \land real(a)
 $$
 -->
+
 ## Chimera Chain 
+
 In this section we describe how chimera chains operate. 
 
 Upon wanting to include an atomic batch of transactions from the transaction pool into a block, a block proposer either creates a genesis block if there is no existing chimera chain or builds on top of an existing chimera chain. 
