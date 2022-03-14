@@ -4,16 +4,14 @@
 
 The protocol controls Namada token NAM (the native staking token) sourced from two locations:
 
-1. Fees (50% of them) paid for transactions per the description in [fee system](./proof-of-stake/fee-system.md).
-1. Inflation (described below), as in tokens directly printed by the protocol (which we can do arbitrarily).
-
-These tokens then flow to many different sinks:
+a. Fees paid for transactions per the description in [fee system](./proof-of-stake/fee-system.md), 50 % goes to block production and 50 % goes to treasury. 
+b. Inflation (described below), as in tokens directly printed by the protocol (which we can do arbitrarily), where these tokens then flow to many different sinks:
 
 1. Proof-of-stake rewards, which are paid into the reward distribution mechanism in order to distribute them to validators and delegators.
-1. Shielded pool rewards, which are locked in a way such they can be eventually paid to users who kept tokens in the shielded pool.
-1. A governance pool.
+2. Shielded pool rewards, which are locked in a way such they can be eventually paid to users who kept tokens in the shielded pool.
+3. A governance pool.
     - These tokens are slowly burned at a fixed fraction per epoch.
-1. A set of configurable custom sinks, which can be addresses on Namada, addresses on Ethereum (over the Ethereum bridge), or addresses on other chains connected over IBC.
+4. A set of configurable custom sinks, which can be addresses on Namada, addresses on Ethereum (over the Ethereum bridge), or addresses on other chains connected over IBC.
     - These can be paid fixed amounts per epoch.
     - Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
 
