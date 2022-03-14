@@ -4,8 +4,8 @@
 
 The protocol controls Namada token NAM (the native staking token) sourced from two locations:
 
-1. Fees (50%) paid for transactions per the description in [fee system](./proof-of-stake/fee-system.md).
-1. Inflation, as in tokens directly printed by the protocol (which we can do arbitrarily).
+1. Fees (50% of them) paid for transactions per the description in [fee system](./proof-of-stake/fee-system.md).
+1. Inflation (described below), as in tokens directly printed by the protocol (which we can do arbitrarily).
 
 These tokens then flow to many different sinks:
 
