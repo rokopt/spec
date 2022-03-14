@@ -9,7 +9,7 @@ The protocol controls Namada token NAM (the native staking token) sourced from t
 
 1. Proof-of-stake rewards, which are paid into the reward distribution mechanism in order to distribute them to validators and delegators.
 2. Shielded pool rewards, which are locked in a way such they can be eventually paid to users who kept tokens in the shielded pool.
-3. A governance pool.
+3. A governance pool - aka treasury.
     - These tokens are slowly burned at a fixed fraction per epoch.
 4. A set of configurable custom sinks, which can be addresses on Namada, addresses on Ethereum (over the Ethereum bridge), or addresses on other chains connected over IBC.
     - These can be paid fixed amounts per epoch.
