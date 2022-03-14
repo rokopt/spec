@@ -150,7 +150,7 @@ The protocol is carried out by sending and receiving messsages. The table below 
 | chainId  | `Id`       | Identifies this Chimera Chain |
 | height   | `uint64`   | Current height of the chimera chain |
 | pktType  | `enum PktType {1A, 1B, 2A}` ||
-| ballot   | `Ballot` = `Timestamp` x `Hash`    | This consists of the hash of the proposed block and the time stamp of the initiated ballot. There is a total lexicographical order on `Ballot`.|
+| ballot   | `Ballot` = `(Timestamp, Hash)`    | This consists of the hash of the proposed block and the timestamp of the initiated ballot. There is a total lexicographical order on `Ballot`.|
 | learner  | `Id`       ||
 | sig      | `Sig`      | The signature field `sig` unforgeably identifying its sender, e.g., the message is signed, and the sender has a known PK in some PKI.|
 | refs     | `Vec<Hash>` | The list of hashes of messages received previously. |
