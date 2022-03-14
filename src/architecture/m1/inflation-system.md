@@ -36,10 +36,11 @@ The privacy that MASP is providying depends on the asset in the shielded pool. A
 Treasury is pool of native tokens that can be appropriated for funding public good products for Namada. The decision on spending these funds will be assigned to governance. 
 
 ### Related work
-Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol and Ethereum 2.0 (Ajinkya, could you please double check this?)have a fixed inflation rates, while Solana start with a high inflation rate that decreases over time, as less transaction fees are burned. 
+Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol and Ethereum 2.0 have a fixed inflation rates, while Solana start with a high inflation rate that decreases over time, as less transaction fees are burned. 
 
 In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. 
 
+For funds going to treasury Near protocol where 5 % goes to treasury and Polkadot sends the difference between inflation for PoS and the total constant inflation to treasury.  
 
 ###  Model
 
@@ -52,8 +53,6 @@ The total inflation consists fo several components as follows.
 $I=I_{PoS}+I_L+I_T-D_T$
 
 where $I_T$ is our inflation that goes to treasury, $I_{PoS}$ is inlation that is paid as PoS rewards, and $I_L$ is the inflation for locking that is pait to accounts in shielded pool. We can extend the $I_L$ be extended to be for many other types of $I_L1,...,I_Ln$. For simplicity we only assume to have one $I_L$. $D_T$ is the constant deflation of the treasury. This is applied to incentivize governance voter to spend treasury funds. 
-
-<!--$I_{target}-\alpha<I_t<I_{target}+\alpha$-->
 
 These coponents are each varying depending on independent factors as follows. The $I_{PoS}$ depends on the staking ratio $R_t$. The locking inflation $I_L$ depends on the locking ratio $L_t$. Ideally we want the total token supply cocnsists of tokens locked for staking and shielded pool and the rest are liquid tokens $Y$. 
 
@@ -91,7 +90,7 @@ $$
 
 The ratio between staking and locking in shielded pool is a trade off between security and privacy. A higher staking ratio means more security, a higher locking ratio means more privacy. It would be easier to consider these separatly, for example, setting the target staking ratio to 50 % and the target locking ratio to 25 %. 
 
-Funds going to treasury can either be a % of the total infation (such as Near protocol where 5 % goes to treasury) or we can determine how much of total inflation goes to validator rewards and send the rest to treasury (such as Polkadot), in this case total inflation stays constant.
+The funds going to treasury is a constant %, for example 1 %. Same goes for $D_T$. 
 
 We need to define $max(I_{PoS})$, $max(I_L)$, and $I_T$ to bound total inflation. 
 
