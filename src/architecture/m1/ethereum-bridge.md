@@ -76,12 +76,19 @@ by at least 2/3 of the staking validators as usual.
 
 ## M1 Validity Predicates
 
-### Minting wrapped ETH tokens on M1
-M1 requires a validity predicate with dedicated storage to mint wrapped
-ETH. This validity predicate should be called on every inclusion of Ethereum
+### Reacting to changes on Ethereum
+M1 requires a validity predicates with dedicated storage to respond to changes on Ethereum that
+have been confirmed by M1 validators. This includes 
+ - minting wrapped ETH,
+ - redeeming wrapped M1 tokens on Ethereum,
+ - rewarding the Designated Relayer for submitting validator set changes to
+   the appropriate Ethereum smart contract (more on this [here](#m1-bridge-relayers)).
+
+This validity predicate should be called on every inclusion of Ethereum
 state above. Its storage contains a queue of messages from the Ethereum
-bridge contracts. It also mints corresponding assets on M1, where the asset denomination corresponds to 
-`{token address on ethereum} || {minimum number of confirmations}`.
+bridge contracts. It can mint corresponding assets on M1, where the asset denomination corresponds to 
+`{token address on ethereum} || {minimum number of confirmations}` as well
+as transfer tokens between accounts. 
 
 The minimum number of confirmations indicated in the outgoing Ethereum message 
 (maybe defaulting to 25 or 50 if unspecified) specifies the minimum number of 
@@ -92,7 +99,8 @@ predicate.
 This queue contains instances of the `MintEthToken` struct below.
 ```rust
 /// The token address for wrapped ETH tokens
-const WRAPPED_ETH_ADDRESS: Address = ... 
+const WRAPPED_ETH_ADDRESS: Address = ...;
+const GOVERNANCE_TREASURY_ADDRESS: Address = ...;
 pub struct WrappedETHAddress;
 pub struct M1TokenAddress(Address);
 
@@ -144,7 +152,7 @@ impl TransferFromEthereum {
     /// Check if the number of confirmations for the block containing
     /// the original message exceeds the minimum number required to 
     /// consider the message confirmed.
-    fn is_confirmed(&self) -> bool {
+    pub fn is_confirmed(&self) -> bool {
         self.latest_descendant.1 - self.height >= self.min_confirmations
     }
 }
@@ -153,6 +161,74 @@ impl TransferFromEthereum {
 pub type MintEthToken = TransferFromEthereum<WrappedETHAddress>;
 /// Struct for redeeming wrapped M1 tokens from Ethereum
 pub type RedeemM1Token = TransferFromEthereum<M1TokenAddress>;
+
+pub struct RewardDesignateRelayer {
+    /// the rewards address of the Designated Relayer
+    rewards_address: Address,
+    /// height of the block at which the message appeared
+    height: u64,
+    /// the hash & height of the last descendant block marked as `seen`
+    latest_descendant: ([u8; 32], u64)
+}
+
+impl RewardDesignateRelayer {
+    pub fn is_confirmed(&self) -> bool {
+        // we use a protocol parameter for the minimum number of confirmations
+        self.latest_descendant.1 - self.height >= MIN_CONFIRMATIONS
+    }
+}
+
+
+/// The messages in the VP queue
+pub enum BridgeMessage<T: MintingAddress> {
+    /// Messages for transfering value over the bridge
+    Token(TransferFromEthereum<T>),
+    /// Message for rewarding the designated validator
+    Reward(RewardDesignateRelayer),
+}
+
+impl BridgeMessage<T: MintingAddress> {
+    /// Check if the message received enough confirmations
+    pub fn is_confirmed(&self) -> bool {
+        match self {
+            BridgeMessage::Token(token) => token.is_confirmed(),
+            BridgeMessage::Reward(reward) => reward.is_confirmed(),
+        }
+    }
+    
+    /// From whom to transfer value
+    pub fn source_address(&self) -> Address {
+        match self {
+            BridgeMessage::Token(token) => token.get_address(),
+            BridgeMessage::Reward(_) => GOVERNANCE_TREASURY_ADDRESS,
+        }
+    }
+
+    /// To whom to transfer value
+    pub fn target_address(&self) -> Address {
+        match self {
+            BridgeMessage::Token(token) => token.receiver,
+            BridgeMessage::Reward(reward) => reward.rewards_address,
+        }
+    }
+    
+    /// Which token should be transferred
+    pub fn token(&self) -> Address {
+        match self {
+            BridgeMessage::Token(token) => token.get_address(),
+            BridgeMessage::Reward(_) => xan(),
+        }
+    }
+    
+    pub fn amount(&self) -> Amount {
+        // the reward amount for the Designate Relayer is a protocol
+        // parameter
+        match self {
+            BridgeMessage::Token(token) => token.amount,
+            BridgeMessage::Reward(_) => REWARD_AMOUNT,
+        }
+    }
+}
 ```
 Every time this validity predicate is called, it must perform the following
 actions:
@@ -161,14 +237,14 @@ actions:
     can be done by finding Ethereum block headers marked as `seen` in the new
     storage data (the input from finalizing the block, it isn't necessary to 
     access M1 storage) that are descendants of the `latest_descendant` field.
- 3. For each message that is confirmed, transfer the appropriate tokens 
-    (as determined by the `get_address` method of the `token` field) to 
-    the address in the `receiver` field.
+ 3. For each message that is confirmed, transfer the appropriate tokens.
+    The message contains methods for getting the source address, target
+    address, token address, and amount. 
 
 Note that this means that a transfer initiated on Ethereum will automatically
-be seen and acted upon by M1. The appropriate protocol transactions to 
-credit tokens to the given user will be included on chain free of charge
-and requires no additional actions from the end user.
+be seen and acted upon by M1. The transfer of tokens to the correct user
+will occur on chain free of charge and requires no additional actions
+from the end user.
 
 ### Redeeming ETH by burning tokens on M1
 
@@ -299,16 +375,32 @@ the performance of the Designated Relayer. If the performance is deemed
 unsatisfactory, a governance vote can be used to replace them.
 
 ### Choosing the Designated Relayer
-The Designated Relayer shall be chosen via governance. Candidates for the
-position must be proposed via a special governance transaction of the form
- ```rust
-  struct Proposal { relayer: Address, rewards: Option<Address> }
-```
-This transaction: 
-- must be approved by the validity predicate associated to the `relayer` address
-  being proposed
-- must send some funds from the `relayer` address to lock into the
-  Designated Relayer VP
+The Designated Relayer shall be chosen via governance and will require validation
+by a native Designated Relayer VP. Candidates for the
+position must submit a transaction that:
+ - Transfers an AMOUNT amount of tokens from the candidate address to 
+   the address associated with the Designate Relayer VP.
+ - Makes a governance proposal that will allow voting on the candidate.
+
+Here AMOUNT is a protocol parameter. These locked funds are for accountability
+of the Designated Relayer.
+
+The Designated Relayer VP has the following storage keys:
+ - `{designated_relayer_addr}/current_relayer: (Address, Option<Address>)`
+ - `{designated_relayer_addr}/next_relayer: (Address, Option<Address>)`
+ - `{designated_relayer_addr}/funds/[address]: Amount`
+ - `{designated_relayer_addr}/candidates/[address]/proposal: Vec<u8>`
+
+The storage should satisfy the following properties:
+ - The `current_relayer` and `next_relayer` fields include the address of the
+   relayer and an optional address for receiving rewards.
+ - The `/funds/[address]` field includes the amount of tokens belonging to
+   `[address]` currently locked by the Designated Relayer VP.
+ - The `/candidates/[address]/proposal` field contains a Borsh serialization
+   of the governance proposal corresponding to the candidacy of `[address]`.
+ - The `current_relayer` and `next_relayer` addresses must have locked funds
+   in the corresponding substorage keys.
+
 
 Voting for the Designated Relayer follows the standard governance voting mechanisms.
 Ballots are cast of the form
@@ -317,7 +409,7 @@ Ballots are cast of the form
   ```
 
 A Designated Relayer will be active for a fixed _term_. The _voting period_
-for the next Designated Relayer will take place during the term of the 
+for the next Designated Relayer will take place during the term of the
 current Designated Relayer. The time between voting ending and term of the
 newly elected Designated Relayer beginning is the _pipeline period_. Thus
 `term = voting period + pipeline period`. All of these are measured in epochs.
@@ -326,29 +418,65 @@ Note that when proposing an address for the position of Designated Relayer,
 certain funds are locked immediately. If the proposal does not win, its funds
 will be refunded at the end of voting.
 
-The locking of these funds will trigger the Designated Relayer VP will
+The locking of these funds will trigger the Designated Relayer VP which will
 perform extra checks on the proposal other than those required by
-governance. This should include checking, e.g. the voting period is of correct
-length and that the proposal goes into effect at the correct time.
+governance. In particular, it should do the following:
+ - check that the AMOUNT of funds sent was correct
+ - The address in the proposal matches the address it received funds from
+ - check the voting period is of correct length
+ - that the proposal goes into effect at the correct epoch.
+ - the code in the proposal is hash-checked (whitelisted).
+ 
+The proposal is a standard governance proposal: 
 
-The proposal also needs code to be executed if it is accepted. This code
-should insert the proposal fields under the `next_relayer` key of the Designated
-Relayer VP. This piece of code should be completely standard and hash-checkable
-by the ledger. This checkout will be carried out the Designated Relayer VP.
+ ```rust
+  struct DesignatedRelayerProposal { relayer: Address, rewards: Option<Address> }
+  
+  struct OnChainProposal {
+      id: u64,
+      /// This can follow a standard template
+      content: Vec<u8>,
+      author: Address,
+      /// This should conform to start of a term
+      votingStartEpoch: Epoch,
+      /// This should conform to the end of the designated voting period
+      votingEndEpoch: Epoch,
+      /// This should be the start of the term after `voteStartEpoch`
+      graceEpoch: Epoch,
+      /// This should be always be the same code. It will be hash-checked
+      /// by the Designated Relayer VP
+      proposalCode: Option<Vec<u8>>,
+      /// The should be a Borsh serialization of a
+      /// `DesignateRelayerProposal` instance
+      parameters: Option<Vec<u8>>,
+  }
+```
+
+The proposal code should read the `address` and `rewards` fields from the governance parameters
+substorage key and write them into the `next_relayer` substorage key of the 
+Designated Relayer VP. The proposal code is a pre-written whitelisted wasm
+blob whose hash is known to the Designated Relayer VP. 
+
+Once this proposal is accepted, the proposal code will attempt to write
+to the Designated Relayer VP storage, triggering the VP. At this stage,
+the Designated Relayer VP should check that the proposal is under the 
+`/candidates/[address]/proposal` substorage key, where the `address` field
+can be found in the `parameters` field of the proposal. If it is,
+the VP accepts the changes.
 
 Note that in the event of ties, several of these proposals will be enacted.
 The last enacted will overwrite the `next_relayer` key, giving a tie-break
 mechanism.
 
 ---
-To handle this logic, M1 validators will keep a simple state machine in memory.
+To handle the voting logic, M1 validators will keep a simple state machine in memory.
 It should work as follows:
 
-- At the end of voting period release any funds not belonging to either
+- At the end of voting period, release any funds not belonging to either
   the `next_relayer` or `current_relayer` address.
 - At the end of the pipeline period, _copy_ the value of the `next_relayer`
   key to the `current_relayer` key.
-- Release any funds in the Designated Relayer vault belonging to addresses
+- At the end of the pipeline period, release any funds in the Designated Relayer vault belonging to addresses
   other than the `current_relayer` key.
 
 Note that this state machine is designed to automatically keep the current 
@@ -381,15 +509,24 @@ their locked funds reaches zero, their address is removed from the `current_rela
 field and also from the `next_relayer` field if necessary. They are 
 thus immediately removed from the position of Designated Relayer.
 
-### Compensation (refunds & rewards)
-    - can be sent directly to the relayer
-    - TODO: how
+On, the other hand, if the requisite log is observed by 2/3 of the staking
+validators, the next block proposer includes a tx giving a reward to the
+Designated Relayer's rewards account, paid from the governance treasury.
 
 ### Additional protocol parameters
-    - term duration in number of epochs
-    - voting duration or pipeline duration (voting duration + pipeline = term)
-    - required funds to be locked in M1T for proposal
-    - ETH update timeout
+
+There are several protocol parameters involved with the Designate Relayer.
+All of these can be changed by governance votes. These parameters are:
+- term duration of the Designated Relayer in number of epochs
+- voting duration (voting duration + pipeline = term)
+- required funds to be locked in the Designate Relayer VP
+- the number of Ethereum blocks in which to see the Designate Relayer submitted 
+  a validator set change to Ethereum.
+- The minimum number of confirmations needed to consider the message successfully
+  relayed to Ethereum
+- The amount to reward a Designated Relayer for relaying a validator set change
+- The amount to punish a Designated Relayer for not relaying a validator set change
+  quickly enough
 
 ## Ethereum Smart Contracts
 The set of Ethereum contracts should perform the following functions:
