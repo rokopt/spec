@@ -7,14 +7,14 @@ The application consist of the an UI that allows the user to perform the followi
 ### Seed Phrase
 [UI Designs](https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=4610%3A5890)
 * Can setup a new seed phrase and derive accounts on it
-* Restore accounts from seed phrase
-* Can retrieve the seed phrase, this needs the password
+* When creating the seed phrase, the user can export it copied to the clipboard, user has to confirm the saving of the seed phrase
+* Restore accounts from a seed phrase
+* Can retrieve a forgotten seed phrase, this requires user to enter the main password
 
 ### User accounts
 [UI Designs](https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=5165%3A8862)
 * Can create accounts derived from the master key pair
 * Can delete accounts
-* Can export and import accounts from a text file that persists the encrypted key pairs
 * Common to all transactions is that the user is being prompted for a password for encrypting the keys whenever a transactions is being performed
 * User can integrated with Ledger hardware wallet
 
@@ -33,7 +33,7 @@ The application consist of the an UI that allows the user to perform the followi
 * Can un-bond funds to a list of validators
 * Can submit proposals
 * Can vote on proposals
-
+* Can follow up with the current and past proposals and their vote results
 
 ## Tech Stack
 ### Core Application
