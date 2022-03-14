@@ -14,9 +14,9 @@ To ensure incentivisation for validators we only transfer to treasury (instead o
 The change in base fees cannot be too fast or too frequent. We propose a minimum of 20 blocks between changes and a delay of 10 blocks before a base fee change is applied, where each change of the transaction fee follows the function below. 
 
 $$
-Tx_fee'=Tx_fee*(1+ch_{max}(F-0.5))
+Tx_{fee}'=Tx_{fee}*(1+ch_{max}(F-0.5))
 $$
-where $Tx_fee$ is the previous transaction fee, $Tx_fee'$ is the new transcation fee, $ch_{max}$ is the max change the transaction fee can have, and $F$ is the block fullness. We decided that our target block fullness is 50 %.  
+where $Tx_{fee}$ is the previous transaction fee, $Tx_{fee}'$ is the new transcation fee, $ch_{max}$ is the max change the transaction fee can have, and $F$ is the block fullness. We decided that our target block fullness is 50 %.  
 
 ![](https://i.imgur.com/p3qeWw3.jpg)
 
