@@ -145,16 +145,69 @@
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <h1 id="web-wallet-interface"><a class="header" href="#web-wallet-interface">Web wallet interface</a></h1>
+<h2 id="application-features"><a class="header" href="#application-features">Application Features</a></h2>
+<p>The application consist of the an UI that allows the user to perform the following actions in an easy to use and consistent web application:</p>
+<h3 id="seed-phrase"><a class="header" href="#seed-phrase">Seed Phrase</a></h3>
+<p><a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=4610%3A5890">hifi Designs</a></p>
 <ul>
-<li>Multi-chain/Multi-asset wallet that supports moving assets across bridges
+<li>Can setup a new seed phrase and derive accounts on it <a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A5866">wireframe</a></li>
+<li>When creating the seed phrase, the user can export it copied to the clipboard, user has to confirm the saving of the seed phrase <a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A6015">wireframe</a> <a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A6104">wireframe</a></li>
+<li>Restore accounts from a seed phrase</li>
+<li>Can retrieve a forgotten seed phrase, this requires user to enter the main password</li>
+</ul>
+<h3 id="user-accounts"><a class="header" href="#user-accounts">User accounts</a></h3>
+<p><a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=5165%3A8862">hifi Designs</a></p>
 <ul>
-<li>Enables ETH to be moved to M1 and back</li>
-<li>Supports staking and governance on M1</li>
-<li>Enables multi-asset transfers involving the MASP</li>
-<li>Integrates with existing key solutions (Ledger, Metamask, Keplr)</li>
-<li>Supports whatever incentives schemes we want to have</li>
+<li>When entering the app, the user is being prompted for a password to decrypt the key pair to be able to perform actions <a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A5801">wireframe</a></li>
+<li>Can create accounts derived from the master key pair</li>
+<li>Can delete accounts</li>
+<li>User can integrated with Ledger hardware wallet
+<ul>
+<li>Set up flow TBD</li>
+<li>Managing TBD</li>
 </ul>
 </li>
+<li>Can see an overview of the assets in the account and all derived accounts <a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A5492">wireframe</a></li>
+<li>Can see the details of a single asset, containing the following information <a href="https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A5681">wireframe</a>
+<ul>
+<li>Balance</li>
+<li>All past transactions for the current account and asset</li>
+<li>Button to initiate a new transfer using this asset</li>
+</ul>
+</li>
+</ul>
+<h3 id="transfers"><a class="header" href="#transfers">Transfers</a></h3>
+<p><a href="">TBD</a></p>
+<ul>
+<li>Can create transparent transfers</li>
+<li>Can create shielded transfers</li>
+<li>Bi-directional transfer between Namada and ETH
+<ul>
+<li>Supports approving transactions with MetaMask</li>
+</ul>
+</li>
+<li>Bi-directional transfer between Namada and IBC supported chains
+<ul>
+<li>Supports approving transactions with Keplr</li>
+</ul>
+</li>
+</ul>
+<h3 id="staking--governance"><a class="header" href="#staking--governance">Staking &amp; Governance</a></h3>
+<p><a href="">TBD</a></p>
+<ul>
+<li>Can bond funds to a list of validators</li>
+<li>Can un-bond funds to a list of validators</li>
+<li>Can submit proposals</li>
+<li>Can vote on proposals</li>
+<li>Can follow up with the current and past proposals and their vote results</li>
+</ul>
+<h2 id="tech-stack"><a class="header" href="#tech-stack">Tech Stack</a></h2>
+<h3 id="core-application"><a class="header" href="#core-application">Core Application</a></h3>
+<ul>
+<li>Core application is built on React/TypeScript</li>
+<li>State management with Redux</li>
+<li>Application styling is accomplished with styled-components</li>
+<li>Extensive usage of WASM compiled Rust code from the common Anoma code base is encouraged where ever feasible.</li>
 </ul>
 
                     </main>
