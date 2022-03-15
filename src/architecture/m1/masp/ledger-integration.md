@@ -134,7 +134,7 @@ completed, the spending key that was used to generate the payment address
 will have the authority to spend the amount that was send. Below is an
 example of how a shielding transacion should be made:
 ```
-cargo run --bin anomac -- transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
+anomac transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
 ```
 #### Unshielding Transactions
 The client should be able to make unshielding transactions by providing
@@ -147,9 +147,20 @@ address). Once the transaction is complete, the spending key will no
 longer be able to spend the transferred amount. Below is an example of
 how an unshielding transaction should be made:
 ```
-cargo run --bin anomac -- transfer --target Bertha --amount 45 --token BTC --spending-key AA
+anomac transfer --target Bertha --amount 45 --token BTC --spending-key AA
 ```
-
+#### Shielded Transactions
+The client should be able to make shielded transactions by providing a
+shielded spending key and a shielded payment address. There should be
+no change in the transparent balance of the MASP validity predicate's
+address. The gas fee is charged to the signer's address. Once the
+transaction is complete, the spending key will no longer be able to
+spend the transferred amount, but the spending key that was used to
+(directly or indirectly) generate the payment address will. Below is
+an example of how a shielded transaction should be made:
+```
+anomac transfer --spending-key AA --amount 5 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
+```
 ### Viewing Shielded Balances
 
 ### Shielded Address/Key Generation
