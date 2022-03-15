@@ -1,0 +1,517 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Governance - Anoma Specification</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../assets/custom.css">
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../index.html"><strong aria-hidden="true">1.</strong> Index</a></li><li class="chapter-item expanded "><a href="../../motivation.html"><strong aria-hidden="true">2.</strong> Motivation</a></li><li class="chapter-item expanded "><a href="../../architecture.html"><strong aria-hidden="true">3.</strong> Architecture</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../architecture/m1.html"><strong aria-hidden="true">3.1.</strong> M1</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/m1/consensus.html"><strong aria-hidden="true">3.1.1.</strong> Consensus</a></li><li class="chapter-item "><a href="../../architecture/m1/p2p.html"><strong aria-hidden="true">3.1.2.</strong> P2P layer</a></li><li class="chapter-item "><a href="../../architecture/m1/execution-system.html"><strong aria-hidden="true">3.1.3.</strong> Execution system</a></li><li class="chapter-item "><a href="../../architecture/m1/masp.html"><strong aria-hidden="true">3.1.4.</strong> Multi-asset shielded pool</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/m1/masp/trusted-setup.html"><strong aria-hidden="true">3.1.4.1.</strong> Trusted setup</a></li><li class="chapter-item "><a href="../../architecture/m1/masp/ledger-integration.html"><strong aria-hidden="true">3.1.4.2.</strong> Ledger integration</a></li><li class="chapter-item "><a href="../../architecture/m1/masp/shielded-pool-incentives.html"><strong aria-hidden="true">3.1.4.3.</strong> Shielded pool incentives</a></li></ol></li><li class="chapter-item expanded "><a href="../../architecture/m1/governance.html" class="active"><strong aria-hidden="true">3.1.5.</strong> Governance</a></li><li class="chapter-item "><a href="../../architecture/m1/proof-of-stake.html"><strong aria-hidden="true">3.1.6.</strong> Proof of stake</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/m1/proof-of-stake/bonding-mechanism.html"><strong aria-hidden="true">3.1.6.1.</strong> Bonding mechanism</a></li><li class="chapter-item "><a href="../../architecture/m1/proof-of-stake/cubic-slashing.html"><strong aria-hidden="true">3.1.6.2.</strong> Cubic slashing</a></li><li class="chapter-item "><a href="../../architecture/m1/proof-of-stake/reward-distribution.html"><strong aria-hidden="true">3.1.6.3.</strong> Reward distribution</a></li></ol></li><li class="chapter-item "><a href="../../architecture/m1/inflation-system.html"><strong aria-hidden="true">3.1.7.</strong> Inflation system</a></li><li class="chapter-item "><a href="../../architecture/m1/fee-system.html"><strong aria-hidden="true">3.1.8.</strong> Fee system</a></li><li class="chapter-item "><a href="../../architecture/m1/ibc.html"><strong aria-hidden="true">3.1.9.</strong> IBC integration</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/m1/ibc/message.html"><strong aria-hidden="true">3.1.9.1.</strong> Messages</a></li></ol></li><li class="chapter-item "><a href="../../architecture/m1/ethereum-bridge.html"><strong aria-hidden="true">3.1.10.</strong> Ethereum bridge</a></li><li class="chapter-item "><a href="../../architecture/m1/web-wallet-interface.html"><strong aria-hidden="true">3.1.11.</strong> Web wallet interface</a></li><li class="chapter-item "><a href="../../architecture/m1/web-explorer-interface.html"><strong aria-hidden="true">3.1.12.</strong> Web explorer interface</a></li><li class="chapter-item "><a href="../../architecture/m1/testnets.html"><strong aria-hidden="true">3.1.13.</strong> Testnets</a></li><li class="chapter-item "><a href="../../architecture/m1/external-integrations.html"><strong aria-hidden="true">3.1.14.</strong> External integrations</a></li></ol></li><li class="chapter-item "><a href="../../architecture/m2.html"><strong aria-hidden="true">3.2.</strong> M2</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/m2/ferveo.html"><strong aria-hidden="true">3.2.1.</strong> Ferveo</a></li><li class="chapter-item "><a href="../../architecture/m2/private-bridges.html"><strong aria-hidden="true">3.2.2.</strong> Private bridges</a></li></ol></li><li class="chapter-item "><a href="../../architecture/a1.html"><strong aria-hidden="true">3.3.</strong> A1</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/a1/state-architecture.html"><strong aria-hidden="true">3.3.1.</strong> State architecture</a></li><li class="chapter-item "><a href="../../architecture/a1/intent-gossip-system.html"><strong aria-hidden="true">3.3.2.</strong> Intent gossip system</a></li><li class="chapter-item "><a href="../../architecture/a1/matchmaking.html"><strong aria-hidden="true">3.3.3.</strong> Matchmaking</a></li><li class="chapter-item "><a href="../../architecture/a1/typhon.html"><strong aria-hidden="true">3.3.4.</strong> Typhon</a></li><li class="chapter-item "><a href="../../architecture/a1/private-bartering-circuits.html"><strong aria-hidden="true">3.3.5.</strong> Private bartering circuits</a></li><li class="chapter-item "><a href="../../architecture/a1/private-execution-architecture.html"><strong aria-hidden="true">3.3.6.</strong> Private execution architecture</a></li><li class="chapter-item "><a href="../../architecture/a1/decentralised-proof-of-identity.html"><strong aria-hidden="true">3.3.7.</strong> Decentralised proof-of-identity</a></li><li class="chapter-item "><a href="../../architecture/a1/public-goods-funding.html"><strong aria-hidden="true">3.3.8.</strong> Public goods funding</a></li><li class="chapter-item "><a href="../../architecture/a1/fee-system.html"><strong aria-hidden="true">3.3.9.</strong> Fee system</a></li></ol></li><li class="chapter-item "><a href="../../architecture/j1.html"><strong aria-hidden="true">3.4.</strong> J1</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/j1/vampir/vampir.html"><strong aria-hidden="true">3.4.1.</strong> Vampir</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../architecture/j1/vampir/ir_design.html"><strong aria-hidden="true">3.4.1.1.</strong> Design Philosophy</a></li><li class="chapter-item "><a href="../../architecture/j1/vampir/ir_spec.html"><strong aria-hidden="true">3.4.1.2.</strong> Spec (Working Draft)</a></li><li class="chapter-item "><a href="../../architecture/j1/vampir/juvix-to-vampir.html"><strong aria-hidden="true">3.4.1.3.</strong> Juvix -&gt; Vampir Details</a></li><li class="chapter-item "><a href="../../architecture/j1/vampir/compilation_diagrams.html"><strong aria-hidden="true">3.4.1.4.</strong> Diagrams</a></li><li class="chapter-item "><a href="../../architecture/j1/vampir/examples.html"><strong aria-hidden="true">3.4.1.5.</strong> TestCircuit Example</a></li></ol></li></ol></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Anoma Specification</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<h1 id="m1-governance"><a class="header" href="#m1-governance">M1 Governance</a></h1>
+<p>Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some <code>M1T</code> will be able to prosose some changes to which delegators and validator will cast their <code>yay</code> or <code>nay</code> votes. Governance on Anoma supports both <code>signaling</code> and <code>voting</code> mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on <code>off chain</code> signaling to agree on a common move.</p>
+<h2 id="on-chain-protocol"><a class="header" href="#on-chain-protocol">On-chain protocol</a></h2>
+<h3 id="governance-address"><a class="header" href="#governance-address">Governance Address</a></h3>
+<p>Governance adds 2 internal addresses:</p>
+<ul>
+<li>GovernanceAddress</li>
+<li>TreasuryAddress</li>
+</ul>
+<p>The first address contains all the proposals under his address space.
+The second address holds the funds of rejected proposals.</p>
+<h3 id="governance-storage"><a class="header" href="#governance-storage">Governance storage</a></h3>
+<p>Each proposal will be stored in a sub-key under the internal proposal address. The storage keys involved are:</p>
+<pre><code>/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id: u64
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/content : Vec&lt;u8&gt;
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/author : Address
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/startEpoch: Epoch
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/endEpoch: Epoch
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/graceEpoch: Epoch
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/proposalCode: Option&lt;Vec&lt;u8&gt;&gt;
+/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;id/funds: u64
+</code></pre>
+<p><code>Author</code> address field will be used to credit the locked funds if the proposal is approved.</p>
+<p>The <code>content</code> value should follow a standard format. We leverage something similar to what is described in the <a href="https://github.com/bitcoin/bips/blob/master/bip-0002.mediawiki#bip-format-and-structure">BIP2</a> document:</p>
+<pre><code class="language-json">{
+    &quot;title&quot;: &quot;&lt;text&gt;&quot;,
+    &quot;authors&quot;: &quot;&lt;authors email addresses&gt; &quot;,
+    &quot;discussions-to&quot;: &quot;&lt;email address / link&gt;&quot;,
+    &quot;created&quot;: &quot;&lt;date created on, in ISO 8601 (yyyy-mm-dd) format&gt;&quot;,
+    &quot;license&quot;: &quot;&lt;abbreviation for approved license(s)&gt;&quot;,
+    &quot;abstract&quot;: &quot;&lt;text&gt;&quot;,
+    &quot;motivation&quot;: &quot;&lt;text&gt;&quot;,
+    &quot;details&quot;: &quot;&lt;AIP number(s)&gt; - optional field&quot;,
+    &quot;requires&quot;: &quot;&lt;AIP number(s)&gt; - optional field&quot;,
+    &quot;replaces&quot;: &quot;&lt;AIP number&gt; - optional field&quot;,
+}
+</code></pre>
+<p><code>GovernanceAddress</code> global storage keys are:</p>
+<pre><code>/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mclose&quot;&gt;?&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:0.7224em;vertical-align:-0.0391em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.22222em;&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ec&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:0.6835em;vertical-align:-0.0391em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;GovernanceAddress/counter: u64
+</code></pre>
+<p><code>Counter</code> is used to assign a unique, incremental ID to each proposal.</p>
+<h3 id="governanceaddress-vp"><a class="header" href="#governanceaddress-vp">GovernanceAddress VP</a></h3>
+<p>Just like Pos, also governance has his own storage space. The <code>GovernanceAddress</code> validity predicate task is to check the integrity and correctness of new proposals. A proposal, to be correct, must satisfy the followings:</p>
+<ul>
+<li>Lock some funds &gt;= <code>MIN_PROPOSAL_FUND</code></li>
+<li>Contains a unique ID</li>
+<li>Contains a start, end and grace Epoch</li>
+<li>The difference between StartEpoch and EndEpoch should be &gt;= <code>MIN_PROPOSAL_PERIOD</code> * constant.</li>
+<li>Should contain a text describing the proposal with length &lt; <code>MAX_PROPOSAL_CONTENT_LENGTH</code> characters.</li>
+<li>Vote can be done only by a delegator or validator</li>
+<li>Validator can vote only in the initial 2/3 of the whole proposal duration (<code>EndEpoch</code> - <code>StartEpoch</code>)</li>
+<li>Due to the previous requirement, the following must be true,<code>(EndEpoch - StartEpoch) % 3 == 0</code> </li>
+<li>If defined <code>proposalCode</code>, should be the wasm bytecode rappresentation of the changes. This code is triggered in case the proposal has a position outcome.</li>
+</ul>
+<p><code>MIN_PROPOSAL_FUND</code>, <code>MAX_PROPOSAL_CODE_SIZE</code> and <code>MIN_PROPOSAL_PERIOD</code> are parameters of the protocol.
+Once a proposal has been created, nobody can modify any of its fields.
+If <code>proposalCode</code>  is <code>Emtpy</code> or <code>None</code> , the proposal upgrade will need to be done via hard fork.</p>
+<p>Here an example of such validity predicate.</p>
+<pre><pre class="playground"><code class="language-rust=">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn proposal_vp(tx_data: Vec&lt;u8&gt;, addr: Address, keys_changed: HashSet&lt;Key&gt;, verifiers: HashSet&lt;Address&gt;) {
+    for key in keys_changed {
+        if is_proposal_key_id(key) {
+            let current_id = read_counter();
+            let proposal_id = get_current_proposal_id();
+            let post_value_counter = read_post(COUNTER_STORAGE_KEY);
+            return !has_pre(key) &amp;&amp; current_id == proposal_id &amp;&amp; post_value_counter == current_id++;
+        } else if is_vote_key(key) {
+             return (is_delegator(verifiers) || (is_validator(verifiers) &amp;&amp; current_epoch_is_2_3(addr, id))) &amp;&amp; is_valid_signature(tx_data);
+        } else if is_content_key(key) {
+            let post_content = read_post(key)
+            return !has_pre(key) &amp;&amp; post_content.len() &lt; MAX_PROPOSAL_CONTENT_LENGTH;
+        } else if is_author_key(key) {
+            return !has_pre(key)  
+        } else if is_proposa_code_key(key) {
+            let proposal_code_size = get_proposal_code_size();
+            return !has_pre(key) &amp;&amp; proposal_code_size &lt; MAX_PROPOSAL_CODE_SIZE;
+        } else if is_grace_epoch(key) {
+            let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+            let graceEpoch = read_post_grace_epoch(addr, id, GRACE_EPOCH_KEY)
+            return !has_pre(key) &amp;&amp; graceEpoch &gt; endEpoch;
+        } else if is_balance_key(key) {
+            let has_pre_funds = has_pre_key(key)
+            let pre_funds = read_funds_pre(key)
+            let post_funds = read_funds_post(key)
+            let minFunds = read_min_funds_parameter()
+            // if new proposal
+            if !has_pre_funds {
+                return post_funds - pre_funds &gt;= MIN_PROPOSAL_FUND;        
+            } else {
+                // return funds to owner or governance fund pool
+                let currentEpoch = read_current_epoch()
+                let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+                return currentEpoch &gt;= endEpoch &amp;&amp; is_allowed_transfer(verifiers);
+            }   
+        } else if is_start_or_end_epoch_key(key) {
+            let id = get_id_from_epoch_key(key);
+            let currentEpoch = read_current_epoch();
+            let minPeriod = read_min_period_parameter();
+            let startEpoch = read_post_start_epoch(addr, id, START_EPOCH_KEY);
+            let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+            return !has_pre(key) &amp;&amp; startEpoch - currentEpoch &gt;= MIN_PROPOSAL_PERIOD &amp;&amp; (startEpoch - currentEpoch) % MIN_PROPOSAL_PERIOD == 0;
+        } else {
+            return false;
+        }
+    }
+}
+
+fn is_delegator(verifiers: HashSet&lt;Address&gt;, tx_data: Vec&lt;u8&gt;) -&gt; bool {
+    // check if tx_data has been signed by a delegator
+    return ...
+}
+
+fn is_validator(verifiers: HashSet&lt;Address&gt;, tx_data: Vec&lt;u8&gt;) -&gt; bool {
+    // check if tx_data has been signed by a validator
+    return ...
+}
+
+fn current_epoch_is_2_3(addr: Address, id: u64) -&gt; bool {
+    let currentEpoch = read_current_epoch()
+    let startEpoch = read_post_start_epoch(addr, id, START_EPOCH_KEY) 
+    let endEpoch = read_post_end_epoch(addr, id, END_EPOCH_KEY)
+    
+    return ((endEpoch - startEpoch) * 2) / 3 &lt;= (currentEpoch - startEpoch);
+}
+    
+fn is_allowed_transfer(verifiers: Vec&lt;Address&gt;) -&gt; bool {
+    // check if the transfer to towards a whitelisted address. 
+    // Transfer can be towers TreasuryAddress if the proposal is rejected 
+    // or author if proposal is accepted
+    // this method must be called only if currentEpoch &gt; proposal.endEpoch
+    return ....
+}
+
+fn is_tally_positive() -&gt; bool {
+    // compute if 2/3 voting power voted yay
+    return ...
+}
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>Example of <code>proposalCode</code> could be:</p>
+<ul>
+<li>storage writes to change some protocol parameter</li>
+<li>storage writes to restore a slash</li>
+</ul>
+<p>This means that corresponding VPs need to handle these cases.</p>
+<h3 id="proposal-transactions"><a class="header" href="#proposal-transactions">Proposal Transactions</a></h3>
+<p>The proposal transaction will have the following structure, where <code>author</code> address will be the refund address.</p>
+<pre><pre class="playground"><code class="language-rust=">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct OnChainProposal {
+    id: u64
+    content: Vec&lt;u8&gt;
+    author: Address
+    votingStartEpoch: Epoch
+    votingEndEpoch: Epoch
+    graceEpoch: Epoch
+    proposalCode: Option&lt;Vec&lt;u8&gt;&gt;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="vote-transaction"><a class="header" href="#vote-transaction">Vote transaction</a></h3>
+<p>Vote transactions have the following structure:</p>
+<pre><pre class="playground"><code class="language-rust=">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct OnChainVote {
+    id: u64
+    voter: Address
+    yay: bool
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Vote transaction creates or modify the following storage key:</p>
+<pre><code>/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;er&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;nan&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ro&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;address: Enum(yay|nay)
+</code></pre>
+<p>The storage key will only be created if the transaction is signed either by a validator or a delagator. 
+Validators will be able to vote only for 2/3 of the total voting period, meanwhile delegators can vote until the end of the voting period.
+If a delegator votes opposite to its validator this will <em>overri</em>de the corresponding vote of this validator (e.g. if a delegator has a voting power of 200 and votes opposite to the delegator holding these tokens, than 200 will be subtracted from the votig power of the involved validator).</p>
+<h3 id="tally"><a class="header" href="#tally">Tally</a></h3>
+<p>At the beginning of each new epoch (and only then), in the <code>BeginBlock</code> event, talling will occur for all the proposals ending at this epoch (specified via the <code>endEpoch</code> field).
+The proposal has a positive outcome if 2/3 of the staked <code>M1T</code> total is voting <code>yay</code>.
+The tally can also be manually computed via CLI command. The tally method behavior will be the following:</p>
+<pre><pre class="playground"><code class="language-rust=">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn compute_tally(proposal_id: u64) {
+    let vote_addresses = get_proposal_vote_iter(proposal_id).map(|addr| addr)
+    let total_m1t: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    
+    let delegators =  vote_addresses.filter(|addr| addr.is_delegator())
+    let yay_addresses = vote_addresses.filter(|addr| read_vote(proposal_id, addr) == 'yay')
+    
+    let yay_validators = yay_addresses.filter(|addr| addr.is_validator())
+    let yay_validators_m1t = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    
+    for delegator in delegators {
+        if yay_validators.contains(delegator.get_correspoding_validator()) {
+            if read_vote(proposal_id, delegator) == 'nay' {
+                yay_validators_m1t -= get_addr_balance(delegator)
+            }
+        }
+    }
+    return yay_validators_m1t / total_m1t &gt;= 0.66;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="refund-and-proposal-execution-mechanism"><a class="header" href="#refund-and-proposal-execution-mechanism">Refund and Proposal Execution mechanism</a></h3>
+<p>Together with the talling, in the first block at the beginning of each epoch, in the <code>BeginBlock</code> event, the protocol will manage the execution of accepted proposals and refunding. For each ended proposal with positive outcome, it will refund the locked funds from <code>GovernanceAddress</code> to the proposal author address (specified in the proposal <code>author</code> field). For each proposal that has been rejected, instead, the locked funds will be moved to the <code>TreasuryAddress</code>. Moreover, if the proposal had a positive outcome and <code>proposalCode</code> was defined, these changes will be executed. Changes are execute in the first block of the <code>GraceEpoch</code> defined in the proposal.</p>
+<p>If the proposal outcome is positive and current epoch is equal to the proposal <code>graceEpoch</code>, the <code>BeginBlock</code></p>
+<ul>
+<li>transfer the locked funds to the proposal author (no tx, directly write keys to storage)</li>
+<li>execute any changes to storage specified by <code>proposalCode</code></li>
+</ul>
+<p>A <code>RejectProposal</code> transaction must:</p>
+<ul>
+<li>transfer the locked funds to the <code>TreasuryAddress</code></li>
+</ul>
+<p><strong>NOTE</strong>: we need a way to signal the fulfillment of an accepted proposal inside the block in which it is applied to the state. We could do that by using <code>Events</code> https://github.com/tendermint/tendermint/blob/ab0835463f1f89dcadf83f9492e98d85583b0e71/docs/spec/abci/abci.md#events (see https://github.com/anoma/anoma/issues/930).</p>
+<h2 id="treasuryaddress"><a class="header" href="#treasuryaddress">TreasuryAddress</a></h2>
+<p>Funds locked in <code>TreasuryAddress</code> address should be spendable only if a 2/3+ voting power accept a proposal which modifies its balance.</p>
+<h3 id="treasuryaddress-storage"><a class="header" href="#treasuryaddress-storage">TreasuryAddress storage</a></h3>
+<pre><code>/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.13889em;&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;re&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;ry&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;dd&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ress&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ba&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.01968em;&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;an&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;64/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;TreasuryAddress/?: Vec&lt;u8&gt;
+</code></pre>
+<h3 id="treasuryaddress-vp"><a class="header" href="#treasuryaddress-vp">TreasuryAddress VP</a></h3>
+<pre><pre class="playground"><code class="language-rust=">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn governance_fund_pool_vp(tx_data: Vec&lt;u8&gt;, addr: Address, keys_changed: HashSet&lt;Key&gt;, verifiers: HashSet&lt;Address&gt;) {
+    for key in keys_changed {
+        if is_balance_key(key) {
+            let pre_balance = read_pre(key);
+            let post_balance = read_post(key);
+            let to_be_spent = post_balance - pre_balance;
+            let proposal_min_lock_funds = read_min_proposal_fund();
+            // if credit
+            if to_be_spent &gt;= proposal_min_lock_funds {
+                return true
+            }
+            // if debit
+            let proposal_id = get_proposal_id();
+            let current_epoch = get_current_epoch();
+            let proposal_grace_epoch = get_proposal_grace_epoch();
+            return is_tally_positive(proposal_id) &amp;&amp; current_epoch == proposal_grace_epoch &amp;&amp; abs(to_be_spent) &lt; MAX_SPENDABLE_SUM;
+        } else {
+            return false;   
+        }
+    }
+}
+
+fn is_tally_positive(proposal_id: u64) -&gt; bool {
+    // compute if 2/3 voting power voted yay
+    return ...
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p><code>MAX_SPENDABLE_SUM</code> is a parameter in of the anoma protocol.</p>
+<h2 id="parameteraddress"><a class="header" href="#parameteraddress">ParameterAddress</a></h2>
+<p>Protocol parameter are described under the ParameterAddress internal address. Proposals can modify them if 2/3+ voting power agree.</p>
+<h3 id="parameteraddress-storage"><a class="header" href="#parameteraddress-storage">ParameterAddress storage</a></h3>
+<pre><code>/ParamaterAddress/&lt;span class=&quot;katex&quot;&gt;&lt;span class=&quot;katex-html&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:0.625em;vertical-align:-0.1944em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;am&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mspace&quot; style=&quot;margin-right:0.2778em;&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot; style=&quot;height:1em;vertical-align:-0.25em;&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;St&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.02778em;&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;mord mathnormal&quot; style=&quot;margin-right:0.03588em;&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;/&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;ParamaterAddress/?: Vec&lt;u8&gt;
+</code></pre>
+<p>We need to keep track of already executed proposals.</p>
+<h3 id="parameteraddress-vp"><a class="header" href="#parameteraddress-vp">ParameterAddress VP</a></h3>
+<pre><pre class="playground"><code class="language-rust=">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn parameter_vp(tx_data: Vec&lt;u8&gt;, addr: Address, keys_changed: HashSet&lt;Key&gt;, verifiers: HashSet&lt;Address&gt;) {
+    for key in keys_changed {
+        if is_param_key(key) {
+            let proposal_id = get_proposal_id();
+            let current_epoch = get_current_epoch();
+            let proposal_grace_epoch = get_proposal_grace_epoch();
+            return is_tally_positive(proposal_id) &amp;&amp; current_epoch == proposal_grace_epoch;
+        } else {
+            return false;   
+        }
+    }
+}
+
+fn is_tally_positive(proposal_id: u64) -&gt; bool {
+    // compute if 2/3 voting power voted yay
+    return ...
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="off-chain-protocol"><a class="header" href="#off-chain-protocol">Off-chain protocol</a></h2>
+<h3 id="create-proposal"><a class="header" href="#create-proposal">Create proposal</a></h3>
+<p>A CLI command to create a signed JSON rappresentation of the proposal. The JSON will have the following structure:</p>
+<pre><code>{
+  content: Base64&lt;Vec&lt;u8&gt;&gt;,
+  author: Address,
+  votingStart: TimeStamp,
+  votingEnd: TimeStamp,
+  signature: Base64&lt;Vec&lt;u8&gt;&gt;
+}
+</code></pre>
+<p>The signature is produced over the hash of the concatenation of <code>content</code>, <code>author</code>, <code>votingStart</code> and <code>votingEnd</code>.</p>
+<h3 id="create-vote"><a class="header" href="#create-vote">Create vote</a></h3>
+<p>A CLI command to create a signed JSON rappresentation of a vote. The JSON will have the following structure:</p>
+<pre><code>{
+  proposalHash: Base64&lt;Vec&lt;u8&gt;&gt;,
+  voter: Address,
+  signature: Base64&lt;Self.proposalHash&gt;,
+  vote: Enum(yay|nay)
+}
+</code></pre>
+<p>The proposalHash is produced over the concatenation of <code>content</code>, <code>author</code>, <code>votingStart</code>, <code>votingEnd</code>, <code>voter</code> and <code>vote</code>.</p>
+<h3 id="tally-1"><a class="header" href="#tally-1">Tally</a></h3>
+<p>Same mechanism as OnChain tally but instead of reading the data from storage it will require a list of serialized json votes.</p>
+<h2 id="interfaces"><a class="header" href="#interfaces">Interfaces</a></h2>
+<ul>
+<li>Ledger CLI</li>
+<li>Wallet</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../architecture/m1/masp/shielded-pool-incentives.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../../architecture/m1/proof-of-stake.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../architecture/m1/masp/shielded-pool-incentives.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../../architecture/m1/proof-of-stake.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript" src="../../assets/mermaid.min.js"></script>
+        <script type="text/javascript" src="../../assets/mermaid-init.js"></script>
+
+
+    </body>
+</html>

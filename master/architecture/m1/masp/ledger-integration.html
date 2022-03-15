@@ -1,0 +1,424 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Ledger integration - Anoma Specification</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../../favicon.svg">
+        <link rel="shortcut icon" href="../../../favicon.png">
+        <link rel="stylesheet" href="../../../css/variables.css">
+        <link rel="stylesheet" href="../../../css/general.css">
+        <link rel="stylesheet" href="../../../css/chrome.css">
+        <link rel="stylesheet" href="../../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../../highlight.css">
+        <link rel="stylesheet" href="../../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../../assets/custom.css">
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../../index.html"><strong aria-hidden="true">1.</strong> Index</a></li><li class="chapter-item expanded "><a href="../../../motivation.html"><strong aria-hidden="true">2.</strong> Motivation</a></li><li class="chapter-item expanded "><a href="../../../architecture.html"><strong aria-hidden="true">3.</strong> Architecture</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../architecture/m1.html"><strong aria-hidden="true">3.1.</strong> M1</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/m1/consensus.html"><strong aria-hidden="true">3.1.1.</strong> Consensus</a></li><li class="chapter-item "><a href="../../../architecture/m1/p2p.html"><strong aria-hidden="true">3.1.2.</strong> P2P layer</a></li><li class="chapter-item "><a href="../../../architecture/m1/execution-system.html"><strong aria-hidden="true">3.1.3.</strong> Execution system</a></li><li class="chapter-item expanded "><a href="../../../architecture/m1/masp.html"><strong aria-hidden="true">3.1.4.</strong> Multi-asset shielded pool</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/m1/masp/trusted-setup.html"><strong aria-hidden="true">3.1.4.1.</strong> Trusted setup</a></li><li class="chapter-item expanded "><a href="../../../architecture/m1/masp/ledger-integration.html" class="active"><strong aria-hidden="true">3.1.4.2.</strong> Ledger integration</a></li><li class="chapter-item "><a href="../../../architecture/m1/masp/shielded-pool-incentives.html"><strong aria-hidden="true">3.1.4.3.</strong> Shielded pool incentives</a></li></ol></li><li class="chapter-item "><a href="../../../architecture/m1/governance.html"><strong aria-hidden="true">3.1.5.</strong> Governance</a></li><li class="chapter-item "><a href="../../../architecture/m1/proof-of-stake.html"><strong aria-hidden="true">3.1.6.</strong> Proof of stake</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/m1/proof-of-stake/bonding-mechanism.html"><strong aria-hidden="true">3.1.6.1.</strong> Bonding mechanism</a></li><li class="chapter-item "><a href="../../../architecture/m1/proof-of-stake/cubic-slashing.html"><strong aria-hidden="true">3.1.6.2.</strong> Cubic slashing</a></li><li class="chapter-item "><a href="../../../architecture/m1/proof-of-stake/reward-distribution.html"><strong aria-hidden="true">3.1.6.3.</strong> Reward distribution</a></li></ol></li><li class="chapter-item "><a href="../../../architecture/m1/inflation-system.html"><strong aria-hidden="true">3.1.7.</strong> Inflation system</a></li><li class="chapter-item "><a href="../../../architecture/m1/fee-system.html"><strong aria-hidden="true">3.1.8.</strong> Fee system</a></li><li class="chapter-item "><a href="../../../architecture/m1/ibc.html"><strong aria-hidden="true">3.1.9.</strong> IBC integration</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/m1/ibc/message.html"><strong aria-hidden="true">3.1.9.1.</strong> Messages</a></li></ol></li><li class="chapter-item "><a href="../../../architecture/m1/ethereum-bridge.html"><strong aria-hidden="true">3.1.10.</strong> Ethereum bridge</a></li><li class="chapter-item "><a href="../../../architecture/m1/web-wallet-interface.html"><strong aria-hidden="true">3.1.11.</strong> Web wallet interface</a></li><li class="chapter-item "><a href="../../../architecture/m1/web-explorer-interface.html"><strong aria-hidden="true">3.1.12.</strong> Web explorer interface</a></li><li class="chapter-item "><a href="../../../architecture/m1/testnets.html"><strong aria-hidden="true">3.1.13.</strong> Testnets</a></li><li class="chapter-item "><a href="../../../architecture/m1/external-integrations.html"><strong aria-hidden="true">3.1.14.</strong> External integrations</a></li></ol></li><li class="chapter-item "><a href="../../../architecture/m2.html"><strong aria-hidden="true">3.2.</strong> M2</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/m2/ferveo.html"><strong aria-hidden="true">3.2.1.</strong> Ferveo</a></li><li class="chapter-item "><a href="../../../architecture/m2/private-bridges.html"><strong aria-hidden="true">3.2.2.</strong> Private bridges</a></li></ol></li><li class="chapter-item "><a href="../../../architecture/a1.html"><strong aria-hidden="true">3.3.</strong> A1</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/a1/state-architecture.html"><strong aria-hidden="true">3.3.1.</strong> State architecture</a></li><li class="chapter-item "><a href="../../../architecture/a1/intent-gossip-system.html"><strong aria-hidden="true">3.3.2.</strong> Intent gossip system</a></li><li class="chapter-item "><a href="../../../architecture/a1/matchmaking.html"><strong aria-hidden="true">3.3.3.</strong> Matchmaking</a></li><li class="chapter-item "><a href="../../../architecture/a1/typhon.html"><strong aria-hidden="true">3.3.4.</strong> Typhon</a></li><li class="chapter-item "><a href="../../../architecture/a1/private-bartering-circuits.html"><strong aria-hidden="true">3.3.5.</strong> Private bartering circuits</a></li><li class="chapter-item "><a href="../../../architecture/a1/private-execution-architecture.html"><strong aria-hidden="true">3.3.6.</strong> Private execution architecture</a></li><li class="chapter-item "><a href="../../../architecture/a1/decentralised-proof-of-identity.html"><strong aria-hidden="true">3.3.7.</strong> Decentralised proof-of-identity</a></li><li class="chapter-item "><a href="../../../architecture/a1/public-goods-funding.html"><strong aria-hidden="true">3.3.8.</strong> Public goods funding</a></li><li class="chapter-item "><a href="../../../architecture/a1/fee-system.html"><strong aria-hidden="true">3.3.9.</strong> Fee system</a></li></ol></li><li class="chapter-item "><a href="../../../architecture/j1.html"><strong aria-hidden="true">3.4.</strong> J1</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/j1/vampir/vampir.html"><strong aria-hidden="true">3.4.1.</strong> Vampir</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../architecture/j1/vampir/ir_design.html"><strong aria-hidden="true">3.4.1.1.</strong> Design Philosophy</a></li><li class="chapter-item "><a href="../../../architecture/j1/vampir/ir_spec.html"><strong aria-hidden="true">3.4.1.2.</strong> Spec (Working Draft)</a></li><li class="chapter-item "><a href="../../../architecture/j1/vampir/juvix-to-vampir.html"><strong aria-hidden="true">3.4.1.3.</strong> Juvix -&gt; Vampir Details</a></li><li class="chapter-item "><a href="../../../architecture/j1/vampir/compilation_diagrams.html"><strong aria-hidden="true">3.4.1.4.</strong> Diagrams</a></li><li class="chapter-item "><a href="../../../architecture/j1/vampir/examples.html"><strong aria-hidden="true">3.4.1.5.</strong> TestCircuit Example</a></li></ol></li></ol></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Anoma Specification</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<h1 id="masp-integration-spec"><a class="header" href="#masp-integration-spec">MASP integration spec</a></h1>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>The overall aim of this integration is to have the ability to provide a
+multi-asset shielded pool following the MASP spec as an account on the
+current Anoma blockchain implementation.</p>
+<h2 id="shielded-pool-vp"><a class="header" href="#shielded-pool-vp">Shielded pool VP</a></h2>
+<p>The shielded value pool can be an Anoma &quot;established account&quot; with a
+validity predicate which handles the verification of shielded
+transactions. Similarly to zcash, the asset balance of the shielded pool
+itself is transparent - that is, from the transparent perspective, the
+MASP is just an account holding assets. The shielded pool VP has the
+following functions:</p>
+<ul>
+<li>Accept only valid transactions involving assets moving in or out of
+the pool.</li>
+<li>Accept valid shielded-to-shielded transactions, which don't move
+assets from the perspective of transparent Anoma.</li>
+<li>Publish the note commitment and nullifier reveal Merkle trees.</li>
+</ul>
+<p>To make this possible, the host environment needs to provide
+verification primitives to VPs. One possibility is to provide a single
+high-level &quot;verify transaction output descriptions and proofs&quot;
+operation, but another is to provide cryptographic functions in the host
+environment and implement the verifier as part of the VP.</p>
+<p>The shielded pool needs the ability to update the commitment and
+nullifier Merkle trees as it receives transactions. This may possibly be
+achievable via the temporary storage mechanism added for IBC, with the
+trees finalized with each block.</p>
+<p>The input to the VP is the following set of state changes:</p>
+<ul>
+<li>updates to the shielded pool's asset balances</li>
+<li>new encrypted notes</li>
+<li>updated note and nullifier tree states (partial, because we only have
+the last block's anchor?)</li>
+</ul>
+<p>and the following data which is ancillary from the ledger's perspective:</p>
+<ul>
+<li>spend descriptions, which destroy old notes:</li>
+</ul>
+<pre><code>struct SpendDescription {
+  // Value commitment to amount of the asset in the note being spent
+  cv: jubjub::ExtendedPoint,
+  // Last block's commitment tree root
+  anchor: bls12_381::Scalar,
+  // Nullifier for the note being nullified
+  nullifier: [u8; 32],
+  // Re-randomized version of the spend authorization key
+  rk: PublicKey,
+  // Spend authorization signature
+  spend_auth_sig: Signature,
+  // Zero-knowledge proof of the note and proof-authorizing key
+  zkproof: Proof&lt;Bls12&gt;,
+}
+</code></pre>
+<ul>
+<li>output descriptions, which create new notes:</li>
+</ul>
+<pre><code>struct OutputDescription {
+  // Value commitment to amount of the asset in the note being created
+  cv: jubjub::ExtendedPoint,
+  // Derived commitment tree location for the output note
+  cmu: bls12_381::Scalar,
+  // Note encryption public key
+  epk: jubjub::ExtendedPoint,
+  // Encrypted note ciphertext
+  c_enc: [u8; ENC_CIPHERTEXT_SIZE],
+  // Encrypted note key recovery ciphertext
+  c_out: [u8; OUT_CIPHERTEXT_SIZE],
+  // Zero-knowledge proof of the new encrypted note's location (?)
+  zkproof: Proof&lt;Bls12&gt;,
+}
+</code></pre>
+<p>Given these inputs:</p>
+<p>The VP must verify the proofs for all spend and output descriptions
+(<code>bellman::groth16</code>), as well as the signature for spend notes.</p>
+<p>Encrypted notes from output descriptions must be published in the
+storage so that holders of the viewing key can view them; however, the
+VP does not concern itself with plaintext notes.</p>
+<p>Nullifiers and commitments must be appended to their respective Merkle
+trees in the VP's storage as well, which is a transaction-level rather
+than a block-level state update.</p>
+<p>Additionally to the individual spend and output description
+verifications, the final transparent asset value change described in the
+transaction must equal the pool asset value change, and as an additional
+sanity check, the pool's balance of any asset may not end up negative
+(this may already be impossible?). (needs more input)</p>
+<p>NB: Shielded-to-shielded transactions in an asset do not, from the
+ledger's perspective, transact in that asset; therefore, the asset's own
+VP is not run as described above, and cannot be because the shielded
+pool is asset-hiding.</p>
+<h2 id="client-capabilities"><a class="header" href="#client-capabilities">Client capabilities</a></h2>
+<p>The client should be able to:</p>
+<ul>
+<li>Make transactions with a shielded sender and/or receiver</li>
+<li>Scan the blockchain to determine shielded assets in one's possession</li>
+<li>Generate payment addresses from viewing keys from spending keys</li>
+</ul>
+<p>To make shielded transactions, the client has to be capable of creating
+and spending notes, and generating proofs which the pool VP verifies.</p>
+<p>Unlike the VP, which must have the ability to do complex verifications,
+the transaction code for shielded transactions can be comparatively
+simple: it delivers the transparent value changes in or out of the pool,
+if any, and proof data computed offline by the client.</p>
+<p>The client and wallet must be extended to support the shielded pool and
+the cryptographic operations needed to interact with it. From the
+perspective of the transparent Anoma protocol, a shielded transaction is
+just a data write to the MASP storage, unless it moves value in or out
+of the pool. The client needs the capability to create notes,
+transactions, and proofs of transactions, but it has the advantage of
+simply being able to link against the MASP crates, unlike the VP.</p>
+<h3 id="making-shielded-transactions"><a class="header" href="#making-shielded-transactions">Making Shielded Transactions</a></h3>
+<h4 id="shielding-transactions"><a class="header" href="#shielding-transactions">Shielding Transactions</a></h4>
+<p>The client should be able to make shielding transactions by providing a
+transparent source address and a shielded payment address. The
+main transparent effect of such a transaction should be a deduction of
+the specified amount from the source address, and a corresponding
+increase in the balance of the MASP validity predicate's address. The
+gas fee is charged to the source address. Once the transaction is
+completed, the spending key that was used to generate the payment address
+will have the authority to spend the amount that was send. Below is an
+example of how a shielding transacion should be made:</p>
+<pre><code>cargo run --bin anomac -- transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
+</code></pre>
+<h4 id="unshielding-transactions"><a class="header" href="#unshielding-transactions">Unshielding Transactions</a></h4>
+<p>The client should be able to make unshielding transactions by providing
+a shielded spending key and a transparent target address. The main
+transparent effect of such a transaction should be a deduction of the
+specified amount from the MASP validity predicate's address and a
+corresponding increase in the transparent target address. The gas fee
+is charged to the signer's address (which should default to the target
+address). Once the transaction is complete, the spending key will no
+longer be able to spend the transferred amount. Below is an example of
+how an unshielding transaction should be made:</p>
+<pre><code>cargo run --bin anomac -- transfer --target Bertha --amount 45 --token BTC --spending-key AA
+</code></pre>
+<h3 id="viewing-shielded-balances"><a class="header" href="#viewing-shielded-balances">Viewing Shielded Balances</a></h3>
+<h3 id="shielded-addresskey-generation"><a class="header" href="#shielded-addresskey-generation">Shielded Address/Key Generation</a></h3>
+<h2 id="protocol"><a class="header" href="#protocol">Protocol</a></h2>
+<h3 id="note-format"><a class="header" href="#note-format">Note Format</a></h3>
+<p>The note structure encodes an asset's type, its quantity and its owner.
+More precisely, it has the following format:</p>
+<pre><code>struct Note {
+  // Diversifier for recipient address
+  d: jubjub::SubgroupPoint,
+  // Diversified public transmission key for recipient address
+  pk_d: jubjub::SubgroupPoint,
+  // Asset value in the note
+  value: u64,
+  // Pedersen commitment trapdoor
+  rseed: Rseed,
+  // Asset identifier for this note
+  asset_type: AssetType,
+  // Arbitrary data chosen by note sender
+  memo: [u8; 512],
+}
+</code></pre>
+<p>For cryptographic details and further information, see
+<a href="https://zips.z.cash/protocol/protocol.pdf#noteptconcept">Note Plaintexts and Memo Fields</a>.
+Note that this structure is required only by the client; the VP only
+handles commitments to this data.</p>
+<p>Diversifiers are selected (randomly?) by the client and used to
+diversify addresses and their associated keys. <code>v</code> and <code>t</code> identify the
+asset type and value. Asset identifiers are derived from asset names,
+which are arbitrary strings (in this case, token/other asset VP
+addresses). The derivation must deterministically result in an
+identifier which hashes to a valid curve point.</p>
+<h3 id="transaction-format"><a class="header" href="#transaction-format">Transaction Format</a></h3>
+<p>The transaction data structure comprises a list of transparent inputs
+and outputs as well as a list of shielded inputs and outputs. More
+precisely:</p>
+<pre><code>struct Transaction {
+    // Transaction version
+    version: u32,
+    // Transparent inputs
+    tx_in: Vec&lt;TxIn&gt;,
+    // Transparent outputs
+    tx_out: Vec&lt;TxOut&gt;,
+    // The net value of Sapling spends minus outputs
+    value_balance_sapling: Vec&lt;(u64, AssetType)&gt;,
+    // A sequence ofSpend descriptions
+    spends_sapling: Vec&lt;SpendDescription&gt;,
+    // A sequence ofOutput descriptions
+    outputs_sapling: Vec&lt;OutputDescription&gt;,
+    // A binding signature on the SIGHASH transaction hash,
+    binding_sig_sapling: [u8; 64],
+}
+</code></pre>
+<p>For the cryptographic constraints and further information, see
+<a href="https://zips.z.cash/protocol/protocol.pdf#txnencoding">Transaction Encoding and Consensus</a>.
+Note that this structure slightly deviates from Sapling due to
+the fact that <code>value_balance_sapling</code> needs to be provided for
+each asset type.</p>
+<h3 id="transparent-input-format"><a class="header" href="#transparent-input-format">Transparent Input Format</a></h3>
+<p>The input data structure decribes how much of each asset is
+being deducted from certain accounts. More precisely, it is as follows:</p>
+<pre><code>struct TxIn {
+    // Source address
+    address: Address,
+    // Asset identifier for this input
+    token: AssetType,
+    // Asset value in the input
+    amount: u64,
+    // A signature over the hash of the transaction
+    sig: Signature,
+    // Used to verify the owner's signature
+    pk: PublicKey,
+}
+</code></pre>
+<p>Note that the signature and public key are required to authenticate
+the deductions.</p>
+<h3 id="transparent-output-format"><a class="header" href="#transparent-output-format">Transparent Output Format</a></h3>
+<p>The output data structure decribes how much is being added to
+certain accounts. More precisely, it is as follows:</p>
+<pre><code>struct TxOut {
+    // Destination address
+    address: Address,
+    // Asset identifier for this output
+    token: AssetType,
+    // Asset value in the output
+    amount: u64,
+}
+</code></pre>
+<p>Note that in contrast to Sapling's UTXO based approach, our
+transparent inputs/outputs are based on the account model used
+in the rest of Anoma.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../architecture/m1/masp/trusted-setup.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../../../architecture/m1/masp/shielded-pool-incentives.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../architecture/m1/masp/trusted-setup.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../../../architecture/m1/masp/shielded-pool-incentives.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript" src="../../../assets/mermaid.min.js"></script>
+        <script type="text/javascript" src="../../../assets/mermaid-init.js"></script>
+
+
+    </body>
+</html>
