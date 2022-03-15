@@ -102,9 +102,9 @@ pool is asset-hiding.
 
 ## Client capabilities
 The client should be able to:
-* Move assets between Anoma accounts and the shielded pool
-* Move assets around within the shielded pool
+* Make transactions with a shielded sender and/or receiver
 * Scan the blockchain to determine shielded assets in one's possession
+* Generate payment addresses from viewing keys from spending keys
 
 To make shielded transactions, the client has to be capable of creating
 and spending notes, and generating proofs which the pool VP verifies.
@@ -122,7 +122,52 @@ of the pool. The client needs the capability to create notes,
 transactions, and proofs of transactions, but it has the advantage of
 simply being able to link against the MASP crates, unlike the VP.
 
-## Note Format
+### Making Shielded Transactions
+#### Shielding Transactions
+The client should be able to make shielding transactions by providing a
+transparent source address and a shielded payment address. The
+main transparent effect of such a transaction should be a deduction of
+the specified amount from the source address, and a corresponding
+increase in the balance of the MASP validity predicate's address. The
+gas fee is charged to the source address. Once the transaction is
+completed, the spending key that was used to generate the payment address
+will have the authority to spend the amount that was send. Below is an
+example of how a shielding transacion should be made:
+```
+anomac transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
+```
+#### Unshielding Transactions
+The client should be able to make unshielding transactions by providing
+a shielded spending key and a transparent target address. The main
+transparent effect of such a transaction should be a deduction of the
+specified amount from the MASP validity predicate's address and a
+corresponding increase in the transparent target address. The gas fee
+is charged to the signer's address (which should default to the target
+address). Once the transaction is complete, the spending key will no
+longer be able to spend the transferred amount. Below is an example of
+how an unshielding transaction should be made:
+```
+anomac transfer --target Bertha --amount 45 --token BTC --spending-key AA
+```
+#### Shielded Transactions
+The client should be able to make shielded transactions by providing a
+shielded spending key and a shielded payment address. There should be
+no change in the transparent balance of the MASP validity predicate's
+address. The gas fee is charged to the signer's address. Once the
+transaction is complete, the spending key will no longer be able to
+spend the transferred amount, but the spending key that was used to
+(directly or indirectly) generate the payment address will. Below is
+an example of how a shielded transaction should be made:
+```
+anomac transfer --spending-key AA --amount 5 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
+```
+### Viewing Shielded Balances
+
+### Shielded Address/Key Generation
+
+## Protocol
+
+### Note Format
 The note structure encodes an asset's type, its quantity and its owner.
 More precisely, it has the following format:
 ```
@@ -153,7 +198,7 @@ which are arbitrary strings (in this case, token/other asset VP
 addresses). The derivation must deterministically result in an
 identifier which hashes to a valid curve point.
 
-## Transaction Format
+### Transaction Format
 The transaction data structure comprises a list of transparent inputs
 and outputs as well as a list of shielded inputs and outputs. More
 precisely:
@@ -181,7 +226,7 @@ Note that this structure slightly deviates from Sapling due to
 the fact that `value_balance_sapling` needs to be provided for
 each asset type.
 
-## Transparent Input Format
+### Transparent Input Format
 The input data structure decribes how much of each asset is
 being deducted from certain accounts. More precisely, it is as follows:
 ```
@@ -200,7 +245,7 @@ struct TxIn {
 ```
 Note that the signature and public key are required to authenticate
 the deductions.
-## Transparent Output Format
+### Transparent Output Format
 The output data structure decribes how much is being added to
 certain accounts. More precisely, it is as follows:
 ```
