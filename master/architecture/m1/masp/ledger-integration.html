@@ -265,7 +265,7 @@ gas fee is charged to the source address. Once the transaction is
 completed, the spending key that was used to generate the payment address
 will have the authority to spend the amount that was send. Below is an
 example of how a shielding transacion should be made:</p>
-<pre><code>cargo run --bin anomac -- transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
+<pre><code>anomac transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
 </code></pre>
 <h4 id="unshielding-transactions"><a class="header" href="#unshielding-transactions">Unshielding Transactions</a></h4>
 <p>The client should be able to make unshielding transactions by providing
@@ -277,7 +277,18 @@ is charged to the signer's address (which should default to the target
 address). Once the transaction is complete, the spending key will no
 longer be able to spend the transferred amount. Below is an example of
 how an unshielding transaction should be made:</p>
-<pre><code>cargo run --bin anomac -- transfer --target Bertha --amount 45 --token BTC --spending-key AA
+<pre><code>anomac transfer --target Bertha --amount 45 --token BTC --spending-key AA
+</code></pre>
+<h4 id="shielded-transactions"><a class="header" href="#shielded-transactions">Shielded Transactions</a></h4>
+<p>The client should be able to make shielded transactions by providing a
+shielded spending key and a shielded payment address. There should be
+no change in the transparent balance of the MASP validity predicate's
+address. The gas fee is charged to the signer's address. Once the
+transaction is complete, the spending key will no longer be able to
+spend the transferred amount, but the spending key that was used to
+(directly or indirectly) generate the payment address will. Below is
+an example of how a shielded transaction should be made:</p>
+<pre><code>anomac transfer --spending-key AA --amount 5 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
 </code></pre>
 <h3 id="viewing-shielded-balances"><a class="header" href="#viewing-shielded-balances">Viewing Shielded Balances</a></h3>
 <h3 id="shielded-addresskey-generation"><a class="header" href="#shielded-addresskey-generation">Shielded Address/Key Generation</a></h3>
