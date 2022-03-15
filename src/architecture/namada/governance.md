@@ -1,6 +1,6 @@
 # Namada Governance
 
-Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some `NamadaT` will be able to prosose some changes to which delegators and validator will cast their `yay` or `nay` votes. Governance on Anoma supports both `signaling` and `voting` mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on `off chain` signaling to agree on a common move.
+Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some `NAM` will be able to prosose some changes to which delegators and validator will cast their `yay` or `nay` votes. Governance on Anoma supports both `signaling` and `voting` mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on `off chain` signaling to agree on a common move.
 
 ## On-chain protocol
 
@@ -56,18 +56,18 @@ The `content` value should follow a standard format. We leverage something simil
 
 `counter` is used to assign a unique, incremental ID to each proposal.\
 `min_proposal_fund` represents the minimum amount of locked tokens to submit a proposal.\
-`max_proposal_code_size` is the maximum allowed size (in kilobytes) of the proposal wasm code.\
+`max_proposal_code_size` is the maximum allowed size (in bytes) of the proposal wasm code.\
 `min_proposal_period` sets the minimum voting time window (in `Epoch`).\
 `max_proposal_content_size` tells the maximum number of characters allowed in the proposal content.\
 `min_proposal_grace_epochs` is the minimum required time window (in `Epoch`) between `end_epoch` and the epoch in which the proposal has to be executed.
 
-The governance machinery also relies on a subkey stored under the `M1T` token address:
+The governance machinery also relies on a subkey stored under the `NAM` token address:
 
 ```
-/$M1TAddress/balance/$GovernanceAddress: u64
+/$NAMAddress/balance/$GovernanceAddress: u64
 ```
 
-This is to leverage the `M1T` VP to check that the funds were correctly locked.
+This is to leverage the `NAM` VP to check that the funds were correctly locked.
 The governance subkey, `/$GovernanceAddress/proposal/$id/funds` will be used after the tally step to know the exact amount of tokens to refund or move to Treasury.
 
 ### GovernanceAddress VP
@@ -201,7 +201,7 @@ If a delegator votes opposite to its validator this will *overri*de the correspo
 
 ### Tally
 At the beginning of each new epoch (and only then), in the `BeginBlock` event, talling will occur for all the proposals ending at this epoch (specified via the `endEpoch` field).
-The proposal has a positive outcome if 2/3 of the staked `NamadaT` total is voting `yay`.
+The proposal has a positive outcome if 2/3 of the staked `NAM` total is voting `yay`.
 The tally can also be manually computed via CLI command. The tally method behavior will be the following:
 
 ```rust=
@@ -255,7 +255,7 @@ Funds locked in `TreasuryAddress` address should be spendable only if a 2/3+ vot
 
 The funds will be stored under:
 ```
-/$M1TAddress/balance/$TreasuryAddress: u64
+/$NAMAddress/balance/$TreasuryAddress: u64
 ```
 
 ### TreasuryAddress VP
