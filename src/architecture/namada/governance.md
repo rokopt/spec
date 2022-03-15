@@ -50,7 +50,7 @@ The `content` value should follow a standard format. We leverage something simil
 /$GovernanceAddress/min_proposal_fund: u64
 /$GovernanceAddress/max_proposal_code_size: u64
 /$GovernanceAddress/min_proposal_period: u64
-/$GovernanceAddress/max_proposal_content: u64
+/$GovernanceAddress/max_proposal_content_size: u64
 /$GovernanceAddress/min_proposal_grace_epochs: u64
 ```
 
@@ -59,7 +59,7 @@ The `content` value should follow a standard format. We leverage something simil
 `max_proposal_code_size` is the maximum allowed size (in kilobytes) of the proposal wasm code.\
 `min_proposal_period` sets the minimum voting time window (in `Epoch`).\
 `max_proposal_content_size` tells the maximum number of characters allowed in the proposal content.\
-`min_proposal_grace_epochs` is the minimum required number of `Epoch` between `start_epoch` and `end_epoch`.
+`min_proposal_grace_epochs` is the minimum required time window (in `Epoch`) between `end_epoch` and the epoch in which the proposal has to be executed.
 
 The governance machinery also relies on a subkey stored under the `M1T` token address:
 
@@ -68,7 +68,7 @@ The governance machinery also relies on a subkey stored under the `M1T` token ad
 ```
 
 This is to leverage the `M1T` VP to check that the funds were correctly locked.
-The governance subkey, `/$GovernanceAddress/proposal/$id/funds` will be used after the tally step to know the exact amount of tokens to refund/slash.
+The governance subkey, `/$GovernanceAddress/proposal/$id/funds` will be used after the tally step to know the exact amount of tokens to refund or move to Treasury.
 
 ### GovernanceAddress VP
 Just like Pos, also governance has his own storage space. The `GovernanceAddress` validity predicate task is to check the integrity and correctness of new proposals. A proposal, to be correct, must satisfy the followings:
@@ -97,7 +97,7 @@ pub fn proposal_vp(tx_data: Vec<u8>, addr: Address, keys_changed: HashSet<Key>, 
              return (is_delegator(verifiers) || (is_validator(verifiers) && current_epoch_is_2_3(addr, id))) && is_valid_signature(tx_data);
         } else if is_content_key(key) {
             let post_content = read_post(key)
-            return !has_pre(key) && post_content.len() < MAX_PROPOSAL_CONTENT_LENGTH;
+            return !has_pre(key) && post_content.len() < MAX_PROPOSAL_CONTENT_SIZE;
         } else if is_author_key(key) {
             return !has_pre(key)  
         } else if is_proposa_code_key(key) {
