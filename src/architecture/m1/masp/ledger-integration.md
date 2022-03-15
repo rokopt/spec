@@ -162,9 +162,41 @@ an example of how a shielded transaction should be made:
 anomac transfer --spending-key AA --amount 5 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005
 ```
 ### Viewing Shielded Balances
+The client should be able to view the balance at a shielded address.
+This should be possible using only a viewing key, however supplying
+a spending key is permissible. The output should be a list of pairs,
+each denoting a token type and the unspent amount of that token
+present at the shielded address. Note that it should be possible to
+restrict the balance query to check only for a specific token type.
+Below is are examples of how balance queries should be made:
+```
+anomac balance --spending-key AA
+anomac balance --viewing-key 628a9956322f3f7d20b19801d9b4a8f3cb4b8b756a26ef2477feb5264be7b808c920996f37a79433d08e27fefcda0b6736c296b1073734a4ee35d11368f2b52ef14d7c1749cc8119ecc8a894f696992453f2dd78ef1e9d74172b2a5ef7cc8c50
+```
 
 ### Shielded Address/Key Generation
-
+#### Viewing Key Generation
+The client should be able to derive a viewing key for any given
+spending key. This key should be usable to determine the total
+unspent notes that the spending key is authorized to spend. It should
+also be able to generate payment addresses such that the originating
+spending key has the authority to spend notes sent to them. It should
+not be possible to directly or indirectly use the viewing key to spend
+funds. Below is an example of how viewing keys should be generated:
+```
+anomaw -- masp derive-view-key --spending-key AA
+```
+#### Payment Address Generation
+The client should be able to generate a payment address from a
+spending key or viewing key. This payment address should be usable
+to send notes to the originating spending key. It should not be
+directly or indirectly usable to either spend notes or view shielded
+balances. Below are examples of how payment addresses should be
+generated:
+```
+anomaw masp gen-payment-addr --spending-key AA
+anomaw masp gen-payment-addr --viewing-key 628a9956322f3f7d20b19801d9b4a8f3cb4b8b756a26ef2477feb5264be7b808c920996f37a79433d08e27fefcda0b6736c296b1073734a4ee35d11368f2b52ef14d7c1749cc8119ecc8a894f696992453f2dd78ef1e9d74172b2a5ef7cc8c50
+```
 ## Protocol
 
 ### Note Format
