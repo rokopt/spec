@@ -78,4 +78,4 @@ Following that, we subcribe to events on the ledger using a query containing `tm
 
 The way this library in `anoma-wallet/src/lib/` is implemented, we can also determine when we want to disconnect the WebSocket. For instance, if for some reason we want to issue a series of transactions in succession, we could feasibly leave the connection open, then close after the final transaction is complete. Alternatively, and in most cases, we would simply close the connection when we are finished with a single transaction, which would then trigger the `onComplete` callback.
 
-See [Transparent Transactions](./transparent-transactions.md) for more information on how the .
+See [Transparent Transactions](./transparent-transactions.md) for more information on how the transactions are initially constructed.
