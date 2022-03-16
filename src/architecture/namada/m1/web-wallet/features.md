@@ -19,7 +19,7 @@ The user should be able to:
 
 [hifi Designs](https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=5165%3A8862)
 
-When entering the app, the user should be prompted for a password to decrypt the key pair to be able to perform actions [wireframe](https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A5801). Following that, the user can:
+When entering the app, the user should be prompted for a password to decrypt the key pair (see [wireframe](https://www.figma.com/file/aiWZpaXjPLW6fDjE7dpFaU/Projects-2021?node-id=6442%3A5801)). Following that, the user can:
 
 - Create accounts derived from the master key pair
 - Delete accounts
