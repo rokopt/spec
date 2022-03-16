@@ -29,7 +29,7 @@ Here are some numbers from other projects
 | Ethereum                                         | 47   |
 | Solana                                           | 77   |
 
-<<<<<<< HEAD
+
 Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
 ### Related work
@@ -44,10 +44,10 @@ Solana has the following model where the inflation that is produced for rewards 
 
 In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. 
 
-<!--### Inflation model
+### Inflation model
 =======
 Our desired percentage for Namada is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
->>>>>>> upstream/master
+
 
 The privacy that MASP is providying depends on the asset in the shielded pool. A transaction can only be private if it can hide among other transactions, hence more funds and activity in the shielded pool increase privacy for transactions. 
 
@@ -58,7 +58,7 @@ Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the h
 
 In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. 
 
-For funds going to treasury Near protocol where 5 % goes to treasury and Polkadot sends the difference between inflation for PoS and the total constant inflation to treasury.  
+For funds going to treasury Near protocol where 5 % goes to treasury and Polkadot sends the difference between inflation for PoS and the total constant inflation to treasury.
 
 ###  Model
 
@@ -84,7 +84,7 @@ We define $I_{PoS}$ as follows.
 
 $$ I_{PoS} =
   \begin{cases}
-   (max(I_{PoS})/2) (1 + \frac{R}{R_{target} })      & \quad R<R_{target}\\
+   (max(I_{PoS})/2) (1 + \frac{R}{R_{target} })      & \quad R< R_{target}\\
    \\
    max(I_{PoS})  * 2 ^{-\frac{R-R_{target}}{1-R_{target}}} & \quad R>=R_{target}
   \end{cases}
@@ -100,7 +100,7 @@ We define $I_{L}$ as follows.
 
 $$ I_{L} =
   \begin{cases}
-   max(I_L)(\frac{L_{target}-L_t}{L_{target}})      & \quad L<L_{target}\\
+   max(I_L)(\frac{L_{target}-L_t}{L_{target}})      & \quad L< L_{target}\\
    \\
    0 & \quad L>=L_{target}
   \end{cases}
@@ -116,7 +116,7 @@ The funds going to treasury is a constant %, for example 1 %. Same goes for $D_T
 
 We need to define $max(I_{PoS})$, $max(I_L)$, and $I_T$ to bound total inflation. 
 
-$max(I_{PoS})+max(I_L)+I_T=<max(I)$ 
+$max(I_{PoS})+max(I_L)+I_T=< max(I)$ 
 
 The sum of $I_L$ and other $I_L1,...,I_Ln$ will also be limited. If their sum would exceed the limit, then we need to scale them down to stay within the limit. 
 
