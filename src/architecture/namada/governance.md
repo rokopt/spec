@@ -207,22 +207,23 @@ The tally can also be manually computed via CLI command. The tally method behavi
 ```rust=
 fn compute_tally(proposal_id: u64) {
     let vote_addresses = get_proposal_vote_iter(proposal_id).map(|addr| addr)
-    let total_nom: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    // NAM is the native token
+    let total_nam: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
     
     let delegators =  vote_addresses.filter(|addr| addr.is_delegator())
     let yay_addresses = vote_addresses.filter(|addr| read_vote(proposal_id, addr) == 'yay')
     
     let yay_validators = yay_addresses.filter(|addr| addr.is_validator())
-    let yay_validators_nom = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    let yay_validators_nam = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
     
     for delegator in delegators {
         if yay_validators.contains(delegator.get_correspoding_validator()) {
             if read_vote(proposal_id, delegator) == 'nay' {
-                yay_validators_nom -= get_addr_balance(delegator)
+                yay_validators_nam -= get_addr_balance(delegator)
             }
         }
     }
-    return yay_validators_nom / total_nom >= 0.66;
+    return yay_validators_nam / total_nam >= 0.66;
 }
 ```
 
