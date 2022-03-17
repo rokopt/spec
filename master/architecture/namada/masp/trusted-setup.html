@@ -145,6 +145,48 @@
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <h1 id="trusted-setup"><a class="header" href="#trusted-setup">Trusted setup</a></h1>
+<h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
+<p>Trusted Setups Ceremonies (and not multi-party computation protocols) were born with the conception of zk-SNARKs - Zero-knowledge succinct non-interactive arguments of knowledge. These ceremonies or events allow one to generate, in a distributed and trustless manner, the hidden randomnesss that constructs the parameters of the zk-SNARK. </p>
+<p>The first historical ceremony was the one for Zcash Sprout and was totally manual. The participants transferred DVDs between computers and burnt them in the end. Until recently, Trusted Setups required a lot of time, coordination and weren't that much scalable - only a dozens of participants would be allowed. Thanks to the advances in MPC - multi-party computation - for this specific application, we are now able to run a ceremony for thousands of participants in an automatic and somehow &quot;parellel&quot; manner. The protocol we are going to use for our Ceremony is called &quot;optimistic MMORPG MPC&quot; and it's a slight improvement to the <a href="https://eprint.iacr.org/2017/1050.pdf">original paper MMORPG MPC</a> implemented by Celo and Aleo.</p>
+<h2 id="high-level-overview"><a class="header" href="#high-level-overview">High-level overview</a></h2>
+<h3 id="what-is-the-anoma-setup"><a class="header" href="#what-is-the-anoma-setup">What is the Anoma Setup?</a></h3>
+<p>To enable private asset-agnostic bartering among any number of parties, Anoma uses a Multi-Asset Shielded Pool (MASP) circuit which is an extension of the Sapling circuit used in Zcash. This relies on a specific class of zero-knowledge proofs called zk-SNARKs. The setup ceremony generates the public parameters for the zk-SNARKs. In order to ensure the random numbers that derive the parameters aren't known by anyone, we are running a MPC ceremony which allow multiple independent parties to construct the parameters. As long as one contributor is honest, the security of the overall system is guaranteed.</p>
+<h4 id="who-are-the-actors"><a class="header" href="#who-are-the-actors">Who are the actors?</a></h4>
+<p>In a Trusted Setup, we have 3 distinct actors:</p>
+<ol>
+<li>The <strong>Coordinator</strong> who orchestrates the ceremony by generating challenges and keeping track of each contributor's progress.</li>
+<li>The <strong>Operator</strong> who controls and monitors the Coordinator - that's us that will type commands. </li>
+<li>The <strong>Contributors or Participants</strong> who receive challenges and send them back with added randomness.</li>
+</ol>
+<p><img src="./trusted-setup-assets/trusted-setup-actors.png" alt="" /></p>
+<h3 id="how-exactly-does-the-setup-work"><a class="header" href="#how-exactly-does-the-setup-work">How exactly does the setup work?</a></h3>
+<h4 id="the-phases"><a class="header" href="#the-phases">The phases</a></h4>
+<p>A Trusted Setup consists in 2 phases:</p>
+<p><strong>Phase 1 (aka the Powers of Tau)</strong> is circuit-agnostic i.e anyone who want to build a zk-SNARK can reuse the output of this phase to bootstrap their zk-SNARK e.g. we are going to take the Zcash Powers of Tau as input for our MASP circuit.</p>
+<ol>
+<li>A coordinator generates an accumulator</li>
+<li>Participant downloads the latest accumulator</li>
+<li>Participant contributes their randomness to the accumulator (randomness is permantently deleted after this step)</li>
+<li>Participant uploads the accumulator back to the coordinator</li>
+<li>Coordinator verifies the accumulator was transformed correctly and produces a new challenge</li>
+</ol>
+<p><strong>Phase 2 (aka parameterization to Groth16)</strong> is circuit-specific. It's where we construct our zk-SNARK circuit (MASP circuit) itself.</p>
+<ol>
+<li>Coordinator &quot;prepares&quot; the parameters from Phase 1 and converts them to Lagrange Coefficients</li>
+<li>Participant downloads the latest state of the parameters</li>
+<li>Participant contributes their randomness to the parameters (randomness is permantently deleted after this step)</li>
+<li>Participant uploads the parameters back to the coordinator</li>
+<li>Coordinator verifies the accumulator was transformed correctly</li>
+<li>Loop from 2 for all participants</li>
+</ol>
+<p>This produces parameters which can then be used for constructing Groth16 SNARKs for that circuit. The setup is sound so long as 1 party was honest and destroyed their randomness or &quot;toxic waste&quot; in step 3.</p>
+<h4 id="mmorpg-mpc"><a class="header" href="#mmorpg-mpc">MMORPG MPC</a></h4>
+<p>Independently from the phase, the actors and the steps to run the protocol are the same. Without going into the cryptographic details in this section, the operator generates a challenge called a <em>Structured Reference String (SRS)</em> sends it to the first participant who takes it as input, does some computation and then sends the output back to the coordinator. The coordinator verifies the correctness of the processed challenge and sends it to the next participant in the queue. This is done sequentially.</p>
+<h4 id="optimistic-mmorpg-mpc"><a class="header" href="#optimistic-mmorpg-mpc">Optimistic MMORPG MPC</a></h4>
+<p>In order to facilitate multiple participants in a round, the SRS is split up into many <em>chunks</em>. It allows participants to acquire a lock on a given chunk where they process the computation, send it back to the coordinator and then acquire the next chunk. This makes the protocol somehow <em>parellel</em> where the number of particpants during the same timeframe is increased.</p>
+<p><img src="./trusted-setup-assets/optimistic-mmorpg-mpc-diagram.png" alt="" /></p>
+<h4 id="contribution-sequence-diagram"><a class="header" href="#contribution-sequence-diagram">Contribution Sequence Diagram</a></h4>
+<p><img src="./trusted-setup-assets/contribution-sequence-diagram.png" alt="" /></p>
 
                     </main>
 

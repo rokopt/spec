@@ -144,7 +144,62 @@
                 <div id="content" class="content">
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
-<h1 id="messages"><a class="header" href="#messages">Messages</a></h1>
+<h1 id="ibc-message"><a class="header" href="#ibc-message">IBC message</a></h1>
+<p>IBC messages are defined in <code>ibc-rs</code>. The message should be encoded with Protobuf (NOT with Borsh) as the following code to set it as a transaction data.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use ibc::tx_msg::Msg;
+
+pub fn make_ibc_data(message: impl Msg) -&gt; Vec&lt;u8&gt; {
+    let msg = message.to_any();
+    let mut tx_data = vec![];
+    prost::Message::encode(&amp;msg, &amp;mut tx_data).expect(&quot;encoding IBC message shouldn't fail&quot;);
+    tx_data
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>
+<p>Client</p>
+<ul>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/5ddec6d2571b1376de7d9ebe7e353b3cd726c2d3/modules/src/core/ics02_client/msgs/create_client.rs#L19-L23">MsgCreateAnyClient</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics02_client/msgs/misbehavior.rs#L17-L24">MsgSubmitAnyMisbehaviour</a> (NOT supported yet)</li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/5ddec6d2571b1376de7d9ebe7e353b3cd726c2d3/modules/src/core/ics02_client/msgs/update_client.rs#L20-L24">MsgUpdateAnyClient</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics02_client/msgs/upgrade_client.rs#L24-L31">MsgUpgradeAnyClient</a></li>
+</ul>
+</li>
+<li>
+<p>Connection</p>
+<ul>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics03_connection/msgs/conn_open_init.rs#L21-L27">MsgConnectionOpenInit</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics03_connection/msgs/conn_open_try.rs#L29-L38">MsgConnectionOpenTry</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics03_connection/msgs/conn_open_ack.rs#L20-L27">MsgConnectionOpenAck</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics03_connection/msgs/conn_open_confirm.rs#L19-L23">MsgConnectionOpenConfirm</a></li>
+</ul>
+</li>
+<li>
+<p>Channel</p>
+<ul>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/chan_open_init.rs#L17-L21">MsgChannelOpenInit</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/chan_open_try.rs#L22-L29">MsgChannelOpenTry</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/chan_open_ack.rs#L18-L25">MsgChannelOpenAck</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/chan_open_confirm.rs#L18-L23">MsgChannelOpenConfirm</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/recv_packet.rs#L19-L23">MsgRecvPacket</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/acknowledgement.rs#L19-L24">MsgAcknowledgement</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/chan_close_init.rs#L18-L22">MsgChannelCloseInit</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/chan_close_confirm.rs#L20-L25">MsgChannelCloseConfirm</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/timeout.rs#L19-L24">MsgTimeout</a></li>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/core/ics04_channel/msgs/timeout_on_close.rs#L18-L23">MsgTimeoutOnClose</a></li>
+</ul>
+</li>
+<li>
+<p>ICS20 FungibleTokenTransfer</p>
+<ul>
+<li><a href="https://github.com/informalsystems/ibc-rs/blob/1448a2bbc817da10b183b8479548a12344ba0e9c/modules/src/applications/ics20_fungible_token_transfer/msgs/transfer.rs#L20-L37">MsgTransfer</a></li>
+</ul>
+</li>
+</ul>
 
                     </main>
 
