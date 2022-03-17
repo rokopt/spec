@@ -1,6 +1,6 @@
 # Cubic slashing
 
-M1 implements cubic slashing, meaning that the amount of a slash is proportional to the cube of the voting power committing infractions discovered within a particular interval. This is designed to make it riskier to operate larger or similarly configured validators, and thus encourage network resilience.
+Namada implements cubic slashing, meaning that the amount of a slash is proportional to the cube of the voting power committing infractions discovered within a particular interval. This is designed to make it riskier to operate larger or similarly configured validators, and thus encourage network resilience.
 
 When a slash is detected:
 1. Enqueue the slash for processing _at the end of the epoch after the current epoch_ (if slash is detected in epoch 10, processing is scheduled for the end of epoch 11)

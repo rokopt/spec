@@ -95,7 +95,7 @@ To a validator who proposed a block, the system rewards tokens based on the `blo
 
 ### Slashing
 
-An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who has bonded stake will be slashed once an offence has been detected. 
+An important part of the security model of Namada is based on making attacking the system very expensive. To this end, the validator who has bonded stake will be slashed once an offence has been detected. 
 
 These are the types of offences: 
 * Equivocation in consensus 

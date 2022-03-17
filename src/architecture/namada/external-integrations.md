@@ -4,7 +4,7 @@
 
 * Custodians
   * Aegies
-* Indexer for M1 to integrate with block explorers
+* Indexer for Namada to integrate with block explorers
 * Validator tooling
 * Stakeholder support
   * Rosetta integration

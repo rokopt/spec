@@ -13,7 +13,7 @@ The protocol controls Namada token NAM (the native staking token) sourced from t
     - These tokens are slowly burned at a fixed fraction per epoch.
 4. A set of configurable custom sinks, which can be addresses on Namada, addresses on Ethereum (over the Ethereum bridge), or addresses on other chains connected over IBC.
     - These can be paid fixed amounts per epoch.
-    - Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by M1 governance.
+    - Initial receipients will be configured at genesis, and recipients can be added, removed, or altered by Namada governance.
 
 ## Token Inflation
 In general, inflation refers to the process of a currency losing its purchasing power over time. While this is a classical economic phenomenon, the way cryptocurrencies are produced permits great control over money supply, and doing so cleverly can have positive effects such as increasing incentives. The Namada inflation model depends on several factors, such as ratio between locked and liquid tokens (described below), the multi-asset shielded pool, and funds for treasury. 
@@ -30,7 +30,7 @@ Here are some numbers from other projects
 | Solana                                           | 77   |
 
 
-Our desired percentage for M1 is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
+Our desired percentage for Namada is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
 ### Related work
 Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol has an inflation rate of 5% while Ethereum 2.0 has an inflation rate of 1.4% (post EIP-1559). Solana starts with a high inflation rate that decreases over time, as less transaction fees are burnt.
@@ -62,7 +62,7 @@ For funds going to treasury Near protocol where 5 % goes to treasury and Polkado
 
 ###  Model
 
-Let us assume $T$ is the total token supply and $I$ is total inflation of M1. 
+Let us assume $T$ is the total token supply and $I$ is total inflation of Namada. 
 
 $$I=\frac{T_\textrm{end of year}-T_\textrm{beginning of year}}{T_\textrm{beginning of year}}$$
 

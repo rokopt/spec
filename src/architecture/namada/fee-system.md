@@ -1,7 +1,7 @@
 # Fee system
 
 This specification should cover:
-- Fee & gas system for M1
+- Fee & gas system for Namada
 
 ## Transaction Fees 
 

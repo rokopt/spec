@@ -1,6 +1,6 @@
 # Proof of Stake (PoS)
 
-This section of the specification describes the proof-of-stake mechanism of M1, which is largely modeled after [Cosmos bonded proof-of-stake](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/spec/README.md), but makes significant changes to bond storage representation, validator set change handling, reward distribution, and slashing, with the general aims of increased precision in reasoning about security, validator decentralisation, and avoiding unnecessary proof-of-stake-related transactions.
+This section of the specification describes the proof-of-stake mechanism of Namada, which is largely modeled after [Cosmos bonded proof-of-stake](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/spec/README.md), but makes significant changes to bond storage representation, validator set change handling, reward distribution, and slashing, with the general aims of increased precision in reasoning about security, validator decentralisation, and avoiding unnecessary proof-of-stake-related transactions.
 
 This section is split into three subcomponents: the [bonding mechanism](./proof-of-stake/bonding-mechanism.md), [reward distribution](./proof-of-stake/reward-distribution.md), and [cubic slashing](./proof-of-stake/cubic-slashing.md).
 
@@ -11,7 +11,7 @@ Blockchain system rely on economic security to prevent abuse and for actors to b
 ## Goals of Rewards and Slashing: Liveness and Security
 
 * **Security: Delegation and Slashing**: we want to make sure  validators backed by enough funds to make misbehaviour very expensive. Security is achieved by punishing (slashing) if they do. *Slashing* locked funds (stake) intends to disintensivize diverting from correct execution of protocol, which is this case is voting to finalize valid blocks. 
-* **Liveness: Paying Rewards**. For continued operation of M1 we want to incentivize participating in consensus and delegation, which helps security.
+* **Liveness: Paying Rewards**. For continued operation of Namada we want to incentivize participating in consensus and delegation, which helps security.
 
 ### Security 
 

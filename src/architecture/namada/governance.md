@@ -1,6 +1,6 @@
-# M1 Governance
+# Namada Governance
 
-Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some `M1T` will be able to prosose some changes to which delegators and validator will cast their `yay` or `nay` votes. Governance on Anoma supports both `signaling` and `voting` mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on `off chain` signaling to agree on a common move.
+Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some `NamadaT` will be able to prosose some changes to which delegators and validator will cast their `yay` or `nay` votes. Governance on Anoma supports both `signaling` and `voting` mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on `off chain` signaling to agree on a common move.
 
 ## On-chain protocol
 
@@ -201,28 +201,29 @@ If a delegator votes opposite to its validator this will *overri*de the correspo
 
 ### Tally
 At the beginning of each new epoch (and only then), in the `BeginBlock` event, talling will occur for all the proposals ending at this epoch (specified via the `endEpoch` field).
-The proposal has a positive outcome if 2/3 of the staked `M1T` total is voting `yay`.
+The proposal has a positive outcome if 2/3 of the staked `NamadaT` total is voting `yay`.
 The tally can also be manually computed via CLI command. The tally method behavior will be the following:
 
 ```rust=
 fn compute_tally(proposal_id: u64) {
     let vote_addresses = get_proposal_vote_iter(proposal_id).map(|addr| addr)
-    let total_m1t: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    // NAM is the native token
+    let total_nam: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
     
     let delegators =  vote_addresses.filter(|addr| addr.is_delegator())
     let yay_addresses = vote_addresses.filter(|addr| read_vote(proposal_id, addr) == 'yay')
     
     let yay_validators = yay_addresses.filter(|addr| addr.is_validator())
-    let yay_validators_m1t = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    let yay_validators_nam = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
     
     for delegator in delegators {
         if yay_validators.contains(delegator.get_correspoding_validator()) {
             if read_vote(proposal_id, delegator) == 'nay' {
-                yay_validators_m1t -= get_addr_balance(delegator)
+                yay_validators_nam -= get_addr_balance(delegator)
             }
         }
     }
-    return yay_validators_m1t / total_m1t >= 0.66;
+    return yay_validators_nam / total_nam >= 0.66;
 }
 ```
 
