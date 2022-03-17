@@ -48,3 +48,21 @@ The goal of bridging wasm and the client TypeScript application should be to mak
 ### Dealing with Rust types in TypeScript
 
 One of the challenges of working with WebAssembly is how we might go about handling types from Rust code. We are limited to what JavaScript can handle, and often when serializing output from the wasm, we'll choose a simple type like `string` or `number`, or send the data as a byte array (very common, especially when dealing with numbers larger than JavaScript can handle by default). Sending raw data to the client is often a decent solution, then any encoding we prefer we can enact on the client-side (hexadecimal, base58, base64, etc), and choosing a Rust type like `Vec<u8>` makes this straight-forward. _(More to come on this topic in the future)_
+
+There is much more nuance to handling types from Rust wasm in TypeScript when working with `wasm-bindgen`, and more information can be found at the following URL:
+
+https://rustwasm.github.io/wasm-bindgen/reference/types.html
+
+## Testing with WebAssembly
+
+The wallet-interface should be able to run within the Jest testing framework. This is made possibly by switching our `wasm-pack` target and rebuilding before the test is run, as tests run within NodeJS. So, instead of the following:
+
+```bash
+wasm-pack build ../anoma-lib/ --out-dir ../anoma-wallet/src/lib/anoma --out-name anoma --target web
+```
+
+We would issue this in order to support Jest in NodeJS:
+
+```bash
+wasm-pack build ../anoma-lib/ --out-dir ../anoma-wallet/src/lib/anoma --out-name anoma --target nodejs
+```
