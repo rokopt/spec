@@ -218,7 +218,7 @@ Unbonded tokens may be withdrawn in or after the <a href="#unbond">unbond's epoc
 <p>Until we have programmable validity predicates, rewards can use the mechanism outlined in the <a href="https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf">F1 paper</a>, but it should use the exponential model, so that withdrawing rewards more frequently provides no additional benefit (this is a design constraint we should follow in general, we don't want to accidentally encourage transaction spam). This should be written in a way that allows for a natural upgrade to a validator-customisable rewards model (defaulting to this one) if possible.</p>
 <p>To a validator who proposed a block, the system rewards tokens based on the <code>block_proposer_reward</code> <a href="#system-parameters">system parameter</a> and each validator that voted on a block receives <code>block_vote_reward</code>.</p>
 <h3 id="slashing"><a class="header" href="#slashing">Slashing</a></h3>
-<p>An important part of the security model of M1 is based on making attacking the system very expensive. To this end, the validator who has bonded stake will be slashed once an offence has been detected. </p>
+<p>An important part of the security model of Namada is based on making attacking the system very expensive. To this end, the validator who has bonded stake will be slashed once an offence has been detected. </p>
 <p>These are the types of offences: </p>
 <ul>
 <li>Equivocation in consensus 

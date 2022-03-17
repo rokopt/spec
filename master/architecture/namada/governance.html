@@ -144,8 +144,8 @@
                 <div id="content" class="content">
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
-<h1 id="m1-governance"><a class="header" href="#m1-governance">M1 Governance</a></h1>
-<p>Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some <code>M1T</code> will be able to prosose some changes to which delegators and validator will cast their <code>yay</code> or <code>nay</code> votes. Governance on Anoma supports both <code>signaling</code> and <code>voting</code> mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on <code>off chain</code> signaling to agree on a common move.</p>
+<h1 id="namada-governance"><a class="header" href="#namada-governance">Namada Governance</a></h1>
+<p>Anoma introduce a governance mechanism to propose and apply protocol changes with and without the need for an hard fork. Anyone holding some <code>NamadaT</code> will be able to prosose some changes to which delegators and validator will cast their <code>yay</code> or <code>nay</code> votes. Governance on Anoma supports both <code>signaling</code> and <code>voting</code> mechanism. The difference between the the two, is that the former is needed when the changes require an hard fork. In cases where the chain is not able to produce blocks anymore, Anoma relies on <code>off chain</code> signaling to agree on a common move.</p>
 <h2 id="on-chain-protocol"><a class="header" href="#on-chain-protocol">On-chain protocol</a></h2>
 <h3 id="governance-address"><a class="header" href="#governance-address">Governance Address</a></h3>
 <p>Governance adds 2 internal addresses:</p>
@@ -328,29 +328,30 @@ Validators will be able to vote only for 2/3 of the total voting period, meanwhi
 If a delegator votes opposite to its validator this will <em>overri</em>de the corresponding vote of this validator (e.g. if a delegator has a voting power of 200 and votes opposite to the delegator holding these tokens, than 200 will be subtracted from the votig power of the involved validator).</p>
 <h3 id="tally"><a class="header" href="#tally">Tally</a></h3>
 <p>At the beginning of each new epoch (and only then), in the <code>BeginBlock</code> event, talling will occur for all the proposals ending at this epoch (specified via the <code>endEpoch</code> field).
-The proposal has a positive outcome if 2/3 of the staked <code>M1T</code> total is voting <code>yay</code>.
+The proposal has a positive outcome if 2/3 of the staked <code>NamadaT</code> total is voting <code>yay</code>.
 The tally can also be manually computed via CLI command. The tally method behavior will be the following:</p>
 <pre><pre class="playground"><code class="language-rust=">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn compute_tally(proposal_id: u64) {
     let vote_addresses = get_proposal_vote_iter(proposal_id).map(|addr| addr)
-    let total_m1t: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    // NAM is the native token
+    let total_nam: u64 = vote_addresses.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
     
     let delegators =  vote_addresses.filter(|addr| addr.is_delegator())
     let yay_addresses = vote_addresses.filter(|addr| read_vote(proposal_id, addr) == 'yay')
     
     let yay_validators = yay_addresses.filter(|addr| addr.is_validator())
-    let yay_validators_m1t = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
+    let yay_validators_nam = yay_validator.reduce(|acc, addr| acc + get_addr_balance(addr), 0)
     
     for delegator in delegators {
         if yay_validators.contains(delegator.get_correspoding_validator()) {
             if read_vote(proposal_id, delegator) == 'nay' {
-                yay_validators_m1t -= get_addr_balance(delegator)
+                yay_validators_nam -= get_addr_balance(delegator)
             }
         }
     }
-    return yay_validators_m1t / total_m1t &gt;= 0.66;
+    return yay_validators_nam / total_nam &gt;= 0.66;
 }
 <span class="boring">}
 </span></code></pre></pre>

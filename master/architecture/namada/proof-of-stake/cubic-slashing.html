@@ -145,7 +145,7 @@
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <h1 id="cubic-slashing"><a class="header" href="#cubic-slashing">Cubic slashing</a></h1>
-<p>M1 implements cubic slashing, meaning that the amount of a slash is proportional to the cube of the voting power committing infractions discovered within a particular interval. This is designed to make it riskier to operate larger or similarly configured validators, and thus encourage network resilience.</p>
+<p>Namada implements cubic slashing, meaning that the amount of a slash is proportional to the cube of the voting power committing infractions discovered within a particular interval. This is designed to make it riskier to operate larger or similarly configured validators, and thus encourage network resilience.</p>
 <p>When a slash is detected:</p>
 <ol>
 <li>Enqueue the slash for processing <em>at the end of the epoch after the current epoch</em> (if slash is detected in epoch 10, processing is scheduled for the end of epoch 11)</li>
