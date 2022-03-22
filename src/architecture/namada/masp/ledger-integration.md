@@ -296,7 +296,7 @@ in the rest of Anoma.
 
 # Shielded Transaction Specification
 ## Transaction Format
-Shielded transactions are implemented as an extension to transparent transactions:
+Shielded transactions are implemented as an optional extension to transparent transactions:
 ```
 /// A simple bilateral token transfer
 #[derive(..., BorshSerialize, BorshDeserialize, ...)]
