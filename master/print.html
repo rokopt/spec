@@ -566,6 +566,59 @@ certain accounts. More precisely, it is as follows:</p>
 <p>Note that in contrast to Sapling's UTXO based approach, our
 transparent inputs/outputs are based on the account model used
 in the rest of Anoma.</p>
+<h1 id="shielded-transaction-specification"><a class="header" href="#shielded-transaction-specification">Shielded Transaction Specification</a></h1>
+<p>Shielded transactions are implemented as an extension to transparent transactions:</p>
+<pre><code>/// A simple bilateral token transfer
+#[derive(..., BorshSerialize, BorshDeserialize, ...)]
+pub struct Transfer {
+    /// Source address will spend the tokens
+    pub source: Address,
+    /// Target address will receive the tokens
+    pub target: Address,
+    /// Token's address
+    pub token: Address,
+    /// The amount of tokens
+    pub amount: Amount,
+    /// Shielded transaction part
+    pub shielded: Option&lt;Transaction&gt;,
+}
+</code></pre>
+<ul>
+<li>A shielded component equal to <code>None</code> indicates a transparent Anoma transaction</li>
+<li>Otherwise the shielded component must have the form <code>Some(x)</code> where <code>x</code> has the transaction encoding specified in the <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a></li>
+<li>Hence for a shielded transaction to be valid, it must:
+<ul>
+<li>satisfy the conditions specified in the <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a></li>
+<li>additionaly satisfy the following boundary conditions intended to ensure consistency between the MASP validity predicate ledger and Anoma ledger</li>
+</ul>
+</li>
+<li>If the target address is the MASP validity predicate, then no transparent outputs are permitted in the shielded transaction</li>
+<li>If the target address is not the MASP validity predicate, then:
+<ul>
+<li>there must be exactly one transparent output in the shielded transaction and:
+<ul>
+<li>its public key must be the hash of the target address - this prevents replay attacks altering transfer destinations</li>
+<li>its value must equal that of the containing transfer - this prevents replay attacks altering transfer amounts</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>If the source address is the MASP validity predicate, then no transparent inputs are permitted in the shielded transaction</li>
+<li>If the source address is not the MASP validity predicate, then:
+<ul>
+<li>there must be exactly one transparent input in the shielded transaction and:
+<ul>
+<li>its value must equal that of amount in the containing transfer - this ensures that clients cannot steal funds from the pool</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Remark: the gas fees for shielded transactions are charged to the signer just like it is done for transparent transactions
+<ul>
+<li>As a consequence, an amount exceeding the gas fees must be available in a transparent account in order to execute an unshielding transaction</li>
+</ul>
+</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <h1 id="shielded-pool-incentives"><a class="header" href="#shielded-pool-incentives">Shielded pool incentives</a></h1>
 <p>Private transactions made by individual users using the MASP increase the privacy set for other users, so even if the individual doesn't care whether a particular transaction is private, others benefit from their choice to do the transaction in private instead of in public. In the absence of a subsidy (the computation required for private state transitions is likely more expensive) orother incentives, users may not elect to make their transactions private when they do not need to because the benefits do not directly accrue to them. This provides grounds for a protocol subsidy of shielded transactions (relative to the computatation required), so that users who do not have a strong preference on whether or not to make their transaction private will be &quot;nudged&quot; by the fee difference to do so.</p>
