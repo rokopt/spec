@@ -567,7 +567,8 @@ certain accounts. More precisely, it is as follows:</p>
 transparent inputs/outputs are based on the account model used
 in the rest of Anoma.</p>
 <h1 id="shielded-transaction-specification"><a class="header" href="#shielded-transaction-specification">Shielded Transaction Specification</a></h1>
-<p>Shielded transactions are implemented as an extension to transparent transactions:</p>
+<h2 id="transaction-format-1"><a class="header" href="#transaction-format-1">Transaction Format</a></h2>
+<p>Shielded transactions are implemented as an optional extension to transparent transactions:</p>
 <pre><code>/// A simple bilateral token transfer
 #[derive(..., BorshSerialize, BorshDeserialize, ...)]
 pub struct Transfer {
@@ -583,15 +584,20 @@ pub struct Transfer {
     pub shielded: Option&lt;Transaction&gt;,
 }
 </code></pre>
+<h2 id="conditions"><a class="header" href="#conditions">Conditions</a></h2>
 <ul>
 <li>A shielded component equal to <code>None</code> indicates a transparent Anoma transaction</li>
 <li>Otherwise the shielded component must have the form <code>Some(x)</code> where <code>x</code> has the transaction encoding specified in the <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a></li>
-<li>Hence for a shielded transaction to be valid, it must:
+<li>Hence for a shielded transaction to be valid:
 <ul>
-<li>satisfy the conditions specified in the <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a></li>
-<li>additionaly satisfy the following boundary conditions intended to ensure consistency between the MASP validity predicate ledger and Anoma ledger</li>
+<li>the <code>Transfer</code> must satisfy the usual conditions for Anoma ledger transfers (i.e. sufficient funds, ...) as enforced by token and account validity predicates</li>
+<li>the <code>Transaction</code> must satisfy the conditions specified in the <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a></li>
+<li>the <code>Transaction</code> and <code>Transfer</code> together must additionaly satisfy the below boundary conditions intended to ensure consistency between the MASP validity predicate ledger and Anoma ledger</li>
 </ul>
 </li>
+</ul>
+<h3 id="boundary-conditions"><a class="header" href="#boundary-conditions">Boundary Conditions</a></h3>
+<ul>
 <li>If the target address is the MASP validity predicate, then no transparent outputs are permitted in the shielded transaction</li>
 <li>If the target address is not the MASP validity predicate, then:
 <ul>
@@ -613,9 +619,48 @@ pub struct Transfer {
 </li>
 </ul>
 </li>
-<li>Remark: the gas fees for shielded transactions are charged to the signer just like it is done for transparent transactions
+</ul>
+<h2 id="remarks"><a class="header" href="#remarks">Remarks</a></h2>
 <ul>
-<li>As a consequence, an amount exceeding the gas fees must be available in a transparent account in order to execute an unshielding transaction</li>
+<li>The gas fees for shielded transactions are charged to the signer just like it is done for transparent transactions
+<ul>
+<li>As a consequence, an amount exceeding the gas fees must be available in a transparent account in order to execute an unshielding transaction - this prevents denial of service attacks</li>
+</ul>
+</li>
+</ul>
+<h2 id="multi-asset-shielded-pool-specification-differences-from-zcash-protocol-specification"><a class="header" href="#multi-asset-shielded-pool-specification-differences-from-zcash-protocol-specification">Multi-Asset Shielded Pool Specification Differences from Zcash Protocol Specification</a></h2>
+<ul>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#notes">3.2 Notes</a>
+<ul>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#noteptconcept">3.2.1 Note Plaintexts and Memo Fields</a></li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#abstractcommit">4.1.8 Commitment</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#send">4.7 Sending Notes</a>
+<ul>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingsend">4.7.2 Sending Notes (Sapling)</a></li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#dummynotes">4.8 Dummy Notes</a>
+<ul>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingdummynotes">4.8.2 Dummy Notes (Sapling)</a></li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingbalance">4.13 Balance and Binding Signature (Sapling)</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingandorchardencrypt">4.19.1 Encryption (Sapling and Orchard)</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#decryptivk">4.19.2 Decryption using an Incoming Viewing Key (Sapling and Orchard)</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#decryptovk">4.19.3 Decryption using a Full Viewing Key (Sapling and Orchard)</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretecommit">5.4.8 Commitment Schemes</a>
+<ul>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretewindowedcommit">5.4.8.2 Windowed Pedersen commitments</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretehomomorphiccommit">5.4.8.3 Homomorphic Pedersen commitments (Sapling and Orchard)</a></li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#notept">5.5 Encodings of Note Plaintexts and Memo Fields</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#consensusfrombitcoin">7 Consensus Changes from Bitcoin</a>
+<ul>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#txnencoding">7.1 Transaction Encoding and Consensus</a></li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#outputencodingandconsensus">7.4 Output Description Encoding and Consensus</a></li>
 </ul>
 </li>
 </ul>
