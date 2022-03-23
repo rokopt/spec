@@ -338,20 +338,46 @@ pub struct Transfer {
 
 ## Multi-Asset Shielded Pool Specification Differences from Zcash Protocol Specification
 * [3.2 Notes](https://zips.z.cash/protocol/protocol.pdf#notes)
+  * Sapling note tuple must include asset type
+  * Note commitment must be parameterized by asset type
   * [3.2.1 Note Plaintexts and Memo Fields](https://zips.z.cash/protocol/protocol.pdf#noteptconcept)
+    * Note plaintext tuple must include asset type 
 * [4.1.8 Commitment](https://zips.z.cash/protocol/protocol.pdf#abstractcommit)
-* [4.7 Sending Notes](https://zips.z.cash/protocol/protocol.pdf#send)
-  * [4.7.2 Sending Notes (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingsend)
-* [4.8 Dummy Notes](https://zips.z.cash/protocol/protocol.pdf#dummynotes)
-  * [4.8.2 Dummy Notes (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingdummynotes)
+  * `NoteCommit` and `ValueCommit` must be parameterized by asset type
+* [4.7.2 Sending Notes (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingsend)
+  * Sender must also be able to select asset type
+  * `NoteCommit` and hence `cm` must be parameterized by asset type
+  * `ValueCommit` and hence `cv` must be parameterized by asset type
+  * The note plaintext tuple must include asset type
+* [4.8.2 Dummy Notes (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingdummynotes)
+  * A random asset type must also be selected
+  * `NoteCommit` and hence `cm` must be parameterized by asset type
+  * `ValueCommit` and hence `cv` must be parameterized by asset type
 * [4.13 Balance and Binding Signature (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingbalance)
+  * The Sapling balance value is no longer a scalar but a vector of pairs comprising values and asset types
+  * Addition, subtraction, and equality checks of Sapling balance values is now done component-wise
+  * A Sapling balance value is defined to be non-negative iff each of its components is non-negative
+  * `ValueCommit` and the value base must be parameterized by asset type
+  * Proofs must be updated to reflect the presence of multiple value bases
 * [4.19.1 Encryption (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#saplingandorchardencrypt)
+  * The note plaintext tuple must include asset type
 * [4.19.2 Decryption using an Incoming Viewing Key (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#decryptivk)
+  * The note plaintext extracted from the decryption must include asset type
 * [4.19.3 Decryption using a Full Viewing Key (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#decryptovk)
-* [5.4.8 Commitment Schemes](https://zips.z.cash/protocol/protocol.pdf#concretecommit)
-  * [5.4.8.2 Windowed Pedersen commitments](https://zips.z.cash/protocol/protocol.pdf#concretewindowedcommit)
-  * [5.4.8.3 Homomorphic Pedersen commitments (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#concretehomomorphiccommit)
+  * The note plaintext extracted from the decryption must include asset type
+* [5.4.8.2 Windowed Pedersen commitments](https://zips.z.cash/protocol/protocol.pdf#concretewindowedcommit)
+  * `NoteCommit` must be parameterized by asset type
+* [5.4.8.3 Homomorphic Pedersen commitments (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#concretehomomorphiccommit)
+  * `HomomorphicPedersenCommit`, `ValueCommit`, and value base must be parameterized by asset type
 * [5.5 Encodings of Note Plaintexts and Memo Fields](https://zips.z.cash/protocol/protocol.pdf#notept)
-* [7 Consensus Changes from Bitcoin](https://zips.z.cash/protocol/protocol.pdf#consensusfrombitcoin)
-  * [7.1 Transaction Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#txnencoding)
-  * [7.4 Output Description Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#outputencodingandconsensus)
+  * The note plaintext tuple must include asset type
+  * The Sapling note plaintext encoding must use 32 bytes inbetween `d` and `v` to encode asset type
+  * Hence the total size of a note plaintext encoding should be 596 bytes
+* [7.1 Transaction Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#txnencoding)
+  * `valueBalanceSapling` is no longer scalar. Hence it should be replaced by two components:
+    * `nValueBalanceSapling`: a `compactSize` indicating number of asset types spanned by balance
+    * a length `nValueBalanceSapling` sequence of 40 byte values where:
+      * the first 32 bytes encode the asset type
+      * the last 8 bytes are an `int64` encoding asset value
+* [7.4 Output Description Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#outputencodingandconsensus)
+  * The `encCiphertext` field must be 612 bytes in order to make 32 bytes room to encode the asset type
