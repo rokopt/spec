@@ -335,3 +335,23 @@ pub struct Transfer {
 ## Remarks
 * The gas fees for shielded transactions are charged to the signer just like it is done for transparent transactions
   * As a consequence, an amount exceeding the gas fees must be available in a transparent account in order to execute an unshielding transaction - this prevents denial of service attacks
+
+## Multi-Asset Shielded Pool Specification Differences from Zcash Protocol Specification
+* [3.2 Notes](https://zips.z.cash/protocol/protocol.pdf#notes)
+  * [3.2.1 Note Plaintexts and Memo Fields](https://zips.z.cash/protocol/protocol.pdf#noteptconcept)
+* [4.1.8 Commitment](https://zips.z.cash/protocol/protocol.pdf#abstractcommit)
+* [4.7 Sending Notes](https://zips.z.cash/protocol/protocol.pdf#send)
+  * [4.7.2 Sending Notes (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingsend)
+* [4.8 Dummy Notes](https://zips.z.cash/protocol/protocol.pdf#dummynotes)
+  * [4.8.2 Dummy Notes (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingdummynotes)
+* [4.13 Balance and Binding Signature (Sapling)](https://zips.z.cash/protocol/protocol.pdf#saplingbalance)
+* [4.19.1 Encryption (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#saplingandorchardencrypt)
+* [4.19.2 Decryption using an Incoming Viewing Key (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#decryptivk)
+* [4.19.3 Decryption using a Full Viewing Key (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#decryptovk)
+* [5.4.8 Commitment Schemes](https://zips.z.cash/protocol/protocol.pdf#concretecommit)
+  * [5.4.8.2 Windowed Pedersen commitments](https://zips.z.cash/protocol/protocol.pdf#concretewindowedcommit)
+  * [5.4.8.3 Homomorphic Pedersen commitments (Sapling and Orchard)](https://zips.z.cash/protocol/protocol.pdf#concretehomomorphiccommit)
+* [5.5 Encodings of Note Plaintexts and Memo Fields](https://zips.z.cash/protocol/protocol.pdf#notept)
+* [7 Consensus Changes from Bitcoin](https://zips.z.cash/protocol/protocol.pdf#consensusfrombitcoin)
+  * [7.1 Transaction Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#txnencoding)
+  * [7.4 Output Description Encoding and Consensus](https://zips.z.cash/protocol/protocol.pdf#outputencodingandconsensus)
