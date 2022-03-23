@@ -566,9 +566,9 @@ certain accounts. More precisely, it is as follows:</p>
 <p>Note that in contrast to Sapling's UTXO based approach, our
 transparent inputs/outputs are based on the account model used
 in the rest of Anoma.</p>
-<h1 id="shielded-transaction-specification"><a class="header" href="#shielded-transaction-specification">Shielded Transaction Specification</a></h1>
-<h2 id="transaction-format-1"><a class="header" href="#transaction-format-1">Transaction Format</a></h2>
-<p>Shielded transactions are implemented as an optional extension to transparent transactions:</p>
+<h1 id="shielded-transfer-specification"><a class="header" href="#shielded-transfer-specification">Shielded Transfer Specification</a></h1>
+<h2 id="transfer-format"><a class="header" href="#transfer-format">Transfer Format</a></h2>
+<p>Shielded transactions are implemented as an optional extension to transparent ledger transfers. The optional <code>shielded</code> field in combination with the <code>source</code> and <code>target</code> field determine whether the transfer is shielding, shielded, or unshielded. See the transfer format below:</p>
 <pre><code>/// A simple bilateral token transfer
 #[derive(..., BorshSerialize, BorshDeserialize, ...)]
 pub struct Transfer {
@@ -585,6 +585,7 @@ pub struct Transfer {
 }
 </code></pre>
 <h2 id="conditions"><a class="header" href="#conditions">Conditions</a></h2>
+<p>Below, the conditions necessary for a valid shielded or unshielded transfer are outlined:</p>
 <ul>
 <li>A shielded component equal to <code>None</code> indicates a transparent Anoma transaction</li>
 <li>Otherwise the shielded component must have the form <code>Some(x)</code> where <code>x</code> has the transaction encoding specified in the <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a></li>
@@ -597,6 +598,7 @@ pub struct Transfer {
 </li>
 </ul>
 <h3 id="boundary-conditions"><a class="header" href="#boundary-conditions">Boundary Conditions</a></h3>
+<p>Below, the conditions necessary to maintain consistency between the MASP validity predicate ledger and Anoma ledger are outlined:</p>
 <ul>
 <li>If the target address is the MASP validity predicate, then no transparent outputs are permitted in the shielded transaction</li>
 <li>If the target address is not the MASP validity predicate, then:
@@ -621,6 +623,7 @@ pub struct Transfer {
 </li>
 </ul>
 <h2 id="remarks"><a class="header" href="#remarks">Remarks</a></h2>
+<p>Below are miscellaneous remarks on the capabilities and limitations of the current MASP implementation:</p>
 <ul>
 <li>The gas fees for shielded transactions are charged to the signer just like it is done for transparent transactions
 <ul>
@@ -629,6 +632,7 @@ pub struct Transfer {
 </li>
 </ul>
 <h2 id="multi-asset-shielded-pool-specification-differences-from-zcash-protocol-specification"><a class="header" href="#multi-asset-shielded-pool-specification-differences-from-zcash-protocol-specification">Multi-Asset Shielded Pool Specification Differences from Zcash Protocol Specification</a></h2>
+<p>The <a href="https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf">Multi-Asset Shielded Pool Specication</a> referenced above is in turn an extension to the <a href="https://zips.z.cash/protocol/protocol.pdf">Zcash Protocol Specification</a>. Below, the changes from the Zcash Protocol Specification assumed to have been integrated into the Multi-Asset Shielded Pool Specification are listed:</p>
 <ul>
 <li><a href="https://zips.z.cash/protocol/protocol.pdf#notes">3.2 Notes</a>
 <ul>
