@@ -294,9 +294,9 @@ Note that in contrast to Sapling's UTXO based approach, our
 transparent inputs/outputs are based on the account model used
 in the rest of Anoma.
 
-# Shielded Transaction Specification
-## Transaction Format
-Shielded transactions are implemented as an optional extension to transparent transactions:
+# Shielded Transfer Specification
+## Transfer Format
+Shielded transactions are implemented as an optional extension to transparent ledger transfers. The optional `shielded` field in combination with the `source` and `target` field determine whether the transfer is shielding, shielded, or unshielded. See the transfer format below:
 ```
 /// A simple bilateral token transfer
 #[derive(..., BorshSerialize, BorshDeserialize, ...)]
@@ -314,6 +314,7 @@ pub struct Transfer {
 }
 ```
 ## Conditions
+Below, the conditions necessary for a valid shielded or unshielded transfer are outlined:
 * A shielded component equal to `None` indicates a transparent Anoma transaction
 * Otherwise the shielded component must have the form `Some(x)` where `x` has the transaction encoding specified in the [Multi-Asset Shielded Pool Specication](https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf)
 * Hence for a shielded transaction to be valid:
@@ -322,6 +323,7 @@ pub struct Transfer {
   * the `Transaction` and `Transfer` together must additionaly satisfy the below boundary conditions intended to ensure consistency between the MASP validity predicate ledger and Anoma ledger
 
 ### Boundary Conditions
+Below, the conditions necessary to maintain consistency between the MASP validity predicate ledger and Anoma ledger are outlined:
 * If the target address is the MASP validity predicate, then no transparent outputs are permitted in the shielded transaction
 * If the target address is not the MASP validity predicate, then:
   * there must be exactly one transparent output in the shielded transaction and:
@@ -333,10 +335,12 @@ pub struct Transfer {
     * its value must equal that of amount in the containing transfer - this ensures that clients cannot steal funds from the pool
 
 ## Remarks
+Below are miscellaneous remarks on the capabilities and limitations of the current MASP implementation:
 * The gas fees for shielded transactions are charged to the signer just like it is done for transparent transactions
   * As a consequence, an amount exceeding the gas fees must be available in a transparent account in order to execute an unshielding transaction - this prevents denial of service attacks
 
 ## Multi-Asset Shielded Pool Specification Differences from Zcash Protocol Specification
+The [Multi-Asset Shielded Pool Specication](https://raw.githubusercontent.com/anoma/masp/main/docs/multi-asset-shielded-pool.pdf) referenced above is in turn an extension to the [Zcash Protocol Specification](https://zips.z.cash/protocol/protocol.pdf). Below, the changes from the Zcash Protocol Specification assumed to have been integrated into the Multi-Asset Shielded Pool Specification are listed:
 * [3.2 Notes](https://zips.z.cash/protocol/protocol.pdf#notes)
   * Sapling note tuple must include asset type
   * Note commitment must be parameterized by asset type
