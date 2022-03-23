@@ -476,35 +476,94 @@ pub struct Transfer {
 <ul>
 <li><a href="https://zips.z.cash/protocol/protocol.pdf#notes">3.2 Notes</a>
 <ul>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#noteptconcept">3.2.1 Note Plaintexts and Memo Fields</a></li>
+<li>Sapling note tuple must include asset type</li>
+<li>Note commitment must be parameterized by asset type</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#noteptconcept">3.2.1 Note Plaintexts and Memo Fields</a>
+<ul>
+<li>Note plaintext tuple must include asset type </li>
 </ul>
 </li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#abstractcommit">4.1.8 Commitment</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#send">4.7 Sending Notes</a>
-<ul>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingsend">4.7.2 Sending Notes (Sapling)</a></li>
 </ul>
 </li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#dummynotes">4.8 Dummy Notes</a>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#abstractcommit">4.1.8 Commitment</a>
 <ul>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingdummynotes">4.8.2 Dummy Notes (Sapling)</a></li>
+<li><code>NoteCommit</code> and <code>ValueCommit</code> must be parameterized by asset type</li>
 </ul>
 </li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingbalance">4.13 Balance and Binding Signature (Sapling)</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingandorchardencrypt">4.19.1 Encryption (Sapling and Orchard)</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#decryptivk">4.19.2 Decryption using an Incoming Viewing Key (Sapling and Orchard)</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#decryptovk">4.19.3 Decryption using a Full Viewing Key (Sapling and Orchard)</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretecommit">5.4.8 Commitment Schemes</a>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingsend">4.7.2 Sending Notes (Sapling)</a>
 <ul>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretewindowedcommit">5.4.8.2 Windowed Pedersen commitments</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretehomomorphiccommit">5.4.8.3 Homomorphic Pedersen commitments (Sapling and Orchard)</a></li>
+<li>Sender must also be able to select asset type</li>
+<li><code>NoteCommit</code> and hence <code>cm</code> must be parameterized by asset type</li>
+<li><code>ValueCommit</code> and hence <code>cv</code> must be parameterized by asset type</li>
+<li>The note plaintext tuple must include asset type</li>
 </ul>
 </li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#notept">5.5 Encodings of Note Plaintexts and Memo Fields</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#consensusfrombitcoin">7 Consensus Changes from Bitcoin</a>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingdummynotes">4.8.2 Dummy Notes (Sapling)</a>
 <ul>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#txnencoding">7.1 Transaction Encoding and Consensus</a></li>
-<li><a href="https://zips.z.cash/protocol/protocol.pdf#outputencodingandconsensus">7.4 Output Description Encoding and Consensus</a></li>
+<li>A random asset type must also be selected</li>
+<li><code>NoteCommit</code> and hence <code>cm</code> must be parameterized by asset type</li>
+<li><code>ValueCommit</code> and hence <code>cv</code> must be parameterized by asset type</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingbalance">4.13 Balance and Binding Signature (Sapling)</a>
+<ul>
+<li>The Sapling balance value is no longer a scalar but a vector of pairs comprising values and asset types</li>
+<li>Addition, subtraction, and equality checks of Sapling balance values is now done component-wise</li>
+<li>A Sapling balance value is defined to be non-negative iff each of its components is non-negative</li>
+<li><code>ValueCommit</code> and the value base must be parameterized by asset type</li>
+<li>Proofs must be updated to reflect the presence of multiple value bases</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#saplingandorchardencrypt">4.19.1 Encryption (Sapling and Orchard)</a>
+<ul>
+<li>The note plaintext tuple must include asset type</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#decryptivk">4.19.2 Decryption using an Incoming Viewing Key (Sapling and Orchard)</a>
+<ul>
+<li>The note plaintext extracted from the decryption must include asset type</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#decryptovk">4.19.3 Decryption using a Full Viewing Key (Sapling and Orchard)</a>
+<ul>
+<li>The note plaintext extracted from the decryption must include asset type</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretewindowedcommit">5.4.8.2 Windowed Pedersen commitments</a>
+<ul>
+<li><code>NoteCommit</code> must be parameterized by asset type</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#concretehomomorphiccommit">5.4.8.3 Homomorphic Pedersen commitments (Sapling and Orchard)</a>
+<ul>
+<li><code>HomomorphicPedersenCommit</code>, <code>ValueCommit</code>, and value base must be parameterized by asset type</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#notept">5.5 Encodings of Note Plaintexts and Memo Fields</a>
+<ul>
+<li>The note plaintext tuple must include asset type</li>
+<li>The Sapling note plaintext encoding must use 32 bytes inbetween <code>d</code> and <code>v</code> to encode asset type</li>
+<li>Hence the total size of a note plaintext encoding should be 596 bytes</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#txnencoding">7.1 Transaction Encoding and Consensus</a>
+<ul>
+<li><code>valueBalanceSapling</code> is no longer scalar. Hence it should be replaced by two components:
+<ul>
+<li><code>nValueBalanceSapling</code>: a <code>compactSize</code> indicating number of asset types spanned by balance</li>
+<li>a length <code>nValueBalanceSapling</code> sequence of 40 byte values where:
+<ul>
+<li>the first 32 bytes encode the asset type</li>
+<li>the last 8 bytes are an <code>int64</code> encoding asset value</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://zips.z.cash/protocol/protocol.pdf#outputencodingandconsensus">7.4 Output Description Encoding and Consensus</a>
+<ul>
+<li>The <code>encCiphertext</code> field must be 612 bytes in order to make 32 bytes room to encode the asset type</li>
 </ul>
 </li>
 </ul>
