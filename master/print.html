@@ -1557,7 +1557,7 @@ pub fn make_ibc_data(message: impl Msg) -&gt; Vec&lt;u8&gt; {
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <h1 id="ethereum-bridge"><a class="header" href="#ethereum-bridge">Ethereum bridge</a></h1>
-<p>The Namada Ethereum bridge exists to mint wrapped ETH tokens on Namada which naturally
+<p>The Namada - Ethereum bridge exists to mint wrapped ETH tokens on Namada which naturally
 can be redeemed on Ethereum at a later time. Furthermore, it allows the
 minting of wrapped tokens on Ethereum backed by escrowed assets on Namada.</p>
 <p>The Namada Ethereum bridge system consists of:</p>
@@ -1565,11 +1565,11 @@ minting of wrapped tokens on Ethereum backed by escrowed assets on Namada.</p>
 <li>Ethereum state inclusion onto Namada.</li>
 <li>A set of validity predicates on Namada which roughly implements <a href="https://docs.cosmos.network/v0.42/modules/ibc/">ICS20</a> fungible token transfers.</li>
 <li>A set of Ethereum smart contracts.</li>
-<li>An Namada bridge process</li>
+<li>A Namada bridge process</li>
 </ul>
-<p>This basic bridge architecture should provide for almost-Namada consensus 
-security for the bridge and free Ethereum state reads on Namada, plus 
-bidirectional message passing with reasonably low gas costs on the 
+<p>This basic bridge architecture should provide for almost-Namada consensus
+security for the bridge and free Ethereum state reads on Namada, plus
+bidirectional message passing with reasonably low gas costs on the
 Ethereum side.</p>
 <h2 id="security-1"><a class="header" href="#security-1">Security</a></h2>
 <p>On Namada, the validators are full nodes of Ethereum and their stake is also
@@ -1579,27 +1579,27 @@ On the Ethereum side, we will add a limit to the amount of ETH that can be
 locked to limit the damage a forking attack on Namada can do. To make an attack
 more cumbersome we will also add a limit on how fast wrapped ETH can be
 redeemed. This will not add more security, but rather make the attack more
-inconvenient. </p>
+inconvenient.</p>
 <h2 id="ethereum-state-inclusion"><a class="header" href="#ethereum-state-inclusion">Ethereum State Inclusion</a></h2>
-<p>We want to store data identifying which Ethereum blocks have been seen 
-and validated by at least 2/3 of the staking validators in the blockchain storage. 
+<p>We want to store data identifying which Ethereum blocks have been seen
+and validated by at least 2/3 of the staking validators in the blockchain storage.
 The data stored from each Ethereum block will be:</p>
 <ul>
 <li>The block header</li>
 <li>The block hash</li>
 <li>Messages from the Ethereum smart contracts relevant
 to the bridge.
-We may also we to include Merkle proofs of inclusion of 
+We may also we to include Merkle proofs of inclusion of
 these messages in the relevant blocks. We might also implement policies to
 prune old/irrelevant data or do checkpointing.</li>
 </ul>
 <p>Each piece of block data should have a list of the validators that have seen
 this block and the current amount of stake associated with it. This
-will need to be appropriately adjusted across epoch boundaries. However, 
-once a block has been seen by 2/3 of the staking validators, it is locked into a 
+will need to be appropriately adjusted across epoch boundaries. However,
+once a block has been seen by 2/3 of the staking validators, it is locked into a
 <code>seen</code> state. Thus, even if after an epoch that block has no longer been
 reported as seen by 2/3 of the new staking validators set, it is still
-considered as <code>seen</code>. </p>
+considered as <code>seen</code>.</p>
 <p>To make this easy, we take the approach of always overwriting the state with
 the new state rather than applying state diffs. The storage keys involved
 are:</p>
@@ -1609,7 +1609,7 @@ are:</p>
 # not yet decided
 /eth_block/block_hash/merkle_proofs : Vec&lt;Vec&lt;u8&gt;&gt;
 </code></pre>
-<p>For every Namada block proposal, the vote of a validator should include 
+<p>For every Namada block proposal, the vote of a validator should include
 the headers, hash, &amp; smart contract messages (possibly with Merkle proofs)
 of the Ethereum blocks they have seen via their full node such that:</p>
 <ol>
@@ -1618,9 +1618,9 @@ of the Ethereum blocks they have seen via their full node such that:</p>
 address.</li>
 <li>Is a descendant of a block they have seen (even if it is not marked <code>seen</code>)</li>
 </ol>
-<p>After an Namada block is committed, the next block proposer receives the 
+<p>After a Namada block is committed, the next block proposer receives the
 aggregate of the vote extensions. From that, they should craft the proposed
-state change of the above form. They subsequently include a tx to that end 
+state change of the above form. They subsequently include a tx to that end
 in their block proposal. This aggregated state change needs to be validated
 by at least 2/3 of the staking validators as usual.</p>
 <h2 id="namada-validity-predicates"><a class="header" href="#namada-validity-predicates">Namada Validity Predicates</a></h2>
@@ -1628,10 +1628,10 @@ by at least 2/3 of the staking validators as usual.</p>
 <p>Namada requires a validity predicate with dedicated storage to mint wrapped
 ETH. This validity predicate should be called on every inclusion of Ethereum
 state above. Its storage contains a queue of messages from the Ethereum
-bridge contracts. It also mints corresponding assets on Namada, where the asset denomination corresponds to 
+bridge contracts. It also mints corresponding assets on Namada, where the asset denomination corresponds to
 <code>{token address on ethereum} || {minimum number of confirmations}</code>.</p>
-<p>The minimum number of confirmations indicated in the outgoing Ethereum message 
-(maybe defaulting to 25 or 50 if unspecified) specifies the minimum number of 
+<p>The minimum number of confirmations indicated in the outgoing Ethereum message
+(maybe defaulting to 25 or 50 if unspecified) specifies the minimum number of
 confirmations in block depth that must be reached before the assets will be
 minted on Namada. This is the purpose of the message queue for this validity
 predicate.</p>
@@ -1642,7 +1642,7 @@ predicate.</p>
 </span>/// The token address for wrapped ETH tokens
 const WRAPPED_ETH_ADDRESS: Address = ... 
 pub struct WrappedETHAddress;
-pub struct NamadaTokenAddress(Address);
+pub struct NamAddress(Address);
 
 pub trait MintingAddress {
     fn get_address(&amp;self) -&gt; &amp;Address;
@@ -1654,7 +1654,7 @@ impl MintingAddress for WrappedETHAddress {
     }
 }
 
-impl MintingAddress for NamadaTokenAddress {
+impl MintingAddress for NamAddress {
     fn get_address(&amp;self) -&gt; &amp;Address {
         &amp;self.0
     }
@@ -1692,15 +1692,15 @@ impl TransferFromEthereum {
     /// Check if the number of confirmations for the block containing
     /// the original message exceeds the minimum number required to 
     /// consider the message confirmed.
-    fn is_confirmed(&amp;self) -&gt; bool {
+    pub fn is_confirmed(&amp;self) -&gt; bool {
         self.latest_descendant.1 - self.height &gt;= self.min_confirmations
     }
 }
 
 /// Struct for minting wrapped ETH tokens on Namada
 pub type MintEthToken = TransferFromEthereum&lt;WrappedETHAddress&gt;;
-/// Struct for redeeming wrapped Namada tokens from Ethereum
-pub type RedeemNamadaToken = TransferFromEthereum&lt;NamadaTokenAddress&gt;;
+/// Struct for redeeming wrapped NAM tokens from Ethereum
+pub type RedeemNam = TransferFromEthereum&lt;NamAddress&gt;;
 <span class="boring">}
 </span></code></pre></pre>
 <p>Every time this validity predicate is called, it must perform the following
@@ -1709,37 +1709,38 @@ actions:</p>
 <li>Add new messages from the input into the queue</li>
 <li>For each message in the queue, update its number of confirmations. This
 can be done by finding Ethereum block headers marked as <code>seen</code> in the new
-storage data (the input from finalizing the block, it isn't necessary to 
+storage data (the input from finalizing the block, it isn't necessary to
 access Namada storage) that are descendants of the <code>latest_descendant</code> field.</li>
-<li>For each message that is confirmed, transfer the appropriate tokens 
-(as determined by the <code>get_address</code> method of the <code>token</code> field) to 
-the address in the <code>receiver</code> field.</li>
 </ol>
+<p>At the end of each <code>FinalizeBlock</code> call, validators should check this queue.
+For each message that is confirmed, they should transfer the appropriate
+tokens (as determined by the <code>get_address</code> method of the <code>token</code> field) to
+the address in the <code>receiver</code> field.</p>
 <p>Note that this means that a transfer initiated on Ethereum will automatically
-be seen and acted upon by Namada. The appropriate protocol transactions to 
-credit tokens to the given user will be included on chain free of charge
-and requires no additional actions from the end user.</p>
+be seen and acted upon by Namada. The appropriate transfers of tokens to the
+given user will be included on chain free of charge and requires no
+additional actions from the end user.</p>
 <h3 id="redeeming-eth-by-burning-tokens-on-namada"><a class="header" href="#redeeming-eth-by-burning-tokens-on-namada">Redeeming ETH by burning tokens on Namada</a></h3>
 <p>For redeeming wrapped ETH, the Namada side will need another validity predicate
 that is called only when the appropriate user tx lands on chain. This validity
 predicate will simply burn the tokens.</p>
-<p>Once this transaction is approved, it is incumbent on the end user to 
-request an appropriate &quot;proof&quot; of the transaction. This proof must be 
-submitted to the appropriate Ethereum smart contract by the user to 
-redeem their ETH. This also means all Ethereum gas costs are the 
+<p>Once this transaction is approved, it is incumbent on the end user to
+request an appropriate &quot;proof&quot; of the transaction. This proof must be
+submitted to the appropriate Ethereum smart contract by the user to
+redeem their ETH. This also means all Ethereum gas costs are the
 responsibility of the end user.</p>
 <p>The proofs to be used will be custom bridge headers that are calculated
-deterministically from the block contents, including messages snet by Namada and
+deterministically from the block contents, including messages sent by Namada and
 possibly validator set updates. They will be designed for maximally
-efficient Ethereum decoding and verification. </p>
+efficient Ethereum decoding and verification.</p>
 <p>For each block on Namada, validators must submit the corresponding bridge
 header signed with a special secp256k1 key as part of their vote extension.
 Validators must reject votes which do not contain correctly signed bridge
 headers. The finalized bridge header with aggregated signatures will appear in the
-next block as a protocol transaction. Aggregation of signatures is the 
-responsibility of the next block proposer. </p>
+next block as a protocol transaction. Aggregation of signatures is the
+responsibility of the next block proposer.</p>
 <p>The bridge headers need only be produced when the proposed block contains
-requests to transfer value over the bridge to Ethereum. The exception is 
+requests to transfer value over the bridge to Ethereum. The exception is
 when validator sets change.  Since the Ethereum smart contract should
 accept any header signed by bridge header signed by 2 / 3 of the staking
 validators, it needs up-to-date knowledge of:</p>
@@ -1757,23 +1758,23 @@ transition set will be consider a slashable offense.</p>
 advance of the actual epoch change, perhaps even at the beginning of each
 new epoch. Bridge headers to ethereum should include the current Namada epoch
 so that the smart contract knows how to verify the headers. In short, there
-is a pipelining mechanism in the smart contract. </p>
+is a pipelining mechanism in the smart contract.</p>
 <p>Such a message is not prompted by any user transaction and thus will have
-to be carried out by an <em>Namada bridge relayer</em>. Once the transfer of power 
-message is on chain, any time afterwards an Namada bridge process may take it
-to craft the appropriate message to the Ethereum smart contracts. </p>
-<p>The details on the Namada bridge relayers are below in the corresponding section.</p>
+to be carried out by a <em>bridge relayer</em>. Once the transfer of power
+message is on chain, any time afterwards a Namada bridge process may take
+it to craft the appropriate message to the Ethereum smart contracts.</p>
+<p>The details on bridge relayers are below in the corresponding section.</p>
 <p>Signing incorrect headers is considered a slashable offense. Anyone witnessing
 an incorrect header that is signed may submit a complaint (a type of transaction)
 to initiate slashing of the validator who made the signature.</p>
 <h3 id="minting-wrapped-namada-tokens-on-ethereum"><a class="header" href="#minting-wrapped-namada-tokens-on-ethereum">Minting wrapped Namada tokens on Ethereum</a></h3>
-<p>If a user wishes to mint a wrapped token on Ethereum backed by a token on 
-Namada, (including NamadaT, Namada's native token), they first must submit a special transaction on Namada. This transaction
+<p>If a user wishes to mint a wrapped token on Ethereum backed by a token on
+Namada, (including NAM, Namada's native token), they first must submit a special transaction on Namada. This transaction
 should be an instance of the following:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>struct MintWrappedNamadaToken {
+</span>struct MintWrappedNam {
     /// The Namada address owning the token
     source: Address,
     /// The address on Ethereum receiving the wrapped tokens
@@ -1786,49 +1787,49 @@ should be an instance of the following:</p>
 <span class="boring">}
 </span></code></pre></pre>
 <p>A special Namada validity predicate will be called on this transaction. If the
-transaction is valid, the corresponding amount of the Namada token will be transferred
+transaction is valid, the corresponding amount of the NAM token will be transferred
 from the <code>source</code> address and deposited in an escrow account by the
-validity predicate. </p>
+validity predicate.</p>
 <p>Just as in redeeming ETH above, it is incumbent on the end user to
 request an appropriate proof of the transaction. This proof must be
 submitted to the appropriate Ethereum smart contract by the user.
-The corresponding amount of wrapped NamadaT tokens will be transferred to the
+The corresponding amount of wrapped NAM tokens will be transferred to the
 <code>ethereum_address</code> by the smart contract.</p>
-<h3 id="redeeming-namada-tokens"><a class="header" href="#redeeming-namada-tokens">Redeeming Namada tokens</a></h3>
-<p>Redeeming wrapped Namada tokens from Ethereum works much the same way as sending
+<h3 id="redeeming-nam-tokens"><a class="header" href="#redeeming-nam-tokens">Redeeming NAM tokens</a></h3>
+<p>Redeeming wrapped NAM tokens from Ethereum works much the same way as sending
 ETH over the bridge. In fact, it may be handled by the same validity
 predicate.</p>
 <p>Every time Ethereum state is included, this validity predicate is called .
-It keeps a queue of messages from the Ethereum bridge contracts that 
-indicate wrapped Namada tokens have been burned by said contract Ethereum side.</p>
-<p>The messages should be instances of the <code>RedeemNamadaToken</code> struct defined in <a href="architecture/namada/ethereum-bridge.html#minting-wrapped-eth-tokens-on-namada">the 
+It keeps a queue of messages from the Ethereum bridge contracts that
+indicate wrapped NAM tokens have been burned by said contract Ethereum side.</p>
+<p>The messages should be instances of the <code>RedeemNam</code> struct defined in <a href="architecture/namada/ethereum-bridge.html#minting-wrapped-eth-tokens-on-m1">the
 above section</a>. Once such a message
-has reached the requisite number of confirmations, a free protocol 
+has reached the requisite number of confirmations, a free protocol
 transaction should be included by the next block proposer. This transaction
-should transfer the appropriate amount of Namada tokens from the Namada escrow account
+should transfer the appropriate amount of NAM tokens from the Namada escrow account
 to the address of the recipient.</p>
 <h2 id="namada-bridge-relayers"><a class="header" href="#namada-bridge-relayers">Namada Bridge Relayers</a></h2>
 <p>Validator changes must be turned into a message that can be communicated to
 smart contracts on Ethereum. These smart contracts need this information
 to verify proofs of actions taken on Namada.</p>
 <p>Since this is protocol level information, it is not user prompted and thus
-should not be the responsibility of any user to submit such a transaction. 
+should not be the responsibility of any user to submit such a transaction.
 However, any user may choose to submit this transaction anyway.</p>
-<p>This necessitates an Namada node whose job it is to submit these transactions on
-Ethereum at the conclusion of each Namada epoch. This node is called the 
-<strong>Designated Relayer</strong>. In theory, since this message is publicly available on the blockchain, 
-anyone can submit this transaction, but only the Designated Relayer will be 
-directly compensated by Namada. </p>
-<p>All Namada full nodes will have an option to serve as bridge relayer and run the 
-relayer program. Namada governance will vote on a single full node to act as 
-Designated Relayer. The governance treasury will be used to compensate the
-Designated Relayer for the gas fees incurred as well as extra fees as 
-payment for their trouble.</p>
-<p>Since all Namada validators are running Ethereum full nodes, they can monitor
-the performance of the Designated Relayer. If the performance is deemed 
-unsatisfactory, a governance vote can be used to replace them.</p>
-<p>Additionally, it is likely desirable to rotate the designated relayer on a
-regular basis.</p>
+<p>This necessitates a Namada node whose job it is to submit these transactions on
+Ethereum at the conclusion of each Namada epoch. This node is called the
+<strong>Designated Relayer</strong>. In theory, since this message is publicly available on the blockchain,
+anyone can submit this transaction, but only the Designated Relayer will be
+directly compensated by Namada.</p>
+<p>All Namada validators will have an option to serve as bridge relayer and
+the Namada ledger will include a process that does the relaying. Since all
+Namada validators are running Ethereum full nodes, they can monitor
+that the message was relayed correctly by the Designated Relayer.</p>
+<p>During the <code>FinalizeBlock</code> call in the ledger, if the epoch changes, a
+flag should be set alerting the next block proposer that they are the
+Designated Relayer for this epoch. If their message gets accepted by the
+Ethereum state inclusion onto Namada, new NAM tokens will be minted to reward
+them. The reward amount shall be a protocol parameter that can be changed
+via governance. It should be high enough to cover necessary gas fees.</p>
 <h2 id="ethereum-smart-contracts"><a class="header" href="#ethereum-smart-contracts">Ethereum Smart Contracts</a></h2>
 <p>The set of Ethereum contracts should perform the following functions:</p>
 <ul>
@@ -1837,7 +1838,7 @@ be submitted to the contract.</li>
 <li>Verify and maintain evolving validator sets with corresponding stake
 and public keys.</li>
 <li>Emit log messages readable by Namada</li>
-<li>Handle ICS20-style token transfer messages appropriately with escrow &amp; 
+<li>Handle ICS20-style token transfer messages appropriately with escrow &amp;
 unescrow on the Ethereum side</li>
 <li>Allow for message batching</li>
 </ul>
@@ -1848,11 +1849,11 @@ a proof from Namada:</p>
 <ol>
 <li>Check the epoch included in the proof.</li>
 <li>Look up the validator set corresponding to said epoch.</li>
-<li>Verify that the signatures included amount to at least 2 / 3 of the 
+<li>Verify that the signatures included amount to at least 2 / 3 of the
 total stake.</li>
 <li>Check the validity of each signature.</li>
 </ol>
-<p>If all the above verifications succeed, the contract may affect the 
+<p>If all the above verifications succeed, the contract may affect the
 appropriate state change, emit logs, etc.</p>
 <h2 id="resources-which-may-be-helpful"><a class="header" href="#resources-which-may-be-helpful">Resources which may be helpful:</a></h2>
 <ul>
@@ -1863,7 +1864,7 @@ appropriate state change, emit logs, etc.</p>
 </ul>
 <p>Operational notes:</p>
 <ol>
-<li>We should bundle the Ethereum full node with the Anoma daemon executable.</li>
+<li>We should bundle the Ethereum full node with the <code>namada</code> daemon executable.</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <h1 id="web-wallet-interface"><a class="header" href="#web-wallet-interface">Web wallet interface</a></h1>
