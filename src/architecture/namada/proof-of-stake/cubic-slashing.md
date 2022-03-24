@@ -3,7 +3,7 @@
 Namada implements cubic slashing, meaning that the amount of a slash is proportional to the cube of the voting power committing infractions within a particular interval. This is designed to make it riskier to operate larger or similarly configured validators, and thus encourage network resilience.
 
 When a slash is detected:
-1. Using the height of the infraction, calculate the epoch just after which stake bonded at the time of infraction could have been fully unbonded. Enqueue the slash for processing at the end of this epoch.
+1. Using the height of the infraction, calculate the epoch just after which stake bonded at the time of infraction could have been fully unbonded. Enqueue the slash for processing at the end of that epoch (so that it will be processed before unbonding could have completed, and hopefully long enough for any other misbehaviour from around the same height as this misbehaviour to also be detected).
 2. Jail the validator in question (this will apply at the end of the current epoch). While the validator is jailed, it should be removed from the validator set (also being effective from the end of the current epoch).
 3. Prevent the delegators to this validator from altering their delegations in any way until the enqueued slash is processed.
 
