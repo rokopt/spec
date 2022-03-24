@@ -4,7 +4,7 @@ Namada implements cubic slashing, meaning that the amount of a slash is proporti
 
 When a slash is detected:
 1. Using the height of the infraction, calculate the epoch just after which stake bonded at the time of infraction could have been fully unbonded. Enqueue the slash for processing at the end of this epoch.
-2. Jail the validator in question (this will apply at the end of the current epoch).
+2. Jail the validator in question (this will apply at the end of the current epoch). While the validator is jailed, it should be removed from the validator set (also being effective from the end of the current epoch).
 3. Prevent the delegators to this validator from altering their delegations in any way until the enqueued slash is processed.
 
 At the end of each epoch, in order to process any slashes scheduled for processing at the end of that epoch:
@@ -29,6 +29,6 @@ function calculateSlashRate(slashes) {
 4. Update the validators' stored voting power appropriately.
 5. Delegations to the validator can now be redelegated / start unbonding / etc.
 
-Validator can later submit a transaction to unjail themselves after a configurable period.
+Validator can later submit a transaction to unjail themselves after a configurable period. When the transaction is applied and accepted, the validator updates its state to "candidate" and is added back to the validator set starting at the epoch at pipeline offset (active or inactive, depending on its voting power).
 
 At present, funds slashed are sent to the governance treasury. In the future we could potentially reward the slash discoverer with part of the slash, for which some sort of commit-reveal mechanism will be required to prevent front-running.
