@@ -38,7 +38,7 @@ _insert table here_
 Solana has the following model where the inflation that is produced for rewards is independent of the staking ratio:
 1. Define a starting inflation rate for year 1.
 2. The inflation rate decreases thereon at a fixed pace until it reaches a desired rate.
-3. Once this desired rate is attained, the inflation rate remains constant.-->
+3. Once this desired rate is attained, the inflation rate remains constant.
 
 In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. -->
 
