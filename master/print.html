@@ -1443,18 +1443,17 @@ struct Unbond {
 <tr><td>Solana</td><td>77</td></tr>
 </tbody></table>
 <p>Our desired percentage for Namada is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. </p>
-<h3 id="related-work"><a class="header" href="#related-work">Related work</a></h3>
-<p>Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol has an inflation rate of 5% while Ethereum 2.0 has an inflation rate of 1.4% (post EIP-1559). Solana starts with a high inflation rate that decreases over time, as less transaction fees are burnt.</p>
 <!--## Inflation rates for popular platforms
 _insert table here_
 Solana has the following model where the inflation that is produced for rewards is independent of the staking ratio:
 1. Define a starting inflation rate for year 1.
 2. The inflation rate decreases thereon at a fixed pace until it reaches a desired rate.
-3. Once this desired rate is attained, the inflation rate remains constant.-->
-<p>In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. --&gt;</p>
+3. Once this desired rate is attained, the inflation rate remains constant.
+
+In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. -->
 <p>The privacy that MASP is providying depends on the asset in the shielded pool. A transaction can only be private if it can hide among other transactions, hence more funds and activity in the shielded pool increase privacy for transactions. </p>
 <p>Treasury is pool of native tokens that can be appropriated for funding public good products for Namada. The decision on spending these funds will be assigned to governance. </p>
-<h3 id="related-work-1"><a class="header" href="#related-work-1">Related work</a></h3>
+<h3 id="related-work"><a class="header" href="#related-work">Related work</a></h3>
 <p>Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol and Ethereum 2.0 have a fixed inflation rates, while Solana start with a high inflation rate that decreases over time, as less transaction fees are burned. </p>
 <p>In Polkadot and Cosmos the total inflation rate that is paid as rewards to validators depends on the staking ratio. This is to incentivize validators and delegators to invest in the staking pool. We will follow the same idea and have inflarion vary depending on our target staking ratio. Here is how we achieve that. </p>
 <p>For funds going to treasury Near protocol where 5 % goes to treasury and Polkadot sends the difference between inflation for PoS and the total constant inflation to treasury.</p>
