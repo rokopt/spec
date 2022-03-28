@@ -32,8 +32,6 @@ Here are some numbers from other projects
 
 Our desired percentage for Namada is 33%-66%: Locked for validating and the rest %33-%66 is liquid. When the price of the token is low we can aim for a higher % of locked tokens and reduce this as the price and demand for liquid tokens increases. For example, we can set a range, in the beginning have be 50 % and later aim for 1/3. I dont think we should go lower than that. The staking reward should be ideally set. 
 
-### Related work
-Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Ethereum 2.0, Solana, and Near protocols inflation rate are independent of the how much tokens are staked. Near protocol has an inflation rate of 5% while Ethereum 2.0 has an inflation rate of 1.4% (post EIP-1559). Solana starts with a high inflation rate that decreases over time, as less transaction fees are burnt.
 
 <!--## Inflation rates for popular platforms
 _insert table here_
