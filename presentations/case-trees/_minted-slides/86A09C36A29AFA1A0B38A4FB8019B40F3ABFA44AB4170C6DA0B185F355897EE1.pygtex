@@ -1,7 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-  \PYG{c+c1}{\PYGZhy{}\PYGZhy{} | Branches in a case tree.}
-  \PYG{k+kr}{data} \PYG{k+kt}{Branch} \PYG{n}{primTy} \PYG{n}{primVal} \PYG{o+ow}{=} \PYG{k+kt}{Branch}
-    \PYG{p}{\PYGZob{}} \PYG{n}{patBranch} \PYG{o+ow}{::} \PYG{k+kt}{Pattern} \PYG{n}{primTy} \PYG{n}{primVal}
-    \PYG{p}{,} \PYG{n}{caseBranch} \PYG{o+ow}{::} \PYG{k+kt}{CaseTree} \PYG{n}{primTy} \PYG{n}{primVal}
-    \PYG{p}{\PYGZcb{}}
-\end{Verbatim}

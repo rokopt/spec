@@ -1,9 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n+nf}{Name} \PYG{o+ow}{:} \PYG{k+kt}{Set}
-Name \PYG{o+ow}{=} String
-
-\PYG{k+kr}{data} Expr \PYG{o+ow}{:} \PYG{k+kt}{Set} \PYG{k+kr}{where}
-  \PYG{n+nf}{var} \PYG{o+ow}{:} Name \PYG{o+ow}{→} Expr
-  \PYG{n+nf}{lam} \PYG{o+ow}{:} Name \PYG{o+ow}{→} Expr \PYG{o+ow}{→} Expr
-  \PYG{n+nf}{\PYGZus{}∙\PYGZus{}} \PYG{o+ow}{:} Expr \PYG{o+ow}{→} Expr \PYG{o+ow}{→} Expr
-\end{Verbatim}
