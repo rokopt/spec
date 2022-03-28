@@ -169,23 +169,30 @@ Nu f = CofreeComonad f ()
 -------------
 -------------
 
--- The functor which defines the object of the refined first-order ADT
--- category from which all other constructs of Geb can be extracted, and
--- which can be extended to generate super-languages of Geb.
-data GebTypeF : Type -> Type where
-  Geb : GebTypeF carrier
+mutual
+  data GebUniversalPropF : Type -> Type where
 
-Functor GebTypeF where
+  -- The functor which defines the object of the refined first-order ADT
+  -- category from which all other constructs of Geb can be extracted, and
+  -- which can be extended to generate super-languages of Geb.
+  data GebTermF : Type -> Type where
+    -- The object in the category of first-order refined ADTs whose term
+    -- category is isomorphic to the Idris GebTypeF (or that of any other
+    -- correct interpreter in any host language).
+    Geb : GebTermF carrier
+
+Functor GebTermF where
   map _ Geb = Geb
 
-FreeGebType : Type -> Type
-FreeGebType = FreeMonad GebTypeF
+FreeGebTerm : Type -> Type
+FreeGebTerm = FreeMonad GebTermF
 
-gebCata : Functor f => Catamorphism GebTypeF v a
-gebCata alg (InFree x) = alg $ case x of
-  TermVar v' => TermVar v'
-  TermComposite t => TermComposite $ case t of
-    Geb => Geb
+mutual
+  gebCata : Functor f => Catamorphism GebTermF v a
+  gebCata alg (InFree x) = alg $ case x of
+    TermVar v' => TermVar v'
+    TermComposite t => TermComposite $ case t of
+      Geb => Geb
 
-CofreeGebType : Type -> Type
-CofreeGebType = CofreeComonad GebTypeF
+CofreeGebTerm : Type -> Type
+CofreeGebTerm = CofreeComonad GebTermF
