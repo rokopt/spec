@@ -1,0 +1,18 @@
+package language-models
+
+modules =
+      Executable.Test.Main
+    , LanguageDef.Core
+    , LanguageDef.Test.CoreTest
+    , Library.IdrisUtils
+    , Library.Test.IdrisUtilsTest
+    , Test.TestLibrary
+
+depends = contrib, network
+
+sourcedir = "src"
+
+opts = "--total --warnpartial"
+
+main = Executable.Test.Main
+executable = geb
