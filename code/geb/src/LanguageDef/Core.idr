@@ -1,6 +1,7 @@
 module LanguageDef.Core
 
 import Library.IdrisUtils
+import Data.Maybe
 
 -- “Ah Love! could thou and I with Fate conspire
 -- To grasp this sorry Scheme of Things entire,
@@ -10,21 +11,11 @@ import Library.IdrisUtils
 
 %default total
 
--------------------------------------
----- Cartesian closed categories ----
--------------------------------------
-
-
-
--------------------------------------
--------------------------------------
----- Categorial algebra in Idris ----
--------------------------------------
--------------------------------------
-
---------------------
----- F-Algebras ----
---------------------
+-----------------------------------------------
+-----------------------------------------------
+---- Categorial algebra on Idris's Type(0) ----
+-----------------------------------------------
+-----------------------------------------------
 
 public export
 Algebra : (Type -> Type) -> Type -> Type
@@ -169,79 +160,11 @@ public export
 Nu : (Type -> Type) -> Type
 Nu f = CofreeComonad f ()
 
-----------------
----- Magmas ----
-----------------
-
--- A functor which generates binary combinations of its input type.
--- Note that this is a generator, not an interface -- the user does
--- not assert that some type implements the binary operation, but
--- rather calls the functor to _produce_ a type which has a binary
--- operation on the input type.
-infixr 8 <>
-public export
-data MagmaF : Type -> Type where
-  (<>) : a -> a -> MagmaF a
-
-public export
-Functor MagmaF where
-  map f (x <> y) = f x <> f y
-
--------------------
----- Relations ----
--------------------
-
--- The Idris type of symmetric binary relations.
-SymBinRel : Type -> Type
-SymBinRel a = a -> a -> Type
-
--------------------------------
----- Equivalence relations ----
--------------------------------
-
--- Functors which generate an equivalence relation.
--- The bundle describes which elements are being asserted to be equivalent.
-public export
-data EquivTermF : Type -> Type -> Type where
-  EqReflF : a -> EquivTermF a rel
-  EqSymF : rel -> EquivTermF a rel
-  EqTransF : rel -> rel -> EquivTermF a rel
-
-public export
-Bifunctor EquivTermF where
-  bimap f _ (EqReflF a) = EqReflF $ f a
-  bimap _ g (EqSymF rel) = EqSymF $ g rel
-  bimap _ g (EqTransF rel rel') = EqTransF (g rel) (g rel')
-
---------------------
----- Semigroups ----
---------------------
-
-infixr 8 <<>>
-public export
-data SemigroupOpF :
-    ((Type -> Type), (Type -> Type -> Type)) -> (Type -> Type) where
-  (<<>>) : a -> a -> SemigroupOpF (op, rel) a
-
------------------
----- Monoids ----
------------------
-
--- A functor whose free algebra generates a free monoid on the input type.
--- It expresses the identity and associativity laws by including terms
--- which express rewriting according to those laws, in the style of
--- a quotient type.
-public export
-data MonoidF : Type -> Type where
-  MId : MonoidF a
-  MOp : a -> a -> MonoidF a
-  MCancelIdL : a -> MonoidF a
-  MCancelIdR : a -> MonoidF a
-  MShiftR : a -> a -> a -> MonoidF a
-
-------------------------------------------
----- Slices, bundles, and refinements ----
-------------------------------------------
+-------------------------------------------------------------
+-------------------------------------------------------------
+---- Slices, bundles, and refinements in Idris's Type(0) ----
+-------------------------------------------------------------
+-------------------------------------------------------------
 
 SliceObj : Type -> Type
 SliceObj c = (a : Type ** a -> c)
@@ -317,6 +240,27 @@ RefinementProj :
   (r : Refinement) -> (RefinementTotal r) -> Maybe (RefinementBase r)
 RefinementProj (_ ** (_ ** proj)) = proj
 
+IsRefined : (r : Refinement) -> RefinementTotal r -> Type
+IsRefined r = IsJust . RefinementProj r
+
+IsUnrefined : (r : Refinement) -> RefinementTotal r -> Type
+IsUnrefined r = Not . IsJust . RefinementProj r
+
+RefinedType : Refinement -> Type
+RefinedType r = DPair (RefinementTotal r) (IsRefined r)
+
+RefinedToBase : {r : Refinement} -> RefinedType r -> RefinementBase r
+RefinedToBase {r=(base ** (tot ** proj))} (t ** just) = fromJust $ proj t
+
+JustBundle : Refinement -> Bundle
+JustBundle r = (RefinementBase r ** (RefinedType r ** RefinedToBase))
+
+UnrefinedType : Refinement -> Type
+UnrefinedType r = DPair (RefinementTotal r) (IsUnrefined r)
+
+NothingBundle : Refinement -> Bundle
+NothingBundle r = (() ** (UnrefinedType r ** const ()))
+
 RefinementFiber :
   (r : Refinement) -> (baseElem : Maybe (RefinementBase r)) -> Type
 RefinementFiber (base ** (tot ** proj)) baseElem =
@@ -329,6 +273,109 @@ JustFiber (base ** (tot ** proj)) baseElem =
 NothingFiber : (r : Refinement) -> Type
 NothingFiber (base ** (tot ** proj)) =
   BundleFiber (Maybe base ** (tot ** proj)) Nothing
+
+RefinementAlgebra : (Type -> Type) -> Type -> Type
+RefinementAlgebra f a = f a -> Maybe a
+
+RefinementAlgebraToAlgebra : (Traversable f, Applicative f) =>
+  RefinementAlgebra f a -> Algebra f (Maybe a)
+RefinementAlgebraToAlgebra alg = join . traverse alg . sequence
+
+-----------------------------------
+-----------------------------------
+---- Free equivalence in Idris ----
+-----------------------------------
+-----------------------------------
+
+-- Homogeneous binary relation.
+public export
+HomRel : Type -> Type
+HomRel a = a -> a -> Type
+
+-- Given a homogeneous binary relation, generate a type which represents
+-- witnesses to an equivalence generated from the input relation.
+public export
+data FreeEquivF : HomRel a -> Type -> Type where
+  EqRefl : a ->
+    FreeEquivF rel carrier
+  EqSym : a -> a ->
+    FreeEquivF rel carrier -> FreeEquivF rel carrier
+  EqTrans : a -> a -> a ->
+    FreeEquivF rel carrier -> FreeEquivF rel carrier -> FreeEquivF rel carrier
+
+public export
+Functor (FreeEquivF rel) where
+  map f (EqRefl x) = EqRefl x
+  map f (EqSym x y eq) = EqSym x y $ map f eq
+  map f (EqTrans x y z eq eq') = EqTrans x y z (map f eq) (map f eq')
+
+-------------------------------------
+---- Cartesian closed categories ----
+-------------------------------------
+
+
+
+-------------------------------------
+-------------------------------------
+---- Categorial algebra in Idris ----
+-------------------------------------
+-------------------------------------
+
+--------------------
+---- F-Algebras ----
+--------------------
+
+----------------
+---- Magmas ----
+----------------
+
+-- A functor which generates binary combinations of its input type.
+-- Note that this is a generator, not an interface -- the user does
+-- not assert that some type implements the binary operation, but
+-- rather calls the functor to _produce_ a type which has a binary
+-- operation on the input type.
+infixr 8 <>
+public export
+data MagmaF : Type -> Type where
+  (<>) : a -> a -> MagmaF a
+
+public export
+Functor MagmaF where
+  map f (x <> y) = f x <> f y
+
+-------------------
+---- Relations ----
+-------------------
+
+-- The Idris type of symmetric binary relations.
+SymBinRel : Type -> Type
+SymBinRel a = a -> a -> Type
+
+--------------------
+---- Semigroups ----
+--------------------
+
+infixr 8 <<>>
+public export
+data SemigroupOpF :
+    ((Type -> Type), (Type -> Type -> Type)) -> (Type -> Type) where
+  (<<>>) : a -> a -> SemigroupOpF (op, rel) a
+
+-----------------
+---- Monoids ----
+-----------------
+
+-- A functor whose free algebra generates a free monoid on the input type.
+-- It expresses the identity and associativity laws by including terms
+-- which express rewriting according to those laws, in the style of
+-- a quotient type.
+public export
+data MonoidF : Type -> Type where
+  MId : MonoidF a
+  MOp : a -> a -> MonoidF a
+  MCancelIdL : a -> MonoidF a
+  MCancelIdR : a -> MonoidF a
+  MShiftR : a -> a -> a -> MonoidF a
 
 -------------------------------
 ---- Higher-order functors ----
