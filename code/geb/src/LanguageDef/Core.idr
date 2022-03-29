@@ -11,6 +11,12 @@ import Library.IdrisUtils
 %default total
 
 -------------------------------------
+---- Cartesian closed categories ----
+-------------------------------------
+
+
+
+-------------------------------------
 -------------------------------------
 ---- Categorial algebra in Idris ----
 -------------------------------------
@@ -181,17 +187,41 @@ public export
 Functor MagmaF where
   map f (x <> y) = f x <> f y
 
+-------------------
+---- Relations ----
+-------------------
+
+-- The Idris type of symmetric binary relations.
+SymBinRel : Type -> Type
+SymBinRel a = a -> a -> Type
+
 -------------------------------
 ---- Equivalence relations ----
 -------------------------------
 
--- Functors which generates an equivalence relation.
+-- Functors which generate an equivalence relation.
 -- The bundle describes which elements are being asserted to be equivalent.
 public export
 data EquivTermF : Type -> Type -> Type where
   EqReflF : a -> EquivTermF a rel
   EqSymF : rel -> EquivTermF a rel
   EqTransF : rel -> rel -> EquivTermF a rel
+
+public export
+Bifunctor EquivTermF where
+  bimap f _ (EqReflF a) = EqReflF $ f a
+  bimap _ g (EqSymF rel) = EqSymF $ g rel
+  bimap _ g (EqTransF rel rel') = EqTransF (g rel) (g rel')
+
+--------------------
+---- Semigroups ----
+--------------------
+
+infixr 8 <<>>
+public export
+data SemigroupOpF :
+    ((Type -> Type), (Type -> Type -> Type)) -> (Type -> Type) where
+  (<<>>) : a -> a -> SemigroupOpF (op, rel) a
 
 -----------------
 ---- Monoids ----
@@ -213,9 +243,6 @@ data MonoidF : Type -> Type where
 ---- Slices, bundles, and refinements ----
 ------------------------------------------
 
-ExtEq : {a, b : Type} -> (f, g : a -> b) -> Type
-ExtEq {a} f g = (elem : a) -> f elem = g elem
-
 SliceObj : Type -> Type
 SliceObj c = (a : Type ** a -> c)
 
@@ -224,6 +251,9 @@ SliceObjDomain (a ** _) = a
 
 SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
 SliceObjMap (_ ** mx) = mx
+
+ExtEq : {a, b : Type} -> (f, g : a -> b) -> Type
+ExtEq {a} f g = (elem : a) -> f elem = g elem
 
 SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> Type
 SliceMorphism x y =
