@@ -510,14 +510,6 @@ data PolyTypeF : (type, functor : Type) -> Type where
   PolyTypeComposeF : functor -> functor -> PolyTypeF type functor
   PolyTypeADTF : PolynomialF type functor -> PolyTypeF type functor
 
-public export
-Bifunctor PolyTypeF where
-  bimap f g t = ?polytype_bifunctor_hole
-
-public export
-polyTypeCata : Catamorphism (PolyTypeF coefficient) v a
-polyTypeCata alg (InFree t) = alg $ ?polytypef_initial_algebra_hole
-
 -- Next, we perform another recursion.  A programming language might define
 -- an ADT as an initial algebra of a polynomial endofunctor.  So, we will
 -- treat PolynomialF as representative of polynomial endofunctors, and
@@ -533,16 +525,6 @@ data PolyRecTypeF : (type, functor : Type) -> Type where
     functor -> PolyRecTypeF type functor
   PolyRecTypeADTF :
     PolyTypeF type functor -> PolyRecTypeF type functor
-
-public export
-Bifunctor PolyRecTypeF where
-  bimap f g t = ?polyrectype_bifunctor_hole
-
--- Now we show that PolyTypeF also has an initial algebra.  That algebra
--- is the object which we shall call the type of polynomial ADTs.
-public export
-polyRecTypeCata : Catamorphism (PolyRecTypeF type) v a
-polyRecTypeCata alg (InFree t) = alg $ ?polyrectypef_initial_algebra_hole
 
 -----------------------------
 ---- Paths and morphisms ----
