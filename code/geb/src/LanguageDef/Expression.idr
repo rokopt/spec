@@ -56,11 +56,50 @@ checkFreeEquiv (EqTrans x y z eq eq') = case (eq, eq') of
 -------------------------
 -------------------------
 
-----------------------
-----------------------
------ Expressions ----
-----------------------
-----------------------
+-- When freely generating categories, we are producing _three_ types:
+--
+--  - Objects
+--  - Morphisms
+--  - Equalities
+--
+-- The equalities come from the identity and associativity laws.  When we
+-- define categories in the usual way by proving that existing constructs
+-- satisfy the axioms, we must supply proofs of those equalities.  But when
+-- we freely generate a category, we must freely generate those equalities
+-- to _make_ the generated category satisfy the axioms.
+--
+-- Consequently, throughout the rest of the development of expressions, the
+-- algebras which typecheck objects and morphisms will _not_ use metalanguage
+-- equalities -- they will use (and update) carrier types representing
+-- free equivalence relations (see `FreeEquivF` above).  This must include
+-- the expressions representing objects and morphisms -- our free generation
+-- may produce some objects indirectly via morphisms, and since morphisms
+-- may exhibit free equalities, objects may as well, unlike in traditional
+-- category theory.  The typechecking of morphisms must respect a carrier
+-- free equivalence on _objects_, because an equivalence of objects may allow a
+-- composition which would not have been allowed by intensional equality
+-- (meaning that the domain of the following morphism was not intensionally
+-- equal to the codomain of the preceding morphism).
+public export
+data MorphismF : Type -> Type -> Type where
+  -- An identity morphism is labeled by the object which is its
+  -- domain and codomain.
+  IdentityF : vertex -> MorphismF vertex path
+  -- A composition is labeled by its source, intermediate object, and
+  -- target, followed by the two morphisms being composed, with the
+  -- following morphism listed first, as in usual mathematical notation.
+  ComposeF : vertex -> vertex -> vertex -> path -> path -> MorphismF vertex path
+
+public export
+Bifunctor MorphismF where
+  bimap f _ (IdentityF v) = IdentityF $ f v
+  bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
+
+----------------------------------
+----------------------------------
+----- Polynomial endofunctors ----
+----------------------------------
+----------------------------------
 
 -- Expressions are drawn from four categories determined by the presence
 -- or absence of each of the following pairs of universal properties:
