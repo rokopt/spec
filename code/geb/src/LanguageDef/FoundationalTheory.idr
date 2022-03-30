@@ -288,34 +288,18 @@ NothingFiber (base ** (tot ** proj)) =
 ---- Paths and morphisms ----
 -----------------------------
 
--- A functor which generates paths through directed graphs.
 public export
-data PathF : Type -> Type -> Type where
-  -- A loop is labeled by its sole endpoint.
-  LoopF : vertex -> PathF vertex path
-  -- A composition is labeled by its source, intermediate vertex, and
-  -- target, followed by the two paths being composed, with the second
-  -- path pointing to the first, as in composition of morphisms in categories.
-  ComposeF : vertex -> vertex -> vertex -> path -> path -> PathF vertex path
-
-public export
-Bifunctor PathF where
-  bimap f _ (LoopF v) = LoopF $ f v
-  bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
-
-public export
-pathCata : Catamorphism (PathF vertex) v a
-pathCata alg (InFree t) = alg $ case t of
+morphismCata : Catamorphism (MorphismF vertex) v a
+morphismCata alg (InFree t) = alg $ case t of
   TermVar x => TermVar x
   TermComposite x => TermComposite $ case x of
-    LoopF v => LoopF $ v
-    ComposeF s i t q p => ComposeF s i t (pathCata alg q) (pathCata alg p)
+    IdentityF v => IdentityF $ v
+    ComposeF s i t q p =>
+      ComposeF s i t (morphismCata alg q) (morphismCata alg p)
 
 -------------------------------------
 ---- Cartesian closed categories ----
 -------------------------------------
-
-
 
 -------------------------------------
 -------------------------------------
