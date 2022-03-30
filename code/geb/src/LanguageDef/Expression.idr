@@ -47,12 +47,60 @@ import LanguageDef.Atom
 -- coalgebras, which are present in the first-order categories but not the
 -- zeroth-order categories.)
 
+-------------------
+---- Constants ----
+-------------------
+
+-- Given an object `a`, `Const a` is an endofunctor which takes all objects
+-- to `a`.
+public export
+data ConstF : Type -> Type -> Type where
+  InConst : a -> ConstF a carrier
+
+public export
+Bifunctor ConstF where
+  bimap f _ (InConst x) = InConst (f x)
+
+------------------
+---- Products ----
+------------------
+
+-- `ProductF a b` is an operator on endofunctors which takes two endofunctors
+-- to their product.  `ProductF` is therefore not itself an endofunctor; it
+-- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
+-- endofunctors on some category `C` -- if all of `C`'s endofunctors are
+-- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
+-- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
+public export
+data ProductF : Type -> Type -> Type where
+  InProduct : a -> b -> ProductF a b
+
+public export
+Bifunctor ProductF where
+  bimap f g (InProduct x y) = InProduct (f x) (g y)
+
+--------------------
+---- Coproducts ----
+--------------------
+
+-- `CoproductF a b` is also in `[PolyC x PolyC, PolyC]`, and takes two
+-- endofunctors to their coproduct.
+public export
+data CoproductF : Type -> Type -> Type where
+  InCoproductLeft : a -> CoproductF a b
+  InCoproductRight : b -> CoproductF a b
+
+public export
+Bifunctor CoproductF where
+  bimap f _ (InCoproductLeft x) = InCoproductLeft (f x)
+  bimap _ g (InCoproductRight y) = InCoproductRight (g y)
+
 -------------------------
 ---- Natural numbers ----
 -------------------------
 
 public export
-data NatF : (carrier : Type) -> Type where
+data NatF : Type -> Type where
   ZeroF : NatF carrier
   SuccF : carrier -> NatF carrier
 
@@ -66,7 +114,7 @@ Functor NatF where
 ---------------
 
 public export
-data ListF : (atom, carrier : Type) -> Type where
+data ListF : Type -> Type -> Type where
   NilF : ListF atom carrier
   ConsF : atom -> carrier -> ListF atom carrier
 
@@ -81,7 +129,7 @@ Bifunctor ListF where
 
 -- A univariate, finite-degree power.
 public export
-data PowerF : (coefficient, carrier : Type) -> Type where
+data PowerF : Type -> Type -> Type where
   FactorsF :
     ListF (coefficient, NatF carrier) carrier ->
     PowerF coefficient carrier
@@ -98,7 +146,7 @@ powerFactors (FactorsF l) = l
 
 -- A univariate, finite-degree polynomial.
 public export
-data PolynomialF : (coefficient, carrier : Type) -> Type where
+data PolynomialF : Type -> Type -> Type where
   PolyTermsF :
     ListF (PowerF coefficient carrier) carrier ->
     PolynomialF coefficient carrier
@@ -128,7 +176,7 @@ polyFactors = mapFst powerFactors . polyTerms
 -- when using polynomials as types, we can gain expressivity with explicit
 -- composition.
 public export
-data PolyTypeF : (type, functor : Type) -> Type where
+data PolyTypeF : Type -> Type -> Type where
   PolyTypeComposeF : functor -> functor -> PolyTypeF type functor
   PolyTypeADTF : PolynomialF type functor -> PolyTypeF type functor
 
@@ -142,7 +190,7 @@ data PolyTypeF : (type, functor : Type) -> Type where
 -- to `PolynomialF` the option of applying `FreeMonad` to an existing polynomial
 -- type.
 public export
-data PolyRecTypeF : (type, functor : Type) -> Type where
+data PolyRecTypeF : Type -> Type -> Type where
   PolyTypeFreeF :
     functor -> PolyRecTypeF type functor
   PolyRecTypeADTF :
