@@ -12,11 +12,16 @@ import LanguageDef.Atom
 -----------------------------------
 
 -- A type which represents witnesses to an equivalence relation.
+-- A term of this type may be used as a rewrite rule.
+
 public export
 data FreeEquivF : Type -> Type -> Type where
   -- `EqRefl` represents the equivalence between some term `x` of type `a`
-  -- and itself.
-  EqRefl : a -> FreeEquivF a carrier
+  -- and itself.  The reason it has _two_ parameters of type `a` is that
+  -- a free generator of witnesses to an equivalence relation is in effect,
+  -- and will be used as, a rewrite rule.  Asserting `EqRefl` between `x`
+  -- and `y` is a claim that there is a _decidable_ equality between the two.
+  EqRefl : a -> a -> FreeEquivF a carrier
   -- Given a term of `carrier`, which represents an equivalence bewteen
   -- terms `x` and `y` of `a`, `EqSym` represents an equivalence between
   -- `y` and `x`.
@@ -27,16 +32,16 @@ data FreeEquivF : Type -> Type -> Type where
   EqTrans : a -> a -> a -> carrier -> carrier -> FreeEquivF a carrier
 
 public export
-Functor (FreeEquivF a) where
-  map _ (EqRefl x) = EqRefl x
-  map f (EqSym x y eq) = EqSym x y $ f eq
-  map f (EqTrans x y z eq eq') = EqTrans x y z (f eq) (f eq')
+Bifunctor FreeEquivF where
+  bimap f _ (EqRefl x y) = EqRefl (f x) (f y)
+  bimap f g (EqSym x y eq) = EqSym (f x) (f y) $ g eq
+  bimap f g (EqTrans x y z eq eq') = EqTrans (f x) (f y) (f z) (g eq) (g eq')
 
 -- Tests for the validity of a witness to an equivalence relation,
 -- and if it is valid, returns which terms are being witnessed to be equivalent.
 public export
 checkFreeEquiv : Eq a => FreeEquivF a (Maybe (a, a)) -> Maybe (a, a)
-checkFreeEquiv (EqRefl x) = Just (x, x)
+checkFreeEquiv (EqRefl x y) = if x == y then Just (x, y) else Nothing
 checkFreeEquiv (EqSym x y eq) = case eq of
   Just (x', y') => if x == x' && y == y' then Just (x, y) else Nothing
   Nothing => Nothing
