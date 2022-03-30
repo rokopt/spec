@@ -12,6 +12,8 @@ modules =
     , LanguageDef.Logic
     , LanguageDef.ComputationalEffects
     , LanguageDef.Embedded
+    , LanguageDef.FullLanguageDef
+    , Library.CategoryTheory
     , Test.TestLibrary
     , Library.Test.IdrisUtilsTest
     , LanguageDef.Test.AtomTest
@@ -23,6 +25,7 @@ modules =
     , LanguageDef.Test.LogicTest
     , LanguageDef.Test.ComputationalEffectsTest
     , LanguageDef.Test.EmbeddedTest
+    , Library.Test.CategoryTheoryTest
 
 depends = contrib, network
 
