@@ -295,19 +295,16 @@ HomRel a = a -> a -> Type
 -- Given a homogeneous binary relation, generate a type which represents
 -- witnesses to an equivalence generated from the input relation.
 public export
-data FreeEquivF : HomRel a -> Type -> Type where
-  EqRefl : a ->
-    FreeEquivF rel carrier
-  EqSym : a -> a ->
-    FreeEquivF rel carrier -> FreeEquivF rel carrier
-  EqTrans : a -> a -> a ->
-    FreeEquivF rel carrier -> FreeEquivF rel carrier -> FreeEquivF rel carrier
+data FreeEquivF : Type -> Type -> Type where
+  EqRefl : a -> FreeEquivF a carrier
+  EqSym : carrier -> FreeEquivF a carrier
+  EqTrans : carrier -> carrier -> FreeEquivF a carrier
 
 public export
-Functor (FreeEquivF rel) where
-  map f (EqRefl x) = EqRefl x
-  map f (EqSym x y eq) = EqSym x y $ map f eq
-  map f (EqTrans x y z eq eq') = EqTrans x y z (map f eq) (map f eq')
+Functor (FreeEquivF a) where
+  map _ (EqRefl x) = EqRefl x
+  map f (EqSym eq) = EqSym $ f eq
+  map f (EqTrans eq eq') = EqTrans (f eq) (f eq')
 
 -------------------------------------
 ---- Cartesian closed categories ----
