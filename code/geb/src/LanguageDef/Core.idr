@@ -287,21 +287,23 @@ RefinementAlgebraToAlgebra alg = join . traverse alg . sequence
 -----------------------------------
 -----------------------------------
 
--- Homogeneous binary relation.
+-- A type which represents witnesses to an equivalence relation.
 public export
-HomRel : Type -> Type
-HomRel a = a -> a -> Type
+data FreeEquivF : Type -> Type where
+  -- `EqRefl` represents the equivalence between some term `x` of type `a`
+  -- and itself.
+  EqRefl : a -> FreeEquivF carrier
+  -- Given a term of `carrier`, which represents an equivalence bewteen
+  -- terms `x` and `y` of `a`, `EqSym` represents an equivalence between
+  -- `y` and `x`.
+  EqSym : carrier -> FreeEquivF carrier
+  -- Given terms `eq` and `eq'` of type `carrier`, which respectively
+  -- represent the equivalences of `x` and `y` and of `y` and `z` of type `a`,
+  -- `EqTrans` represents the equivalence of `x` and `z`.
+  EqTrans : carrier -> carrier -> FreeEquivF carrier
 
--- Given a homogeneous binary relation, generate a type which represents
--- witnesses to an equivalence generated from the input relation.
 public export
-data FreeEquivF : Type -> Type -> Type where
-  EqRefl : a -> FreeEquivF a carrier
-  EqSym : carrier -> FreeEquivF a carrier
-  EqTrans : carrier -> carrier -> FreeEquivF a carrier
-
-public export
-Functor (FreeEquivF a) where
+Functor FreeEquivF where
   map _ (EqRefl x) = EqRefl x
   map f (EqSym eq) = EqSym $ f eq
   map f (EqTrans eq eq') = EqTrans (f eq) (f eq')
