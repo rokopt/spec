@@ -2,11 +2,23 @@ package language-models
 
 modules =
       Executable.Test.Main
-    , LanguageDef.Core
-    , LanguageDef.Test.CoreTest
     , Library.IdrisUtils
-    , Library.Test.IdrisUtilsTest
+    , LanguageDef.Atom
+    , LanguageDef.Expression
+    , LanguageDef.FoundationalTheory
+    , LanguageDef.Interpretation
+    , LanguageDef.Metaprogramming
+    , LanguageDef.Logic
+    , LanguageDef.ComputationalEffects
     , Test.TestLibrary
+    , Library.Test.IdrisUtilsTest
+    , LanguageDef.Test.AtomTest
+    , LanguageDef.Test.ExpressionTest
+    , LanguageDef.Test.InterpretationTest
+    , LanguageDef.Test.FoundationalTheoryTest
+    , LanguageDef.Test.MetaprogrammingTest
+    , LanguageDef.Test.LogicTest
+    , LanguageDef.Test.ComputationalEffectsTest
 
 depends = contrib, network
 

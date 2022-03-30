@@ -1,16 +1,14 @@
-module LanguageDef.Core
+module LanguageDef.FoundationalTheory
 
 import Library.IdrisUtils
-import Data.Maybe
-import Decidable.Equality
+
+%default total
 
 -- “Ah Love! could thou and I with Fate conspire
 -- To grasp this sorry Scheme of Things entire,
 -- Would not we shatter it to bits -- and then
 -- Re-mould it nearer to the Heart's Desire!”
 --  - _Rubaiyat of Omar Khayyam_ (tr. Edward FitzGerald)
-
-%default total
 
 -----------------------------------------------
 -----------------------------------------------
@@ -275,13 +273,6 @@ NothingFiber : (r : Refinement) -> Type
 NothingFiber (base ** (tot ** proj)) =
   BundleFiber (Maybe base ** (tot ** proj)) Nothing
 
-RefinementAlgebra : (Type -> Type) -> Type -> Type
-RefinementAlgebra f a = f a -> Maybe a
-
-RefinementAlgebraToAlgebra : (Traversable f, Applicative f) =>
-  RefinementAlgebra f a -> Algebra f (Maybe a)
-RefinementAlgebraToAlgebra alg = join . traverse alg . sequence
-
 -----------------------------------
 -----------------------------------
 ---- Free equivalence in Idris ----
@@ -312,7 +303,7 @@ Functor (FreeEquivF a) where
 -- Tests for the validity of a witness to an equivalence relation,
 -- and if it is valid, returns which terms are being witnessed to be equivalent.
 public export
-checkFreeEquiv : Eq a => FreeEquivF a (Maybe (a, a)) -> Maybe (a, a)
+checkFreeEquiv : Eq a => Algebra (FreeEquivF a) (Maybe (a, a))
 checkFreeEquiv (EqRefl x) = Just (x, x)
 checkFreeEquiv (EqSym x y eq) = case eq of
   Just (x', y') => if x == x' && y == y' then Just (x, y) else Nothing
@@ -323,9 +314,37 @@ checkFreeEquiv (EqTrans x y z eq eq') = case (eq, eq') of
   _ => Nothing
 
 ---------------------------------------------------
+---------------------------------------------------
 ---- Free equivalence-parameterized categories ----
 ---------------------------------------------------
+---------------------------------------------------
 
+-----------------------------
+---- Paths and morphisms ----
+-----------------------------
+
+-- A functor which generates paths through directed graphs.
+public export
+data PathF : Type -> Type -> Type where
+  -- A loop is labeled by its sole endpoint.
+  LoopF : vertex -> PathF vertex path
+  -- A composition is labeled by its source, intermediate vertex, and
+  -- target, followed by the two paths being composed, with the second
+  -- path pointing to the first, as in composition of morphisms in categories.
+  ComposeF : vertex -> vertex -> vertex -> path -> path -> PathF vertex path
+
+public export
+Bifunctor PathF where
+  bimap f _ (LoopF v) = LoopF $ f v
+  bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
+
+public export
+pathCata : Catamorphism (PathF vertex) v a
+pathCata alg (InFree t) = alg $ case t of
+  TermVar x => TermVar x
+  TermComposite x => TermComposite $ case x of
+    LoopF v => LoopF $ v
+    ComposeF s i t q p => ComposeF s i t (pathCata alg q) (pathCata alg p)
 
 -------------------------------------
 ---- Cartesian closed categories ----
@@ -620,33 +639,6 @@ data PolyRecTypeF : (type, functor : Type) -> Type where
     functor -> PolyRecTypeF type functor
   PolyRecTypeADTF :
     PolyTypeF type functor -> PolyRecTypeF type functor
-
------------------------------
----- Paths and morphisms ----
------------------------------
-
--- A functor which generates paths through directed graphs.
-public export
-data PathF : Type -> Type -> Type where
-  -- A loop is labeled by its sole endpoint.
-  LoopF : vertex -> PathF vertex path
-  -- A composition is labeled by its source, intermediate vertex, and
-  -- target, followed by the two paths being composed, with the second
-  -- path pointing to the first, as in composition of morphisms in categories.
-  ComposeF : vertex -> vertex -> vertex -> path -> path -> PathF vertex path
-
-public export
-Bifunctor PathF where
-  bimap f _ (LoopF v) = LoopF $ f v
-  bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
-
-public export
-pathCata : Catamorphism (PathF vertex) v a
-pathCata alg (InFree t) = alg $ case t of
-  TermVar x => TermVar x
-  TermComposite x => TermComposite $ case x of
-    LoopF v => LoopF $ v
-    ComposeF s i t q p => ComposeF s i t (pathCata alg q) (pathCata alg p)
 
 -------------
 -------------
