@@ -460,53 +460,13 @@ listCata alg (InFree t) = alg $ case t of
     NilF => NilF
     ConsF a l' => ConsF a $ listCata alg l'
 
----------------------
----- Polynomials ----
----------------------
-
--- A univariate, finite-degree power.
-public export
-data PowerF : (coefficient, carrier : Type) -> Type where
-  FactorsF :
-    ListF (coefficient, NatF carrier) carrier ->
-    PowerF coefficient carrier
-
-public export
-Bifunctor PowerF where
-  bimap f g (FactorsF l) = FactorsF $ bimap (bimap f $ map g) g l
+-----------------------------
+---- Polynomial algebras ----
+-----------------------------
 
 public export
 powerToListAlg : Algebra (PowerF v) a -> Algebra (ListF (v, NatF a)) a
 powerToListAlg alg = alg . FactorsF
-
-export
-powerFactors :
-  PowerF coefficient carrier ->
-  ListF (coefficient, NatF carrier) carrier
-powerFactors (FactorsF l) = l
-
--- A univariate, finite-degree polynomial.
-public export
-data PolynomialF : (coefficient, carrier : Type) -> Type where
-  PolyTermsF :
-    ListF (PowerF coefficient carrier) carrier ->
-    PolynomialF coefficient carrier
-
-public export
-Bifunctor PolynomialF where
-  bimap f g (PolyTermsF t) = PolyTermsF $ bimap (bimap f g) g t
-
-export
-polyTerms :
-  PolynomialF coefficient carrier ->
-  ListF (PowerF coefficient carrier) carrier
-polyTerms (PolyTermsF t) = t
-
-export
-polyFactors :
-  PolynomialF coefficient carrier ->
-  ListF (ListF (coefficient, NatF carrier) carrier) carrier
-polyFactors = mapFst powerFactors . polyTerms
 
 public export
 polyToPowerAlg : Algebra (PolynomialF v) a -> Algebra (ListF (PowerF v a)) a
@@ -516,10 +476,6 @@ public export
 polyToListAlg :
   Algebra (PolynomialF v) a -> Algebra (ListF (ListF (v, NatF a) a)) a
 polyToListAlg alg = polyToPowerAlg alg . mapFst FactorsF
-
------------------------------
----- Polynomial algebras ----
------------------------------
 
 -- Although not _all_ endofunctors have initial algebras, there are some
 -- _classes_ of endofunctors that can be guaranteed to have initial algebras.
@@ -595,35 +551,6 @@ where
       SuccF (InFree t) => SuccF $ alg $ case t of
         TermVar x => TermVar x
         TermComposite t => TermComposite $ mapPoly t
-
--- Next, we introduce a way of interpreting polynomials as datatypes.
--- A polynomial endofunctor may be viewed as simply a polynomial, and
--- may be factored into one, but when representing types with
--- endofunctors, we may wish to factor out commonality amongst types
--- and compose them from smaller components. Such types could theoretically
--- be fully distributed into flat polynomials like `PolynomialF`, but
--- when using polynomials as types, we can gain expressivity with explicit
--- composition.
-public export
-data PolyTypeF : (type, functor : Type) -> Type where
-  PolyTypeComposeF : functor -> functor -> PolyTypeF type functor
-  PolyTypeADTF : PolynomialF type functor -> PolyTypeF type functor
-
--- Next, we perform another recursion.  A programming language might define
--- an ADT as an initial algebra of a polynomial endofunctor.  So, we will
--- treat PolynomialF as representative of polynomial endofunctors, and
--- therefore potentially of ADTs.  To turn a polynomial endofunctor
--- which represents a non-recursive datatype into one which represents a
--- recursive type, we apply the above-defined higher-order functor,
--- `FreeMonad` (AKA `F*`).  So to generate polynomial _recursive_ types, we add
--- to `PolynomialF` the option of applying `FreeMonad` to an existing polynomial
--- type.
-public export
-data PolyRecTypeF : (type, functor : Type) -> Type where
-  PolyTypeFreeF :
-    functor -> PolyRecTypeF type functor
-  PolyRecTypeADTF :
-    PolyTypeF type functor -> PolyRecTypeF type functor
 
 -------------
 -------------
