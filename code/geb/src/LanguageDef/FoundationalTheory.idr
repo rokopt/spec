@@ -1,6 +1,11 @@
 module LanguageDef.FoundationalTheory
 
 import Library.IdrisUtils
+import LanguageDef.Atom
+import LanguageDef.Expression
+
+%default total
+
 
 %default total
 

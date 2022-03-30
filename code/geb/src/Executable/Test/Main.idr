@@ -6,9 +6,11 @@ import LanguageDef.Test.AtomTest
 import LanguageDef.Test.ExpressionTest
 import LanguageDef.Test.FoundationalTheoryTest
 import LanguageDef.Test.InterpretationTest
+import LanguageDef.Test.SyntaxTest
 import LanguageDef.Test.MetaprogrammingTest
 import LanguageDef.Test.LogicTest
 import LanguageDef.Test.ComputationalEffectsTest
+import LanguageDef.Test.EmbeddedTest
 
 %default total
 
@@ -21,6 +23,8 @@ main = do
   LanguageDef.Test.ExpressionTest.languageDefExpressionTest
   LanguageDef.Test.FoundationalTheoryTest.languageDefFoundationalTheoryTest
   LanguageDef.Test.InterpretationTest.languageDefInterpretationTest
+  LanguageDef.Test.SyntaxTest.languageDefSyntaxTest
   LanguageDef.Test.MetaprogrammingTest.languageDefMetaprogrammingTest
   LanguageDef.Test.LogicTest.languageDefLogicTest
   LanguageDef.Test.ComputationalEffectsTest.languageDefComputationalEffectsTest
+  LanguageDef.Test.EmbeddedTest.languageDefEmbeddedTest

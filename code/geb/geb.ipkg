@@ -7,18 +7,22 @@ modules =
     , LanguageDef.Expression
     , LanguageDef.FoundationalTheory
     , LanguageDef.Interpretation
+    , LanguageDef.Syntax
     , LanguageDef.Metaprogramming
     , LanguageDef.Logic
     , LanguageDef.ComputationalEffects
+    , LanguageDef.Embedded
     , Test.TestLibrary
     , Library.Test.IdrisUtilsTest
     , LanguageDef.Test.AtomTest
     , LanguageDef.Test.ExpressionTest
     , LanguageDef.Test.InterpretationTest
+    , LanguageDef.Test.SyntaxTest
     , LanguageDef.Test.FoundationalTheoryTest
     , LanguageDef.Test.MetaprogrammingTest
     , LanguageDef.Test.LogicTest
     , LanguageDef.Test.ComputationalEffectsTest
+    , LanguageDef.Test.EmbeddedTest
 
 depends = contrib, network
 
