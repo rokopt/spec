@@ -441,16 +441,6 @@ Bifunctor f => Bifunctor (flip f) where
 -------------------------
 
 public export
-data NatF : (carrier : Type) -> Type where
-  ZeroF : NatF carrier
-  SuccF : carrier -> NatF carrier
-
-public export
-Functor NatF where
-  map _ ZeroF = ZeroF
-  map f (SuccF n) = SuccF $ f n
-
-public export
 natCata : Catamorphism NatF v a
 natCata alg (InFree t) = alg $ case t of
   TermVar x => TermVar x
@@ -461,16 +451,6 @@ natCata alg (InFree t) = alg $ case t of
 ---------------
 ---- Lists ----
 ---------------
-
-public export
-data ListF : (atom, carrier : Type) -> Type where
-  NilF : ListF atom carrier
-  ConsF : atom -> carrier -> ListF atom carrier
-
-public export
-Bifunctor ListF where
-  bimap f g NilF = NilF
-  bimap f g (ConsF a l) = ConsF (f a) (g l)
 
 public export
 listCata : Catamorphism (ListF atom) v a
