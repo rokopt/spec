@@ -2,6 +2,7 @@ module LanguageDef.Core
 
 import Library.IdrisUtils
 import Data.Maybe
+import Decidable.Equality
 
 -- “Ah Love! could thou and I with Fate conspire
 -- To grasp this sorry Scheme of Things entire,
@@ -289,24 +290,42 @@ RefinementAlgebraToAlgebra alg = join . traverse alg . sequence
 
 -- A type which represents witnesses to an equivalence relation.
 public export
-data FreeEquivF : Type -> Type where
+data FreeEquivF : Type -> Type -> Type where
   -- `EqRefl` represents the equivalence between some term `x` of type `a`
   -- and itself.
-  EqRefl : a -> FreeEquivF carrier
+  EqRefl : a -> FreeEquivF a carrier
   -- Given a term of `carrier`, which represents an equivalence bewteen
   -- terms `x` and `y` of `a`, `EqSym` represents an equivalence between
   -- `y` and `x`.
-  EqSym : carrier -> FreeEquivF carrier
+  EqSym : a -> a -> carrier -> FreeEquivF a carrier
   -- Given terms `eq` and `eq'` of type `carrier`, which respectively
   -- represent the equivalences of `x` and `y` and of `y` and `z` of type `a`,
   -- `EqTrans` represents the equivalence of `x` and `z`.
-  EqTrans : carrier -> carrier -> FreeEquivF carrier
+  EqTrans : a -> a -> a -> carrier -> carrier -> FreeEquivF a carrier
 
 public export
-Functor FreeEquivF where
+Functor (FreeEquivF a) where
   map _ (EqRefl x) = EqRefl x
-  map f (EqSym eq) = EqSym $ f eq
-  map f (EqTrans eq eq') = EqTrans (f eq) (f eq')
+  map f (EqSym x y eq) = EqSym x y $ f eq
+  map f (EqTrans x y z eq eq') = EqTrans x y z (f eq) (f eq')
+
+-- Tests for the validity of a witness to an equivalence relation,
+-- and if it is valid, returns which terms are being witnessed to be equivalent.
+public export
+checkFreeEquiv : Eq a => FreeEquivF a (Maybe (a, a)) -> Maybe (a, a)
+checkFreeEquiv (EqRefl x) = Just (x, x)
+checkFreeEquiv (EqSym x y eq) = case eq of
+  Just (x', y') => if x == x' && y == y' then Just (x, y) else Nothing
+  Nothing => Nothing
+checkFreeEquiv (EqTrans x y z eq eq') = case (eq, eq') of
+  (Just (x', y'), Just (y'', z')) =>
+    if x == x' && y == y' && y == y'' && z == z' then Just (x, z) else Nothing
+  _ => Nothing
+
+---------------------------------------------------
+---- Free equivalence-parameterized categories ----
+---------------------------------------------------
+
 
 -------------------------------------
 ---- Cartesian closed categories ----
