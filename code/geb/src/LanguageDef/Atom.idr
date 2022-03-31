@@ -4,58 +4,62 @@ import Library.IdrisUtils
 
 %default total
 
----------------------------------
----------------------------------
----- Atoms used in `GebTerm` ----
----------------------------------
----------------------------------
+-- This module implements decidable equalities and ordering and such
+-- on enumerated types -- the kind of thing that a `deriving`
+-- mechanism would provide automatically.
+
+------------------------------------------
+------------------------------------------
+---- Classification used in `GebTerm` ----
+------------------------------------------
+------------------------------------------
 
 public export
-data GebAtom : Type where
-  GANat : GebAtom
-  GAList : GebAtom
+data GTClass : Type where
+  GTCnat : GTClass
+  GTClist : GTClass
 
 export
-gaEncode : GebAtom -> Nat
-gaEncode GANat = 0
-gaEncode GAList = 1
+gtcEncode : GTClass -> Nat
+gtcEncode GTCnat = 0
+gtcEncode GTClist = 1
 
 export
-gaDecode : Nat -> Maybe GebAtom
-gaDecode 0 = Just GANat
-gaDecode 1 = Just GAList
-gaDecode _ = Nothing
+gtcDecode : Nat -> Maybe GTClass
+gtcDecode 0 = Just GTCnat
+gtcDecode 1 = Just GTClist
+gtcDecode _ = Nothing
 
 export
-gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
-gaDecodeEncodeIsJust GANat = Refl
-gaDecodeEncodeIsJust GAList = Refl
+gtcDecodeEncodeIsJust : (a : GTClass) -> gtcDecode (gtcEncode a) = Just a
+gtcDecodeEncodeIsJust GTCnat = Refl
+gtcDecodeEncodeIsJust GTClist = Refl
 
 export
-gaToString : GebAtom -> String
-gaToString GANat = "Nat"
-gaToString GAList = "List"
+gtcToString : GTClass -> String
+gtcToString GTCnat = "Nat"
+gtcToString GTClist = "List"
 
 export
-Show GebAtom where
-  show a = gaToString a
+Show GTClass where
+  show a = gtcToString a
 
 export
-gaEq : GebAtom -> GebAtom -> Bool
-gaEq a a' = gaEncode a == gaEncode a'
+gtcEq : GTClass -> GTClass -> Bool
+gtcEq a a' = gtcEncode a == gtcEncode a'
 
 export
-Eq GebAtom where
-  (==) = gaEq
+Eq GTClass where
+  (==) = gtcEq
 
 export
-Ord GebAtom where
-  a < a' = gaEncode a < gaEncode a'
+Ord GTClass where
+  a < a' = gtcEncode a < gtcEncode a'
 
 export
-gaDecEq : (a, a' : GebAtom) -> Dec (a = a')
-gaDecEq = encodingDecEq gaEncode gaDecode gaDecodeEncodeIsJust decEq
+gtcDecEq : (a, a' : GTClass) -> Dec (a = a')
+gtcDecEq = encodingDecEq gtcEncode gtcDecode gtcDecodeEncodeIsJust decEq
 
 export
-DecEq GebAtom where
-  decEq = gaDecEq
+DecEq GTClass where
+  decEq = gtcDecEq
