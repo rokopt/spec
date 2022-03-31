@@ -103,6 +103,14 @@ GebTermF = (GebTermF_object ** GebTermF_morphism)
 ---- Term algebra ----
 ----------------------
 
+public export
+GebTermMu : GTClass -> Type
+GebTermMu = MuProduct GebTermF_object
+
+public export
+GebTermNu : GTClass -> Type
+GebTermNu = NuProduct GebTermF_object
+
 -----------------------------------
 -----------------------------------
 ---- Free equivalence in Idris ----
