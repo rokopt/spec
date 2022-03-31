@@ -57,14 +57,14 @@ import LanguageDef.Atom
 
 public export
 GebTermProductCatObject : Type
-GebTermProductCatObject = GTClass -> Type
+GebTermProductCatObject = ProductCatObject GTClass
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
 GebTermProductCatMorphism :
   GebTermProductCatObject -> GebTermProductCatObject -> Type
-GebTermProductCatMorphism dom cod = (c : GTClass) -> dom c -> cod c
+GebTermProductCatMorphism = ProductCatMorphism {idx=GTClass}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
@@ -72,19 +72,15 @@ GebTermProductCatMorphism dom cod = (c : GTClass) -> dom c -> cod c
 
 public export
 GebTermProductCatObjectMap : Type
-GebTermProductCatObjectMap = GebTermProductCatObject -> GebTermProductCatObject
+GebTermProductCatObjectMap = ProductCatObjectEndoMap GTClass
 
 public export
 GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
-GebTermProductCatMorphismMap objmap =
-  (dom, cod : GebTermProductCatObject) ->
-  GebTermProductCatMorphism dom cod ->
-  GebTermProductCatMorphism (objmap dom) (objmap cod)
+GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
 GebTermProductCatEndofunctor : Type
-GebTermProductCatEndofunctor =
-  DPair GebTermProductCatObjectMap GebTermProductCatMorphismMap
+GebTermProductCatEndofunctor = ProductCatEndofunctor GTClass
 
 -- The object-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
