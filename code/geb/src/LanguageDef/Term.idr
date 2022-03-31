@@ -1,6 +1,7 @@
 module LanguageDef.Term
 
 import Library.IdrisUtils
+import Library.IdrisCategories
 import LanguageDef.Atom
 
 %default total

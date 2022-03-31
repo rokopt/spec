@@ -12,6 +12,7 @@ import LanguageDef.Test.MetaprogrammingTest
 import LanguageDef.Test.LogicTest
 import LanguageDef.Test.ComputationalEffectsTest
 import LanguageDef.Test.EmbeddedTest
+import Library.Test.IdrisCategoriesTest
 import Library.Test.CategoryTheoryTest
 
 %default total
@@ -31,4 +32,5 @@ main = do
   LanguageDef.Test.LogicTest.languageDefLogicTest
   LanguageDef.Test.ComputationalEffectsTest.languageDefComputationalEffectsTest
   LanguageDef.Test.EmbeddedTest.languageDefEmbeddedTest
+  Library.Test.IdrisCategoriesTest.libraryIdrisCategoriesTest
   Library.Test.CategoryTheoryTest.libraryCategoryTheoryTest

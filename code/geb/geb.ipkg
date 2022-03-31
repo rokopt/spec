@@ -3,6 +3,8 @@ package language-models
 modules =
       Executable.Test.Main
     , Library.IdrisUtils
+    , Library.IdrisCategories
+    , Library.CategoryTheory
     , LanguageDef.Atom
     , LanguageDef.Term
     , LanguageDef.Expression
@@ -14,9 +16,6 @@ modules =
     , LanguageDef.ComputationalEffects
     , LanguageDef.Embedded
     , LanguageDef.FullLanguageDef
-    , Library.CategoryTheory
-    , Test.TestLibrary
-    , Library.Test.IdrisUtilsTest
     , LanguageDef.Test.AtomTest
     , LanguageDef.Test.TermTest
     , LanguageDef.Test.ExpressionTest
@@ -27,6 +26,9 @@ modules =
     , LanguageDef.Test.LogicTest
     , LanguageDef.Test.ComputationalEffectsTest
     , LanguageDef.Test.EmbeddedTest
+    , Test.TestLibrary
+    , Library.Test.IdrisUtilsTest
+    , Library.Test.IdrisCategoriesTest
     , Library.Test.CategoryTheoryTest
 
 depends = contrib, network
