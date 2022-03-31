@@ -209,29 +209,38 @@ ProductCatCoalgebra f a = ProductCatMorphism a (f a)
 -- tress of that datatype with labels drawn from type `v`.
 public export
 data TreeFunctor : (Type -> Type) -> Type -> (Type -> Type) where
-  TreeNode : {f : Type -> Type} -> {0 a, x : Type} ->
-    a -> f x -> TreeFunctor f a x
-
-export
-treeLabel : {f : Type -> Type} -> {a, x : Type} -> TreeFunctor f a x -> a
-treeLabel (TreeNode a' _) = a'
-
-export
-treeSubtree : {f : Type -> Type} -> {a, x : Type} -> TreeFunctor f a x -> f x
-treeSubtree (TreeNode _ fx) = fx
+  TreeNode : {f : Type -> Type} -> {0 l, a : Type} ->
+    l -> f a -> TreeFunctor f l a
 
 export
 Functor f => Bifunctor (TreeFunctor f) where
   bimap f' g' (TreeNode x fx) = TreeNode (f' x) (map g' fx)
 
--- A coalgebra on a functor representing a type of labeled trees (as generated
--- by `TreeFunctor` above) may be viewed as a polymorphic coalgebra, because
--- for each object `v` it generates an `F[v]`-coalgebra on an any given carrier
--- object.  When `v` is the terminal object (`Unit`), it specializes to
--- generating `F`-coalgebras.
 public export
-TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
-TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
+data ProductCatTreeFunctor : {idx : Type} ->
+    ProductCatObjectEndoMap idx ->
+    ProductCatObject idx ->
+    ProductCatObjectEndoMap idx where
+  ProductCatTreeNode : {idx : Type} ->
+    {f : ProductCatObjectEndoMap idx} -> {0 l, a : ProductCatObject idx} ->
+    {i : idx} ->
+    l i -> f a i -> ProductCatTreeFunctor f l a i
+
+export
+treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
+treeLabel (TreeNode a' _) = a'
+
+export
+treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> f a
+treeSubtree (TreeNode _ fx) = fx
+
+export
+treeLabelProduct : ProductCatTreeFunctor f l a i -> l i
+treeLabelProduct (ProductCatTreeNode a' _) = a'
+
+export
+treeSubtreeProduct : ProductCatTreeFunctor f l a i -> f a i
+treeSubtreeProduct (ProductCatTreeNode _ fx) = fx
 
 -- If `F` has a terminal coalgebra, then for every object `a`, the functor
 -- `Fa` defined above also has a terminal coalgebra, which is isomorphic
@@ -246,6 +255,15 @@ data CofreeComonad : (Type -> Type) -> (Type -> Type) where
     Inf (TreeFunctor f a (CofreeComonad f a)) -> CofreeComonad f a
 
 public export
+data ProductCatCofreeComonad : {idx : Type} ->
+    ProductCatObjectEndoMap idx -> ProductCatObjectEndoMap idx where
+  InCofreeProduct : {idx : Type} ->
+    {f : ProductCatObjectEndoMap idx} -> {l : ProductCatObject idx} ->
+    {i : idx} ->
+    Inf (ProductCatTreeFunctor f l (ProductCatCofreeComonad f l) i) ->
+    ProductCatCofreeComonad f l i
+
+public export
 inCofreeTree : {a : Type} -> {f : Type -> Type} ->
   a -> f (CofreeComonad f a) -> CofreeComonad f a
 inCofreeTree x fx = InCofree $ TreeNode x fx
@@ -255,14 +273,31 @@ outCofree : {f : Type -> Type} -> {a : Type} ->
   CofreeComonad f a -> TreeFunctor f a (CofreeComonad f a)
 outCofree (InCofree x) = x
 
--- Not all endofunctors have terminal coalgebras.  If an endofunctor
--- _does_ have a terminal coalgebra, then this is the signature of
--- its parameterized anamorphism (unfold).
-Anamorphism : (Type -> Type) -> Type -> Type -> Type
-Anamorphism f v a = TreeCoalgebra f v a -> a -> CofreeComonad f v
+public export
+outCofreeProduct : {idx : Type} ->
+  {f : ProductCatObjectEndoMap idx} -> {l : ProductCatObject idx} ->
+  {i : idx} ->
+  ProductCatCofreeComonad f l i ->
+  ProductCatTreeFunctor f l (ProductCatCofreeComonad f l) i
+outCofreeProduct (InCofreeProduct x) = x
 
 -- Special case of `CofreeComonad` where `v` is `Unit`.
 -- This is the cofixpoint of an endofunctor (if it exists).
 public export
 Nu : (Type -> Type) -> Type
 Nu f = CofreeComonad f ()
+
+public export
+NuProduct : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx
+NuProduct f = ProductCatCofreeComonad f (const ())
+
+-- Not all endofunctors have terminal coalgebras.  If an endofunctor
+-- _does_ have a terminal coalgebra, then this is the signature of
+-- its anamorphism (unfold).
+Anamorphism : (Type -> Type) -> Type -> Type
+Anamorphism f l = Coalgebra f l -> l -> Nu f
+
+ProductAnamorphism : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
+ProductAnamorphism f l = ProductCatMorphism l (NuProduct f)
