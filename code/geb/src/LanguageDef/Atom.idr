@@ -4,56 +4,58 @@ import Library.IdrisUtils
 
 %default total
 
-------------------------------------
----- Atoms used in `Expression` ----
-------------------------------------
+---------------------------------
+---------------------------------
+---- Atoms used in `GebTerm` ----
+---------------------------------
+---------------------------------
 
 public export
-data ExprAtom : Type where
-  EANat : ExprAtom
-  EAList : ExprAtom
-
-public export
-eaEncode : ExprAtom -> Nat
-eaEncode EANat = 0
-eaEncode EAList = 1
-
-public export
-eaDecode : Nat -> Maybe ExprAtom
-eaDecode 0 = Just EANat
-eaDecode 1 = Just EAList
-eaDecode _ = Nothing
+data GebAtom : Type where
+  GANat : GebAtom
+  GAList : GebAtom
 
 export
-eaDecodeEncodeIsJust : (a : ExprAtom) -> eaDecode (eaEncode a) = Just a
-eaDecodeEncodeIsJust EANat = Refl
-eaDecodeEncodeIsJust EAList = Refl
-
-public export
-objectAtomToString : ExprAtom -> String
-objectAtomToString EANat = "Nat"
-objectAtomToString EAList = "List"
-
-public export
-Show ExprAtom where
-  show a = ":" ++ objectAtomToString a
-
-public export
-eaEq : ExprAtom -> ExprAtom -> Bool
-eaEq a a' = eaEncode a == eaEncode a'
-
-public export
-Eq ExprAtom where
-  (==) = eaEq
-
-public export
-Ord ExprAtom where
-  a < a' = eaEncode a < eaEncode a'
+gaEncode : GebAtom -> Nat
+gaEncode GANat = 0
+gaEncode GAList = 1
 
 export
-eaDecEq : (a, a' : ExprAtom) -> Dec (a = a')
-eaDecEq = encodingDecEq eaEncode eaDecode eaDecodeEncodeIsJust decEq
+gaDecode : Nat -> Maybe GebAtom
+gaDecode 0 = Just GANat
+gaDecode 1 = Just GAList
+gaDecode _ = Nothing
 
-public export
-DecEq ExprAtom where
-  decEq = eaDecEq
+export
+gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
+gaDecodeEncodeIsJust GANat = Refl
+gaDecodeEncodeIsJust GAList = Refl
+
+export
+gaToString : GebAtom -> String
+gaToString GANat = "Nat"
+gaToString GAList = "List"
+
+export
+Show GebAtom where
+  show a = gaToString a
+
+export
+gaEq : GebAtom -> GebAtom -> Bool
+gaEq a a' = gaEncode a == gaEncode a'
+
+export
+Eq GebAtom where
+  (==) = gaEq
+
+export
+Ord GebAtom where
+  a < a' = gaEncode a < gaEncode a'
+
+export
+gaDecEq : (a, a' : GebAtom) -> Dec (a = a')
+gaDecEq = encodingDecEq gaEncode gaDecode gaDecodeEncodeIsJust decEq
+
+export
+DecEq GebAtom where
+  decEq = gaDecEq

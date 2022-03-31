@@ -4,6 +4,7 @@ modules =
       Executable.Test.Main
     , Library.IdrisUtils
     , LanguageDef.Atom
+    , LanguageDef.Term
     , LanguageDef.Expression
     , LanguageDef.FoundationalTheory
     , LanguageDef.Interpretation
@@ -17,6 +18,7 @@ modules =
     , Test.TestLibrary
     , Library.Test.IdrisUtilsTest
     , LanguageDef.Test.AtomTest
+    , LanguageDef.Test.TermTest
     , LanguageDef.Test.ExpressionTest
     , LanguageDef.Test.InterpretationTest
     , LanguageDef.Test.SyntaxTest

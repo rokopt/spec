@@ -3,6 +3,7 @@ module Executable.Test.Main
 import Library.Test.IdrisUtilsTest
 import Test.TestLibrary
 import LanguageDef.Test.AtomTest
+import LanguageDef.Test.TermTest
 import LanguageDef.Test.ExpressionTest
 import LanguageDef.Test.FoundationalTheoryTest
 import LanguageDef.Test.InterpretationTest
@@ -21,6 +22,7 @@ main = do
   Library.Test.IdrisUtilsTest.idrisUtilsTest
   Test.TestLibrary.testLibraryTest
   LanguageDef.Test.AtomTest.languageDefAtomTest
+  LanguageDef.Test.TermTest.languageDefTermTest
   LanguageDef.Test.ExpressionTest.languageDefExpressionTest
   LanguageDef.Test.FoundationalTheoryTest.languageDefFoundationalTheoryTest
   LanguageDef.Test.InterpretationTest.languageDefInterpretationTest

@@ -2,6 +2,7 @@ module LanguageDef.FoundationalTheory
 
 import Library.IdrisUtils
 import LanguageDef.Atom
+import LanguageDef.Term
 import LanguageDef.Expression
 
 %default total
