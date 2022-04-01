@@ -201,6 +201,22 @@ Bifunctor MorphismF where
   bimap f _ (IdentityF v) = IdentityF $ f v
   bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
 
+-- Free categories produce a free equivalence on morphisms, correpsonding to
+-- the identity laws.
+public export
+data MorphismEqF : (vertex, path, carrier : Type) -> Type where
+  -- Equivalence between (id . f) and f.
+  IdLeftEq : vertex -> path -> carrier -> MorphismEqF vertex path carrier
+  -- Equivalence between (f . id) and f.
+  IdRightEq : vertex -> path -> carrier -> MorphismEqF vertex path carrier
+  -- Equivalence between (f . (g . h)) and ((f' . g') . h').
+  -- Depends upon equivalences between f and f', g and g', and h and h'.
+  AssocEq :
+    vertex -> vertex -> vertex -> vertex ->
+    path -> path -> path ->
+    carrier -> carrier -> carrier ->
+    MorphismEqF vertex path carrier
+
 ----------------------------------
 ----------------------------------
 ----- Polynomial endofunctors ----
