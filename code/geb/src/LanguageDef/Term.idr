@@ -202,20 +202,32 @@ Bifunctor MorphismF where
   bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
 
 -- Free categories produce a free equivalence on morphisms, correpsonding to
--- the identity laws.
+-- the identity and associativity laws.
 public export
-data MorphismEqF : (vertex, path, carrier : Type) -> Type where
-  -- Equivalence between (id . f) and f.
-  IdLeftEq : vertex -> path -> carrier -> MorphismEqF vertex path carrier
-  -- Equivalence between (f . id) and f.
-  IdRightEq : vertex -> path -> carrier -> MorphismEqF vertex path carrier
-  -- Equivalence between (f . (g . h)) and ((f' . g') . h').
-  -- Depends upon equivalences between f and f', g and g', and h and h'.
-  AssocEq :
-    vertex -> vertex -> vertex -> vertex ->
-    path -> path -> path ->
-    carrier -> carrier -> carrier ->
-    MorphismEqF vertex path carrier
+data MorphismEqF : Type -> Type -> Type where
+  -- Rewrite the path `(id . f)` to `f`.
+  RewriteIDLeft : vertex -> path -> MorphismEqF vertex path
+  -- Rewrite the path `(f . id)` to `f`.
+  RewriteIDRight : vertex -> path -> MorphismEqF vertex path
+  -- Rewrite the path `(f . g) . h` to `f . (g . h)`.
+  RewriteAssoc : vertex -> vertex -> vertex -> vertex ->
+    path -> path -> path -> MorphismEqF vertex path
+
+-- Generate the free equivalence relation from the identity and associativity
+-- laws.
+public export
+RewrittenMorphismF : Type -> Type -> Type
+RewrittenMorphismF vertex path = FreeEquivF (MorphismEqF vertex path) path
+
+-- Generate the refined type of morphisms quotiented by the rewrite rules
+-- (which are the axioms of category theory).
+public export
+data RefinedMorphismF : Type -> Type -> Type where
+  RawMorphism :
+    MorphismF vertex path -> RefinedMorphismF vertex path
+  RewrittenMorphism :
+    RewrittenMorphismF vertex (RefinedMorphismF vertex path) ->
+    RefinedMorphismF vertex path
 
 ----------------------------------
 ----------------------------------
