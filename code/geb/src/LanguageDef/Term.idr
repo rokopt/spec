@@ -45,7 +45,10 @@ checkFreeEquiv :
   Eq a =>
   ((a, a) -> Maybe (a, a)) ->
   FreeEquivF a (a, a) -> Maybe (a, a)
-checkFreeEquiv eqa (EqRefl x y) = eqa (x, y)
+checkFreeEquiv eqa (EqRefl x y) =
+  case eqa (x, y) of
+    Just (x', y') => if x == x' && y == y' then Just (x, y) else Nothing
+    Nothing => Nothing
 checkFreeEquiv eqa (EqSym x y eq) =
   case eqa eq of
     Just (x', y') => if x == x' && y == y' then Just (y, x) else Nothing
