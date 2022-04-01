@@ -41,18 +41,16 @@ Bifunctor FreeEquivF where
 -- Tests for the validity of a witness to an equivalence relation,
 -- and if it is valid, returns which terms are being witnessed to be equivalent.
 public export
-checkFreeEquiv : ((a, a) -> Bool) -> FreeEquivF a (Maybe (a, a)) -> Maybe (a, a)
+checkFreeEquiv : ((a, a) -> Bool) -> FreeEquivF a (a, a) -> Maybe (a, a)
 checkFreeEquiv eqa (EqRefl x y) = if eqa (x, y) then Just (x, y) else Nothing
 checkFreeEquiv eqa (EqSym x y eq) = case eq of
-  Just (x', y') => if eqa (x, x') && eqa (y, y') then Just (x, y) else Nothing
-  Nothing => Nothing
+  (x', y') => if eqa (x, x') && eqa (y, y') then Just (x, y) else Nothing
 checkFreeEquiv eqa (EqTrans x y z eq eq') = case (eq, eq') of
-  (Just (x', y'), Just (y'', z')) =>
+  ((x', y'), (y'', z')) =>
     if eqa (x, x') && eqa (y, y') && eqa (y', y'') && eqa (z, z') then
       Just (x, z)
     else
       Nothing
-  _ => Nothing
 
 -------------------------
 -------------------------
