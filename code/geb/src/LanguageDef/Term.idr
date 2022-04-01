@@ -190,11 +190,13 @@ public export
 data MorphismF : Type -> Type -> Type where
   -- An identity morphism is labeled by the object which is its
   -- domain and codomain.
-  IdentityF : vertex -> MorphismF vertex path
+  IdentityF :
+    vertex -> MorphismF vertex carrier
   -- A composition is labeled by its source, intermediate object, and
   -- target, followed by the two morphisms being composed, with the
   -- following morphism listed first, as in usual mathematical notation.
-  ComposeF : vertex -> vertex -> vertex -> path -> path -> MorphismF vertex path
+  ComposeF :
+    vertex -> vertex -> vertex -> carrier -> carrier -> MorphismF vertex carrier
 
 public export
 Bifunctor MorphismF where
@@ -205,29 +207,30 @@ Bifunctor MorphismF where
 -- the identity and associativity laws.
 public export
 data MorphismEqF : Type -> Type -> Type where
-  -- Rewrite the path `(id . f)` to `f`.
-  RewriteIDLeft : vertex -> path -> MorphismEqF vertex path
-  -- Rewrite the path `(f . id)` to `f`.
-  RewriteIDRight : vertex -> path -> MorphismEqF vertex path
-  -- Rewrite the path `(f . g) . h` to `f . (g . h)`.
+  -- Rewrite the morphism `(id . f)` to `f`.
+  RewriteIDLeft : vertex -> carrier -> MorphismEqF vertex carrier
+  -- Rewrite the morphism `(f . id)` to `f`.
+  RewriteIDRight : vertex -> carrier -> MorphismEqF vertex carrier
+  -- Rewrite the morphism `(f . g) . h` to `f . (g . h)`.
   RewriteAssoc : vertex -> vertex -> vertex -> vertex ->
-    path -> path -> path -> MorphismEqF vertex path
+    carrier -> carrier -> carrier -> MorphismEqF vertex carrier
 
 -- Generate the free equivalence relation from the identity and associativity
 -- laws.
 public export
-RewrittenMorphismF : Type -> Type -> Type
-RewrittenMorphismF vertex path = FreeEquivF (MorphismEqF vertex path) path
+CoequalizedMorphismF : Type -> Type -> Type
+CoequalizedMorphismF vertex carrier =
+  FreeEquivF (MorphismEqF vertex carrier) carrier
 
 -- Generate the refined type of morphisms quotiented by the rewrite rules
 -- (which are the axioms of category theory).
 public export
 data RefinedMorphismF : Type -> Type -> Type where
   RawMorphism :
-    MorphismF vertex path -> RefinedMorphismF vertex path
-  RewrittenMorphism :
-    RewrittenMorphismF vertex (RefinedMorphismF vertex path) ->
-    RefinedMorphismF vertex path
+    MorphismF vertex carrier -> RefinedMorphismF vertex carrier
+  CoequalizedMorphism :
+    CoequalizedMorphismF vertex (RefinedMorphismF vertex carrier) ->
+    RefinedMorphismF vertex carrier
 
 ----------------------------------
 ----------------------------------
