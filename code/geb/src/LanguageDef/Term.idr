@@ -86,12 +86,12 @@ data MorphismF : Type -> Type -> Type where
   -- An identity morphism is labeled by the object which is its
   -- domain and codomain.
   IdentityF :
-    vertex -> MorphismF vertex carrier
+    object -> MorphismF object carrier
   -- A composition is labeled by its source, intermediate object, and
   -- target, followed by the two morphisms being composed, with the
   -- following morphism listed first, as in usual mathematical notation.
   ComposeF :
-    vertex -> vertex -> vertex -> carrier -> carrier -> MorphismF vertex carrier
+    object -> object -> object -> carrier -> carrier -> MorphismF object carrier
 
 public export
 Bifunctor MorphismF where
@@ -103,29 +103,29 @@ Bifunctor MorphismF where
 public export
 data MorphismEqF : Type -> Type -> Type where
   -- Rewrite the morphism `(id . f)` to `f`.
-  RewriteIDLeft : vertex -> carrier -> MorphismEqF vertex carrier
+  RewriteIDLeft : object -> carrier -> MorphismEqF object carrier
   -- Rewrite the morphism `(f . id)` to `f`.
-  RewriteIDRight : vertex -> carrier -> MorphismEqF vertex carrier
+  RewriteIDRight : object -> carrier -> MorphismEqF object carrier
   -- Rewrite the morphism `(f . g) . h` to `f . (g . h)`.
-  RewriteAssoc : vertex -> vertex -> vertex -> vertex ->
-    carrier -> carrier -> carrier -> MorphismEqF vertex carrier
+  RewriteAssoc : object -> object -> object -> object ->
+    carrier -> carrier -> carrier -> MorphismEqF object carrier
 
 -- Generate the free equivalence relation from the identity and associativity
 -- laws.
 public export
 CoequalizedMorphismF : Type -> Type -> Type
-CoequalizedMorphismF vertex carrier =
-  FreeEquivF (MorphismEqF vertex carrier) carrier
+CoequalizedMorphismF object carrier =
+  FreeEquivF (MorphismEqF object carrier) carrier
 
 -- Generate the refined type of morphisms quotiented by the rewrite rules
 -- (which are the axioms of category theory).
 public export
 data RefinedMorphismF : Type -> Type -> Type where
   RawMorphism :
-    MorphismF vertex carrier -> RefinedMorphismF vertex carrier
+    MorphismF object carrier -> RefinedMorphismF object carrier
   CoequalizedMorphism :
-    CoequalizedMorphismF vertex (RefinedMorphismF vertex carrier) ->
-    RefinedMorphismF vertex carrier
+    CoequalizedMorphismF object (RefinedMorphismF object carrier) ->
+    RefinedMorphismF object carrier
 
 ----------------------------
 ----------------------------
