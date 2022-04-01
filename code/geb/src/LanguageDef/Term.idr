@@ -6,111 +6,6 @@ import LanguageDef.Atom
 
 %default total
 
-----------------------------
-----------------------------
----- Geb terms in Idris ----
-----------------------------
-----------------------------
-
--- Geb itself is a pure specification.  `GebTerm` is an Idris type whose
--- terms represent various concepts of Geb.  Because a term of `GebTerm`
--- might represent any of several different concepts, the type is indexed
--- by a type of atoms which classify which concept a given term represents.
--- This makes `GebTerm` a type family; it's effectively simulating a definition
--- by a large mutual recursion, but using an index intead of many different
--- Idris types allows us to interpret Geb in Idris by interpreting just that
--- one type.  I find it less confusing and more convenient than a big mutual
--- recursion.
-
--------------------------
----- Term definition ----
--------------------------
-
--- We define `GebTerm` -- an Idris type -- as a fixed point of a polynomial
--- endofunctor of Idris, in the same style in which we will define types of
--- Geb itself.  In particular, that will allow us to write a homoiconic
--- representation of `GebTerm` _as_ a term of `GebTerm` in a way which parallels
--- the Idris definition of `GebTerm`.
---
--- Because `GebTerm`, as described above, represents a number of different
--- concepts, we can view it as an object in a finite product category, where
--- each concept -- which we call a "class" in the context of defining
--- `GebTerm` -- is one of the categories.
---
--- So we first define `GebTermF`, a (polynomial) endofunctor in the product
--- category of all the classes.  Having defined that functor, we'll take a
--- fixed point of it (which we will be able to do because it is polynomial),
--- and then we'll have a `GebTerm` which comprises the Idris representation of
--- terms of Geb.
---
--- Below is the product category in which `GebTerm` lives; therefore it's the
--- category on which we will build an endofunctor, `GebTermF`, from which we
--- will derive `GebTerm` as a fixpoint (initial algebra).
---
--- We represent the product category as a function from a finite
--- index type rather than as, say, nested pairs or a list -- those are all
--- isomorphic, but I feel that the function representation produces the most
--- readable code.
---
--- The aspects of the product category that we define are its objects, its
--- morphisms, and its endofunctors.
-
-public export
-GebTermProductCatObject : Type
-GebTermProductCatObject = ProductCatObject GTClass
-
--- A morphism in a product category is a product of morphisms.
--- (In an Idris category, morphisms are functions.)
-public export
-GebTermProductCatMorphism :
-  GebTermProductCatObject -> GebTermProductCatObject -> Type
-GebTermProductCatMorphism = ProductCatMorphism {idx=GTClass}
-
--- An endofunctor on the Idris product category in which Geb terms are defined
--- is a function on objects of the product category together with a function
--- on morphisms that respects it.
-
-public export
-GebTermProductCatObjectMap : Type
-GebTermProductCatObjectMap = ProductCatObjectEndoMap GTClass
-
-public export
-GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
-GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
-
-public export
-GebTermProductCatEndofunctor : Type
-GebTermProductCatEndofunctor = ProductCatEndofunctor GTClass
-
--- The object-map component of the endofunctor from which we shall define
--- `GebTerm` (as an initial algebra).
-public export
-data GebTermF_object : GebTermProductCatObjectMap where
-  GTNat : GebTermF_object carrier GTCnat
-  GTList : GebTermF_object carrier GTClist
-
--- The morphism-map component of the endofunctor from which we shall define
--- `GebTerm` (as an initial algebra).
-public export GebTermF_morphism : GebTermProductCatMorphismMap GebTermF_object
-GebTermF_morphism dom cod m GTCnat GTNat = GTNat
-GebTermF_morphism dom cod m GTClist GTList = GTList
-
-public export
-GebTermF : GebTermProductCatEndofunctor
-GebTermF = (GebTermF_object ** GebTermF_morphism)
-
-----------------------
----- Term algebra ----
-----------------------
-
-public export
-GebTermMu : GTClass -> Type
-GebTermMu = MuProduct GebTermF_object
-
-public export
-GebTermNu : GTClass -> Type
-GebTermNu = NuProduct GebTermF_object
-
 -----------------------------------
 -----------------------------------
 ---- Free equivalence in Idris ----
@@ -231,6 +126,111 @@ data RefinedMorphismF : Type -> Type -> Type where
   CoequalizedMorphism :
     CoequalizedMorphismF vertex (RefinedMorphismF vertex carrier) ->
     RefinedMorphismF vertex carrier
+
+----------------------------
+----------------------------
+---- Geb terms in Idris ----
+----------------------------
+----------------------------
+
+-- Geb itself is a pure specification.  `GebTerm` is an Idris type whose
+-- terms represent various concepts of Geb.  Because a term of `GebTerm`
+-- might represent any of several different concepts, the type is indexed
+-- by a type of atoms which classify which concept a given term represents.
+-- This makes `GebTerm` a type family; it's effectively simulating a definition
+-- by a large mutual recursion, but using an index intead of many different
+-- Idris types allows us to interpret Geb in Idris by interpreting just that
+-- one type.  I find it less confusing and more convenient than a big mutual
+-- recursion.
+
+-------------------------
+---- Term definition ----
+-------------------------
+
+-- We define `GebTerm` -- an Idris type -- as a fixed point of a polynomial
+-- endofunctor of Idris, in the same style in which we will define types of
+-- Geb itself.  In particular, that will allow us to write a homoiconic
+-- representation of `GebTerm` _as_ a term of `GebTerm` in a way which parallels
+-- the Idris definition of `GebTerm`.
+--
+-- Because `GebTerm`, as described above, represents a number of different
+-- concepts, we can view it as an object in a finite product category, where
+-- each concept -- which we call a "class" in the context of defining
+-- `GebTerm` -- is one of the categories.
+--
+-- So we first define `GebTermF`, a (polynomial) endofunctor in the product
+-- category of all the classes.  Having defined that functor, we'll take a
+-- fixed point of it (which we will be able to do because it is polynomial),
+-- and then we'll have a `GebTerm` which comprises the Idris representation of
+-- terms of Geb.
+--
+-- Below is the product category in which `GebTerm` lives; therefore it's the
+-- category on which we will build an endofunctor, `GebTermF`, from which we
+-- will derive `GebTerm` as a fixpoint (initial algebra).
+--
+-- We represent the product category as a function from a finite
+-- index type rather than as, say, nested pairs or a list -- those are all
+-- isomorphic, but I feel that the function representation produces the most
+-- readable code.
+--
+-- The aspects of the product category that we define are its objects, its
+-- morphisms, and its endofunctors.
+
+public export
+GebTermProductCatObject : Type
+GebTermProductCatObject = ProductCatObject GTClass
+
+-- A morphism in a product category is a product of morphisms.
+-- (In an Idris category, morphisms are functions.)
+public export
+GebTermProductCatMorphism :
+  GebTermProductCatObject -> GebTermProductCatObject -> Type
+GebTermProductCatMorphism = ProductCatMorphism {idx=GTClass}
+
+-- An endofunctor on the Idris product category in which Geb terms are defined
+-- is a function on objects of the product category together with a function
+-- on morphisms that respects it.
+
+public export
+GebTermProductCatObjectMap : Type
+GebTermProductCatObjectMap = ProductCatObjectEndoMap GTClass
+
+public export
+GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
+GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
+
+public export
+GebTermProductCatEndofunctor : Type
+GebTermProductCatEndofunctor = ProductCatEndofunctor GTClass
+
+-- The object-map component of the endofunctor from which we shall define
+-- `GebTerm` (as an initial algebra).
+public export
+data GebTermF_object : GebTermProductCatObjectMap where
+  GTNat : GebTermF_object carrier GTCnat
+  GTList : GebTermF_object carrier GTClist
+
+-- The morphism-map component of the endofunctor from which we shall define
+-- `GebTerm` (as an initial algebra).
+public export GebTermF_morphism : GebTermProductCatMorphismMap GebTermF_object
+GebTermF_morphism dom cod m GTCnat GTNat = GTNat
+GebTermF_morphism dom cod m GTClist GTList = GTList
+
+public export
+GebTermF : GebTermProductCatEndofunctor
+GebTermF = (GebTermF_object ** GebTermF_morphism)
+
+----------------------
+---- Term algebra ----
+----------------------
+
+public export
+GebTermMu : GTClass -> Type
+GebTermMu = MuProduct GebTermF_object
+
+public export
+GebTermNu : GTClass -> Type
+GebTermNu = NuProduct GebTermF_object
 
 ----------------------------------
 ----------------------------------
