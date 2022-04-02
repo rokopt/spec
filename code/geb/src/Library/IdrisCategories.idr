@@ -234,6 +234,17 @@ data ProductCatTreeFunctor : {idx : Type} ->
     {i : idx} ->
     l i -> f a i -> ProductCatTreeFunctor f l a i
 
+public export
+TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
+TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
+
+public export
+ProductCatTreeCoalgebra : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
+  Type
+ProductCatTreeCoalgebra f v a =
+  ProductCatCoalgebra (ProductCatTreeFunctor f v) a
+
 export
 treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
 treeLabel (TreeNode a' _) = a'
