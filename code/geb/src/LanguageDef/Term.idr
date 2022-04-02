@@ -6,6 +6,36 @@ import LanguageDef.Atom
 
 %default total
 
+-----------------------------------------------
+-----------------------------------------------
+---- Interpretation of categories in Idris ----
+-----------------------------------------------
+-----------------------------------------------
+
+-- An interpretation of the objects of some category into the Idris
+-- type system ("ITS").
+ITSObjectInterpretation : Type -> Type
+ITSObjectInterpretation object = object -> Type
+
+-- The type of morphisms between objects of some category.
+ITSMorphismType : Type -> Type
+ITSMorphismType object = object -> object -> Type
+
+-- An interpretation of the morphism of some category into the Idris
+-- type system.
+ITSMorphismInterpretation : {object : Type} ->
+  ITSMorphismType object -> ITSObjectInterpretation object -> Type
+ITSMorphismInterpretation {object} morphism objInterp =
+  (domain, codomain : object) ->
+  morphism domain codomain ->
+  (objInterp domain -> objInterp codomain)
+
+----------------------------
+----------------------------
+---- Fibration in Idris ----
+----------------------------
+----------------------------
+
 -----------------------------------
 -----------------------------------
 ---- Free equivalence in Idris ----
@@ -21,7 +51,8 @@ data FreeEquivF : Type -> Type -> Type where
   -- and itself.  The reason it has _two_ parameters of type `a` is that
   -- a free generator of witnesses to an equivalence relation is in effect,
   -- and will be used as, a rewrite rule.  Asserting `EqRefl` between `x`
-  -- and `y` is a claim that there is a _decidable_ equality between the two.
+  -- and `y` is a claim that there is a _decidable_ equality between the two
+  -- which can be decided when the term is validated (typechecked).
   EqRefl : a -> a -> FreeEquivF a carrier
   -- Given a term of `carrier`, which represents an equivalence bewteen
   -- terms `x` and `y` of `a`, `EqSym` represents an equivalence between
@@ -165,6 +196,55 @@ data RefinedMorphismF : Type -> Type -> Type where
 -- These are the categories we need in order to define the objects
 -- and morphisms of the refined first-order ADT category -- the smallest one
 -- in which there is an object which we can interpret in Idris as `GebTerm`.
+
+-- Generate objects for a category which can support at least
+-- substitution:  initial and terminal objects, and products and coproducts.
+public export
+data SubstCatObjF : Type -> Type where
+  SubstInitial : SubstCatObjF carrier
+  SubstTerminal : SubstCatObjF carrier
+  SubstProduct : carrier -> carrier -> SubstCatObjF carrier
+  SubstCoproduct : carrier -> carrier -> SubstCatObjF carrier
+
+-- Generate morphisms for a category which can support at least substitution.
+public export
+data SubstCatAlgebraF : Type -> Type -> Type where
+
+  -- The left adjoint of the unique functor from the substitution category
+  -- to the terminal category (which is the discrete one-object category).
+  SubstFromInitial : object -> SubstCatAlgebraF object carrier
+
+  -- The right adjoint of the unique functor from the substitution category
+  -- to the terminal category.
+  SubstToTerminal : object -> SubstCatAlgebraF object carrier
+
+  -- In the context of products and coproducts, and therefore of the
+  -- substitution category, the diagonal functor is the one from the
+  -- substitution category to the category of functors from the discrete
+  -- two-object category to the substitution category.
+  SubstDiagonal : (dom, cod : object) ->
+    carrier -> SubstCatAlgebraF object carrier
+
+  -- The right adjoint of the diagonal functor (the diagonal functor goes
+  -- from the substitution category to the product category, so its adjoints
+  -- go from the product category to the substitution category).
+  SubstProductIntro : (dom, dom', cod, cod' : object) ->
+    carrier -> carrier -> SubstCatAlgebraF object carrier
+
+  -- The left projection of the counit of the product adjunction
+  -- (which is a morphism in the substitution category).
+  SubstProductElimLeft : (dom, dom', cod, cod' : object) ->
+    carrier -> SubstCatAlgebraF object carrier
+
+  -- The right projection of the counit of the product adjunction.
+  SubstProductElimRight : (dom, dom', cod, cod' : object) ->
+    carrier -> SubstCatAlgebraF object carrier
+
+  -- The left adjoint of the diagonal functor.
+  SubstCoproductIntro : (dom, dom', cod, cod' : object) ->
+    carrier -> carrier -> SubstCatAlgebraF object carrier
+
+  -- The left injection to the unit of the coproduct adjunction.
 
 ----------------------------
 ----------------------------
