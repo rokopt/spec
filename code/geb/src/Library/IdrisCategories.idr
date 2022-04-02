@@ -108,6 +108,16 @@ data ProductCatTermFunctor : {idx : Type} ->
     {i : idx} ->
     f a i -> ProductCatTermFunctor f v a i
 
+public export
+TermAlgebra : (Type -> Type) -> Type -> Type -> Type
+TermAlgebra f v a = Algebra (TermFunctor f v) a
+
+public export
+ProductCatTermAlgebra : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
+  Type
+ProductCatTermAlgebra f v a = ProductCatAlgebra (ProductCatTermFunctor f v) a
+
 -- If `F` has an initial algebra, then for every object `a`, the functor
 -- `Fa` defined above also has an initial algebra, which is isomorphic
 -- to `FreeMonad[F, a]`.  Thus `FreeMonad` allows us to create initial
@@ -123,7 +133,7 @@ data ProductCatTermFunctor : {idx : Type} ->
 public export
 data FreeMonad : (Type -> Type) -> (Type -> Type) where
   InFree : {f : Type -> Type} -> {0 a : Type} ->
-    (TermFunctor f a) (FreeMonad f a) -> FreeMonad f a
+    TermAlgebra f a (FreeMonad f a)
 
 -- The product-category version of `FreeMonad`.
 public export
@@ -131,9 +141,7 @@ data ProductCatFreeMonad : {idx : Type} ->
     ProductCatObjectEndoMap idx -> ProductCatObjectEndoMap idx where
   InFreeProduct : {idx : Type} ->
     {f : ProductCatObjectEndoMap idx} -> {0 a : ProductCatObject idx} ->
-    {0 i : idx} ->
-    ProductCatTermFunctor f a (ProductCatFreeMonad f a) i ->
-    ProductCatFreeMonad f a i
+    ProductCatTermAlgebra f a (ProductCatFreeMonad f a)
 
 public export
 inFreeVar : {f : Type -> Type} -> a -> FreeMonad f a
@@ -142,8 +150,8 @@ inFreeVar = InFree . TermVar
 public export
 inFreeVarProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {0 a : ProductCatObject idx} ->
-  {i : idx} -> a i -> ProductCatFreeMonad f a i
-inFreeVarProduct = InFreeProduct . ProductCatTermVar
+  ProductCatMorphism a (ProductCatFreeMonad f a)
+inFreeVarProduct i = InFreeProduct i . ProductCatTermVar
 
 public export
 inFreeComposite : {f : Type -> Type} -> f (FreeMonad f a) -> FreeMonad f a
@@ -152,8 +160,8 @@ inFreeComposite = InFree . TermComposite
 public export
 inFreeCompositeProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {a : ProductCatObject idx} ->
-  {i : idx} -> f (ProductCatFreeMonad f a) i -> ProductCatFreeMonad f a i
-inFreeCompositeProduct = InFreeProduct . ProductCatTermComposite
+  ProductCatMorphism (f (ProductCatFreeMonad f a)) (ProductCatFreeMonad f a)
+inFreeCompositeProduct i = InFreeProduct i . ProductCatTermComposite
 
 public export
 outFree : FreeMonad f a -> TermFunctor f a (FreeMonad f a)
@@ -164,7 +172,7 @@ outFreeProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {a : ProductCatObject idx} ->
   {i : idx} -> ProductCatFreeMonad f a i ->
   ProductCatTermFunctor f a (ProductCatFreeMonad f a) i
-outFreeProduct (InFreeProduct x) = x
+outFreeProduct (InFreeProduct i x) = x
 
 -- Special case of `FreeMonad` where `v` is `Void`.
 -- This is the fixpoint of an endofunctor (if it exists).
