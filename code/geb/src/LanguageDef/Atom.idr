@@ -16,29 +16,34 @@ import Library.IdrisUtils
 
 public export
 data GTClass : Type where
-  GTCnat : GTClass
-  GTClist : GTClass
+  GTCcat : GTClass
+  GTCobj : GTClass
+  GTCmorph : GTClass
 
 export
 gtcEncode : GTClass -> Nat
-gtcEncode GTCnat = 0
-gtcEncode GTClist = 1
+gtcEncode GTCcat = 0
+gtcEncode GTCobj = 1
+gtcEncode GTCmorph = 2
 
 export
 gtcDecode : Nat -> Maybe GTClass
-gtcDecode 0 = Just GTCnat
-gtcDecode 1 = Just GTClist
+gtcDecode 0 = Just GTCcat
+gtcDecode 1 = Just GTCobj
+gtcDecode 2 = Just GTCmorph
 gtcDecode _ = Nothing
 
 export
 gtcDecodeEncodeIsJust : (a : GTClass) -> gtcDecode (gtcEncode a) = Just a
-gtcDecodeEncodeIsJust GTCnat = Refl
-gtcDecodeEncodeIsJust GTClist = Refl
+gtcDecodeEncodeIsJust GTCcat = Refl
+gtcDecodeEncodeIsJust GTCobj = Refl
+gtcDecodeEncodeIsJust GTCmorph = Refl
 
 export
 gtcToString : GTClass -> String
-gtcToString GTCnat = "Nat"
-gtcToString GTClist = "List"
+gtcToString GTCcat = "Category"
+gtcToString GTCobj = "Object"
+gtcToString GTCmorph = "Morphism"
 
 export
 Show GTClass where

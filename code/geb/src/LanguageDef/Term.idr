@@ -156,6 +156,16 @@ data RefinedMorphismF : Type -> Type -> Type where
     CoequalizedMorphismF (RefinedMorphismF object carrier) ->
     RefinedMorphismF object carrier
 
+----------------------------------
+----------------------------------
+---- Term-building categories ----
+----------------------------------
+----------------------------------
+
+-- These are the categories we need in order to define the objects
+-- and morphisms of the refined first-order ADT category -- the smallest one
+-- in which there is an object which we can interpret in Idris as `GebTerm`.
+
 ----------------------------
 ----------------------------
 ---- Geb terms in Idris ----
@@ -236,14 +246,16 @@ GebTermProductCatEndofunctor = ProductCatEndofunctor GTClass
 -- `GebTerm` (as an initial algebra).
 public export
 data GebTermF_object : GebTermProductCatObjectMap where
-  GTNat : GebTermF_object carrier GTCnat
-  GTList : GebTermF_object carrier GTClist
+  GTSubstCat : GebTermF_object carrier GTCcat
+  GTSubstInitial : GebTermF_object carrier GTCobj
+  GTGebTerm : GebTermF_object carrier GTCobj
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
 public export GebTermF_morphism : GebTermProductCatMorphismMap GebTermF_object
-GebTermF_morphism dom cod m GTCnat GTNat = GTNat
-GebTermF_morphism dom cod m GTClist GTList = GTList
+GebTermF_morphism dom cod m GTCcat GTSubstCat = GTSubstCat
+GebTermF_morphism dom cod m GTCobj GTSubstInitial = GTSubstInitial
+GebTermF_morphism dom cod m GTCobj GTGebTerm = GTGebTerm
 
 public export
 GebTermF : GebTermProductCatEndofunctor
