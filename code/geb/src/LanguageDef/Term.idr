@@ -106,6 +106,25 @@ data MorphismF : Type -> Type -> Type where
     object -> object -> object -> carrier -> carrier -> MorphismF object carrier
 
 public export
+checkMorphism :
+  (Eq object, Eq carrier) =>
+  (object -> Maybe object) ->
+  (carrier -> Maybe (object, object)) ->
+  (MorphismF object carrier -> Maybe (object, object))
+checkMorphism checkObj checkMorph (IdentityF obj) =
+  case checkObj obj of
+    Just obj' => Just (obj', obj')
+    Nothing => Nothing
+checkMorphism checkObj checkMorph (ComposeF a b c g f) =
+  case (checkObj a, checkObj b, checkObj c, checkMorph g, checkMorph f) of
+    (Just a', Just b', Just c', Just (domg, codg), Just (domf, codf)) =>
+      if a' == domf && b' == codf && b' == domg && c' == codg then
+        Just (a', c')
+      else
+        Nothing
+    _ => Nothing
+
+public export
 Bifunctor MorphismF where
   bimap f _ (IdentityF v) = IdentityF $ f v
   bimap f g (ComposeF s i t q p) = ComposeF (f s) (f i) (f t) (g q) (g p)
@@ -113,21 +132,19 @@ Bifunctor MorphismF where
 -- Free categories produce a free equivalence on morphisms, correpsonding to
 -- the identity and associativity laws.
 public export
-data MorphismEqF : Type -> Type -> Type where
+data MorphismEqF : Type -> Type where
   -- Rewrite the morphism `(id . f)` to `f`.
-  RewriteIDLeft : object -> carrier -> MorphismEqF object carrier
+  RewriteIDLeft : morphism -> MorphismEqF morphism
   -- Rewrite the morphism `(f . id)` to `f`.
-  RewriteIDRight : object -> carrier -> MorphismEqF object carrier
+  RewriteIDRight : morphism -> MorphismEqF morphism
   -- Rewrite the morphism `(f . g) . h` to `f . (g . h)`.
-  RewriteAssoc : object -> object -> object -> object ->
-    carrier -> carrier -> carrier -> MorphismEqF object carrier
+  RewriteAssoc : morphism -> morphism -> morphism -> MorphismEqF morphism
 
 -- Generate the free equivalence relation from the identity and associativity
 -- laws.
 public export
-CoequalizedMorphismF : Type -> Type -> Type
-CoequalizedMorphismF object carrier =
-  FreeEquivF (MorphismEqF object carrier) carrier
+CoequalizedMorphismF : Type -> Type
+CoequalizedMorphismF carrier = FreeEquivF (MorphismEqF carrier) carrier
 
 -- Generate the refined type of morphisms quotiented by the rewrite rules
 -- (which are the axioms of category theory).
@@ -136,7 +153,7 @@ data RefinedMorphismF : Type -> Type -> Type where
   RawMorphism :
     MorphismF object carrier -> RefinedMorphismF object carrier
   CoequalizedMorphism :
-    CoequalizedMorphismF object (RefinedMorphismF object carrier) ->
+    CoequalizedMorphismF (RefinedMorphismF object carrier) ->
     RefinedMorphismF object carrier
 
 ----------------------------
