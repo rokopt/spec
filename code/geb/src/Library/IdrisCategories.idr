@@ -28,6 +28,15 @@ ITSMorphismInterpretation {object} morphism objInterp =
   morphism domain codomain ->
   (objInterp domain -> objInterp codomain)
 
+ITSHasId :
+  {object : Type} ->
+  {morphism : ITSMorphismType object} ->
+  {objInterp : ITSObjectInterpretation object} ->
+  ITSMorphismInterpretation morphism objInterp -> Type
+ITSHasId {object} {morphism} {objInterp} morphInterp =
+  (a : object) ->
+  (idm : morphism a a ** morphInterp a a idm = Prelude.Basics.id)
+
 ----------------------------
 ----------------------------
 ---- Fibration in Idris ----
@@ -350,3 +359,28 @@ Anamorphism f l = Coalgebra f l -> l -> Nu f
 ProductAnamorphism : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
 ProductAnamorphism f l = ProductCatMorphism l (NuProduct f)
+
+------------------------------------------
+------------------------------------------
+---- Polynomial endofunctors in Idris ----
+------------------------------------------
+------------------------------------------
+
+ITSProductF : (Type -> Type) -> (Type -> Type) -> (Type -> Type)
+ITSProductF f g a = Pair (f a) (g a)
+
+ITSCoproductF : (Type -> Type) -> (Type -> Type) -> (Type -> Type)
+ITSCoproductF f g a = Either (f a) (g a)
+
+public export
+data IsPolynomial : (Type -> Type) -> Type where
+  IdPoly : IsPolynomial Prelude.Basics.id
+  ComposePoly : IsPolynomial g -> IsPolynomial f -> IsPolynomial (g . f)
+  VoidPoly : IsPolynomial $ const Void
+  UnitPoly : IsPolynomial $ const ()
+  ProductPoly :
+    IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSProductF f g
+  CoproductPoly :
+    IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSCoproductF f g
+  FreePoly : IsPolynomial f -> IsPolynomial $ FreeMonad f
+  CofreePoly : IsPolynomial f -> IsPolynomial $ CofreeComonad f
