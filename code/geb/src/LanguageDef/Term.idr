@@ -270,8 +270,20 @@ GebTermMu : GTClass -> Type
 GebTermMu = MuProduct GebTermF_object
 
 public export
+GebTermFreeMonad : GebTermProductCatObjectMap
+GebTermFreeMonad = ProductCatFreeMonad GebTermF_object
+
+public export
 GebTermNu : GTClass -> Type
 GebTermNu = NuProduct GebTermF_object
+
+public export
+GebTermCofreeComonad : GebTermProductCatObjectMap
+GebTermCofreeComonad = ProductCatCofreeComonad GebTermF_object
+
+------------------------------------------
+---- Term-checking and interpretation ----
+------------------------------------------
 
 ----------------------------------
 ----------------------------------
