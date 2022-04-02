@@ -147,6 +147,11 @@ data ProductCatTermFunctor : {idx : Type} ->
     {i : idx} ->
     f a i -> ProductCatTermFunctor f v a i
 
+-- An algebra on a functor representing a type of open terms (as generated
+-- by `TermFunctor` above) may be viewed as a polymorphic algebra, because
+-- for each object `v` it generates an `F[v]`-algebra on an any given carrier
+-- object.  When `v` is the initial object (`Void`), it specializes to
+-- generating `F`-algebras.
 public export
 TermAlgebra : (Type -> Type) -> Type -> Type -> Type
 TermAlgebra f v a = Algebra (TermFunctor f v) a
@@ -227,8 +232,8 @@ MuProduct f = ProductCatFreeMonad f (const Void)
 -- _does_ have an initial algebra, then this is the signature of
 -- its catamorphism (fold).
 public export
-Catamorphism : (Type -> Type) -> Type -> Type
-Catamorphism f a = Algebra f a -> Mu f -> a
+Catamorphism : (Type -> Type) -> Type -> Type -> Type
+Catamorphism f v a = TermAlgebra f v a -> FreeMonad f v -> a
 
 public export
 ProductCatamorphism : {idx : Type} ->
@@ -273,6 +278,11 @@ data ProductCatTreeFunctor : {idx : Type} ->
     {i : idx} ->
     l i -> f a i -> ProductCatTreeFunctor f l a i
 
+-- A coalgebra on a functor representing a type of labeled trees (as generated
+-- by `TreeFunctor` above) may be viewed as a polymorphic coalgebra, because
+-- for each object `v` it generates an `F[v]`-coalgebra on an any given carrier
+-- object.  When `v` is the terminal object (`Unit`), it specializes to
+-- generating `F`-coalgebras.
 public export
 TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
 TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
@@ -353,8 +363,8 @@ NuProduct f = ProductCatCofreeComonad f (const ())
 -- Not all endofunctors have terminal coalgebras.  If an endofunctor
 -- _does_ have a terminal coalgebra, then this is the signature of
 -- its anamorphism (unfold).
-Anamorphism : (Type -> Type) -> Type -> Type
-Anamorphism f l = Coalgebra f l -> l -> Nu f
+Anamorphism : (Type -> Type) -> Type -> Type -> Type
+Anamorphism f v l = TreeCoalgebra f v l -> l -> CofreeComonad f v
 
 ProductAnamorphism : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
@@ -384,3 +394,11 @@ data IsPolynomial : (Type -> Type) -> Type where
     IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSCoproductF f g
   FreePoly : IsPolynomial f -> IsPolynomial $ FreeMonad f
   CofreePoly : IsPolynomial f -> IsPolynomial $ CofreeComonad f
+
+public export
+muTerm : IsPolynomial f -> Catamorphism f v a
+muTerm = ?polynomial_mu_hole
+
+public export
+nuTree : IsPolynomial f -> Anamorphism f v a
+nuTree = ?polynomial_nu_hole
