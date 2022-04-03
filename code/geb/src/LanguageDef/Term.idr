@@ -6,11 +6,189 @@ import LanguageDef.Atom
 
 %default total
 
------------------------------------
------------------------------------
----- Free equivalence in Idris ----
------------------------------------
------------------------------------
+-------------------------------------------------------------
+-------------------------------------------------------------
+---- Slices, bundles, and refinements in Idris's Type(0) ----
+-------------------------------------------------------------
+-------------------------------------------------------------
+
+SliceObj : Type -> Type
+SliceObj c = (a : Type ** a -> c)
+
+SliceObjDomain : {c : Type} -> SliceObj c -> Type
+SliceObjDomain (a ** _) = a
+
+SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
+SliceObjMap (_ ** mx) = mx
+
+ExtEq : {a, b : Type} -> (f, g : a -> b) -> Type
+ExtEq {a} f g = (elem : a) -> f elem = g elem
+
+SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> Type
+SliceMorphism x y =
+  (w : SliceObjDomain x -> SliceObjDomain y **
+   ExtEq (SliceObjMap y . w) (SliceObjMap x))
+
+SliceMorphismMap : {c : Type} -> {x, y : SliceObj c} ->
+  SliceMorphism x y -> SliceObjDomain x -> SliceObjDomain y
+SliceMorphismMap (w ** _) = w
+
+SliceMorphismEq : {c : Type} -> {x, y : SliceObj c} ->
+  (f : SliceMorphism x y) ->
+  ExtEq (SliceObjMap y . SliceMorphismMap {x} {y} f) (SliceObjMap x)
+SliceMorphismEq (_ ** eq) = eq
+
+SliceId : {c : Type} -> (w : SliceObj c) -> SliceMorphism w w
+SliceId (a ** x) = (id ** \_ => Refl)
+
+SliceCompose : {c : Type} -> {u, v, w : SliceObj c} ->
+  SliceMorphism v w -> SliceMorphism u v -> SliceMorphism u w
+SliceCompose {c} {u} {v} {w} g f =
+  (SliceMorphismMap g . SliceMorphismMap f **
+   \elem =>
+    trans
+      (SliceMorphismEq g (SliceMorphismMap f elem))
+      (SliceMorphismEq f elem))
+
+Bundle : Type
+Bundle = (base : Type ** SliceObj base)
+
+BundleBase : Bundle -> Type
+BundleBase (base ** (_ ** _)) = base
+
+BundleTotal : Bundle -> Type
+BundleTotal (_ ** (tot ** _)) = tot
+
+BundleProj :
+  (bundle : Bundle) -> (BundleTotal bundle) -> (BundleBase bundle)
+BundleProj (_ ** (_ ** proj)) = proj
+
+BundleFiber : (bundle : Bundle) -> (baseElem : BundleBase bundle) -> Type
+BundleFiber bundle baseElem =
+  (totalElem : BundleTotal bundle ** (BundleProj bundle totalElem = baseElem))
+
+RefinementBy : Type -> Type
+RefinementBy = SliceObj . Maybe
+
+Refinement : Type
+Refinement = DPair Type RefinementBy
+
+RefinementBundle : Refinement -> Bundle
+RefinementBundle (base ** slice) = (Maybe base ** slice)
+
+RefinementBase : Refinement -> Type
+RefinementBase (base ** _) = base
+
+RefinementTotal : Refinement -> Type
+RefinementTotal = BundleTotal . RefinementBundle
+
+RefinementProj :
+  (r : Refinement) -> (RefinementTotal r) -> Maybe (RefinementBase r)
+RefinementProj (_ ** (_ ** proj)) = proj
+
+IsRefined : (r : Refinement) -> RefinementTotal r -> Type
+IsRefined r = IsJust . RefinementProj r
+
+IsUnrefined : (r : Refinement) -> RefinementTotal r -> Type
+IsUnrefined r = Not . IsJust . RefinementProj r
+
+RefinedType : Refinement -> Type
+RefinedType r = DPair (RefinementTotal r) (IsRefined r)
+
+RefinedToBase : {r : Refinement} -> RefinedType r -> RefinementBase r
+RefinedToBase {r=(base ** (tot ** proj))} (t ** just) = fromJust $ proj t
+
+JustBundle : Refinement -> Bundle
+JustBundle r = (RefinementBase r ** (RefinedType r ** RefinedToBase))
+
+UnrefinedType : Refinement -> Type
+UnrefinedType r = DPair (RefinementTotal r) (IsUnrefined r)
+
+NothingBundle : Refinement -> Bundle
+NothingBundle r = (() ** (UnrefinedType r ** const ()))
+
+RefinementFiber :
+  (r : Refinement) -> (baseElem : Maybe (RefinementBase r)) -> Type
+RefinementFiber (base ** (tot ** proj)) baseElem =
+  BundleFiber (Maybe base ** (tot ** proj)) baseElem
+
+JustFiber : (r : Refinement) -> (baseElem : RefinementBase r) -> Type
+JustFiber (base ** (tot ** proj)) baseElem =
+  BundleFiber (Maybe base ** (tot ** proj)) (Just baseElem)
+
+NothingFiber : (r : Refinement) -> Type
+NothingFiber (base ** (tot ** proj)) =
+  BundleFiber (Maybe base ** (tot ** proj)) Nothing
+
+---------------------------------
+---------------------------------
+---- Metalanguage fibrations ----
+---------------------------------
+---------------------------------
+
+-----------------------------
+-----------------------------
+---- Metalanguage arrows ----
+-----------------------------
+-----------------------------
+
+-- We refer to a pair of a pair of vertices in a directed graph and an edge
+-- from the first vertex in the pair to the second vertex in the pair as an
+-- "arrow".
+
+----------------------------
+----------------------------
+---- Generalized arrows ----
+----------------------------
+----------------------------
+
+-- We refer to a pair of a pair of vertices in a directed graph and an edge
+-- from the first vertex in the pair to the second vertex in the pair as an
+-- "arrow".
+
+{-
+public export
+ArrowSig : Type -> Type
+ArrowSig vertexType = (vertexType, vertexType)
+
+public export
+EdgeType : Type -> Type
+EdgeType vertexType = ArrowSig vertexType -> Type
+
+public export
+Arrow : {vertexType : Type} -> EdgeType vertexType -> Type
+Arrow {vertexType} arrowType = DPair (ArrowSig vertexType) arrowType
+
+public export
+arrowSig : {vertexType : Type} -> {arrowType : EdgeType vertexType} ->
+  Arrow arrowType -> ArrowSig vertexType
+arrowSig (sig ** _) = sig
+
+public export
+arrowEdge : {vertexType : Type} -> {arrowType : EdgeType vertexType} ->
+  (arrow : Arrow arrowType) -> arrowType (arrowSig arrow)
+arrowEdge (_ ** edge) = edge
+
+public export
+arrowSource : {vertexType : Type} -> {arrowType : EdgeType vertexType} ->
+  Arrow arrowType -> vertexType
+arrowSource = fst . arrowSig
+
+public export
+arrowTarget : {vertexType : Type} -> {arrowType : EdgeType vertexType} ->
+  Arrow arrowType -> vertexType
+arrowTarget = snd . arrowSig
+-}
+
+----------------------------------------
+----------------------------------------
+---- Equivalence and term rewriting ----
+----------------------------------------
+----------------------------------------
+
+------------------------------------
+---- Free equivalence relations ----
+------------------------------------
 
 -- A type which represents witnesses to an equivalence relation.
 -- A term of this type may be used as a rewrite rule.
@@ -63,6 +241,16 @@ checkFreeEquiv eqa (EqTrans x y z eq eq') =
         Nothing
     (Nothing, _) => Nothing
     (_, Nothing) => Nothing
+
+--------------------------
+---- Rewritable terms ----
+--------------------------
+
+-- A rewritable term type is a term type accompanied with a (free) equivalence
+-- relation, a witness to which may be used _as_ a term.
+public export
+data RewritableTermF : Type -> Type where
+  Rewrite : FreeEquivF carrier carrier -> RewritableTermF carrier
 
 -------------------------
 -------------------------
