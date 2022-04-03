@@ -394,11 +394,3 @@ data IsPolynomial : (Type -> Type) -> Type where
     IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSCoproductF f g
   FreePoly : IsPolynomial f -> IsPolynomial $ FreeMonad f
   CofreePoly : IsPolynomial f -> IsPolynomial $ CofreeComonad f
-
-public export
-muTerm : IsPolynomial f -> Catamorphism f v a
-muTerm = ?polynomial_mu_hole
-
-public export
-nuTree : IsPolynomial f -> Anamorphism f v a
-nuTree = ?polynomial_nu_hole

@@ -29,55 +29,62 @@ HomSetRel : (a, b : Type) -> Type
 HomSetRel a b = RelationOn (a -> b)
 
 ExtEq : {a, b : Type} -> HomSetRel a b
-ExtEq {a} f g = (elem : a) -> f elem = g elem
+ExtEq {a} f g = (x : a) -> f x = g x
 
 EqExtEq : {a, b : Type} -> (f, g : a -> b) -> f = g -> ExtEq f g
 EqExtEq f f Refl x = Refl
 
-data HomSetEqRel : {a, b : Type} -> HomSetRel a b -> (f, g : a -> b) ->
-    Type where
-  ExtEqEquiv : ExtEq f g -> HomSetEqRel rel f g
-  ExtEqSym : HomSetEqRel rel f g -> HomSetEqRel rel g f
-  ExtEqTrans : HomSetEqRel rel f g -> HomSetEqRel rel g h ->
-      HomSetEqRel rel f h
-
-EqFunctionEq : {a, b : Type} -> (rel : HomSetRel a b) -> (f, g : a -> b) ->
-  f = g -> HomSetEqRel rel f g
-EqFunctionEq rel f g = ExtEqEquiv . EqExtEq f g
-
 FunctionRel : Type
 FunctionRel = (a, b : Type) -> HomSetRel a b
 
-FunctionEqRel : FunctionRel -> Type
-FunctionEqRel rel = {a, b : Type} ->
-  (f, g : a -> b) -> HomSetEqRel (rel a b) f g
+data FunctionEqRel :
+    (rel : FunctionRel) -> {a, b : Type} -> (f, g : a -> b) -> Type where
+  FunctionEqExt : ExtEq f g -> FunctionEqRel rel f g
+  FunctionEqSym : FunctionEqRel rel f g -> FunctionEqRel rel g f
+  FunctionEqTrans : FunctionEqRel rel f g -> FunctionEqRel rel g h ->
+      FunctionEqRel rel f h
+  FunctionEqCompose : {rel : FunctionRel} -> {a, b, c: Type} ->
+    {f, f' : a -> b} -> {g, g' : b -> c} ->
+    FunctionEqRel rel g g' -> FunctionEqRel rel f f' ->
+    FunctionEqRel rel (g . f) (g' . f')
+
+EqFunctionEq : {a, b : Type} -> (rel : FunctionRel) -> (f, g : a -> b) ->
+  f = g -> FunctionEqRel rel f g
+EqFunctionEq rel f g = FunctionEqExt . EqExtEq f g
+
+FunctionEqRefl : {a, b : Type} ->
+  (rel : FunctionRel) -> (f : a -> b) -> FunctionEqRel rel f f
+FunctionEqRefl rel f = EqFunctionEq rel f f Refl
 
 -- The category-theoretic notion of a morphism of a slice category.
-SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> Type
-SliceMorphism x y =
+SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> FunctionRel -> Type
+SliceMorphism x y rel =
   (w : SliceObjDomain x -> SliceObjDomain y **
-   ExtEq (SliceObjMap y . w) (SliceObjMap x))
+   FunctionEqRel rel (SliceObjMap y . w) (SliceObjMap x))
 
-SliceMorphismMap : {c : Type} -> {x, y : SliceObj c} ->
-  SliceMorphism x y -> SliceObjDomain x -> SliceObjDomain y
+SliceMorphismMap : {c : Type} -> {x, y : SliceObj c} -> {rel : FunctionRel} ->
+  SliceMorphism x y rel -> SliceObjDomain x -> SliceObjDomain y
 SliceMorphismMap (w ** _) = w
 
-SliceMorphismEq : {c : Type} -> {x, y : SliceObj c} ->
-  (f : SliceMorphism x y) ->
-  ExtEq (SliceObjMap y . SliceMorphismMap {x} {y} f) (SliceObjMap x)
+SliceMorphismEq : {c : Type} -> {x, y : SliceObj c} -> {rel : FunctionRel} ->
+  (f : SliceMorphism x y rel) ->
+  FunctionEqRel rel
+    (SliceObjMap y . SliceMorphismMap {x} {y} {rel} f) (SliceObjMap x)
 SliceMorphismEq (_ ** eq) = eq
 
-SliceId : {c : Type} -> (w : SliceObj c) -> SliceMorphism w w
-SliceId (a ** x) = (id ** \_ => Refl)
+SliceId : {c : Type} -> {rel : FunctionRel} ->
+  (w : SliceObj c) -> SliceMorphism w w rel
+SliceId (a ** x) = (id ** EqFunctionEq rel x x Refl)
 
-SliceCompose : {c : Type} -> {u, v, w : SliceObj c} ->
-  SliceMorphism v w -> SliceMorphism u v -> SliceMorphism u w
-SliceCompose {c} {u} {v} {w} g f =
+SliceCompose : {c : Type} -> {u, v, w : SliceObj c} -> {rel : FunctionRel} ->
+  SliceMorphism v w rel -> SliceMorphism u v rel -> SliceMorphism u w rel
+SliceCompose {rel} g f =
   (SliceMorphismMap g . SliceMorphismMap f **
-   \elem =>
-    trans
-      (SliceMorphismEq g (SliceMorphismMap f elem))
-      (SliceMorphismEq f elem))
+   FunctionEqTrans
+    (FunctionEqCompose
+      (SliceMorphismEq g)
+      (FunctionEqRefl rel (SliceMorphismMap f)))
+    (SliceMorphismEq f))
 
 Bundle : Type
 Bundle = (base : Type ** SliceObj base)
