@@ -25,79 +25,91 @@ SliceObjMap (_ ** mx) = mx
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
-HomSetRel : (a, b : Type) -> Type
-HomSetRel a b = RelationOn (a -> b)
+TermRel : Type
+TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
 
-ExtEq : {a, b : Type} -> HomSetRel a b
+data QuotientRel :
+    (rel : TermRel) -> {a, b : Type} -> a -> b -> Type where
+  QuotientRefl : {rel : TermRel} -> {a : Type} -> {el, el' : a} ->
+    el = el' -> QuotientRel rel {a} {b=a} el el'
+  QuotientedTerm : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
+    rel el el' -> QuotientRel rel el el'
+  QuotientExt : {rel : TermRel} -> {a, b : Type} -> {f, g: a -> b} ->
+    ((el : a) -> QuotientRel rel (f el) (g el)) ->
+    QuotientRel rel f g
+  QuotientApp : {rel : TermRel} -> {a, a', b, b' : Type} ->
+    {f : a -> b} -> {f' : a' -> b'} ->
+    {el : a} -> {el' : a'} ->
+    QuotientRel rel f f' ->
+    QuotientRel rel el el' ->
+    QuotientRel rel (f el) (f' el')
+  QuotientSym : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
+    QuotientRel rel el el' -> QuotientRel rel el' el
+  QuotientTrans : {rel : TermRel} -> {a, b, c : Type} ->
+    {el : a} -> {el' : b} -> {el'' : c} ->
+    QuotientRel rel el el' -> QuotientRel rel el' el'' ->
+    QuotientRel rel el el''
+
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
 
-EqExtEq : {a, b : Type} -> (f, g : a -> b) -> f = g -> ExtEq f g
-EqExtEq f f Refl x = Refl
+EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
+EqFunctionExt f f Refl _ = Refl
 
-FunctionRel : Type
-FunctionRel = (a, b : Type) -> HomSetRel a b
+QuotientExtEq : {rel : TermRel} -> {a, b : Type} -> {f, g : a -> b} ->
+  ExtEq f g -> QuotientRel rel f g
+QuotientExtEq eqfg = QuotientExt $ \el => QuotientRefl $ eqfg el
 
-data FunctionEqRel :
-    (rel : FunctionRel) -> {a, b : Type} -> (f, g : a -> b) -> Type where
-  FunctionEqExt : ExtEq f g -> FunctionEqRel rel f g
-  FunctionEqSym : FunctionEqRel rel f g -> FunctionEqRel rel g f
-  FunctionEqTrans : FunctionEqRel rel f g -> FunctionEqRel rel g h ->
-      FunctionEqRel rel f h
-  FunctionEqCompose : {rel : FunctionRel} -> {a, b, c: Type} ->
-    {f, f' : a -> b} -> {g, g' : b -> c} ->
-    FunctionEqRel rel g g' -> FunctionEqRel rel f f' ->
-    FunctionEqRel rel (g . f) (g' . f')
-
-EqFunctionEq : {a, b : Type} -> (rel : FunctionRel) -> (f, g : a -> b) ->
-  f = g -> FunctionEqRel rel f g
-EqFunctionEq rel f g = FunctionEqExt . EqExtEq f g
-
-FunctionEqRefl : {a, b : Type} ->
-  (rel : FunctionRel) -> (f : a -> b) -> FunctionEqRel rel f f
-FunctionEqRefl rel f = EqFunctionEq rel f f Refl
+QuotientCompose : {rel : TermRel} -> {a, b, c : Type} ->
+  {f, f' : a -> b} -> {g, g': b -> c} ->
+  QuotientRel rel g g' ->
+  QuotientRel rel f f' ->
+  QuotientRel rel (g . f) (g' . f')
+QuotientCompose {rel} geq feq =
+  QuotientExt $ \el => QuotientApp geq $ QuotientApp feq $ QuotientRefl Refl
 
 -- The category-theoretic notion of a morphism of a slice category.
-SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> FunctionRel -> Type
+SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> TermRel -> Type
 SliceMorphism x y rel =
   (w : SliceObjDomain x -> SliceObjDomain y **
-   FunctionEqRel rel (SliceObjMap y . w) (SliceObjMap x))
+   QuotientRel rel (SliceObjMap y . w) (SliceObjMap x))
 
-SliceMorphismMap : {c : Type} -> {x, y : SliceObj c} -> {rel : FunctionRel} ->
+SliceMorphismMap : {c : Type} -> {x, y : SliceObj c} -> {rel : TermRel} ->
   SliceMorphism x y rel -> SliceObjDomain x -> SliceObjDomain y
 SliceMorphismMap (w ** _) = w
 
-SliceMorphismEq : {c : Type} -> {x, y : SliceObj c} -> {rel : FunctionRel} ->
+SliceMorphismEq : {c : Type} -> {x, y : SliceObj c} -> {rel : TermRel} ->
   (f : SliceMorphism x y rel) ->
-  FunctionEqRel rel
+  QuotientRel rel
     (SliceObjMap y . SliceMorphismMap {x} {y} {rel} f) (SliceObjMap x)
 SliceMorphismEq (_ ** eq) = eq
 
-SliceId : {c : Type} -> {rel : FunctionRel} ->
+SliceId : {c : Type} -> {rel : TermRel} ->
   (w : SliceObj c) -> SliceMorphism w w rel
-SliceId (a ** x) = (id ** EqFunctionEq rel x x Refl)
+SliceId (a ** x) = (id ** QuotientRefl Refl)
 
-SliceCompose : {c : Type} -> {u, v, w : SliceObj c} -> {rel : FunctionRel} ->
+SliceCompose : {c : Type} -> {u, v, w : SliceObj c} -> {rel : TermRel} ->
   SliceMorphism v w rel -> SliceMorphism u v rel -> SliceMorphism u w rel
 SliceCompose {rel} g f =
   (SliceMorphismMap g . SliceMorphismMap f **
-   FunctionEqTrans
-    (FunctionEqCompose
+   QuotientTrans
+    (QuotientCompose
       (SliceMorphismEq g)
-      (FunctionEqRefl rel (SliceMorphismMap f)))
+      (QuotientRefl Refl))
     (SliceMorphismEq f))
 
-Pullback : FunctionRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
+Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
 Pullback rel {a} {b} f g = (el : a ** el' : b ** ?Pullback_hole)
 
-pullbackProj1 : {rel : FunctionRel} -> {a, b, c : Type} ->
+pullbackProj1 : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> a)
 pullbackProj1 = ?pullbackProj1_hole
 
-pullbackProj2 : {rel : FunctionRel} -> {a, b, c : Type} ->
+pullbackProj2 : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> b)
 pullbackProj2 = ?pullbackProj2_hole
 
-BaseChangeObj : FunctionRel ->
+BaseChangeObj : TermRel ->
   {x, y : Type} -> (f : x -> y) -> SliceObj y -> SliceObj x
 BaseChangeObj rel f u =
   let blork = Pullback rel (SliceObjMap u) f in
