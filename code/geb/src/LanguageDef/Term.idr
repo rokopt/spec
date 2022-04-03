@@ -6,12 +6,13 @@ import LanguageDef.Atom
 
 %default total
 
--------------------------------------------------------------
--------------------------------------------------------------
----- Slices, bundles, and refinements in Idris's Type(0) ----
--------------------------------------------------------------
--------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+---- Slices, bundles, and refinements in the metalanguage (Idris's Type(0)) ----
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
+-- The category-theoretic notion of an object of a slice category.
 SliceObj : Type -> Type
 SliceObj c = (a : Type ** a -> c)
 
@@ -21,9 +22,37 @@ SliceObjDomain (a ** _) = a
 SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
 SliceObjMap (_ ** mx) = mx
 
-ExtEq : {a, b : Type} -> (f, g : a -> b) -> Type
+RelationOn : Type -> Type
+RelationOn a = a -> a -> Type
+
+HomSetRel : (a, b : Type) -> Type
+HomSetRel a b = RelationOn (a -> b)
+
+ExtEq : {a, b : Type} -> HomSetRel a b
 ExtEq {a} f g = (elem : a) -> f elem = g elem
 
+EqExtEq : {a, b : Type} -> (f, g : a -> b) -> f = g -> ExtEq f g
+EqExtEq f f Refl x = Refl
+
+data HomSetEqRel : {a, b : Type} -> HomSetRel a b -> (f, g : a -> b) ->
+    Type where
+  ExtEqEquiv : ExtEq f g -> HomSetEqRel rel f g
+  ExtEqSym : HomSetEqRel rel f g -> HomSetEqRel rel g f
+  ExtEqTrans : HomSetEqRel rel f g -> HomSetEqRel rel g h ->
+      HomSetEqRel rel f h
+
+EqFunctionEq : {a, b : Type} -> (rel : HomSetRel a b) -> (f, g : a -> b) ->
+  f = g -> HomSetEqRel rel f g
+EqFunctionEq rel f g = ExtEqEquiv . EqExtEq f g
+
+FunctionRel : Type
+FunctionRel = (a, b : Type) -> HomSetRel a b
+
+FunctionEqRel : FunctionRel -> Type
+FunctionEqRel rel = {a, b : Type} ->
+  (f, g : a -> b) -> HomSetEqRel (rel a b) f g
+
+-- The category-theoretic notion of a morphism of a slice category.
 SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> Type
 SliceMorphism x y =
   (w : SliceObjDomain x -> SliceObjDomain y **
