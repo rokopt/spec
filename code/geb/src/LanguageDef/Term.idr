@@ -29,7 +29,7 @@ HomSetRel : (a, b : Type) -> Type
 HomSetRel a b = RelationOn (a -> b)
 
 ExtEq : {a, b : Type} -> HomSetRel a b
-ExtEq {a} f g = (x : a) -> f x = g x
+ExtEq {a} f g = (el : a) -> f el = g el
 
 EqExtEq : {a, b : Type} -> (f, g : a -> b) -> f = g -> ExtEq f g
 EqExtEq f f Refl x = Refl
@@ -85,6 +85,24 @@ SliceCompose {rel} g f =
       (SliceMorphismEq g)
       (FunctionEqRefl rel (SliceMorphismMap f)))
     (SliceMorphismEq f))
+
+Pullback : FunctionRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
+Pullback rel {a} {b} f g = (el : a ** el' : b ** ?Pullback_hole)
+
+pullbackProj1 : {rel : FunctionRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> a)
+pullbackProj1 = ?pullbackProj1_hole
+
+pullbackProj2 : {rel : FunctionRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> b)
+pullbackProj2 = ?pullbackProj2_hole
+
+BaseChangeObj : FunctionRel ->
+  {x, y : Type} -> (f : x -> y) -> SliceObj y -> SliceObj x
+BaseChangeObj rel f u =
+  let blork = Pullback rel (SliceObjMap u) f in
+  -- let bjat = pullbackProj2 blork in
+  ?BaseChange_hole
 
 Bundle : Type
 Bundle = (base : Type ** SliceObj base)
