@@ -115,6 +115,12 @@ BaseChangeObj : TermRel ->
 BaseChangeObj rel {x} {y} f u =
   (Pullback rel (SliceObjMap u) f ** pullbackProj2 {f=(SliceObjMap u)} {g=f})
 
+BaseChangeMorphism : (rel : TermRel) ->
+  {x, y : Type} -> (f : x -> y) -> {u, v : SliceObj y} ->
+  SliceMorphism u v rel ->
+  SliceMorphism (BaseChangeObj rel f u) (BaseChangeObj rel f v) rel
+BaseChangeMorphism rel {x} {y} f {u} {v} m = ?BaseChangeMorphism_hole
+
 Bundle : Type
 Bundle = (base : Type ** SliceObj base)
 
