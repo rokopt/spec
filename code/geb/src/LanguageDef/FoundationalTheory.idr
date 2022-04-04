@@ -1,10 +1,7 @@
 module LanguageDef.FoundationalTheory
 
-import Library.IdrisUtils
 import Library.IdrisCategories
-import LanguageDef.Atom
-import LanguageDef.Term
-import LanguageDef.Expression
+import public LanguageDef.Expression
 
 %default total
 

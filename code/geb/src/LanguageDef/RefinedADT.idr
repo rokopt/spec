@@ -1,8 +1,8 @@
-module LanguageDef.Term
+module LanguageDef.RefinedADT
 
 import Library.IdrisUtils
 import Library.IdrisCategories
-import LanguageDef.Atom
+import public LanguageDef.Atom
 
 %default total
 

@@ -6,7 +6,7 @@ modules =
     , Library.IdrisCategories
     , Library.CategoryTheory
     , LanguageDef.Atom
-    , LanguageDef.Term
+    , LanguageDef.RefinedADT
     , LanguageDef.Expression
     , LanguageDef.FoundationalTheory
     , LanguageDef.Interpretation
@@ -17,7 +17,7 @@ modules =
     , LanguageDef.Embedded
     , LanguageDef.FullLanguageDef
     , LanguageDef.Test.AtomTest
-    , LanguageDef.Test.TermTest
+    , LanguageDef.Test.RefinedADTTest
     , LanguageDef.Test.ExpressionTest
     , LanguageDef.Test.InterpretationTest
     , LanguageDef.Test.SyntaxTest

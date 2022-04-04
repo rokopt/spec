@@ -1,7 +1,7 @@
 module LanguageDef.FullLanguageDef
 
 import public LanguageDef.Atom
-import public LanguageDef.Term
+import public LanguageDef.RefinedADT
 import public LanguageDef.Expression
 import public LanguageDef.FoundationalTheory
 import public LanguageDef.Interpretation
