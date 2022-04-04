@@ -50,6 +50,15 @@ QuotientTypeClosureF : QuotientType -> QuotientType
 QuotientTypeClosureF (carrierType ** carrierRel) =
   (carrierType ** EquivClosureF carrierRel)
 
+data RefinedCat : Type where
+  RefinedSubst : RefinedCat
+  RefinedADT : RefinedCat
+
+data RefinedObject : RefinedCat ->
+    (functorCarrier, objCarrier : Type) -> Type where
+  RefinedObjectApply :
+    functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
+
 TermRel : Type
 TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
 
