@@ -52,10 +52,25 @@ RelationClosureF functor rel = RelationTermF functor rel rel
 
 data FreeMRelation :
     {t : Type} -> RelFunctor t -> RelationOn t -> RelationOn t where
-  InRelation :
+  InFreeRelation :
     {t : Type} -> {f : RelFunctor t} -> {rel : RelationOn t} -> {el, el' : t} ->
     RelationTermF f rel (FreeMRelation f rel) el el' ->
     FreeMRelation f rel el el'
+
+data RelationTreeF : {t: Type} ->
+    (f : RelFunctor t) ->
+    (v : RelationOn t) -> (carrier : RelationOn t) -> RelationOn t where
+  RelationNode :
+    {t : Type} -> {f : RelFunctor t} ->
+    {v, carrier : RelationOn t} -> {el, el' : t} ->
+    v el el' -> f carrier el el' -> RelationTreeF f v carrier el el'
+
+data CofreeCMRelation :
+    {t : Type} -> RelFunctor t -> RelationOn t -> RelationOn t where
+  InCofreeRelation :
+    {t : Type} -> {f : RelFunctor t} -> {rel : RelationOn t} -> {el, el' : t} ->
+    Inf (RelationTreeF f rel (CofreeCMRelation f rel) el el') ->
+    CofreeCMRelation f rel el el'
 
 ----------------------
 ---- Equivalences ----
