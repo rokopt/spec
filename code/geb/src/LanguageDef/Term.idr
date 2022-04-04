@@ -99,22 +99,21 @@ SliceCompose {rel} g f =
     (SliceMorphismEq f))
 
 Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
-Pullback rel {a} {b} f g = (el : a ** el' : b ** ?Pullback_hole)
+Pullback rel {a} {b} f g =
+  (el : (a, b) ** QuotientRel rel (f (fst el)) (g (snd el)))
 
 pullbackProj1 : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> a)
-pullbackProj1 = ?pullbackProj1_hole
+pullbackProj1 pb = fst (fst pb)
 
 pullbackProj2 : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> b)
-pullbackProj2 = ?pullbackProj2_hole
+pullbackProj2 pb = snd (fst pb)
 
 BaseChangeObj : TermRel ->
   {x, y : Type} -> (f : x -> y) -> SliceObj y -> SliceObj x
-BaseChangeObj rel f u =
-  let blork = Pullback rel (SliceObjMap u) f in
-  -- let bjat = pullbackProj2 blork in
-  ?BaseChange_hole
+BaseChangeObj rel {x} {y} f u =
+  (Pullback rel (SliceObjMap u) f ** pullbackProj2 {f=(SliceObjMap u)} {g=f})
 
 Bundle : Type
 Bundle = (base : Type ** SliceObj base)
