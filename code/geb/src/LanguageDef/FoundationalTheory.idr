@@ -256,16 +256,16 @@ mutual
   -- The functor which defines the object of the refined first-order ADT
   -- category from which all other constructs of Geb can be extracted, and
   -- which can be extended to generate super-languages of Geb.
-  data GebTermF : Type -> Type -> Type where
-    GebUP : GebUniversalPropF prop -> GebTermF prop term
+  data RefinedADTCatF : Type -> Type -> Type where
+    GebUP : GebUniversalPropF prop -> RefinedADTCatF prop term
 
     -- The object in the category of first-order refined ADTs whose term
     -- category is isomorphic to the Idris GebTypeF (or that of any other
     -- correct interpreter in any host language).
-    Geb : GebTermF prop term
+    Geb : RefinedADTCatF prop term
 
-FreeGebTerm : Type -> Type -> Type
-FreeGebTerm prop = FreeMonad $ GebTermF prop
+FreeRefinedADTCat : Type -> Type -> Type
+FreeRefinedADTCat prop = FreeMonad $ RefinedADTCatF prop
 
-CofreeGebTerm : Type -> Type -> Type
-CofreeGebTerm prop = CofreeComonad $ GebTermF prop
+CofreeRefinedADTCat : Type -> Type -> Type
+CofreeRefinedADTCat prop = CofreeComonad $ RefinedADTCatF prop
