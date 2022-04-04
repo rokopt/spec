@@ -608,15 +608,20 @@ data SubstCatAlgebraF : Type -> Type -> Type where
 -- morphisms, and its endofunctors.
 
 public export
+RefinedADTCatProductCatIndex : Type
+RefinedADTCatProductCatIndex = (RefinedCat, RADTClass)
+
+public export
 RefinedADTCatProductCatObject : Type
-RefinedADTCatProductCatObject = ProductCatObject RADTClass
+RefinedADTCatProductCatObject = ProductCatObject RefinedADTCatProductCatIndex
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
 RefinedADTCatProductCatMorphism :
   RefinedADTCatProductCatObject -> RefinedADTCatProductCatObject -> Type
-RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=RADTClass}
+RefinedADTCatProductCatMorphism =
+  ProductCatMorphism {idx=RefinedADTCatProductCatIndex}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
@@ -624,7 +629,8 @@ RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=RADTClass}
 
 public export
 RefinedADTCatProductCatObjectMap : Type
-RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap RADTClass
+RefinedADTCatProductCatObjectMap =
+  ProductCatObjectEndoMap RefinedADTCatProductCatIndex
 
 public export
 RefinedADTCatProductCatMorphismMap : RefinedADTCatProductCatObjectMap -> Type
@@ -632,23 +638,18 @@ RefinedADTCatProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
 RefinedADTCatProductCatEndofunctor : Type
-RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor RADTClass
+RefinedADTCatProductCatEndofunctor =
+  ProductCatEndofunctor RefinedADTCatProductCatIndex
 
 -- The object-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
 public export
 data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
-  RADTSubstCat : RefinedADTCatF_object carrier RADTCcat
-  RADTSubstInitial : RefinedADTCatF_object carrier RADTCobj
-  RADTRefinedADTCat : RefinedADTCatF_object carrier RADTCobj
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
 public export RefinedADTCatF_morphism :
   RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
-RefinedADTCatF_morphism dom cod m RADTCcat RADTSubstCat = RADTSubstCat
-RefinedADTCatF_morphism dom cod m RADTCobj RADTSubstInitial = RADTSubstInitial
-RefinedADTCatF_morphism dom cod m RADTCobj RADTRefinedADTCat = RADTRefinedADTCat
 
 public export
 RefinedADTCatF : RefinedADTCatProductCatEndofunctor
@@ -659,7 +660,7 @@ RefinedADTCatF = (RefinedADTCatF_object ** RefinedADTCatF_morphism)
 ----------------------
 
 public export
-RefinedADTCatMu : RADTClass -> Type
+RefinedADTCatMu : RefinedADTCatProductCatIndex -> Type
 RefinedADTCatMu = MuProduct RefinedADTCatF_object
 
 public export
@@ -667,7 +668,7 @@ RefinedADTCatFreeMonad : RefinedADTCatProductCatObjectMap
 RefinedADTCatFreeMonad = ProductCatFreeMonad RefinedADTCatF_object
 
 public export
-RefinedADTCatNu : RADTClass -> Type
+RefinedADTCatNu : RefinedADTCatProductCatIndex -> Type
 RefinedADTCatNu = NuProduct RefinedADTCatF_object
 
 public export
