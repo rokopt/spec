@@ -43,18 +43,21 @@ QuotientVoid = (Void ** VoidRel)
 QuotientUnit : QuotientType
 QuotientUnit = (Unit ** UnitRel ())
 
+data EquivGenF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
+  EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
+    (el : t) -> EquivGenF carrier el el
+  EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
+    carrier el el' -> EquivGenF carrier el' el
+  EquivTrans : {t : Type} -> {carrier : RelationOn t} ->
+    {el, el', el'' : t} ->
+    carrier el el' -> carrier el' el'' -> EquivGenF carrier el el''
+
 data EquivTermF : {t: Type} -> (v : RelationOn t) ->
     (carrier : RelationOn t) -> RelationOn t where
-  EquivVar : {t : Type} -> {v : RelationOn t} ->
-    {carrier : RelationOn t} -> {el, el' : t} ->
+  EquivVar : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
     v el el' -> EquivTermF v carrier el el'
-  EquivRefl : {t : Type} -> {v, carrier : RelationOn t} ->
-    (el : t) -> EquivTermF v carrier el el
-  EquivSym : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
-    carrier el el' -> EquivTermF v carrier el' el
-  EquivTrans : {t : Type} -> {v, carrier : RelationOn t} ->
-    {el, el', el'' : t} ->
-    carrier el el' -> carrier el' el'' -> EquivTermF v carrier el el''
+  EquivComposite : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
+    EquivGenF carrier el el' -> EquivTermF v carrier el el'
 
 EquivClosureF : {t: Type} -> RelationOn t -> RelationOn t
 EquivClosureF rel = EquivTermF rel rel
