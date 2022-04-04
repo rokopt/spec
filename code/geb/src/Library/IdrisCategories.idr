@@ -13,6 +13,9 @@ import Library.IdrisUtils
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
+MergeRelations : RelationOn a -> RelationOn a -> RelationOn a
+MergeRelations rel rel' el el' = Either (rel el el') (rel' el el')
+
 QuotientType : Type
 QuotientType = DPair Type RelationOn
 

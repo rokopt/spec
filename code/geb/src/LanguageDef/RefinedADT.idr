@@ -85,7 +85,9 @@ GebTermProductCatEndofunctor = ProductCatEndofunctor GebTermClass
 data RefinedObjectF :
     (functorCarrier, objCarrier : CategoryClass -> Type) ->
     CategoryClass -> Type where
-  RefinedObjectApply : {cat : CategoryClass} ->
+  RefinedObjectInitial :
+    RefinedObjectF functorCarrier objCarrier cat
+  RefinedObjectApply :
     functorCarrier cat -> objCarrier cat ->
     RefinedObjectF functorCarrier objCarrier cat
   RefinedObjectGeb :
