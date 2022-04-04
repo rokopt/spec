@@ -130,18 +130,17 @@ data RefinedObject : RefinedCat ->
 public export
 data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
   RADTCat : RefinedCat -> RefinedADTCatF_object carrier RADTCcat
-  RADTSubstInitial : RefinedADTCatF_object carrier RADTCobjOrder0
-  RADTRefinedADTCat : RefinedADTCatF_object carrier RADTCobjOrder1
+  RADTObject0 :
+    RefinedObject
+      RefinedSubst
+      Void {- functorCarrier -}
+      (carrier RADTCobjOrder0) ->
+    RefinedADTCatF_object carrier RADTCobjOrder0
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
 public export RefinedADTCatF_morphism :
-  RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
-RefinedADTCatF_morphism dom cod m RADTCcat (RADTCat cat) = RADTCat cat
-RefinedADTCatF_morphism dom cod m RADTCobjOrder0 RADTSubstInitial =
-  RADTSubstInitial
-RefinedADTCatF_morphism dom cod m RADTCobjOrder1 RADTRefinedADTCat =
-  RADTRefinedADTCat
+    RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
 
 public export
 RefinedADTCatF : RefinedADTCatProductCatEndofunctor
