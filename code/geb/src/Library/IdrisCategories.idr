@@ -60,7 +60,7 @@ data FreeMRelation :
 
 data EquivGenF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
   EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
-    (el : t) -> EquivGenF carrier el el
+    {el, el' : t} -> el = el' -> EquivGenF carrier el el
   EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
     carrier el el' -> EquivGenF carrier el' el
   EquivTrans : {t : Type} -> {carrier : RelationOn t} ->
