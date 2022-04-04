@@ -17,11 +17,14 @@ import Library.IdrisUtils
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
-IntersectRelations : RelationOn a -> RelationOn a -> RelationOn a
-IntersectRelations rel rel' el el' = (rel el el', rel' el el')
+ProductRelation : RelationOn a -> RelationOn b -> RelationOn (a, b)
+ProductRelation rel rel' (el1, el1') (el2, el2') = (rel el1 el2, rel' el1' el2')
 
-MergeRelations : RelationOn a -> RelationOn a -> RelationOn a
-MergeRelations rel rel' el el' = Either (rel el el') (rel' el el')
+CoproductRelation : RelationOn a -> RelationOn b -> RelationOn (Either a b)
+CoproductRelation rel rel' (Left el1) (Left el2) = rel el1 el2
+CoproductRelation rel rel' (Left el1) (Right el2') = Void
+CoproductRelation rel rel' (Right el1') (Left el2) = Void
+CoproductRelation rel rel' (Right el1') (Right el2') = rel' el1' el2'
 
 VoidRel : RelationOn Void
 VoidRel v _ = void v
@@ -94,6 +97,14 @@ QuotientVoid = (Void ** VoidRel)
 
 QuotientUnit : QuotientType
 QuotientUnit = (Unit ** UnitRel ())
+
+QuotientProduct : QuotientType -> QuotientType -> QuotientType
+QuotientProduct (t ** r) (t' ** r') =
+  ((t, t') ** (ProductRelation r r'))
+
+QuotientCoproduct : QuotientType -> QuotientType -> QuotientType
+QuotientCoproduct (t ** r) (t' ** r') =
+  (Either t t' ** (CoproductRelation r r'))
 
 -----------------------------------------------
 -----------------------------------------------
