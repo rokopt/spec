@@ -506,7 +506,8 @@ data RefinedMorphismF : Type -> Type -> Type where
 
 -- These are the categories we need in order to define the objects
 -- and morphisms of the refined first-order ADT category -- the smallest one
--- in which there is an object which we can interpret in Idris as `GebTerm`.
+-- in which there is an object which we can interpret in Idris as
+-- `RefinedADTCat`.
 
 -- Generate objects for a category which can support at least
 -- substitution:  initial and terminal objects, and products and coproducts.
@@ -563,40 +564,40 @@ data SubstCatAlgebraF : Type -> Type -> Type where
 ----------------------------
 ----------------------------
 
--- Geb itself is a pure specification.  `GebTerm` is an Idris type whose
--- terms represent various concepts of Geb.  Because a term of `GebTerm`
+-- Geb itself is a pure specification.  `RefinedADTCat` is an Idris type whose
+-- terms represent various concepts of Geb.  Because a term of `RefinedADTCat`
 -- might represent any of several different concepts, the type is indexed
 -- by a type of atoms which classify which concept a given term represents.
--- This makes `GebTerm` a type family; it's effectively simulating a definition
--- by a large mutual recursion, but using an index intead of many different
--- Idris types allows us to interpret Geb in Idris by interpreting just that
--- one type.  I find it less confusing and more convenient than a big mutual
--- recursion.
+-- This makes `RefinedADTCat` a type family; it's effectively simulating a
+-- definition by a large mutual recursion, but using an index intead of many
+-- different Idris types allows us to interpret Geb in Idris by interpreting
+-- just that one type.  I find it less confusing and more convenient than a big
+-- mutual recursion.
 
 -------------------------
 ---- Term definition ----
 -------------------------
 
--- We define `GebTerm` -- an Idris type -- as a fixed point of a polynomial
--- endofunctor of Idris, in the same style in which we will define types of
--- Geb itself.  In particular, that will allow us to write a homoiconic
--- representation of `GebTerm` _as_ a term of `GebTerm` in a way which parallels
--- the Idris definition of `GebTerm`.
+-- We define `RefinedADTCat` -- an Idris type -- as a fixed point of a
+-- polynomial endofunctor of Idris, in the same style in which we will define
+-- types of Geb itself.  In particular, that will allow us to write a homoiconic
+-- representation of `RefinedADTCat` _as_ a term of `RefinedADTCat` in a way
+-- which parallels the Idris definition of `RefinedADTCat`.
 --
--- Because `GebTerm`, as described above, represents a number of different
+-- Because `RefinedADTCat`, as described above, represents a number of different
 -- concepts, we can view it as an object in a finite product category, where
 -- each concept -- which we call a "class" in the context of defining
--- `GebTerm` -- is one of the categories.
+-- `RefinedADTCat` -- is one of the categories.
 --
--- So we first define `GebTermF`, a (polynomial) endofunctor in the product
+-- So we first define `RefinedADTCatF`, a (polynomial) endofunctor in the product
 -- category of all the classes.  Having defined that functor, we'll take a
 -- fixed point of it (which we will be able to do because it is polynomial),
--- and then we'll have a `GebTerm` which comprises the Idris representation of
--- terms of Geb.
+-- and then we'll have a `RefinedADTCat` which comprises the Idris
+-- representation of terms of Geb.
 --
--- Below is the product category in which `GebTerm` lives; therefore it's the
--- category on which we will build an endofunctor, `GebTermF`, from which we
--- will derive `GebTerm` as a fixpoint (initial algebra).
+-- Below is the product category in which `RefinedADTCat` lives; therefore it's
+-- the category on which we will build an endofunctor, `RefinedADTCatF`, from
+-- which we will derive `RefinedADTCat` as a fixpoint (initial algebra).
 --
 -- We represent the product category as a function from a finite
 -- index type rather than as, say, nested pairs or a list -- those are all
@@ -607,70 +608,71 @@ data SubstCatAlgebraF : Type -> Type -> Type where
 -- morphisms, and its endofunctors.
 
 public export
-GebTermProductCatObject : Type
-GebTermProductCatObject = ProductCatObject GTClass
+RefinedADTCatProductCatObject : Type
+RefinedADTCatProductCatObject = ProductCatObject GTClass
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
-GebTermProductCatMorphism :
-  GebTermProductCatObject -> GebTermProductCatObject -> Type
-GebTermProductCatMorphism = ProductCatMorphism {idx=GTClass}
+RefinedADTCatProductCatMorphism :
+  RefinedADTCatProductCatObject -> RefinedADTCatProductCatObject -> Type
+RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=GTClass}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
 -- on morphisms that respects it.
 
 public export
-GebTermProductCatObjectMap : Type
-GebTermProductCatObjectMap = ProductCatObjectEndoMap GTClass
+RefinedADTCatProductCatObjectMap : Type
+RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap GTClass
 
 public export
-GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
-GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
+RefinedADTCatProductCatMorphismMap : RefinedADTCatProductCatObjectMap -> Type
+RefinedADTCatProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
-GebTermProductCatEndofunctor : Type
-GebTermProductCatEndofunctor = ProductCatEndofunctor GTClass
+RefinedADTCatProductCatEndofunctor : Type
+RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor GTClass
 
 -- The object-map component of the endofunctor from which we shall define
--- `GebTerm` (as an initial algebra).
+-- `RefinedADTCat` (as an initial algebra).
 public export
-data GebTermF_object : GebTermProductCatObjectMap where
-  GTSubstCat : GebTermF_object carrier GTCcat
-  GTSubstInitial : GebTermF_object carrier GTCobj
-  GTGebTerm : GebTermF_object carrier GTCobj
+data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
+  GTSubstCat : RefinedADTCatF_object carrier GTCcat
+  GTSubstInitial : RefinedADTCatF_object carrier GTCobj
+  GTRefinedADTCat : RefinedADTCatF_object carrier GTCobj
 
 -- The morphism-map component of the endofunctor from which we shall define
--- `GebTerm` (as an initial algebra).
-public export GebTermF_morphism : GebTermProductCatMorphismMap GebTermF_object
-GebTermF_morphism dom cod m GTCcat GTSubstCat = GTSubstCat
-GebTermF_morphism dom cod m GTCobj GTSubstInitial = GTSubstInitial
-GebTermF_morphism dom cod m GTCobj GTGebTerm = GTGebTerm
+-- `RefinedADTCat` (as an initial algebra).
+public export RefinedADTCatF_morphism :
+  RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
+RefinedADTCatF_morphism dom cod m GTCcat GTSubstCat = GTSubstCat
+RefinedADTCatF_morphism dom cod m GTCobj GTSubstInitial = GTSubstInitial
+RefinedADTCatF_morphism dom cod m GTCobj GTRefinedADTCat = GTRefinedADTCat
 
 public export
-GebTermF : GebTermProductCatEndofunctor
-GebTermF = (GebTermF_object ** GebTermF_morphism)
+RefinedADTCatF : RefinedADTCatProductCatEndofunctor
+RefinedADTCatF = (RefinedADTCatF_object ** RefinedADTCatF_morphism)
 
 ----------------------
 ---- Term algebra ----
 ----------------------
 
 public export
-GebTermMu : GTClass -> Type
-GebTermMu = MuProduct GebTermF_object
+RefinedADTCatMu : GTClass -> Type
+RefinedADTCatMu = MuProduct RefinedADTCatF_object
 
 public export
-GebTermFreeMonad : GebTermProductCatObjectMap
-GebTermFreeMonad = ProductCatFreeMonad GebTermF_object
+RefinedADTCatFreeMonad : RefinedADTCatProductCatObjectMap
+RefinedADTCatFreeMonad = ProductCatFreeMonad RefinedADTCatF_object
 
 public export
-GebTermNu : GTClass -> Type
-GebTermNu = NuProduct GebTermF_object
+RefinedADTCatNu : GTClass -> Type
+RefinedADTCatNu = NuProduct RefinedADTCatF_object
 
 public export
-GebTermCofreeComonad : GebTermProductCatObjectMap
-GebTermCofreeComonad = ProductCatCofreeComonad GebTermF_object
+RefinedADTCatCofreeComonad : RefinedADTCatProductCatObjectMap
+RefinedADTCatCofreeComonad = ProductCatCofreeComonad RefinedADTCatF_object
 
 ------------------------------------------
 ---- Term-checking and interpretation ----
