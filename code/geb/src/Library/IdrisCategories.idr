@@ -4,11 +4,15 @@ import Library.IdrisUtils
 
 %default total
 
-----------------------------
-----------------------------
----- Quotients in Idris ----
-----------------------------
-----------------------------
+---------------------------------------------------------
+---------------------------------------------------------
+---- Relations, equivalences, and quotients in Idris ----
+---------------------------------------------------------
+---------------------------------------------------------
+
+-------------------
+---- Relations ----
+-------------------
 
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
@@ -18,6 +22,60 @@ IntersectRelations rel rel' el el' = (rel el el', rel' el el')
 
 MergeRelations : RelationOn a -> RelationOn a -> RelationOn a
 MergeRelations rel rel' el el' = Either (rel el el') (rel' el el')
+
+VoidRel : RelationOn Void
+VoidRel v _ = void v
+
+UnitRel : Type -> RelationOn Unit
+UnitRel t () () = t
+
+RelFunctor : Type -> Type
+RelFunctor t = RelationOn t -> RelationOn t
+
+data RelationTermF : {t: Type} ->
+    (f : RelFunctor t) ->
+    (v : RelationOn t) -> (carrier : RelationOn t) -> RelationOn t where
+  RelationVar :
+    {t : Type} -> {f : RelFunctor t} ->
+    {v, carrier : RelationOn t} -> {el, el' : t} ->
+    v el el' -> RelationTermF f {t} v carrier el el'
+  RelationComposite :
+    {t : Type} -> {f : RelFunctor t} ->
+    {v, carrier : RelationOn t} -> {el, el' : t} ->
+    f carrier el el' -> RelationTermF f v carrier el el'
+
+RelationClosureF : {t: Type} -> RelFunctor t -> RelationOn t -> RelationOn t
+RelationClosureF functor rel = RelationTermF functor rel rel
+
+data FreeMRelation :
+    {t : Type} -> RelFunctor t -> RelationOn t -> RelationOn t where
+  InRelation :
+    {t : Type} -> {f : RelFunctor t} -> {rel : RelationOn t} -> {el, el' : t} ->
+    RelationTermF f rel (FreeMRelation f rel) el el' ->
+    FreeMRelation f rel el el'
+
+----------------------
+---- Equivalences ----
+----------------------
+
+data EquivGenF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
+  EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
+    (el : t) -> EquivGenF carrier el el
+  EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
+    carrier el el' -> EquivGenF carrier el' el
+  EquivTrans : {t : Type} -> {carrier : RelationOn t} ->
+    {el, el', el'' : t} ->
+    carrier el el' -> carrier el' el'' -> EquivGenF carrier el el''
+
+EquivClosureF : {t: Type} -> RelationOn t -> RelationOn t
+EquivClosureF = RelationClosureF EquivGenF
+
+FreeMEquiv : {t : Type} -> RelationOn t -> RelationOn t
+FreeMEquiv = FreeMRelation EquivGenF
+
+------------------------
+---- Quotient types ----
+------------------------
 
 QuotientType : Type
 QuotientType = DPair Type RelationOn
@@ -31,40 +89,11 @@ QuotientRelType t = RelationOn (QuotientTot t)
 QuotientRelGen : (t : QuotientType) -> QuotientRelType t
 QuotientRelGen (_ ** r) = r
 
-VoidRel : RelationOn Void
-VoidRel v _ = void v
-
-UnitRel : Type -> RelationOn Unit
-UnitRel t () () = t
-
 QuotientVoid : QuotientType
 QuotientVoid = (Void ** VoidRel)
 
 QuotientUnit : QuotientType
 QuotientUnit = (Unit ** UnitRel ())
-
-data EquivGenF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
-  EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
-    (el : t) -> EquivGenF carrier el el
-  EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
-    carrier el el' -> EquivGenF carrier el' el
-  EquivTrans : {t : Type} -> {carrier : RelationOn t} ->
-    {el, el', el'' : t} ->
-    carrier el el' -> carrier el' el'' -> EquivGenF carrier el el''
-
-data EquivTermF : {t: Type} -> (v : RelationOn t) ->
-    (carrier : RelationOn t) -> RelationOn t where
-  EquivVar : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
-    v el el' -> EquivTermF v carrier el el'
-  EquivComposite : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
-    EquivGenF carrier el el' -> EquivTermF v carrier el el'
-
-EquivClosureF : {t: Type} -> RelationOn t -> RelationOn t
-EquivClosureF rel = EquivTermF rel rel
-
-data FreeMEquiv : {t : Type} -> RelationOn t -> RelationOn t where
-  InEquiv : {t : Type} -> {rel : RelationOn t} -> {el, el' : t} ->
-    EquivTermF rel (FreeMEquiv rel) el el' -> FreeMEquiv rel el el'
 
 -----------------------------------------------
 -----------------------------------------------
