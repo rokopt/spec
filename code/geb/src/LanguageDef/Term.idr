@@ -134,9 +134,7 @@ ClassCarrierFromTermCarrier termCarrier c cat = termCarrier (cat, c)
 -- `GebTerm` (as an initial algebra).
 public export
 data GebTermF_object : GebTermProductCatObjectMap where
-  RADTObject :
-    {cat : RefinedCat} ->
-    {carrier : GebTermIndex -> Type} ->
+  RADTObject : {cat : RefinedCat} -> {carrier : GebTermIndex -> Type} ->
     RefinedObjectF
       (const Void) {- functorCarrier -}
       (ClassCarrierFromTermCarrier carrier GTCObject)
