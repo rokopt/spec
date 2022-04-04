@@ -17,33 +17,34 @@ import Library.IdrisUtils
 public export
 data RADTClass : Type where
   RADTCcat : RADTClass
-  RADTCobj : RADTClass
-  RADTCmorph : RADTClass
+  RADTCobjOrder0 : RADTClass
+  RADTCobjOrder1 : RADTClass
 
 export
 radtcEncode : RADTClass -> Nat
 radtcEncode RADTCcat = 0
-radtcEncode RADTCobj = 1
-radtcEncode RADTCmorph = 2
+radtcEncode RADTCobjOrder0 = 1
+radtcEncode RADTCobjOrder1 = 2
 
 export
 radtcDecode : Nat -> Maybe RADTClass
 radtcDecode 0 = Just RADTCcat
-radtcDecode 1 = Just RADTCobj
-radtcDecode 2 = Just RADTCmorph
+radtcDecode 1 = Just RADTCobjOrder0
+radtcDecode 2 = Just RADTCobjOrder1
 radtcDecode _ = Nothing
 
 export
-radtcDecodeEncodeIsJust : (a : RADTClass) -> radtcDecode (radtcEncode a) = Just a
+radtcDecodeEncodeIsJust :
+  (a : RADTClass) -> radtcDecode (radtcEncode a) = Just a
 radtcDecodeEncodeIsJust RADTCcat = Refl
-radtcDecodeEncodeIsJust RADTCobj = Refl
-radtcDecodeEncodeIsJust RADTCmorph = Refl
+radtcDecodeEncodeIsJust RADTCobjOrder0 = Refl
+radtcDecodeEncodeIsJust RADTCobjOrder1 = Refl
 
 export
 radtcToString : RADTClass -> String
 radtcToString RADTCcat = "Category"
-radtcToString RADTCobj = "Object"
-radtcToString RADTCmorph = "Morphism"
+radtcToString RADTCobjOrder0 = "SubstObject"
+radtcToString RADTCobjOrder1 = "ADTObject"
 
 export
 Show RADTClass where

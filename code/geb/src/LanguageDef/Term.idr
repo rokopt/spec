@@ -6,21 +6,11 @@ import LanguageDef.Atom
 
 %default total
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
----- Slices, bundles, and refinements in the metalanguage (Idris's Type(0)) ----
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
--- The category-theoretic notion of an object of a slice category.
-SliceObj : Type -> Type
-SliceObj c = (a : Type ** a -> c)
-
-SliceObjDomain : {c : Type} -> SliceObj c -> Type
-SliceObjDomain (a ** _) = a
-
-SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
-SliceObjMap (_ ** mx) = mx
+----------------------------
+----------------------------
+---- Quotients in Idris ----
+----------------------------
+----------------------------
 
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
@@ -49,15 +39,6 @@ data EquivClosureF : {t : Type} ->
 QuotientTypeClosureF : QuotientType -> QuotientType
 QuotientTypeClosureF (carrierType ** carrierRel) =
   (carrierType ** EquivClosureF carrierRel)
-
-data RefinedCat : Type where
-  RefinedSubst : RefinedCat
-  RefinedADT : RefinedCat
-
-data RefinedObject : RefinedCat ->
-    (functorCarrier, objCarrier : Type) -> Type where
-  RefinedObjectApply :
-    functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
 
 TermRel : Type
 TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
@@ -106,6 +87,154 @@ QuotientCompose : {rel : TermRel} -> {a, b, c : Type} ->
   QuotientRel rel (g . f) (g' . f')
 QuotientCompose {rel} geq feq =
   QuotientExt $ \el => QuotientApp geq $ QuotientApp feq $ QuotientRefl Refl
+
+data RefinedCat : Type where
+  RefinedSubst : RefinedCat
+  RefinedADT : RefinedCat
+
+data RefinedObject : RefinedCat ->
+    (functorCarrier, objCarrier : Type) -> Type where
+  RefinedObjectApply :
+    functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
+
+----------------------------
+----------------------------
+---- Geb terms in Idris ----
+----------------------------
+----------------------------
+
+-- Geb itself is a pure specification.  `RefinedADTCat` is an Idris type whose
+-- terms represent various concepts of Geb.  Because a term of `RefinedADTCat`
+-- might represent any of several different concepts, the type is indexed
+-- by a type of atoms which classify which concept a given term represents.
+-- This makes `RefinedADTCat` a type family; it's effectively simulating a
+-- definition by a large mutual recursion, but using an index intead of many
+-- different Idris types allows us to interpret Geb in Idris by interpreting
+-- just that one type.  I find it less confusing and more convenient than a big
+-- mutual recursion.
+
+-------------------------
+---- Term definition ----
+-------------------------
+
+-- We define `RefinedADTCat` -- an Idris type -- as a fixed point of a
+-- polynomial endofunctor of Idris, in the same style in which we will define
+-- types of Geb itself.  In particular, that will allow us to write a homoiconic
+-- representation of `RefinedADTCat` _as_ a term of `RefinedADTCat` in a way
+-- which parallels the Idris definition of `RefinedADTCat`.
+--
+-- Because `RefinedADTCat`, as described above, represents a number of different
+-- concepts, we can view it as an object in a finite product category, where
+-- each concept -- which we call a "class" in the context of defining
+-- `RefinedADTCat` -- is one of the categories.
+--
+-- So we first define `RefinedADTCatF`, a (polynomial) endofunctor in the product
+-- category of all the classes.  Having defined that functor, we'll take a
+-- fixed point of it (which we will be able to do because it is polynomial),
+-- and then we'll have a `RefinedADTCat` which comprises the Idris
+-- representation of terms of Geb.
+--
+-- Below is the product category in which `RefinedADTCat` lives; therefore it's
+-- the category on which we will build an endofunctor, `RefinedADTCatF`, from
+-- which we will derive `RefinedADTCat` as a fixpoint (initial algebra).
+--
+-- We represent the product category as a function from a finite
+-- index type rather than as, say, nested pairs or a list -- those are all
+-- isomorphic, but I feel that the function representation produces the most
+-- readable code.
+--
+-- The aspects of the product category that we define are its objects, its
+-- morphisms, and its endofunctors.
+
+public export
+RefinedADTCatProductCatObject : Type
+RefinedADTCatProductCatObject = ProductCatObject RADTClass
+
+-- A morphism in a product category is a product of morphisms.
+-- (In an Idris category, morphisms are functions.)
+public export
+RefinedADTCatProductCatMorphism :
+  RefinedADTCatProductCatObject -> RefinedADTCatProductCatObject -> Type
+RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=RADTClass}
+
+-- An endofunctor on the Idris product category in which Geb terms are defined
+-- is a function on objects of the product category together with a function
+-- on morphisms that respects it.
+
+public export
+RefinedADTCatProductCatObjectMap : Type
+RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap RADTClass
+
+public export
+RefinedADTCatProductCatMorphismMap : RefinedADTCatProductCatObjectMap -> Type
+RefinedADTCatProductCatMorphismMap = ProductCatMorphismEndoMap
+
+public export
+RefinedADTCatProductCatEndofunctor : Type
+RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor RADTClass
+
+-- The object-map component of the endofunctor from which we shall define
+-- `RefinedADTCat` (as an initial algebra).
+public export
+data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
+  RADTCat : RefinedCat -> RefinedADTCatF_object carrier RADTCcat
+  RADTSubstInitial : RefinedADTCatF_object carrier RADTCobjOrder0
+  RADTRefinedADTCat : RefinedADTCatF_object carrier RADTCobjOrder1
+
+-- The morphism-map component of the endofunctor from which we shall define
+-- `RefinedADTCat` (as an initial algebra).
+public export RefinedADTCatF_morphism :
+  RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
+RefinedADTCatF_morphism dom cod m RADTCcat (RADTCat cat) = RADTCat cat
+RefinedADTCatF_morphism dom cod m RADTCobjOrder0 RADTSubstInitial =
+  RADTSubstInitial
+RefinedADTCatF_morphism dom cod m RADTCobjOrder1 RADTRefinedADTCat =
+  RADTRefinedADTCat
+
+public export
+RefinedADTCatF : RefinedADTCatProductCatEndofunctor
+RefinedADTCatF = (RefinedADTCatF_object ** RefinedADTCatF_morphism)
+
+----------------------
+---- Term algebra ----
+----------------------
+
+public export
+RefinedADTCatMu : RADTClass -> Type
+RefinedADTCatMu = MuProduct RefinedADTCatF_object
+
+public export
+RefinedADTCatFreeMonad : RefinedADTCatProductCatObjectMap
+RefinedADTCatFreeMonad = ProductCatFreeMonad RefinedADTCatF_object
+
+public export
+RefinedADTCatNu : RADTClass -> Type
+RefinedADTCatNu = NuProduct RefinedADTCatF_object
+
+public export
+RefinedADTCatCofreeComonad : RefinedADTCatProductCatObjectMap
+RefinedADTCatCofreeComonad = ProductCatCofreeComonad RefinedADTCatF_object
+
+------------------------------------------
+---- Term-checking and interpretation ----
+------------------------------------------
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+---- Slices, bundles, and refinements in the metalanguage (Idris's Type(0)) ----
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- The category-theoretic notion of an object of a slice category.
+SliceObj : Type -> Type
+SliceObj c = (a : Type ** a -> c)
+
+SliceObjDomain : {c : Type} -> SliceObj c -> Type
+SliceObjDomain (a ** _) = a
+
+SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
+SliceObjMap (_ ** mx) = mx
 
 -- The category-theoretic notion of a morphism of a slice category.
 SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> TermRel -> Type
@@ -557,127 +686,6 @@ data SubstCatAlgebraF : Type -> Type -> Type where
     carrier -> carrier -> SubstCatAlgebraF object carrier
 
   -- The left injection to the unit of the coproduct adjunction.
-
-----------------------------
-----------------------------
----- Geb terms in Idris ----
-----------------------------
-----------------------------
-
--- Geb itself is a pure specification.  `RefinedADTCat` is an Idris type whose
--- terms represent various concepts of Geb.  Because a term of `RefinedADTCat`
--- might represent any of several different concepts, the type is indexed
--- by a type of atoms which classify which concept a given term represents.
--- This makes `RefinedADTCat` a type family; it's effectively simulating a
--- definition by a large mutual recursion, but using an index intead of many
--- different Idris types allows us to interpret Geb in Idris by interpreting
--- just that one type.  I find it less confusing and more convenient than a big
--- mutual recursion.
-
--------------------------
----- Term definition ----
--------------------------
-
--- We define `RefinedADTCat` -- an Idris type -- as a fixed point of a
--- polynomial endofunctor of Idris, in the same style in which we will define
--- types of Geb itself.  In particular, that will allow us to write a homoiconic
--- representation of `RefinedADTCat` _as_ a term of `RefinedADTCat` in a way
--- which parallels the Idris definition of `RefinedADTCat`.
---
--- Because `RefinedADTCat`, as described above, represents a number of different
--- concepts, we can view it as an object in a finite product category, where
--- each concept -- which we call a "class" in the context of defining
--- `RefinedADTCat` -- is one of the categories.
---
--- So we first define `RefinedADTCatF`, a (polynomial) endofunctor in the product
--- category of all the classes.  Having defined that functor, we'll take a
--- fixed point of it (which we will be able to do because it is polynomial),
--- and then we'll have a `RefinedADTCat` which comprises the Idris
--- representation of terms of Geb.
---
--- Below is the product category in which `RefinedADTCat` lives; therefore it's
--- the category on which we will build an endofunctor, `RefinedADTCatF`, from
--- which we will derive `RefinedADTCat` as a fixpoint (initial algebra).
---
--- We represent the product category as a function from a finite
--- index type rather than as, say, nested pairs or a list -- those are all
--- isomorphic, but I feel that the function representation produces the most
--- readable code.
---
--- The aspects of the product category that we define are its objects, its
--- morphisms, and its endofunctors.
-
-public export
-RefinedADTCatProductCatObject : Type
-RefinedADTCatProductCatObject = ProductCatObject RADTClass
-
--- A morphism in a product category is a product of morphisms.
--- (In an Idris category, morphisms are functions.)
-public export
-RefinedADTCatProductCatMorphism :
-  RefinedADTCatProductCatObject -> RefinedADTCatProductCatObject -> Type
-RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=RADTClass}
-
--- An endofunctor on the Idris product category in which Geb terms are defined
--- is a function on objects of the product category together with a function
--- on morphisms that respects it.
-
-public export
-RefinedADTCatProductCatObjectMap : Type
-RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap RADTClass
-
-public export
-RefinedADTCatProductCatMorphismMap : RefinedADTCatProductCatObjectMap -> Type
-RefinedADTCatProductCatMorphismMap = ProductCatMorphismEndoMap
-
-public export
-RefinedADTCatProductCatEndofunctor : Type
-RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor RADTClass
-
--- The object-map component of the endofunctor from which we shall define
--- `RefinedADTCat` (as an initial algebra).
-public export
-data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
-  RADTSubstCat : RefinedADTCatF_object carrier RADTCcat
-  RADTSubstInitial : RefinedADTCatF_object carrier RADTCobj
-  RADTRefinedADTCat : RefinedADTCatF_object carrier RADTCobj
-
--- The morphism-map component of the endofunctor from which we shall define
--- `RefinedADTCat` (as an initial algebra).
-public export RefinedADTCatF_morphism :
-  RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
-RefinedADTCatF_morphism dom cod m RADTCcat RADTSubstCat = RADTSubstCat
-RefinedADTCatF_morphism dom cod m RADTCobj RADTSubstInitial = RADTSubstInitial
-RefinedADTCatF_morphism dom cod m RADTCobj RADTRefinedADTCat = RADTRefinedADTCat
-
-public export
-RefinedADTCatF : RefinedADTCatProductCatEndofunctor
-RefinedADTCatF = (RefinedADTCatF_object ** RefinedADTCatF_morphism)
-
-----------------------
----- Term algebra ----
-----------------------
-
-public export
-RefinedADTCatMu : RADTClass -> Type
-RefinedADTCatMu = MuProduct RefinedADTCatF_object
-
-public export
-RefinedADTCatFreeMonad : RefinedADTCatProductCatObjectMap
-RefinedADTCatFreeMonad = ProductCatFreeMonad RefinedADTCatF_object
-
-public export
-RefinedADTCatNu : RADTClass -> Type
-RefinedADTCatNu = NuProduct RefinedADTCatF_object
-
-public export
-RefinedADTCatCofreeComonad : RefinedADTCatProductCatObjectMap
-RefinedADTCatCofreeComonad = ProductCatCofreeComonad RefinedADTCatF_object
-
-------------------------------------------
----- Term-checking and interpretation ----
-------------------------------------------
-
 ----------------------------------
 ----------------------------------
 ----- Polynomial endofunctors ----
