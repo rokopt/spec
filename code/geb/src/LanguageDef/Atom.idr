@@ -15,56 +15,56 @@ import Library.IdrisUtils
 ------------------------------------------
 
 public export
-data GTClass : Type where
-  GTCcat : GTClass
-  GTCobj : GTClass
-  GTCmorph : GTClass
+data RADTClass : Type where
+  RADTCcat : RADTClass
+  RADTCobj : RADTClass
+  RADTCmorph : RADTClass
 
 export
-gtcEncode : GTClass -> Nat
-gtcEncode GTCcat = 0
-gtcEncode GTCobj = 1
-gtcEncode GTCmorph = 2
+gtcEncode : RADTClass -> Nat
+gtcEncode RADTCcat = 0
+gtcEncode RADTCobj = 1
+gtcEncode RADTCmorph = 2
 
 export
-gtcDecode : Nat -> Maybe GTClass
-gtcDecode 0 = Just GTCcat
-gtcDecode 1 = Just GTCobj
-gtcDecode 2 = Just GTCmorph
+gtcDecode : Nat -> Maybe RADTClass
+gtcDecode 0 = Just RADTCcat
+gtcDecode 1 = Just RADTCobj
+gtcDecode 2 = Just RADTCmorph
 gtcDecode _ = Nothing
 
 export
-gtcDecodeEncodeIsJust : (a : GTClass) -> gtcDecode (gtcEncode a) = Just a
-gtcDecodeEncodeIsJust GTCcat = Refl
-gtcDecodeEncodeIsJust GTCobj = Refl
-gtcDecodeEncodeIsJust GTCmorph = Refl
+gtcDecodeEncodeIsJust : (a : RADTClass) -> gtcDecode (gtcEncode a) = Just a
+gtcDecodeEncodeIsJust RADTCcat = Refl
+gtcDecodeEncodeIsJust RADTCobj = Refl
+gtcDecodeEncodeIsJust RADTCmorph = Refl
 
 export
-gtcToString : GTClass -> String
-gtcToString GTCcat = "Category"
-gtcToString GTCobj = "Object"
-gtcToString GTCmorph = "Morphism"
+gtcToString : RADTClass -> String
+gtcToString RADTCcat = "Category"
+gtcToString RADTCobj = "Object"
+gtcToString RADTCmorph = "Morphism"
 
 export
-Show GTClass where
+Show RADTClass where
   show a = gtcToString a
 
 export
-gtcEq : GTClass -> GTClass -> Bool
+gtcEq : RADTClass -> RADTClass -> Bool
 gtcEq a a' = gtcEncode a == gtcEncode a'
 
 export
-Eq GTClass where
+Eq RADTClass where
   (==) = gtcEq
 
 export
-Ord GTClass where
+Ord RADTClass where
   a < a' = gtcEncode a < gtcEncode a'
 
 export
-gtcDecEq : (a, a' : GTClass) -> Dec (a = a')
+gtcDecEq : (a, a' : RADTClass) -> Dec (a = a')
 gtcDecEq = encodingDecEq gtcEncode gtcDecode gtcDecodeEncodeIsJust decEq
 
 export
-DecEq GTClass where
+DecEq RADTClass where
   decEq = gtcDecEq

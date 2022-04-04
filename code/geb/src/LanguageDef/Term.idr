@@ -609,14 +609,14 @@ data SubstCatAlgebraF : Type -> Type -> Type where
 
 public export
 RefinedADTCatProductCatObject : Type
-RefinedADTCatProductCatObject = ProductCatObject GTClass
+RefinedADTCatProductCatObject = ProductCatObject RADTClass
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
 RefinedADTCatProductCatMorphism :
   RefinedADTCatProductCatObject -> RefinedADTCatProductCatObject -> Type
-RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=GTClass}
+RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=RADTClass}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
@@ -624,7 +624,7 @@ RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=GTClass}
 
 public export
 RefinedADTCatProductCatObjectMap : Type
-RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap GTClass
+RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap RADTClass
 
 public export
 RefinedADTCatProductCatMorphismMap : RefinedADTCatProductCatObjectMap -> Type
@@ -632,23 +632,23 @@ RefinedADTCatProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
 RefinedADTCatProductCatEndofunctor : Type
-RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor GTClass
+RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor RADTClass
 
 -- The object-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
 public export
 data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
-  GTSubstCat : RefinedADTCatF_object carrier GTCcat
-  GTSubstInitial : RefinedADTCatF_object carrier GTCobj
-  GTRefinedADTCat : RefinedADTCatF_object carrier GTCobj
+  RADTSubstCat : RefinedADTCatF_object carrier RADTCcat
+  RADTSubstInitial : RefinedADTCatF_object carrier RADTCobj
+  RADTRefinedADTCat : RefinedADTCatF_object carrier RADTCobj
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
 public export RefinedADTCatF_morphism :
   RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
-RefinedADTCatF_morphism dom cod m GTCcat GTSubstCat = GTSubstCat
-RefinedADTCatF_morphism dom cod m GTCobj GTSubstInitial = GTSubstInitial
-RefinedADTCatF_morphism dom cod m GTCobj GTRefinedADTCat = GTRefinedADTCat
+RefinedADTCatF_morphism dom cod m RADTCcat RADTSubstCat = RADTSubstCat
+RefinedADTCatF_morphism dom cod m RADTCobj RADTSubstInitial = RADTSubstInitial
+RefinedADTCatF_morphism dom cod m RADTCobj RADTRefinedADTCat = RADTRefinedADTCat
 
 public export
 RefinedADTCatF : RefinedADTCatProductCatEndofunctor
@@ -659,7 +659,7 @@ RefinedADTCatF = (RefinedADTCatF_object ** RefinedADTCatF_morphism)
 ----------------------
 
 public export
-RefinedADTCatMu : GTClass -> Type
+RefinedADTCatMu : RADTClass -> Type
 RefinedADTCatMu = MuProduct RefinedADTCatF_object
 
 public export
@@ -667,7 +667,7 @@ RefinedADTCatFreeMonad : RefinedADTCatProductCatObjectMap
 RefinedADTCatFreeMonad = ProductCatFreeMonad RefinedADTCatF_object
 
 public export
-RefinedADTCatNu : GTClass -> Type
+RefinedADTCatNu : RADTClass -> Type
 RefinedADTCatNu = NuProduct RefinedADTCatF_object
 
 public export
