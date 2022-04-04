@@ -25,6 +25,29 @@ SliceObjMap (_ ** mx) = mx
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
+QuotientType : Type
+QuotientType = DPair Type RelationOn
+
+QuotientTot : QuotientType -> Type
+QuotientTot (t ** _) = t
+
+QuotientRelGen : (t : QuotientType) -> RelationOn (QuotientTot t)
+QuotientRelGen (_ ** r) = r
+
+data EquivClosure : {t : Type} -> RelationOn t -> RelationOn t where
+  EquivRefl : {t : Type} ->
+    (rel : RelationOn t) -> (el : t) -> EquivClosure rel el el
+  EquivGen : {t : Type} -> {rel : RelationOn t} -> {el, el' : t} ->
+    rel el el' -> EquivClosure rel el el'
+  EquivSym : {t : Type} -> {rel : RelationOn t} -> {el, el' : t} ->
+    EquivClosure rel el el' -> EquivClosure rel el' el
+  EquivTrans : {t : Type} -> {rel : RelationOn t} -> {el, el', el'' : t} ->
+    EquivClosure rel el el' -> EquivClosure rel el' el'' ->
+    EquivClosure rel el el''
+
+QuotientRelEquiv : (t : QuotientType) -> RelationOn (QuotientTot t)
+QuotientRelEquiv t = EquivClosure (QuotientRelGen t)
+
 TermRel : Type
 TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
 
