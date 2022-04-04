@@ -49,6 +49,11 @@ data QuotientRel :
     {el : a} -> {el' : b} -> {el'' : c} ->
     QuotientRel rel el el' -> QuotientRel rel el' el'' ->
     QuotientRel rel el el''
+  QuotientErase : {rel : TermRel} -> {a, a', b, b' : Type} ->
+    {ela : a} -> {ela' : a'} -> {elb : b} -> {elb' : b'} ->
+    (qr : QuotientRel rel ela elb) ->
+    (qr' : QuotientRel rel ela' elb') ->
+    QuotientRel rel qr qr'
 
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
@@ -102,13 +107,23 @@ Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
 Pullback rel {a} {b} f g =
   (el : (a, b) ** QuotientRel rel (f (fst el)) (g (snd el)))
 
+pullbackProd : {rel : TermRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> (a, b))
+pullbackProd pb = fst pb
+
 pullbackProj1 : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> a)
-pullbackProj1 pb = fst (fst pb)
+pullbackProj1 {f} {g} pb = fst $ pullbackProd {f} {g} pb
 
 pullbackProj2 : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> b)
-pullbackProj2 pb = snd (fst pb)
+pullbackProj2 {f} {g} pb = snd $ pullbackProd {f} {g} pb
+
+pullbackRel : {rel : TermRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} ->
+  (pb : Pullback rel f g) ->
+  QuotientRel rel (f (pullbackProj1 {f} {g} pb)) (g (pullbackProj2 {f} {g} pb))
+pullbackRel {rel} {f} {g} pb = DPair.snd pb
 
 BaseChangeObj : TermRel ->
   {x, y : Type} -> (f : x -> y) -> SliceObj y -> SliceObj x
@@ -119,7 +134,13 @@ BaseChangeMorphism : (rel : TermRel) ->
   {x, y : Type} -> (f : x -> y) -> {u, v : SliceObj y} ->
   SliceMorphism u v rel ->
   SliceMorphism (BaseChangeObj rel f u) (BaseChangeObj rel f v) rel
-BaseChangeMorphism rel {x} {y} f {u} {v} m = ?BaseChangeMorphism_hole
+BaseChangeMorphism rel {x} {y} f {u=(uo ** um)} {v=(vo ** vm)} (muv ** eqmuv) =
+  (\elpb =>
+    ((muv $ pullbackProj1 {f=um} {g=f} elpb, pullbackProj2 {f=um} {g=f} elpb) **
+      QuotientTrans
+        (QuotientApp eqmuv $ QuotientRefl Refl)
+        (pullbackRel {f=um} {g=f} elpb)) **
+   QuotientRefl Refl)
 
 Bundle : Type
 Bundle = (base : Type ** SliceObj base)
