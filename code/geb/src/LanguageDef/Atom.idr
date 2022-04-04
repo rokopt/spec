@@ -21,55 +21,55 @@ data CategoryClass : Type where
 
 public export
 data TermTypeClass : Type where
-  RADTCcat : TermTypeClass
-  GTCObject : TermTypeClass
+  TTCcat : TermTypeClass
+  TTCobject : TermTypeClass
 
 public export
 GebTermClass : Type
 GebTermClass = (CategoryClass, TermTypeClass)
 
 export
-radtcEncode : TermTypeClass -> Nat
-radtcEncode RADTCcat = 0
-radtcEncode GTCObject = 1
+gtcEncode : TermTypeClass -> Nat
+gtcEncode TTCcat = 0
+gtcEncode TTCobject = 1
 
 export
-radtcDecode : Nat -> Maybe TermTypeClass
-radtcDecode 0 = Just RADTCcat
-radtcDecode 1 = Just GTCObject
-radtcDecode _ = Nothing
+gtcDecode : Nat -> Maybe TermTypeClass
+gtcDecode 0 = Just TTCcat
+gtcDecode 1 = Just TTCobject
+gtcDecode _ = Nothing
 
 export
-radtcDecodeEncodeIsJust :
-  (a : TermTypeClass) -> radtcDecode (radtcEncode a) = Just a
-radtcDecodeEncodeIsJust RADTCcat = Refl
-radtcDecodeEncodeIsJust GTCObject = Refl
+gtcDecodeEncodeIsJust :
+  (a : TermTypeClass) -> gtcDecode (gtcEncode a) = Just a
+gtcDecodeEncodeIsJust TTCcat = Refl
+gtcDecodeEncodeIsJust TTCobject = Refl
 
 export
-radtcToString : TermTypeClass -> String
-radtcToString RADTCcat = "Category"
-radtcToString GTCObject = "Object"
+gtcToString : TermTypeClass -> String
+gtcToString TTCcat = "Category"
+gtcToString TTCobject = "Object"
 
 export
 Show TermTypeClass where
-  show a = radtcToString a
+  show a = gtcToString a
 
 export
-radtcEq : TermTypeClass -> TermTypeClass -> Bool
-radtcEq a a' = radtcEncode a == radtcEncode a'
+gtcEq : TermTypeClass -> TermTypeClass -> Bool
+gtcEq a a' = gtcEncode a == gtcEncode a'
 
 export
 Eq TermTypeClass where
-  (==) = radtcEq
+  (==) = gtcEq
 
 export
 Ord TermTypeClass where
-  a < a' = radtcEncode a < radtcEncode a'
+  a < a' = gtcEncode a < gtcEncode a'
 
 export
-radtcDecEq : (a, a' : TermTypeClass) -> Dec (a = a')
-radtcDecEq = encodingDecEq radtcEncode radtcDecode radtcDecodeEncodeIsJust decEq
+gtcDecEq : (a, a' : TermTypeClass) -> Dec (a = a')
+gtcDecEq = encodingDecEq gtcEncode gtcDecode gtcDecodeEncodeIsJust decEq
 
 export
 DecEq TermTypeClass where
-  decEq = radtcDecEq
+  decEq = gtcDecEq

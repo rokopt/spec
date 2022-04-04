@@ -137,9 +137,9 @@ data GebTermF_object : GebTermProductCatObjectMap where
   RADTObject : {cat : CategoryClass} -> {carrier : GebTermClass -> Type} ->
     RefinedObjectF
       (const Void) {- functorCarrier -}
-      (ClassCarrierFromTermCarrier carrier GTCObject)
+      (ClassCarrierFromTermCarrier carrier TTCobject)
       cat ->
-    GebTermF_object carrier (cat, GTCObject)
+    GebTermF_object carrier (cat, TTCobject)
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
