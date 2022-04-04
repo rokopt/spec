@@ -1,5 +1,5 @@
 module LanguageDef.Metaprogramming
 
-import public LanguageDef.Syntax
+import public LanguageDef.Expression
 
 %default total

@@ -1,7 +1,7 @@
 module LanguageDef.FoundationalTheory
 
 import Library.IdrisCategories
-import public LanguageDef.Expression
+import public LanguageDef.RefinedADT
 
 %default total
 

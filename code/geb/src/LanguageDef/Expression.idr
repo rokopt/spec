@@ -1,5 +1,5 @@
 module LanguageDef.Expression
 
-import public LanguageDef.RefinedADT
+import public LanguageDef.Syntax
 
 %default total

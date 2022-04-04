@@ -8,11 +8,11 @@ import Library.IdrisUtils
 -- on enumerated types -- the kind of thing that a `deriving`
 -- mechanism would provide automatically.
 
-------------------------------------------------
-------------------------------------------------
----- Classification used in `RefinedADTCat` ----
-------------------------------------------------
-------------------------------------------------
+------------------------------------------
+------------------------------------------
+---- Classification used in `GebTerm` ----
+------------------------------------------
+------------------------------------------
 
 public export
 data CategoryClass : Type where
