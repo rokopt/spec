@@ -21,50 +21,50 @@ data RADTClass : Type where
   RADTCmorph : RADTClass
 
 export
-gtcEncode : RADTClass -> Nat
-gtcEncode RADTCcat = 0
-gtcEncode RADTCobj = 1
-gtcEncode RADTCmorph = 2
+radtcEncode : RADTClass -> Nat
+radtcEncode RADTCcat = 0
+radtcEncode RADTCobj = 1
+radtcEncode RADTCmorph = 2
 
 export
-gtcDecode : Nat -> Maybe RADTClass
-gtcDecode 0 = Just RADTCcat
-gtcDecode 1 = Just RADTCobj
-gtcDecode 2 = Just RADTCmorph
-gtcDecode _ = Nothing
+radtcDecode : Nat -> Maybe RADTClass
+radtcDecode 0 = Just RADTCcat
+radtcDecode 1 = Just RADTCobj
+radtcDecode 2 = Just RADTCmorph
+radtcDecode _ = Nothing
 
 export
-gtcDecodeEncodeIsJust : (a : RADTClass) -> gtcDecode (gtcEncode a) = Just a
-gtcDecodeEncodeIsJust RADTCcat = Refl
-gtcDecodeEncodeIsJust RADTCobj = Refl
-gtcDecodeEncodeIsJust RADTCmorph = Refl
+radtcDecodeEncodeIsJust : (a : RADTClass) -> radtcDecode (radtcEncode a) = Just a
+radtcDecodeEncodeIsJust RADTCcat = Refl
+radtcDecodeEncodeIsJust RADTCobj = Refl
+radtcDecodeEncodeIsJust RADTCmorph = Refl
 
 export
-gtcToString : RADTClass -> String
-gtcToString RADTCcat = "Category"
-gtcToString RADTCobj = "Object"
-gtcToString RADTCmorph = "Morphism"
+radtcToString : RADTClass -> String
+radtcToString RADTCcat = "Category"
+radtcToString RADTCobj = "Object"
+radtcToString RADTCmorph = "Morphism"
 
 export
 Show RADTClass where
-  show a = gtcToString a
+  show a = radtcToString a
 
 export
-gtcEq : RADTClass -> RADTClass -> Bool
-gtcEq a a' = gtcEncode a == gtcEncode a'
+radtcEq : RADTClass -> RADTClass -> Bool
+radtcEq a a' = radtcEncode a == radtcEncode a'
 
 export
 Eq RADTClass where
-  (==) = gtcEq
+  (==) = radtcEq
 
 export
 Ord RADTClass where
-  a < a' = gtcEncode a < gtcEncode a'
+  a < a' = radtcEncode a < radtcEncode a'
 
 export
-gtcDecEq : (a, a' : RADTClass) -> Dec (a = a')
-gtcDecEq = encodingDecEq gtcEncode gtcDecode gtcDecodeEncodeIsJust decEq
+radtcDecEq : (a, a' : RADTClass) -> Dec (a = a')
+radtcDecEq = encodingDecEq radtcEncode radtcDecode radtcDecodeEncodeIsJust decEq
 
 export
 DecEq RADTClass where
-  decEq = gtcDecEq
+  decEq = radtcDecEq
