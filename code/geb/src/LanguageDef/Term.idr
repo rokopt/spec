@@ -103,6 +103,18 @@ SliceCompose {rel} g f =
       (QuotientRefl Refl))
     (SliceMorphismEq f))
 
+Equalizer : TermRel -> {a, b : Type} -> (f, g : a -> b) -> Type
+Equalizer rel {a} {b} f g = (el : a ** QuotientRel rel (f el) (g el))
+
+equalizerElem : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+  Equalizer rel f g -> a
+equalizerElem rel eq = fst eq
+
+equalizerRel : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+  (eq : Equalizer rel f g) ->
+  QuotientRel rel (f (equalizerElem rel eq)) (g (equalizerElem rel eq))
+equalizerRel rel eq = snd eq
+
 Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
 Pullback rel {a} {b} f g =
   (el : (a, b) ** QuotientRel rel (f (fst el)) (g (snd el)))
