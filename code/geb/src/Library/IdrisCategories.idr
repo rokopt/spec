@@ -17,6 +17,12 @@ import Library.IdrisUtils
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
+VoidRel : RelationOn Void
+VoidRel v _ = void v
+
+UnitRel : Type -> RelationOn Unit
+UnitRel t () () = t
+
 ProductRelation : RelationOn a -> RelationOn b -> RelationOn (a, b)
 ProductRelation rel rel' (el1, el1') (el2, el2') = (rel el1 el2, rel' el1' el2')
 
@@ -26,18 +32,19 @@ CoproductRelation rel rel' (Left el1) (Right el2') = Void
 CoproductRelation rel rel' (Right el1') (Left el2) = Void
 CoproductRelation rel rel' (Right el1') (Right el2') = rel' el1' el2'
 
-VoidRel : RelationOn Void
-VoidRel v _ = void v
+PreservesRelation : {a, b : Type} ->
+  RelationOn a -> RelationOn b -> (a -> b) -> Type
+PreservesRelation rel rel' f =
+  (el, el' : a) -> rel el el' -> rel' (f el) (f el')
 
-UnitRel : Type -> RelationOn Unit
-UnitRel t () () = t
+RelMorphism : {a, b : Type} -> RelationOn a -> RelationOn b -> Type
+RelMorphism rel rel' = DPair (a -> b) (PreservesRelation rel rel')
 
 RelFunctor : Type -> Type
 RelFunctor t = RelationOn t -> RelationOn t
 
 data RelationTermF : {t: Type} ->
-    (f : RelFunctor t) ->
-    (v : RelationOn t) -> (carrier : RelationOn t) -> RelationOn t where
+    (f : RelFunctor t) -> (v : RelationOn t) -> RelFunctor t where
   RelationVar :
     {t : Type} -> {f : RelFunctor t} ->
     {v, carrier : RelationOn t} -> {el, el' : t} ->
@@ -51,22 +58,21 @@ RelationClosureF : {t: Type} -> RelFunctor t -> RelationOn t -> RelationOn t
 RelationClosureF functor rel = RelationTermF functor rel rel
 
 data FreeMRelation :
-    {t : Type} -> RelFunctor t -> RelationOn t -> RelationOn t where
+    {t : Type} -> RelFunctor t -> RelFunctor t where
   InFreeRelation :
     {t : Type} -> {f : RelFunctor t} -> {rel : RelationOn t} -> {el, el' : t} ->
     RelationTermF f rel (FreeMRelation f rel) el el' ->
     FreeMRelation f rel el el'
 
 data RelationTreeF : {t: Type} ->
-    (f : RelFunctor t) ->
-    (v : RelationOn t) -> (carrier : RelationOn t) -> RelationOn t where
+    (f : RelFunctor t) -> (v : RelationOn t) -> RelFunctor t where
   RelationNode :
     {t : Type} -> {f : RelFunctor t} ->
     {v, carrier : RelationOn t} -> {el, el' : t} ->
     v el el' -> f carrier el el' -> RelationTreeF f v carrier el el'
 
 data CofreeCMRelation :
-    {t : Type} -> RelFunctor t -> RelationOn t -> RelationOn t where
+    {t : Type} -> RelFunctor t -> RelFunctor t where
   InCofreeRelation :
     {t : Type} -> {f : RelFunctor t} -> {rel : RelationOn t} -> {el, el' : t} ->
     Inf (RelationTreeF f rel (CofreeCMRelation f rel) el el') ->
@@ -90,6 +96,9 @@ EquivClosureF = RelationClosureF EquivGenF
 
 FreeMEquiv : {t : Type} -> RelationOn t -> RelationOn t
 FreeMEquiv = FreeMRelation EquivGenF
+
+CofreeCMEquiv : {t : Type} -> RelationOn t -> RelationOn t
+CofreeCMEquiv = CofreeCMRelation EquivGenF
 
 ------------------------
 ---- Quotient types ----
