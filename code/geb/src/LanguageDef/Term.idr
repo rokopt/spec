@@ -31,25 +31,23 @@ QuotientType = DPair Type RelationOn
 QuotientTot : QuotientType -> Type
 QuotientTot (t ** _) = t
 
-QuotientRelGen : (t : QuotientType) -> RelationOn (QuotientTot t)
+QuotientRelType : QuotientType -> Type
+QuotientRelType t = RelationOn (QuotientTot t)
+
+QuotientRelGen : (t : QuotientType) -> QuotientRelType t
 QuotientRelGen (_ ** r) = r
 
-data EquivClosure : {t : Type} ->
-    (rel : RelationOn t) -> (carrier : RelationOn t) -> RelationOn t where
-  EquivRefl : {t : Type} ->
-    (rel : RelationOn t) -> {carrier : RelationOn t} ->
-    (el : t) -> EquivClosure rel carrier el el
-  EquivGen : {t : Type} -> {rel : RelationOn t} -> {carrier : RelationOn t} ->
-    {el, el' : t} -> rel el el' -> EquivClosure rel carrier el el'
-  EquivSym : {t : Type} -> {rel : RelationOn t} -> {carrier : RelationOn t} ->
-    {el, el' : t} -> carrier el el' -> EquivClosure rel carrier el' el
-  EquivTrans : {t : Type} -> {rel : RelationOn t} -> {carrier : RelationOn t} ->
-    {el, el', el'' : t} ->
-    carrier el el' -> carrier el' el'' -> EquivClosure carrier rel el el''
+data EquivClosureF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
+  EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
+    (el : t) -> EquivClosureF carrier el el
+  EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
+    carrier el el' -> EquivClosureF carrier el' el
+  EquivTrans : {t : Type} -> {carrier : RelationOn t} -> {el, el', el'' : t} ->
+    carrier el el' -> carrier el' el'' -> EquivClosureF carrier el el''
 
-QuotientRelEquiv :
-  {t : QuotientType} -> RelationOn (QuotientTot t) -> RelationOn (QuotientTot t)
-QuotientRelEquiv {t} carrier = EquivClosure (QuotientRelGen t) carrier
+QuotientTypeClosureF : QuotientType -> QuotientType
+QuotientTypeClosureF (carrierType ** carrierRel) =
+  (carrierType ** EquivClosureF carrierRel)
 
 TermRel : Type
 TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
