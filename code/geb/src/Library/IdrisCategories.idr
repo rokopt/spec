@@ -31,22 +31,37 @@ QuotientRelType t = RelationOn (QuotientTot t)
 QuotientRelGen : (t : QuotientType) -> QuotientRelType t
 QuotientRelGen (_ ** r) = r
 
-data EquivClosureF : {t: Type} -> (v : RelationOn t) ->
+VoidRel : RelationOn Void
+VoidRel v _ = void v
+
+UnitRel : Type -> RelationOn Unit
+UnitRel t () () = t
+
+QuotientVoid : QuotientType
+QuotientVoid = (Void ** VoidRel)
+
+QuotientUnit : QuotientType
+QuotientUnit = (Unit ** UnitRel ())
+
+data EquivTermF : {t: Type} -> (v : RelationOn t) ->
     (carrier : RelationOn t) -> RelationOn t where
   EquivVar : {t : Type} -> {v : RelationOn t} ->
     {carrier : RelationOn t} -> {el, el' : t} ->
-    v el el' -> EquivClosureF v carrier el el'
+    v el el' -> EquivTermF v carrier el el'
   EquivRefl : {t : Type} -> {v, carrier : RelationOn t} ->
-    (el : t) -> EquivClosureF v carrier el el
+    (el : t) -> EquivTermF v carrier el el
   EquivSym : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
-    carrier el el' -> EquivClosureF v carrier el' el
+    carrier el el' -> EquivTermF v carrier el' el
   EquivTrans : {t : Type} -> {v, carrier : RelationOn t} ->
     {el, el', el'' : t} ->
-    carrier el el' -> carrier el' el'' -> EquivClosureF v carrier el el''
+    carrier el el' -> carrier el' el'' -> EquivTermF v carrier el el''
+
+EquivClosureF : {t: Type} -> RelationOn t -> RelationOn t
+EquivClosureF rel = EquivTermF rel rel
 
 data FreeMEquiv : {t : Type} -> RelationOn t -> RelationOn t where
   InEquiv : {t : Type} -> {rel : RelationOn t} -> {el, el' : t} ->
-    EquivClosureF rel (FreeMEquiv rel) el el' -> FreeMEquiv rel el el'
+    EquivTermF rel (FreeMEquiv rel) el el' -> FreeMEquiv rel el el'
 
 -----------------------------------------------
 -----------------------------------------------
