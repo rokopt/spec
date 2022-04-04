@@ -115,6 +115,13 @@ equalizerRel : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
   QuotientRel rel (f (equalizerElem rel eq)) (g (equalizerElem rel eq))
 equalizerRel rel eq = snd eq
 
+data Coequalizer : TermRel -> {a, b: Type} -> (f, g : a -> b) -> TermRel where
+  AlreadyEqual : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+    {el : a} -> {el' : b} -> rel {a} {b} el el' -> Coequalizer rel f g el el'
+  Coequalized : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+    {el : a} -> {el' : b} ->
+    QuotientRel rel (f el) (g el) -> Coequalizer rel f g el el'
+
 Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
 Pullback rel {a} {b} f g =
   (el : (a, b) ** QuotientRel rel (f (fst el)) (g (snd el)))
