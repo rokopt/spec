@@ -124,6 +124,11 @@ data RefinedObject : RefinedCat ->
     (functorCarrier, objCarrier : Type) -> Type where
   RefinedObjectApply :
     functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
+  RefinedObjectGeb :
+    RefinedObject RefinedSubst functorCarrier objCarrier
+  RefinedObjectInclusion :
+    RefinedObject RefinedSubst functorCarrier objCarrier ->
+    RefinedObject RefinedADT functorCarrier objCarrier
 
 -- The object-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
