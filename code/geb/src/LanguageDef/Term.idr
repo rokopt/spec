@@ -37,7 +37,8 @@ QuotientRelType t = RelationOn (QuotientTot t)
 QuotientRelGen : (t : QuotientType) -> QuotientRelType t
 QuotientRelGen (_ ** r) = r
 
-data EquivClosureF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
+data EquivClosureF : {t : Type} ->
+    (carrier : RelationOn t) -> RelationOn t where
   EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
     (el : t) -> EquivClosureF carrier el el
   EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
