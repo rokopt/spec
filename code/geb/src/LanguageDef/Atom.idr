@@ -15,61 +15,61 @@ import Library.IdrisUtils
 ------------------------------------------------
 
 public export
-data CatClass : Type where
-  RefinedSubst : CatClass
-  RefinedADT : CatClass
+data CategoryClass : Type where
+  RefinedSubst : CategoryClass
+  RefinedADT : CategoryClass
 
 public export
-data RADTClass : Type where
-  RADTCcat : RADTClass
-  GTCObject : RADTClass
+data TermTypeClass : Type where
+  RADTCcat : TermTypeClass
+  GTCObject : TermTypeClass
 
 public export
-GebTermIndex : Type
-GebTermIndex = (CatClass, RADTClass)
+GebTermClass : Type
+GebTermClass = (CategoryClass, TermTypeClass)
 
 export
-radtcEncode : RADTClass -> Nat
+radtcEncode : TermTypeClass -> Nat
 radtcEncode RADTCcat = 0
 radtcEncode GTCObject = 1
 
 export
-radtcDecode : Nat -> Maybe RADTClass
+radtcDecode : Nat -> Maybe TermTypeClass
 radtcDecode 0 = Just RADTCcat
 radtcDecode 1 = Just GTCObject
 radtcDecode _ = Nothing
 
 export
 radtcDecodeEncodeIsJust :
-  (a : RADTClass) -> radtcDecode (radtcEncode a) = Just a
+  (a : TermTypeClass) -> radtcDecode (radtcEncode a) = Just a
 radtcDecodeEncodeIsJust RADTCcat = Refl
 radtcDecodeEncodeIsJust GTCObject = Refl
 
 export
-radtcToString : RADTClass -> String
+radtcToString : TermTypeClass -> String
 radtcToString RADTCcat = "Category"
 radtcToString GTCObject = "Object"
 
 export
-Show RADTClass where
+Show TermTypeClass where
   show a = radtcToString a
 
 export
-radtcEq : RADTClass -> RADTClass -> Bool
+radtcEq : TermTypeClass -> TermTypeClass -> Bool
 radtcEq a a' = radtcEncode a == radtcEncode a'
 
 export
-Eq RADTClass where
+Eq TermTypeClass where
   (==) = radtcEq
 
 export
-Ord RADTClass where
+Ord TermTypeClass where
   a < a' = radtcEncode a < radtcEncode a'
 
 export
-radtcDecEq : (a, a' : RADTClass) -> Dec (a = a')
+radtcDecEq : (a, a' : TermTypeClass) -> Dec (a = a')
 radtcDecEq = encodingDecEq radtcEncode radtcDecode radtcDecodeEncodeIsJust decEq
 
 export
-DecEq RADTClass where
+DecEq TermTypeClass where
   decEq = radtcDecEq

@@ -91,14 +91,14 @@ QuotientTypeClosureF (carrierType ** carrierRel) =
 
 public export
 GebTermProductCatObject : Type
-GebTermProductCatObject = ProductCatObject GebTermIndex
+GebTermProductCatObject = ProductCatObject GebTermClass
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
 GebTermProductCatMorphism :
   GebTermProductCatObject -> GebTermProductCatObject -> Type
-GebTermProductCatMorphism = ProductCatMorphism {idx=GebTermIndex}
+GebTermProductCatMorphism = ProductCatMorphism {idx=GebTermClass}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
@@ -106,7 +106,7 @@ GebTermProductCatMorphism = ProductCatMorphism {idx=GebTermIndex}
 
 public export
 GebTermProductCatObjectMap : Type
-GebTermProductCatObjectMap = ProductCatObjectEndoMap GebTermIndex
+GebTermProductCatObjectMap = ProductCatObjectEndoMap GebTermClass
 
 public export
 GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
@@ -114,12 +114,12 @@ GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
 GebTermProductCatEndofunctor : Type
-GebTermProductCatEndofunctor = ProductCatEndofunctor GebTermIndex
+GebTermProductCatEndofunctor = ProductCatEndofunctor GebTermClass
 
 data RefinedObjectF :
-    (functorCarrier, objCarrier : CatClass -> Type) ->
-    CatClass -> Type where
-  RefinedObjectApply : {cat : CatClass} ->
+    (functorCarrier, objCarrier : CategoryClass -> Type) ->
+    CategoryClass -> Type where
+  RefinedObjectApply : {cat : CategoryClass} ->
     functorCarrier cat -> objCarrier cat ->
     RefinedObjectF functorCarrier objCarrier cat
   RefinedObjectGeb :
@@ -127,14 +127,14 @@ data RefinedObjectF :
 
 public export
 ClassCarrierFromTermCarrier :
-  (GebTermIndex -> Type) -> RADTClass -> (CatClass -> Type)
+  (GebTermClass -> Type) -> TermTypeClass -> (CategoryClass -> Type)
 ClassCarrierFromTermCarrier termCarrier c cat = termCarrier (cat, c)
 
 -- The object-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
 public export
 data GebTermF_object : GebTermProductCatObjectMap where
-  RADTObject : {cat : CatClass} -> {carrier : GebTermIndex -> Type} ->
+  RADTObject : {cat : CategoryClass} -> {carrier : GebTermClass -> Type} ->
     RefinedObjectF
       (const Void) {- functorCarrier -}
       (ClassCarrierFromTermCarrier carrier GTCObject)
@@ -155,7 +155,7 @@ GebTermF = (GebTermF_object ** GebTermF_morphism)
 ----------------------
 
 public export
-GebTermMu : GebTermIndex -> Type
+GebTermMu : GebTermClass -> Type
 GebTermMu = MuProduct GebTermF_object
 
 public export
@@ -163,7 +163,7 @@ GebTermFreeMonad : GebTermProductCatObjectMap
 GebTermFreeMonad = ProductCatFreeMonad GebTermF_object
 
 public export
-GebTermNu : GebTermIndex -> Type
+GebTermNu : GebTermClass -> Type
 GebTermNu = NuProduct GebTermF_object
 
 public export
