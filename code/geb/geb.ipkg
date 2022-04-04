@@ -8,7 +8,7 @@ modules =
     , LanguageDef.Atom
     , LanguageDef.RefinedADT
     , LanguageDef.Expression
-    , LanguageDef.FoundationalTheory
+    , LanguageDef.UniversalCategory
     , LanguageDef.Interpretation
     , LanguageDef.Syntax
     , LanguageDef.Metaprogramming
@@ -21,7 +21,7 @@ modules =
     , LanguageDef.Test.ExpressionTest
     , LanguageDef.Test.InterpretationTest
     , LanguageDef.Test.SyntaxTest
-    , LanguageDef.Test.FoundationalTheoryTest
+    , LanguageDef.Test.UniversalCategoryTest
     , LanguageDef.Test.MetaprogrammingTest
     , LanguageDef.Test.LogicTest
     , LanguageDef.Test.ComputationalEffectsTest

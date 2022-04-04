@@ -2,7 +2,7 @@ module LanguageDef.FullLanguageDef
 
 import public LanguageDef.Atom
 import public LanguageDef.RefinedADT
-import public LanguageDef.FoundationalTheory
+import public LanguageDef.UniversalCategory
 import public LanguageDef.Interpretation
 import public LanguageDef.Syntax
 import public LanguageDef.Expression

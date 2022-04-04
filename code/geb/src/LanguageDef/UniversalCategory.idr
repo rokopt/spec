@@ -1,4 +1,4 @@
-module LanguageDef.FoundationalTheory
+module LanguageDef.UniversalCategory
 
 import Library.IdrisCategories
 import public LanguageDef.RefinedADT

@@ -1,5 +1,5 @@
 module LanguageDef.Interpretation
 
-import public LanguageDef.FoundationalTheory
+import public LanguageDef.UniversalCategory
 
 %default total

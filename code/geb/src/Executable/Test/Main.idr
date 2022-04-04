@@ -5,7 +5,7 @@ import Library.Test.IdrisUtilsTest
 import Library.Test.IdrisCategoriesTest
 import LanguageDef.Test.AtomTest
 import LanguageDef.Test.RefinedADTTest
-import LanguageDef.Test.FoundationalTheoryTest
+import LanguageDef.Test.UniversalCategoryTest
 import LanguageDef.Test.InterpretationTest
 import LanguageDef.Test.SyntaxTest
 import LanguageDef.Test.ExpressionTest
@@ -25,7 +25,7 @@ main = do
   Library.Test.IdrisCategoriesTest.libraryIdrisCategoriesTest
   LanguageDef.Test.AtomTest.languageDefAtomTest
   LanguageDef.Test.RefinedADTTest.languageDefRefinedADTTest
-  LanguageDef.Test.FoundationalTheoryTest.languageDefFoundationalTheoryTest
+  LanguageDef.Test.UniversalCategoryTest.languageDefUniversalCategoryTest
   LanguageDef.Test.InterpretationTest.languageDefInterpretationTest
   LanguageDef.Test.SyntaxTest.languageDefSyntaxTest
   LanguageDef.Test.ExpressionTest.languageDefExpressionTest
