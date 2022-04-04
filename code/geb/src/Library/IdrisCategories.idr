@@ -13,6 +13,9 @@ import Library.IdrisUtils
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
+IntersectRelations : RelationOn a -> RelationOn a -> RelationOn a
+IntersectRelations rel rel' el el' = (rel el el', rel' el el')
+
 MergeRelations : RelationOn a -> RelationOn a -> RelationOn a
 MergeRelations rel rel' el el' = Either (rel el el') (rel' el el')
 
@@ -28,18 +31,22 @@ QuotientRelType t = RelationOn (QuotientTot t)
 QuotientRelGen : (t : QuotientType) -> QuotientRelType t
 QuotientRelGen (_ ** r) = r
 
-data EquivClosureF : {t : Type} ->
+data EquivClosureF : {t: Type} -> (v : RelationOn t) ->
     (carrier : RelationOn t) -> RelationOn t where
-  EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
-    (el : t) -> EquivClosureF carrier el el
-  EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
-    carrier el el' -> EquivClosureF carrier el' el
-  EquivTrans : {t : Type} -> {carrier : RelationOn t} -> {el, el', el'' : t} ->
-    carrier el el' -> carrier el' el'' -> EquivClosureF carrier el el''
+  EquivVar : {t : Type} -> {v : RelationOn t} ->
+    {carrier : RelationOn t} -> {el, el' : t} ->
+    v el el' -> EquivClosureF v carrier el el'
+  EquivRefl : {t : Type} -> {v, carrier : RelationOn t} ->
+    (el : t) -> EquivClosureF v carrier el el
+  EquivSym : {t : Type} -> {v, carrier : RelationOn t} -> {el, el' : t} ->
+    carrier el el' -> EquivClosureF v carrier el' el
+  EquivTrans : {t : Type} -> {v, carrier : RelationOn t} ->
+    {el, el', el'' : t} ->
+    carrier el el' -> carrier el' el'' -> EquivClosureF v carrier el el''
 
-QuotientTypeClosureF : QuotientType -> QuotientType
-QuotientTypeClosureF (carrierType ** carrierRel) =
-  (carrierType ** EquivClosureF carrierRel)
+data FreeMEquiv : {t : Type} -> RelationOn t -> RelationOn t where
+  InEquiv : {t : Type} -> {rel : RelationOn t} -> {el, el' : t} ->
+    EquivClosureF rel (FreeMEquiv rel) el el' -> FreeMEquiv rel el el'
 
 -----------------------------------------------
 -----------------------------------------------
