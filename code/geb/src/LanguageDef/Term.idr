@@ -46,11 +46,11 @@ QuotientTypeClosureF (carrierType ** carrierRel) =
 ----------------------------
 ----------------------------
 
--- Geb itself is a pure specification.  `RefinedADTCat` is an Idris type whose
--- terms represent various concepts of Geb.  Because a term of `RefinedADTCat`
+-- Geb itself is a pure specification.  `GebTerm` is an Idris type whose
+-- terms represent various concepts of Geb.  Because a term of `GebTerm`
 -- might represent any of several different concepts, the type is indexed
 -- by a type of atoms which classify which concept a given term represents.
--- This makes `RefinedADTCat` a type family; it's effectively simulating a
+-- This makes `GebTerm` a type family; it's effectively simulating a
 -- definition by a large mutual recursion, but using an index intead of many
 -- different Idris types allows us to interpret Geb in Idris by interpreting
 -- just that one type.  I find it less confusing and more convenient than a big
@@ -60,26 +60,26 @@ QuotientTypeClosureF (carrierType ** carrierRel) =
 ---- Term definition ----
 -------------------------
 
--- We define `RefinedADTCat` -- an Idris type -- as a fixed point of a
+-- We define `GebTerm` -- an Idris type -- as a fixed point of a
 -- polynomial endofunctor of Idris, in the same style in which we will define
 -- types of Geb itself.  In particular, that will allow us to write a homoiconic
--- representation of `RefinedADTCat` _as_ a term of `RefinedADTCat` in a way
--- which parallels the Idris definition of `RefinedADTCat`.
+-- representation of `GebTerm` _as_ a term of `GebTerm` in a way
+-- which parallels the Idris definition of `GebTerm`.
 --
--- Because `RefinedADTCat`, as described above, represents a number of different
+-- Because `GebTerm`, as described above, represents a number of different
 -- concepts, we can view it as an object in a finite product category, where
 -- each concept -- which we call a "class" in the context of defining
--- `RefinedADTCat` -- is one of the categories.
+-- `GebTerm` -- is one of the categories.
 --
--- So we first define `RefinedADTCatF`, a (polynomial) endofunctor in the product
+-- So we first define `GebTermF`, a (polynomial) endofunctor in the product
 -- category of all the classes.  Having defined that functor, we'll take a
 -- fixed point of it (which we will be able to do because it is polynomial),
--- and then we'll have a `RefinedADTCat` which comprises the Idris
+-- and then we'll have a `GebTerm` which comprises the Idris
 -- representation of terms of Geb.
 --
--- Below is the product category in which `RefinedADTCat` lives; therefore it's
--- the category on which we will build an endofunctor, `RefinedADTCatF`, from
--- which we will derive `RefinedADTCat` as a fixpoint (initial algebra).
+-- Below is the product category in which `GebTerm` lives; therefore it's
+-- the category on which we will build an endofunctor, `GebTermF`, from
+-- which we will derive `GebTerm` as a fixpoint (initial algebra).
 --
 -- We represent the product category as a function from a finite
 -- index type rather than as, say, nested pairs or a list -- those are all
@@ -90,86 +90,87 @@ QuotientTypeClosureF (carrierType ** carrierRel) =
 -- morphisms, and its endofunctors.
 
 public export
-RefinedADTCatProductCatObject : Type
-RefinedADTCatProductCatObject = ProductCatObject RADTClass
+GebTermProductCatObject : Type
+GebTermProductCatObject = ProductCatObject GebTermIndex
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
-RefinedADTCatProductCatMorphism :
-  RefinedADTCatProductCatObject -> RefinedADTCatProductCatObject -> Type
-RefinedADTCatProductCatMorphism = ProductCatMorphism {idx=RADTClass}
+GebTermProductCatMorphism :
+  GebTermProductCatObject -> GebTermProductCatObject -> Type
+GebTermProductCatMorphism = ProductCatMorphism {idx=GebTermIndex}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
 -- on morphisms that respects it.
 
 public export
-RefinedADTCatProductCatObjectMap : Type
-RefinedADTCatProductCatObjectMap = ProductCatObjectEndoMap RADTClass
+GebTermProductCatObjectMap : Type
+GebTermProductCatObjectMap = ProductCatObjectEndoMap GebTermIndex
 
 public export
-RefinedADTCatProductCatMorphismMap : RefinedADTCatProductCatObjectMap -> Type
-RefinedADTCatProductCatMorphismMap = ProductCatMorphismEndoMap
+GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
+GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
-RefinedADTCatProductCatEndofunctor : Type
-RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor RADTClass
+GebTermProductCatEndofunctor : Type
+GebTermProductCatEndofunctor = ProductCatEndofunctor GebTermIndex
 
-data RefinedCat : Type where
-  RefinedSubst : RefinedCat
-  RefinedADT : RefinedCat
-
-data RefinedObject : RefinedCat ->
-    (functorCarrier, objCarrier : Type) -> Type where
-  RefinedObjectApply :
-    functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
+data RefinedObjectF :
+    (functorCarrier, objCarrier : RefinedCat -> Type) ->
+    RefinedCat -> Type where
+  RefinedObjectApply : {cat : RefinedCat} ->
+    functorCarrier cat -> objCarrier cat ->
+    RefinedObjectF functorCarrier objCarrier cat
   RefinedObjectGeb :
-    RefinedObject RefinedSubst functorCarrier objCarrier
-  RefinedObjectInclusion :
-    RefinedObject RefinedSubst functorCarrier objCarrier ->
-    RefinedObject RefinedADT functorCarrier objCarrier
+    RefinedObjectF functorCarrier objCarrier RefinedSubst
+
+public export
+ClassCarrierFromTermCarrier :
+  (GebTermIndex -> Type) -> RADTClass -> (RefinedCat -> Type)
+ClassCarrierFromTermCarrier termCarrier c cat = termCarrier (cat, c)
 
 -- The object-map component of the endofunctor from which we shall define
--- `RefinedADTCat` (as an initial algebra).
+-- `GebTerm` (as an initial algebra).
 public export
-data RefinedADTCatF_object : RefinedADTCatProductCatObjectMap where
-  RADTCat : RefinedCat -> RefinedADTCatF_object carrier RADTCcat
-  RADTObject0 :
-    RefinedObject
-      RefinedSubst
-      Void {- functorCarrier -}
-      (carrier RADTCobjOrder0) ->
-    RefinedADTCatF_object carrier RADTCobjOrder0
+data GebTermF_object : GebTermProductCatObjectMap where
+  RADTObject :
+    {cat : RefinedCat} ->
+    {carrier : GebTermIndex -> Type} ->
+    RefinedObjectF
+      (const Void) {- functorCarrier -}
+      (ClassCarrierFromTermCarrier carrier GTCObject)
+      cat ->
+    GebTermF_object carrier (cat, GTCObject)
 
 -- The morphism-map component of the endofunctor from which we shall define
--- `RefinedADTCat` (as an initial algebra).
-public export RefinedADTCatF_morphism :
-    RefinedADTCatProductCatMorphismMap RefinedADTCatF_object
+-- `GebTerm` (as an initial algebra).
+public export GebTermF_morphism :
+    GebTermProductCatMorphismMap GebTermF_object
 
 public export
-RefinedADTCatF : RefinedADTCatProductCatEndofunctor
-RefinedADTCatF = (RefinedADTCatF_object ** RefinedADTCatF_morphism)
+GebTermF : GebTermProductCatEndofunctor
+GebTermF = (GebTermF_object ** GebTermF_morphism)
 
 ----------------------
 ---- Term algebra ----
 ----------------------
 
 public export
-RefinedADTCatMu : RADTClass -> Type
-RefinedADTCatMu = MuProduct RefinedADTCatF_object
+GebTermMu : GebTermIndex -> Type
+GebTermMu = MuProduct GebTermF_object
 
 public export
-RefinedADTCatFreeMonad : RefinedADTCatProductCatObjectMap
-RefinedADTCatFreeMonad = ProductCatFreeMonad RefinedADTCatF_object
+GebTermFreeMonad : GebTermProductCatObjectMap
+GebTermFreeMonad = ProductCatFreeMonad GebTermF_object
 
 public export
-RefinedADTCatNu : RADTClass -> Type
-RefinedADTCatNu = NuProduct RefinedADTCatF_object
+GebTermNu : GebTermIndex -> Type
+GebTermNu = NuProduct GebTermF_object
 
 public export
-RefinedADTCatCofreeComonad : RefinedADTCatProductCatObjectMap
-RefinedADTCatCofreeComonad = ProductCatCofreeComonad RefinedADTCatF_object
+GebTermCofreeComonad : GebTermProductCatObjectMap
+GebTermCofreeComonad = ProductCatCofreeComonad GebTermF_object
 
 ------------------------------------------
 ---- Term-checking and interpretation ----

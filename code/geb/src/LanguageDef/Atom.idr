@@ -15,21 +15,30 @@ import Library.IdrisUtils
 ------------------------------------------------
 
 public export
+data RefinedCat : Type where
+  RefinedSubst : RefinedCat
+  RefinedADT : RefinedCat
+
+public export
 data RADTClass : Type where
   RADTCcat : RADTClass
-  RADTCobjOrder0 : RADTClass
+  GTCObject : RADTClass
   RADTCobjOrder1 : RADTClass
+
+public export
+GebTermIndex : Type
+GebTermIndex = (RefinedCat, RADTClass)
 
 export
 radtcEncode : RADTClass -> Nat
 radtcEncode RADTCcat = 0
-radtcEncode RADTCobjOrder0 = 1
+radtcEncode GTCObject = 1
 radtcEncode RADTCobjOrder1 = 2
 
 export
 radtcDecode : Nat -> Maybe RADTClass
 radtcDecode 0 = Just RADTCcat
-radtcDecode 1 = Just RADTCobjOrder0
+radtcDecode 1 = Just GTCObject
 radtcDecode 2 = Just RADTCobjOrder1
 radtcDecode _ = Nothing
 
@@ -37,13 +46,13 @@ export
 radtcDecodeEncodeIsJust :
   (a : RADTClass) -> radtcDecode (radtcEncode a) = Just a
 radtcDecodeEncodeIsJust RADTCcat = Refl
-radtcDecodeEncodeIsJust RADTCobjOrder0 = Refl
+radtcDecodeEncodeIsJust GTCObject = Refl
 radtcDecodeEncodeIsJust RADTCobjOrder1 = Refl
 
 export
 radtcToString : RADTClass -> String
 radtcToString RADTCcat = "Category"
-radtcToString RADTCobjOrder0 = "SubstObject"
+radtcToString GTCObject = "SubstObject"
 radtcToString RADTCobjOrder1 = "ADTObject"
 
 export
