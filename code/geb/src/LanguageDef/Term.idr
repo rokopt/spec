@@ -40,63 +40,6 @@ QuotientTypeClosureF : QuotientType -> QuotientType
 QuotientTypeClosureF (carrierType ** carrierRel) =
   (carrierType ** EquivClosureF carrierRel)
 
-TermRel : Type
-TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
-
-data QuotientRel :
-    (rel : TermRel) -> {a, b : Type} -> a -> b -> Type where
-  QuotientRefl : {rel : TermRel} -> {a : Type} -> {el, el' : a} ->
-    el = el' -> QuotientRel rel {a} {b=a} el el'
-  QuotientedTerm : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
-    rel el el' -> QuotientRel rel el el'
-  QuotientExt : {rel : TermRel} -> {a, b : Type} -> {f, g: a -> b} ->
-    ((el : a) -> QuotientRel rel (f el) (g el)) ->
-    QuotientRel rel f g
-  QuotientApp : {rel : TermRel} -> {a, a', b, b' : Type} ->
-    {f : a -> b} -> {f' : a' -> b'} ->
-    {el : a} -> {el' : a'} ->
-    QuotientRel rel f f' ->
-    QuotientRel rel el el' ->
-    QuotientRel rel (f el) (f' el')
-  QuotientSym : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
-    QuotientRel rel el el' -> QuotientRel rel el' el
-  QuotientTrans : {rel : TermRel} -> {a, b, c : Type} ->
-    {el : a} -> {el' : b} -> {el'' : c} ->
-    QuotientRel rel el el' -> QuotientRel rel el' el'' ->
-    QuotientRel rel el el''
-  QuotientErase : {rel : TermRel} -> {a, a', b, b' : Type} ->
-    {ela : a} -> {ela' : a'} -> {elb : b} -> {elb' : b'} ->
-    (qr : QuotientRel rel ela elb) ->
-    (qr' : QuotientRel rel ela' elb') ->
-    QuotientRel rel qr qr'
-
-ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
-ExtEq {a} f g = (el : a) -> f el = g el
-
-EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
-EqFunctionExt f f Refl _ = Refl
-
-QuotientExtEq : {rel : TermRel} -> {a, b : Type} -> {f, g : a -> b} ->
-  ExtEq f g -> QuotientRel rel f g
-QuotientExtEq eqfg = QuotientExt $ \el => QuotientRefl $ eqfg el
-
-QuotientCompose : {rel : TermRel} -> {a, b, c : Type} ->
-  {f, f' : a -> b} -> {g, g': b -> c} ->
-  QuotientRel rel g g' ->
-  QuotientRel rel f f' ->
-  QuotientRel rel (g . f) (g' . f')
-QuotientCompose {rel} geq feq =
-  QuotientExt $ \el => QuotientApp geq $ QuotientApp feq $ QuotientRefl Refl
-
-data RefinedCat : Type where
-  RefinedSubst : RefinedCat
-  RefinedADT : RefinedCat
-
-data RefinedObject : RefinedCat ->
-    (functorCarrier, objCarrier : Type) -> Type where
-  RefinedObjectApply :
-    functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
-
 ----------------------------
 ----------------------------
 ---- Geb terms in Idris ----
@@ -173,6 +116,15 @@ public export
 RefinedADTCatProductCatEndofunctor : Type
 RefinedADTCatProductCatEndofunctor = ProductCatEndofunctor RADTClass
 
+data RefinedCat : Type where
+  RefinedSubst : RefinedCat
+  RefinedADT : RefinedCat
+
+data RefinedObject : RefinedCat ->
+    (functorCarrier, objCarrier : Type) -> Type where
+  RefinedObjectApply :
+    functorCarrier -> objCarrier -> RefinedObject cat functorCarrier objCarrier
+
 -- The object-map component of the endofunctor from which we shall define
 -- `RefinedADTCat` (as an initial algebra).
 public export
@@ -225,6 +177,54 @@ RefinedADTCatCofreeComonad = ProductCatCofreeComonad RefinedADTCatF_object
 ---- Slices, bundles, and refinements in the metalanguage (Idris's Type(0)) ----
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+TermRel : Type
+TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
+
+data QuotientRel :
+    (rel : TermRel) -> {a, b : Type} -> a -> b -> Type where
+  QuotientRefl : {rel : TermRel} -> {a : Type} -> {el, el' : a} ->
+    el = el' -> QuotientRel rel {a} {b=a} el el'
+  QuotientedTerm : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
+    rel el el' -> QuotientRel rel el el'
+  QuotientExt : {rel : TermRel} -> {a, b : Type} -> {f, g: a -> b} ->
+    ((el : a) -> QuotientRel rel (f el) (g el)) ->
+    QuotientRel rel f g
+  QuotientApp : {rel : TermRel} -> {a, a', b, b' : Type} ->
+    {f : a -> b} -> {f' : a' -> b'} ->
+    {el : a} -> {el' : a'} ->
+    QuotientRel rel f f' ->
+    QuotientRel rel el el' ->
+    QuotientRel rel (f el) (f' el')
+  QuotientSym : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
+    QuotientRel rel el el' -> QuotientRel rel el' el
+  QuotientTrans : {rel : TermRel} -> {a, b, c : Type} ->
+    {el : a} -> {el' : b} -> {el'' : c} ->
+    QuotientRel rel el el' -> QuotientRel rel el' el'' ->
+    QuotientRel rel el el''
+  QuotientErase : {rel : TermRel} -> {a, a', b, b' : Type} ->
+    {ela : a} -> {ela' : a'} -> {elb : b} -> {elb' : b'} ->
+    (qr : QuotientRel rel ela elb) ->
+    (qr' : QuotientRel rel ela' elb') ->
+    QuotientRel rel qr qr'
+
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
+ExtEq {a} f g = (el : a) -> f el = g el
+
+EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
+EqFunctionExt f f Refl _ = Refl
+
+QuotientExtEq : {rel : TermRel} -> {a, b : Type} -> {f, g : a -> b} ->
+  ExtEq f g -> QuotientRel rel f g
+QuotientExtEq eqfg = QuotientExt $ \el => QuotientRefl $ eqfg el
+
+QuotientCompose : {rel : TermRel} -> {a, b, c : Type} ->
+  {f, f' : a -> b} -> {g, g': b -> c} ->
+  QuotientRel rel g g' ->
+  QuotientRel rel f f' ->
+  QuotientRel rel (g . f) (g' . f')
+QuotientCompose {rel} geq feq =
+  QuotientExt $ \el => QuotientApp geq $ QuotientApp feq $ QuotientRefl Refl
 
 -- The category-theoretic notion of an object of a slice category.
 SliceObj : Type -> Type
