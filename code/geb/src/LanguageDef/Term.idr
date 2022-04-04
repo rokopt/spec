@@ -123,18 +123,18 @@ pullbackRel : {rel : TermRel} -> {a, b, c : Type} ->
   {f : a -> c} -> {g : b -> c} ->
   (pb : Pullback rel f g) ->
   QuotientRel rel (f (pullbackProj1 {f} {g} pb)) (g (pullbackProj2 {f} {g} pb))
-pullbackRel {rel} {f} {g} pb = DPair.snd pb
+pullbackRel = DPair.snd
 
 BaseChangeObj : TermRel ->
   {x, y : Type} -> (f : x -> y) -> SliceObj y -> SliceObj x
-BaseChangeObj rel {x} {y} f u =
+BaseChangeObj rel f u =
   (Pullback rel (SliceObjMap u) f ** pullbackProj2 {f=(SliceObjMap u)} {g=f})
 
 BaseChangeMorphism : (rel : TermRel) ->
   {x, y : Type} -> (f : x -> y) -> {u, v : SliceObj y} ->
   SliceMorphism u v rel ->
   SliceMorphism (BaseChangeObj rel f u) (BaseChangeObj rel f v) rel
-BaseChangeMorphism rel {x} {y} f {u=(uo ** um)} {v=(vo ** vm)} (muv ** eqmuv) =
+BaseChangeMorphism rel f {u=(uo ** um)} {v=(vo ** vm)} (muv ** eqmuv) =
   (\elpb =>
     ((muv $ pullbackProj1 {f=um} {g=f} elpb, pullbackProj2 {f=um} {g=f} elpb) **
       QuotientTrans
@@ -155,9 +155,17 @@ BundleProj :
   (bundle : Bundle) -> (BundleTotal bundle) -> (BundleBase bundle)
 BundleProj (_ ** (_ ** proj)) = proj
 
+BundleObject : (bundle : Bundle) -> SliceObj (BundleBase bundle)
+BundleObject (base ** (tot ** proj)) = (tot ** proj)
+
 BundleFiber : (bundle : Bundle) -> (baseElem : BundleBase bundle) -> Type
 BundleFiber bundle baseElem =
   (totalElem : BundleTotal bundle ** (BundleProj bundle totalElem = baseElem))
+
+BundleMorphism : (rel : TermRel) ->
+  (b : Bundle) -> {b' : Type} -> (b' -> BundleBase b) -> Bundle
+BundleMorphism rel (base ** (tot ** proj)) {b'} f =
+  (b' ** BaseChangeObj rel f (tot ** proj))
 
 RefinementBy : Type -> Type
 RefinementBy = SliceObj . Maybe
