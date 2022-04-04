@@ -100,6 +100,9 @@ FreeMEquiv = FreeMRelation EquivGenF
 CofreeCMEquiv : {t : Type} -> RelationOn t -> RelationOn t
 CofreeCMEquiv = CofreeCMRelation EquivGenF
 
+EqualizerRelationGenF : (a -> b) -> RelationOn b -> RelationOn a
+EqualizerRelationGenF f rel el el' = rel (f el) (f el')
+
 ------------------------
 ---- Quotient types ----
 ------------------------
@@ -113,8 +116,8 @@ QuotientTot (t ** _) = t
 QuotientRelType : QuotientType -> Type
 QuotientRelType t = RelationOn (QuotientTot t)
 
-QuotientRelGen : (t : QuotientType) -> QuotientRelType t
-QuotientRelGen (_ ** r) = r
+QuotientRel : (t : QuotientType) -> QuotientRelType t
+QuotientRel (_ ** r) = r
 
 QuotientVoid : QuotientType
 QuotientVoid = (Void ** VoidRel)
@@ -129,6 +132,12 @@ QuotientProduct (t ** r) (t' ** r') =
 QuotientCoproduct : QuotientType -> QuotientType -> QuotientType
 QuotientCoproduct (t ** r) (t' ** r') =
   (Either t t' ** (CoproductRelation r r'))
+
+QuotientEqualizer :
+  (dom, cod : QuotientType) -> (QuotientTot dom -> QuotientTot cod) ->
+  QuotientType
+QuotientEqualizer (domtot ** domrel) (codtot ** codrel) f =
+  (domtot ** EqualizerRelationGenF f codrel)
 
 -----------------------------------------------
 -----------------------------------------------
