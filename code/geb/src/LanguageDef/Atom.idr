@@ -15,9 +15,9 @@ import Library.IdrisUtils
 ------------------------------------------------
 
 public export
-data RefinedCat : Type where
-  RefinedSubst : RefinedCat
-  RefinedADT : RefinedCat
+data CatClass : Type where
+  RefinedSubst : CatClass
+  RefinedADT : CatClass
 
 public export
 data RADTClass : Type where
@@ -26,7 +26,7 @@ data RADTClass : Type where
 
 public export
 GebTermIndex : Type
-GebTermIndex = (RefinedCat, RADTClass)
+GebTermIndex = (CatClass, RADTClass)
 
 export
 radtcEncode : RADTClass -> Nat
