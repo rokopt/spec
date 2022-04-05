@@ -210,18 +210,6 @@ QuotientProductF f g qt = QuotientProduct (f qt) (g qt)
 QuotientCoproductF : QFunctor -> QFunctor -> QFunctor
 QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
 
---------------------------------------
----- Polynomial quotient functors ----
---------------------------------------
-
-data PolyQuotientF : QFunctor -> (QFunctor -> Type) -> Type where
-  PQFConstVoid : PolyQuotientF QuotientConstVoid carrier
-  PQFConstUnit : PolyQuotientF QuotientConstUnit carrier
-  PQFProduct : {f, g : QFunctor} -> {carrier : QFunctor -> Type} ->
-    carrier f -> carrier g -> PolyQuotientF (QuotientProductF f g) carrier
-  PQFCoproduct : {f, g : QFunctor} -> {carrier : QFunctor -> Type} ->
-    carrier f -> carrier g -> PolyQuotientF (QuotientCoproductF f g) carrier
-
 -----------------------------------------------
 -----------------------------------------------
 ---- Interpretation of categories in Idris ----
