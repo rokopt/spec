@@ -4,6 +4,58 @@ import Library.IdrisUtils
 
 %default total
 
+------------------------------------------
+------------------------------------------
+---- Interpreting categories in Idris ----
+------------------------------------------
+------------------------------------------
+
+public export
+DigraphEdgeFibration : Type -> Type -> Type
+DigraphEdgeFibration vertex edge = edge -> (vertex, vertex)
+
+public export
+record DirectedGraph where
+  constructor DirectedGraphComponents
+  VertexType : Type
+  EdgeType : Type
+
+  -- Returns the source and target.  This function therefore
+  -- fibers the type of edges by the type of vertices (it
+  -- forms a bundle from edges to vertices, with the type
+  -- of edges as the total space, the type of vertices as
+  -- the base space, and this function as the projection; if
+  -- the vertex and edge types are objects of a category, then
+  -- this fibration (which is a morphism) can also be viewed
+  -- (together with the edge object) as an object of the slice
+  -- category over the type of pairs of vertices).
+  EdgeProjection : DigraphEdgeFibration VertexType EdgeType
+
+public export
+graphSource : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
+graphSource {graph} = fst . EdgeProjection graph
+
+public export
+graphTarget : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
+graphTarget {graph} = snd . EdgeProjection graph
+
+-- Implementing this interface provides a way of interpreting a directed
+-- graph into the Idris type system as a category.
+public export
+record DigraphCategoryInterpretation (graph : DirectedGraph) where
+  constructor DigraphCategoryInterpretations
+  VertexInterpretation : VertexType graph -> Type
+  EdgeInterpretation :
+    (m : EdgeType graph) ->
+    (VertexInterpretation (graphSource {graph} m)) ->
+    (VertexInterpretation (graphTarget {graph} m))
+
+public export
+record InterpretedDigraph where
+  constructor InterpretedDigraphComponents
+  UnderlyingGraph : DirectedGraph
+  GraphInterpretation : DigraphCategoryInterpretation UnderlyingGraph
+
 ----------------------------------
 ----------------------------------
 ---- Idris product categories ----
@@ -107,7 +159,7 @@ Functor f => Bifunctor (TermFunctor f) where
 -- `Fa[x] = a * F[x]`.  We call it `TreeFunctor` because it turns
 -- an endofunctor which we can interpret as representing a datatype
 -- into one which we can interpret as representing potentially infinite
--- tress of that datatype with labels drawn from type `v`.
+-- trees of that datatype with labels drawn from type `v`.
 -- This is the dual of `TermFunctor`.
 public export
 data TreeFunctor : (Type -> Type) -> Type -> (Type -> Type) where
