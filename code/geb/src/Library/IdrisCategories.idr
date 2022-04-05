@@ -154,6 +154,22 @@ data ProductCatTreeFunctor : {idx : Type} ->
     {i : idx} ->
     l i -> f a i -> ProductCatTreeFunctor f l a i
 
+export
+treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
+treeLabel (TreeNode a' _) = a'
+
+export
+treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> f a
+treeSubtree (TreeNode _ fx) = fx
+
+export
+treeLabelProduct : ProductCatTreeFunctor f l a i -> l i
+treeLabelProduct (ProductCatTreeNode a' _) = a'
+
+export
+treeSubtreeProduct : ProductCatTreeFunctor f l a i -> f a i
+treeSubtreeProduct (ProductCatTreeNode _ fx) = fx
+
 -- An algebra on a functor representing a type of open terms (as generated
 -- by `TermFunctor` above) may be viewed as a polymorphic algebra, because
 -- for each object `v` it generates an `F[v]`-algebra on an any given carrier
@@ -167,7 +183,19 @@ public export
 ProductCatTermAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
-ProductCatTermAlgebra f v a = ProductCatAlgebra (ProductCatTermFunctor f v) a
+ProductCatTermAlgebra f v a =
+  ProductCatAlgebra (ProductCatTermFunctor f v) a
+
+public export
+TermCoalgebra : (Type -> Type) -> Type -> Type -> Type
+TermCoalgebra f v a = Coalgebra (TermFunctor f v) a
+
+public export
+ProductCatTermCoalgebra : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
+  Type
+ProductCatTermCoalgebra f v a =
+  ProductCatCoalgebra (ProductCatTermFunctor f v) a
 
 -- A coalgebra on a functor representing a type of labeled trees (as generated
 -- by `TreeFunctor` above) may be viewed as a polymorphic coalgebra, because
@@ -179,11 +207,15 @@ TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
 TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
 
 public export
-ProductCatTreeCoalgebra : {idx : Type} ->
+TreeAlgebra : (Type -> Type) -> Type -> Type -> Type
+TreeAlgebra f v a = Algebra (TreeFunctor f v) a
+
+public export
+ProductCatTreeAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
-ProductCatTreeCoalgebra f v a =
-  ProductCatCoalgebra (ProductCatTreeFunctor f v) a
+ProductCatTreeAlgebra f v a =
+  ProductCatAlgebra (ProductCatTreeFunctor f v) a
 
 --------------------------------------------------
 ---- Initial algebras and terminal coalgebras ----
@@ -236,78 +268,34 @@ data ProductCatCofreeComonad : {idx : Type} ->
     ProductCatCofreeComonad f l i
 
 public export
-inFreeVar : {f : Type -> Type} -> a -> FreeMonad f a
+inFreeVar : {f : Type -> Type} -> Coalgebra (FreeMonad f) a
 inFreeVar = InFree . TermVar
 
 public export
 inFreeVarProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {0 a : ProductCatObject idx} ->
-  ProductCatMorphism a (ProductCatFreeMonad f a)
+  ProductCatCoalgebra (ProductCatFreeMonad f) a
 inFreeVarProduct i = InFreeProduct i . ProductCatTermVar
 
 public export
-inFreeComposite : {f : Type -> Type} -> f (FreeMonad f a) -> FreeMonad f a
+inFreeComposite : {f : Type -> Type} -> Algebra f (FreeMonad f a)
 inFreeComposite = InFree . TermComposite
 
 public export
 inFreeCompositeProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {a : ProductCatObject idx} ->
-  ProductCatMorphism (f (ProductCatFreeMonad f a)) (ProductCatFreeMonad f a)
+  ProductCatAlgebra f (ProductCatFreeMonad f a)
 inFreeCompositeProduct i = InFreeProduct i . ProductCatTermComposite
 
 public export
-outFree : FreeMonad f a -> TermFunctor f a (FreeMonad f a)
+outFree : TermCoalgebra f a (FreeMonad f a)
 outFree (InFree x) = x
 
 public export
 outFreeProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {a : ProductCatObject idx} ->
-  {i : idx} -> ProductCatFreeMonad f a i ->
-  ProductCatTermFunctor f a (ProductCatFreeMonad f a) i
-outFreeProduct (InFreeProduct i x) = x
-
--- Special case of `FreeMonad` where `v` is `Void`.
--- This is the fixpoint of an endofunctor (if it exists).
-public export
-Mu : (Type -> Type) -> Type
-Mu f = FreeMonad f Void
-
-public export
-MuProduct : {idx : Type} -> ProductCatObjectEndoMap idx -> ProductCatObject idx
-MuProduct f = ProductCatFreeMonad f (const Void)
-
--- Not all endofunctors have initial algebras.  If an endofunctor
--- _does_ have an initial algebra, then this is the signature of
--- its catamorphism (fold).
-public export
-Catamorphism : (Type -> Type) -> Type -> Type -> Type
-Catamorphism f v a = TermAlgebra f v a -> FreeMonad f v -> a
-
-public export
-ProductCatamorphism : {idx : Type} ->
-  ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
-ProductCatamorphism f a =
-  ProductCatAlgebra f a -> ProductCatMorphism (MuProduct f) a
-
-----------------------
----- F-Coalgebras ----
-----------------------
-
-export
-treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
-treeLabel (TreeNode a' _) = a'
-
-export
-treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> f a
-treeSubtree (TreeNode _ fx) = fx
-
-export
-treeLabelProduct : ProductCatTreeFunctor f l a i -> l i
-treeLabelProduct (ProductCatTreeNode a' _) = a'
-
-export
-treeSubtreeProduct : ProductCatTreeFunctor f l a i -> f a i
-treeSubtreeProduct (ProductCatTreeNode _ fx) = fx
+  ProductCatTermCoalgebra f a (ProductCatFreeMonad f a)
+outFreeProduct i (InFreeProduct i x) = x
 
 public export
 inCofreeTree : {a : Type} -> {f : Type -> Type} ->
@@ -327,6 +315,16 @@ outCofreeProduct : {idx : Type} ->
   ProductCatTreeFunctor f l (ProductCatCofreeComonad f l) i
 outCofreeProduct (InCofreeProduct x) = x
 
+-- Special case of `FreeMonad` where `v` is `Void`.
+-- This is the fixpoint of an endofunctor (if it exists).
+public export
+Mu : (Type -> Type) -> Type
+Mu f = FreeMonad f Void
+
+public export
+MuProduct : {idx : Type} -> ProductCatObjectEndoMap idx -> ProductCatObject idx
+MuProduct f = ProductCatFreeMonad f (const Void)
+
 -- Special case of `CofreeComonad` where `v` is `Unit`.
 -- This is the cofixpoint of an endofunctor (if it exists).
 public export
@@ -337,6 +335,19 @@ public export
 NuProduct : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx
 NuProduct f = ProductCatCofreeComonad f (const ())
+
+-- Not all endofunctors have initial algebras.  If an endofunctor
+-- _does_ have an initial algebra, then this is the signature of
+-- its catamorphism (fold).
+public export
+Catamorphism : (Type -> Type) -> Type -> Type -> Type
+Catamorphism f v a = TermAlgebra f v a -> FreeMonad f v -> a
+
+public export
+ProductCatamorphism : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
+ProductCatamorphism f a =
+  ProductCatAlgebra f a -> ProductCatMorphism (MuProduct f) a
 
 -- Not all endofunctors have terminal coalgebras.  If an endofunctor
 -- _does_ have a terminal coalgebra, then this is the signature of
