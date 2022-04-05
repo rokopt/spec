@@ -157,6 +157,18 @@ QuotientCoequalizer :
 QuotientCoequalizer (_ ** domrel) (codtot ** codrel) f g =
   (codtot ** CoequalizerRelationGenF f g domrel codrel)
 
+QFunctor : Type
+QFunctor = QuotientType -> QuotientType
+
+QFunctorType : Type
+QFunctorType = QuotientType -> Type
+
+QFunctorRel : QFunctorType -> Type
+QFunctorRel f = (t : QuotientType) -> RelationOn (f t)
+
+QFunctorFromComponents : (f : QFunctorType) -> QFunctorRel f -> QFunctor
+QFunctorFromComponents f fm qt = (f qt ** fm qt)
+
 -----------------------------------------------
 -----------------------------------------------
 ---- Interpretation of categories in Idris ----
