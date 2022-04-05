@@ -141,6 +141,12 @@ FreeCoequalizerRelation : {a, b : _} ->
 FreeCoequalizerRelation f g rel rel' =
   FreeMEquiv (CoequalizerRelationGenF f g rel rel')
 
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
+ExtEq {a} f g = (el : a) -> f el = g el
+
+EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
+EqFunctionExt f f Refl _ = Refl
+
 ------------------------
 ---- Quotient types ----
 ------------------------
@@ -210,14 +216,34 @@ QuotientProductF f g qt = QuotientProduct (f qt) (g qt)
 QuotientCoproductF : QFunctor -> QFunctor -> QFunctor
 QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
----- Slices, bundles, and refinements in the metalanguage (Idris's Type(0)) ----
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+---- Slices, pullbacks, pushouts, base changes, bundles, and refinements ----
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+
+-----------------------
+---- Slice objects ----
+-----------------------
+
+-- The category-theoretic notion of an object of a slice category.
+SliceObj : Type -> Type
+SliceObj c = (a : Type ** a -> c)
+
+SliceObjDomain : {c : Type} -> SliceObj c -> Type
+SliceObjDomain (a ** _) = a
+
+SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
+SliceObjMap (_ ** mx) = mx
+
+-- We will parameterize the notion of morphisms over an equivalence relation.
 
 TermRel : Type
 TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
+
+---------------------------------------------
+---- Quotients over a global equivalence ----
+---------------------------------------------
 
 data QuotientClosure :
     (rel : TermRel) -> {a, b : Type} -> a -> b -> Type where
@@ -246,12 +272,6 @@ data QuotientClosure :
     (qr' : QuotientClosure rel ela' elb') ->
     QuotientClosure rel qr qr'
 
-ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
-ExtEq {a} f g = (el : a) -> f el = g el
-
-EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
-EqFunctionExt f f Refl _ = Refl
-
 QuotientExtEq : {rel : TermRel} -> {a, b : Type} -> {f, g : a -> b} ->
   ExtEq f g -> QuotientClosure rel f g
 QuotientExtEq eqfg = QuotientExt $ \el => QuotientRefl $ eqfg el
@@ -264,15 +284,9 @@ QuotientCompose : {rel : TermRel} -> {a, b, c : Type} ->
 QuotientCompose {rel} geq feq =
   QuotientExt $ \el => QuotientApp geq $ QuotientApp feq $ QuotientRefl Refl
 
--- The category-theoretic notion of an object of a slice category.
-SliceObj : Type -> Type
-SliceObj c = (a : Type ** a -> c)
-
-SliceObjDomain : {c : Type} -> SliceObj c -> Type
-SliceObjDomain (a ** _) = a
-
-SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
-SliceObjMap (_ ** mx) = mx
+---------------------------------------------------
+---- Slice morphisms over a global equivalence ----
+---------------------------------------------------
 
 -- The category-theoretic notion of a morphism of a slice category.
 SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> TermRel -> Type
@@ -304,6 +318,10 @@ SliceCompose {rel} g f =
       (QuotientRefl Refl))
     (SliceMorphismEq f))
 
+---------------------------------------------------------------
+---- Equalizers and coequalizers over a global equivalence ----
+---------------------------------------------------------------
+
 Equalizer : TermRel -> {a, b : Type} -> (f, g : a -> b) -> Type
 Equalizer rel {a} {b} f g = (el : a ** QuotientClosure rel (f el) (g el))
 
@@ -322,6 +340,10 @@ data Coequalizer : TermRel -> {a, b: Type} -> (f, g : a -> b) -> TermRel where
   Coequalized : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
     {el : a} -> {el' : b} ->
     QuotientClosure rel (f el) (g el) -> Coequalizer rel f g el el'
+
+--------------------------------------------------------------
+---- Pullbacks and base changes over a global equivalence ----
+--------------------------------------------------------------
 
 Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
 Pullback rel {a} {b} f g =
@@ -363,6 +385,10 @@ BaseChangeMorphism rel f {u=(uo ** um)} {v=(vo ** vm)} (muv ** eqmuv) =
         (pullbackRel {f=um} {g=f} elpb)) **
    QuotientRefl Refl)
 
+-----------------
+---- Bundles ----
+-----------------
+
 Bundle : Type
 Bundle = (base : Type ** SliceObj base)
 
@@ -383,10 +409,18 @@ BundleFiber : (bundle : Bundle) -> (baseElem : BundleBase bundle) -> Type
 BundleFiber bundle baseElem =
   (totalElem : BundleTotal bundle ** (BundleProj bundle totalElem = baseElem))
 
+----------------------------------------------------
+---- Bundle morphisms over a global equivalence ----
+----------------------------------------------------
+
 BundleMorphism : (rel : TermRel) ->
   (b : Bundle) -> {b' : Type} -> (b' -> BundleBase b) -> Bundle
 BundleMorphism rel (base ** (tot ** proj)) {b'} f =
   (b' ** BaseChangeObj rel f (tot ** proj))
+
+---------------------
+---- Refinements ----
+---------------------
 
 RefinementBy : Type -> Type
 RefinementBy = SliceObj . Maybe
