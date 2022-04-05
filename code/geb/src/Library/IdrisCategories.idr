@@ -17,11 +17,17 @@ import Library.IdrisUtils
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
+EmptyRel : (t : Type) -> RelationOn t
+EmptyRel t el el' = Void
+
 VoidRel : RelationOn Void
 VoidRel v _ = void v
 
-UnitRel : Type -> RelationOn Unit
-UnitRel t () () = t
+FullRel : (t : Type) -> RelationOn t
+FullRel t el el' = ()
+
+UnitRel : RelationOn Unit
+UnitRel = FullRel ()
 
 ProductRelation : RelationOn a -> RelationOn b -> RelationOn (a, b)
 ProductRelation rel rel' (el1, el1') (el2, el2') = (rel el1 el2, rel' el1' el2')
@@ -63,6 +69,9 @@ data FreeMRelation :
     {t : Type} -> {f : RelFunctor t} -> {rel : RelationOn t} -> {el, el' : t} ->
     RelationTermF f rel (FreeMRelation f rel) el el' ->
     FreeMRelation f rel el el'
+
+RelationMu : {t: Type} -> RelFunctor t -> RelationOn t
+RelationMu {t} f = FreeMRelation f $ EmptyRel t
 
 data RelationTreeF : {t: Type} ->
     (f : RelFunctor t) -> (v : RelationOn t) -> RelFunctor t where
@@ -135,7 +144,7 @@ QuotientVoid : QuotientType
 QuotientVoid = (Void ** VoidRel)
 
 QuotientUnit : QuotientType
-QuotientUnit = (Unit ** UnitRel ())
+QuotientUnit = (Unit ** UnitRel)
 
 QuotientProduct : QuotientType -> QuotientType -> QuotientType
 QuotientProduct (t ** r) (t' ** r') =
