@@ -38,10 +38,14 @@ CoproductRelation rel rel' (Left el1) (Right el2') = Void
 CoproductRelation rel rel' (Right el1') (Left el2) = Void
 CoproductRelation rel rel' (Right el1') (Right el2') = rel' el1' el2'
 
+EqualOverRelation : {a, b : Type} ->
+  RelationOn a -> RelationOn b -> (f, g : a -> b) -> Type
+EqualOverRelation rel rel' f g =
+  (el, el' : a) -> rel el el' -> rel' (f el) (g el')
+
 PreservesRelation : {a, b : Type} ->
   RelationOn a -> RelationOn b -> (a -> b) -> Type
-PreservesRelation rel rel' f =
-  (el, el' : a) -> rel el el' -> rel' (f el) (f el')
+PreservesRelation rel rel' f = EqualOverRelation rel rel' f f
 
 RelMorphism : {a, b : Type} -> RelationOn a -> RelationOn b -> Type
 RelMorphism rel rel' = DPair (a -> b) (PreservesRelation rel rel')
@@ -152,6 +156,9 @@ QuotientRelType t = RelationOn (QuotientTot t)
 
 QuotientRel : (t : QuotientType) -> QuotientRelType t
 QuotientRel (_ ** r) = r
+
+QuotientMorphism : QuotientType -> QuotientType -> Type
+QuotientMorphism (t ** r) (t' ** r') = (m : t -> t' ** PreservesRelation r r' m)
 
 QuotientVoid : QuotientType
 QuotientVoid = (Void ** VoidRel)
