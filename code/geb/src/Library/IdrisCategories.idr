@@ -210,6 +210,237 @@ QuotientProductF f g qt = QuotientProduct (f qt) (g qt)
 QuotientCoproductF : QFunctor -> QFunctor -> QFunctor
 QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
 
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+---- Slices, bundles, and refinements in the metalanguage (Idris's Type(0)) ----
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+TermRel : Type
+TermRel = {a, b : Type} -> (el : a) -> (el' : b) -> Type
+
+data QuotientClosure :
+    (rel : TermRel) -> {a, b : Type} -> a -> b -> Type where
+  QuotientRefl : {rel : TermRel} -> {a : Type} -> {el, el' : a} ->
+    el = el' -> QuotientClosure rel {a} {b=a} el el'
+  QuotientedTerm : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
+    rel el el' -> QuotientClosure rel el el'
+  QuotientExt : {rel : TermRel} -> {a, b : Type} -> {f, g: a -> b} ->
+    ((el : a) -> QuotientClosure rel (f el) (g el)) ->
+    QuotientClosure rel f g
+  QuotientApp : {rel : TermRel} -> {a, a', b, b' : Type} ->
+    {f : a -> b} -> {f' : a' -> b'} ->
+    {el : a} -> {el' : a'} ->
+    QuotientClosure rel f f' ->
+    QuotientClosure rel el el' ->
+    QuotientClosure rel (f el) (f' el')
+  QuotientSym : {rel : TermRel} -> {a, b : Type} -> {el : a} -> {el' : b} ->
+    QuotientClosure rel el el' -> QuotientClosure rel el' el
+  QuotientTrans : {rel : TermRel} -> {a, b, c : Type} ->
+    {el : a} -> {el' : b} -> {el'' : c} ->
+    QuotientClosure rel el el' -> QuotientClosure rel el' el'' ->
+    QuotientClosure rel el el''
+  QuotientErase : {rel : TermRel} -> {a, a', b, b' : Type} ->
+    {ela : a} -> {ela' : a'} -> {elb : b} -> {elb' : b'} ->
+    (qr : QuotientClosure rel ela elb) ->
+    (qr' : QuotientClosure rel ela' elb') ->
+    QuotientClosure rel qr qr'
+
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
+ExtEq {a} f g = (el : a) -> f el = g el
+
+EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
+EqFunctionExt f f Refl _ = Refl
+
+QuotientExtEq : {rel : TermRel} -> {a, b : Type} -> {f, g : a -> b} ->
+  ExtEq f g -> QuotientClosure rel f g
+QuotientExtEq eqfg = QuotientExt $ \el => QuotientRefl $ eqfg el
+
+QuotientCompose : {rel : TermRel} -> {a, b, c : Type} ->
+  {f, f' : a -> b} -> {g, g': b -> c} ->
+  QuotientClosure rel g g' ->
+  QuotientClosure rel f f' ->
+  QuotientClosure rel (g . f) (g' . f')
+QuotientCompose {rel} geq feq =
+  QuotientExt $ \el => QuotientApp geq $ QuotientApp feq $ QuotientRefl Refl
+
+-- The category-theoretic notion of an object of a slice category.
+SliceObj : Type -> Type
+SliceObj c = (a : Type ** a -> c)
+
+SliceObjDomain : {c : Type} -> SliceObj c -> Type
+SliceObjDomain (a ** _) = a
+
+SliceObjMap : {c : Type} -> (x : SliceObj c) -> (SliceObjDomain x -> c)
+SliceObjMap (_ ** mx) = mx
+
+-- The category-theoretic notion of a morphism of a slice category.
+SliceMorphism : {c : Type} -> SliceObj c -> SliceObj c -> TermRel -> Type
+SliceMorphism x y rel =
+  (w : SliceObjDomain x -> SliceObjDomain y **
+   QuotientClosure rel (SliceObjMap y . w) (SliceObjMap x))
+
+SliceMorphismMap : {c : Type} -> {x, y : SliceObj c} -> {rel : TermRel} ->
+  SliceMorphism x y rel -> SliceObjDomain x -> SliceObjDomain y
+SliceMorphismMap (w ** _) = w
+
+SliceMorphismEq : {c : Type} -> {x, y : SliceObj c} -> {rel : TermRel} ->
+  (f : SliceMorphism x y rel) ->
+  QuotientClosure rel
+    (SliceObjMap y . SliceMorphismMap {x} {y} {rel} f) (SliceObjMap x)
+SliceMorphismEq (_ ** eq) = eq
+
+SliceId : {c : Type} -> {rel : TermRel} ->
+  (w : SliceObj c) -> SliceMorphism w w rel
+SliceId (a ** x) = (id ** QuotientRefl Refl)
+
+SliceCompose : {c : Type} -> {u, v, w : SliceObj c} -> {rel : TermRel} ->
+  SliceMorphism v w rel -> SliceMorphism u v rel -> SliceMorphism u w rel
+SliceCompose {rel} g f =
+  (SliceMorphismMap g . SliceMorphismMap f **
+   QuotientTrans
+    (QuotientCompose
+      (SliceMorphismEq g)
+      (QuotientRefl Refl))
+    (SliceMorphismEq f))
+
+Equalizer : TermRel -> {a, b : Type} -> (f, g : a -> b) -> Type
+Equalizer rel {a} {b} f g = (el : a ** QuotientClosure rel (f el) (g el))
+
+equalizerElem : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+  Equalizer rel f g -> a
+equalizerElem rel eq = fst eq
+
+equalizerRel : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+  (eq : Equalizer rel f g) ->
+  QuotientClosure rel (f (equalizerElem rel eq)) (g (equalizerElem rel eq))
+equalizerRel rel eq = snd eq
+
+data Coequalizer : TermRel -> {a, b: Type} -> (f, g : a -> b) -> TermRel where
+  AlreadyEqual : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+    {el : a} -> {el' : b} -> rel {a} {b} el el' -> Coequalizer rel f g el el'
+  Coequalized : (rel : TermRel) -> {a, b : Type} -> {f, g : a -> b} ->
+    {el : a} -> {el' : b} ->
+    QuotientClosure rel (f el) (g el) -> Coequalizer rel f g el el'
+
+Pullback : TermRel -> {a, b, c : Type} -> (a -> c) -> (b -> c) -> Type
+Pullback rel {a} {b} f g =
+  (el : (a, b) ** QuotientClosure rel (f (fst el)) (g (snd el)))
+
+pullbackProd : {rel : TermRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> (a, b))
+pullbackProd pb = fst pb
+
+pullbackProj1 : {rel : TermRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> a)
+pullbackProj1 {f} {g} pb = fst $ pullbackProd {f} {g} pb
+
+pullbackProj2 : {rel : TermRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} -> (Pullback rel f g -> b)
+pullbackProj2 {f} {g} pb = snd $ pullbackProd {f} {g} pb
+
+pullbackRel : {rel : TermRel} -> {a, b, c : Type} ->
+  {f : a -> c} -> {g : b -> c} ->
+  (pb : Pullback rel f g) ->
+  QuotientClosure rel
+    (f (pullbackProj1 {f} {g} pb)) (g (pullbackProj2 {f} {g} pb))
+pullbackRel = DPair.snd
+
+BaseChangeObj : TermRel ->
+  {x, y : Type} -> (f : x -> y) -> SliceObj y -> SliceObj x
+BaseChangeObj rel f u =
+  (Pullback rel (SliceObjMap u) f ** pullbackProj2 {f=(SliceObjMap u)} {g=f})
+
+BaseChangeMorphism : (rel : TermRel) ->
+  {x, y : Type} -> (f : x -> y) -> {u, v : SliceObj y} ->
+  SliceMorphism u v rel ->
+  SliceMorphism (BaseChangeObj rel f u) (BaseChangeObj rel f v) rel
+BaseChangeMorphism rel f {u=(uo ** um)} {v=(vo ** vm)} (muv ** eqmuv) =
+  (\elpb =>
+    ((muv $ pullbackProj1 {f=um} {g=f} elpb, pullbackProj2 {f=um} {g=f} elpb) **
+      QuotientTrans
+        (QuotientApp eqmuv $ QuotientRefl Refl)
+        (pullbackRel {f=um} {g=f} elpb)) **
+   QuotientRefl Refl)
+
+Bundle : Type
+Bundle = (base : Type ** SliceObj base)
+
+BundleBase : Bundle -> Type
+BundleBase (base ** (_ ** _)) = base
+
+BundleTotal : Bundle -> Type
+BundleTotal (_ ** (tot ** _)) = tot
+
+BundleProj :
+  (bundle : Bundle) -> (BundleTotal bundle) -> (BundleBase bundle)
+BundleProj (_ ** (_ ** proj)) = proj
+
+BundleObject : (bundle : Bundle) -> SliceObj (BundleBase bundle)
+BundleObject (base ** (tot ** proj)) = (tot ** proj)
+
+BundleFiber : (bundle : Bundle) -> (baseElem : BundleBase bundle) -> Type
+BundleFiber bundle baseElem =
+  (totalElem : BundleTotal bundle ** (BundleProj bundle totalElem = baseElem))
+
+BundleMorphism : (rel : TermRel) ->
+  (b : Bundle) -> {b' : Type} -> (b' -> BundleBase b) -> Bundle
+BundleMorphism rel (base ** (tot ** proj)) {b'} f =
+  (b' ** BaseChangeObj rel f (tot ** proj))
+
+RefinementBy : Type -> Type
+RefinementBy = SliceObj . Maybe
+
+Refinement : Type
+Refinement = DPair Type RefinementBy
+
+RefinementBundle : Refinement -> Bundle
+RefinementBundle (base ** slice) = (Maybe base ** slice)
+
+RefinementBase : Refinement -> Type
+RefinementBase (base ** _) = base
+
+RefinementTotal : Refinement -> Type
+RefinementTotal = BundleTotal . RefinementBundle
+
+RefinementProj :
+  (r : Refinement) -> (RefinementTotal r) -> Maybe (RefinementBase r)
+RefinementProj (_ ** (_ ** proj)) = proj
+
+IsRefined : (r : Refinement) -> RefinementTotal r -> Type
+IsRefined r = IsJust . RefinementProj r
+
+IsUnrefined : (r : Refinement) -> RefinementTotal r -> Type
+IsUnrefined r = Not . IsJust . RefinementProj r
+
+RefinedType : Refinement -> Type
+RefinedType r = DPair (RefinementTotal r) (IsRefined r)
+
+RefinedToBase : {r : Refinement} -> RefinedType r -> RefinementBase r
+RefinedToBase {r=(base ** (tot ** proj))} (t ** just) = fromJust $ proj t
+
+JustBundle : Refinement -> Bundle
+JustBundle r = (RefinementBase r ** (RefinedType r ** RefinedToBase))
+
+UnrefinedType : Refinement -> Type
+UnrefinedType r = DPair (RefinementTotal r) (IsUnrefined r)
+
+NothingBundle : Refinement -> Bundle
+NothingBundle r = (() ** (UnrefinedType r ** const ()))
+
+RefinementFiber :
+  (r : Refinement) -> (baseElem : Maybe (RefinementBase r)) -> Type
+RefinementFiber (base ** (tot ** proj)) baseElem =
+  BundleFiber (Maybe base ** (tot ** proj)) baseElem
+
+JustFiber : (r : Refinement) -> (baseElem : RefinementBase r) -> Type
+JustFiber (base ** (tot ** proj)) baseElem =
+  BundleFiber (Maybe base ** (tot ** proj)) (Just baseElem)
+
+NothingFiber : (r : Refinement) -> Type
+NothingFiber (base ** (tot ** proj)) =
+  BundleFiber (Maybe base ** (tot ** proj)) Nothing
+
 -----------------------------------------------
 -----------------------------------------------
 ---- Interpretation of categories in Idris ----
