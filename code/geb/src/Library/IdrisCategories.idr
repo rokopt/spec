@@ -185,16 +185,13 @@ QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
 ---- Polynomial quotient functors ----
 --------------------------------------
 
-data PolyQuotientF : QFunctor -> Type where
-  PQFConstVoid : PolyQuotientF QuotientConstVoid
-  PQFConstUnit : PolyQuotientF QuotientConstUnit
-  PQFProduct : {f, g : QFunctor} ->
-    PolyQuotientF f -> PolyQuotientF g ->
-    PolyQuotientF (QuotientProductF f g)
-  PQFCoproduct : {f, g : QFunctor} ->
-    PolyQuotientF f -> PolyQuotientF g ->
-    PolyQuotientF (QuotientCoproductF f g)
-
+data PolyQuotientF : QFunctor -> (QFunctor -> Type) -> Type where
+  PQFConstVoid : PolyQuotientF QuotientConstVoid carrier
+  PQFConstUnit : PolyQuotientF QuotientConstUnit carrier
+  PQFProduct : {f, g : QFunctor} -> {carrier : QFunctor -> Type} ->
+    carrier f -> carrier g -> PolyQuotientF (QuotientProductF f g) carrier
+  PQFCoproduct : {f, g : QFunctor} -> {carrier : QFunctor -> Type} ->
+    carrier f -> carrier g -> PolyQuotientF (QuotientCoproductF f g) carrier
 
 -----------------------------------------------
 -----------------------------------------------
