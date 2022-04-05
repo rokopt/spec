@@ -87,6 +87,9 @@ data CofreeCMRelation :
     Inf (RelationTreeF f rel (CofreeCMRelation f rel) el el') ->
     CofreeCMRelation f rel el el'
 
+RelationNu : {t: Type} -> RelFunctor t -> RelationOn t
+RelationNu {t} f = CofreeCMRelation f $ FullRel t
+
 ----------------------
 ---- Equivalences ----
 ----------------------
