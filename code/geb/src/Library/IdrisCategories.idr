@@ -299,12 +299,12 @@ outFreeProduct i (InFreeProduct i x) = x
 
 public export
 inCofreeTree : {a : Type} -> {f : Type -> Type} ->
-  a -> f (CofreeComonad f a) -> CofreeComonad f a
+  a -> Algebra f (CofreeComonad f a)
 inCofreeTree x fx = InCofree $ TreeNode x fx
 
 public export
 outCofree : {f : Type -> Type} -> {a : Type} ->
-  CofreeComonad f a -> TreeFunctor f a (CofreeComonad f a)
+  TreeCoalgebra f a (CofreeComonad f a)
 outCofree (InCofree x) = x
 
 public export
