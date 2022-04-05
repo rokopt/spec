@@ -513,39 +513,6 @@ record CategoryInterpretation (cat : CategoryData) where
     ObjInterp (FunctorInterpObj (CatNatTransDom cat nt) a) ->
     ObjInterp (FunctorInterpObj (CatNatTransCod cat nt) a)
 
--- An interpretation of the objects of some category into the Idris
--- type system ("ITS").
-ITSObjectInterpretation : Type -> Type
-ITSObjectInterpretation object = object -> Type
-
--- The type of morphisms between objects of some category.
-ITSMorphismType : Type -> Type
-ITSMorphismType object = object -> object -> Type
-
--- An interpretation of the morphism of some category into the Idris
--- type system.
-ITSMorphismInterpretation : {object : Type} ->
-  ITSMorphismType object -> ITSObjectInterpretation object -> Type
-ITSMorphismInterpretation {object} morphism objInterp =
-  (domain, codomain : object) ->
-  morphism domain codomain ->
-  (objInterp domain -> objInterp codomain)
-
-ITSHasId :
-  {object : Type} ->
-  {morphism : ITSMorphismType object} ->
-  {objInterp : ITSObjectInterpretation object} ->
-  ITSMorphismInterpretation morphism objInterp -> Type
-ITSHasId {object} {morphism} {objInterp} morphInterp =
-  (a : object) ->
-  (idm : morphism a a ** morphInterp a a idm = Prelude.Basics.id)
-
-----------------------------
-----------------------------
----- Fibration in Idris ----
-----------------------------
-----------------------------
-
 ----------------------------------
 ----------------------------------
 ---- Idris product categories ----
