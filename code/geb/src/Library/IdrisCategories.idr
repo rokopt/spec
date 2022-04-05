@@ -169,6 +169,33 @@ QFunctorRel f = (t : QuotientType) -> RelationOn (f t)
 QFunctorFromComponents : (f : QFunctorType) -> QFunctorRel f -> QFunctor
 QFunctorFromComponents f fm qt = (f qt ** fm qt)
 
+QuotientConstVoid : QFunctor
+QuotientConstVoid _ = QuotientVoid
+
+QuotientConstUnit : QFunctor
+QuotientConstUnit _ = QuotientUnit
+
+QuotientProductF : QFunctor -> QFunctor -> QFunctor
+QuotientProductF f g qt = QuotientProduct (f qt) (g qt)
+
+QuotientCoproductF : QFunctor -> QFunctor -> QFunctor
+QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
+
+--------------------------------------
+---- Polynomial quotient functors ----
+--------------------------------------
+
+data PolyQuotientF : QFunctor -> Type where
+  PQFConstVoid : PolyQuotientF QuotientConstVoid
+  PQFConstUnit : PolyQuotientF QuotientConstUnit
+  PQFProduct : {f, g : QFunctor} ->
+    PolyQuotientF f -> PolyQuotientF g ->
+    PolyQuotientF (QuotientProductF f g)
+  PQFCoproduct : {f, g : QFunctor} ->
+    PolyQuotientF f -> PolyQuotientF g ->
+    PolyQuotientF (QuotientCoproductF f g)
+
+
 -----------------------------------------------
 -----------------------------------------------
 ---- Interpretation of categories in Idris ----
