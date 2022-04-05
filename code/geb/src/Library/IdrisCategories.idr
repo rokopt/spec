@@ -47,6 +47,17 @@ graphTarget {graph} = snd . EdgeProjection graph
 ---- Graphs as categories ----
 ------------------------------
 
+-- Given an interpretation of a vertex type into the Idris type system,
+-- this is the type of an interpretation of edges that translates
+-- source and target to domain and codomain, and path concatenation to
+-- composition.
+public export
+EdgeInterpretation : {vertex, edge : Type} ->
+  (vint : vertex -> Type) -> (fibration : DigraphEdgeFibration vertex edge) ->
+  Type
+EdgeInterpretation vint {edge} fibration =
+  (e : edge) -> vint (fst (fibration e)) -> vint (snd (fibration e))
+
 -- Implementing this interface provides a way of interpreting a directed
 -- graph into the Idris type system as a category.  (This induces a closure
 -- of the directed graph by paths -- producing a free category on the
@@ -54,11 +65,10 @@ graphTarget {graph} = snd . EdgeProjection graph
 public export
 record DigraphCategoryInterpretation (graph : DirectedGraph) where
   constructor DigraphCategoryInterpretations
-  VertexInterpretation : VertexType graph -> Type
-  EdgeInterpretation :
-    (m : EdgeType graph) ->
-    (VertexInterpretation (graphSource {graph} m)) ->
-    (VertexInterpretation (graphTarget {graph} m))
+  ObjectInterpretation :
+    VertexType graph -> Type
+  MorphismInterpretation :
+    EdgeInterpretation ObjectInterpretation (EdgeProjection graph)
 
 public export
 record InterpretedDigraph where
@@ -73,6 +83,7 @@ record InterpretedDigraph where
 public export
 record HigherDigraph where
   constructor HigherDigraphComponents
+
   CategoryType : Type
   ObjectType : Type
   MorphismType : Type
@@ -81,7 +92,27 @@ record HigherDigraph where
   AdjunctionType : Type
 
   ObjectFibration : ObjectType -> CategoryType
+
   MorphismFibration : DigraphEdgeFibration ObjectType MorphismType
+
+  FunctorFibration : DigraphEdgeFibration CategoryType FunctorType
+
+  NatTransFibration : DigraphEdgeFibration FunctorType NatTransType
+
+    -- By convention:
+    --  (Left adjoint, right adjoint, counit, unit)
+  AdjunctionFibration : AdjunctionType ->
+    (FunctorType, FunctorType, NatTransType, NatTransType)
+
+public export
+record HigherDigraphInterpretation (hdg : HigherDigraph) where
+  constructor HigherDigraphInterpretations
+
+public export
+record InterpretedHigherDigraph where
+  constructor InterpretedHigherDigraphComponents
+  UnderlyingHigherGraph : HigherDigraph
+  HigherGraphInterpretation : HigherDigraphInterpretation UnderlyingHigherGraph
 
 ----------------------------------
 ----------------------------------
