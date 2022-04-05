@@ -199,6 +199,38 @@ data PolyQuotientF : QFunctor -> (QFunctor -> Type) -> Type where
 -----------------------------------------------
 -----------------------------------------------
 
+record EquivBundle (t : Type) where
+  constructor MkEquivBundle
+  EquivType : Type
+  EquivLeft : EquivType -> t
+  EquivRight : EquivType -> t
+
+record CategoryData where
+  constructor CategoryComponents
+  CatObject : Type
+  ObjEquiv : EquivBundle CatObject
+  CatMorphism : Type
+  MorphEquiv : EquivBundle CatMorphism
+  MorphDomain : CatMorphism -> CatObject
+  MorphCodomain : CatMorphism -> CatObject
+  CatEndofunctor : Type
+  FunctorEquiv : EquivBundle CatEndofunctor
+  CatNatTrans : Type
+  CatNatTransEquiv : EquivBundle CatNatTrans
+  CatNatTransDom : CatNatTrans -> CatEndofunctor
+  CatNatTransCod : CatNatTrans -> CatEndofunctor
+
+record CategoryInterpretation (cat : CategoryData) where
+  constructor CategoryInterpretations
+  ObjInterp : CatObject cat -> Type
+  MorphInterp : (m : CatMorphism cat) ->
+    ObjInterp (MorphDomain cat m) -> ObjInterp (MorphCodomain cat m)
+  FunctorInterpObj : CatEndofunctor cat -> CatObject cat -> CatObject cat
+  FunctorInterpMorph : CatEndofunctor cat -> CatMorphism cat -> CatMorphism cat
+  NatTransInterp : (nt : CatNatTrans cat) -> (a : CatObject cat) ->
+    ObjInterp (FunctorInterpObj (CatNatTransDom cat nt) a) ->
+    ObjInterp (FunctorInterpObj (CatNatTransCod cat nt) a)
+
 -- An interpretation of the objects of some category into the Idris
 -- type system ("ITS").
 ITSObjectInterpretation : Type -> Type
