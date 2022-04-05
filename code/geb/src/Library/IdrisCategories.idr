@@ -117,6 +117,11 @@ EqualizerRelationGenF :
 EqualizerRelationGenF f g rel rel' el el' =
   (rel el el', rel' (f el) (g el'))
 
+FreeEqualizerRelation : {a, b : _} ->
+  (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn a
+FreeEqualizerRelation f g rel rel' =
+  FreeMEquiv (EqualizerRelationGenF f g rel rel')
+
 MappedFromRelated : {a, b: _} ->
   (f, g : a -> b) -> RelationOn a -> RelationOn b
 MappedFromRelated {a} f g rel el el' =
@@ -126,6 +131,11 @@ CoequalizerRelationGenF : {a, b : _} ->
   (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn b
 CoequalizerRelationGenF {a} {b} f g rel rel' el el' =
   Either (rel' el el') (MappedFromRelated f g rel el el')
+
+FreeCoequalizerRelation : {a, b : _} ->
+  (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn b
+FreeCoequalizerRelation f g rel rel' =
+  FreeMEquiv (CoequalizerRelationGenF f g rel rel')
 
 ------------------------
 ---- Quotient types ----
@@ -161,13 +171,13 @@ QuotientEqualizer :
   (dom, cod : QuotientType) -> (f, g : QuotientTot dom -> QuotientTot cod) ->
   QuotientType
 QuotientEqualizer (domtot ** domrel) (_ ** codrel) f g =
-  (domtot ** EqualizerRelationGenF f g domrel codrel)
+  (domtot ** FreeEqualizerRelation f g domrel codrel)
 
 QuotientCoequalizer :
   (dom, cod : QuotientType) -> (f, g : QuotientTot dom -> QuotientTot cod) ->
   QuotientType
 QuotientCoequalizer (_ ** domrel) (codtot ** codrel) f g =
-  (codtot ** CoequalizerRelationGenF f g domrel codrel)
+  (codtot ** FreeCoequalizerRelation f g domrel codrel)
 
 QFunctor : Type
 QFunctor = QuotientType -> QuotientType
