@@ -10,6 +10,10 @@ import Library.IdrisUtils
 ------------------------------------------
 ------------------------------------------
 
+-------------------------
+---- Directed graphs ----
+-------------------------
+
 public export
 DigraphEdgeFibration : Type -> Type -> Type
 DigraphEdgeFibration vertex edge = edge -> (vertex, vertex)
@@ -39,8 +43,14 @@ public export
 graphTarget : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
 graphTarget {graph} = snd . EdgeProjection graph
 
+------------------------------
+---- Graphs as categories ----
+------------------------------
+
 -- Implementing this interface provides a way of interpreting a directed
--- graph into the Idris type system as a category.
+-- graph into the Idris type system as a category.  (This induces a closure
+-- of the directed graph by paths -- producing a free category on the
+-- graph -- using composition in the Idris type system.)
 public export
 record DigraphCategoryInterpretation (graph : DirectedGraph) where
   constructor DigraphCategoryInterpretations
@@ -55,6 +65,23 @@ record InterpretedDigraph where
   constructor InterpretedDigraphComponents
   UnderlyingGraph : DirectedGraph
   GraphInterpretation : DigraphCategoryInterpretation UnderlyingGraph
+
+-------------------------------------
+---- Graphs as higher categories ----
+-------------------------------------
+
+public export
+record HigherDigraph where
+  constructor HigherDigraphComponents
+  CategoryType : Type
+  ObjectType : Type
+  MorphismType : Type
+  FunctorType : Type
+  NatTransType : Type
+  AdjunctionType : Type
+
+  ObjectFibration : ObjectType -> CategoryType
+  MorphismFibration : DigraphEdgeFibration ObjectType MorphismType
 
 ----------------------------------
 ----------------------------------
