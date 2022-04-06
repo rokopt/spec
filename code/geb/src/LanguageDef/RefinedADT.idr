@@ -96,6 +96,9 @@ TypeCarrierFromTermCarrier termCarrier c term = termCarrier (c, term)
 -- `GebTerm` (as an initial algebra).
 public export
 data GebTermF_object : GebTermProductCatObjectMap where
+  GTFsubstConst :
+    carrier (Subst, TCtype) ->
+    GebTermF_object carrier (Subst, TCfunction)
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
