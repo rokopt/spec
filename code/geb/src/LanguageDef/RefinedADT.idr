@@ -82,21 +82,15 @@ public export
 GebTermProductCatEndofunctor : Type
 GebTermProductCatEndofunctor = ProductCatEndofunctor GebTermClass
 
-data RefinedObjectF :
-    (functorCarrier, objCarrier : CategoryClass -> Type) ->
-    CategoryClass -> Type where
-  RefinedObjectInitial :
-    RefinedObjectF functorCarrier objCarrier cat
-  RefinedObjectApply :
-    functorCarrier cat -> objCarrier cat ->
-    RefinedObjectF functorCarrier objCarrier cat
-  RefinedObjectGeb :
-    RefinedObjectF functorCarrier objCarrier RefinedSubst
-
 public export
 ClassCarrierFromTermCarrier :
   (GebTermClass -> Type) -> TermClass -> (CategoryClass -> Type)
 ClassCarrierFromTermCarrier termCarrier c cat = termCarrier (cat, c)
+
+public export
+TypeCarrierFromTermCarrier :
+  (GebTermClass -> Type) -> CategoryClass -> (TermClass -> Type)
+TypeCarrierFromTermCarrier termCarrier c term = termCarrier (c, term)
 
 -- The object-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
