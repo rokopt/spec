@@ -8,55 +8,90 @@ import Library.IdrisUtils
 -- on enumerated types -- the kind of thing that a `deriving`
 -- mechanism would provide automatically.
 
-------------------------------------------
-------------------------------------------
----- Classification used in `GebTerm` ----
-------------------------------------------
-------------------------------------------
+---------------------------------
+---------------------------------
+---- Atoms used in `GebTerm` ----
+---------------------------------
+---------------------------------
 
 public export
 data CategoryClass : Type where
+  Subst : CategoryClass
   RefinedSubst : CategoryClass
+  ADT : CategoryClass
   RefinedADT : CategoryClass
 
 public export
-data TermTypeClass : Type where
-  TTCcat : TermTypeClass
-  TTCobject : TermTypeClass
+data TermClass : Type where
+  TCterm : TermClass
+  TCtype : TermClass
+  TCfunction : TermClass
 
 public export
 GebTermClass : Type
-GebTermClass = (CategoryClass, TermTypeClass)
+GebTermClass = (CategoryClass, TermClass)
 
 export
 gtcEncode : GebTermClass -> Nat
-gtcEncode (RefinedSubst, TTCcat) = 0
-gtcEncode (RefinedSubst, TTCobject) = 1
-gtcEncode (RefinedADT, TTCcat) = 2
-gtcEncode (RefinedADT, TTCobject) = 3
+gtcEncode (Subst, TCterm) = 0
+gtcEncode (Subst, TCtype) = 1
+gtcEncode (Subst, TCfunction) = 2
+gtcEncode (RefinedSubst, TCterm) = 3
+gtcEncode (RefinedSubst, TCtype) = 4
+gtcEncode (RefinedSubst, TCfunction) = 5
+gtcEncode (ADT, TCterm) = 6
+gtcEncode (ADT, TCtype) = 7
+gtcEncode (ADT, TCfunction) = 8
+gtcEncode (RefinedADT, TCterm) = 9
+gtcEncode (RefinedADT, TCtype) = 10
+gtcEncode (RefinedADT, TCfunction) = 11
 
 export
 gtcDecode : Nat -> Maybe GebTermClass
-gtcDecode 0 = Just (RefinedSubst, TTCcat)
-gtcDecode 1 = Just (RefinedSubst, TTCobject)
-gtcDecode 2 = Just (RefinedADT, TTCcat)
-gtcDecode 3 = Just (RefinedADT, TTCobject)
+gtcDecode 0 = Just (Subst, TCterm)
+gtcDecode 1 = Just (Subst, TCtype)
+gtcDecode 2 = Just (Subst, TCfunction)
+gtcDecode 3 = Just (RefinedSubst, TCterm)
+gtcDecode 4 = Just (RefinedSubst, TCtype)
+gtcDecode 5 = Just (RefinedSubst, TCfunction)
+gtcDecode 6 = Just (ADT, TCterm)
+gtcDecode 7 = Just (ADT, TCtype)
+gtcDecode 8 = Just (ADT, TCfunction)
+gtcDecode 9 = Just (RefinedADT, TCterm)
+gtcDecode 10 = Just (RefinedADT, TCtype)
+gtcDecode 11 = Just (RefinedADT, TCfunction)
 gtcDecode _ = Nothing
 
 export
 gtcDecodeEncodeIsJust :
   (a : GebTermClass) -> gtcDecode (gtcEncode a) = Just a
-gtcDecodeEncodeIsJust (RefinedSubst, TTCcat) = Refl
-gtcDecodeEncodeIsJust (RefinedSubst, TTCobject) = Refl
-gtcDecodeEncodeIsJust (RefinedADT, TTCcat) = Refl
-gtcDecodeEncodeIsJust (RefinedADT, TTCobject) = Refl
+gtcDecodeEncodeIsJust (Subst, TCterm) = Refl
+gtcDecodeEncodeIsJust (Subst, TCtype) = Refl
+gtcDecodeEncodeIsJust (Subst, TCfunction) = Refl
+gtcDecodeEncodeIsJust (RefinedSubst, TCterm) = Refl
+gtcDecodeEncodeIsJust (RefinedSubst, TCtype) = Refl
+gtcDecodeEncodeIsJust (RefinedSubst, TCfunction) = Refl
+gtcDecodeEncodeIsJust (ADT, TCterm) = Refl
+gtcDecodeEncodeIsJust (ADT, TCtype) = Refl
+gtcDecodeEncodeIsJust (ADT, TCfunction) = Refl
+gtcDecodeEncodeIsJust (RefinedADT, TCterm) = Refl
+gtcDecodeEncodeIsJust (RefinedADT, TCtype) = Refl
+gtcDecodeEncodeIsJust (RefinedADT, TCfunction) = Refl
 
 export
 gtcToString : GebTermClass -> String
-gtcToString (RefinedSubst, TTCcat) = "RefinedSubstCat"
-gtcToString (RefinedSubst, TTCobject) = "RefinedSubstObject"
-gtcToString (RefinedADT, TTCcat) = "RefinedADTCat"
-gtcToString (RefinedADT, TTCobject) = "RefinedADTObject"
+gtcToString (Subst, TCterm) = "SubstTerm"
+gtcToString (Subst, TCtype) = "SubstType"
+gtcToString (Subst, TCfunction) = "SubstFunction"
+gtcToString (RefinedSubst, TCterm) = "RefinedSubstTerm"
+gtcToString (RefinedSubst, TCtype) = "RefinedSubstType"
+gtcToString (RefinedSubst, TCfunction) = "RefinedSubstFunction"
+gtcToString (ADT, TCterm) = "ADTTerm"
+gtcToString (ADT, TCtype) = "ADTType"
+gtcToString (ADT, TCfunction) = "ADTFunction"
+gtcToString (RefinedADT, TCterm) = "RefinedADTTerm"
+gtcToString (RefinedADT, TCtype) = "RefinedADTType"
+gtcToString (RefinedADT, TCfunction) = "RefinedADTFunction"
 
 export
 Show GebTermClass where

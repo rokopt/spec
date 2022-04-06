@@ -95,19 +95,13 @@ data RefinedObjectF :
 
 public export
 ClassCarrierFromTermCarrier :
-  (GebTermClass -> Type) -> TermTypeClass -> (CategoryClass -> Type)
+  (GebTermClass -> Type) -> TermClass -> (CategoryClass -> Type)
 ClassCarrierFromTermCarrier termCarrier c cat = termCarrier (cat, c)
 
 -- The object-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
 public export
 data GebTermF_object : GebTermProductCatObjectMap where
-  RADTObject : {cat : CategoryClass} -> {carrier : GebTermClass -> Type} ->
-    RefinedObjectF
-      (const Void) {- functorCarrier -}
-      (ClassCarrierFromTermCarrier carrier TTCobject)
-      cat ->
-    GebTermF_object carrier (cat, TTCobject)
 
 -- The morphism-map component of the endofunctor from which we shall define
 -- `GebTerm` (as an initial algebra).
