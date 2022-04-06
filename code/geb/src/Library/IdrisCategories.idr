@@ -317,6 +317,13 @@ CofreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
 CofreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
 
 public export
+ProductCatCofreeCoalgebra : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
+  Type
+ProductCatCofreeCoalgebra f v a =
+  ProductCatCoalgebra (ProductCatTreeFunctor f v) a
+
+public export
 TreeAlgebra : (Type -> Type) -> Type -> Type -> Type
 TreeAlgebra f v a = Algebra (TreeFunctor f v) a
 
@@ -455,9 +462,13 @@ Catamorphism f v a = FreeAlgebra f v a -> FreeMonad f v -> a
 
 public export
 ProductCatamorphism : {idx : Type} ->
-  ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
-ProductCatamorphism f a =
-  ProductCatAlgebra f a -> ProductCatMorphism (MuProduct f) a
+  ProductCatObjectEndoMap idx ->
+  ProductCatObject idx ->
+  ProductCatObject idx ->
+  Type
+ProductCatamorphism f v a =
+  ProductCatFreeAlgebra f v a ->
+  ProductCatMorphism (ProductCatFreeMonad f v) a
 
 -- Not all endofunctors have terminal coalgebras.  If an endofunctor
 -- _does_ have a terminal coalgebra, then this is the signature of
@@ -466,8 +477,13 @@ Anamorphism : (Type -> Type) -> Type -> Type -> Type
 Anamorphism f v l = CofreeCoalgebra f v l -> l -> CofreeComonad f v
 
 ProductAnamorphism : {idx : Type} ->
-  ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
-ProductAnamorphism f l = ProductCatMorphism l (NuProduct f)
+  ProductCatObjectEndoMap idx ->
+  ProductCatObject idx ->
+  ProductCatObject idx ->
+  Type
+ProductAnamorphism f v l =
+  ProductCatCofreeCoalgebra f v l ->
+  ProductCatMorphism (ProductCatCofreeComonad f v) l
 
 ---------------------------------------------------------
 ---------------------------------------------------------

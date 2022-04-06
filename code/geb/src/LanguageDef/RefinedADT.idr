@@ -545,12 +545,61 @@ Functor NatF where
 public export
 data ListF : Type -> Type -> Type where
   NilF : ListF atom carrier
-  ConsF : atom -> carrier -> ListF atom carrier
+  ConsF : ProductF atom carrier -> ListF atom carrier
 
 public export
 Bifunctor ListF where
   bimap f g NilF = NilF
-  bimap f g (ConsF a l) = ConsF (f a) (g l)
+  bimap f g (ConsF p) = ConsF $ bimap f g p
+
+-----------------------
+---- S-expressions ----
+-----------------------
+
+public export
+data SexpType : Type where
+  SexpExp : SexpType
+  SexpList : SexpType
+
+public export
+SexpTypeObject : Type
+SexpTypeObject = ProductCatObject SexpType
+
+public export
+data SexpTypeFunctor :
+    (atom : Type) -> (carrier : SexpTypeObject) -> SexpTypeObject where
+  SexpF :
+    ProductF atom (carrier SexpList) ->
+    SexpTypeFunctor atom carrier SexpExp
+  SlistF :
+    ListF (carrier SexpExp) (carrier SexpList) ->
+    SexpTypeFunctor atom carrier SexpList
+
+-------------------------------------------------
+---- S-expressions with natural number atoms ----
+-------------------------------------------------
+
+public export
+data NSexpType : Type where
+  NSexpNat : NSexpType
+  NSexpExp : NSexpType
+  NSexpList : NSexpType
+
+public export
+NSexpTypeObject : Type
+NSexpTypeObject = ProductCatObject NSexpType
+
+public export
+data NSexpTypeFunctor : (carrier : NSexpTypeObject) -> NSexpTypeObject where
+  NSatomF :
+    NatF (carrier NSexpNat) ->
+    NSexpTypeFunctor carrier NSexpNat
+  NSexpF :
+    ProductF (carrier NSexpNat) (carrier NSexpList) ->
+    NSexpTypeFunctor carrier NSexpExp
+  NSlistF :
+    ListF (carrier NSexpExp) (carrier NSexpList) ->
+    NSexpTypeFunctor carrier NSexpList
 
 ---------------------
 ---- Polynomials ----
