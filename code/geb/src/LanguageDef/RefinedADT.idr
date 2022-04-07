@@ -731,7 +731,7 @@ public export
 record SexpCheckResult (inputType : NSexpType) where
   constructor SexpInterpretations
   Input : NSExpType inputType
-  InputInterpretation : SexpInterpretation inputType
+  InputInterpretation : Maybe (SexpInterpretation inputType)
   AllInterpretations :
     (type : NSexpType) -> NSExpType type -> Maybe (SexpInterpretation type)
 
