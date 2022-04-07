@@ -508,21 +508,75 @@ Bifunctor CoproductF where
   bimap f _ (InCoproductLeft x) = InCoproductLeft (f x)
   bimap _ g (InCoproductRight y) = InCoproductRight (g y)
 
--------------------------------
----- Substitution category ----
--------------------------------
-
--- We bootstrap the type system starting with the polynomial endofunctors
--- (in fact, all the endofunctors are polynomial in this category) on the
--- zeroth-order unrefined category, or "substitution category".
+---------------------------------
+---- Polynomial endofunctors ----
+---------------------------------
 
 public export
 data SubstEndofunctorF : Type -> Type -> Type where
   SEndoConstVoid : SubstEndofunctorF obj carrier
   SEndoConstUnit : SubstEndofunctorF obj carrier
-  SEndoConst : ConstF obj carrier -> SubstEndofunctorF obj carrier
   SEndoProduct : ProductF obj carrier -> SubstEndofunctorF obj carrier
   SEndoCoproduct : CoproductF obj carrier -> SubstEndofunctorF obj carrier
+
+---------------------------------------
+---- Refined substitution category ----
+---------------------------------------
+
+public export
+data RefinedExpClass : Type where
+  REC_Term : RefinedExpClass
+  REC_Object : RefinedExpClass
+  REC_Morphism : RefinedExpClass
+  REC_PolyEndo : RefinedExpClass
+  REC_PolyNatTrans : RefinedExpClass
+
+public export
+ObjectInterpretation : Type -> Type
+ObjectInterpretation obj = obj -> Type
+
+public export
+MorphismInterpretation : {obj, morph : Type} -> ObjectInterpretation obj ->
+  (domain, codomain : obj) -> morph -> Type
+MorphismInterpretation objInterp domain codomain m =
+  objInterp domain -> objInterp codomain
+
+public export
+FunctorObjmap : Type -> Type
+FunctorObjmap obj = obj -> obj
+
+public export
+MorphHasSig : {obj, morph : Type} ->
+  (domain : morph -> obj) -> (codomain : morph -> obj) ->
+  morph -> (obj, obj) -> Type
+MorphHasSig domain codomain m (a, b) = (domain m = a, codomain m = b)
+
+public export
+FunctorMorphmap : {obj, morph : Type} ->
+  (domain : morph -> obj) -> (codomain : morph -> obj) ->
+  FunctorObjmap obj -> Type
+FunctorMorphmap {obj} {morph} domain codomain objmap =
+  (m : morph) ->
+  (fm : morph **
+   MorphHasSig domain codomain fm (objmap (domain m), objmap (codomain m)))
+
+public export
+FunctorInterpretation : {obj, morph : Type} ->
+  ObjectInterpretation obj ->
+  (domain, codomain : morph -> obj) ->
+  (objmap : FunctorObjmap obj) ->
+  FunctorMorphmap domain codomain objmap ->
+  Type
+FunctorInterpretation objInterp domain codomain objmap morphmap =
+  (m : morph) ->
+  MorphismInterpretation objInterp
+    (domain m)
+    (codomain m)
+    m ->
+  MorphismInterpretation objInterp
+    (objmap (domain m))
+    (objmap (codomain m))
+    (morphmap m)
 
 -------------------------
 ---- Natural numbers ----
@@ -706,8 +760,8 @@ hasProperty InductiveTypes ADTCat = True
 hasProperty InductiveTypes RefinedADTCat = True
 
 public export
-MorphismInterpretation : Type
-MorphismInterpretation =
+SMorphismInterpretation : Type
+SMorphismInterpretation =
   (domain : Type ** codomain : Type ** domain -> codomain)
 
 public export
@@ -719,11 +773,12 @@ public export
 data SexpInterpretation : NSexpType -> Type where
   SnatAsNat : Nat -> SexpInterpretation NSexpNat
   SexpAsObject : Type -> SexpInterpretation NSexpExp
-  SexpAsMorphism : MorphismInterpretation -> SexpInterpretation NSexpExp
+  SexpAsMorphism : SMorphismInterpretation -> SexpInterpretation NSexpExp
   SexpAsFunctor : (Type -> Type) -> SexpInterpretation NSexpExp
   SexpAsNatTrans : NatTransInterpretation -> SexpInterpretation NSexpExp
   SlistAsObjects : List Type -> SexpInterpretation NSexpList
-  SlistAsMorphisms : List MorphismInterpretation -> SexpInterpretation NSexpList
+  SlistAsMorphisms :
+    List SMorphismInterpretation -> SexpInterpretation NSexpList
   SlistAsFunctors : List (Type -> Type) -> SexpInterpretation NSexpList
   SlistAsNatTrans : List NatTransInterpretation -> SexpInterpretation NSexpList
 
@@ -734,10 +789,6 @@ record SexpCheckResult (inputType : NSexpType) where
   InputInterpretation : Maybe (SexpInterpretation inputType)
   AllInterpretations :
     (type : NSexpType) -> NSExpType type -> Maybe (SexpInterpretation type)
-
-public export
-interpretationAlgebra : ProductCatAlgebra NSexpTypeFunctor SexpCheckResult
-interpretationAlgebra type term = ?interpretationAlgebra_hole
 
 ---------------------
 ---- Polynomials ----
