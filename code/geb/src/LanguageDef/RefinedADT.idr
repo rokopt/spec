@@ -601,6 +601,37 @@ data NSexpTypeFunctor : (carrier : NSexpTypeObject) -> NSexpTypeObject where
     ListF (carrier NSexpExp) (carrier NSexpList) ->
     NSexpTypeFunctor carrier NSexpList
 
+public export
+nsexpCata : ProductCatamorphism NSexpTypeFunctor v carrier
+nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
+  NSexpNat => nsexpCataNat term
+  NSexpExp => nsexpCataExp term
+  NSexpList => nsexpCataList term
+  where
+    nsexpCataNat :
+      ProductCatTermFunctor
+        NSexpTypeFunctor v
+        (ProductCatFreeMonad NSexpTypeFunctor v) NSexpNat
+        ->
+      ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpNat
+    nsexpCataNat = ?nsexpCataNat_hole
+
+    nsexpCataExp :
+      ProductCatTermFunctor
+        NSexpTypeFunctor v
+        (ProductCatFreeMonad NSexpTypeFunctor v) NSexpExp
+        ->
+      ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpExp
+    nsexpCataExp = ?nsexpCataExp_hole
+
+    nsexpCataList :
+      ProductCatTermFunctor
+        NSexpTypeFunctor v
+        (ProductCatFreeMonad NSexpTypeFunctor v) NSexpList
+        ->
+      ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpList
+    nsexpCataList = ?nsexpCataList_hole
+
 ---------------------
 ---- Polynomials ----
 ---------------------
