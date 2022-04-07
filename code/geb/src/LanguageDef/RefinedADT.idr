@@ -607,14 +607,20 @@ nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
   NSexpNat => nsexpCataNat term
   NSexpExp => nsexpCataExp term
   NSexpList => nsexpCataList term
-  where
+  where mutual
     nsexpCataNat :
       ProductCatTermFunctor
         NSexpTypeFunctor v
         (ProductCatFreeMonad NSexpTypeFunctor v) NSexpNat
         ->
       ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpNat
-    nsexpCataNat = ?nsexpCataNat_hole
+    nsexpCataNat (ProductCatTermVar v) = ProductCatTermVar v
+    nsexpCataNat (ProductCatTermComposite com) = ProductCatTermComposite $
+      case com of
+        NSatomF a => NSatomF $ case a of
+          ZeroF => ZeroF
+          SuccF n => case n of
+            InFreeProduct NSexpNat n => SuccF $ alg NSexpNat $ nsexpCataNat n
 
     nsexpCataExp :
       ProductCatTermFunctor
@@ -622,7 +628,16 @@ nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
         (ProductCatFreeMonad NSexpTypeFunctor v) NSexpExp
         ->
       ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpExp
-    nsexpCataExp = ?nsexpCataExp_hole
+    nsexpCataExp (ProductCatTermVar v) = ProductCatTermVar v
+    nsexpCataExp (ProductCatTermComposite com) = ProductCatTermComposite $
+      case com of
+        NSexpF x => NSexpF $ case x of
+          InProduct n l => case n of
+            InFreeProduct NSexpNat n => case l of
+              InFreeProduct NSexpList l =>
+                InProduct
+                  (alg NSexpNat $ nsexpCataNat n)
+                  (alg NSexpList $ nsexpCataList l)
 
     nsexpCataList :
       ProductCatTermFunctor
@@ -630,7 +645,18 @@ nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
         (ProductCatFreeMonad NSexpTypeFunctor v) NSexpList
         ->
       ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpList
-    nsexpCataList = ?nsexpCataList_hole
+    nsexpCataList (ProductCatTermVar v) = ProductCatTermVar v
+    nsexpCataList (ProductCatTermComposite com) = ProductCatTermComposite $
+      case com of
+        NSlistF l => NSlistF $ case l of
+          NilF => NilF
+          ConsF p => ConsF $ case p of
+            InProduct x l' => case x of
+              InFreeProduct NSexpExp x => case l' of
+                InFreeProduct NSexpList l' =>
+                  InProduct
+                    (alg NSexpExp $ nsexpCataExp x)
+                    (alg NSexpList $ nsexpCataList l')
 
 ---------------------
 ---- Polynomials ----
