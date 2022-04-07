@@ -602,6 +602,22 @@ data NSexpTypeFunctor : (carrier : NSexpTypeObject) -> NSexpTypeObject where
     NSexpTypeFunctor carrier NSexpList
 
 public export
+NSExpType : NSexpType -> Type
+NSExpType = MuProduct NSexpTypeFunctor
+
+public export
+NSNat : Type
+NSNat = NSExpType NSexpNat
+
+public export
+NSExp : Type
+NSExp = NSExpType NSexpExp
+
+public export
+NSList : Type
+NSList = NSExpType NSexpList
+
+public export
 nsexpCata : ProductCatamorphism NSexpTypeFunctor v carrier
 nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
   NSexpNat => nsexpCataNat term
@@ -657,6 +673,65 @@ nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
                   InProduct
                     (alg NSexpExp $ nsexpCataExp x)
                     (alg NSexpList $ nsexpCataList l')
+
+---------------------------------------------------------
+---------------------------------------------------------
+---- Interpretation of S-expressions into categories ----
+---------------------------------------------------------
+---------------------------------------------------------
+
+public export
+data UniversalProperty : Type where
+  -- Equalizers and coequalizers.
+  ConnectedLimits : UniversalProperty
+  -- Initial algebras and terminal coalgebras of polynomial endofunctors.
+  InductiveTypes : UniversalProperty
+
+public export
+data SexpCategory : Type where
+  SubstCat : SexpCategory
+  RefinedSubstCat : SexpCategory
+  ADTCat : SexpCategory
+  RefinedADTCat : SexpCategory
+
+public export
+hasProperty : UniversalProperty -> SexpCategory -> Bool
+hasProperty ConnectedLimits SubstCat = False
+hasProperty ConnectedLimits RefinedSubstCat = True
+hasProperty ConnectedLimits ADTCat = False
+hasProperty ConnectedLimits RefinedADTCat = True
+hasProperty InductiveTypes SubstCat = False
+hasProperty InductiveTypes RefinedSubstCat = False
+hasProperty InductiveTypes ADTCat = True
+hasProperty InductiveTypes RefinedADTCat = True
+
+public export
+MorphismInterpretation : Type
+MorphismInterpretation =
+  (domain : Type ** codomain : Type ** domain -> codomain)
+
+public export
+NatTransInterpretation : Type
+NatTransInterpretation =
+  (f : Type -> Type ** g : Type -> Type ** (x : Type) -> f x -> g x)
+
+public export
+data SexpInterpretation : NSexpType -> Type where
+  SnatAsNat : Nat -> SexpInterpretation NSexpNat
+  SexpAsObject : Type -> SexpInterpretation NSexpExp
+  SexpAsMorphism : MorphismInterpretation -> SexpInterpretation NSexpExp
+  SexpAsFunctor : (Type -> Type) -> SexpInterpretation NSexpExp
+  SexpAsNatTrans : NatTransInterpretation -> SexpInterpretation NSexpExp
+  SlistAsObjects : List Type -> SexpInterpretation NSexpList
+  SlistAsMorphisms : List MorphismInterpretation -> SexpInterpretation NSexpList
+  SlistAsFunctors : List (Type -> Type) -> SexpInterpretation NSexpList
+  SlistAsNatTrans : List NatTransInterpretation -> SexpInterpretation NSexpList
+
+public export
+record SexpCheckResult where
+  constructor SexpInterpretations
+  Interpretations :
+    (type : NSexpType) -> NSExpType type -> SexpInterpretation type
 
 ---------------------
 ---- Polynomials ----
