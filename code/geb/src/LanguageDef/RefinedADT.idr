@@ -728,10 +728,15 @@ data SexpInterpretation : NSexpType -> Type where
   SlistAsNatTrans : List NatTransInterpretation -> SexpInterpretation NSexpList
 
 public export
-record SexpCheckResult where
+record SexpCheckResult (inputType : NSexpType) where
   constructor SexpInterpretations
-  Interpretations :
-    (type : NSexpType) -> NSExpType type -> SexpInterpretation type
+  InputInterpretation : SexpInterpretation inputType
+  AllInterpretations :
+    (type : NSexpType) -> NSExpType type -> Maybe (SexpInterpretation type)
+
+public export
+interpretationAlgebra : ProductCatAlgebra NSexpTypeFunctor SexpCheckResult
+interpretationAlgebra = ?interpretationAlgebra_hole
 
 ---------------------
 ---- Polynomials ----
