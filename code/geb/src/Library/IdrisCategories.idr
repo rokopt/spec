@@ -65,10 +65,10 @@ EdgeInterpretation vint {edge} fibration =
 public export
 record DigraphCategoryInterpretation (graph : DirectedGraph) where
   constructor DigraphCategoryInterpretations
-  ObjectInterpretation :
+  DGObjectInterpretation :
     VertexType graph -> Type
-  MorphismInterpretation :
-    EdgeInterpretation ObjectInterpretation (EdgeProjection graph)
+  DGMorphismInterpretation :
+    EdgeInterpretation DGObjectInterpretation (EdgeProjection graph)
 
 public export
 record InterpretedDigraph where
