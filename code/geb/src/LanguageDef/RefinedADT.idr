@@ -525,11 +525,58 @@ data SubstEndofunctorF : Type -> Type -> Type where
 
 public export
 data RefinedExpClass : Type where
-  REC_Term : RefinedExpClass
-  REC_Object : RefinedExpClass
-  REC_Morphism : RefinedExpClass
-  REC_PolyEndo : RefinedExpClass
-  REC_PolyNatTrans : RefinedExpClass
+  RECl_Term : RefinedExpClass
+  RECl_Object : RefinedExpClass
+  RECl_Morphism : RefinedExpClass
+  RECl_PolyEndo : RefinedExpClass
+  RECl_PolyNatTrans : RefinedExpClass
+
+public export
+record RefinedExpCategory_Obj where
+  constructor RefinedExpClassTypes
+
+  RECat_Term : Type
+  RECat_Object : Type
+  RECat_Morphism : Type
+  RECat_PolyEndo : Type
+  RECat_PolyNatTrans : Type
+
+  RECat_Term_Codomain : RECat_Term -> RECat_Object
+  RECat_Morphism_Domain : RECat_Morphism -> RECat_Object
+  RECat_Morphism_Codomain : RECat_Morphism -> RECat_Object
+  RECat_PolyNatTrans_Domain : RECat_PolyNatTrans -> RECat_PolyEndo
+  RECat_PolyNatTrans_Codomain : RECat_PolyNatTrans -> RECat_PolyEndo
+
+public export
+record RefinedExpCategory_Equiv (recat : RefinedExpCategory_Obj) where
+  constructor RefinedExpCategory_Equivalences
+
+  RECat_Term_Equiv : Type
+  RECat_Object_Equiv : Type
+  RECat_Morphism_Equiv : Type
+  RECat_PolyEndo_Equiv : Type
+  RECat_PolyNatTrans_Equiv : Type
+
+  RECat_TermEquiv_Left :
+     RECat_Term_Equiv -> RECat_Term recat
+  RECat_TermEquiv_Right :
+     RECat_Term_Equiv -> RECat_Term recat
+  RECat_ObjectEquiv_Left :
+     RECat_Object_Equiv -> RECat_Object recat
+  RECat_ObjectEquiv_Right :
+     RECat_Object_Equiv -> RECat_Object recat
+  RECat_MorphismEquiv_Left :
+     RECat_Morphism_Equiv -> RECat_Morphism recat
+  RECat_MorphismEquiv_Right :
+     RECat_Morphism_Equiv -> RECat_Morphism recat
+  RECat_PolyEndoEquiv_Left :
+     RECat_PolyEndo_Equiv -> RECat_PolyEndo recat
+  RECat_PolyEndoEquiv_Right :
+     RECat_PolyEndo_Equiv -> RECat_PolyEndo recat
+  RECat_PolyNatTransEquiv_Left :
+     RECat_PolyNatTrans_Equiv -> RECat_PolyNatTrans recat
+  RECat_PolyNatTransEquiv_Right :
+    RECat_PolyNatTrans_Equiv -> RECat_PolyNatTrans recat
 
 public export
 ObjectInterpretation : Type -> Type
@@ -577,6 +624,10 @@ FunctorInterpretation objInterp domain codomain objmap morphmap =
     (objmap (domain m))
     (objmap (codomain m))
     (morphmap m)
+
+public export
+record RefinedExpInterpretation (rec : RefinedExpClass) where
+  constructor RefinedExpInterpretations
 
 -------------------------
 ---- Natural numbers ----
