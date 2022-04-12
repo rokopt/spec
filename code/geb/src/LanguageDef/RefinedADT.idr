@@ -414,7 +414,7 @@ data SubstCatAlgebraF : Type -> Type -> Type where
     carrier -> SubstCatAlgebraF object carrier
 
   -- The left adjoint of the diagonal functor.
-  SubstCoproductIntro : (dom, dom', cod, cod' : object) ->
+  SubstCoproductElim : (dom, dom', cod, cod' : object) ->
     carrier -> carrier -> SubstCatAlgebraF object carrier
 
   -- The left injection to the unit of the coproduct adjunction.
@@ -677,7 +677,8 @@ nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
   NSexpNat => nsexpCataNat term
   NSexpExp => nsexpCataExp term
   NSexpList => nsexpCataList term
-  where mutual
+  where
+  mutual
     nsexpCataNat :
       ProductCatTermFunctor
         NSexpTypeFunctor v
