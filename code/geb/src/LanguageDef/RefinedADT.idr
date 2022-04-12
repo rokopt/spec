@@ -558,45 +558,49 @@ record RefinedExpCategory_Equiv (recat : RefinedExpCategory_Obj) where
   RECat_PolyNatTrans_Equiv : Type
 
   RECat_TermEquiv_Left :
-     RECat_Term_Equiv -> RECat_Term recat
+    RECat_Term_Equiv -> RECat_Term recat
   RECat_TermEquiv_Right :
-     RECat_Term_Equiv -> RECat_Term recat
+    RECat_Term_Equiv -> RECat_Term recat
   RECat_ObjectEquiv_Left :
-     RECat_Object_Equiv -> RECat_Object recat
+    RECat_Object_Equiv -> RECat_Object recat
   RECat_ObjectEquiv_Right :
-     RECat_Object_Equiv -> RECat_Object recat
+    RECat_Object_Equiv -> RECat_Object recat
   RECat_MorphismEquiv_Left :
-     RECat_Morphism_Equiv -> RECat_Morphism recat
+    RECat_Morphism_Equiv -> RECat_Morphism recat
   RECat_MorphismEquiv_Right :
-     RECat_Morphism_Equiv -> RECat_Morphism recat
+    RECat_Morphism_Equiv -> RECat_Morphism recat
   RECat_PolyEndoEquiv_Left :
-     RECat_PolyEndo_Equiv -> RECat_PolyEndo recat
+    RECat_PolyEndo_Equiv -> RECat_PolyEndo recat
   RECat_PolyEndoEquiv_Right :
-     RECat_PolyEndo_Equiv -> RECat_PolyEndo recat
+    RECat_PolyEndo_Equiv -> RECat_PolyEndo recat
   RECat_PolyNatTransEquiv_Left :
-     RECat_PolyNatTrans_Equiv -> RECat_PolyNatTrans recat
+    RECat_PolyNatTrans_Equiv -> RECat_PolyNatTrans recat
   RECat_PolyNatTransEquiv_Right :
     RECat_PolyNatTrans_Equiv -> RECat_PolyNatTrans recat
 
 public export
-ObjectInterpretation : Type -> Type
-ObjectInterpretation obj = obj -> Type
+ObjectTypeInterpretation : Type -> Type
+ObjectTypeInterpretation obj = obj -> Type
 
 public export
-MorphismInterpretation : {obj, morph : Type} -> ObjectInterpretation obj ->
-  (domain, codomain : obj) -> morph -> Type
-MorphismInterpretation objInterp domain codomain m =
-  objInterp domain -> objInterp codomain
+TermTypeInterpretation : {obj : Type} -> ObjectTypeInterpretation obj -> Type
+TermTypeInterpretation {obj} objInterp = (a : obj) -> () -> objInterp a
 
 public export
-FunctorObjmap : Type -> Type
-FunctorObjmap obj = obj -> obj
+MorphismTypeInterpretation : {obj : Type} -> ObjectTypeInterpretation obj ->
+  (morph : Type) -> (domain, codomain : morph -> obj) -> Type
+MorphismTypeInterpretation objInterp morph domain codomain =
+  (m : morph) -> objInterp (domain m) -> objInterp (codomain m)
 
 public export
 MorphHasSig : {obj, morph : Type} ->
   (domain : morph -> obj) -> (codomain : morph -> obj) ->
   morph -> (obj, obj) -> Type
 MorphHasSig domain codomain m (a, b) = (domain m = a, codomain m = b)
+
+public export
+FunctorObjmap : Type -> Type
+FunctorObjmap obj = obj -> obj
 
 public export
 FunctorMorphmap : {obj, morph : Type} ->
@@ -608,26 +612,27 @@ FunctorMorphmap {obj} {morph} domain codomain objmap =
    MorphHasSig domain codomain fm (objmap (domain m), objmap (codomain m)))
 
 public export
-FunctorInterpretation : {obj, morph : Type} ->
-  ObjectInterpretation obj ->
-  (domain, codomain : morph -> obj) ->
-  (objmap : FunctorObjmap obj) ->
-  FunctorMorphmap domain codomain objmap ->
-  Type
-FunctorInterpretation objInterp domain codomain objmap morphmap =
-  (m : morph) ->
-  MorphismInterpretation objInterp
-    (domain m)
-    (codomain m)
-    m ->
-  MorphismInterpretation objInterp
-    (objmap (domain m))
-    (objmap (codomain m))
-    (morphmap m)
+FunctorTypeInterpretation : {obj, morph : Type} ->
+  {domain, codomain : morph -> obj} ->
+  (objInterp : ObjectTypeInterpretation obj) ->
+  MorphismTypeInterpretation objInterp morph domain codomain ->
+  Type -> Type
+FunctorTypeInterpretation {obj} {domain} {codomain}
+  objInterp morphInterp functor =
+    functor ->
+      (objmap : FunctorObjmap obj ** FunctorMorphmap domain codomain objmap)
 
 public export
-record RefinedExpInterpretation (rec : RefinedExpClass) where
+record RefinedExpInterpretation (recat : RefinedExpCategory_Obj) where
   constructor RefinedExpInterpretations
+  REInt_Object : ObjectTypeInterpretation (RECat_Object recat)
+  REInt_Term : TermTypeInterpretation REInt_Object
+  REInt_Morphism :
+    MorphismTypeInterpretation
+      REInt_Object (RECat_Morphism recat)
+      (RECat_Morphism_Domain recat) (RECat_Morphism_Codomain recat)
+  REInt_PolyEndo :
+    FunctorTypeInterpretation REInt_Object REInt_Morphism (RECat_PolyEndo recat)
 
 -------------------------
 ---- Natural numbers ----
