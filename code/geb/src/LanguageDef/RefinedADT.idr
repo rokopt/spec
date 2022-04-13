@@ -382,9 +382,6 @@ data SubstCatObjF : Type -> Type where
 -- Generate morphisms for a category which can support at least substitution.
 public export
 data SubstCatMorphismF : Type -> Type -> Type where
-  SubstCatFreeMorphism :
-    MorphismF object carrier -> SubstCatMorphismF object carrier
-
   -- The left adjoint of the unique functor from the substitution category
   -- to the terminal category (which is the discrete one-object category).
   SubstFromInitial : object -> SubstCatMorphismF object carrier
@@ -419,13 +416,14 @@ data SubstCatMorphismF : Type -> Type -> Type where
 
 public export
 data RefinedSubstObjF : Type -> Type -> Type where
-  SubstAsRefined : SubstCatObjF object -> RefinedSubstObjF object morphism
-
   SubstEqualizer : object -> object -> morphism -> morphism ->
     RefinedSubstObjF object morphism
 
   SubstCoequalizer : object -> object -> morphism -> morphism ->
     RefinedSubstObjF object morphism
+
+public export
+data RefinedSubstMorphismF : Type -> Type -> Type where
 
 ----------------------------------
 ----------------------------------
@@ -462,6 +460,28 @@ data RefinedSubstObjF : Type -> Type -> Type where
 ----- Polynomial endofunctors ----
 ----------------------------------
 ----------------------------------
+
+public export
+data PolynomialFunctorF : Type -> Type -> Type where
+  -- See https://ncatlab.org/nlab/show/polynomial+functor#definition :
+  --
+  -- In a category `C`, objects `W`, `X`, `Y`, `Z` and morphisms:
+  --
+  --  `f`: `X -> W`
+  --  `g`: `X -> Y`
+  --  `h`: `Y -> Z`
+  --
+  -- determine a polynomial endofunctor from `C/W` to `C/Z` comprised of
+  -- the composition (domain to codomain):
+  --
+  --  `f*`: `C/W -> C/X` (pullback (or "base change") functor of `f`)
+  --  `Pi(g)`: `C/X -> C/Y` (dependent product)
+  --  `Sigma(h)`: `C/Y -> C/Z` (dependent sum)
+  --
+  -- (This is an endofunctor iff `W==Z`, and a non-dependent endofunctor
+  -- iff furthermore `W==Z==1` (where `1` is the terminal object of `C`).
+  PolyFunctorFromMorphisms : (w, x, y, z : object) -> (f, g, h : morphism) ->
+    PolynomialFunctorF object morphism
 
 -- Expressions are drawn from four categories determined by the presence
 -- or absence of each of the following pairs of universal properties:
