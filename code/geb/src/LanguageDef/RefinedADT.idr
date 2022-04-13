@@ -381,43 +381,82 @@ data SubstCatObjF : Type -> Type where
 
 -- Generate morphisms for a category which can support at least substitution.
 public export
-data SubstCatAlgebraF : Type -> Type -> Type where
+data SubstCatMorphismF : Type -> Type -> Type where
+  SubstCatFreeMorphism :
+    MorphismF object carrier -> SubstCatMorphismF object carrier
 
   -- The left adjoint of the unique functor from the substitution category
   -- to the terminal category (which is the discrete one-object category).
-  SubstFromInitial : object -> SubstCatAlgebraF object carrier
+  SubstFromInitial : object -> SubstCatMorphismF object carrier
 
   -- The right adjoint of the unique functor from the substitution category
   -- to the terminal category.
-  SubstToTerminal : object -> SubstCatAlgebraF object carrier
-
-  -- In the context of products and coproducts, and therefore of the
-  -- substitution category, the diagonal functor is the one from the
-  -- substitution category to the category of functors from the discrete
-  -- two-object category to the substitution category.
-  SubstDiagonal : (dom, cod : object) ->
-    carrier -> SubstCatAlgebraF object carrier
+  SubstToTerminal : object -> SubstCatMorphismF object carrier
 
   -- The right adjoint of the diagonal functor (the diagonal functor goes
   -- from the substitution category to the product category, so its adjoints
   -- go from the product category to the substitution category).
-  SubstProductIntro : (dom, dom', cod, cod' : object) ->
-    carrier -> carrier -> SubstCatAlgebraF object carrier
+  SubstProductIntro : (dom, cod, cod' : object) ->
+    carrier -> carrier -> SubstCatMorphismF object carrier
 
   -- The left projection of the counit of the product adjunction
   -- (which is a morphism in the substitution category).
-  SubstProductElimLeft : (dom, dom', cod, cod' : object) ->
-    carrier -> SubstCatAlgebraF object carrier
+  SubstProductElimLeft : (dom, cod : object) ->
+    carrier -> SubstCatMorphismF object carrier
 
   -- The right projection of the counit of the product adjunction.
-  SubstProductElimRight : (dom, dom', cod, cod' : object) ->
-    carrier -> SubstCatAlgebraF object carrier
+  SubstProductElimRight : (dom, cod : object) ->
+    carrier -> SubstCatMorphismF object carrier
 
-  -- The left adjoint of the diagonal functor.
-  SubstCoproductElim : (dom, dom', cod, cod' : object) ->
-    carrier -> carrier -> SubstCatAlgebraF object carrier
+  SubstCoproductIntroLeft : (dom, cod : object) ->
+    carrier -> SubstCatMorphismF object carrier
 
-  -- The left injection to the unit of the coproduct adjunction.
+  SubstCoproductIntroRight : (dom, cod : object) ->
+    carrier -> SubstCatMorphismF object carrier
+
+  SubstCoproductElim : (dom, dom', cod : object) ->
+    carrier -> carrier -> SubstCatMorphismF object carrier
+
+public export
+data RefinedSubstObjF : Type -> Type -> Type where
+  SubstAsRefined : SubstCatObjF object -> RefinedSubstObjF object morphism
+
+  SubstEqualizer : object -> object -> morphism -> morphism ->
+    RefinedSubstObjF object morphism
+
+  SubstCoequalizer : object -> object -> morphism -> morphism ->
+    RefinedSubstObjF object morphism
+
+----------------------------------
+----------------------------------
+----- Polynomial endofunctors ----
+----------------------------------
+----------------------------------
+
+-- Expressions are drawn from four categories determined by the presence
+-- or absence of each of the following pairs of universal properties:
+--
+--  - Equalizers & coequalizers
+--    (Categories with them are called "refined"; those without are "unrefined")
+--  - Initial algebras & terminal coalgebras
+--    (Categories with them are "first-order"; those without are "zeroth-order")
+--
+-- The zeroth-order categories may also be called "substitution" categories.
+--
+-- All four categories have each of the following pairs of universal properties:
+--
+--  - Initial objects & terminal objects
+--  - Products & coproducts
+--
+-- All the types until the end of the `Expression` section are zeroth-order,
+-- even though they _have_ initial algebras and terminal coalgebras, because
+-- they are all defined in the style of "datatypes à la carte" -- in effect,
+-- this means that we are programming in the category of polynomial functors
+-- of the zeroth-order categories.  At the end of the `Expression` section,
+-- we generate the full forms of expressions by taking the fixpoints and
+-- cofixpoints of the datatypes previously defined; those types live only in
+-- the first-order categories.
+
 ----------------------------------
 ----------------------------------
 ----- Polynomial endofunctors ----
@@ -523,9 +562,14 @@ data SubstEndofunctorF : Type -> Type -> Type where
 ---- Refined substitution category ----
 ---------------------------------------
 
+-- Generate objects of the refined substitution category.
+public export
+data RSubstObjF :
+    (obj, morph : Type) -> (domain, codomain : morph -> obj) -> Type where
+  RSubstObjInitial : RSubstObjF obj morph domain codomain
+
 public export
 data RefinedExpClass : Type where
-  RECl_Term : RefinedExpClass
   RECl_Object : RefinedExpClass
   RECl_Morphism : RefinedExpClass
   RECl_PolyEndo : RefinedExpClass
@@ -535,13 +579,11 @@ public export
 record RefinedExpCategory_Obj where
   constructor RefinedExpClassTypes
 
-  RECat_Term : Type
   RECat_Object : Type
   RECat_Morphism : Type
   RECat_PolyEndo : Type
   RECat_PolyNatTrans : Type
 
-  RECat_Term_Codomain : RECat_Term -> RECat_Object
   RECat_Morphism_Domain : RECat_Morphism -> RECat_Object
   RECat_Morphism_Codomain : RECat_Morphism -> RECat_Object
   RECat_PolyNatTrans_Domain : RECat_PolyNatTrans -> RECat_PolyEndo
@@ -551,16 +593,11 @@ public export
 record RefinedExpCategory_Equiv (recat : RefinedExpCategory_Obj) where
   constructor RefinedExpCategory_Equivalences
 
-  RECat_Term_Equiv : Type
   RECat_Object_Equiv : Type
   RECat_Morphism_Equiv : Type
   RECat_PolyEndo_Equiv : Type
   RECat_PolyNatTrans_Equiv : Type
 
-  RECat_TermEquiv_Left :
-    RECat_Term_Equiv -> RECat_Term recat
-  RECat_TermEquiv_Right :
-    RECat_Term_Equiv -> RECat_Term recat
   RECat_ObjectEquiv_Left :
     RECat_Object_Equiv -> RECat_Object recat
   RECat_ObjectEquiv_Right :
@@ -633,6 +670,12 @@ record RefinedExpInterpretation (recat : RefinedExpCategory_Obj) where
       (RECat_Morphism_Domain recat) (RECat_Morphism_Codomain recat)
   REInt_PolyEndo :
     FunctorTypeInterpretation REInt_Object REInt_Morphism (RECat_PolyEndo recat)
+
+public export
+record RefinedExpCategoryType where
+  constructor RefinedExpCategoryComponents
+  REC_Obj : RefinedExpCategory_Obj
+  REC_Int : RefinedExpInterpretation REC_Obj
 
 -------------------------
 ---- Natural numbers ----
