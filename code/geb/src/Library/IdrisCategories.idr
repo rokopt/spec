@@ -4,11 +4,11 @@ import Library.IdrisUtils
 
 %default total
 
-----------------------------------
-----------------------------------
----- Idris product categories ----
-----------------------------------
-----------------------------------
+----------------------------------------------
+----------------------------------------------
+---- Idris product and functor categories ----
+----------------------------------------------
+----------------------------------------------
 
 -- The objects of a product category, where the product is represented by
 -- a function from an index type (as opposed to by a pair or a list -- the
@@ -85,11 +85,11 @@ public export
 FunctorCatEndofunctor : Type
 FunctorCatEndofunctor = ProductCatEndofunctor Type
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
----- Categorial algebra on Idris universe categories and product categories ----
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+---- Categorial algebra on Idris categories ----
+------------------------------------------------
+------------------------------------------------
 
 -------------------------------------
 ---- F-algebras and F-coalgebras ----
@@ -111,6 +111,7 @@ ProductCatAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
 ProductCatAlgebra f a = ProductCatMorphism (f a) a
 
+-- The version of `Coalgebra` for an Idris product category.
 public export
 ProductCatCoalgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
@@ -342,6 +343,16 @@ public export
 inCofreeTree : {a : Type} -> {f : Type -> Type} ->
   a -> Algebra f (CofreeComonad f a)
 inCofreeTree x fx = InCofree $ TreeNode x fx
+
+public export
+inCofreeTreeProduct : {idx : Type} ->
+  {f : ProductCatObjectEndoMap idx} ->
+  {l : ProductCatObject idx} ->
+  {i : idx} ->
+  l i ->
+  f (ProductCatCofreeComonad f l) i ->
+  ProductCatCofreeComonad f l i
+inCofreeTreeProduct x fx = InCofreeProduct $ ProductCatTreeNode x fx
 
 public export
 outCofree : {f : Type -> Type} -> {a : Type} ->
