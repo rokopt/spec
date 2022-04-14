@@ -665,14 +665,27 @@ EqFunctionExt f f Refl _ = Refl
 PredOverRelGenF : {t : Type} -> RelationOn t -> PredFunctor t
 PredOverRelGenF {t} rel pred x = (x' : t ** (rel x x', pred x'))
 
+PredOverRel : {t : Type} -> RelationOn t -> PredFunctor t
+PredOverRel = FreeMPredicate . PredOverRelGenF
+
 record FinBicompT where
   constructor FBCType
   FBCTotal : Type
   FBCPred : PredicateOn FBCTotal
   FBCEquiv : RelationOn FBCTotal
 
+EffectiveEquiv : (t : FinBicompT) -> RelationOn (FBCTotal t)
+EffectiveEquiv t = FreeMEquiv (FBCEquiv t)
+
 EffectivePredGenF : (t : FinBicompT) -> PredicateOn (FBCTotal t)
 EffectivePredGenF (FBCType tot pred equiv) = PredOverRelGenF {t=tot} equiv pred
+
+EffectivePred : (t : FinBicompT) -> PredicateOn (FBCTotal t)
+EffectivePred (FBCType tot pred equiv) =
+  PredOverRel {t=tot} (FreeMEquiv equiv) pred
+
+EffectiveType : FinBicompT -> FinBicompT
+EffectiveType t = {FBCPred := EffectivePred t, FBCEquiv := EffectiveEquiv t} t
 
 record FBCMorphism (domain, codomain : FinBicompT) where
   constructor FBCMorph
