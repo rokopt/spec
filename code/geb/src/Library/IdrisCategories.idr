@@ -550,17 +550,17 @@ CoproductRelation rel rel' (Left el1) (Right el2') = Void
 CoproductRelation rel rel' (Right el1') (Left el2) = Void
 CoproductRelation rel rel' (Right el1') (Right el2') = rel' el1' el2'
 
-EqualOverRelation : {a, b : Type} ->
+EqualOverRelations : {a, b : Type} ->
   RelationOn a -> RelationOn b -> (f, g : a -> b) -> Type
-EqualOverRelation rel rel' f g =
+EqualOverRelations rel rel' f g =
   (el, el' : a) -> rel el el' -> rel' (f el) (g el')
 
-PreservesRelation : {a, b : Type} ->
+PreservesRelations : {a, b : Type} ->
   RelationOn a -> RelationOn b -> (a -> b) -> Type
-PreservesRelation rel rel' f = EqualOverRelation rel rel' f f
+PreservesRelations rel rel' f = EqualOverRelations rel rel' f f
 
 RelMorphism : {a, b : Type} -> RelationOn a -> RelationOn b -> Type
-RelMorphism rel rel' = DPair (a -> b) (PreservesRelation rel rel')
+RelMorphism rel rel' = DPair (a -> b) (PreservesRelations rel rel')
 
 RelFunctor : Type -> Type
 RelFunctor t = RelationOn t -> RelationOn t
@@ -645,6 +645,39 @@ ExtEq {a} f g = (el : a) -> f el = g el
 EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
 EqFunctionExt f f Refl _ = Refl
 
+-----------------------------------
+---- Finitely bicomplete types ----
+-----------------------------------
+
+-- A finitely bicomplete type is one with all finite limits and colimits.
+-- That condition is equivalent to having all of either of the following:
+--
+--  - Finite products, finite coproducts, equalizers, coequalizers
+--  - Initial object, terminal object, pullbacks, pushouts
+--
+-- Pullbacks provide dependent types, and pushouts provide quotient types.
+-- A bicomplete type therefore has both, and they work together, in the
+-- sense that the equalizer used by a pullback respects the coequalizer
+-- used by a pushout:  from the perspective of a host metalanguage without
+-- quotient types, we could say that the type dependency uses an equivalence
+-- relation rather than a strict equality.
+
+PredOverRelGenF : {t : Type} -> RelationOn t -> PredFunctor t
+PredOverRelGenF {t} rel pred x = (x' : t ** (rel x x', pred x'))
+
+record FinBicompT where
+  constructor FBCType
+  FBCTotal : Type
+  FBCPred : PredicateOn FBCTotal
+  FBCEquiv : RelationOn FBCTotal
+
+EffectivePredGenF : (t : FinBicompT) -> PredicateOn (FBCTotal t)
+EffectivePredGenF (FBCType tot pred equiv) = PredOverRelGenF {t=tot} equiv pred
+
+record FBCMorphism (domain, codomain : FinBicompT) where
+  constructor FBCMorph
+  FBCFunction : FBCTotal domain -> FBCTotal codomain
+
 ------------------------
 ---- Quotient types ----
 ------------------------
@@ -662,7 +695,8 @@ QuotientRel : (t : QuotientType) -> QuotientRelType t
 QuotientRel (_ ** r) = r
 
 QuotientMorphism : QuotientType -> QuotientType -> Type
-QuotientMorphism (t ** r) (t' ** r') = (m : t -> t' ** PreservesRelation r r' m)
+QuotientMorphism (t ** r) (t' ** r') =
+  (m : t -> t' ** PreservesRelations r r' m)
 
 QuotientVoid : QuotientType
 QuotientVoid = (Void ** VoidRel)
@@ -718,16 +752,6 @@ QuotientProductF f g qt = QuotientProduct (f qt) (g qt)
 
 QuotientCoproductF : QFunctor -> QFunctor -> QFunctor
 QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
-
------------------------------------
----- Finitely bicomplete types ----
------------------------------------
-
--- A finitely bicomplete type is one with all small limits and colimits.
--- That condition is equivalent to having all of either of the following:
---
---  - Finite products, finite coproducts, equalizers, coequalizers
---  - Initial object, terminal object, pullbacks, pushouts
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
