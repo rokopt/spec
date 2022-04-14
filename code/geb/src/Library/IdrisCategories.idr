@@ -474,6 +474,54 @@ CoproductPred : PredicateOn a -> PredicateOn b -> PredicateOn (Either a b)
 CoproductPred p p' (Left el) = p el
 CoproductPred p p' (Right el') = p' el'
 
+PreservesPredicate : {a, b : Type} -> PredicateOn a -> PredicateOn b ->
+  (a -> b) -> Type
+PreservesPredicate p p' f = (el : a) -> p el -> p' (f el)
+
+PredMorphism : {a, b : Type} -> PredicateOn a -> PredicateOn b -> Type
+PredMorphism p p' = DPair (a -> b) (PreservesPredicate p p')
+
+PredFunctor : Type -> Type
+PredFunctor t = PredicateOn t -> PredicateOn t
+
+data PredicateTermF : {t: Type} ->
+    (f : PredFunctor t) -> (v : PredicateOn t) -> PredFunctor t where
+  PredicateVar :
+    {t : Type} -> {f : PredFunctor t} ->
+    {v, carrier : PredicateOn t} -> {el : t} ->
+    v el -> PredicateTermF f {t} v carrier el
+  PredicateComposite :
+    {t : Type} -> {f : PredFunctor t} ->
+    {v, carrier : PredicateOn t} -> {el : t} ->
+    f carrier el -> PredicateTermF f v carrier el
+
+data FreeMPredicate :
+    {t : Type} -> PredFunctor t -> PredFunctor t where
+  InFreePredicate :
+    {t : Type} -> {f : PredFunctor t} -> {rel : PredicateOn t} -> {el : t} ->
+    PredicateTermF f rel (FreeMPredicate f rel) el ->
+    FreeMPredicate f rel el
+
+PredicateMu : {t: Type} -> PredFunctor t -> PredicateOn t
+PredicateMu {t} f = FreeMPredicate f $ EmptyPred t
+
+data PredicateTreeF : {t: Type} ->
+    (f : PredFunctor t) -> (v : PredicateOn t) -> PredFunctor t where
+  PredicateNode :
+    {t : Type} -> {f : PredFunctor t} ->
+    {v, carrier : PredicateOn t} -> {el : t} ->
+    v el -> f carrier el -> PredicateTreeF f v carrier el
+
+data CofreeCMPredicate :
+    {t : Type} -> PredFunctor t -> PredFunctor t where
+  InCofreePredicate :
+    {t : Type} -> {f : PredFunctor t} -> {rel : PredicateOn t} -> {el : t} ->
+    Inf (PredicateTreeF f rel (CofreeCMPredicate f rel) el) ->
+    CofreeCMPredicate f rel el
+
+PredicateNu : {t: Type} -> PredFunctor t -> PredicateOn t
+PredicateNu {t} f = CofreeCMPredicate f $ FullPred t
+
 -------------------
 ---- Relations ----
 -------------------
