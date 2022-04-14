@@ -502,9 +502,6 @@ data RelationTermF : {t: Type} ->
     {v, carrier : RelationOn t} -> {el, el' : t} ->
     f carrier el el' -> RelationTermF f v carrier el el'
 
-RelationClosureF : {t: Type} -> RelFunctor t -> RelationOn t -> RelationOn t
-RelationClosureF functor rel = RelationTermF functor rel rel
-
 data FreeMRelation :
     {t : Type} -> RelFunctor t -> RelFunctor t where
   InFreeRelation :
@@ -545,39 +542,28 @@ data EquivGenF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
     {el, el', el'' : t} ->
     carrier el el' -> carrier el' el'' -> EquivGenF carrier el el''
 
-EquivClosureF : {t: Type} -> RelationOn t -> RelationOn t
-EquivClosureF = RelationClosureF EquivGenF
-
-FreeMEquiv : {t : Type} -> RelationOn t -> RelationOn t
+FreeMEquiv : {t : Type} -> RelFunctor t
 FreeMEquiv = FreeMRelation EquivGenF
 
-CofreeCMEquiv : {t : Type} -> RelationOn t -> RelationOn t
+CofreeCMEquiv : {t : Type} -> RelFunctor t
 CofreeCMEquiv = CofreeCMRelation EquivGenF
 
-EqualizerRelationGenF :
-  (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn a
-EqualizerRelationGenF f g rel rel' el el' =
-  (rel el el', rel' (f el) (g el'))
+-- Category theory's equalizer, parameterized over a relation on
+-- the codomain (which serves as equality on the codomain, allowing
+-- the representation of equalizers on types whose equality is not
+-- that of the metalanguage (Idris)).
+EqualizerRelationGenF : (f, g : a -> b) -> RelationOn b -> RelationOn a
+EqualizerRelationGenF f g rel el el' = rel (f el) (g el')
 
-FreeEqualizerRelation : {a, b : _} ->
-  (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn a
-FreeEqualizerRelation f g rel rel' =
-  FreeMEquiv (EqualizerRelationGenF f g rel rel')
-
-MappedFromRelated : {a, b: _} ->
+-- Category theory's coequalizer, parameterized over a relation on
+-- the domain (which serves as equality on the domain, allowing
+-- the representation of coequalizers on types whose equality is not
+-- that of the metalanguage (Idris)).
+CoequalizerRelationGenF : {a, b: _} ->
   (f, g : a -> b) -> RelationOn a -> RelationOn b
-MappedFromRelated {a} f g rel el el' =
-  (ela : a ** ela' : a ** (rel ela ela, f ela = el, g ela' = el'))
-
-CoequalizerRelationGenF : {a, b : _} ->
-  (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn b
-CoequalizerRelationGenF {a} {b} f g rel rel' el el' =
-  Either (rel' el el') (MappedFromRelated f g rel el el')
-
-FreeCoequalizerRelation : {a, b : _} ->
-  (f, g : a -> b) -> RelationOn a -> RelationOn b -> RelationOn b
-FreeCoequalizerRelation f g rel rel' =
-  FreeMEquiv (CoequalizerRelationGenF f g rel rel')
+CoequalizerRelationGenF {a} f g rel el el' =
+  (elas : (a, a) **
+   (rel (fst elas) (snd elas), f (fst elas) = el, g (snd elas) = el'))
 
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
@@ -622,13 +608,17 @@ QuotientEqualizer :
   (dom, cod : QuotientType) -> (f, g : QuotientTot dom -> QuotientTot cod) ->
   QuotientType
 QuotientEqualizer (domtot ** domrel) (_ ** codrel) f g =
-  (domtot ** FreeEqualizerRelation f g domrel codrel)
+  ((x : domtot ** codrel (f x) (g x)) **
+   (\x, x' => domrel (fst x) (fst x')))
 
 QuotientCoequalizer :
   (dom, cod : QuotientType) -> (f, g : QuotientTot dom -> QuotientTot cod) ->
   QuotientType
-QuotientCoequalizer (_ ** domrel) (codtot ** codrel) f g =
-  (codtot ** FreeCoequalizerRelation f g domrel codrel)
+QuotientCoequalizer (domtot ** domrel) (codtot ** codrel) f g =
+  (codtot ** (\x, x' =>
+   Either
+    (codrel x x')
+    (elas : (domtot, domtot) ** codrel (f (fst elas)) (g (snd elas)))))
 
 QFunctor : Type
 QFunctor = QuotientType -> QuotientType
