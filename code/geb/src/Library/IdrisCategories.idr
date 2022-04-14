@@ -12,10 +12,16 @@ import Library.IdrisUtils
 
 -- The objects of a product category, where the product is represented by
 -- a function from an index type (as opposed to by a pair or a list -- the
--- function type allows the assignment of names from a user-selected domain).
+-- function type allows the assignment of names from a user-selected domain,
+-- and the definition of the category of endofunctors on Idris's `Type`
+-- by specializing the index to `Type`).
 public export
 ProductCatObject : Type -> Type
 ProductCatObject idx = idx -> Type
+
+public export
+FunctorCatObject : Type
+FunctorCatObject = ProductCatObject Type
 
 public export
 ProductCatMorphism : {idx : Type} ->
@@ -23,12 +29,24 @@ ProductCatMorphism : {idx : Type} ->
 ProductCatMorphism {idx} dom cod = (i : idx) -> dom i -> cod i
 
 public export
+FunctorCatMorphism : FunctorCatObject -> FunctorCatObject -> Type
+FunctorCatMorphism = ProductCatMorphism {idx=Type}
+
+public export
 ProductCatObjectMap : Type -> Type -> Type
 ProductCatObjectMap idx idx' = ProductCatObject idx -> ProductCatObject idx'
 
 public export
+FunctorCatObjectMap : Type
+FunctorCatObjectMap = ProductCatObjectMap Type Type
+
+public export
 ProductCatObjectEndoMap : Type -> Type
 ProductCatObjectEndoMap idx = ProductCatObjectMap idx idx
+
+public export
+FunctorCatObjectEndoMap : Type
+FunctorCatObjectEndoMap = ProductCatObjectEndoMap Type
 
 public export
 ProductCatMorphismMap :
@@ -39,8 +57,16 @@ ProductCatMorphismMap {idx} {idx'} objmap =
   ProductCatMorphism (objmap dom) (objmap cod)
 
 public export
+FunctorCatMorphismMap : FunctorCatObjectMap -> Type
+FunctorCatMorphismMap = ProductCatMorphismMap {idx=Type} {idx'=Type}
+
+public export
 ProductCatMorphismEndoMap : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
 ProductCatMorphismEndoMap = ProductCatMorphismMap
+
+public export
+FunctorCatMorphismEndoMap : FunctorCatObjectEndoMap -> Type
+FunctorCatMorphismEndoMap = ProductCatMorphismEndoMap {idx=Type}
 
 public export
 ProductCatFunctor : Type -> Type -> Type
@@ -48,8 +74,16 @@ ProductCatFunctor idx idx' =
   DPair (ProductCatObjectMap idx idx') ProductCatMorphismMap
 
 public export
+FunctorCatFunctor : Type
+FunctorCatFunctor = ProductCatFunctor Type Type
+
+public export
 ProductCatEndofunctor : Type -> Type
 ProductCatEndofunctor idx = ProductCatFunctor idx idx
+
+public export
+FunctorCatEndofunctor : Type
+FunctorCatEndofunctor = ProductCatEndofunctor Type
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
