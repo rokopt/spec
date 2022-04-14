@@ -488,6 +488,11 @@ public export
 Catamorphism : (Type -> Type) -> Type
 Catamorphism f = (a : Type) -> Algebra f a -> Mu f -> a
 
+-- Non-parameterized anamorphism (unfold).
+public export
+Anamorphism : (Type -> Type) -> Type
+Anamorphism f = (a : Type) -> Coalgebra f a -> a -> Nu f
+
 ---------------------------------------------------------
 ---------------------------------------------------------
 ---- Relations, equivalences, and quotients in Idris ----
