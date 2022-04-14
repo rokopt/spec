@@ -425,6 +425,23 @@ data RefinedSubstObjF : Type -> Type -> Type where
 public export
 data RefinedSubstMorphismF : Type -> Type -> Type where
 
+public export
+SubstCatObjFree : Type -> Type
+SubstCatObjFree = FreeMonad SubstCatObjF
+
+public export
+SubstCatObj : Type
+SubstCatObj = Mu SubstCatObjF
+
+-----------------------------------------------------------
+-----------------------------------------------------------
+---- Substitution category in the metalanguage (Idris) ----
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+-- public export
+-- data MetaSubstCatObjAlg : Type -> Type) where
+
 ----------------------------------
 ----------------------------------
 ----- Polynomial endofunctors ----
@@ -498,6 +515,20 @@ data CartesianTransformationF : Type -> Type -> Type -> Type where
     CartesianTransformationFromMorphism:
       (f1 : object) -> (f : morphism) -> (g : functor) ->
       CartesianTransformationF object morphism functor
+
+public export
+data AdjunctionF : Type -> Type -> Type where
+  AdjunctionFromUnits : (l, r : functor) -> (unit, counit : natTrans) ->
+    AdjunctionF functor natTrans
+
+public export
+data ConjugateNatTransF : Type -> Type where
+  -- See
+  -- https://unapologetic.wordpress.com/2007/07/30/transformations-of-adjoints/
+  -- for the definition of "conjugate natural transformations" and how
+  -- they can be used to transform adjoints.
+  ConjugateNatTransFromPair :
+    natTrans -> natTrans -> ConjugateNatTransF natTrans
 
 -- Expressions are drawn from four categories determined by the presence
 -- or absence of each of the following pairs of universal properties:
@@ -807,8 +838,8 @@ NSList : Type
 NSList = NSExpType NSexpList
 
 public export
-nsexpCata : ProductCatamorphism NSexpTypeFunctor v carrier
-nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
+nsexpCata : ProductFreeCatamorphism NSexpTypeFunctor
+nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
   NSexpNat => nsexpCataNat term
   NSexpExp => nsexpCataExp term
   NSexpList => nsexpCataList term
@@ -820,13 +851,14 @@ nsexpCata alg type (InFreeProduct type term) = alg type $ case type of
         (ProductCatFreeMonad NSexpTypeFunctor v) NSexpNat
         ->
       ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpNat
-    nsexpCataNat (ProductCatTermVar v) = ProductCatTermVar v
+    nsexpCataNat (ProductCatTermVar t) = ProductCatTermVar t
     nsexpCataNat (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
         NSatomF a => NSatomF $ case a of
           ZeroF => ZeroF
           SuccF n => case n of
-            InFreeProduct NSexpNat n => SuccF $ alg NSexpNat $ nsexpCataNat n
+            InFreeProduct NSexpNat n =>
+              SuccF $ alg NSexpNat $ nsexpCataNat n
 
     nsexpCataExp :
       ProductCatTermFunctor

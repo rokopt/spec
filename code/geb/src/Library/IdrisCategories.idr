@@ -455,35 +455,38 @@ NuProduct f = ProductCatCofreeComonad f (const ())
 
 -- Not all endofunctors have initial algebras.  If an endofunctor
 -- _does_ have an initial algebra, then this is the signature of
--- its catamorphism (fold).
+-- its parameterized catamorphism (fold).
 public export
-Catamorphism : (Type -> Type) -> Type -> Type -> Type
-Catamorphism f v a = FreeAlgebra f v a -> FreeMonad f v -> a
+FreeCatamorphism : (Type -> Type) -> Type
+FreeCatamorphism f =
+  (v, a : Type) -> FreeAlgebra f v a -> FreeMonad f v -> a
 
 public export
-ProductCatamorphism : {idx : Type} ->
-  ProductCatObjectEndoMap idx ->
-  ProductCatObject idx ->
-  ProductCatObject idx ->
-  Type
-ProductCatamorphism f v a =
+ProductFreeCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
+ProductFreeCatamorphism f =
+  (v, a : ProductCatObject idx) ->
   ProductCatFreeAlgebra f v a ->
   ProductCatMorphism (ProductCatFreeMonad f v) a
 
 -- Not all endofunctors have terminal coalgebras.  If an endofunctor
 -- _does_ have a terminal coalgebra, then this is the signature of
--- its anamorphism (unfold).
-Anamorphism : (Type -> Type) -> Type -> Type -> Type
-Anamorphism f v l = CofreeCoalgebra f v l -> l -> CofreeComonad f v
+-- its parameterized anamorphism (unfold).
+FreeAnamorphism : (Type -> Type) -> Type
+FreeAnamorphism f =
+  (v, l : Type) -> CofreeCoalgebra f v l -> l -> CofreeComonad f v
 
-ProductAnamorphism : {idx : Type} ->
+ProductFreeAnamorphism : {idx : Type} ->
   ProductCatObjectEndoMap idx ->
-  ProductCatObject idx ->
-  ProductCatObject idx ->
   Type
-ProductAnamorphism f v l =
+ProductFreeAnamorphism f =
+  (v, l : ProductCatObject idx) ->
   ProductCatCofreeCoalgebra f v l ->
   ProductCatMorphism (ProductCatCofreeComonad f v) l
+
+-- Non-parameterized catamorphism (fold).
+public export
+Catamorphism : (Type -> Type) -> Type
+Catamorphism f = (a : Type) -> Algebra f a -> Mu f -> a
 
 ---------------------------------------------------------
 ---------------------------------------------------------
