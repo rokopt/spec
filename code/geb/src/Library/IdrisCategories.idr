@@ -474,12 +474,12 @@ CoproductPred : PredicateOn a -> PredicateOn b -> PredicateOn (Either a b)
 CoproductPred p p' (Left el) = p el
 CoproductPred p p' (Right el') = p' el'
 
-PreservesPredicate : {a, b : Type} -> PredicateOn a -> PredicateOn b ->
+PreservesPredicates : {a, b : Type} -> PredicateOn a -> PredicateOn b ->
   (a -> b) -> Type
-PreservesPredicate p p' f = (el : a) -> p el -> p' (f el)
+PreservesPredicates p p' f = (el : a) -> p el -> p' (f el)
 
 PredMorphism : {a, b : Type} -> PredicateOn a -> PredicateOn b -> Type
-PredMorphism p p' = DPair (a -> b) (PreservesPredicate p p')
+PredMorphism p p' = DPair (a -> b) (PreservesPredicates p p')
 
 PredFunctor : Type -> Type
 PredFunctor t = PredicateOn t -> PredicateOn t
@@ -690,6 +690,16 @@ EffectiveType t = {FBCPred := EffectivePred t, FBCEquiv := EffectiveEquiv t} t
 record FBCMorphism (domain, codomain : FinBicompT) where
   constructor FBCMorph
   FBCFunction : FBCTotal domain -> FBCTotal codomain
+  FBCPreservesPred :
+    PreservesPredicates
+      (EffectivePred domain)
+      (EffectivePred codomain)
+      FBCFunction
+  FBCPreservesEquiv :
+    PreservesRelations
+      (EffectiveEquiv domain)
+      (EffectiveEquiv codomain)
+      FBCFunction
 
 ------------------------
 ---- Quotient types ----
