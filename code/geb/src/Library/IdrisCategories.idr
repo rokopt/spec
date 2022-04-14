@@ -4,116 +4,6 @@ import Library.IdrisUtils
 
 %default total
 
-------------------------------------------
-------------------------------------------
----- Interpreting categories in Idris ----
-------------------------------------------
-------------------------------------------
-
--------------------------
----- Directed graphs ----
--------------------------
-
-public export
-DigraphEdgeFibration : Type -> Type -> Type
-DigraphEdgeFibration vertex edge = edge -> (vertex, vertex)
-
-public export
-record DirectedGraph where
-  constructor DirectedGraphComponents
-  VertexType : Type
-  EdgeType : Type
-
-  -- Returns the source and target.  This function therefore
-  -- fibers the type of edges by the type of vertices (it
-  -- forms a bundle from edges to vertices, with the type
-  -- of edges as the total space, the type of vertices as
-  -- the base space, and this function as the projection; if
-  -- the vertex and edge types are objects of a category, then
-  -- this fibration (which is a morphism) can also be viewed
-  -- (together with the edge object) as an object of the slice
-  -- category over the type of pairs of vertices).
-  EdgeProjection : DigraphEdgeFibration VertexType EdgeType
-
-public export
-graphSource : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
-graphSource {graph} = fst . EdgeProjection graph
-
-public export
-graphTarget : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
-graphTarget {graph} = snd . EdgeProjection graph
-
-------------------------------
----- Graphs as categories ----
-------------------------------
-
--- Given an interpretation of a vertex type into the Idris type system,
--- this is the type of an interpretation of edges that translates
--- source and target to domain and codomain, and path concatenation to
--- composition.
-public export
-EdgeInterpretation : {vertex, edge : Type} ->
-  (vint : vertex -> Type) -> (fibration : DigraphEdgeFibration vertex edge) ->
-  Type
-EdgeInterpretation vint {edge} fibration =
-  (e : edge) -> vint (fst (fibration e)) -> vint (snd (fibration e))
-
--- Implementing this interface provides a way of interpreting a directed
--- graph into the Idris type system as a category.  (This induces a closure
--- of the directed graph by paths -- producing a free category on the
--- graph -- using composition in the Idris type system.)
-public export
-record DigraphCategoryInterpretation (graph : DirectedGraph) where
-  constructor DigraphCategoryInterpretations
-  DGObjectInterpretation :
-    VertexType graph -> Type
-  DGMorphismInterpretation :
-    EdgeInterpretation DGObjectInterpretation (EdgeProjection graph)
-
-public export
-record InterpretedDigraph where
-  constructor InterpretedDigraphComponents
-  UnderlyingGraph : DirectedGraph
-  GraphInterpretation : DigraphCategoryInterpretation UnderlyingGraph
-
--------------------------------------
----- Graphs as higher categories ----
--------------------------------------
-
-public export
-record HigherDigraph where
-  constructor HigherDigraphComponents
-
-  CategoryType : Type
-  ObjectType : Type
-  MorphismType : Type
-  FunctorType : Type
-  NatTransType : Type
-  AdjunctionType : Type
-
-  ObjectFibration : ObjectType -> CategoryType
-
-  MorphismFibration : DigraphEdgeFibration ObjectType MorphismType
-
-  FunctorFibration : DigraphEdgeFibration CategoryType FunctorType
-
-  NatTransFibration : DigraphEdgeFibration FunctorType NatTransType
-
-    -- By convention:
-    --  (Left adjoint, right adjoint, counit, unit)
-  AdjunctionFibration : AdjunctionType ->
-    (FunctorType, FunctorType, NatTransType, NatTransType)
-
-public export
-record HigherDigraphInterpretation (hdg : HigherDigraph) where
-  constructor HigherDigraphInterpretations
-
-public export
-record InterpretedHigherDigraph where
-  constructor InterpretedHigherDigraphComponents
-  UnderlyingHigherGraph : HigherDigraph
-  HigherGraphInterpretation : HigherDigraphInterpretation UnderlyingHigherGraph
-
 ----------------------------------
 ----------------------------------
 ---- Idris product categories ----
@@ -1026,3 +916,113 @@ data IsPolynomial : (Type -> Type) -> Type where
     IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSCoproductF f g
   FreePoly : IsPolynomial f -> IsPolynomial $ FreeMonad f
   CofreePoly : IsPolynomial f -> IsPolynomial $ CofreeComonad f
+
+------------------------------------------
+------------------------------------------
+---- Interpreting categories in Idris ----
+------------------------------------------
+------------------------------------------
+
+-------------------------
+---- Directed graphs ----
+-------------------------
+
+public export
+DigraphEdgeFibration : Type -> Type -> Type
+DigraphEdgeFibration vertex edge = edge -> (vertex, vertex)
+
+public export
+record DirectedGraph where
+  constructor DirectedGraphComponents
+  VertexType : Type
+  EdgeType : Type
+
+  -- Returns the source and target.  This function therefore
+  -- fibers the type of edges by the type of vertices (it
+  -- forms a bundle from edges to vertices, with the type
+  -- of edges as the total space, the type of vertices as
+  -- the base space, and this function as the projection; if
+  -- the vertex and edge types are objects of a category, then
+  -- this fibration (which is a morphism) can also be viewed
+  -- (together with the edge object) as an object of the slice
+  -- category over the type of pairs of vertices).
+  EdgeProjection : DigraphEdgeFibration VertexType EdgeType
+
+public export
+graphSource : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
+graphSource {graph} = fst . EdgeProjection graph
+
+public export
+graphTarget : {graph : DirectedGraph} -> EdgeType graph -> VertexType graph
+graphTarget {graph} = snd . EdgeProjection graph
+
+------------------------------
+---- Graphs as categories ----
+------------------------------
+
+-- Given an interpretation of a vertex type into the Idris type system,
+-- this is the type of an interpretation of edges that translates
+-- source and target to domain and codomain, and path concatenation to
+-- composition.
+public export
+EdgeInterpretation : {vertex, edge : Type} ->
+  (vint : vertex -> Type) -> (fibration : DigraphEdgeFibration vertex edge) ->
+  Type
+EdgeInterpretation vint {edge} fibration =
+  (e : edge) -> vint (fst (fibration e)) -> vint (snd (fibration e))
+
+-- Implementing this interface provides a way of interpreting a directed
+-- graph into the Idris type system as a category.  (This induces a closure
+-- of the directed graph by paths -- producing a free category on the
+-- graph -- using composition in the Idris type system.)
+public export
+record DigraphCategoryInterpretation (graph : DirectedGraph) where
+  constructor DigraphCategoryInterpretations
+  DGObjectInterpretation :
+    VertexType graph -> Type
+  DGMorphismInterpretation :
+    EdgeInterpretation DGObjectInterpretation (EdgeProjection graph)
+
+public export
+record InterpretedDigraph where
+  constructor InterpretedDigraphComponents
+  UnderlyingGraph : DirectedGraph
+  GraphInterpretation : DigraphCategoryInterpretation UnderlyingGraph
+
+-------------------------------------
+---- Graphs as higher categories ----
+-------------------------------------
+
+public export
+record HigherDigraph where
+  constructor HigherDigraphComponents
+
+  CategoryType : Type
+  ObjectType : Type
+  MorphismType : Type
+  FunctorType : Type
+  NatTransType : Type
+  AdjunctionType : Type
+
+  ObjectFibration : ObjectType -> CategoryType
+
+  MorphismFibration : DigraphEdgeFibration ObjectType MorphismType
+
+  FunctorFibration : DigraphEdgeFibration CategoryType FunctorType
+
+  NatTransFibration : DigraphEdgeFibration FunctorType NatTransType
+
+    -- By convention:
+    --  (Left adjoint, right adjoint, counit, unit)
+  AdjunctionFibration : AdjunctionType ->
+    (FunctorType, FunctorType, NatTransType, NatTransType)
+
+public export
+record HigherDigraphInterpretation (hdg : HigherDigraph) where
+  constructor HigherDigraphInterpretations
+
+public export
+record InterpretedHigherDigraph where
+  constructor InterpretedHigherDigraphComponents
+  UnderlyingHigherGraph : HigherDigraph
+  HigherGraphInterpretation : HigherDigraphInterpretation UnderlyingHigherGraph
