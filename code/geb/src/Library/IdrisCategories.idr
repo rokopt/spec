@@ -423,10 +423,24 @@ public export
 Catamorphism : (Type -> Type) -> Type
 Catamorphism f = (a : Type) -> Algebra f a -> Mu f -> a
 
+public export
+ProductCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
+ProductCatamorphism {idx} f =
+  (a : ProductCatObject idx) ->
+  ProductCatAlgebra f a ->
+  ProductCatMorphism (MuProduct f) a
+
 -- Non-parameterized anamorphism (unfold).
 public export
 Anamorphism : (Type -> Type) -> Type
 Anamorphism f = (a : Type) -> Coalgebra f a -> a -> Nu f
+
+public export
+ProductAnamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
+ProductAnamorphism {idx} f =
+  (a : ProductCatObject idx) ->
+  ProductCatCoalgebra f a ->
+  ProductCatMorphism a (NuProduct f)
 
 ---------------------------------------------------------
 ---------------------------------------------------------
