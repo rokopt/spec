@@ -442,11 +442,37 @@ ProductAnamorphism {idx} f =
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
 
----------------------------------------------------------
----------------------------------------------------------
----- Relations, equivalences, and quotients in Idris ----
----------------------------------------------------------
----------------------------------------------------------
+------------------------------------------------------
+------------------------------------------------------
+---- Predicates, relations, equivalences in Idris ----
+------------------------------------------------------
+------------------------------------------------------
+
+--------------------
+---- Predicates ----
+--------------------
+
+PredicateOn : Type -> Type
+PredicateOn type = type -> Type
+
+EmptyPred : (t : Type) -> PredicateOn t
+EmptyPred t el = Void
+
+VoidPred : PredicateOn Void
+VoidPred v = void v
+
+FullPred : (t : Type) -> PredicateOn t
+FullPred t el = ()
+
+UnitPred : PredicateOn Unit
+UnitPred = FullPred ()
+
+ProductPred : PredicateOn a -> PredicateOn b -> PredicateOn (a, b)
+ProductPred p p' (el, el') = (p el, p' el')
+
+CoproductPred : PredicateOn a -> PredicateOn b -> PredicateOn (Either a b)
+CoproductPred p p' (Left el) = p el
+CoproductPred p p' (Right el') = p' el'
 
 -------------------
 ---- Relations ----
@@ -533,7 +559,7 @@ RelationNu {t} f = CofreeCMRelation f $ FullRel t
 ---- Equivalences ----
 ----------------------
 
-data EquivGenF : {t : Type} -> (carrier : RelationOn t) -> RelationOn t where
+data EquivGenF : {t : Type} -> RelFunctor t where
   EquivRefl : {t : Type} -> {carrier : RelationOn t} ->
     {el, el' : t} -> el = el' -> EquivGenF carrier el el
   EquivSym : {t : Type} -> {carrier : RelationOn t} -> {el, el' : t} ->
@@ -644,6 +670,16 @@ QuotientProductF f g qt = QuotientProduct (f qt) (g qt)
 
 QuotientCoproductF : QFunctor -> QFunctor -> QFunctor
 QuotientCoproductF f g qt = QuotientCoproduct (f qt) (g qt)
+
+-----------------------------------
+---- Finitely bicomplete types ----
+-----------------------------------
+
+-- A finitely bicomplete type is one with all small limits and colimits.
+-- That condition is equivalent to having all of either of the following:
+--
+--  - Finite products, finite coproducts, equalizers, coequalizers
+--  - Initial object, terminal object, pullbacks, pushouts
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
