@@ -618,7 +618,8 @@ QuotientCoequalizer (domtot ** domrel) (codtot ** codrel) f g =
   (codtot ** (\x, x' =>
    Either
     (codrel x x')
-    (elas : (domtot, domtot) ** codrel (f (fst elas)) (g (snd elas)))))
+    (elas : (domtot, domtot) **
+     (domrel (fst elas) (snd elas), codrel (f (fst elas)) (g (snd elas))))))
 
 QFunctor : Type
 QFunctor = QuotientType -> QuotientType
