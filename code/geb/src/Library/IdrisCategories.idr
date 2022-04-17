@@ -474,6 +474,12 @@ CoproductPred : PredicateOn a -> PredicateOn b -> PredicateOn (Either a b)
 CoproductPred p p' (Left el) = p el
 CoproductPred p p' (Right el') = p' el'
 
+SubPredicate : {a : Type} -> (sub, super : PredicateOn a) -> Type
+SubPredicate {a} sub super = (el : a) -> sub el -> super el
+
+PredEquiv : {a : Type} -> (p, p' : PredicateOn a) -> Type
+PredEquiv {a} p p' = (SubPredicate p p', SubPredicate p' p)
+
 PreservesPredicates : {a, b : Type} -> PredicateOn a -> PredicateOn b ->
   (a -> b) -> Type
 PreservesPredicates p p' f = (el : a) -> p el -> p' (f el)
@@ -549,6 +555,12 @@ CoproductRelation rel rel' (Left el1) (Left el2) = rel el1 el2
 CoproductRelation rel rel' (Left el1) (Right el2') = Void
 CoproductRelation rel rel' (Right el1') (Left el2) = Void
 CoproductRelation rel rel' (Right el1') (Right el2') = rel' el1' el2'
+
+SubRelation : {a : Type} -> (sub, super : RelationOn a) -> Type
+SubRelation {a} sub super = (el1, el2 : a) -> sub el1 el2 -> super el1 el2
+
+RelationEquiv : {a : Type} -> (r, r' : RelationOn a) -> Type
+RelationEquiv r r' = (SubRelation r r', SubRelation r' r)
 
 EqualOverRelations : {a, b : Type} ->
   RelationOn a -> RelationOn b -> (f, g : a -> b) -> Type
@@ -642,7 +654,7 @@ CoequalizerRelationGenF {a} f g rel el el' =
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
 
-EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
+EqFunctionExt : {a, b : Type} -> (𝑓, 𝑔: a -> b) -> 𝑓 = 𝑔 -> ExtEq 𝑓 𝑔
 EqFunctionExt f f Refl _ = Refl
 
 -----------------------------------
@@ -692,14 +704,47 @@ record FBCMorphism (domain, codomain : FinBicompT) where
   FBCFunction : FBCTotal domain -> FBCTotal codomain
   FBCPreservesPred :
     PreservesPredicates
-      (EffectivePred domain)
+      (FBCPred domain)
       (EffectivePred codomain)
       FBCFunction
   FBCPreservesEquiv :
     PreservesRelations
-      (EffectiveEquiv domain)
+      (FBCEquiv domain)
       (EffectiveEquiv codomain)
       FBCFunction
+
+PreservesPredsClosure : {domain, codomain : FinBicompT} ->
+  (morphism : FBCMorphism domain codomain) ->
+  PreservesPredicates
+    (FBCPred domain) (EffectivePred codomain) (FBCFunction morphism) ->
+  PreservesPredicates
+    (EffectivePred domain) (EffectivePred codomain) (FBCFunction morphism)
+PreservesPredsClosure {domain} {codomain} morphism preserves =
+  ?PreservesPredsClosure_hole
+
+PreservesEquivClosure : {domain, codomain : FinBicompT} ->
+  (morphism : FBCMorphism domain codomain) ->
+  PreservesRelations
+    (FBCEquiv domain) (EffectiveEquiv codomain) (FBCFunction morphism) ->
+  PreservesRelations
+    (EffectiveEquiv domain) (EffectiveEquiv codomain) (FBCFunction morphism)
+PreservesEquivClosure {domain} {codomain} morphism preserves =
+  ?PreservesEquivClosure_hole
+
+FBCId : (a : FinBicompT) -> FBCMorphism a a
+FBCId a =
+  FBCMorph
+    id
+    (?FBCID_ppred_hole)
+    (?FBCID_pequiv_hole)
+
+FBCCompose : {a, b, c : FinBicompT} ->
+  FBCMorphism b c -> FBCMorphism a b -> FBCMorphism a c
+FBCCompose (FBCMorph g pgPred pgEquiv) (FBCMorph f pfPred pfEquiv) =
+  FBCMorph
+    (g . f)
+    (\el => ?FBCMorph_compose_ppred_hole)
+    (\el, el' => ?FBCMorph_compose_pequiv_hole)
 
 ------------------------
 ---- Quotient types ----
