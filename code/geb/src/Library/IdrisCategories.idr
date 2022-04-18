@@ -675,7 +675,7 @@ EqFunctionExt f f Refl _ = Refl
 -- relation rather than a strict equality.
 
 PredOverRelGenF : {t : Type} -> RelationOn t -> PredFunctor t
-PredOverRelGenF {t} rel pred x = (x' : t ** (rel x x', pred x'))
+PredOverRelGenF {t} rel pred x = (x' : t ** (rel x' x, pred x'))
 
 PredOverRel : {t : Type} -> RelationOn t -> PredFunctor t
 PredOverRel = FreeMPredicate . PredOverRelGenF
@@ -699,12 +699,20 @@ EffectivePred (FBCType tot pred equiv) =
 EffectiveType : FinBicompT -> FinBicompT
 EffectiveType t = {FBCPred := EffectivePred t, FBCEquiv := EffectiveEquiv t} t
 
+PreservesPredsOverRel : {a, b : Type} ->
+  RelationOn a -> PredicateOn a -> RelationOn b -> PredicateOn b ->
+  (a -> b) -> Type
+PreservesPredsOverRel r p r' p' f =
+  (el : a) -> PredOverRel r p el -> PredOverRel r' p' (f el)
+
 record FBCMorphism (domain, codomain : FinBicompT) where
   constructor FBCMorph
   FBCFunction : FBCTotal domain -> FBCTotal codomain
   FBCPreservesPred :
-    PreservesPredicates
+    PreservesPredsOverRel
+      (EffectiveEquiv domain)
       (FBCPred domain)
+      (EffectiveEquiv codomain)
       (EffectivePred codomain)
       FBCFunction
   FBCPreservesEquiv :
@@ -713,14 +721,22 @@ record FBCMorphism (domain, codomain : FinBicompT) where
       (EffectiveEquiv codomain)
       FBCFunction
 
-PreservesPredsClosure : {domain, codomain : FinBicompT} ->
+PreservesPredsOverRelClosure : {domain, codomain : FinBicompT} ->
   (morphism : FBCMorphism domain codomain) ->
-  PreservesPredicates
-    (FBCPred domain) (EffectivePred codomain) (FBCFunction morphism) ->
-  PreservesPredicates
-    (EffectivePred domain) (EffectivePred codomain) (FBCFunction morphism)
-PreservesPredsClosure {domain} {codomain} morphism preserves =
-  ?PreservesPredsClosure_hole
+  PreservesPredsOverRel
+    (EffectiveEquiv domain)
+    (FBCPred domain)
+    (EffectiveEquiv codomain)
+    (EffectivePred codomain)
+    (FBCFunction morphism) ->
+  PreservesPredsOverRel
+    (EffectiveEquiv domain)
+    (EffectivePred domain)
+    (EffectiveEquiv codomain)
+    (EffectivePred codomain)
+    (FBCFunction morphism)
+PreservesPredsOverRelClosure {domain} {codomain} morphism preserves =
+  ?PreservesPredsOverRelClosure_hole
 
 PreservesEquivClosure : {domain, codomain : FinBicompT} ->
   (morphism : FBCMorphism domain codomain) ->
