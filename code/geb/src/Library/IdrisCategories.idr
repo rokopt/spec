@@ -1140,6 +1140,12 @@ record CategoryInterpretation (cat : CategoryData) where
 ------------------------------------------
 ------------------------------------------
 
+ITSVoidF : Type -> Type
+ITSVoidF = const Void
+
+ITSUnitF : Type -> Type
+ITSUnitF = const Unit
+
 ITSProductF : (Type -> Type) -> (Type -> Type) -> (Type -> Type)
 ITSProductF f g a = Pair (f a) (g a)
 
@@ -1150,14 +1156,18 @@ public export
 data IsPolynomial : (Type -> Type) -> Type where
   IdPoly : IsPolynomial Prelude.Basics.id
   ComposePoly : IsPolynomial g -> IsPolynomial f -> IsPolynomial (g . f)
-  VoidPoly : IsPolynomial $ const Void
-  UnitPoly : IsPolynomial $ const ()
+  VoidPoly : IsPolynomial $ ITSVoidF
+  UnitPoly : IsPolynomial $ ITSUnitF
   ProductPoly :
     IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSProductF f g
   CoproductPoly :
     IsPolynomial f -> IsPolynomial g -> IsPolynomial $ ITSCoproductF f g
   FreePoly : IsPolynomial f -> IsPolynomial $ FreeMonad f
   CofreePoly : IsPolynomial f -> IsPolynomial $ CofreeComonad f
+
+public export
+ITSPolynomialFunctor : Type
+ITSPolynomialFunctor = DPair (Type -> Type) IsPolynomial
 
 ------------------------------------------
 ------------------------------------------
