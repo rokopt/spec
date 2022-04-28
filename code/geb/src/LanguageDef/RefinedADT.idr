@@ -14,15 +14,16 @@ public export
 data PathF :
     {vertex, edge : Type} ->
     (vEq : vertex -> vertex -> Type) ->
-    (signature : edge -> (vertex, vertex)) ->
+    (domain : edge -> vertex) ->
+    (codomain : edge -> vertex) ->
     (path : Type) ->
     Type where
   LoopF :
     vertex ->
-    PathF vEq signature path
+    PathF vEq domain codomain path
   ConcatF : {tail, head : edge} ->
-    vEq (Builtin.fst $ signature tail) (Builtin.snd $ signature head) ->
-    PathF vEq signature path
+    vEq (domain tail) (codomain head) ->
+    PathF vEq domain codomain path
 
 ----------------------------
 ----------------------------
