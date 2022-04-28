@@ -7,23 +7,79 @@ import public LanguageDef.Atom
 %default total
 
 ---------------
+---------------
 ---- Paths ----
+---------------
 ---------------
 
 public export
-data PathF :
-    {vertex, edge : Type} ->
-    (vEq : vertex -> vertex -> Type) ->
-    (domain : edge -> vertex) ->
-    (codomain : edge -> vertex) ->
-    (path : Type) ->
-    Type where
+EdgeProjectionType : Type -> Type -> Type
+EdgeProjectionType vertex edge = edge -> (vertex, vertex)
+
+public export
+record PathCarrier (vertex : Type) where
+  constructor EdgeFibration
+  EdgeTotal : Type
+  EdgeProjection : EdgeProjectionType vertex EdgeTotal
+
+public export
+edgeSource : {carrier : PathCarrier vertex} -> EdgeTotal carrier -> vertex
+edgeSource {carrier} = fst . EdgeProjection carrier
+
+public export
+edgeTarget : {carrier : PathCarrier vertex} -> EdgeTotal carrier -> vertex
+edgeTarget {carrier} = snd . EdgeProjection carrier
+
+public export
+data PathTotalF :
+    (vEq : vertex -> vertex -> Type) -> PathCarrier vertex -> Type where
   LoopF :
+    {carrier : PathCarrier vertex} ->
     vertex ->
-    PathF vEq domain codomain path
-  ConcatF : {tail, head : edge} ->
-    vEq (domain tail) (codomain head) ->
-    PathF vEq domain codomain path
+    PathTotalF vEq carrier
+  ConcatF :
+    {carrier : PathCarrier vertex} ->
+    (tail, head : EdgeTotal carrier) ->
+    {auto valid :
+      vEq (edgeSource {carrier} tail) (edgeTarget {carrier} head)} ->
+    PathTotalF vEq carrier
+
+public export
+PathDomainF :
+  {vertex : Type} ->
+  (vEq : vertex -> vertex -> Type) ->
+  (carrier : PathCarrier vertex) ->
+  PathTotalF vEq carrier ->
+  vertex
+PathDomainF vEq carrier (LoopF v) = v
+PathDomainF vEq carrier (ConcatF tail head) = edgeSource head
+
+public export
+PathCodomainF :
+  {vertex : Type} ->
+  (vEq : vertex -> vertex -> Type) ->
+  (carrier : PathCarrier vertex) ->
+  PathTotalF vEq carrier ->
+  vertex
+PathCodomainF vEq carrier (LoopF v) = v
+PathCodomainF vEq carrier (ConcatF tail head) = edgeTarget tail
+
+public export
+PathProjectionF :
+  {vertex : Type} ->
+  (vEq : vertex -> vertex -> Type) ->
+  (carrier : PathCarrier vertex) ->
+  EdgeProjectionType vertex (PathTotalF vEq carrier)
+PathProjectionF vEq carrier edge =
+  (PathDomainF vEq carrier edge, PathCodomainF vEq carrier edge)
+
+public export
+PathF : {vertex : Type} ->
+  (vertex -> vertex -> Type) ->
+  PathCarrier vertex ->
+  PathCarrier vertex
+PathF vEq carrier =
+  EdgeFibration (PathTotalF vEq carrier) (PathProjectionF vEq carrier)
 
 ----------------------------
 ----------------------------
