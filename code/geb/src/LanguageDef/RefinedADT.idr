@@ -6,6 +6,24 @@ import public LanguageDef.Atom
 
 %default total
 
+---------------
+---- Paths ----
+---------------
+
+public export
+data PathF :
+    {vertex, edge : Type} ->
+    (vEq : vertex -> vertex -> Type) ->
+    (signature : edge -> (vertex, vertex)) ->
+    (path : Type) ->
+    Type where
+  LoopF :
+    vertex ->
+    PathF vEq signature path
+  ConcatF : {tail, head : edge} ->
+    vEq (Builtin.fst $ signature tail) (Builtin.snd $ signature head) ->
+    PathF vEq signature path
+
 ----------------------------
 ----------------------------
 ---- Geb terms in Idris ----
