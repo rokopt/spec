@@ -6,6 +6,10 @@ import public LanguageDef.Atom
 
 %default total
 
+public export
+record GebCarrier where
+  constructor GebComponents
+
 ---------------
 ---------------
 ---- Paths ----
@@ -47,31 +51,31 @@ data PathTotalF :
 public export
 PathDomainF :
   {vertex : Type} ->
-  (vEq : vertex -> vertex -> Type) ->
+  {vEq : vertex -> vertex -> Type} ->
   (carrier : PathCarrier vertex) ->
   PathTotalF vEq carrier ->
   vertex
-PathDomainF vEq carrier (LoopF v) = v
-PathDomainF vEq carrier (ConcatF tail head) = edgeSource head
+PathDomainF carrier (LoopF v) = v
+PathDomainF carrier (ConcatF tail head) = edgeSource {carrier} head
 
 public export
 PathCodomainF :
   {vertex : Type} ->
-  (vEq : vertex -> vertex -> Type) ->
+  {vEq : vertex -> vertex -> Type} ->
   (carrier : PathCarrier vertex) ->
   PathTotalF vEq carrier ->
   vertex
-PathCodomainF vEq carrier (LoopF v) = v
-PathCodomainF vEq carrier (ConcatF tail head) = edgeTarget tail
+PathCodomainF carrier (LoopF v) = v
+PathCodomainF carrier (ConcatF tail head) = edgeTarget {carrier} tail
 
 public export
 PathProjectionF :
   {vertex : Type} ->
-  (vEq : vertex -> vertex -> Type) ->
+  {vEq : vertex -> vertex -> Type} ->
   (carrier : PathCarrier vertex) ->
   EdgeProjectionType vertex (PathTotalF vEq carrier)
-PathProjectionF vEq carrier edge =
-  (PathDomainF vEq carrier edge, PathCodomainF vEq carrier edge)
+PathProjectionF carrier edge =
+  (PathDomainF carrier edge, PathCodomainF carrier edge)
 
 public export
 PathF : {vertex : Type} ->
@@ -79,7 +83,7 @@ PathF : {vertex : Type} ->
   PathCarrier vertex ->
   PathCarrier vertex
 PathF vEq carrier =
-  EdgeFibration (PathTotalF vEq carrier) (PathProjectionF vEq carrier)
+  EdgeFibration (PathTotalF vEq carrier) (PathProjectionF {vEq} carrier)
 
 ----------------------------
 ----------------------------
