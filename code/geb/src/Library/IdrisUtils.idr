@@ -38,3 +38,13 @@ mapIndexStart f n (x :: xs) = f n x :: mapIndexStart f (S n) xs
 public export
 mapIndex : (Nat -> a -> b) -> Vect n a -> Vect n b
 mapIndex f = mapIndexStart f Z
+
+public export
+foldIndexAccumStart : (Nat -> a -> b -> b) -> Nat -> b -> Vect len a -> b
+foldIndexAccumStart _ _ acc [] = acc
+foldIndexAccumStart f n acc (x :: xs) =
+  foldIndexAccumStart f (S n) (f n x acc) xs
+
+public export
+foldIndexAccum : (Nat -> a -> b -> b) -> b -> Vect len a -> b
+foldIndexAccum f acc v = foldIndexAccumStart f Z acc v

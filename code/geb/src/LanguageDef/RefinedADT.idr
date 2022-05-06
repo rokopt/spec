@@ -15,7 +15,7 @@ record FinNatPoly where
 public export
 interpretFinNatPoly : FinNatPoly -> Nat -> Nat
 interpretFinNatPoly (MkFinNatPoly d cs) n =
-  foldrImpl (+) Z id (mapIndex (flip (*) . power n) cs)
+  foldIndexAccum (\i, c, acc => acc + c * (power n i)) Z cs
 
 public export
 record MultiVarTerm (constant, variable : Type) where
