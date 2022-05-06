@@ -1,6 +1,7 @@
 module Library.IdrisUtils
 
 import public Data.Maybe
+import public Data.List
 import public Decidable.Equality
 import public Control.Function
 
