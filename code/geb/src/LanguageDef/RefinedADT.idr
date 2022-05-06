@@ -7,8 +7,31 @@ import public LanguageDef.Atom
 %default total
 
 public export
-record GebCarrier where
-  constructor GebComponents
+record MultiVarTerm (constant, variable : Type) where
+  PolyTerm : (constant, variable)
+
+public export
+mvConst : MultiVarTerm constant variable -> constant
+mvConst = fst . PolyTerm
+
+public export
+mvVar : MultiVarTerm constant variable -> variable
+mvVar = snd . PolyTerm
+
+public export
+record MultiVarPoly (constant, variable : Type) where
+  PolyTerms : List (MultiVarTerm constant variable)
+
+public export
+numTerms : MultiVarPoly constant variable -> Nat
+numTerms = length . PolyTerms
+
+public export
+mvNth :
+  (mvp : MultiVarPoly constant variable) -> (n : Nat) ->
+  {auto ok : InBounds n (PolyTerms mvp)} ->
+  MultiVarTerm constant variable
+mvNth mvp n = index n (PolyTerms mvp)
 
 ---------------
 ---------------
