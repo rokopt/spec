@@ -7,6 +7,17 @@ import public LanguageDef.Atom
 %default total
 
 public export
+record FinNatPoly where
+  constructor MkFinNatPoly
+  degree : Nat
+  coefficients : Vect (S degree) Nat
+
+public export
+interpretFinNatPoly : FinNatPoly -> Nat -> Nat
+interpretFinNatPoly (MkFinNatPoly d cs) n =
+  foldrImpl (+) Z id (mapIndex (flip (*) . power n) cs)
+
+public export
 record MultiVarTerm (constant, variable : Type) where
   PolyTerm : (constant, variable)
 

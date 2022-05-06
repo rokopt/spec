@@ -2,6 +2,7 @@ module Library.IdrisUtils
 
 import public Data.Maybe
 import public Data.List
+import public Data.Vect
 import public Decidable.Equality
 import public Control.Function
 
@@ -28,3 +29,12 @@ encodingDecEq encode decode encodingIsCorrect bDecEq x x' with
             (encodingIsCorrect x'))
     encodingDecEq encode decode encodingIsCorrect bDecEq x x' | No neq =
       No $ \xeq => neq $ cong encode xeq
+
+public export
+mapIndexStart : (Nat -> a -> b) -> Nat -> Vect l a -> Vect l b
+mapIndexStart _ _ [] = []
+mapIndexStart f n (x :: xs) = f n x :: mapIndexStart f (S n) xs
+
+public export
+mapIndex : (Nat -> a -> b) -> Vect n a -> Vect n b
+mapIndex f = mapIndexStart f Z
