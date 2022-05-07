@@ -11,11 +11,16 @@ record FinNatPoly where
   constructor MkFinNatPoly
   numTerms : Nat
   coefficients : LList Nat numTerms
-  trimmed : Not (head' (llList coefficients) = Just 0)
+  trimmed : (head' (llList coefficients) /= Just 0) = True
 
 public export
 Show FinNatPoly where
   show (MkFinNatPoly _ c _) = show c
+
+public export
+InitFinNatPoly :
+  (l : List Nat) -> {auto ok : (head' l /= Just 0) = True} -> FinNatPoly
+InitFinNatPoly l {ok} = MkFinNatPoly (length l) (InitLList l) ok
 
 public export
 interpretFinNatPoly : FinNatPoly -> Nat -> Nat
