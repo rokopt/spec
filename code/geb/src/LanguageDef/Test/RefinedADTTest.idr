@@ -6,7 +6,8 @@ import LanguageDef.RefinedADT
 %default total
 
 exampleFinNatPoly : FinNatPoly
-exampleFinNatPoly = MkFinNatPoly 4 $ MkLList [0, 4, 0, 2, 3] Refl
+exampleFinNatPoly = MkFinNatPoly 4 (MkLList [4, 0, 2, 3] Refl)
+  (\eq => case eq of Refl impossible)
 
 finNatPolyTest : Assertion
 finNatPolyTest = Assert $ interpretFinNatPoly exampleFinNatPoly 7 == 1389

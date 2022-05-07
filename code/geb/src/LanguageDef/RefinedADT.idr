@@ -9,12 +9,13 @@ import public LanguageDef.Atom
 public export
 record FinNatPoly where
   constructor MkFinNatPoly
-  degree : Nat
-  coefficients : LList Nat (S degree)
+  numTerms : Nat
+  coefficients : LList Nat numTerms
+  trimmed : Not (head' (llList coefficients) = Just 0)
 
 public export
 interpretFinNatPoly : FinNatPoly -> Nat -> Nat
-interpretFinNatPoly (MkFinNatPoly d cs) n =
+interpretFinNatPoly (MkFinNatPoly d cs _) n =
   llCata (MkLLAlg Z (\i, c, acc => acc + c * (power n i))) cs
 
 public export
