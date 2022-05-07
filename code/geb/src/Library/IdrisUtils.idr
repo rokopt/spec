@@ -2,7 +2,7 @@ module Library.IdrisUtils
 
 import public Data.Maybe
 import public Data.List
-import public Data.Vect
+import public Data.Nat
 import public Decidable.Equality
 import public Control.Function
 
@@ -30,27 +30,30 @@ encodingDecEq encode decode encodingIsCorrect bDecEq x x' with
     encodingDecEq encode decode encodingIsCorrect bDecEq x x' | No neq =
       No $ \xeq => neq $ cong encode xeq
 
+-- A list with a length stored together with it at run time.
 public export
-mapIndexStart : (Nat -> a -> b) -> Nat -> Vect l a -> Vect l b
-mapIndexStart _ _ [] = []
-mapIndexStart f n (x :: xs) = f n x :: mapIndexStart f (S n) xs
+record LList (a : Type) (len : Nat) where
+  constructor MkLList
+  llList : List a
+  llValid : length llList = len
 
 public export
-mapIndex : (Nat -> a -> b) -> Vect n a -> Vect n b
-mapIndex f = mapIndexStart f Z
+record LLAlg (a, b : Type) where
+  constructor MkLLAlg
+  llZ : b
+  llS : Nat -> a -> b -> b
 
 public export
-foldIndexAccumStart : (Nat -> a -> b -> b) -> Nat -> b -> Vect len a -> b
-foldIndexAccumStart _ _ acc [] = acc
-foldIndexAccumStart f n acc (x :: xs) =
-  foldIndexAccumStart f (S n) (f n x acc) xs
-
-public export
-foldIndexAccum : (Nat -> a -> b -> b) -> b -> Vect len a -> b
-foldIndexAccum f acc v = foldIndexAccumStart f Z acc v
-
-public export
-foldIndexAccumDec : {len : Nat} -> (Nat -> a -> b -> b) -> b -> Vect len a -> b
-foldIndexAccumDec {len=Z} _ acc [] = acc
-foldIndexAccumDec {len=(S len)} f acc (x :: xs) =
-  foldIndexAccumDec f (f len x acc) xs
+llCata : {len : Nat} -> LLAlg a b -> LList a len -> b
+llCata {len} (MkLLAlg z s) (MkLList l valid) = llCataInternal z s len l valid
+  where
+  llCataInternal :
+    b ->
+    (Nat -> a -> b -> b) ->
+    (len : Nat) ->
+    (l : List a) ->
+    length l = len ->
+    b
+  llCataInternal z s Z [] Refl = z
+  llCataInternal z s (S n) (x :: xs) valid =
+    s n x $ llCataInternal z s n xs $ injective valid

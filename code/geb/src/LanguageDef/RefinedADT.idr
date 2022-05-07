@@ -10,12 +10,12 @@ public export
 record FinNatPoly where
   constructor MkFinNatPoly
   degree : Nat
-  coefficients : Vect (S degree) Nat
+  coefficients : LList Nat (S degree)
 
 public export
 interpretFinNatPoly : FinNatPoly -> Nat -> Nat
 interpretFinNatPoly (MkFinNatPoly d cs) n =
-  foldIndexAccumDec (\i, c, acc => acc + c * (power n i)) Z cs
+  llCata (MkLLAlg Z (\i, c, acc => acc + c * (power n i))) cs
 
 public export
 record MultiVarTerm (constant, variable : Type) where
