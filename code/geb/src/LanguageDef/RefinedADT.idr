@@ -883,6 +883,30 @@ Functor NatF where
   map _ ZeroF = ZeroF
   map f (SuccF n) = SuccF $ f n
 
+public export
+NatAlg : Type -> Type
+NatAlg = Algebra NatF
+
+public export
+FreeNat : Type -> Type
+FreeNat = FreeMonad NatF
+
+public export
+MuNat : Type
+MuNat = Mu NatF
+
+public export
+NatCoalg : Type -> Type
+NatCoalg = Coalgebra NatF
+
+public export
+CofreeNat : Type -> Type
+CofreeNat = CofreeComonad NatF
+
+public export
+NuNat : Type
+NuNat = Nu NatF
+
 ---------------
 ---- Lists ----
 ---------------
@@ -896,6 +920,30 @@ public export
 Bifunctor ListF where
   bimap f g NilF = NilF
   bimap f g (ConsF p) = ConsF $ bimap f g p
+
+public export
+ListAlg : Type -> Type -> Type
+ListAlg = Algebra . ListF
+
+public export
+FreeList : Type -> Type -> Type
+FreeList = FreeMonad . ListF
+
+public export
+MuList : Type -> Type
+MuList = Mu . ListF
+
+public export
+ListCoalg : Type -> Type -> Type
+ListCoalg = Coalgebra . ListF
+
+public export
+CofreeList : Type -> Type -> Type
+CofreeList = CofreeComonad . ListF
+
+public export
+NuList : Type -> Type
+NuList = Nu . ListF
 
 -----------------------
 ---- S-expressions ----
@@ -911,6 +959,10 @@ SexpObject : Type
 SexpObject = ProductCatObject SexpClass
 
 public export
+SexpObjectMap : Type
+SexpObjectMap = ProductCatObjectEndoMap SexpClass
+
+public export
 data SexpFunctor :
     (atom : Type) -> (carrier : SexpObject) -> SexpObject where
   SexpF :
@@ -919,6 +971,14 @@ data SexpFunctor :
   SlistF :
     ListF (carrier SEXP) (carrier SLIST) ->
     SexpFunctor atom carrier SLIST
+
+public export
+SexpAlg : Type -> SexpObject -> Type
+SexpAlg = ProductCatAlgebra {idx=SexpClass} . SexpFunctor
+
+-----------------------------------------
+---- Refined S-expressions and lists ----
+-----------------------------------------
 
 -------------------------------------------------
 ---- S-expressions with natural number atoms ----
