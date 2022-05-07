@@ -945,6 +945,24 @@ public export
 NuList : Type -> Type
 NuList = Nu . ListF
 
+----------------
+---- Tuples ----
+----------------
+
+public export
+TupleF : Nat -> Type -> Type -> Type
+TupleF Z atom carrier = ()
+TupleF (S n) atom carrier = ProductF atom (TupleF n atom carrier)
+
+public export
+bimapTuple : {n : Nat} -> (a -> b) -> (c -> d) -> TupleF n a c -> TupleF n b d
+bimapTuple {n=Z} f g () = ()
+bimapTuple {n=(S n)} f g (InPair x t) = InPair (f x) $ bimapTuple {n} f g t
+
+public export
+(n : Nat) => Bifunctor (TupleF n) where
+  bimap = bimapTuple
+
 -----------------------
 ---- S-expressions ----
 -----------------------
@@ -983,6 +1001,14 @@ FreeSexp atom = ProductCatFreeMonad {idx=SexpClass} (SexpFunctor atom)
 public export
 MuSexp : Type -> SexpObject
 MuSexp atom = MuProduct {idx=SexpClass} (SexpFunctor atom)
+
+public export
+Sexp : Type -> Type
+Sexp = flip MuSexp SEXP
+
+public export
+Slist : Type -> Type
+Slist = flip MuSexp SLIST
 
 public export
 SexpCoalg : Type -> SexpObject -> Type
