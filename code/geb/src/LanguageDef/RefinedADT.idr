@@ -902,13 +902,13 @@ Bifunctor ListF where
 -----------------------
 
 public export
-data SexpType : Type where
-  SEXP : SexpType
-  SLIST : SexpType
+data SexpClass : Type where
+  SEXP : SexpClass
+  SLIST : SexpClass
 
 public export
 SexpObject : Type
-SexpObject = ProductCatObject SexpType
+SexpObject = ProductCatObject SexpClass
 
 public export
 data SexpFunctor :
@@ -925,14 +925,14 @@ data SexpFunctor :
 -------------------------------------------------
 
 public export
-data NSexpType : Type where
-  NSexpNat : NSexpType
-  NSEXP : NSexpType
-  NSLIST : NSexpType
+data NSexpClass : Type where
+  NSexpNat : NSexpClass
+  NSEXP : NSexpClass
+  NSLIST : NSexpClass
 
 public export
 NSexpObject : Type
-NSexpObject = ProductCatObject NSexpType
+NSexpObject = ProductCatObject NSexpClass
 
 public export
 data NSexpFunctor : (carrier : NSexpObject) -> NSexpObject where
@@ -947,7 +947,7 @@ data NSexpFunctor : (carrier : NSexpObject) -> NSexpObject where
     NSexpFunctor carrier NSLIST
 
 public export
-NSExpType : NSexpType -> Type
+NSExpType : NSexpClass -> Type
 NSExpType = MuProduct NSexpFunctor
 
 public export
@@ -1063,7 +1063,7 @@ NatTransInterpretation =
   (f : Type -> Type ** g : Type -> Type ** (x : Type) -> f x -> g x)
 
 public export
-data SexpInterpretation : NSexpType -> Type where
+data SexpInterpretation : NSexpClass -> Type where
   SnatAsNat : Nat -> SexpInterpretation NSexpNat
   SexpAsObject : Type -> SexpInterpretation NSEXP
   SexpAsMorphism : SMorphismInterpretation -> SexpInterpretation NSEXP
@@ -1076,12 +1076,12 @@ data SexpInterpretation : NSexpType -> Type where
   SlistAsNatTrans : List NatTransInterpretation -> SexpInterpretation NSLIST
 
 public export
-record SexpCheckResult (inputType : NSexpType) where
+record SexpCheckResult (inputType : NSexpClass) where
   constructor SexpInterpretations
   Input : NSExpType inputType
   InputInterpretation : Maybe (SexpInterpretation inputType)
   AllInterpretations :
-    (type : NSexpType) -> NSExpType type -> Maybe (SexpInterpretation type)
+    (type : NSexpClass) -> NSExpType type -> Maybe (SexpInterpretation type)
 
 ---------------------
 ---- Polynomials ----
