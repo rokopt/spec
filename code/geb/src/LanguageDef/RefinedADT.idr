@@ -11,7 +11,7 @@ record FinNatPoly where
   constructor MkFinNatPoly
   numTerms : Nat
   coefficients : LList Nat numTerms
-  trimmed : (head' (llList coefficients) /= Just 0) = True
+  trimmed : Not (head' (llList coefficients) = Just 0)
 
 public export
 Show FinNatPoly where
@@ -20,7 +20,9 @@ Show FinNatPoly where
 public export
 InitFinNatPoly :
   (l : List Nat) -> {auto ok : (head' l /= Just 0) = True} -> FinNatPoly
-InitFinNatPoly l {ok} = MkFinNatPoly (length l) (InitLList l) ok
+InitFinNatPoly l {ok} = MkFinNatPoly (length l) (InitLList l) $
+  \isz =>
+    case replace {p=(\hl => (hl /= Just 0) = True)} isz ok of Refl impossible
 
 public export
 interpretFinNatPoly : FinNatPoly -> Nat -> Nat
