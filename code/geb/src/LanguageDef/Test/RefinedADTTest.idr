@@ -6,7 +6,7 @@ import LanguageDef.RefinedADT
 %default total
 
 exampleFinNatPoly : FinNatPoly
-exampleFinNatPoly = MkFinNatPoly 4 (MkLList [4, 0, 2, 3] Refl)
+exampleFinNatPoly = MkFinNatPoly 4 (InitLList [4, 0, 2, 3])
   (\eq => case eq of Refl impossible)
 
 finNatPolyTest : Assertion
@@ -16,5 +16,6 @@ export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
   printLn "Begin languageDefRefinedADTTest:"
+  printLn $ show exampleFinNatPoly
   printLn "End languageDefRefinedADTTest."
   pure ()

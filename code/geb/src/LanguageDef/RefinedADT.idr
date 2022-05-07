@@ -14,6 +14,10 @@ record FinNatPoly where
   trimmed : Not (head' (llList coefficients) = Just 0)
 
 public export
+Show FinNatPoly where
+  show (MkFinNatPoly _ c _) = show c
+
+public export
 interpretFinNatPoly : FinNatPoly -> Nat -> Nat
 interpretFinNatPoly (MkFinNatPoly d cs _) n =
   llCata (MkLLAlg Z (\i, c, acc => acc + c * (power n i))) cs

@@ -38,6 +38,10 @@ record LList (a : Type) (len : Nat) where
   llValid : length llList = len
 
 public export
+Show a => (len : Nat) => Show (LList a len) where
+  show (MkLList l _) = show l ++ "(len=" ++ show len ++ ")"
+
+public export
 record LLAlg (a, b : Type) where
   constructor MkLLAlg
   llZ : b
@@ -57,3 +61,7 @@ llCata {len} (MkLLAlg z s) (MkLList l valid) = llCataInternal z s len l valid
   llCataInternal z s Z [] Refl = z
   llCataInternal z s (S n) (x :: xs) valid =
     s n x $ llCataInternal z s n xs $ injective valid
+
+public export
+InitLList : {a : Type} -> (l : List a) -> LList a (length l)
+InitLList l = MkLList l Refl
