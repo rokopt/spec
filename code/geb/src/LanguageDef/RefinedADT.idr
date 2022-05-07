@@ -717,11 +717,11 @@ Bifunctor ConstF where
 -- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
 public export
 data ProductF : Type -> Type -> Type where
-  InProduct : a -> b -> ProductF a b
+  InPair : a -> b -> ProductF a b
 
 public export
 Bifunctor ProductF where
-  bimap f g (InProduct x y) = InProduct (f x) (g y)
+  bimap f g (InPair x y) = InPair (f x) (g y)
 
 --------------------
 ---- Coproducts ----
@@ -731,13 +731,13 @@ Bifunctor ProductF where
 -- endofunctors to their coproduct.
 public export
 data CoproductF : Type -> Type -> Type where
-  InCoproductLeft : a -> CoproductF a b
-  InCoproductRight : b -> CoproductF a b
+  InLeft : a -> CoproductF a b
+  InRight : b -> CoproductF a b
 
 public export
 Bifunctor CoproductF where
-  bimap f _ (InCoproductLeft x) = InCoproductLeft (f x)
-  bimap _ g (InCoproductRight y) = InCoproductRight (g y)
+  bimap f _ (InLeft x) = InLeft (f x)
+  bimap _ g (InRight y) = InRight (g y)
 
 ---------------------------------
 ---- Polynomial endofunctors ----
@@ -976,6 +976,26 @@ public export
 SexpAlg : Type -> SexpObject -> Type
 SexpAlg = ProductCatAlgebra {idx=SexpClass} . SexpFunctor
 
+public export
+FreeSexp : Type -> SexpObject -> SexpObject
+FreeSexp atom = ProductCatFreeMonad {idx=SexpClass} (SexpFunctor atom)
+
+public export
+MuSexp : Type -> SexpObject
+MuSexp atom = MuProduct {idx=SexpClass} (SexpFunctor atom)
+
+public export
+SexpCoalg : Type -> SexpObject -> Type
+SexpCoalg = ProductCatCoalgebra {idx=SexpClass} . SexpFunctor
+
+public export
+CofreeSexp : Type -> SexpObject -> SexpObject
+CofreeSexp atom = ProductCatCofreeComonad {idx=SexpClass} (SexpFunctor atom)
+
+public export
+NuSexp : Type -> SexpObject
+NuSexp atom = NuProduct {idx=SexpClass} (SexpFunctor atom)
+
 -----------------------------------------
 ---- Refined S-expressions and lists ----
 -----------------------------------------
@@ -1055,10 +1075,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataExp (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
         NSexpF x => NSexpF $ case x of
-          InProduct n l => case n of
+          InPair n l => case n of
             InFreeProduct NSexpNat n => case l of
               InFreeProduct NSLIST l =>
-                InProduct
+                InPair
                   (alg NSexpNat $ nsexpCataNat n)
                   (alg NSLIST $ nsexpCataList l)
 
@@ -1074,10 +1094,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
         NSlistF l => NSlistF $ case l of
           NilF => NilF
           ConsF p => ConsF $ case p of
-            InProduct x l' => case x of
+            InPair x l' => case x of
               InFreeProduct NSEXP x => case l' of
                 InFreeProduct NSLIST l' =>
-                  InProduct
+                  InPair
                     (alg NSEXP $ nsexpCataExp x)
                     (alg NSLIST $ nsexpCataList l')
 
