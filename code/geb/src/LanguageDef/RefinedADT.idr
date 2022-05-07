@@ -950,18 +950,18 @@ NuList = Nu . ListF
 ----------------
 
 public export
-TupleF : Nat -> Type -> Type -> Type
-TupleF Z atom carrier = ()
-TupleF (S n) atom carrier = ProductF atom (TupleF n atom carrier)
+Tuple : Nat -> Type -> Type
+Tuple Z atom = ()
+Tuple (S n) atom = (atom, Tuple n atom)
 
 public export
-bimapTuple : {n : Nat} -> (a -> b) -> (c -> d) -> TupleF n a c -> TupleF n b d
-bimapTuple {n=Z} f g () = ()
-bimapTuple {n=(S n)} f g (InPair x t) = InPair (f x) $ bimapTuple {n} f g t
+mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
+mapTuple {n=Z} f () = ()
+mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
 
 public export
-(n : Nat) => Bifunctor (TupleF n) where
-  bimap = bimapTuple
+(n : Nat) => Functor (Tuple n) where
+  map = mapTuple
 
 -----------------------
 ---- S-expressions ----
