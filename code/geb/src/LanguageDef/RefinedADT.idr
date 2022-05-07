@@ -907,18 +907,18 @@ data SexpType : Type where
   SLIST : SexpType
 
 public export
-SexpTypeObject : Type
-SexpTypeObject = ProductCatObject SexpType
+SexpObject : Type
+SexpObject = ProductCatObject SexpType
 
 public export
-data SexpTypeFunctor :
-    (atom : Type) -> (carrier : SexpTypeObject) -> SexpTypeObject where
+data SexpFunctor :
+    (atom : Type) -> (carrier : SexpObject) -> SexpObject where
   SexpF :
     ProductF atom (carrier SLIST) ->
-    SexpTypeFunctor atom carrier SEXP
+    SexpFunctor atom carrier SEXP
   SlistF :
     ListF (carrier SEXP) (carrier SLIST) ->
-    SexpTypeFunctor atom carrier SLIST
+    SexpFunctor atom carrier SLIST
 
 -------------------------------------------------
 ---- S-expressions with natural number atoms ----
@@ -931,24 +931,24 @@ data NSexpType : Type where
   NSLIST : NSexpType
 
 public export
-NSexpTypeObject : Type
-NSexpTypeObject = ProductCatObject NSexpType
+NSexpObject : Type
+NSexpObject = ProductCatObject NSexpType
 
 public export
-data NSexpTypeFunctor : (carrier : NSexpTypeObject) -> NSexpTypeObject where
+data NSexpFunctor : (carrier : NSexpObject) -> NSexpObject where
   NSatomF :
     NatF (carrier NSexpNat) ->
-    NSexpTypeFunctor carrier NSexpNat
+    NSexpFunctor carrier NSexpNat
   NSexpF :
     ProductF (carrier NSexpNat) (carrier NSLIST) ->
-    NSexpTypeFunctor carrier NSEXP
+    NSexpFunctor carrier NSEXP
   NSlistF :
     ListF (carrier NSEXP) (carrier NSLIST) ->
-    NSexpTypeFunctor carrier NSLIST
+    NSexpFunctor carrier NSLIST
 
 public export
 NSExpType : NSexpType -> Type
-NSExpType = MuProduct NSexpTypeFunctor
+NSExpType = MuProduct NSexpFunctor
 
 public export
 NSNat : Type
@@ -963,7 +963,7 @@ NSList : Type
 NSList = NSExpType NSLIST
 
 public export
-nsexpCata : ProductFreeCatamorphism NSexpTypeFunctor
+nsexpCata : ProductFreeCatamorphism NSexpFunctor
 nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
   NSexpNat => nsexpCataNat term
   NSEXP => nsexpCataExp term
@@ -972,10 +972,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
   mutual
     nsexpCataNat :
       ProductCatTermFunctor
-        NSexpTypeFunctor v
-        (ProductCatFreeMonad NSexpTypeFunctor v) NSexpNat
+        NSexpFunctor v
+        (ProductCatFreeMonad NSexpFunctor v) NSexpNat
         ->
-      ProductCatTermFunctor NSexpTypeFunctor v carrier NSexpNat
+      ProductCatTermFunctor NSexpFunctor v carrier NSexpNat
     nsexpCataNat (ProductCatTermVar t) = ProductCatTermVar t
     nsexpCataNat (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
@@ -987,10 +987,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
 
     nsexpCataExp :
       ProductCatTermFunctor
-        NSexpTypeFunctor v
-        (ProductCatFreeMonad NSexpTypeFunctor v) NSEXP
+        NSexpFunctor v
+        (ProductCatFreeMonad NSexpFunctor v) NSEXP
         ->
-      ProductCatTermFunctor NSexpTypeFunctor v carrier NSEXP
+      ProductCatTermFunctor NSexpFunctor v carrier NSEXP
     nsexpCataExp (ProductCatTermVar v) = ProductCatTermVar v
     nsexpCataExp (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
@@ -1004,10 +1004,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
 
     nsexpCataList :
       ProductCatTermFunctor
-        NSexpTypeFunctor v
-        (ProductCatFreeMonad NSexpTypeFunctor v) NSLIST
+        NSexpFunctor v
+        (ProductCatFreeMonad NSexpFunctor v) NSLIST
         ->
-      ProductCatTermFunctor NSexpTypeFunctor v carrier NSLIST
+      ProductCatTermFunctor NSexpFunctor v carrier NSLIST
     nsexpCataList (ProductCatTermVar v) = ProductCatTermVar v
     nsexpCataList (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
