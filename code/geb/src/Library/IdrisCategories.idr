@@ -211,14 +211,14 @@ treeSubtreeProduct (ProductCatTreeNode _ fx) = fx
 -- object.  When `v` is the initial object (`Void`), it specializes to
 -- generating `F`-algebras.
 public export
-FreeAlgebra : (Type -> Type) -> Type -> Type -> Type
-FreeAlgebra f v a = Algebra (TermFunctor f v) a
+TermAlgebra : (Type -> Type) -> Type -> Type -> Type
+TermAlgebra f v a = Algebra (TermFunctor f v) a
 
 public export
-ProductCatFreeAlgebra : {idx : Type} ->
+ProductCatTermAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
-ProductCatFreeAlgebra f v a =
+ProductCatTermAlgebra f v a =
   ProductCatAlgebra (ProductCatTermFunctor f v) a
 
 public export
@@ -238,14 +238,14 @@ ProductCatTermCoalgebra f v a =
 -- object.  When `v` is the terminal object (`Unit`), it specializes to
 -- generating `F`-coalgebras.
 public export
-CofreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
-CofreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
+TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
+TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
 
 public export
-ProductCatCofreeCoalgebra : {idx : Type} ->
+ProductCatTreeCoalgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
-ProductCatCofreeCoalgebra f v a =
+ProductCatTreeCoalgebra f v a =
   ProductCatCoalgebra (ProductCatTreeFunctor f v) a
 
 public export
@@ -278,7 +278,7 @@ ProductCatTreeAlgebra f v a =
 public export
 data FreeMonad : (Type -> Type) -> (Type -> Type) where
   InFree : {f : Type -> Type} -> {0 a : Type} ->
-    FreeAlgebra f a (FreeMonad f a)
+    TermAlgebra f a (FreeMonad f a)
 
 -- The product-category version of `FreeMonad`.
 public export
@@ -286,7 +286,7 @@ data ProductCatFreeMonad : {idx : Type} ->
     ProductCatObjectEndoMap idx -> ProductCatObjectEndoMap idx where
   InFreeProduct : {idx : Type} ->
     {f : ProductCatObjectEndoMap idx} -> {0 a : ProductCatObject idx} ->
-    ProductCatFreeAlgebra f a (ProductCatFreeMonad f a)
+    ProductCatTermAlgebra f a (ProductCatFreeMonad f a)
 
 -- If `F` has a terminal coalgebra, then for every object `a`, the functor
 -- `Fa` defined above also has a terminal coalgebra, which is isomorphic
@@ -356,7 +356,7 @@ inCofreeTreeProduct x fx = InCofreeProduct $ ProductCatTreeNode x fx
 
 public export
 outCofree : {f : Type -> Type} -> {a : Type} ->
-  CofreeCoalgebra f a (CofreeComonad f a)
+  TreeCoalgebra f a (CofreeComonad f a)
 outCofree (InCofree x) = x
 
 public export
@@ -394,13 +394,13 @@ NuProduct f = ProductCatCofreeComonad f (const ())
 public export
 FreeCatamorphism : (Type -> Type) -> Type
 FreeCatamorphism f =
-  (v, a : Type) -> FreeAlgebra f v a -> FreeMonad f v -> a
+  (v, a : Type) -> TermAlgebra f v a -> FreeMonad f v -> a
 
 public export
 ProductFreeCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
 ProductFreeCatamorphism f =
   (v, a : ProductCatObject idx) ->
-  ProductCatFreeAlgebra f v a ->
+  ProductCatTermAlgebra f v a ->
   ProductCatMorphism (ProductCatFreeMonad f v) a
 
 -- Not all endofunctors have terminal coalgebras.  If an endofunctor
@@ -408,14 +408,14 @@ ProductFreeCatamorphism f =
 -- its parameterized anamorphism (unfold).
 FreeAnamorphism : (Type -> Type) -> Type
 FreeAnamorphism f =
-  (v, l : Type) -> CofreeCoalgebra f v l -> l -> CofreeComonad f v
+  (v, l : Type) -> TreeCoalgebra f v l -> l -> CofreeComonad f v
 
 ProductFreeAnamorphism : {idx : Type} ->
   ProductCatObjectEndoMap idx ->
   Type
 ProductFreeAnamorphism f =
   (v, l : ProductCatObject idx) ->
-  ProductCatCofreeCoalgebra f v l ->
+  ProductCatTreeCoalgebra f v l ->
   ProductCatMorphism (ProductCatCofreeComonad f v) l
 
 -- Non-parameterized catamorphism (fold).
