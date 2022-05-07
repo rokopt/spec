@@ -48,3 +48,9 @@ foldIndexAccumStart f n acc (x :: xs) =
 public export
 foldIndexAccum : (Nat -> a -> b -> b) -> b -> Vect len a -> b
 foldIndexAccum f acc v = foldIndexAccumStart f Z acc v
+
+public export
+foldIndexAccumDec : {len : Nat} -> (Nat -> a -> b -> b) -> b -> Vect len a -> b
+foldIndexAccumDec {len=Z} _ acc [] = acc
+foldIndexAccumDec {len=(S len)} f acc (x :: xs) =
+  foldIndexAccumDec f (f len x acc) xs

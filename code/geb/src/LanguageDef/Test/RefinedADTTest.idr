@@ -6,7 +6,7 @@ import LanguageDef.RefinedADT
 %default total
 
 exampleFinNatPoly : FinNatPoly
-exampleFinNatPoly = MkFinNatPoly 4 [3, 2, 0, 4, 0]
+exampleFinNatPoly = MkFinNatPoly 4 [0, 4, 0, 2, 3]
 
 finNatPolyTest : Assertion
 finNatPolyTest = Assert $ interpretFinNatPoly exampleFinNatPoly 7 == 1389
