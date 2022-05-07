@@ -945,24 +945,6 @@ public export
 NuList : Type -> Type
 NuList = Nu . ListF
 
-----------------
----- Tuples ----
-----------------
-
-public export
-Tuple : Nat -> Type -> Type
-Tuple Z atom = ()
-Tuple (S n) atom = (atom, Tuple n atom)
-
-public export
-mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
-mapTuple {n=Z} f () = ()
-mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
-
-public export
-(n : Nat) => Functor (Tuple n) where
-  map = mapTuple
-
 -----------------------
 ---- S-expressions ----
 -----------------------
@@ -1021,6 +1003,57 @@ CofreeSexp atom = ProductCatCofreeComonad {idx=SexpClass} (SexpFunctor atom)
 public export
 NuSexp : Type -> SexpObject
 NuSexp atom = NuProduct {idx=SexpClass} (SexpFunctor atom)
+
+----------------
+---- Tuples ----
+----------------
+
+public export
+Tuple : Nat -> Type -> Type
+Tuple Z atom = ()
+Tuple (S n) atom = (atom, Tuple n atom)
+
+public export
+mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
+mapTuple {n=Z} f () = ()
+mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
+
+public export
+(n : Nat) => Functor (Tuple n) where
+  map = mapTuple
+
+-------------------------------
+---- "Fixed" S-expressions ----
+-------------------------------
+
+public export
+data FSexpF : {atom : Type} -> (atom -> Nat) -> Type -> Type where
+  FSop : {atom : Type} -> {arity : atom -> Nat} -> {carrier : Type} ->
+    (a : atom) -> Tuple (arity a) carrier -> FSexpF {atom} arity carrier
+
+public export
+FSexpAlg : {atom : Type} -> (atom -> Nat) -> Type -> Type
+FSexpAlg = Algebra . FSexpF
+
+public export
+FreeFSexp : {atom : Type} -> (atom -> Nat) -> Type -> Type
+FreeFSexp = FreeMonad . FSexpF
+
+public export
+MuFSexp : {atom : Type} -> (atom -> Nat) -> Type
+MuFSexp = Mu . FSexpF
+
+public export
+FSexpCoalg : {atom : Type} -> (atom -> Nat) -> Type -> Type
+FSexpCoalg = Coalgebra . FSexpF
+
+public export
+CofreeFSexp : {atom : Type} -> (atom -> Nat) -> Type -> Type
+CofreeFSexp = CofreeComonad . FSexpF
+
+public export
+NuFSexp : {atom : Type} -> (atom -> Nat) -> Type
+NuFSexp = Nu . FSexpF
 
 -----------------------------------------
 ---- Refined S-expressions and lists ----
