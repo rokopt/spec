@@ -182,14 +182,14 @@ PathF vEq carrier =
 
 public export
 GebTermProductCatObject : Type
-GebTermProductCatObject = ProductCatObject GebTermClass
+GebTermProductCatObject = ProductCatObject GebAtom
 
 -- A morphism in a product category is a product of morphisms.
 -- (In an Idris category, morphisms are functions.)
 public export
 GebTermProductCatMorphism :
   GebTermProductCatObject -> GebTermProductCatObject -> Type
-GebTermProductCatMorphism = ProductCatMorphism {idx=GebTermClass}
+GebTermProductCatMorphism = ProductCatMorphism {idx=GebAtom}
 
 -- An endofunctor on the Idris product category in which Geb terms are defined
 -- is a function on objects of the product category together with a function
@@ -197,7 +197,7 @@ GebTermProductCatMorphism = ProductCatMorphism {idx=GebTermClass}
 
 public export
 GebTermProductCatObjectMap : Type
-GebTermProductCatObjectMap = ProductCatObjectEndoMap GebTermClass
+GebTermProductCatObjectMap = ProductCatObjectEndoMap GebAtom
 
 public export
 GebTermProductCatMorphismMap : GebTermProductCatObjectMap -> Type
@@ -205,54 +205,7 @@ GebTermProductCatMorphismMap = ProductCatMorphismEndoMap
 
 public export
 GebTermProductCatEndofunctor : Type
-GebTermProductCatEndofunctor = ProductCatEndofunctor GebTermClass
-
-public export
-ClassCarrierFromTermCarrier :
-  (GebTermClass -> Type) -> TermClass -> (CategoryClass -> Type)
-ClassCarrierFromTermCarrier termCarrier c cat = termCarrier (cat, c)
-
-public export
-TypeCarrierFromTermCarrier :
-  (GebTermClass -> Type) -> CategoryClass -> (TermClass -> Type)
-TypeCarrierFromTermCarrier termCarrier c term = termCarrier (c, term)
-
--- The object-map component of the endofunctor from which we shall define
--- `GebTerm` (as an initial algebra).
-public export
-data GebTermF_object : GebTermProductCatObjectMap where
-  GTFsubstConst :
-    carrier (Subst, TCtype) ->
-    GebTermF_object carrier (Subst, TCfunction)
-
--- The morphism-map component of the endofunctor from which we shall define
--- `GebTerm` (as an initial algebra).
-public export GebTermF_morphism :
-    GebTermProductCatMorphismMap GebTermF_object
-
-public export
-GebTermF : GebTermProductCatEndofunctor
-GebTermF = (GebTermF_object ** GebTermF_morphism)
-
-----------------------
----- Term algebra ----
-----------------------
-
-public export
-GebTermMu : GebTermClass -> Type
-GebTermMu = MuProduct GebTermF_object
-
-public export
-GebTermFreeMonad : GebTermProductCatObjectMap
-GebTermFreeMonad = ProductCatFreeMonad GebTermF_object
-
-public export
-GebTermNu : GebTermClass -> Type
-GebTermNu = NuProduct GebTermF_object
-
-public export
-GebTermCofreeComonad : GebTermProductCatObjectMap
-GebTermCofreeComonad = ProductCatCofreeComonad GebTermF_object
+GebTermProductCatEndofunctor = ProductCatEndofunctor GebAtom
 
 ------------------------------------------
 ---- Term-checking and interpretation ----
