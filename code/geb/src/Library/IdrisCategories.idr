@@ -280,6 +280,14 @@ data FreeMonad : (Type -> Type) -> (Type -> Type) where
   InFree : {f : Type -> Type} -> {0 a : Type} ->
     TermAlgebra f a (FreeMonad f a)
 
+public export
+FreeAlgebra : (Type -> Type) -> Type -> Type
+FreeAlgebra f a = Algebra f (FreeMonad f a)
+
+public export
+InitialAlgebra : (Type -> Type) -> Type
+InitialAlgebra f = FreeAlgebra f Void
+
 -- The product-category version of `FreeMonad`.
 public export
 data ProductCatFreeMonad : {idx : Type} ->
