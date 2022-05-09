@@ -621,6 +621,11 @@ Tuple Z atom = ()
 Tuple (S n) atom = PairWithF atom (Tuple n atom)
 
 public export
+toTuple : {atom : Type} -> (l : List atom) -> Tuple (length l) atom
+toTuple [] = ()
+toTuple (x :: xs) = (x, toTuple xs)
+
+public export
 mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
 mapTuple {n=Z} f () = ()
 mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
