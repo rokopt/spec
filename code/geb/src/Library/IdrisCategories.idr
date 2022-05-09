@@ -576,13 +576,25 @@ public export
   map m (Left x) = Left $ map m x
   map m (Right y) = Right $ map m y
 
+---------------------------------------
+---- Higher-order utility functors ----
+---------------------------------------
+
+public export
+PairWithF : Type -> Type -> Type
+PairWithF a = ProductF (ConstF a) IdF
+
+public export
+ChoiceBetweenF : Type -> Type -> Type
+ChoiceBetweenF a = CoproductF (ConstF a) IdF
+
 -------------------------
 ---- Natural numbers ----
 -------------------------
 
 public export
 NatF : Type -> Type
-NatF = CoproductF UnitF IdF
+NatF = ChoiceBetweenF Unit
 
 public export
 Functor NatF where
@@ -602,7 +614,7 @@ TupleF natCarrier (Right n) carrier atom = (atom, carrier n)
 public export
 Tuple : Nat -> Type -> Type
 Tuple Z atom = ()
-Tuple (S n) atom = ProductF (ConstF atom) IdF (Tuple n atom)
+Tuple (S n) atom = PairWithF atom (Tuple n atom)
 
 public export
 mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
@@ -633,7 +645,7 @@ ChoiceF natCarrier (Right n) carrier atom = Either atom (carrier n)
 public export
 Choice : Nat -> Type -> Type
 Choice Z atom = Void
-Choice (S n) atom = CoproductF (ConstF atom) IdF (Choice n atom)
+Choice (S n) atom = ChoiceBetweenF atom (Choice n atom)
 
 public export
 mapChoice : {n : Nat} -> (f : a -> b) -> Choice n a -> Choice n b
@@ -658,7 +670,7 @@ choiceInj {n=(S n)} (S i) {ok} t = Right $ choiceInj i t {ok=(fromLteSucc ok)}
 
 public export
 ListF : Type -> Type -> Type
-ListF atom = CoproductF UnitF (ProductF (ConstF atom) IdF)
+ListF atom = ChoiceBetweenF () . (PairWithF atom)
 
 public export
 Bifunctor ListF where
