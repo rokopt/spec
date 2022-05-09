@@ -9,9 +9,9 @@ import public Control.Function
 %default total
 
 public export
-semigroupFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
-semigroupFromNonEmptyList f x [] = x
-semigroupFromNonEmptyList f x (x' :: l) = f x $ semigroupFromNonEmptyList f x' l
+magmaFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
+magmaFromNonEmptyList f x [] = x
+magmaFromNonEmptyList f x (x' :: l) = f x $ magmaFromNonEmptyList f x' l
 
 public export
 DecEqPred : (a: Type) -> Type
