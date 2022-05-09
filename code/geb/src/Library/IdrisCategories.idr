@@ -740,12 +740,24 @@ PolyFunctor0Alg : Type -> Type
 PolyFunctor0Alg = Algebra PolyFunctorF0
 
 public export
+PolyFunctor0Coalg : Type -> Type
+PolyFunctor0Coalg = Coalgebra PolyFunctorF0
+
+public export
 FreePolyFunctor0 : Type -> Type
 FreePolyFunctor0 = FreeMonad PolyFunctorF0
 
 public export
+CofreePolyFunctor0 : Type -> Type
+CofreePolyFunctor0 = CofreeComonad PolyFunctorF0
+
+public export
 MuPolyFunctor0 : Type
 MuPolyFunctor0 = Mu PolyFunctorF0
+
+public export
+NuPolyFunctor0 : Type
+NuPolyFunctor0 = Nu PolyFunctorF0
 
 public export
 interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
