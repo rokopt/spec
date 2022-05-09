@@ -984,10 +984,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataNat (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
         NSatomF a => NSatomF $ case a of
-          ZeroF => ZeroF
-          SuccF n => case n of
+          Left () => Left ()
+          Right n => case n of
             InFreeProduct NSexpNat n =>
-              SuccF $ alg NSexpNat $ nsexpCataNat n
+              Right $ alg NSexpNat $ nsexpCataNat n
 
     nsexpCataExp :
       ProductCatTermFunctor
@@ -1097,7 +1097,7 @@ data PowerF : Type -> Type -> Type where
 
 public export
 Bifunctor PowerF where
-  bimap f g (FactorsF l) = FactorsF $ bimap (bimap f $ map g) g l
+  bimap f g (FactorsF l) = FactorsF $ ?babaa -- bimap (bimap f $ map g) g l
 
 export
 powerFactors :

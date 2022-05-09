@@ -528,12 +528,12 @@ public export
 -- Given an object `a`, `Const a` is an endofunctor which takes all objects
 -- to `a`.
 public export
-data ConstF : Type -> Type -> Type where
-  InConst : a -> ConstF a carrier
+ConstF : Type -> Type -> Type
+ConstF a b = a
 
 public export
-Bifunctor ConstF where
-  bimap f _ (InConst x) = InConst (f x)
+Functor (ConstF a) where
+  map _ x = x
 
 public export
 VoidF : Type -> Type
@@ -581,14 +581,8 @@ public export
 -------------------------
 
 public export
-data NatF : Type -> Type where
-  ZeroF : NatF carrier
-  SuccF : carrier -> NatF carrier
-
-public export
-Functor NatF where
-  map _ ZeroF = ZeroF
-  map f (SuccF n) = SuccF $ f n
+NatF : Type -> Type
+NatF = CoproductF UnitF IdF
 
 public export
 NatAlg : Type -> Type
