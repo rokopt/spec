@@ -529,19 +529,27 @@ public export
 -- to `a`.
 public export
 ConstF : Type -> Type -> Type
-ConstF a b = a
+ConstF a _ = a
 
 public export
 Functor (ConstF a) where
-  map _ x = x
+  map = const id
 
 public export
-VoidF : Type -> Type
-VoidF = ConstF Void
+TerminalMonad : Type -> Type
+TerminalMonad = ConstF Unit
 
 public export
-UnitF : Type -> Type
-UnitF = ConstF Unit
+TerminalNTUnit : {a : Type} -> a -> TerminalMonad a
+TerminalNTUnit = const ()
+
+public export
+VoidComonad : Type -> Type
+VoidComonad = ConstF Void
+
+public export
+InitialNTCounit : {a : Type} -> VoidComonad a -> a
+InitialNTCounit v = void v
 
 ------------------
 ---- Products ----
@@ -561,6 +569,14 @@ public export
 (Functor f, Functor g) => Functor (ProductF f g) where
   map m (x, y) = (map m x, map m y)
 
+public export
+ProductMonad : Type -> Type
+ProductMonad a = Pair a a
+
+public export
+ProductNTUnit : {a : Type} -> a -> ProductMonad a
+ProductNTUnit x = (x, x)
+
 --------------------
 ---- Coproducts ----
 --------------------
@@ -575,6 +591,15 @@ public export
 (Functor f, Functor g) => Functor (CoproductF f g) where
   map m (Left x) = Left $ map m x
   map m (Right y) = Right $ map m y
+
+public export
+CoproductComonad : Type -> Type
+CoproductComonad a = Either a a
+
+public export
+CoproductNTCounit : {a : Type} -> CoproductComonad a -> a
+CoproductNTCounit (Left x) = x
+CoproductNTCounit (Right x) = x
 
 ---------------------------------------
 ---- Higher-order utility functors ----
@@ -598,12 +623,12 @@ Functor MaybeF where
   map m (Right x) = Right $ m x
 
 public export
-ProductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-ProductFL = magmaFromNonEmptyList ProductF
+ProductFL : List (Type -> Type) -> Type -> Type
+ProductFL = monoidFromList IdF ProductF
 
 public export
-CoproductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductFL = magmaFromNonEmptyList CoproductF
+CoproductFL : List (Type -> Type) -> Type -> Type
+CoproductFL = monoidFromList IdF CoproductF
 
 -------------------------
 ---- Natural numbers ----
@@ -620,7 +645,7 @@ NatF = MaybeF
 public export
 TupleF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-TupleF natCarrier (Left ()) carrier = UnitF
+TupleF natCarrier (Left ()) carrier = TerminalMonad
 TupleF natCarrier (Right n) carrier = flip Pair (carrier n)
 
 public export
@@ -656,7 +681,7 @@ tupleProj {n=(S n)} (S i) {ok} (a, t) = tupleProj i t {ok=(fromLteSucc ok)}
 public export
 ChoiceF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-ChoiceF natCarrier (Left ()) carrier = VoidF
+ChoiceF natCarrier (Left ()) carrier = VoidComonad
 ChoiceF natCarrier (Right n) carrier = flip Either (carrier n)
 
 public export
@@ -692,18 +717,23 @@ ListF atom = MaybeF . (PairWithF atom)
 public export
 Bifunctor ListF where
   bimap f g (Left ()) = (Left ())
-  bimap f g (Right (x, l)) = Right ((f x), (g l))
+  bimap f g (Right p) = Right $ bimap f g p
 
 --------------------------------------------------------------------
 ---- The category of zeroth-order Idris polynomial endofunctors ----
 --------------------------------------------------------------------
 
 public export
+PolyFunctorF0' : Type -> Type
+PolyFunctorF0' = CoproductFL [ TerminalMonad, ProductMonad ]
+  -- CoproductFL [TerminalMonad, ProductF ]
+
+public export
 data PolyFunctorF0 : Type -> Type where
   PolyId : PolyFunctorF0 carrier
   PolyCompose : carrier -> carrier -> PolyFunctorF0 carrier
-  PolyVoid : PolyFunctorF0 carrier
   PolyUnit : PolyFunctorF0 carrier
+  PolyVoid : PolyFunctorF0 carrier
   PolyProduct : carrier -> carrier -> PolyFunctorF0 carrier
   PolyCoproduct : carrier -> carrier -> PolyFunctorF0 carrier
 
@@ -723,8 +753,8 @@ public export
 interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
 interpretPoly0Alg PolyId = IdF
 interpretPoly0Alg (PolyCompose g f) = ComposeF g f
-interpretPoly0Alg PolyVoid = VoidF
-interpretPoly0Alg PolyUnit = UnitF
+interpretPoly0Alg PolyUnit = TerminalMonad
+interpretPoly0Alg PolyVoid = VoidComonad
 interpretPoly0Alg (PolyProduct f g) = ProductF f g
 interpretPoly0Alg (PolyCoproduct f g) = CoproductF f g
 

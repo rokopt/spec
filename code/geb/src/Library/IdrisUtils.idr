@@ -14,6 +14,11 @@ magmaFromNonEmptyList f x [] = x
 magmaFromNonEmptyList f x (x' :: l) = f x $ magmaFromNonEmptyList f x' l
 
 public export
+monoidFromList : {a : Type} -> a -> (a -> a -> a) -> List a -> a
+monoidFromList id compose [] = id
+monoidFromList id compose (x :: l) = magmaFromNonEmptyList compose x l
+
+public export
 DecEqPred : (a: Type) -> Type
 DecEqPred a = (x, x': a) -> Dec (x = x')
 
