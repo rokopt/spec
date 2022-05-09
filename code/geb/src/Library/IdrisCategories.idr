@@ -725,8 +725,15 @@ Bifunctor ListF where
 
 public export
 PolyFunctorF0' : Type -> Type
-PolyFunctorF0' = CoproductFL [ TerminalMonad, ProductMonad ]
-  -- CoproductFL [TerminalMonad, ProductF ]
+PolyFunctorF0' =
+  CoproductFL [
+    TerminalMonad, -- Identity
+    ProductMonad, -- Composition
+    TerminalMonad, -- Const-valued unit
+    TerminalMonad, -- Const-valued void
+    ProductMonad, -- Product
+    ProductMonad -- Coproduct
+  ]
 
 public export
 data PolyFunctorF0 : Type -> Type where
