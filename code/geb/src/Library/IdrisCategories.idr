@@ -487,6 +487,10 @@ IdF : Type -> Type
 IdF = id
 
 public export
+Functor IdF where
+  map m = m
+
+public export
 ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
 ComposeF = (.)
 
@@ -621,7 +625,7 @@ poly0AlgCata v a alg (InFree x) = alg $ case x of
 
 public export
 interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
-interpretPoly0Alg PolyId = id
+interpretPoly0Alg PolyId = IdF
 interpretPoly0Alg (PolyCompose g f) = ComposeF g f
 interpretPoly0Alg PolyVoid = VoidF
 interpretPoly0Alg PolyUnit = UnitF
