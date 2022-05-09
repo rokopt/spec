@@ -980,32 +980,36 @@ public export
 -------------------------------
 
 public export
-data FSexpF : {atom : Type} -> (atom -> Nat) -> Type -> Type where
-  FSop : {atom : Type} -> {arity : atom -> Nat} -> {carrier : Type} ->
+ArityMap : Type -> Type
+ArityMap atom = atom -> Nat
+
+public export
+data FSexpF : {atom : Type} -> ArityMap atom -> Type -> Type where
+  FSop : {atom : Type} -> {arity : ArityMap atom} -> {carrier : Type} ->
     (a : atom) -> Tuple (arity a) carrier -> FSexpF {atom} arity carrier
 
 public export
-FSexpAlg : {atom : Type} -> (atom -> Nat) -> Type -> Type
+FSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type
 FSexpAlg = Algebra . FSexpF
 
 public export
-FreeFSexp : {atom : Type} -> (atom -> Nat) -> Type -> Type
+FreeFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
 FreeFSexp = FreeMonad . FSexpF
 
 public export
-MuFSexp : {atom : Type} -> (atom -> Nat) -> Type
+MuFSexp : {atom : Type} -> ArityMap atom -> Type
 MuFSexp = Mu . FSexpF
 
 public export
-FSexpCoalg : {atom : Type} -> (atom -> Nat) -> Type -> Type
+FSexpCoalg : {atom : Type} -> ArityMap atom -> Type -> Type
 FSexpCoalg = Coalgebra . FSexpF
 
 public export
-CofreeFSexp : {atom : Type} -> (atom -> Nat) -> Type -> Type
+CofreeFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
 CofreeFSexp = CofreeComonad . FSexpF
 
 public export
-NuFSexp : {atom : Type} -> (atom -> Nat) -> Type
+NuFSexp : {atom : Type} -> ArityMap atom -> Type
 NuFSexp = Nu . FSexpF
 
 -----------------------------------------
