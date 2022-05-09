@@ -482,6 +482,14 @@ ProductAnamorphism {idx} f =
 ------------------------------------------
 ------------------------------------------
 
+public export
+IdF : Type -> Type
+IdF = id
+
+public export
+ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ComposeF = (.)
+
 -------------------
 ---- Constants ----
 -------------------
@@ -537,39 +545,88 @@ public export
   map m (Left x) = Left $ map m x
   map m (Right y) = Right $ map m y
 
--------------------------------------------------------
----- The category of Idris polynomial endofunctors ----
--------------------------------------------------------
+-------------------------
+---- Natural numbers ----
+-------------------------
 
 public export
-data PolyFunctorF : Type -> Type where
-  PolyId : PolyFunctorF carrier
-  PolyCompose : carrier -> carrier -> PolyFunctorF carrier
-  PolyVoid : PolyFunctorF carrier
-  PolyUnit : PolyFunctorF carrier
-  PolyProduct : carrier -> carrier -> PolyFunctorF carrier
-  PolyCoproduct : carrier -> carrier -> PolyFunctorF carrier
+data NatF : Type -> Type where
+  ZeroF : NatF carrier
+  SuccF : carrier -> NatF carrier
 
 public export
-PolyFunctorAlg : Type -> Type
-PolyFunctorAlg = Algebra PolyFunctorF
+Functor NatF where
+  map _ ZeroF = ZeroF
+  map f (SuccF n) = SuccF $ f n
 
 public export
-FreePolyFunctor : Type -> Type
-FreePolyFunctor = FreeMonad PolyFunctorF
+NatAlg : Type -> Type
+NatAlg = Algebra NatF
 
 public export
-MuPolyFunctor : Type
-MuPolyFunctor = Mu PolyFunctorF
+FreeNat : Type -> Type
+FreeNat = FreeMonad NatF
 
 public export
-interpretPolyAlg : PolyFunctorAlg (Type -> Type)
-interpretPolyAlg PolyId = id
-interpretPolyAlg (PolyCompose g f) = g . f
-interpretPolyAlg PolyVoid = VoidF
-interpretPolyAlg PolyUnit = UnitF
-interpretPolyAlg (PolyProduct f g) = ProductF f g
-interpretPolyAlg (PolyCoproduct f g) = CoproductF f g
+MuNat : Type
+MuNat = Mu NatF
+
+public export
+NatCoalg : Type -> Type
+NatCoalg = Coalgebra NatF
+
+public export
+CofreeNat : Type -> Type
+CofreeNat = CofreeComonad NatF
+
+public export
+NuNat : Type
+NuNat = Nu NatF
+
+--------------------------------------------------------------------
+---- The category of zeroth-order Idris polynomial endofunctors ----
+--------------------------------------------------------------------
+
+public export
+data PolyFunctorF0 : Type -> Type where
+  PolyId : PolyFunctorF0 carrier
+  PolyCompose : carrier -> carrier -> PolyFunctorF0 carrier
+  PolyVoid : PolyFunctorF0 carrier
+  PolyUnit : PolyFunctorF0 carrier
+  PolyProduct : carrier -> carrier -> PolyFunctorF0 carrier
+  PolyCoproduct : carrier -> carrier -> PolyFunctorF0 carrier
+
+public export
+PolyFunctor0Alg : Type -> Type
+PolyFunctor0Alg = Algebra PolyFunctorF0
+
+public export
+FreePolyFunctor0 : Type -> Type
+FreePolyFunctor0 = FreeMonad PolyFunctorF0
+
+public export
+MuPolyFunctor0 : Type
+MuPolyFunctor0 = Mu PolyFunctorF0
+
+public export
+poly0AlgCata : FreeCatamorphism PolyFunctorF0
+poly0AlgCata v a alg (InFree x) = alg $ case x of
+  TermVar v' => ?poly0AlgCata_hole_var
+  TermComposite x' => TermComposite $
+    ?poly0AlgCata_hole_term
+
+public export
+interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
+interpretPoly0Alg PolyId = id
+interpretPoly0Alg (PolyCompose g f) = ComposeF g f
+interpretPoly0Alg PolyVoid = VoidF
+interpretPoly0Alg PolyUnit = UnitF
+interpretPoly0Alg (PolyProduct f g) = ProductF f g
+interpretPoly0Alg (PolyCoproduct f g) = CoproductF f g
+
+---------------------------------------------------------------
+---- Zeroth-order datatypes from zeroth-order endofunctors ----
+---------------------------------------------------------------
 
 ------------------------------------------------------
 ------------------------------------------------------
