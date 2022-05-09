@@ -599,13 +599,11 @@ Functor MaybeF where
 
 public export
 ProductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-ProductFL a [] = a
-ProductFL a (a' :: l) = ProductF a $ ProductFL a' l
+ProductFL = monoidFromNonEmptyList ProductF
 
 public export
 CoproductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductFL a [] = a
-CoproductFL a (a' :: l) = CoproductF a $ CoproductFL a' l
+CoproductFL = monoidFromNonEmptyList CoproductF
 
 -------------------------
 ---- Natural numbers ----
