@@ -588,18 +588,22 @@ public export
 ChoiceBetweenF : Type -> Type -> Type
 ChoiceBetweenF a = CoproductF (ConstF a) IdF
 
+public export
+MaybeF : Type -> Type
+MaybeF = ChoiceBetweenF ()
+
+public export
+Functor MaybeF where
+  map m (Left ()) = Left ()
+  map m (Right x) = Right $ m x
+
 -------------------------
 ---- Natural numbers ----
 -------------------------
 
 public export
 NatF : Type -> Type
-NatF = ChoiceBetweenF Unit
-
-public export
-Functor NatF where
-  map m (Left ()) = Left ()
-  map m (Right x) = Right $ m x
+NatF = MaybeF
 
 ----------------
 ---- Tuples ----
@@ -670,7 +674,7 @@ choiceInj {n=(S n)} (S i) {ok} t = Right $ choiceInj i t {ok=(fromLteSucc ok)}
 
 public export
 ListF : Type -> Type -> Type
-ListF atom = ChoiceBetweenF () . (PairWithF atom)
+ListF atom = MaybeF . (PairWithF atom)
 
 public export
 Bifunctor ListF where
