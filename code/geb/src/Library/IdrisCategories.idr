@@ -543,11 +543,12 @@ public export
 
 public export
 data PolyFunctorF : Type -> Type where
+  PolyId : PolyFunctorF carrier
+  PolyCompose : carrier -> carrier -> PolyFunctorF carrier
   PolyVoid : PolyFunctorF carrier
   PolyUnit : PolyFunctorF carrier
   PolyProduct : carrier -> carrier -> PolyFunctorF carrier
   PolyCoproduct : carrier -> carrier -> PolyFunctorF carrier
-  PolyCompose : carrier -> carrier -> PolyFunctorF carrier
 
 public export
 PolyFunctorAlg : Type -> Type
@@ -563,11 +564,12 @@ MuPolyFunctor = Mu PolyFunctorF
 
 public export
 interpretPolyAlg : PolyFunctorAlg (Type -> Type)
+interpretPolyAlg PolyId = id
+interpretPolyAlg (PolyCompose g f) = g . f
 interpretPolyAlg PolyVoid = VoidF
 interpretPolyAlg PolyUnit = UnitF
 interpretPolyAlg (PolyProduct f g) = ProductF f g
 interpretPolyAlg (PolyCoproduct f g) = CoproductF f g
-interpretPolyAlg (PolyCompose g f) = g . f
 
 ------------------------------------------------------
 ------------------------------------------------------
