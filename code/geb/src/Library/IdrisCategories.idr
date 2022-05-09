@@ -476,6 +476,68 @@ ProductAnamorphism {idx} f =
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
 
+-----------------------------------------
+-----------------------------------------
+---- Polynomial endofunctor in Idris ----
+-----------------------------------------
+-----------------------------------------
+
+-------------------
+---- Constants ----
+-------------------
+
+-- Given an object `a`, `Const a` is an endofunctor which takes all objects
+-- to `a`.
+public export
+data ConstF : Type -> Type -> Type where
+  InConst : a -> ConstF a carrier
+
+public export
+Bifunctor ConstF where
+  bimap f _ (InConst x) = InConst (f x)
+
+public export
+VoidF : Type -> Type
+VoidF = ConstF Void
+
+public export
+UnitF : Type -> Type
+UnitF = ConstF Unit
+
+------------------
+---- Products ----
+------------------
+
+-- `ProductF` is an operator on endofunctors which takes two endofunctors
+-- to their product.  `ProductF` is therefore not itself an endofunctor; it
+-- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
+-- endofunctors on some category `C` -- if all of `C`'s endofunctors are
+-- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
+-- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
+public export
+data ProductF : Type -> Type -> Type where
+  InPair : a -> b -> ProductF a b
+
+public export
+Bifunctor ProductF where
+  bimap f g (InPair x y) = InPair (f x) (g y)
+
+--------------------
+---- Coproducts ----
+--------------------
+
+-- `CoproductF` is also in `[PolyC x PolyC, PolyC]`, and takes two
+-- endofunctors to their coproduct.
+public export
+data CoproductF : Type -> Type -> Type where
+  InLeft : a -> CoproductF a b
+  InRight : b -> CoproductF a b
+
+public export
+Bifunctor CoproductF where
+  bimap f _ (InLeft x) = InLeft (f x)
+  bimap _ g (InRight y) = InRight (g y)
+
 ------------------------------------------------------
 ------------------------------------------------------
 ---- Predicates, relations, equivalences in Idris ----

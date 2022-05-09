@@ -6,6 +6,19 @@ import public LanguageDef.Atom
 
 %default total
 
+-------------------------------------------------
+-------------------------------------------------
+---- The category of polynomial endofunctors ----
+-------------------------------------------------
+-------------------------------------------------
+
+public export
+data SubstEndofunctorF : Type -> Type -> Type where
+  SEndoConstVoid : SubstEndofunctorF obj carrier
+  SEndoConstUnit : SubstEndofunctorF obj carrier
+  SEndoProduct : ProductF obj carrier -> SubstEndofunctorF obj carrier
+  SEndoCoproduct : CoproductF obj carrier -> SubstEndofunctorF obj carrier
+
 public export
 record FinNatPoly where
   constructor MkFinNatPoly
@@ -643,65 +656,6 @@ data ConjugateNatTransF : Type -> Type where
 -- category.  (In particular, they all have initial algebras and terminal
 -- coalgebras, which are present in the first-order categories but not the
 -- zeroth-order categories.)
-
--------------------
----- Constants ----
--------------------
-
--- Given an object `a`, `Const a` is an endofunctor which takes all objects
--- to `a`.
-public export
-data ConstF : Type -> Type -> Type where
-  InConst : a -> ConstF a carrier
-
-public export
-Bifunctor ConstF where
-  bimap f _ (InConst x) = InConst (f x)
-
-------------------
----- Products ----
-------------------
-
--- `ProductF a b` is an operator on endofunctors which takes two endofunctors
--- to their product.  `ProductF` is therefore not itself an endofunctor; it
--- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
--- endofunctors on some category `C` -- if all of `C`'s endofunctors are
--- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
--- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
-public export
-data ProductF : Type -> Type -> Type where
-  InPair : a -> b -> ProductF a b
-
-public export
-Bifunctor ProductF where
-  bimap f g (InPair x y) = InPair (f x) (g y)
-
---------------------
----- Coproducts ----
---------------------
-
--- `CoproductF a b` is also in `[PolyC x PolyC, PolyC]`, and takes two
--- endofunctors to their coproduct.
-public export
-data CoproductF : Type -> Type -> Type where
-  InLeft : a -> CoproductF a b
-  InRight : b -> CoproductF a b
-
-public export
-Bifunctor CoproductF where
-  bimap f _ (InLeft x) = InLeft (f x)
-  bimap _ g (InRight y) = InRight (g y)
-
----------------------------------
----- Polynomial endofunctors ----
----------------------------------
-
-public export
-data SubstEndofunctorF : Type -> Type -> Type where
-  SEndoConstVoid : SubstEndofunctorF obj carrier
-  SEndoConstUnit : SubstEndofunctorF obj carrier
-  SEndoProduct : ProductF obj carrier -> SubstEndofunctorF obj carrier
-  SEndoCoproduct : CoproductF obj carrier -> SubstEndofunctorF obj carrier
 
 ---------------------------------------
 ---- Refined substitution category ----
