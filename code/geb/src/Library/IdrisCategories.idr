@@ -4,11 +4,20 @@ import Library.IdrisUtils
 
 %default total
 
-----------------------------------------------
-----------------------------------------------
----- Idris product and functor categories ----
-----------------------------------------------
-----------------------------------------------
+------------------------------------------------------
+------------------------------------------------------
+---- Idris sigma, product, and functor categories ----
+------------------------------------------------------
+------------------------------------------------------
+
+public export
+SigmaObject : {a : Type} -> (a -> Type) -> Type
+SigmaObject {a} b = DPair a b
+
+public export
+SigmaMorphism : {a, a' : Type} ->
+  (a -> Type) -> (a' -> Type) -> (a -> a') -> Type
+SigmaMorphism {a} b b' f = (x : a) -> b x -> b' (f x)
 
 -- The objects of a product category, where the product is represented by
 -- a function from an index type (as opposed to by a pair or a list -- the
