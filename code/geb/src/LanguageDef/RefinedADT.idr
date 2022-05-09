@@ -13,13 +13,6 @@ import public LanguageDef.Atom
 -------------------------------------------------
 
 public export
-data SubstEndofunctorF : Type -> Type -> Type where
-  SEndoConstVoid : SubstEndofunctorF obj carrier
-  SEndoConstUnit : SubstEndofunctorF obj carrier
-  SEndoProduct : ProductF obj carrier -> SubstEndofunctorF obj carrier
-  SEndoCoproduct : CoproductF obj carrier -> SubstEndofunctorF obj carrier
-
-public export
 record FinNatPoly where
   constructor MkFinNatPoly
   numTerms : Nat
@@ -821,12 +814,12 @@ NuNat = Nu NatF
 public export
 data ListF : Type -> Type -> Type where
   NilF : ListF atom carrier
-  ConsF : ProductF atom carrier -> ListF atom carrier
+  ConsF : atom -> carrier -> ListF atom carrier
 
 public export
 Bifunctor ListF where
   bimap f g NilF = NilF
-  bimap f g (ConsF p) = ConsF $ bimap f g p
+  bimap f g (ConsF x l) = ConsF (f x) (g l)
 
 public export
 ListAlg : Type -> Type -> Type
@@ -873,8 +866,7 @@ public export
 data SexpFunctor :
     (atom : Type) -> (carrier : SexpObject) -> SexpObject where
   SexpF :
-    ProductF atom (carrier SLIST) ->
-    SexpFunctor atom carrier SEXP
+    atom -> carrier SLIST -> SexpFunctor atom carrier SEXP
   SlistF :
     ListF (carrier SEXP) (carrier SLIST) ->
     SexpFunctor atom carrier SLIST
@@ -990,7 +982,7 @@ data NSexpFunctor : (carrier : NSexpObject) -> NSexpObject where
     NatF (carrier NSexpNat) ->
     NSexpFunctor carrier NSexpNat
   NSexpF :
-    ProductF (carrier NSexpNat) (carrier NSLIST) ->
+    carrier NSexpNat -> carrier NSLIST ->
     NSexpFunctor carrier NSEXP
   NSlistF :
     ListF (carrier NSEXP) (carrier NSLIST) ->
@@ -1044,13 +1036,11 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataExp (ProductCatTermVar v) = ProductCatTermVar v
     nsexpCataExp (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
-        NSexpF x => NSexpF $ case x of
-          InPair n l => case n of
-            InFreeProduct NSexpNat n => case l of
-              InFreeProduct NSLIST l =>
-                InPair
-                  (alg NSexpNat $ nsexpCataNat n)
-                  (alg NSLIST $ nsexpCataList l)
+        NSexpF (InFreeProduct NSexpNat n) l =>
+          case l of
+            InFreeProduct NSLIST l =>
+              NSexpF
+                (alg NSexpNat $ nsexpCataNat n) (alg NSLIST $ nsexpCataList l)
 
     nsexpCataList :
       ProductCatTermFunctor
@@ -1063,13 +1053,12 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
       case com of
         NSlistF l => NSlistF $ case l of
           NilF => NilF
-          ConsF p => ConsF $ case p of
-            InPair x l' => case x of
-              InFreeProduct NSEXP x => case l' of
-                InFreeProduct NSLIST l' =>
-                  InPair
-                    (alg NSEXP $ nsexpCataExp x)
-                    (alg NSLIST $ nsexpCataList l')
+          ConsF (InFreeProduct NSEXP x) l' =>
+            case l' of
+              InFreeProduct NSLIST l'' =>
+                ConsF
+                  (alg NSEXP $ nsexpCataExp x)
+                  (alg NSLIST $ nsexpCataList l'')
 
 ---------------------------------------------------------
 ---------------------------------------------------------

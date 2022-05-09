@@ -515,12 +515,12 @@ UnitF = ConstF Unit
 -- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
 -- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
 public export
-data ProductF : Type -> Type -> Type where
-  InPair : a -> b -> ProductF a b
+ProductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ProductF f g a = (f a, g a)
 
 public export
-Bifunctor ProductF where
-  bimap f g (InPair x y) = InPair (f x) (g y)
+(Functor f, Functor g) => Functor (ProductF f g) where
+  map m (x, y) = (map m x, map m y)
 
 --------------------
 ---- Coproducts ----
@@ -529,14 +529,45 @@ Bifunctor ProductF where
 -- `CoproductF` is also in `[PolyC x PolyC, PolyC]`, and takes two
 -- endofunctors to their coproduct.
 public export
-data CoproductF : Type -> Type -> Type where
-  InLeft : a -> CoproductF a b
-  InRight : b -> CoproductF a b
+CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+CoproductF f g a = Either (f a) (g a)
 
 public export
-Bifunctor CoproductF where
-  bimap f _ (InLeft x) = InLeft (f x)
-  bimap _ g (InRight y) = InRight (g y)
+(Functor f, Functor g) => Functor (CoproductF f g) where
+  map m (Left x) = Left $ map m x
+  map m (Right y) = Right $ map m y
+
+-------------------------------------------------------
+---- The category of Idris polynomial endofunctors ----
+-------------------------------------------------------
+
+public export
+data PolyFunctorF : Type -> Type where
+  PolyVoid : PolyFunctorF carrier
+  PolyUnit : PolyFunctorF carrier
+  PolyProduct : carrier -> carrier -> PolyFunctorF carrier
+  PolyCoproduct : carrier -> carrier -> PolyFunctorF carrier
+  PolyCompose : carrier -> carrier -> PolyFunctorF carrier
+
+public export
+PolyFunctorAlg : Type -> Type
+PolyFunctorAlg = Algebra PolyFunctorF
+
+public export
+FreePolyFunctor : Type -> Type
+FreePolyFunctor = FreeMonad PolyFunctorF
+
+public export
+MuPolyFunctor : Type
+MuPolyFunctor = Mu PolyFunctorF
+
+public export
+interpretPolyAlg : PolyFunctorAlg (Type -> Type)
+interpretPolyAlg PolyVoid = VoidF
+interpretPolyAlg PolyUnit = UnitF
+interpretPolyAlg (PolyProduct f g) = ProductF f g
+interpretPolyAlg (PolyCoproduct f g) = CoproductF f g
+interpretPolyAlg (PolyCompose g f) = g . f
 
 ------------------------------------------------------
 ------------------------------------------------------
