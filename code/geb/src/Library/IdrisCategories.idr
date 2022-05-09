@@ -643,7 +643,7 @@ tupleProj {n=(S n)} (S i) {ok} (a, t) = tupleProj i t {ok=(fromLteSucc ok)}
 public export
 ChoiceF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-ChoiceF natCarrier (Left ()) carrier = UnitF
+ChoiceF natCarrier (Left ()) carrier = VoidF
 ChoiceF natCarrier (Right n) carrier = flip Either (carrier n)
 
 public export
