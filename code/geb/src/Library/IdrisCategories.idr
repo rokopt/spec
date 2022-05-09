@@ -597,6 +597,16 @@ Functor MaybeF where
   map m (Left ()) = Left ()
   map m (Right x) = Right $ m x
 
+public export
+ProductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+ProductFL a [] = a
+ProductFL a (a' :: l) = ProductF a $ ProductFL a' l
+
+public export
+CoproductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+CoproductFL a [] = a
+CoproductFL a (a' :: l) = CoproductF a $ CoproductFL a' l
+
 -------------------------
 ---- Natural numbers ----
 -------------------------
@@ -710,13 +720,6 @@ FreePolyFunctor0 = FreeMonad PolyFunctorF0
 public export
 MuPolyFunctor0 : Type
 MuPolyFunctor0 = Mu PolyFunctorF0
-
-public export
-poly0AlgCata : FreeCatamorphism PolyFunctorF0
-poly0AlgCata v a alg (InFree x) = alg $ case x of
-  TermVar v' => ?poly0AlgCata_hole_var
-  TermComposite x' => TermComposite $
-    ?poly0AlgCata_hole_term
 
 public export
 interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
