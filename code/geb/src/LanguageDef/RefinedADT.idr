@@ -769,19 +769,37 @@ record RefinedExpCategoryType where
   REC_Obj : RefinedExpCategory_Obj
   REC_Int : RefinedExpInterpretation REC_Obj
 
+-------------------------
+---- Natural numbers ----
+-------------------------
+
+public export
+NatAlg : Type -> Type
+NatAlg = Algebra NatF
+
+public export
+FreeNat : Type -> Type
+FreeNat = FreeMonad NatF
+
+public export
+MuNat : Type
+MuNat = Mu NatF
+
+public export
+NatCoalg : Type -> Type
+NatCoalg = Coalgebra NatF
+
+public export
+CofreeNat : Type -> Type
+CofreeNat = CofreeComonad NatF
+
+public export
+NuNat : Type
+NuNat = Nu NatF
+
 ---------------
 ---- Lists ----
 ---------------
-
-public export
-data ListF : Type -> Type -> Type where
-  NilF : ListF atom carrier
-  ConsF : atom -> carrier -> ListF atom carrier
-
-public export
-Bifunctor ListF where
-  bimap f g NilF = NilF
-  bimap f g (ConsF x l) = ConsF (f x) (g l)
 
 public export
 ListAlg : Type -> Type -> Type
