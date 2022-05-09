@@ -1097,7 +1097,7 @@ data PowerF : Type -> Type -> Type where
 
 public export
 Bifunctor PowerF where
-  bimap f g (FactorsF l) = FactorsF $ ?babaa -- bimap (bimap f $ map g) g l
+  bimap f g (FactorsF l) = FactorsF $ mapSnd (bimap (bimap f $ mapSnd g) g) l
 
 export
 powerFactors :
