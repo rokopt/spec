@@ -87,23 +87,6 @@ data MonoidF : Type -> Type where
   MCancelIdR : a -> MonoidF a
   MShiftR : a -> a -> a -> MonoidF a
 
--------------------------------
----- Higher-order functors ----
--------------------------------
-
--- A bifunctor applied to a type is a functor.  This is simply the
--- currying adjunction in the category of functors -- the functor
--- categories `[C, [D, E]]` and `[C × D, E]` are equivalent.
-public export
-Bifunctor f => Functor (f a) where
-  map = mapSnd
-
--- A bifunctor with its arguments flipped is a bifunctor.  This
--- reflects the symmetry of the product.
-public export
-Bifunctor f => Bifunctor (flip f) where
-  bimap f g = bimap g f
-
 -------------------------
 ---- Natural numbers ----
 -------------------------
