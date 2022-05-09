@@ -613,6 +613,13 @@ public export
 (n : Nat) => Functor (Tuple n) where
   map = mapTuple
 
+public export
+tupleProj : {n : Nat} -> {atom : Type} -> (i : Nat) -> {auto ok : LT i n} ->
+  Tuple n atom -> atom
+tupleProj {n=Z} Z {ok} () = void $ succNotLTEzero ok
+tupleProj {n=(S n)} Z {ok} (a, t) = a
+tupleProj {n=(S n)} (S i) {ok} (a, t) = tupleProj i t {ok=(fromLteSucc ok)}
+
 ---------------
 ---- Lists ----
 ---------------
