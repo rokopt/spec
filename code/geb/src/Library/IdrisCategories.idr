@@ -594,10 +594,10 @@ Functor NatF where
 ----------------
 
 public export
-TupleF : (atom, natCarrier : Type) -> NatF natCarrier ->
-  (carrier : natCarrier -> Type) -> Type
-TupleF atom natCarrier (Left ()) carrier = ()
-TupleF atom natCarrier (Right x) carrier = (atom, carrier x)
+TupleF : (natCarrier : Type) -> NatF natCarrier ->
+  (carrier : natCarrier -> Type) -> (atom : Type) -> Type
+TupleF natCarrier (Left ()) carrier atom = ()
+TupleF natCarrier (Right n) carrier atom = (atom, carrier n)
 
 public export
 Tuple : Nat -> Type -> Type
@@ -619,6 +619,38 @@ tupleProj : {n : Nat} -> {atom : Type} -> (i : Nat) -> {auto ok : LT i n} ->
 tupleProj {n=Z} Z {ok} () = void $ succNotLTEzero ok
 tupleProj {n=(S n)} Z {ok} (a, t) = a
 tupleProj {n=(S n)} (S i) {ok} (a, t) = tupleProj i t {ok=(fromLteSucc ok)}
+
+-----------------
+---- Choices ----
+-----------------
+
+public export
+ChoiceF : (natCarrier : Type) -> NatF natCarrier ->
+  (carrier : natCarrier -> Type) -> (atom : Type) -> Type
+ChoiceF natCarrier (Left ()) carrier atom = Void
+ChoiceF natCarrier (Right n) carrier atom = Either atom (carrier n)
+
+public export
+Choice : Nat -> Type -> Type
+Choice Z atom = ()
+Choice (S n) atom = Either atom (Choice n atom)
+
+public export
+mapChoice : {n : Nat} -> (f : a -> b) -> Choice n a -> Choice n b
+mapChoice {n=Z} f () = ()
+mapChoice {n=(S n)} f (Left x) = Left (f x)
+mapChoice {n=(S n)} f (Right t) = Right (mapChoice f {n} t)
+
+public export
+(n : Nat) => Functor (Choice n) where
+  map = mapChoice
+
+public export
+choiceInj : {n : Nat} -> {atom : Type} -> (i : Nat) -> {auto ok : LT i n} ->
+  atom -> Choice n atom
+choiceInj {n=Z} Z {ok} a = void $ succNotLTEzero ok
+choiceInj {n=(S n)} Z {ok} a = Left a
+choiceInj {n=(S n)} (S i) {ok} t = Right $ choiceInj i t {ok=(fromLteSucc ok)}
 
 ---------------
 ---- Lists ----
