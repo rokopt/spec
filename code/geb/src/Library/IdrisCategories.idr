@@ -490,6 +490,10 @@ public export
 ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
 ComposeF = (.)
 
+public export
+(Functor g, Functor f) => Functor (ComposeF g f) where
+  map = map . map
+
 -------------------
 ---- Constants ----
 -------------------
