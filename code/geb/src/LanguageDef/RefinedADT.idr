@@ -1032,13 +1032,13 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataList (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
         NSlistF l => NSlistF $ case l of
-          NilF => NilF
-          ConsF (InFreeProduct NSEXP x) l' =>
+          Left () => Left ()
+          Right ((InFreeProduct NSEXP x), l') =>
             case l' of
               InFreeProduct NSLIST l'' =>
-                ConsF
-                  (alg NSEXP $ nsexpCataExp x)
-                  (alg NSLIST $ nsexpCataList l'')
+                Right
+                  ((alg NSEXP $ nsexpCataExp x),
+                   (alg NSLIST $ nsexpCataList l''))
 
 ---------------------------------------------------------
 ---------------------------------------------------------
@@ -1132,7 +1132,7 @@ data PolynomialF : Type -> Type -> Type where
 
 public export
 Bifunctor PolynomialF where
-  bimap f g (PolyTermsF t) = PolyTermsF $ bimap (bimap f g) g t
+  bimap f g (PolyTermsF t) = PolyTermsF $ mapSnd (bimap (bimap f g) g) t
 
 export
 polyTerms :
@@ -1144,7 +1144,7 @@ export
 polyFactors :
   PolynomialF coefficient carrier ->
   ListF (ListF (coefficient, NatF carrier) carrier) carrier
-polyFactors = mapFst powerFactors . polyTerms
+polyFactors = mapSnd (mapFst powerFactors) . polyTerms
 
 -- Next, we introduce a way of interpreting polynomials as datatypes.
 -- A polynomial endofunctor may be viewed as simply a polynomial, and

@@ -576,20 +576,6 @@ public export
   map m (Left x) = Left $ map m x
   map m (Right y) = Right $ map m y
 
----------------
----- Lists ----
----------------
-
-public export
-data ListF : Type -> Type -> Type where
-  NilF : ListF atom carrier
-  ConsF : atom -> carrier -> ListF atom carrier
-
-public export
-Bifunctor ListF where
-  bimap f g NilF = NilF
-  bimap f g (ConsF x l) = ConsF (f x) (g l)
-
 -------------------------
 ---- Natural numbers ----
 -------------------------
@@ -597,6 +583,24 @@ Bifunctor ListF where
 public export
 NatF : Type -> Type
 NatF = CoproductF UnitF IdF
+
+public export
+Functor NatF where
+  map m (Left ()) = Left ()
+  map m (Right x) = Right $ m x
+
+---------------
+---- Lists ----
+---------------
+
+public export
+ListF : Type -> Type -> Type
+ListF atom = CoproductF UnitF (ProductF (ConstF atom) IdF)
+
+public export
+Bifunctor ListF where
+  bimap f g (Left ()) = (Left ())
+  bimap f g (Right (x, l)) = Right ((f x), (g l))
 
 --------------------------------------------------------------------
 ---- The category of zeroth-order Idris polynomial endofunctors ----
