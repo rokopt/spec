@@ -19,6 +19,15 @@ SigmaMorphism : {a, a' : Type} ->
   (a -> Type) -> (a' -> Type) -> (a -> a') -> Type
 SigmaMorphism {a} b b' f = (x : a) -> b x -> b' (f x)
 
+public export
+sigmaCompose : {a, a', a'' : Type} ->
+  {b : a -> Type} -> {b' : a' -> Type} -> {b'' : a'' -> Type} ->
+  {f' : a' -> a''} -> {f : a -> a'} ->
+  SigmaMorphism b' b'' f' ->
+  SigmaMorphism b b' f ->
+  SigmaMorphism b b'' (f' . f)
+sigmaCompose {f} m' m x y = m' (f x) $ m x y
+
 -- The objects of a product category, where the product is represented by
 -- a function from an index type (as opposed to by a pair or a list -- the
 -- function type allows the assignment of names from a user-selected domain,
