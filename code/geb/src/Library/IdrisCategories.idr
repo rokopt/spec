@@ -724,8 +724,8 @@ Bifunctor ListF where
 --------------------------------------------------------------------
 
 public export
-PolyFunctorF0' : Type -> Type
-PolyFunctorF0' =
+PolyFunctorF0 : Type -> Type
+PolyFunctorF0 =
   CoproductFL [
     TerminalMonad, -- Identity
     ProductMonad, -- Composition
@@ -734,15 +734,6 @@ PolyFunctorF0' =
     ProductMonad, -- Product
     ProductMonad -- Coproduct
   ]
-
-public export
-data PolyFunctorF0 : Type -> Type where
-  PolyId : PolyFunctorF0 carrier
-  PolyCompose : carrier -> carrier -> PolyFunctorF0 carrier
-  PolyUnit : PolyFunctorF0 carrier
-  PolyVoid : PolyFunctorF0 carrier
-  PolyProduct : carrier -> carrier -> PolyFunctorF0 carrier
-  PolyCoproduct : carrier -> carrier -> PolyFunctorF0 carrier
 
 public export
 PolyFunctor0Alg : Type -> Type
@@ -758,12 +749,14 @@ MuPolyFunctor0 = Mu PolyFunctorF0
 
 public export
 interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
-interpretPoly0Alg PolyId = IdF
-interpretPoly0Alg (PolyCompose g f) = ComposeF g f
-interpretPoly0Alg PolyUnit = TerminalMonad
-interpretPoly0Alg PolyVoid = VoidComonad
-interpretPoly0Alg (PolyProduct f g) = ProductF f g
-interpretPoly0Alg (PolyCoproduct f g) = CoproductF f g
+interpretPoly0Alg (Left ()) = IdF
+interpretPoly0Alg (Right $ Left (g, f)) = ComposeF g f
+interpretPoly0Alg (Right $ Right $ Left ()) = TerminalMonad
+interpretPoly0Alg (Right $ Right $ Right $ Left ()) = VoidComonad
+interpretPoly0Alg (Right $ Right $ Right $ Right $ Left (f, g)) =
+  ProductF f g
+interpretPoly0Alg (Right $ Right $ Right $ Right $ Right (f, g)) =
+  CoproductF f g
 
 ---------------------------------------------------------------
 ---- Zeroth-order datatypes from zeroth-order endofunctors ----
