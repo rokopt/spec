@@ -476,11 +476,11 @@ ProductAnamorphism {idx} f =
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
 
--------------------------------
--------------------------------
----- Higher-order functors ----
--------------------------------
--------------------------------
+--------------------
+--------------------
+---- Bifunctors ----
+--------------------
+--------------------
 
 -- A bifunctor applied to a type is a functor.  This is simply the
 -- currying adjunction in the category of functors -- the functor
@@ -500,6 +500,10 @@ Bifunctor f => Bifunctor (flip f) where
 ---- Polynomial endofunctors in Idris ----
 ------------------------------------------
 ------------------------------------------
+
+------------------------------------------------------
+---- Identity/composition in category of functors ----
+------------------------------------------------------
 
 public export
 IdF : Type -> Type
