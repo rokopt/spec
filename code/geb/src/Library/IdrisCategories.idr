@@ -612,8 +612,8 @@ NatF = MaybeF
 public export
 TupleF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-TupleF natCarrier (Left ()) carrier atom = ()
-TupleF natCarrier (Right n) carrier atom = (atom, carrier n)
+TupleF natCarrier (Left ()) carrier = UnitF
+TupleF natCarrier (Right n) carrier = flip Pair (carrier n)
 
 public export
 Tuple : Nat -> Type -> Type
@@ -643,8 +643,8 @@ tupleProj {n=(S n)} (S i) {ok} (a, t) = tupleProj i t {ok=(fromLteSucc ok)}
 public export
 ChoiceF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-ChoiceF natCarrier (Left ()) carrier atom = Void
-ChoiceF natCarrier (Right n) carrier atom = Either atom (carrier n)
+ChoiceF natCarrier (Left ()) carrier = UnitF
+ChoiceF natCarrier (Right n) carrier = flip Either (carrier n)
 
 public export
 Choice : Nat -> Type -> Type
