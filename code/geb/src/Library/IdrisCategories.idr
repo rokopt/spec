@@ -602,7 +602,7 @@ TupleF natCarrier (Right n) carrier atom = (atom, carrier n)
 public export
 Tuple : Nat -> Type -> Type
 Tuple Z atom = ()
-Tuple (S n) atom = (atom, Tuple n atom)
+Tuple (S n) atom = ProductF (ConstF atom) IdF (Tuple n atom)
 
 public export
 mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
@@ -632,12 +632,12 @@ ChoiceF natCarrier (Right n) carrier atom = Either atom (carrier n)
 
 public export
 Choice : Nat -> Type -> Type
-Choice Z atom = ()
-Choice (S n) atom = Either atom (Choice n atom)
+Choice Z atom = Void
+Choice (S n) atom = CoproductF (ConstF atom) IdF (Choice n atom)
 
 public export
 mapChoice : {n : Nat} -> (f : a -> b) -> Choice n a -> Choice n b
-mapChoice {n=Z} f () = ()
+mapChoice {n=Z} f v = void v
 mapChoice {n=(S n)} f (Left x) = Left (f x)
 mapChoice {n=(S n)} f (Right t) = Right (mapChoice f {n} t)
 
