@@ -594,6 +594,12 @@ Functor NatF where
 ----------------
 
 public export
+TupleF : (atom, natCarrier : Type) -> NatF natCarrier ->
+  (carrier : natCarrier -> Type) -> Type
+TupleF atom natCarrier (Left ()) carrier = ()
+TupleF atom natCarrier (Right x) carrier = (atom, carrier x)
+
+public export
 Tuple : Nat -> Type -> Type
 Tuple Z atom = ()
 Tuple (S n) atom = (atom, Tuple n atom)
