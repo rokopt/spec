@@ -309,6 +309,14 @@ data CofreeComonad : (Type -> Type) -> (Type -> Type) where
     Inf (TreeFunctor f a (CofreeComonad f a)) -> CofreeComonad f a
 
 public export
+CofreeCoalgebra : (Type -> Type) -> Type -> Type
+CofreeCoalgebra f a = Coalgebra f (CofreeComonad f a)
+
+public export
+TerminalCoalgebra : (Type -> Type) -> Type
+TerminalCoalgebra f = CofreeCoalgebra f Unit
+
+public export
 data ProductCatCofreeComonad : {idx : Type} ->
     ProductCatObjectEndoMap idx -> ProductCatObjectEndoMap idx where
   InCofreeProduct : {idx : Type} ->
