@@ -599,11 +599,11 @@ Functor MaybeF where
 
 public export
 ProductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-ProductFL = monoidFromNonEmptyList ProductF
+ProductFL = semigroupFromNonEmptyList ProductF
 
 public export
 CoproductFL : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductFL = monoidFromNonEmptyList CoproductF
+CoproductFL = semigroupFromNonEmptyList CoproductF
 
 -------------------------
 ---- Natural numbers ----

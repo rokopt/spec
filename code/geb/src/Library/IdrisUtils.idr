@@ -9,9 +9,9 @@ import public Control.Function
 %default total
 
 public export
-monoidFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
-monoidFromNonEmptyList f x [] = x
-monoidFromNonEmptyList f x (x' :: l) = f x $ monoidFromNonEmptyList f x' l
+semigroupFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
+semigroupFromNonEmptyList f x [] = x
+semigroupFromNonEmptyList f x (x' :: l) = f x $ semigroupFromNonEmptyList f x' l
 
 public export
 DecEqPred : (a: Type) -> Type
