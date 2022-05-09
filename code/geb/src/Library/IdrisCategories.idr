@@ -744,6 +744,23 @@ data CofreeCMRelation :
 RelationNu : {t: Type} -> RelFunctor t -> RelationOn t
 RelationNu {t} f = CofreeCMRelation f $ FullRel t
 
+-- Category theory's equalizer, parameterized over a relation on
+-- the codomain (which serves as equality on the codomain, allowing
+-- the representation of equalizers on types whose equality is not
+-- that of the metalanguage (Idris)).
+EqualizerRelationGenF : (f, g : a -> b) -> RelationOn b -> RelationOn a
+EqualizerRelationGenF f g rel el el' = rel (f el) (g el')
+
+-- Category theory's coequalizer, parameterized over a relation on
+-- the domain (which serves as equality on the domain, allowing
+-- the representation of coequalizers on types whose equality is not
+-- that of the metalanguage (Idris)).
+CoequalizerRelationGenF : {a, b: _} ->
+  (f, g : a -> b) -> RelationOn a -> RelationOn b
+CoequalizerRelationGenF {a} f g rel el el' =
+  (elas : (a, a) **
+   (rel (fst elas) (snd elas), f (fst elas) = el, g (snd elas) = el'))
+
 ----------------------
 ---- Equivalences ----
 ----------------------
@@ -763,25 +780,8 @@ FreeMEquiv = FreeMRelation EquivGenF
 CofreeCMEquiv : {t : Type} -> RelFunctor t
 CofreeCMEquiv = CofreeCMRelation EquivGenF
 
--- Category theory's equalizer, parameterized over a relation on
--- the codomain (which serves as equality on the codomain, allowing
--- the representation of equalizers on types whose equality is not
--- that of the metalanguage (Idris)).
-EqualizerRelationGenF : (f, g : a -> b) -> RelationOn b -> RelationOn a
-EqualizerRelationGenF f g rel el el' = rel (f el) (g el')
-
--- Category theory's coequalizer, parameterized over a relation on
--- the domain (which serves as equality on the domain, allowing
--- the representation of coequalizers on types whose equality is not
--- that of the metalanguage (Idris)).
-CoequalizerRelationGenF : {a, b: _} ->
-  (f, g : a -> b) -> RelationOn a -> RelationOn b
-CoequalizerRelationGenF {a} f g rel el el' =
-  (elas : (a, a) **
-   (rel (fst elas) (snd elas), f (fst elas) = el, g (snd elas) = el'))
-
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
 
-EqFunctionExt : {a, b : Type} -> (𝑓, 𝑔: a -> b) -> 𝑓 = 𝑔 -> ExtEq 𝑓 𝑔
+EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
 EqFunctionExt f f Refl _ = Refl
