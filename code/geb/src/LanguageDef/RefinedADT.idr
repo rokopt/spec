@@ -883,24 +883,6 @@ public export
 NuSexp : Type -> SexpObject
 NuSexp atom = NuProduct {idx=SexpClass} (SexpFunctor atom)
 
-----------------
----- Tuples ----
-----------------
-
-public export
-Tuple : Nat -> Type -> Type
-Tuple Z atom = ()
-Tuple (S n) atom = (atom, Tuple n atom)
-
-public export
-mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
-mapTuple {n=Z} f () = ()
-mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
-
-public export
-(n : Nat) => Functor (Tuple n) where
-  map = mapTuple
-
 -------------------------------
 ---- "Fixed" S-expressions ----
 -------------------------------
