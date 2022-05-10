@@ -677,10 +677,17 @@ public export
 ProductNTUnit : {a : Type} -> a -> ProductMonad a
 ProductNTUnit x = (x, x)
 
--- The right adjoint to the diagonal functor, in the Idris type system.
+-- The right adjoint to the diagonal functor from the Idris type system
+-- (`Type`).
 public export
 ProductAdjunct : (Type, Type) -> Type
 ProductAdjunct (t, t') = Pair t t'
+
+-- The right adjoint to the diagonal functor from the category of Idris
+-- functors (`Type -> Type`).
+public export
+ProductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
+ProductAdjunctFCat p = ProductF (fst p) (snd p)
 
 --------------------
 ---- Coproducts ----
@@ -710,6 +717,12 @@ CoproductNTCounit (Right x) = x
 public export
 CoproductAdjunct : (Type, Type) -> Type
 CoproductAdjunct (t, t') = Either t t'
+
+-- The left adjoint to the diagonal functor from the category of Idris
+-- functors (`Type -> Type`).
+public export
+CoproductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
+CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
 
 --------------------------------------------
 ---- F-algebra and F-coalgebra functors ----
@@ -987,8 +1000,8 @@ subst0FunctorAlg : Subst0TypeAlg (Type -> Type)
 subst0FunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
   (const TerminalMonad,
    const InitialComonad,
-   \p => ProductF (fst p) (snd p),
-   \p => CoproductF (fst p) (snd p)
+   ProductAdjunctFCat,
+   CoproductAdjunctFCat
   )
 
 ------------------------------------------------------
