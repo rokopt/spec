@@ -476,6 +476,26 @@ ProductAnamorphism {idx} f =
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
 
+-----------------------------------
+---- Functional extensionality ----
+-----------------------------------
+
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
+ExtEq {a} f g = (el : a) -> f el = g el
+
+ExtEqRefl : {a : Type} -> {f : a -> a} -> ExtEq f f
+ExtEqRefl _ = Refl
+
+ExtEqSym : {a, b  : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
+ExtEqSym eq x = sym (eq x)
+
+ExtEqTrans : {a, b : Type} ->
+  {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
+ExtEqTrans eq eq' x = trans (eq x) (eq' x)
+
+EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
+EqFunctionExt Refl _ = Refl
+
 --------------------
 --------------------
 ---- Bifunctors ----
@@ -514,6 +534,10 @@ Functor IdF where
   map m = m
 
 public export
+IdFunctorialityId : {a, b : Type} -> map {f=IdF} (id {a}) = id {a=b}
+IdFunctorialityId = ?hole
+
+public export
 ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
 ComposeF = (.)
 
@@ -535,13 +559,26 @@ public export
 Functor (ConstF a) where
   map = const id
 
+--------------------------------------
+---- Terminal and initial objects ----
+--------------------------------------
+
 public export
 TerminalMonad : Type -> Type
 TerminalMonad = ConstF Unit
 
 public export
-TerminalNTUnit : {a : Type} -> a -> TerminalMonad a
-TerminalNTUnit = const ()
+Functor TerminalMonad where
+  map m () = ()
+
+public export
+TerminalNTUnit : (a : Type) -> a -> TerminalMonad a
+TerminalNTUnit _ = const ()
+
+public export
+TerminalNaturality : {a, b : Type} -> (m : a -> b) ->
+  map {f=TerminalMonad} m . TerminalNTUnit a = TerminalNTUnit b . m
+TerminalNaturality m = Refl
 
 public export
 VoidComonad : Type -> Type
@@ -616,11 +653,6 @@ ChoiceBetweenF a = CoproductF (ConstF a) IdF
 public export
 MaybeF : Type -> Type
 MaybeF = ChoiceBetweenF ()
-
-public export
-Functor MaybeF where
-  map m (Left ()) = Left ()
-  map m (Right x) = Right $ m x
 
 public export
 ProductFL : List (Type -> Type) -> Type -> Type
@@ -982,9 +1014,3 @@ FreeMEquiv = FreeMRelation EquivGenF
 
 CofreeCMEquiv : {t : Type} -> RelFunctor t
 CofreeCMEquiv = CofreeCMRelation EquivGenF
-
-ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
-ExtEq {a} f g = (el : a) -> f el = g el
-
-EqFunctionExt : {a, b : Type} -> (f, g: a -> b) -> f = g -> ExtEq f g
-EqFunctionExt f f Refl _ = Refl
