@@ -846,12 +846,33 @@ public export
 NuSubst0Type : Type
 NuSubst0Type = Nu Subst0TypeF
 
+-- This algebra interprets the constructors of the substitution-0 category
+-- as types in the Idris type system.  This is posible because those
+-- types themselves form a category, and there is a faithful functor
+-- from the substitution-0 category to that category.  (In other
+-- words, the Idris type system contains an initial object, a terminal object,
+-- and all products and coproducts, which together inductively comprise all
+-- of the objects of the substitution-0 category.)
 public export
-interpretSubst0Alg : Subst0TypeAlg (Type -> Type)
-interpretSubst0Alg (Left ()) = TerminalMonad
-interpretSubst0Alg (Right $ Left ()) = VoidComonad
-interpretSubst0Alg (Right $ Right $ Left (f, g)) = ProductF f g
-interpretSubst0Alg (Right $ Right $ Right (f, g)) = CoproductF f g
+interpretSubst0Alg : Subst0TypeAlg Type
+interpretSubst0Alg (Left ()) = ()
+interpretSubst0Alg (Right $ Left ()) = Void
+interpretSubst0Alg (Right $ Right $ Left (f, g)) = (f, g)
+interpretSubst0Alg (Right $ Right $ Right (f, g)) = Either f g
+
+-- This algebra interprets the constructors of the substitution-0 category
+-- as functors in the Idris type system.  This is posible because those
+-- functors themselves form a category, and there is a faithful functor
+-- from the substitution-0 category to that functor category.  (In other
+-- words, the functor category contains an initial object, a terminal object,
+-- and all products and coproducts, which together inductively comprise all
+-- of the objects of the substitution-0 category.)
+public export
+subst0FunctorAlg : Subst0TypeAlg (Type -> Type)
+subst0FunctorAlg (Left ()) = TerminalMonad
+subst0FunctorAlg (Right $ Left ()) = VoidComonad
+subst0FunctorAlg (Right $ Right $ Left (f, g)) = ProductF f g
+subst0FunctorAlg (Right $ Right $ Right (f, g)) = CoproductF f g
 
 public export
 data PolyConstraint0F : {a : Type} ->
