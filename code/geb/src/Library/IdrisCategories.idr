@@ -525,17 +525,63 @@ Bifunctor f => Bifunctor (flip f) where
 ---- Identity/composition in category of functors ----
 ------------------------------------------------------
 
+-- The identity on type `Type`.
+
 public export
 IdF : Type -> Type
-IdF = id
+IdF = Prelude.Basics.id
 
 public export
 Functor IdF where
   map m = m
 
 public export
-IdFunctorialityId : ExtEq (map {f=IdF} id) id
-IdFunctorialityId _ = Refl
+mapIdFRefl : (a : Type) ->
+  map {f=IdF} (Prelude.Basics.id {a}) = Prelude.Basics.id {a}
+mapIdFRefl _ = Refl
+
+public export
+mapIdFExtEq : (a : Type) ->
+  ExtEq (map {f=IdF} (Prelude.Basics.id {a})) (Prelude.Basics.id {a})
+mapIdFExtEq a = EqFunctionExt (mapIdFRefl a)
+
+public export
+mapIdFIdem : (a : Type) ->
+  map (map {f=IdF} (Prelude.Basics.id {a})) =
+    map {f=IdF} (Prelude.Basics.id {a})
+mapIdFIdem _ = Refl
+
+public export
+mapIdFExtIdem : (a : Type) ->
+  ExtEq
+    (map (map {f=IdF} (Prelude.Basics.id {a})))
+    (map {f=IdF} (Prelude.Basics.id {a}))
+mapIdFExtIdem a = EqFunctionExt (mapIdFIdem a)
+
+public export
+mapMapIdFRefl : (a : Type) ->
+  map (map {f=IdF} (Prelude.Basics.id {a})) = Prelude.Basics.id {a}
+mapMapIdFRefl _ = Refl
+
+public export
+mapMapIdFExtEq : (a : Type) ->
+  ExtEq (map (map {f=IdF} (Prelude.Basics.id {a}))) (Prelude.Basics.id {a})
+mapMapIdFExtEq a = EqFunctionExt (mapMapIdFRefl a)
+
+-- `IdF` follows the functor laws; this shows that `IdF` is a
+-- functor in the category of the Idris type system.
+
+public export
+IdFunctorialityId : (a : Type) ->
+  ExtEq (map {f=IdF} $ Prelude.Basics.id {a}) (Prelude.Basics.id {a})
+IdFunctorialityId _ _ = Refl
+
+public export
+IdFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
+  ExtEq (map {f=IdF} (m' . m)) (map {f=IdF} m' . map {f=IdF} m)
+IdFunctorialityCompose _ _ _ = Refl
+
+-- Composition of functions of type `Type -> Type`.
 
 public export
 ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
@@ -544,6 +590,23 @@ ComposeF = (.)
 public export
 (Functor g, Functor f) => Functor (ComposeF g f) where
   map = map . map
+
+-- `ComposeF` follows the functor laws; this shows that `ComposeF` is
+-- a functor in the category of the Idris type system.
+
+-- XXX
+
+-- `IdF` serves as a left and right identity for functors.  This
+-- is the first of the two conditions required to show that functors in
+-- the Idris type system themselves form a category.
+
+-- XXX
+
+-- `ComposeF` is associative.  This is the second of the two conditions
+-- required to show that functors in the Idris type system themselves
+-- form a category.
+
+-- XXX
 
 -------------------
 ---- Constants ----
