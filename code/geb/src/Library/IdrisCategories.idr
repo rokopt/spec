@@ -840,14 +840,18 @@ Bifunctor ListF where
 -- datatypes as the "substitution-0 category".
 
 public export
-Subst0TypeF : Type -> Type
-Subst0TypeF =
-  CoproductFL [
+Subst0TypeFCases : List (Type -> Type)
+Subst0TypeFCases =
+  [
     TerminalMonad, -- Unit
     TerminalMonad, -- Void
     ProductMonad, -- Product
     ProductMonad -- Coproduct
   ]
+
+public export
+Subst0TypeF : Type -> Type
+Subst0TypeF = CoproductFL Subst0TypeFCases
 
 public export
 Subst0TypeAlg : Type -> Type
@@ -882,10 +886,8 @@ NuSubst0Type = Nu Subst0TypeF
 -- of the objects of the substitution-0 category.)
 public export
 interpretSubst0Alg : Subst0TypeAlg Type
-interpretSubst0Alg (Left ()) = ()
-interpretSubst0Alg (Right $ Left ()) = Void
-interpretSubst0Alg (Right $ Right $ Left (f, g)) = (f, g)
-interpretSubst0Alg (Right $ Right $ Right (f, g)) = Either f g
+interpretSubst0Alg = CoproductAlgL {l=Subst0TypeFCases}
+  (const (), const Void, \p => (fst p, snd p), \p => Either (fst p) (snd p))
 
 -- This dependent algebra -- which together with `interpretSubst0Alg` induces
 -- a functor in the arrow (sigma) category of the substitution-0 category --
