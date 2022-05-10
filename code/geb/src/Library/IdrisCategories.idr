@@ -710,11 +710,13 @@ MaybeF = ChoiceBetweenF ()
 
 public export
 ProductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-ProductFLNE = magmaFromNonEmptyList ProductF
+ProductFLNE f [] = f
+ProductFLNE f (f' :: fs) = ProductF f (ProductFLNE f' fs)
 
 public export
 ProductFL : List (Type -> Type) -> Type -> Type
-ProductFL = monoidFromList TerminalMonad ProductF
+ProductFL [] = TerminalMonad
+ProductFL (f :: fs) = ProductFLNE f fs
 
 public export
 ProductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
@@ -739,11 +741,13 @@ ProductAlgL = ?ProductAlgL_hole
 
 public export
 CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductFLNE = magmaFromNonEmptyList CoproductF
+CoproductFLNE f [] = f
+CoproductFLNE f (f' :: fs) = CoproductF f (CoproductFLNE f' fs)
 
 public export
 CoproductFL : List (Type -> Type) -> Type -> Type
-CoproductFL = monoidFromList InitialComonad CoproductF
+CoproductFL [] = InitialComonad
+CoproductFL (f :: fs) = CoproductFLNE f fs
 
 public export
 CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
