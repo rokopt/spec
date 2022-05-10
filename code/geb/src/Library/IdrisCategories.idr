@@ -728,7 +728,6 @@ PolyFunctorF0 : Type -> Type
 PolyFunctorF0 =
   CoproductFL [
     TerminalMonad, -- Identity
-    ProductMonad, -- Composition
     TerminalMonad, -- Const-valued unit
     TerminalMonad, -- Const-valued void
     ProductMonad, -- Product
@@ -762,13 +761,14 @@ NuPolyFunctor0 = Nu PolyFunctorF0
 public export
 interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
 interpretPoly0Alg (Left ()) = IdF
-interpretPoly0Alg (Right $ Left (g, f)) = ComposeF g f
-interpretPoly0Alg (Right $ Right $ Left ()) = TerminalMonad
-interpretPoly0Alg (Right $ Right $ Right $ Left ()) = VoidComonad
-interpretPoly0Alg (Right $ Right $ Right $ Right $ Left (f, g)) =
-  ProductF f g
-interpretPoly0Alg (Right $ Right $ Right $ Right $ Right (f, g)) =
-  CoproductF f g
+interpretPoly0Alg (Right $ Left ()) = TerminalMonad
+interpretPoly0Alg (Right $ Right $ Left ()) = VoidComonad
+interpretPoly0Alg (Right $ Right $ Right $ Left (f, g)) = ProductF f g
+interpretPoly0Alg (Right $ Right $ Right $ Right (f, g)) = CoproductF f g
+
+public export
+data PolyConstraint0F : {a : Type} ->
+    (b : a -> Type) -> (PolyFunctorF0 a -> Type) where
 
 ---------------------------------------------------------------
 ---- Zeroth-order datatypes from zeroth-order endofunctors ----
