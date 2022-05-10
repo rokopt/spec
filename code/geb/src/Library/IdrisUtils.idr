@@ -19,6 +19,14 @@ monoidFromList id compose [] = id
 monoidFromList id compose (x :: l) = magmaFromNonEmptyList compose x l
 
 public export
+pairInj1 : {a, b : Type} -> {p, p' : (a, b)} -> p = p' -> fst p = fst p'
+pairInj1 Refl = Refl
+
+public export
+pairInj2 : {a, b : Type} -> {p, p' : (a, b)} -> p = p' -> snd p = snd p'
+pairInj2 Refl = Refl
+
+public export
 DecEqPred : (a: Type) -> Type
 DecEqPred a = (x, x': a) -> Dec (x = x')
 
