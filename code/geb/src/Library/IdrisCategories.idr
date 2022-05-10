@@ -737,7 +737,8 @@ ProductAlgLNE = ?ProductAlgLNE_hole
 public export
 ProductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
   ProductAlgType l a -> Algebra (ProductFL l) a
-ProductAlgL = ?ProductAlgL_hole
+ProductAlgL {l=[]} algl = algl
+ProductAlgL {l=(f :: fs)} algl = ProductAlgLNE {f} {l=fs} algl
 
 public export
 CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
@@ -768,7 +769,8 @@ CoproductAlgLNE = ?CoproductAlgLNE_hole
 public export
 CoproductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
   CoproductAlgType l a -> Algebra (CoproductFL l) a
-CoproductAlgL = ?CoproductAlgL_hole
+CoproductAlgL {l=[]} algl = \x => void x
+CoproductAlgL {l=(f :: fs)} algl = CoproductAlgLNE {f} {l=fs} algl
 
 -------------------------
 ---- Natural numbers ----
