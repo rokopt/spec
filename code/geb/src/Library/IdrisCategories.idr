@@ -534,8 +534,8 @@ Functor IdF where
   map m = m
 
 public export
-IdFunctorialityId : {a, b : Type} -> map {f=IdF} (id {a}) = id {a=b}
-IdFunctorialityId = ?hole
+IdFunctorialityId : ExtEq (map {f=IdF} id) id
+IdFunctorialityId _ = Refl
 
 public export
 ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
