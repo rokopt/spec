@@ -623,7 +623,7 @@ TerminalMonad = ConstF Unit
 
 public export
 Functor TerminalMonad where
-  map m () = ()
+  map _ () = ()
 
 public export
 TerminalNTUnit : (a : Type) -> a -> TerminalMonad a
@@ -632,15 +632,24 @@ TerminalNTUnit _ = const ()
 public export
 TerminalNaturality : {a, b : Type} -> (m : a -> b) ->
   map {f=TerminalMonad} m . TerminalNTUnit a = TerminalNTUnit b . m
-TerminalNaturality m = Refl
+TerminalNaturality _ = Refl
 
 public export
 InitialComonad : Type -> Type
 InitialComonad = ConstF Void
 
 public export
-InitialNTCounit : {a : Type} -> InitialComonad a -> a
-InitialNTCounit v = void v
+Functor InitialComonad where
+  map _ v = v
+
+public export
+InitialNTCounit : (a : Type) -> InitialComonad a -> a
+InitialNTCounit _ v = void v
+
+public export
+InitialNaturality : {a, b : Type} -> (m : a -> b) ->
+  ExtEq (InitialNTCounit b . map {f=InitialComonad} m) (m . InitialNTCounit a)
+InitialNaturality _ v = void v
 
 ------------------
 ---- Products ----
