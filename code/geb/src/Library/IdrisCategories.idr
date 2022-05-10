@@ -928,10 +928,12 @@ data Subst0ConstraintF : {a : Type} -> Subst0TypeAlg a -> Type where
 -- of the objects of the substitution-0 category.)
 public export
 subst0FunctorAlg : Subst0TypeAlg (Type -> Type)
-subst0FunctorAlg (Left ()) = TerminalMonad
-subst0FunctorAlg (Right $ Left ()) = InitialComonad
-subst0FunctorAlg (Right $ Right $ Left (f, g)) = ProductF f g
-subst0FunctorAlg (Right $ Right $ Right (f, g)) = CoproductF f g
+subst0FunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
+  (const TerminalMonad,
+   const InitialComonad,
+   \p => ProductF (fst p) (snd p),
+   \p => CoproductF (fst p) (snd p)
+  )
 
 ------------------------------------------------------
 ------------------------------------------------------
