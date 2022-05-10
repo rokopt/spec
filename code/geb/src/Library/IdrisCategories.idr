@@ -711,6 +711,22 @@ public export
 CoproductAdjunct : (Type, Type) -> Type
 CoproductAdjunct (t, t') = Either t t'
 
+--------------------------------------------
+---- F-algebra and F-coalgebra functors ----
+--------------------------------------------
+
+-- Called `TermFunctor` above, this version is expressed explicitly
+-- in terms of products and coproducts.
+public export
+PreFreeAlgebraF : (Type -> Type) -> Type -> (Type -> Type)
+PreFreeAlgebraF f a = CoproductF (ConstF a) f
+
+-- Called `TreeFunctor` above, this version is expressed explicitly
+-- in terms of products and coproducts.
+public export
+PreCofreeCoalgebraF : (Type -> Type) -> Type -> (Type -> Type)
+PreCofreeCoalgebraF f a = ProductF (ConstF a) f
+
 ---------------------------------------
 ---- Higher-order utility functors ----
 ---------------------------------------
