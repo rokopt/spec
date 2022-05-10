@@ -805,60 +805,61 @@ Bifunctor ListF where
   bimap f g (Left ()) = (Left ())
   bimap f g (Right p) = Right $ bimap f g p
 
---------------------------------------------------------------------
----- The category of zeroth-order Idris polynomial endofunctors ----
---------------------------------------------------------------------
+-------------------------------------
+---- The substitution-0 category ----
+-------------------------------------
+
+-- We refer to the category of zeroth-order (non-recursive) non-dependent
+-- datatypes as the "substitution-0 category".
 
 public export
-PolyFunctorF0 : Type -> Type
-PolyFunctorF0 =
+Subst0TypeF : Type -> Type
+Subst0TypeF =
   CoproductFL [
-    TerminalMonad, -- Identity
-    TerminalMonad, -- Const-valued unit
-    TerminalMonad, -- Const-valued void
+    TerminalMonad, -- Unit
+    TerminalMonad, -- Void
     ProductMonad, -- Product
     ProductMonad -- Coproduct
   ]
 
 public export
-PolyFunctor0Alg : Type -> Type
-PolyFunctor0Alg = Algebra PolyFunctorF0
+Subst0TypeAlg : Type -> Type
+Subst0TypeAlg = Algebra Subst0TypeF
 
 public export
-PolyFunctor0Coalg : Type -> Type
-PolyFunctor0Coalg = Coalgebra PolyFunctorF0
+Subst0TypeCoalg : Type -> Type
+Subst0TypeCoalg = Coalgebra Subst0TypeF
 
 public export
-FreePolyFunctor0 : Type -> Type
-FreePolyFunctor0 = FreeMonad PolyFunctorF0
+FreeSubst0Type : Type -> Type
+FreeSubst0Type = FreeMonad Subst0TypeF
 
 public export
-CofreePolyFunctor0 : Type -> Type
-CofreePolyFunctor0 = CofreeComonad PolyFunctorF0
+CofreeSubst0Type : Type -> Type
+CofreeSubst0Type = CofreeComonad Subst0TypeF
 
 public export
-MuPolyFunctor0 : Type
-MuPolyFunctor0 = Mu PolyFunctorF0
+MuSubst0Type : Type
+MuSubst0Type = Mu Subst0TypeF
 
 public export
-NuPolyFunctor0 : Type
-NuPolyFunctor0 = Nu PolyFunctorF0
+NuSubst0Type : Type
+NuSubst0Type = Nu Subst0TypeF
 
 public export
-interpretPoly0Alg : PolyFunctor0Alg (Type -> Type)
-interpretPoly0Alg (Left ()) = IdF
-interpretPoly0Alg (Right $ Left ()) = TerminalMonad
-interpretPoly0Alg (Right $ Right $ Left ()) = VoidComonad
-interpretPoly0Alg (Right $ Right $ Right $ Left (f, g)) = ProductF f g
-interpretPoly0Alg (Right $ Right $ Right $ Right (f, g)) = CoproductF f g
+interpretSubst0Alg : Subst0TypeAlg (Type -> Type)
+interpretSubst0Alg (Left ()) = TerminalMonad
+interpretSubst0Alg (Right $ Left ()) = VoidComonad
+interpretSubst0Alg (Right $ Right $ Left (f, g)) = ProductF f g
+interpretSubst0Alg (Right $ Right $ Right (f, g)) = CoproductF f g
 
 public export
 data PolyConstraint0F : {a : Type} ->
-    (b : a -> Type) -> (PolyFunctorF0 a -> Type) where
+    (b : a -> Type) -> (Subst0TypeF a -> Type) where
 
----------------------------------------------------------------
----- Zeroth-order datatypes from zeroth-order endofunctors ----
----------------------------------------------------------------
+--------------------------------------------------------------------
+---- The category of zeroth-order Idris polynomial endofunctors ----
+--------------------------------------------------------------------
 
 ------------------------------------------------------
 ------------------------------------------------------
