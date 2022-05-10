@@ -709,12 +709,62 @@ MaybeF : Type -> Type
 MaybeF = ChoiceBetweenF ()
 
 public export
+ProductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+ProductFLNE = magmaFromNonEmptyList ProductF
+
+public export
 ProductFL : List (Type -> Type) -> Type -> Type
 ProductFL = monoidFromList TerminalMonad ProductF
 
 public export
+ProductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+ProductAlgTypeNE f [] a = Algebra f a
+ProductAlgTypeNE f (f' :: fs) a = (Algebra f' a, ProductAlgTypeNE f' fs a)
+
+public export
+ProductAlgType : List (Type -> Type) -> Type -> Type
+ProductAlgType [] a = Algebra TerminalMonad a
+ProductAlgType (f :: fs) a = ProductAlgTypeNE f fs a
+
+public export
+ProductAlgLNE :
+  {f : Type -> Type} -> {l : List (Type -> Type)} -> {a : Type} ->
+  ProductAlgTypeNE f l a -> Algebra (ProductFLNE f l) a
+ProductAlgLNE = ?ProductAlgLNE_hole
+
+public export
+ProductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
+  ProductAlgType l a -> Algebra (ProductFL l) a
+ProductAlgL = ?ProductAlgL_hole
+
+public export
+CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+CoproductFLNE = magmaFromNonEmptyList CoproductF
+
+public export
 CoproductFL : List (Type -> Type) -> Type -> Type
 CoproductFL = monoidFromList InitialComonad CoproductF
+
+public export
+CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+CoproductAlgTypeNE f [] a = Algebra f a
+CoproductAlgTypeNE f (f' :: fs) a = (Algebra f' a, CoproductAlgTypeNE f' fs a)
+
+public export
+CoproductAlgType : List (Type -> Type) -> Type -> Type
+CoproductAlgType [] a = Algebra InitialComonad a
+CoproductAlgType (f :: fs) a = CoproductAlgTypeNE f fs a
+
+public export
+CoproductAlgLNE :
+  {f : Type -> Type} -> {l : List (Type -> Type)} -> {a : Type} ->
+  CoproductAlgTypeNE f l a -> Algebra (CoproductFLNE f l) a
+CoproductAlgLNE = ?CoproductAlgLNE_hole
+
+public export
+CoproductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
+  CoproductAlgType l a -> Algebra (CoproductFL l) a
+CoproductAlgL = ?CoproductAlgL_hole
 
 -------------------------
 ---- Natural numbers ----
