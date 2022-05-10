@@ -677,6 +677,11 @@ public export
 ProductNTUnit : {a : Type} -> a -> ProductMonad a
 ProductNTUnit x = (x, x)
 
+-- The right adjoint to the diagonal functor, in the Idris type system.
+public export
+ProductAdjunct : (Type, Type) -> Type
+ProductAdjunct (t, t') = Pair t t'
+
 --------------------
 ---- Coproducts ----
 --------------------
@@ -700,6 +705,11 @@ public export
 CoproductNTCounit : {a : Type} -> CoproductComonad a -> a
 CoproductNTCounit (Left x) = x
 CoproductNTCounit (Right x) = x
+
+-- The left adjoint to the diagonal functor, in the Idris type system.
+public export
+CoproductAdjunct : (Type, Type) -> Type
+CoproductAdjunct (t, t') = Either t t'
 
 ---------------------------------------
 ---- Higher-order utility functors ----
@@ -896,7 +906,7 @@ NuSubst0Type = Nu Subst0TypeF
 public export
 interpretSubst0Alg : Subst0TypeAlg Type
 interpretSubst0Alg = CoproductAlgL {l=Subst0TypeFCases}
-  (const (), const Void, \p => (fst p, snd p), \p => Either (fst p) (snd p))
+  (const (), const Void, ProductAdjunct, CoproductAdjunct)
 
 -- This algebra -- which together with `interpretSubst0Alg` induces
 -- a functor in the arrow (sigma) category of the substitution-0 category --
@@ -916,11 +926,11 @@ subst0NewConstraintAlg = CoproductAlgL {l=Subst0TypeFCases}
 
     -- The product type can have either of two constraints:  "must
     -- be equal" and "must be different".
-    \x => Either (fst x) (snd x),
+    CoproductAdjunct,
 
     -- The coproduct type can have either of two constraints:  "must
     -- be left" and "must be right".
-    \x => Either (fst x) (snd x)
+    CoproductAdjunct
   )
 
 -- This algebra, given a type of constraints, generates a new
