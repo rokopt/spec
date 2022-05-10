@@ -709,38 +709,6 @@ MaybeF : Type -> Type
 MaybeF = ChoiceBetweenF ()
 
 public export
-ProductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-ProductFLNE f [] = f
-ProductFLNE f (f' :: fs) = ProductF f (ProductFLNE f' fs)
-
-public export
-ProductFL : List (Type -> Type) -> Type -> Type
-ProductFL [] = TerminalMonad
-ProductFL (f :: fs) = ProductFLNE f fs
-
-public export
-ProductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-ProductAlgTypeNE f [] a = Algebra f a
-ProductAlgTypeNE f (f' :: fs) a = (Algebra f' a, ProductAlgTypeNE f' fs a)
-
-public export
-ProductAlgType : List (Type -> Type) -> Type -> Type
-ProductAlgType [] a = Algebra TerminalMonad a
-ProductAlgType (f :: fs) a = ProductAlgTypeNE f fs a
-
-public export
-ProductAlgLNE :
-  {f : Type -> Type} -> {l : List (Type -> Type)} -> {a : Type} ->
-  ProductAlgTypeNE f l a -> Algebra (ProductFLNE f l) a
-ProductAlgLNE = ?ProductAlgLNE_hole
-
-public export
-ProductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
-  ProductAlgType l a -> Algebra (ProductFL l) a
-ProductAlgL {l=[]} algl = algl
-ProductAlgL {l=(f :: fs)} algl = ProductAlgLNE {f} {l=fs} algl
-
-public export
 CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
 CoproductFLNE f [] = f
 CoproductFLNE f (f' :: fs) = CoproductF f (CoproductFLNE f' fs)
@@ -753,7 +721,7 @@ CoproductFL (f :: fs) = CoproductFLNE f fs
 public export
 CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
 CoproductAlgTypeNE f [] a = Algebra f a
-CoproductAlgTypeNE f (f' :: fs) a = (Algebra f' a, CoproductAlgTypeNE f' fs a)
+CoproductAlgTypeNE f (f' :: fs) a = (Algebra f a, CoproductAlgTypeNE f' fs a)
 
 public export
 CoproductAlgType : List (Type -> Type) -> Type -> Type
@@ -764,7 +732,10 @@ public export
 CoproductAlgLNE :
   {f : Type -> Type} -> {l : List (Type -> Type)} -> {a : Type} ->
   CoproductAlgTypeNE f l a -> Algebra (CoproductFLNE f l) a
-CoproductAlgLNE = ?CoproductAlgLNE_hole
+CoproductAlgLNE {f} {l=[]} alg x = alg x
+CoproductAlgLNE {f} {l=(f' :: fs)} (alg, algs) x = case x of
+  Left x' => alg x'
+  Right x' => CoproductAlgLNE {f=f'} {l=fs} algs x'
 
 public export
 CoproductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
