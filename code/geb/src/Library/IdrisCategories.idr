@@ -1125,10 +1125,45 @@ subst0TypeGenCata : {a : Type} ->
   Algebra Subst0TypeFreeMonad a -> Subst0Type -> a
 subst0TypeGenCata {a} alg = subst0TypeGenParamCata {v=Void} alg (voidF a)
 
+mutual
+  public export
+  subst0TypeMap : {0 a, b : Type} ->
+    (a -> b) -> Subst0TypeFreeMonad a -> Subst0TypeFreeMonad b
+  subst0TypeMap f x = ?mapSubst0TypeFree_hole
+
+  public export
+  subst0TypeReturn : {0 a : Type} -> a -> Subst0TypeFreeMonad a
+  subst0TypeReturn x = InFreeSubst0 $ Left x
+
+  public export
+  subst0TypeApply : {0 a, b : Type} ->
+    Subst0TypeFreeMonad (a -> b) ->
+    Subst0TypeFreeMonad a ->
+    Subst0TypeFreeMonad b
+  subst0TypeApply x = ?subst0TypeApply_hole
+
+  public export
+  subst0TypeJoin : {0 a : Type} ->
+    Subst0TypeFreeMonad (Subst0TypeFreeMonad a) -> Subst0TypeFreeMonad a
+  subst0TypeJoin x = ?subst0TypeJoin_hole
+
+  public export
+  Subst0TypeFreeAlgebra : (0 a : Type) ->
+    Algebra Subst0TypeF (Subst0TypeFreeMonad a)
+  Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
+
 public export
-Subst0TypeFreeAlgebra : (a : Type) ->
-  Algebra Subst0TypeF (Subst0TypeFreeMonad a)
-Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
+Functor Subst0TypeFreeMonad where
+  map = subst0TypeMap
+
+public export
+Applicative Subst0TypeFreeMonad where
+  pure = subst0TypeReturn
+  (<*>) = subst0TypeApply
+
+public export
+Monad Subst0TypeFreeMonad where
+  join = subst0TypeJoin
 
 public export
 Subst0TypeInitialAlgebra :
