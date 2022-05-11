@@ -927,7 +927,7 @@ NuSubst0Type = Nu Subst0TypeF
 
 public export
 data Subst0TypeFreeMonad : Type -> Type where
-  InSubst0Free :
+  InFreeSubst0 :
     PreFreeAlgebraF Subst0TypeF a (Subst0TypeFreeMonad a) ->
     Subst0TypeFreeMonad a
 
@@ -939,9 +939,9 @@ Subst0Type = Subst0TypeFreeMonad Void
 public export
 subst0TypeGenParamCata : {v, a : Type} ->
   Algebra Subst0TypeFreeMonad a -> (v -> a) -> Subst0TypeFreeMonad v -> a
-subst0TypeGenParamCata {v} {a} alg subst (InSubst0Free x) = case x of
+subst0TypeGenParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
   Left var => subst var
-  Right com => alg $ InSubst0Free $ Right $ case com of
+  Right com => alg $ InFreeSubst0 $ Right $ case com of
     -- Unit
     Left () => Left ()
     Right com' => Right $ case com' of
@@ -950,18 +950,33 @@ subst0TypeGenParamCata {v} {a} alg subst (InSubst0Free x) = case x of
       Right com'' => Right $ case com'' of
         -- Product
         Left (p1, p2) => Left $
-          (InSubst0Free $ Left $ subst0TypeGenParamCata alg subst p1,
-           InSubst0Free $ Left $ subst0TypeGenParamCata alg subst p2)
+          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p1,
+           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p2)
         -- Coproduct
         Right (c1, c2) => Right $
-          (InSubst0Free $ Left $ subst0TypeGenParamCata alg subst c1,
-           InSubst0Free $ Left $ subst0TypeGenParamCata alg subst c2)
+          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c1,
+           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c2)
 
 -- Parameterized special induction.
 public export
 subst0TypeParamCata : {v, a : Type} ->
   Algebra Subst0TypeF a -> (v -> a) -> Subst0TypeFreeMonad v -> a
-subst0TypeParamCata {a} alg x = ?subst0TypeParamCata_hole
+subst0TypeParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
+  Left var => subst var
+  Right com => alg $ case com of
+    -- Unit
+    Left () => Left ()
+    Right com' => Right $ case com' of
+      -- Void
+      Left () => Left ()
+      Right com'' => Right $ case com'' of
+        -- Product
+        Left (p1, p2) => Left $
+          (subst0TypeParamCata alg subst p1,
+           subst0TypeParamCata alg subst p2)
+        Right (c1, c2) => Right $
+          (subst0TypeParamCata alg subst c1,
+           subst0TypeParamCata alg subst c2)
 
 public export
 Subst0TypeFreeAlgebra : (a : Type) ->
