@@ -935,28 +935,6 @@ public export
 Subst0Type : Type
 Subst0Type = Subst0TypeFreeMonad Void
 
--- Parameterized general induction.
-public export
-subst0TypeGenParamCata : {v, a : Type} ->
-  Algebra Subst0TypeFreeMonad a -> (v -> a) -> Subst0TypeFreeMonad v -> a
-subst0TypeGenParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
-  Left var => subst var
-  Right com => alg $ InFreeSubst0 $ Right $ case com of
-    -- Unit
-    Left () => Left ()
-    Right com' => Right $ case com' of
-      -- Void
-      Left () => Left ()
-      Right com'' => Right $ case com'' of
-        -- Product
-        Left (p1, p2) => Left $
-          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p1,
-           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p2)
-        -- Coproduct
-        Right (c1, c2) => Right $
-          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c1,
-           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c2)
-
 -- Parameterized special induction.
 public export
 subst0TypeParamCata : {v, a : Type} ->
@@ -987,12 +965,6 @@ public export
 Subst0TypeInitialAlgebra :
   Algebra Subst0TypeF Subst0Type
 Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
-
--- General induction.
-public export
-subst0TypeGenCata : {a : Type} ->
-  Algebra Subst0TypeFreeMonad a -> Subst0Type -> a
-subst0TypeGenCata {a} alg = subst0TypeGenParamCata {v=Void} alg (voidF a)
 
 -- Special induction.
 public export
@@ -1129,6 +1101,38 @@ mutual
 public export
 subst0TypeErase : RefinedSubst0Type -> ErasedSubst0Type
 subst0TypeErase r = ?subst0TypeErase_hole
+
+----------------------------------------------
+---- Category of first-order refined ADTs ----
+----------------------------------------------
+
+-- Parameterized general induction.
+public export
+subst0TypeGenParamCata : {v, a : Type} ->
+  Algebra Subst0TypeFreeMonad a -> (v -> a) -> Subst0TypeFreeMonad v -> a
+subst0TypeGenParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
+  Left var => subst var
+  Right com => alg $ InFreeSubst0 $ Right $ case com of
+    -- Unit
+    Left () => Left ()
+    Right com' => Right $ case com' of
+      -- Void
+      Left () => Left ()
+      Right com'' => Right $ case com'' of
+        -- Product
+        Left (p1, p2) => Left $
+          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p1,
+           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p2)
+        -- Coproduct
+        Right (c1, c2) => Right $
+          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c1,
+           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c2)
+
+-- General induction.
+public export
+subst0TypeGenCata : {a : Type} ->
+  Algebra Subst0TypeFreeMonad a -> Subst0Type -> a
+subst0TypeGenCata {a} alg = subst0TypeGenParamCata {v=Void} alg (voidF a)
 
 ------------------------------------------------------
 ------------------------------------------------------
