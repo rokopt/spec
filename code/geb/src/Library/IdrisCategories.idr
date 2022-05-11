@@ -935,6 +935,34 @@ public export
 Subst0Type : Type
 Subst0Type = Subst0TypeFreeMonad Void
 
+-- Parameterized general induction.
+public export
+subst0TypeGenParamCata : {v, a : Type} ->
+  Algebra Subst0TypeFreeMonad a -> (v -> a) -> Subst0TypeFreeMonad v -> a
+subst0TypeGenParamCata {v} {a} alg subst (InSubst0Free x) = case x of
+  Left var => subst var
+  Right com => alg $ InSubst0Free $ Right $ case com of
+    -- Unit
+    Left () => Left ()
+    Right com' => Right $ case com' of
+      -- Void
+      Left () => Left ()
+      Right com'' => Right $ case com'' of
+        -- Product
+        Left (p1, p2) => Left $
+          (InSubst0Free $ Left $ subst0TypeGenParamCata alg subst p1,
+           InSubst0Free $ Left $ subst0TypeGenParamCata alg subst p2)
+        -- Coproduct
+        Right (c1, c2) => Right $
+          (InSubst0Free $ Left $ subst0TypeGenParamCata alg subst c1,
+           InSubst0Free $ Left $ subst0TypeGenParamCata alg subst c2)
+
+-- Parameterized special induction.
+public export
+subst0TypeParamCata : {v, a : Type} ->
+  Algebra Subst0TypeF a -> (v -> a) -> Subst0TypeFreeMonad v -> a
+subst0TypeParamCata {a} alg x = ?subst0TypeParamCata_hole
+
 public export
 Subst0TypeFreeAlgebra : (a : Type) ->
   Algebra Subst0TypeF (Subst0TypeFreeMonad a)
@@ -945,23 +973,11 @@ Subst0TypeInitialAlgebra :
   Algebra Subst0TypeF Subst0Type
 Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
 
--- Parameterized general induction.
-public export
-subst0TypeGenParamCata : {v, a : Type} ->
-  Algebra Subst0TypeFreeMonad a -> (v -> a) -> Subst0TypeFreeMonad v -> a
-subst0TypeGenParamCata {v} {a} alg x = ?subst0TypeGenParamCata_hole
-
 -- General induction.
 public export
 subst0TypeGenCata : {a : Type} ->
   Algebra Subst0TypeFreeMonad a -> Subst0Type -> a
 subst0TypeGenCata {a} alg = subst0TypeGenParamCata {v=Void} alg (voidF a)
-
--- Parameterized special induction.
-public export
-subst0TypeParamCata : {v, a : Type} ->
-  Algebra Subst0TypeF a -> (v -> a) -> Subst0TypeFreeMonad v -> a
-subst0TypeParamCata {a} alg x = ?subst0TypeParamCata_hole
 
 -- Special induction.
 public export
