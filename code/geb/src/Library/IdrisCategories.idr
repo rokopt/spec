@@ -4,6 +4,26 @@ import Library.IdrisUtils
 
 %default total
 
+-----------------------------------
+---- Functional extensionality ----
+-----------------------------------
+
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
+ExtEq {a} f g = (el : a) -> f el = g el
+
+ExtEqRefl : {a : Type} -> {f : a -> a} -> ExtEq f f
+ExtEqRefl _ = Refl
+
+ExtEqSym : {a, b  : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
+ExtEqSym eq x = sym (eq x)
+
+ExtEqTrans : {a, b : Type} ->
+  {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
+ExtEqTrans eq eq' x = trans (eq x) (eq' x)
+
+EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
+EqFunctionExt Refl _ = Refl
+
 ------------------------------------------------------
 ------------------------------------------------------
 ---- Idris sigma, product, and functor categories ----
@@ -475,26 +495,6 @@ ProductAnamorphism {idx} f =
   (a : ProductCatObject idx) ->
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
-
------------------------------------
----- Functional extensionality ----
------------------------------------
-
-ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
-ExtEq {a} f g = (el : a) -> f el = g el
-
-ExtEqRefl : {a : Type} -> {f : a -> a} -> ExtEq f f
-ExtEqRefl _ = Refl
-
-ExtEqSym : {a, b  : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
-ExtEqSym eq x = sym (eq x)
-
-ExtEqTrans : {a, b : Type} ->
-  {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
-ExtEqTrans eq eq' x = trans (eq x) (eq' x)
-
-EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
-EqFunctionExt Refl _ = Refl
 
 --------------------
 --------------------
