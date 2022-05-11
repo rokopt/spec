@@ -952,19 +952,10 @@ subst0TypeParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
         Left (p1, p2) => Left $
           (subst0TypeParamCata alg subst p1,
            subst0TypeParamCata alg subst p2)
+        -- Coproduct
         Right (c1, c2) => Right $
           (subst0TypeParamCata alg subst c1,
            subst0TypeParamCata alg subst c2)
-
-public export
-Subst0TypeFreeAlgebra : (a : Type) ->
-  Algebra Subst0TypeF (Subst0TypeFreeMonad a)
-Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
-
-public export
-Subst0TypeInitialAlgebra :
-  Algebra Subst0TypeF Subst0Type
-Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
 
 -- Special induction.
 public export
@@ -1133,6 +1124,16 @@ public export
 subst0TypeGenCata : {a : Type} ->
   Algebra Subst0TypeFreeMonad a -> Subst0Type -> a
 subst0TypeGenCata {a} alg = subst0TypeGenParamCata {v=Void} alg (voidF a)
+
+public export
+Subst0TypeFreeAlgebra : (a : Type) ->
+  Algebra Subst0TypeF (Subst0TypeFreeMonad a)
+Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
+
+public export
+Subst0TypeInitialAlgebra :
+  Algebra Subst0TypeF Subst0Type
+Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
 
 ------------------------------------------------------
 ------------------------------------------------------
