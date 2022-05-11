@@ -925,6 +925,12 @@ public export
 NuSubst0Type : Type
 NuSubst0Type = Nu Subst0TypeF
 
+public export
+data Subst0TypeFreeMonad : Type -> Type where
+  InSubst0Free :
+    PreFreeAlgebraF Subst0TypeF a (Subst0TypeFreeMonad a) ->
+    Subst0TypeFreeMonad a
+
 -- This algebra interprets the constructors of the substitution-0 category
 -- as types in the Idris type system.  This is posible because those
 -- types themselves form a category, and there is a faithful functor
@@ -1003,6 +1009,57 @@ subst0FunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
    ProductAdjunctFCat,
    CoproductAdjunctFCat
   )
+
+-- The functor analogue of `subst0NewConstraintAlg`, as
+-- `subst0FunctorAlg` is the functor analogue of `interpretSubst0Alg`.
+public export
+subst0NewConstraintFunctorAlg : Subst0TypeAlg (Type -> Type)
+subst0NewConstraintFunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
+  (
+    -- The (already-fully-constrained) unit type
+    const InitialComonad,
+
+    -- The (already-fully-constrained) void type
+    const InitialComonad,
+
+    -- The product type ("must be equal" or "must be different")
+    CoproductAdjunctFCat,
+
+    -- The coproduct type ("must be left" or "must be right")
+    CoproductAdjunctFCat
+  )
+
+public export
+record Subst0TypeArrow where
+  constructor Subst0Types
+  ErasedType : Type
+  RefinedType : ErasedType -> Type
+
+public export
+data ErasedSubst0TypeF : Subst0TypeArrow -> Type where
+
+public export
+data RefinedSubst0TypeF : Subst0TypeArrow -> Type where
+
+public export
+subst0TypeEraseF : (a : Subst0TypeArrow) ->
+  RefinedSubst0TypeF a -> ErasedSubst0TypeF a
+subst0TypeEraseF a r = ?subst0TypeEraseF_hole
+
+public export
+Subst0TypeArrowF : Subst0TypeArrow -> Subst0TypeArrow
+Subst0TypeArrowF a = ?Subst0TypeArrowF_hole
+
+mutual
+  public export
+  data ErasedSubst0Type : Type where
+
+  public export
+  data RefinedSubst0Type : Type where
+
+public export
+subst0TypeErase : RefinedSubst0Type -> ErasedSubst0Type
+subst0TypeErase r = ?subst0TypeErase_hole
 
 ------------------------------------------------------
 ------------------------------------------------------
