@@ -644,7 +644,7 @@ Functor InitialComonad where
 
 public export
 InitialNTCounit : (a : Type) -> InitialComonad a -> a
-InitialNTCounit _ v = void v
+InitialNTCounit = voidF
 
 public export
 InitialNaturality : {a, b : Type} -> (m : a -> b) ->
@@ -930,6 +930,44 @@ data Subst0TypeFreeMonad : Type -> Type where
   InSubst0Free :
     PreFreeAlgebraF Subst0TypeF a (Subst0TypeFreeMonad a) ->
     Subst0TypeFreeMonad a
+
+public export
+Subst0Type : Type
+Subst0Type = Subst0TypeFreeMonad Void
+
+public export
+Subst0TypeFreeAlgebra : (a : Type) ->
+  Algebra Subst0TypeF (Subst0TypeFreeMonad a)
+Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
+
+public export
+Subst0TypeInitialAlgebra :
+  Algebra Subst0TypeF Subst0Type
+Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
+
+-- Parameterized general induction.
+public export
+subst0TypeGenParamCata : {v, a : Type} ->
+  Algebra Subst0TypeFreeMonad a -> (v -> a) -> Subst0TypeFreeMonad v -> a
+subst0TypeGenParamCata {v} {a} alg x = ?subst0TypeGenParamCata_hole
+
+-- General induction.
+public export
+subst0TypeGenCata : {a : Type} ->
+  Algebra Subst0TypeFreeMonad a -> Subst0Type -> a
+subst0TypeGenCata {a} alg = subst0TypeGenParamCata {v=Void} alg (voidF a)
+
+-- Parameterized special induction.
+public export
+subst0TypeParamCata : {v, a : Type} ->
+  Algebra Subst0TypeF a -> (v -> a) -> Subst0TypeFreeMonad v -> a
+subst0TypeParamCata {a} alg x = ?subst0TypeParamCata_hole
+
+-- Special induction.
+public export
+subst0TypeCata : {a : Type} ->
+  Algebra Subst0TypeF a -> Subst0Type -> a
+subst0TypeCata alg = subst0TypeParamCata {v=Void} alg (voidF a)
 
 -- This algebra interprets the constructors of the substitution-0 category
 -- as types in the Idris type system.  This is posible because those

@@ -9,6 +9,10 @@ import public Control.Function
 %default total
 
 public export
+voidF : (a : Type) -> Void -> a
+voidF _ x = void x
+
+public export
 magmaFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
 magmaFromNonEmptyList f x [] = x
 magmaFromNonEmptyList f x (x' :: l) = f x $ magmaFromNonEmptyList f x' l
