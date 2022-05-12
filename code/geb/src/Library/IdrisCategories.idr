@@ -5,16 +5,18 @@ import Library.IdrisUtils
 %default total
 
 -----------------------------------
+-----------------------------------
 ---- Functional extensionality ----
+-----------------------------------
 -----------------------------------
 
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
 
-ExtEqRefl : {a : Type} -> {f : a -> a} -> ExtEq f f
-ExtEqRefl _ = Refl
+ExtEqRefl : {a : Type} -> (f : a -> a) -> ExtEq f f
+ExtEqRefl _ _ = Refl
 
-ExtEqSym : {a, b  : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
+ExtEqSym : {a, b : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
 ExtEqSym eq x = sym (eq x)
 
 ExtEqTrans : {a, b : Type} ->
@@ -23,6 +25,166 @@ ExtEqTrans eq eq' x = trans (eq x) (eq' x)
 
 EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
 EqFunctionExt Refl _ = Refl
+
+---------------------------------
+---------------------------------
+---- Metalanguage categories ----
+---------------------------------
+---------------------------------
+
+-- A category enriched over the metalanguage's `Type`, together with an
+-- interpretation into `Type`, with morphism equality defined by (non-recursive)
+-- extensional equality of functions.
+public export
+record EnrichedCat where
+  -- The types of `Type` which represent the objects and morphisms of the
+  -- enriched category.
+  EnrichedObj : Type
+  EnrichedMorphism : EnrichedObj -> EnrichedObj -> Type
+
+  -- Identity and composition.
+  EnrichedId : (a : EnrichedObj) -> EnrichedMorphism a a
+  EnrichedCompose : {a, b, c : EnrichedObj} ->
+    EnrichedMorphism b c -> EnrichedMorphism a b -> EnrichedMorphism a c
+
+  -- The interpretations of the objects and morphisms of the enriched category.
+  EnrichedObjInterp : EnrichedObj -> Type
+  EnrichedMorphismInterp : {a, b : EnrichedObj} ->
+    EnrichedMorphism a b -> EnrichedObjInterp a -> EnrichedObjInterp b
+
+  -- Correctness conditions (the axioms of category theory), with
+  -- equality up to first-order (non-recursive) extensional equality of the
+  -- of the morphisms as metalanguage functions.
+  EnrichedLeftId : {a, b : EnrichedObj} ->
+    (f : EnrichedMorphism a b) ->
+    ExtEq
+      (EnrichedMorphismInterp (EnrichedCompose (EnrichedId b) f))
+      (EnrichedMorphismInterp f)
+  EnrichedRightId : {a, b : EnrichedObj} ->
+    (f : EnrichedMorphism a b) ->
+    ExtEq
+      (EnrichedMorphismInterp f)
+      (EnrichedMorphismInterp (EnrichedCompose f (EnrichedId a)))
+  EnrichedAssoc : {a, b, c, d : EnrichedObj} ->
+    (h : EnrichedMorphism c d) ->
+    (g : EnrichedMorphism b c) ->
+    (f : EnrichedMorphism a b) ->
+    ExtEq
+      (EnrichedMorphismInterp (EnrichedCompose h (EnrichedCompose g f)))
+      (EnrichedMorphismInterp (EnrichedCompose (EnrichedCompose h g) f))
+
+public export
+MorphismEq : {cat : EnrichedCat} -> {a, b : EnrichedObj cat} ->
+  EnrichedMorphism cat a b -> EnrichedMorphism cat a b -> Type
+MorphismEq m m' =
+  ExtEq (EnrichedMorphismInterp cat m) (EnrichedMorphismInterp cat m')
+
+public export
+record EnrichedFunctor (catC, catD : EnrichedCat) where
+  EnrichedFunctorObjMap : EnrichedObj catC -> EnrichedObj catD
+  EnrichedFunctorMorphMap : {a, b : EnrichedObj catC} ->
+      EnrichedMorphism catC a b ->
+      EnrichedMorphism catD (EnrichedFunctorObjMap a) (EnrichedFunctorObjMap b)
+
+  -- Correctness conditions.
+  EnrichedFunctorId : (a : EnrichedObj catC) ->
+    MorphismEq
+      {cat=catD} {a=(EnrichedFunctorObjMap a)} {b=(EnrichedFunctorObjMap a)}
+      (EnrichedFunctorMorphMap {a} {b=a} (EnrichedId catC a))
+      (EnrichedId catD (EnrichedFunctorObjMap a))
+
+-- A 2-category (or higher) enriched over the metalanguage's `Type`, together
+-- with an interpretation into `Type`, with morphism equality defined by
+-- (non-recursive) extensional equality of functions.
+public export
+record EnrichedHigherCat where
+  -- Higher objects are themselves categories.
+  EnrichedHigherObj : Type
+  -- Higher morphisms are functors.
+  EnrichedHigherMorphism : EnrichedHigherObj -> EnrichedHigherObj -> Type
+
+  EnrichedHigherObjInterp : EnrichedHigherObj -> EnrichedCat
+  EnrichedHigherMorphismInterp : {a, b : EnrichedHigherObj} ->
+    EnrichedHigherMorphism a b ->
+    EnrichedFunctor (EnrichedHigherObjInterp a) (EnrichedHigherObjInterp b)
+
+--------------------------------
+---- Arrow-category algebra ----
+--------------------------------
+
+-- The components of an object of Idris's arrow category, which is simply a
+-- pair of `Type`s with a morphism between them.
+public export
+record Arrow where
+  constructor MkArrow
+  arrowTot : Type
+  arrowBase : Type
+  arrowProj : arrowTot -> arrowBase
+
+-- The components of a morphism in Idris's arrow category.
+public export
+record ArrowMorphism (a, b : Arrow) where
+  constructor MkArrowMorphism
+  arrowTotMorphism : arrowTot a -> arrowTot b
+  arrowBaseMorphism : arrowBase a -> arrowBase b
+  arrowMorphismCommutes :
+    ExtEq (arrowProj b . arrowTotMorphism) (arrowBaseMorphism . arrowProj a)
+
+-- The type signature of an arrow functor, which can generate an arrow
+-- object from an initial algebra.
+public export
+record ArrowFunctor where
+  constructor ArrowFGen
+  arrowBaseChange : Arrow ->
+    Type -- change base space
+  arrowCobaseChangeOnly : Arrow ->
+    Type -- change total space only
+  arrowCobaseChangeProj : (a : Arrow) ->
+    arrowCobaseChangeOnly a -> arrowBase a
+  arrowCobaseChangeDep : (a : Arrow) ->
+    (newBase : arrowBaseChange a) -> Type
+  arrowProjChange : (a : Arrow) ->
+    (newBase : arrowBaseChange a) -> arrowCobaseChangeDep a newBase -> Type
+
+public export
+data ArrowTermFunctor : (f : ArrowFunctor) ->
+    (v, a : Arrow) -> Type where
+  InArrowVar : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (x : arrowTot v) -> ArrowTermFunctor f v a
+  InArrowBase : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (base : arrowBaseChange f a) ->
+    ArrowTermFunctor f v a
+  InArrowCobase : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (tot : arrowCobaseChangeOnly f a) ->
+    ArrowTermFunctor f v a
+  InArrowBoth : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (newBase : arrowBaseChange f a) ->
+    arrowCobaseChangeDep f a newBase ->
+    ArrowTermFunctor f v a
+
+mutual
+  public export
+  FreeArrowTot : (f : ArrowFunctor) -> (a : Arrow) -> Type
+  FreeArrowTot f a = ?FreeArrowTot_hole
+
+  public export
+  FreeArrowBase : (f : ArrowFunctor) -> (a : Arrow) -> Type
+  FreeArrowBase f a = ?FreeArrowBase_hole
+
+  public export
+  freeArrowProj : (f : ArrowFunctor) -> (a : Arrow) ->
+    FreeArrowTot f a -> FreeArrowBase f a
+  freeArrowProj f a tot = ?freeArrowProj_hole
+
+  public export
+  data FreeArrowType : ArrowFunctor -> Arrow -> Type where
+    InFreeArrow : {f : ArrowFunctor} -> {a : Arrow} ->
+      ArrowTermFunctor f a (FreeArrowMonad f a) ->
+      FreeArrowType f a
+
+  public export
+  FreeArrowMonad : ArrowFunctor -> Arrow -> Arrow
+  FreeArrowMonad f a = let type = FreeArrowType f a in ?FreeArrowMonad_hole
 
 ------------------------------------------------------
 ------------------------------------------------------
@@ -495,75 +657,6 @@ ProductAnamorphism {idx} f =
   (a : ProductCatObject idx) ->
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
-
---------------------------------
----- Arrow-category algebra ----
---------------------------------
-
--- The components of an object of an arrow category, which is simply a
--- morphism in a containing category.
-public export
-record Arrow where
-  constructor ArrowComponents
-  arrowTot : Type
-  arrowBase : Type
-  arrowProj : arrowTot -> arrowBase
-
--- The type signature of an arrow functor, which can generate an arrow
--- object from an initial algebra.
-public export
-record ArrowFunctor where
-  constructor ArrowFGen
-  arrowBaseChange : Arrow ->
-    Type -- change base space
-  arrowCobaseChangeOnly : Arrow ->
-    Type -- change total space only
-  arrowCobaseChangeProj : (a : Arrow) ->
-    arrowCobaseChangeOnly a -> arrowBase a
-  arrowCobaseChangeDep : (a : Arrow) ->
-    (newBase : arrowBaseChange a) -> Type
-  arrowProjChange : (a : Arrow) ->
-    (newBase : arrowBaseChange a) -> arrowCobaseChangeDep a newBase -> Type
-
-public export
-data ArrowTermFunctor : (f : ArrowFunctor) ->
-    (v, a : Arrow) -> Type where
-  InArrowVar : {f : ArrowFunctor} -> {v, a : Arrow} ->
-    (x : arrowTot v) -> ArrowTermFunctor f v a
-  InArrowBase : {f : ArrowFunctor} -> {v, a : Arrow} ->
-    (base : arrowBaseChange f a) ->
-    ArrowTermFunctor f v a
-  InArrowCobase : {f : ArrowFunctor} -> {v, a : Arrow} ->
-    (tot : arrowCobaseChangeOnly f a) ->
-    ArrowTermFunctor f v a
-  InArrowBoth : {f : ArrowFunctor} -> {v, a : Arrow} ->
-    (newBase : arrowBaseChange f a) ->
-    arrowCobaseChangeDep f a newBase ->
-    ArrowTermFunctor f v a
-
-mutual
-  public export
-  FreeArrowTot : (f : ArrowFunctor) -> (a : Arrow) -> Type
-  FreeArrowTot f a = ?FreeArrowTot_hole
-
-  public export
-  FreeArrowBase : (f : ArrowFunctor) -> (a : Arrow) -> Type
-  FreeArrowBase f a = ?FreeArrowBase_hole
-
-  public export
-  freeArrowProj : (f : ArrowFunctor) -> (a : Arrow) ->
-    FreeArrowTot f a -> FreeArrowBase f a
-  freeArrowProj f a tot = ?freeArrowProj_hole
-
-  public export
-  data FreeArrowType : ArrowFunctor -> Arrow -> Type where
-    InFreeArrow : {f : ArrowFunctor} -> {a : Arrow} ->
-      ArrowTermFunctor f a (FreeArrowMonad f a) ->
-      FreeArrowType f a
-
-  public export
-  FreeArrowMonad : ArrowFunctor -> Arrow -> Arrow
-  FreeArrowMonad f a = let type = FreeArrowType f a in ?FreeArrowMonad_hole
 
 --------------------
 --------------------
@@ -1044,9 +1137,18 @@ interpretSubst0Alg : Subst0TypeAlg Type
 interpretSubst0Alg = CoproductAlgL {l=Subst0TypeFCases}
   (const (), const Void, ProductAdjunct, CoproductAdjunct)
 
+----------------------------------------
+---- The 2x-substitution-0 category ----
+----------------------------------------
+
+-- Now we define the types of the product category of the substitution-0
+-- category with itself.
+
 ----------------------------
 ---- Refined categories ----
 ----------------------------
+
+-- XX
 
 -- This algebra -- which together with `interpretSubst0Alg` induces
 -- a functor in the arrow (sigma) category of the substitution-0 category --
