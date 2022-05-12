@@ -26,6 +26,9 @@ ExtEqTrans eq eq' x = trans (eq x) (eq' x)
 EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
 EqFunctionExt Refl _ = Refl
 
+ExtInverse : {a, b : Type} -> (a -> b) -> (b -> a) -> Type
+ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
+
 ---------------------------------
 ---------------------------------
 ---- Metalanguage categories ----
@@ -81,15 +84,15 @@ record MetaCat where
 
   -- Tensor product.
   MetaTensorObj : MetaObj -> MetaObj -> MetaObj
-  MetaTensorObjProd : (a, b : MetaObj) ->
-    MetaObjInterp (MetaTensorObj a b) = (MetaObjInterp a, MetaObjInterp b)
+  MetaTensorObjInterp : (a, b : MetaObj) ->
+    MetaObjInterp (MetaTensorObj a b) -> (MetaObjInterp a, MetaObjInterp b)
+  MetaTensorObjInterpInv : (a, b : MetaObj) ->
+    (MetaObjInterp a, MetaObjInterp b) -> MetaObjInterp (MetaTensorObj a b)
+  MetaTensorObjInterpCorrectLeft : (a, b : MetaObj) ->
+    ExtEq (MetaTensorObjInterpInv a b . MetaTensorObjInterp a b) Prelude.Basics.id
   MetaTensorMorph : {a, b, c, d : MetaObj} ->
     MetaMorphism a b -> MetaMorphism c d ->
     MetaMorphism (MetaTensorObj a c) (MetaTensorObj b d)
-  MetaTensorMorphProd : {a, b, c, d : MetaObj} ->
-    (f : MetaMorphism a b) -> (g : MetaMorphism c d) ->
-    MetaMorphismInterp (MetaTensorMorph f g) =
-      (MetaMorphismInterp f, MetaMorphismInterp g)
 
 -- A category enriched over a `MetaCat`.
 -- This definition is in the style of category theory, using fibrations.
