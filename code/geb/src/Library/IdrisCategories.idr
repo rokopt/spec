@@ -36,74 +36,78 @@ EqFunctionExt Refl _ = Refl
 -- interpretation into `Type`, with morphism equality defined by (non-recursive)
 -- extensional equality of functions.
 public export
-record EnrichedCat where
+record MetaCat where
+  constructor MkMetaCat
   -- The types of `Type` which represent the objects and morphisms of the
   -- enriched category.
-  EnrichedObj : Type
-  EnrichedMorphism : EnrichedObj -> EnrichedObj -> Type
+  MetaObj : Type
+  MetaMorphism : MetaObj -> MetaObj -> Type
 
   -- Identity and composition.
-  EnrichedId : (a : EnrichedObj) -> EnrichedMorphism a a
-  EnrichedCompose : {a, b, c : EnrichedObj} ->
-    EnrichedMorphism b c -> EnrichedMorphism a b -> EnrichedMorphism a c
+  MetaId : (a : MetaObj) -> MetaMorphism a a
+  MetaCompose : {a, b, c : MetaObj} ->
+    MetaMorphism b c -> MetaMorphism a b -> MetaMorphism a c
 
   -- The interpretations of the objects and morphisms of the enriched category.
-  EnrichedObjInterp : EnrichedObj -> Type
-  EnrichedMorphismInterp : {a, b : EnrichedObj} ->
-    EnrichedMorphism a b -> EnrichedObjInterp a -> EnrichedObjInterp b
+  MetaObjInterp : MetaObj -> Type
+  MetaMorphismInterp : {a, b : MetaObj} ->
+    MetaMorphism a b -> MetaObjInterp a -> MetaObjInterp b
 
   -- Correctness conditions (the axioms of category theory), with
   -- equality up to first-order (non-recursive) extensional equality of the
   -- of the morphisms as metalanguage functions.
-  EnrichedLeftId : {a, b : EnrichedObj} ->
-    (f : EnrichedMorphism a b) ->
+  MetaLeftId : {a, b : MetaObj} ->
+    (f : MetaMorphism a b) ->
     ExtEq
-      (EnrichedMorphismInterp (EnrichedCompose (EnrichedId b) f))
-      (EnrichedMorphismInterp f)
-  EnrichedRightId : {a, b : EnrichedObj} ->
-    (f : EnrichedMorphism a b) ->
+      (MetaMorphismInterp (MetaCompose (MetaId b) f))
+      (MetaMorphismInterp f)
+  MetaRightId : {a, b : MetaObj} ->
+    (f : MetaMorphism a b) ->
     ExtEq
-      (EnrichedMorphismInterp f)
-      (EnrichedMorphismInterp (EnrichedCompose f (EnrichedId a)))
-  EnrichedAssoc : {a, b, c, d : EnrichedObj} ->
-    (h : EnrichedMorphism c d) ->
-    (g : EnrichedMorphism b c) ->
-    (f : EnrichedMorphism a b) ->
+      (MetaMorphismInterp f)
+      (MetaMorphismInterp (MetaCompose f (MetaId a)))
+  MetaAssoc : {a, b, c, d : MetaObj} ->
+    (h : MetaMorphism c d) ->
+    (g : MetaMorphism b c) ->
+    (f : MetaMorphism a b) ->
     ExtEq
-      (EnrichedMorphismInterp (EnrichedCompose h (EnrichedCompose g f)))
-      (EnrichedMorphismInterp (EnrichedCompose (EnrichedCompose h g) f))
+      (MetaMorphismInterp (MetaCompose h (MetaCompose g f)))
+      (MetaMorphismInterp (MetaCompose (MetaCompose h g) f))
+
+record CatMetaCat (cat : MetaCat) where
+  -- XXX
 
 public export
-MorphismEq : {cat : EnrichedCat} -> {a, b : EnrichedObj cat} ->
-  EnrichedMorphism cat a b -> EnrichedMorphism cat a b -> Type
+MorphismEq : {cat : MetaCat} -> {a, b : MetaObj cat} ->
+  MetaMorphism cat a b -> MetaMorphism cat a b -> Type
 MorphismEq m m' =
-  ExtEq (EnrichedMorphismInterp cat m) (EnrichedMorphismInterp cat m')
+  ExtEq (MetaMorphismInterp cat m) (MetaMorphismInterp cat m')
 
 public export
-record EnrichedFunctor (catC, catD : EnrichedCat) where
-  EnrichedFunctorObjMap : EnrichedObj catC -> EnrichedObj catD
-  EnrichedFunctorMorphMap : {a, b : EnrichedObj catC} ->
-      EnrichedMorphism catC a b ->
-      EnrichedMorphism catD (EnrichedFunctorObjMap a) (EnrichedFunctorObjMap b)
+record MetaFunctor (catC, catD : MetaCat) where
+  MetaFunctorObjMap : MetaObj catC -> MetaObj catD
+  MetaFunctorMorphMap : {a, b : MetaObj catC} ->
+      MetaMorphism catC a b ->
+      MetaMorphism catD (MetaFunctorObjMap a) (MetaFunctorObjMap b)
 
   -- Correctness conditions.
-  EnrichedFunctorId : (a : EnrichedObj catC) ->
+  MetaFunctorId : (a : MetaObj catC) ->
     MorphismEq
-      {cat=catD} {a=(EnrichedFunctorObjMap a)} {b=(EnrichedFunctorObjMap a)}
-      (EnrichedFunctorMorphMap {a} {b=a} (EnrichedId catC a))
-      (EnrichedId catD (EnrichedFunctorObjMap a))
-  EnrichedFunctorCompose : {a, b, c : EnrichedObj catC} ->
-    (g : EnrichedMorphism catC b c) ->
-    (f : EnrichedMorphism catC a b) ->
+      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap a)}
+      (MetaFunctorMorphMap {a} {b=a} (MetaId catC a))
+      (MetaId catD (MetaFunctorObjMap a))
+  MetaFunctorCompose : {a, b, c : MetaObj catC} ->
+    (g : MetaMorphism catC b c) ->
+    (f : MetaMorphism catC a b) ->
     MorphismEq
-      {cat=catD} {a=(EnrichedFunctorObjMap a)} {b=(EnrichedFunctorObjMap c)}
-      (EnrichedFunctorMorphMap {a} {b=c} (EnrichedCompose {a} {b} {c} catC g f))
-      (EnrichedCompose catD
-        {a=(EnrichedFunctorObjMap a)}
-        {b=(EnrichedFunctorObjMap b)}
-        {c=(EnrichedFunctorObjMap c)}
-        (EnrichedFunctorMorphMap {a=b} {b=c} g)
-        (EnrichedFunctorMorphMap {a} {b} f))
+      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap c)}
+      (MetaFunctorMorphMap {a} {b=c} (MetaCompose {a} {b} {c} catC g f))
+      (MetaCompose catD
+        {a=(MetaFunctorObjMap a)}
+        {b=(MetaFunctorObjMap b)}
+        {c=(MetaFunctorObjMap c)}
+        (MetaFunctorMorphMap {a=b} {b=c} g)
+        (MetaFunctorMorphMap {a} {b} f))
 
 -- XXX id functor
 -- XXX compose functors
@@ -119,21 +123,12 @@ record EnrichedFunctor (catC, catD : EnrichedCat) where
 -- XXX compose adjunctions
 -- XXX adjunction cat
 
+-- XXX diagrams
+
 -- A 2-category (or higher) enriched over the metalanguage's `Type`, together
 -- with an interpretation into `Type`, with morphism equality defined by
 -- (non-recursive) extensional equality of functions.
 -- XXX more to it (nat transes, adjunctions)
-public export
-record EnrichedHigherCat where
-  -- Higher objects are themselves categories.
-  EnrichedHigherObj : Type
-  -- Higher morphisms are functors.
-  EnrichedHigherMorphism : EnrichedHigherObj -> EnrichedHigherObj -> Type
-
-  EnrichedHigherObjInterp : EnrichedHigherObj -> EnrichedCat
-  EnrichedHigherMorphismInterp : {a, b : EnrichedHigherObj} ->
-    EnrichedHigherMorphism a b ->
-    EnrichedFunctor (EnrichedHigherObjInterp a) (EnrichedHigherObjInterp b)
 
 --------------------------------
 ---- Arrow-category algebra ----
