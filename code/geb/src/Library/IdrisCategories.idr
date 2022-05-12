@@ -38,11 +38,6 @@ ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
 -- A category enriched over the metalanguage's `Type`, together with an
 -- interpretation into `Type`, with morphism equality defined by (non-recursive)
 -- extensional equality of functions.
---
--- Furthermore, because we are going to enrich further categories over
--- `MetaCat`s, we require that a `MetaCat` have a tensor product, whose
--- properties we ensure by requiring that it be interpreted as the
--- product in `Type` (known as `Pair`).
 public export
 record MetaCat where
   constructor MkMetaCat
@@ -82,31 +77,39 @@ record MetaCat where
       (MetaMorphismInterp (MetaCompose h (MetaCompose g f)))
       (MetaMorphismInterp (MetaCompose (MetaCompose h g) f))
 
-  -- Tensor product.
-  MetaTensorObj : MetaObj -> MetaObj -> MetaObj
-  MetaTensorObjInterp : (a, b : MetaObj) ->
-    MetaObjInterp (MetaTensorObj a b) -> (MetaObjInterp a, MetaObjInterp b)
-  MetaTensorObjInterpInv : (a, b : MetaObj) ->
-    (MetaObjInterp a, MetaObjInterp b) -> MetaObjInterp (MetaTensorObj a b)
-  MetaTensorObjInterpCorrectLeft : (a, b : MetaObj) ->
-    ExtEq (MetaTensorObjInterpInv a b . MetaTensorObjInterp a b) Prelude.Basics.id
-  MetaTensorMorph : {a, b, c, d : MetaObj} ->
-    MetaMorphism a b -> MetaMorphism c d ->
-    MetaMorphism (MetaTensorObj a c) (MetaTensorObj b d)
-
--- A category enriched over a `MetaCat`.
--- This definition is in the style of category theory, using fibrations.
-record EnrichedCat (mcat : MetaCat) where
-  constructor MkEnrichedCat
-  EnrichedObj : mcat.MetaObj
-  EnrichedMorphism : mcat.MetaObj
-  -- XXX
-
 public export
 MorphismEq : {cat : MetaCat} -> {a, b : MetaObj cat} ->
   MetaMorphism cat a b -> MetaMorphism cat a b -> Type
 MorphismEq m m' =
   ExtEq (MetaMorphismInterp cat m) (MetaMorphismInterp cat m')
+
+-- Because we are going to enrich further categories over
+-- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
+-- properties we ensure by requiring that it be interpreted as the
+-- product in `Type` (known as `Pair`).
+record MonoidalCat where
+  constructor MkMonoidalCat
+  MonCat : MetaCat
+  MetaTensorObj : MetaObj MonCat -> MetaObj MonCat -> MetaObj MonCat
+  MetaTensorObjInterp : (a, b : MetaObj MonCat) ->
+    MetaObjInterp MonCat (MetaTensorObj a b) ->
+    (MetaObjInterp MonCat a, MetaObjInterp MonCat b)
+  MetaTensorObjInterpInv : (a, b : MetaObj MonCat) ->
+    (MetaObjInterp MonCat a, MetaObjInterp MonCat b) ->
+    MetaObjInterp MonCat (MetaTensorObj a b)
+  MetaTensorObjInterpCorrectLeft : (a, b : MetaObj MonCat) ->
+    ExtInverse (MetaTensorObjInterpInv a b) (MetaTensorObjInterp a b)
+  MetaTensorMorph : {a, b, c, d : MetaObj MonCat} ->
+    MetaMorphism MonCat a b -> MetaMorphism MonCat c d ->
+    MetaMorphism MonCat (MetaTensorObj a c) (MetaTensorObj b d)
+
+-- A category enriched over a `MetaCat`.
+-- This definition is in the style of category theory, using fibrations.
+record EnrichedCat (mcat : MonoidalCat) where
+  constructor MkEnrichedCat
+  EnrichedObj : mcat.MonCat.MetaObj
+  EnrichedMorphism : mcat.MonCat.MetaObj
+  -- XXX
 
 public export
 record MetaFunctor (catC, catD : MetaCat) where
