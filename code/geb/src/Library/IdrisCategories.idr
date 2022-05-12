@@ -105,9 +105,24 @@ record EnrichedFunctor (catC, catD : EnrichedCat) where
         (EnrichedFunctorMorphMap {a=b} {b=c} g)
         (EnrichedFunctorMorphMap {a} {b} f))
 
+-- XXX id functor
+-- XXX compose functors
+-- XXX natural transformation between functors
+-- XXX id nat trans
+-- XXX vertical compose nat trans
+-- XXX horizontal compose nat trans
+-- XXX whisker nat trans
+-- XXX functor cat
+-- XXX nat trans cat
+-- XXX adjunction
+-- XXX id adjunction
+-- XXX compose adjunctions
+-- XXX adjunction cat
+
 -- A 2-category (or higher) enriched over the metalanguage's `Type`, together
 -- with an interpretation into `Type`, with morphism equality defined by
 -- (non-recursive) extensional equality of functions.
+-- XXX more to it (nat transes, adjunctions)
 public export
 record EnrichedHigherCat where
   -- Higher objects are themselves categories.
