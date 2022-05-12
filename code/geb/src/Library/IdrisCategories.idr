@@ -92,6 +92,22 @@ record EnrichedFunctor (catC, catD : EnrichedCat) where
       {cat=catD} {a=(EnrichedFunctorObjMap a)} {b=(EnrichedFunctorObjMap a)}
       (EnrichedFunctorMorphMap {a} {b=a} (EnrichedId catC a))
       (EnrichedId catD (EnrichedFunctorObjMap a))
+  EnrichedFunctorCompose : {a, b, c : EnrichedObj catC} ->
+    (g : EnrichedMorphism catC b c) ->
+    (f : EnrichedMorphism catC a b) ->
+    MorphismEq
+      {cat=catD} {a=(EnrichedFunctorObjMap a)} {b=(EnrichedFunctorObjMap c)}
+      (EnrichedFunctorMorphMap {a} {b=c} (EnrichedCompose {a} {b} {c} catC g f))
+      (EnrichedCompose catD
+        {a=(EnrichedFunctorObjMap a)}
+        {b=(EnrichedFunctorObjMap b)}
+        {c=(EnrichedFunctorObjMap c)}
+        (EnrichedFunctorMorphMap
+          {a=b} {b=c}
+          g)
+        (EnrichedFunctorMorphMap
+          {a} {b}
+          f))
 
 -- A 2-category (or higher) enriched over the metalanguage's `Type`, together
 -- with an interpretation into `Type`, with morphism equality defined by
