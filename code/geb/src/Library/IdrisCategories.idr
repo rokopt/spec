@@ -35,6 +35,11 @@ EqFunctionExt Refl _ = Refl
 -- A category enriched over the metalanguage's `Type`, together with an
 -- interpretation into `Type`, with morphism equality defined by (non-recursive)
 -- extensional equality of functions.
+--
+-- Furthermore, because we are going to enrich further categories over
+-- `MetaCat`s, we require that a `MetaCat` have a tensor product, whose
+-- properties we ensure by requiring that it be interpreted as the
+-- product in `Type` (known as `Pair`).
 public export
 record MetaCat where
   constructor MkMetaCat
@@ -74,7 +79,24 @@ record MetaCat where
       (MetaMorphismInterp (MetaCompose h (MetaCompose g f)))
       (MetaMorphismInterp (MetaCompose (MetaCompose h g) f))
 
-record CatMetaCat (cat : MetaCat) where
+  -- Tensor product.
+  MetaTensorObj : MetaObj -> MetaObj -> MetaObj
+  MetaTensorObjProd : (a, b : MetaObj) ->
+    MetaObjInterp (MetaTensorObj a b) = (MetaObjInterp a, MetaObjInterp b)
+  MetaTensorMorph : {a, b, c, d : MetaObj} ->
+    MetaMorphism a b -> MetaMorphism c d ->
+    MetaMorphism (MetaTensorObj a c) (MetaTensorObj b d)
+  MetaTensorMorphProd : {a, b, c, d : MetaObj} ->
+    (f : MetaMorphism a b) -> (g : MetaMorphism c d) ->
+    MetaMorphismInterp (MetaTensorMorph f g) =
+      (MetaMorphismInterp f, MetaMorphismInterp g)
+
+-- A category enriched over a `MetaCat`.
+-- This definition is in the style of category theory, using fibrations.
+record EnrichedCat (mcat : MetaCat) where
+  constructor MkEnrichedCat
+  EnrichedObj : mcat.MetaObj
+  EnrichedMorphism : mcat.MetaObj
   -- XXX
 
 public export
