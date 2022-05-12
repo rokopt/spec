@@ -496,6 +496,75 @@ ProductAnamorphism {idx} f =
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
 
+--------------------------------
+---- Arrow-category algebra ----
+--------------------------------
+
+-- The components of an object of an arrow category, which is simply a
+-- morphism in a containing category.
+public export
+record Arrow where
+  constructor ArrowComponents
+  arrowTot : Type
+  arrowBase : Type
+  arrowProj : arrowTot -> arrowBase
+
+-- The type signature of an arrow functor, which can generate an arrow
+-- object from an initial algebra.
+public export
+record ArrowFunctor where
+  constructor ArrowFGen
+  arrowBaseChange : Arrow ->
+    Type -- change base space
+  arrowCobaseChangeOnly : Arrow ->
+    Type -- change total space only
+  arrowCobaseChangeProj : (a : Arrow) ->
+    arrowCobaseChangeOnly a -> arrowBase a
+  arrowCobaseChangeDep : (a : Arrow) ->
+    (newBase : arrowBaseChange a) -> Type
+  arrowProjChange : (a : Arrow) ->
+    (newBase : arrowBaseChange a) -> arrowCobaseChangeDep a newBase -> Type
+
+public export
+data ArrowTermFunctor : (f : ArrowFunctor) ->
+    (v, a : Arrow) -> Type where
+  InArrowVar : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (x : arrowTot v) -> ArrowTermFunctor f v a
+  InArrowBase : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (base : arrowBaseChange f a) ->
+    ArrowTermFunctor f v a
+  InArrowCobase : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (tot : arrowCobaseChangeOnly f a) ->
+    ArrowTermFunctor f v a
+  InArrowBoth : {f : ArrowFunctor} -> {v, a : Arrow} ->
+    (newBase : arrowBaseChange f a) ->
+    arrowCobaseChangeDep f a newBase ->
+    ArrowTermFunctor f v a
+
+mutual
+  public export
+  FreeArrowTot : (f : ArrowFunctor) -> (a : Arrow) -> Type
+  FreeArrowTot f a = ?FreeArrowTot_hole
+
+  public export
+  FreeArrowBase : (f : ArrowFunctor) -> (a : Arrow) -> Type
+  FreeArrowBase f a = ?FreeArrowBase_hole
+
+  public export
+  freeArrowProj : (f : ArrowFunctor) -> (a : Arrow) ->
+    FreeArrowTot f a -> FreeArrowBase f a
+  freeArrowProj f a tot = ?freeArrowProj_hole
+
+  public export
+  data FreeArrowType : ArrowFunctor -> Arrow -> Type where
+    InFreeArrow : {f : ArrowFunctor} -> {a : Arrow} ->
+      ArrowTermFunctor f a (FreeArrowMonad f a) ->
+      FreeArrowType f a
+
+  public export
+  FreeArrowMonad : ArrowFunctor -> Arrow -> Arrow
+  FreeArrowMonad f a = let type = FreeArrowType f a in ?FreeArrowMonad_hole
+
 --------------------
 --------------------
 ---- Bifunctors ----
@@ -964,7 +1033,7 @@ subst0TypeCata : {a : Type} ->
 subst0TypeCata alg = subst0TypeParamCata {v=Void} alg (voidF a)
 
 -- This algebra interprets the constructors of the substitution-0 category
--- as types in the Idris type system.  This is posible because those
+-- as types in the Idris type system.  This is possible because those
 -- types themselves form a category, and there is a faithful functor
 -- from the substitution-0 category to that category.  (In other
 -- words, the Idris type system contains an initial object, a terminal object,
@@ -974,26 +1043,6 @@ public export
 interpretSubst0Alg : Subst0TypeAlg Type
 interpretSubst0Alg = CoproductAlgL {l=Subst0TypeFCases}
   (const (), const Void, ProductAdjunct, CoproductAdjunct)
-
---------------------------------------------------------------------
----- The category of zeroth-order Idris polynomial endofunctors ----
---------------------------------------------------------------------
-
--- This algebra interprets the constructors of the substitution-0 category
--- as functors in the Idris type system.  This is posible because those
--- functors themselves form a category, and there is a faithful functor
--- from the substitution-0 category to that functor category.  (In other
--- words, the functor category contains an initial object, a terminal object,
--- and all products and coproducts, which together inductively comprise all
--- of the objects of the substitution-0 category.)
-public export
-subst0FunctorAlg : Subst0TypeAlg (Type -> Type)
-subst0FunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
-  (const TerminalMonad,
-   const InitialComonad,
-   ProductAdjunctFCat,
-   CoproductAdjunctFCat
-  )
 
 ----------------------------
 ---- Refined categories ----
@@ -1096,6 +1145,26 @@ mutual
 public export
 subst0TypeErase : RefinedSubst0Type -> ErasedSubst0Type
 subst0TypeErase r = ?subst0TypeErase_hole
+
+--------------------------------------------------------------------
+---- The category of zeroth-order Idris polynomial endofunctors ----
+--------------------------------------------------------------------
+
+-- This algebra interprets the constructors of the substitution-0 category
+-- as functors in the Idris type system.  This is posible because those
+-- functors themselves form a category, and there is a faithful functor
+-- from the substitution-0 category to that functor category.  (In other
+-- words, the functor category contains an initial object, a terminal object,
+-- and all products and coproducts, which together inductively comprise all
+-- of the objects of the substitution-0 category.)
+public export
+subst0FunctorAlg : Subst0TypeAlg (Type -> Type)
+subst0FunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
+  (const TerminalMonad,
+   const InitialComonad,
+   ProductAdjunctFCat,
+   CoproductAdjunctFCat
+  )
 
 ----------------------------------------------
 ---- Category of first-order refined ADTs ----
