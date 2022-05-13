@@ -93,15 +93,35 @@ record MonoidalCat where
   MetaTensorObj : MetaObj MonCat -> MetaObj MonCat -> MetaObj MonCat
   MetaTensorObjInterp : (a, b : MetaObj MonCat) ->
     MetaObjInterp MonCat (MetaTensorObj a b) ->
-    (MetaObjInterp MonCat a, MetaObjInterp MonCat b)
+    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b)
   MetaTensorObjInterpInv : (a, b : MetaObj MonCat) ->
-    (MetaObjInterp MonCat a, MetaObjInterp MonCat b) ->
+    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b) ->
     MetaObjInterp MonCat (MetaTensorObj a b)
-  MetaTensorObjInterpCorrectLeft : (a, b : MetaObj MonCat) ->
+  MetaTensorObjInterpCorrect : (a, b : MetaObj MonCat) ->
     ExtInverse (MetaTensorObjInterpInv a b) (MetaTensorObjInterp a b)
   MetaTensorMorph : {a, b, c, d : MetaObj MonCat} ->
-    MetaMorphism MonCat a b -> MetaMorphism MonCat c d ->
-    MetaMorphism MonCat (MetaTensorObj a c) (MetaTensorObj b d)
+    MetaMorphism MonCat a c -> MetaMorphism MonCat b d ->
+    MetaMorphism MonCat (MetaTensorObj a b) (MetaTensorObj c d)
+  MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj MonCat} ->
+    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
+    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
+    MetaMorphismInterp MonCat {a} {b=c} m (fst $ MetaTensorObjInterp a b x) =
+      fst (MetaTensorObjInterp c d $
+        MetaMorphismInterp MonCat
+          {a=(MetaTensorObj a b)}
+          {b=(MetaTensorObj c d)}
+          (MetaTensorMorph {a} {b} {c} {d} m m')
+          x)
+  MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj MonCat} ->
+    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
+    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
+    MetaMorphismInterp MonCat {a=b} {b=d} m' (snd $ MetaTensorObjInterp a b x) =
+      snd (MetaTensorObjInterp c d $
+        MetaMorphismInterp MonCat
+          {a=(MetaTensorObj a b)}
+          {b=(MetaTensorObj c d)}
+          (MetaTensorMorph {a} {b} {c} {d} m m')
+          x)
 
 -- A category enriched over a `MetaCat`.
 -- This definition is in the style of category theory, using fibrations.
