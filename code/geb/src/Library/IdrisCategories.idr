@@ -123,14 +123,6 @@ record MonoidalCat where
           (MetaTensorMorph {a} {b} {c} {d} m m')
           x)
 
--- A category enriched over a `MetaCat`.
--- This definition is in the style of category theory, using fibrations.
-record EnrichedCat (mcat : MonoidalCat) where
-  constructor MkEnrichedCat
-  EnrichedObj : mcat.MonCat.MetaObj
-  EnrichedMorphism : mcat.MonCat.MetaObj
-  -- XXX
-
 public export
 record MetaFunctor (catC, catD : MetaCat) where
   MetaFunctorObjMap : MetaObj catC -> MetaObj catD
