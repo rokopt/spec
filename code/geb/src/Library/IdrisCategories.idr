@@ -5,6 +5,34 @@ import Library.IdrisUtils
 %default total
 
 -----------------------------------
+---- Godel-numbered categories ----
+-----------------------------------
+
+-------------------------------------------------------------------
+---- Identity/composition in category of metalanguage functors ----
+-------------------------------------------------------------------
+
+-- The identity in the functor category `[Type, Type]`.
+
+public export
+IdF : Type -> Type
+IdF = Prelude.Basics.id
+
+public export
+Functor IdF where
+  map m = m
+
+-- Composition in the functor category `[Type, Type]`.
+
+public export
+ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ComposeF = (.)
+
+public export
+(Functor g, Functor f) => Functor (ComposeF g f) where
+  map = map . map
+
+-----------------------------------
 -----------------------------------
 ---- Functional extensionality ----
 -----------------------------------
@@ -745,20 +773,6 @@ Bifunctor f => Bifunctor (flip f) where
 ------------------------------------------
 ------------------------------------------
 
-------------------------------------------------------
----- Identity/composition in category of functors ----
-------------------------------------------------------
-
--- The identity on type `Type`.
-
-public export
-IdF : Type -> Type
-IdF = Prelude.Basics.id
-
-public export
-Functor IdF where
-  map m = m
-
 public export
 mapId : {a : Type} -> (x : a) -> map (Prelude.Basics.id {a}) x = x
 mapId x = Refl
@@ -812,16 +826,6 @@ IdFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
     (map {f=IdF} (m' . m))
     (map {f=IdF} m' . map {f=IdF} m)
 IdFunctorialityCompose _ _ _ = Refl
-
--- Composition of functions of type `Type -> Type`.
-
-public export
-ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
-ComposeF = (.)
-
-public export
-(Functor g, Functor f) => Functor (ComposeF g f) where
-  map = map . map
 
 -------------------
 ---- Constants ----
