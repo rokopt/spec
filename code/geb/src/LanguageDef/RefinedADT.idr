@@ -6,6 +6,40 @@ import public LanguageDef.Atom
 
 %default total
 
+--------------------
+--------------------
+---- Core types ----
+--------------------
+--------------------
+
+---------------
+---- Lists ----
+---------------
+
+public export
+ListAlg : Type -> Type -> Type
+ListAlg = Algebra . ListF
+
+public export
+FreeList : Type -> Type -> Type
+FreeList = FreeMonad . ListF
+
+public export
+MuList : Type -> Type
+MuList = Mu . ListF
+
+public export
+ListCoalg : Type -> Type -> Type
+ListCoalg = Coalgebra . ListF
+
+public export
+CofreeList : Type -> Type -> Type
+CofreeList = CofreeComonad . ListF
+
+public export
+NuList : Type -> Type
+NuList = Nu . ListF
+
 -------------------------------------------------
 -------------------------------------------------
 ---- The category of polynomial endofunctors ----
@@ -796,34 +830,6 @@ CofreeNat = CofreeComonad NatF
 public export
 NuNat : Type
 NuNat = Nu NatF
-
----------------
----- Lists ----
----------------
-
-public export
-ListAlg : Type -> Type -> Type
-ListAlg = Algebra . ListF
-
-public export
-FreeList : Type -> Type -> Type
-FreeList = FreeMonad . ListF
-
-public export
-MuList : Type -> Type
-MuList = Mu . ListF
-
-public export
-ListCoalg : Type -> Type -> Type
-ListCoalg = Coalgebra . ListF
-
-public export
-CofreeList : Type -> Type -> Type
-CofreeList = CofreeComonad . ListF
-
-public export
-NuList : Type -> Type
-NuList = Nu . ListF
 
 -----------------------
 ---- S-expressions ----
