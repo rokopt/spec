@@ -245,7 +245,7 @@ mutual
     Geb : RefinedADTCatF prop term
 
 FreeRefinedADTCat : Type -> Type -> Type
-FreeRefinedADTCat prop = FreeMonad $ RefinedADTCatF prop
+FreeRefinedADTCat prop = FreeMonad' $ RefinedADTCatF prop
 
 CofreeRefinedADTCat : Type -> Type -> Type
-CofreeRefinedADTCat prop = CofreeComonad $ RefinedADTCatF prop
+CofreeRefinedADTCat prop = CofreeComonad' $ RefinedADTCatF prop
