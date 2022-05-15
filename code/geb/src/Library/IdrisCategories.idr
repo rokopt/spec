@@ -35,19 +35,23 @@ ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
--------------------------------------------------------------------
----- Identity/composition in category of metalanguage functors ----
--------------------------------------------------------------------
+------------------------------------------
+---- Identity/composition in `[Type]` ----
+------------------------------------------
+
+public export
+IdT : Type -> Type
+IdT = Prelude.Basics.id
+
+public export
+Functor IdT where
+  map m = m
+
+------------------------------------------------
+---- Identity/composition in `[Type, Type]` ----
+------------------------------------------------
 
 -- The identity in the functor category `[Type, Type]`.
-
-public export
-IdF : Type -> Type
-IdF = Prelude.Basics.id
-
-public export
-Functor IdF where
-  map m = m
 
 -- Composition in the functor category `[Type, Type]`.
 
@@ -157,7 +161,7 @@ ProductAdjunctFCat p = ProductF (fst p) (snd p)
 ---- Coproducts ----
 --------------------
 
--- `CoproductF` is also in `[PolyC x PolyC, PolyC]`, and takes two
+-- `CoproductF` is in `[PolyC x PolyC, PolyC]`, and takes two
 -- endofunctors to their coproduct.
 public export
 CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
@@ -194,11 +198,11 @@ CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
 
 public export
 PairWithF : Type -> Type -> Type
-PairWithF a = ProductF (ConstF a) IdF
+PairWithF a = ProductF (ConstF a) IdT
 
 public export
 ChoiceBetweenF : Type -> Type -> Type
-ChoiceBetweenF a = CoproductF (ConstF a) IdF
+ChoiceBetweenF a = CoproductF (ConstF a) IdT
 
 public export
 MaybeF : Type -> Type
@@ -274,7 +278,7 @@ Functor f => Bifunctor (TreeFunctor f) where
 public export
 data FreeMId : Type -> Type where
   InIdVar : {a : Type} -> a -> FreeMId a
-  InIdComposite : IdF (FreeMId a) -> FreeMId a
+  InIdComposite : IdT (FreeMId a) -> FreeMId a
 
 public export
 CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
@@ -1015,52 +1019,52 @@ mapId x = Refl
 
 public export
 mapIdFRefl : (a : Type) ->
-  map {f=IdF} (Prelude.Basics.id {a}) = Prelude.Basics.id {a}
+  map {f=IdT} (Prelude.Basics.id {a}) = Prelude.Basics.id {a}
 mapIdFRefl _ = Refl
 
 public export
 mapIdFExtEq : (a : Type) ->
-  ExtEq (map {f=IdF} (Prelude.Basics.id {a})) (Prelude.Basics.id {a})
+  ExtEq (map {f=IdT} (Prelude.Basics.id {a})) (Prelude.Basics.id {a})
 mapIdFExtEq a = EqFunctionExt (mapIdFRefl a)
 
 public export
 mapIdFIdem : (a : Type) ->
-  map (map {f=IdF} (Prelude.Basics.id {a})) =
-    map {f=IdF} (Prelude.Basics.id {a})
+  map (map {f=IdT} (Prelude.Basics.id {a})) =
+    map {f=IdT} (Prelude.Basics.id {a})
 mapIdFIdem _ = Refl
 
 public export
 mapIdFExtIdem : (a : Type) ->
   ExtEq
-    (map (map {f=IdF} (Prelude.Basics.id {a})))
-    (map {f=IdF} (Prelude.Basics.id {a}))
+    (map (map {f=IdT} (Prelude.Basics.id {a})))
+    (map {f=IdT} (Prelude.Basics.id {a}))
 mapIdFExtIdem a = EqFunctionExt (mapIdFIdem a)
 
 public export
 mapMapIdFRefl : (a : Type) ->
-  map (map {f=IdF} (Prelude.Basics.id {a})) = Prelude.Basics.id {a}
+  map (map {f=IdT} (Prelude.Basics.id {a})) = Prelude.Basics.id {a}
 mapMapIdFRefl _ = Refl
 
 public export
 mapMapIdFExtEq : (a : Type) ->
-  ExtEq (map (map {f=IdF} (Prelude.Basics.id {a}))) (Prelude.Basics.id {a})
+  ExtEq (map (map {f=IdT} (Prelude.Basics.id {a}))) (Prelude.Basics.id {a})
 mapMapIdFExtEq a = EqFunctionExt (mapMapIdFRefl a)
 
--- `IdF` follows the functor laws; this shows that `IdF` is a
+-- `IdT` follows the functor laws; this shows that `IdT` is a
 -- functor in the category of the Idris type system.
 
 public export
 IdFunctorialityId : (a : Type) ->
   ExtEq
-    (map {f=IdF} $ Prelude.Basics.id {a})
-    (Prelude.Basics.id {a=(IdF a)})
+    (map {f=IdT} $ Prelude.Basics.id {a})
+    (Prelude.Basics.id {a=(IdT a)})
 IdFunctorialityId _ _ = Refl
 
 public export
 IdFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
   ExtEq
-    (map {f=IdF} (m' . m))
-    (map {f=IdF} m' . map {f=IdF} m)
+    (map {f=IdT} (m' . m))
+    (map {f=IdT} m' . map {f=IdT} m)
 IdFunctorialityCompose _ _ _ = Refl
 
 -------------------------
