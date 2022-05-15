@@ -89,9 +89,16 @@ ComposeT = (.)
 -------------------------------------------------
 ---- Identity/composition in `[Type x Type]` ----
 -------------------------------------------------
+
 public export
 IdP : (a : ObjectP) -> MorphismP a a
 IdP (a, b) = (IdT a, IdT b)
+
+public export
+ComposeP : {a, b, c : ObjectP} ->
+  MorphismP b c -> MorphismP a b -> MorphismP a c
+ComposeP {a=(a, a')} {b=(b, b')} {c=(c, c')} (g, g') (f, f') =
+  (ComposeT {a} {b} {c} g f, ComposeT {a=a'} {b=b'} {c=c'} g' f')
 
 ------------------------------------------------
 ---- Identity/composition in `[Type, Type]` ----
@@ -99,17 +106,21 @@ IdP (a, b) = (IdT a, IdT b)
 
 -- The identity in the functor category `[Type, Type]`.
 public export
-IdF : (a : ObjectF) -> MorphismF a a
+IdF : (f : ObjectF) -> MorphismF f f
+IdF f a = Prelude.Basics.id {a=(f a)}
 
 -- Composition in the functor category `[Type, Type]`.
-
+-- This is vertical composition of natural transformations.
 public export
-ComposeF : (Type -> Type) -> (Type -> Type) -> Type -> Type
-ComposeF = (.)
+ComposeF : {f, g, h : ObjectF} ->
+  MorphismF g h -> MorphismF f g -> MorphismF f h
+ComposeF beta alpha a = ComposeT (beta a) (alpha a)
 
+-- The functor category also has horizonal composition.
 public export
-(Functor g, Functor f) => Functor (ComposeF g f) where
-  map = map . map
+ComposeFH : {f, g, h, j : ObjectF} -> Functor g =>
+  MorphismF g j -> MorphismF f h -> MorphismF (ComposeT g f) (ComposeT j h)
+ComposeFH beta alpha a = (beta (h a) . map {f=g} (alpha a))
 
 ---------------------------------------
 ---- Polynomial functors on `Type` ----
