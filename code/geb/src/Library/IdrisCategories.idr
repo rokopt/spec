@@ -12,7 +12,9 @@ import Library.IdrisUtils
 
 -- When interpreting category theory into Idris's type system, we could
 -- axiomatize functional extensionality, but instead we'll quotient over
--- it explicitly.
+-- it explicitly.  This is because we will quotient over a weaker notion
+-- than that of functional extensionality:  decidable first-order
+-- extensional equality.
 
 public export
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
@@ -50,7 +52,8 @@ ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
 
 public export
 ObjRepresentation : Type -> Type -> Type
-ObjRepresentation represented representing = represented -> representing
+ObjRepresentation represented representing =
+  represented -> (representing -> representing)
 
 public export
 ObjRepresenting : Type -> Type
@@ -60,37 +63,85 @@ public export
 ObjRepresentedBy : Type -> Type
 ObjRepresentedBy = DPair Type . flip ObjRepresentation
 
--- The representation of the type of functions on given represented types by
--- the composition of the representations.
+-- We may represent functions between function-represented types as
+-- ways of translating back and forth between the types underlying
+-- the representations of the domain and codomain.  This type
+-- defines the representation of one particular function.  Note that
+-- this is still non-trivial even if `domRep` and `codRep` are the
+-- same -- in that case we might not call it "translating", but it can
+-- still be "rearranging".
 public export
-FunctionRepresentation : {domain, domRep, codomain, codRep : Type} ->
-  ObjRepresentation domain domRep -> ObjRepresentation codomain codRep ->
-  Type
-FunctionRepresentation domRepFunc codRepFunc =
-  ObjRepresentation (domain -> codomain) (domRep -> codRep)
+FunctionRepresentation : (domRep, codRep : Type) -> Type
+FunctionRepresentation domRep codRep = (codRep -> domRep, domRep -> codRep)
 
--- Define a notion of consistency of a function-type representation with
--- the representations of its domain and codomain.
+public export
+transformRep : {domRep, codRep : Type} ->
+  (domain -> codomain) ->
+  FunctionRepresentation domRep codRep ->
+  ObjRepresentation domain domRep ->
+  ObjRepresentation domain codRep
+transformRep f (codToDom, domToCod) domRepFunc x =
+  domToCod . domRepFunc x . codToDom
+
+-- Define a notion of consistency of the representation of a particular function
+-- with the representations of its domain and codomain.
 public export
 FuncRepCommutes : {domain, domRep, codomain, codRep : Type} ->
-  {domRepFunc : ObjRepresentation domain domRep} ->
-  {codRepFunc : ObjRepresentation codomain codRep} ->
-  FunctionRepresentation domRepFunc codRepFunc -> Type
-FuncRepCommutes {domain} {codomain} funcRep =
-  (f : domain -> codomain) -> ExtEq (codRepFunc . f) (funcRep f . domRepFunc)
+  (domRepFunc : ObjRepresentation domain domRep) ->
+  (codRepFunc : ObjRepresentation codomain codRep) ->
+  (domain -> codomain) ->
+  FunctionRepresentation domRep codRep -> Type
+FuncRepCommutes {domRep} {codRep} domRepFunc codRepFunc f funcRep =
+  ExtEq (codRepFunc . f) (transformRep f funcRep domRepFunc)
 
--- then we can define a notion of a type of functions between the
--- represented types which are themselves represented by a composition
--- of the representing functions, and which commute with the types'
--- representations.
 public export
-MorphismFRep : {domRepType, codRepType : Type} ->
-  ObjRepresentedBy domRepType -> ObjRepresentedBy codRepType -> Type
-MorphismFRep {domRepType} {codRepType}
-  (domain ** domRepFunc) (codomain ** codRepFunc) =
-    DPair
-      ((domain -> codomain) -> (domRepType -> codRepType))
-      (FuncRepCommutes {domRepFunc} {codRepFunc})
+CommutingFuncRep : {domain, domRep, codomain, codRep : Type} ->
+  (domRepFunc : ObjRepresentation domain domRep) ->
+  (codRepFunc : ObjRepresentation codomain codRep) ->
+  (domain -> codomain) -> Type
+CommutingFuncRep domRepFunc codRepFunc f =
+  DPair
+    (FunctionRepresentation domRep codRep)
+    (FuncRepCommutes domRepFunc codRepFunc f)
+
+public export
+HomObjRep : {domain, domRep, codomain, codRep : Type} ->
+  (domRepFunc : ObjRepresentation domain domRep) ->
+  (codRepFunc : ObjRepresentation codomain codRep) ->
+  Type
+HomObjRep domRepFunc codRepFunc =
+  (f : domain -> codomain) -> CommutingFuncRep domRepFunc codRepFunc f
+
+-- We now define a notion of a category with the following properties
+-- (together with the standard axioms of category theory):
+--  - Every object and morphism has a representation as a metalanguage function
+--    (the objects all share a representation, but representations of morphisms
+--    with one signature are allowed to differ from those with other signatures)
+--  - All of those representations satisfy `FuncRepCommutes` above
+--  - All of the representation functions have decidable extensional equalities
+--    (this does not only mean that there is a decidable equality for each
+--    input value, but rather the stronger condition that we can decide the
+--    extensional equality of entire functions)
+--  - Equality on objects and morphisms is given by extensional equality of
+--    their metalanguage representations
+-- We shall call such a category "decidably representable".
+public export
+record DecRepCat (obj : Type) (morph : obj -> obj -> Type) where
+  constructor MkDecRepCat
+  DecRepId : obj
+  DecRepCompose : {a, b, c : obj} -> morph b c -> morph a b -> morph a c
+
+  -- Each object is represented by an endomorphism on `DecRepObjRepType`.
+  DecRepObjRepType : Type
+  DecRepObjRep : ObjRepresentation obj DecRepObjRepType
+
+  -- We allow each hom-set to use a different representation.
+  -- (The _object_ representation functions for the domain and
+  -- codomain are the same, however, because the whole category
+  -- shares one object representation function.  The reason for that
+  -- is that it creates a monoid on objects, allowing them to be
+  -- composed.)
+  DecRepMorphRep : obj -> obj -> HomObjRep DecRepObjRep DecRepObjRep
 
 --------------------------------------------------------------
 --------------------------------------------------------------
