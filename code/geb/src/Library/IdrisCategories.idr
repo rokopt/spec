@@ -10,24 +10,87 @@ import Library.IdrisUtils
 -----------------------------------
 -----------------------------------
 
+-- When interpreting category theory into Idris's type system, we could
+-- axiomatize functional extensionality, but instead we'll quotient over
+-- it explicitly.
+
+public export
 ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
 
+public export
 ExtEqRefl : {a : Type} -> (f : a -> a) -> ExtEq f f
 ExtEqRefl _ _ = Refl
 
+public export
 ExtEqSym : {a, b : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
 ExtEqSym eq x = sym (eq x)
 
+public export
 ExtEqTrans : {a, b : Type} ->
   {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
 ExtEqTrans eq eq' x = trans (eq x) (eq' x)
 
+public export
 EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
 EqFunctionExt Refl _ = Refl
 
+public export
 ExtInverse : {a, b : Type} -> (a -> b) -> (b -> a) -> Type
 ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
+
+----------------------------------------------------------
+----------------------------------------------------------
+---- Categories represented by metalanguage functions ----
+----------------------------------------------------------
+----------------------------------------------------------
+
+-- We define a notion of a type which can be represented by a metalanguage
+-- function.
+
+public export
+ObjRepresentation : Type -> Type -> Type
+ObjRepresentation represented representing = represented -> representing
+
+public export
+ObjRepresenting : Type -> Type
+ObjRepresenting = DPair Type . ObjRepresentation
+
+public export
+ObjRepresentedBy : Type -> Type
+ObjRepresentedBy = DPair Type . flip ObjRepresentation
+
+-- The representation of the type of functions on given represented types by
+-- the composition of the representations.
+public export
+FunctionRepresentation : {domain, domRep, codomain, codRep : Type} ->
+  ObjRepresentation domain domRep -> ObjRepresentation codomain codRep ->
+  Type
+FunctionRepresentation domRepFunc codRepFunc =
+  ObjRepresentation (domain -> codomain) (domRep -> codRep)
+
+-- Define a notion of consistency of a function-type representation with
+-- the representations of its domain and codomain.
+public export
+FuncRepCommutes : {domain, domRep, codomain, codRep : Type} ->
+  {domRepFunc : ObjRepresentation domain domRep} ->
+  {codRepFunc : ObjRepresentation codomain codRep} ->
+  FunctionRepresentation domRepFunc codRepFunc -> Type
+FuncRepCommutes {domain} {codomain} funcRep =
+  (f : domain -> codomain) -> ExtEq (codRepFunc . f) (funcRep f . domRepFunc)
+
+-- then we can define a notion of a type of functions between the
+-- represented types which are themselves represented by a composition
+-- of the representing functions, and which commute with the types'
+-- representations.
+public export
+MorphismFRep : {domRepType, codRepType : Type} ->
+  ObjRepresentedBy domRepType -> ObjRepresentedBy codRepType -> Type
+MorphismFRep {domRepType} {codRepType}
+  (domain ** domRepFunc) (codomain ** codRepFunc) =
+    DPair
+      ((domain -> codomain) -> (domRepType -> codRepType))
+      (FuncRepCommutes {domRepFunc} {codRepFunc})
 
 --------------------------------------------------------------
 --------------------------------------------------------------
@@ -116,6 +179,11 @@ ComposeF : {f, g, h : ObjectF} ->
   MorphismF g h -> MorphismF f g -> MorphismF f h
 ComposeF beta alpha a = ComposeT (beta a) (alpha a)
 
+-- The functor category also has composition of _objects_.
+public export
+ComposeFObj : ObjectF -> ObjectF -> ObjectF
+ComposeFObj = (.)
+
 -- The functor category also has horizonal composition.
 public export
 ComposeFH : {f, g, h, j : ObjectF} -> Functor g =>
@@ -199,7 +267,7 @@ InitialNaturality _ v = void v
 -- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
 -- endofunctors on some category `C` -- if all of `C`'s endofunctors are
 -- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
--- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
+-- [Poly[C] x Poly[C], Poly[C].  That is, it is a bifunctor on `Poly[C]`.)
 public export
 ProductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
 ProductF f g a = (f a, g a)
