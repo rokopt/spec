@@ -5,8 +5,35 @@ import Library.IdrisUtils
 %default total
 
 -----------------------------------
----- Godel-numbered categories ----
 -----------------------------------
+---- Functional extensionality ----
+-----------------------------------
+-----------------------------------
+
+ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
+ExtEq {a} f g = (el : a) -> f el = g el
+
+ExtEqRefl : {a : Type} -> (f : a -> a) -> ExtEq f f
+ExtEqRefl _ _ = Refl
+
+ExtEqSym : {a, b : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
+ExtEqSym eq x = sym (eq x)
+
+ExtEqTrans : {a, b : Type} ->
+  {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
+ExtEqTrans eq eq' x = trans (eq x) (eq' x)
+
+EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
+EqFunctionExt Refl _ = Refl
+
+ExtInverse : {a, b : Type} -> (a -> b) -> (b -> a) -> Type
+ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+---- The Idris `Type` and endofunctor (`[Type, Type]`) categories ----
+----------------------------------------------------------------------
+----------------------------------------------------------------------
 
 -------------------------------------------------------------------
 ---- Identity/composition in category of metalanguage functors ----
@@ -32,30 +59,253 @@ public export
 (Functor g, Functor f) => Functor (ComposeF g f) where
   map = map . map
 
+---------------------------------------
+---- Polynomial functors on `Type` ----
+---------------------------------------
+
+-------------------
+---- Constants ----
+-------------------
+
+-- Given an object `a`, `Const a` is an endofunctor which takes all objects
+-- to `a`.
+public export
+ConstF : Type -> Type -> Type
+ConstF a _ = a
+
+public export
+Functor (ConstF a) where
+  map = const id
+
+--------------------------------------
+---- Terminal and initial objects ----
+--------------------------------------
+
+public export
+TerminalMonad : Type -> Type
+TerminalMonad = ConstF Unit
+
+public export
+Functor TerminalMonad where
+  map _ () = ()
+
+public export
+TerminalNTUnit : (a : Type) -> a -> TerminalMonad a
+TerminalNTUnit _ = const ()
+
+public export
+TerminalNaturality : {a, b : Type} -> (m : a -> b) ->
+  map {f=TerminalMonad} m . TerminalNTUnit a = TerminalNTUnit b . m
+TerminalNaturality _ = Refl
+
+public export
+InitialComonad : Type -> Type
+InitialComonad = ConstF Void
+
+public export
+Functor InitialComonad where
+  map _ v = v
+
+public export
+InitialNTCounit : (a : Type) -> InitialComonad a -> a
+InitialNTCounit = voidF
+
+public export
+InitialNaturality : {a, b : Type} -> (m : a -> b) ->
+  ExtEq (InitialNTCounit b . map {f=InitialComonad} m) (m . InitialNTCounit a)
+InitialNaturality _ v = void v
+
+------------------
+---- Products ----
+------------------
+
+-- `ProductF` is an operator on endofunctors which takes two endofunctors
+-- to their product.  `ProductF` is therefore not itself an endofunctor; it
+-- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
+-- endofunctors on some category `C` -- if all of `C`'s endofunctors are
+-- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
+-- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
+public export
+ProductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ProductF f g a = (f a, g a)
+
+public export
+(Functor f, Functor g) => Functor (ProductF f g) where
+  map m (x, y) = (map m x, map m y)
+
+public export
+ProductMonad : Type -> Type
+ProductMonad a = Pair a a
+
+public export
+ProductNTUnit : {a : Type} -> a -> ProductMonad a
+ProductNTUnit x = (x, x)
+
+-- The right adjoint to the diagonal functor from the Idris type system
+-- (`Type`).
+public export
+ProductAdjunct : (Type, Type) -> Type
+ProductAdjunct (t, t') = Pair t t'
+
+-- The right adjoint to the diagonal functor from the category of Idris
+-- functors (`Type -> Type`).
+public export
+ProductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
+ProductAdjunctFCat p = ProductF (fst p) (snd p)
+
+--------------------
+---- Coproducts ----
+--------------------
+
+-- `CoproductF` is also in `[PolyC x PolyC, PolyC]`, and takes two
+-- endofunctors to their coproduct.
+public export
+CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+CoproductF f g a = Either (f a) (g a)
+
+public export
+(Functor f, Functor g) => Functor (CoproductF f g) where
+  map m (Left x) = Left $ map m x
+  map m (Right y) = Right $ map m y
+
+public export
+CoproductComonad : Type -> Type
+CoproductComonad a = Either a a
+
+public export
+CoproductNTCounit : {a : Type} -> CoproductComonad a -> a
+CoproductNTCounit (Left x) = x
+CoproductNTCounit (Right x) = x
+
+-- The left adjoint to the diagonal functor, in the Idris type system.
+public export
+CoproductAdjunct : (Type, Type) -> Type
+CoproductAdjunct (t, t') = Either t t'
+
+-- The left adjoint to the diagonal functor from the category of Idris
+-- functors (`Type -> Type`).
+public export
+CoproductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
+CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
+
+---------------------------------------
+---- Higher-order utility functors ----
+---------------------------------------
+
+public export
+PairWithF : Type -> Type -> Type
+PairWithF a = ProductF (ConstF a) IdF
+
+public export
+ChoiceBetweenF : Type -> Type -> Type
+ChoiceBetweenF a = CoproductF (ConstF a) IdF
+
+public export
+MaybeF : Type -> Type
+MaybeF = ChoiceBetweenF ()
+
+public export
+CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+CoproductFLNE f [] = f
+CoproductFLNE f (f' :: fs) = CoproductF f (CoproductFLNE f' fs)
+
+public export
+CoproductFL : List (Type -> Type) -> Type -> Type
+CoproductFL [] = InitialComonad
+CoproductFL (f :: fs) = CoproductFLNE f fs
+
+--------------------------------------
+--------------------------------------
+---- Categorial algebra on `Type` ----
+--------------------------------------
+--------------------------------------
+
+-------------------------------------
+---- F-algebras and F-coalgebras ----
+-------------------------------------
+
+-- The categorial definition of an F-algebra.
+public export
+Algebra : (Type -> Type) -> Type -> Type
+Algebra f a = f a -> a
+
+-- The dual of an F-algebra: an F-coalgebra.
+public export
+Coalgebra : (Type -> Type) -> Type -> Type
+Coalgebra f a = a -> f a
+
+--------------------------------------
+---- Open terms and labeled trees ----
+--------------------------------------
+
+-- For a given functor `F` and object `v`, form the functor `Fv` defined by
+-- `Fv[x] = v + F[x]`.  We call it `TermFunctor` because it turns
+-- an endofunctor which we can interpret as representing a datatype
+-- into one which we can interpret as representing open terms of
+-- that datatype with variables drawn from type `v`.
+public export
+TermFunctor : (Type -> Type) -> Type -> (Type -> Type)
+TermFunctor f a = CoproductF (ConstF a) f
+
+public export
+Functor f => Bifunctor (TermFunctor f) where
+  bimap f' g' (Left x) = Left $ f' x
+  bimap f' g' (Right x) = Right $ map g' x
+
+-- For a given functor `F`, form the functor `Fa` defined by
+-- `Fa[x] = a * F[x]`.  We call it `TreeFunctor` because it turns
+-- an endofunctor which we can interpret as representing a datatype
+-- into one which we can interpret as representing potentially infinite
+-- trees of that datatype with labels drawn from type `v`.
+-- This is the dual of `TermFunctor`.
+public export
+TreeFunctor : (Type -> Type) -> Type -> (Type -> Type)
+TreeFunctor f a = ProductF (ConstF a) f
+
+export
+Functor f => Bifunctor (TreeFunctor f) where
+  bimap f' g' (x, fx) = (f' x, map g' fx)
+
+----------------------------------------------
+---- Polynomial-functor algebra on `Type` ----
+----------------------------------------------
+
+-- The free monad of the identity functor.
+public export
+data FreeMId : Type -> Type where
+  InIdVar : {a : Type} -> a -> FreeMId a
+  InIdComposite : IdF (FreeMId a) -> FreeMId a
+
+public export
+CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+CoproductAlgTypeNE f [] a = Algebra f a
+CoproductAlgTypeNE f (f' :: fs) a = (Algebra f a, CoproductAlgTypeNE f' fs a)
+
+public export
+CoproductAlgType : List (Type -> Type) -> Type -> Type
+CoproductAlgType [] a = Algebra InitialComonad a
+CoproductAlgType (f :: fs) a = CoproductAlgTypeNE f fs a
+
+public export
+CoproductAlgLNE :
+  {f : Type -> Type} -> {l : List (Type -> Type)} -> {a : Type} ->
+  CoproductAlgTypeNE f l a -> Algebra (CoproductFLNE f l) a
+CoproductAlgLNE {f} {l=[]} alg x = alg x
+CoproductAlgLNE {f} {l=(f' :: fs)} (alg, algs) x = case x of
+  Left x' => alg x'
+  Right x' => CoproductAlgLNE {f=f'} {l=fs} algs x'
+
+public export
+CoproductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
+  CoproductAlgType l a -> Algebra (CoproductFL l) a
+CoproductAlgL {l=[]} algl = \x => void x
+CoproductAlgL {l=(f :: fs)} algl = CoproductAlgLNE {f} {l=fs} algl
+
 -----------------------------------
 -----------------------------------
----- Functional extensionality ----
+---- Godel-numbered categories ----
 -----------------------------------
 -----------------------------------
-
-ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
-ExtEq {a} f g = (el : a) -> f el = g el
-
-ExtEqRefl : {a : Type} -> (f : a -> a) -> ExtEq f f
-ExtEqRefl _ _ = Refl
-
-ExtEqSym : {a, b : Type} -> {f, g : a -> b} -> ExtEq f g -> ExtEq g f
-ExtEqSym eq x = sym (eq x)
-
-ExtEqTrans : {a, b : Type} ->
-  {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
-ExtEqTrans eq eq' x = trans (eq x) (eq' x)
-
-EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
-EqFunctionExt Refl _ = Refl
-
-ExtInverse : {a, b : Type} -> (a -> b) -> (b -> a) -> Type
-ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
 
 ---------------------------------
 ---------------------------------
@@ -381,19 +631,41 @@ FunctorCatEndofunctor = ProductCatEndofunctor Type
 ------------------------------------------------
 ------------------------------------------------
 
+-- For a given functor `F` and object `v`, form the functor `Fv` defined by
+-- `Fv[x] = v + F[x]`.  We call it `TermFunctor'` because it turns
+-- an endofunctor which we can interpret as representing a datatype
+-- into one which we can interpret as representing open terms of
+-- that datatype with variables drawn from type `v`.
+public export
+data TermFunctor' : (Type -> Type) -> Type -> (Type -> Type) where
+  TermVar : {f : Type -> Type} -> {0 v, a : Type} ->
+    v -> TermFunctor' f v a
+  TermComposite : {f : Type -> Type} -> {0 v, a : Type} ->
+    f a -> TermFunctor' f v a
+
+public export
+Functor f => Bifunctor (TermFunctor' f) where
+  bimap f' g' (TermVar x) = TermVar $ f' x
+  bimap f' g' (TermComposite x) = TermComposite $ map g' x
+
+-- For a given functor `F`, form the functor `Fa` defined by
+-- `Fa[x] = a * F[x]`.  We call it `TreeFunctor'` because it turns
+-- an endofunctor which we can interpret as representing a datatype
+-- into one which we can interpret as representing potentially infinite
+-- trees of that datatype with labels drawn from type `v`.
+-- This is the dual of `TermFunctor'`.
+public export
+data TreeFunctor' : (Type -> Type) -> Type -> (Type -> Type) where
+  TreeNode : {f : Type -> Type} -> {0 l, a : Type} ->
+    l -> f a -> TreeFunctor' f l a
+
+export
+Functor f => Bifunctor (TreeFunctor' f) where
+  bimap f' g' (TreeNode x fx) = TreeNode (f' x) (map g' fx)
+
 -------------------------------------
 ---- F-algebras and F-coalgebras ----
 -------------------------------------
-
--- The categorial definition of an F-algebra.
-public export
-Algebra : (Type -> Type) -> Type -> Type
-Algebra f a = f a -> a
-
--- The dual of an F-algebra:  an F-coalgebra.
-public export
-Coalgebra : (Type -> Type) -> Type -> Type
-Coalgebra f a = a -> f a
 
 -- The version of `Algebra` for an Idris product category.
 public export
@@ -407,43 +679,7 @@ ProductCatCoalgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> Type
 ProductCatCoalgebra f a = ProductCatMorphism a (f a)
 
---------------------------------------
----- Open terms and labeled trees ----
---------------------------------------
-
--- For a given functor `F` and object `v`, form the functor `Fv` defined by
--- `Fv[x] = v + F[x]`.  We call it `TermFunctor` because it turns
--- an endofunctor which we can interpret as representing a datatype
--- into one which we can interpret as representing open terms of
--- that datatype with variables drawn from type `v`.
-public export
-data TermFunctor : (Type -> Type) -> Type -> (Type -> Type) where
-  TermVar : {f : Type -> Type} -> {0 v, a : Type} ->
-    v -> TermFunctor f v a
-  TermComposite : {f : Type -> Type} -> {0 v, a : Type} ->
-    f a -> TermFunctor f v a
-
-public export
-Functor f => Bifunctor (TermFunctor f) where
-  bimap f' g' (TermVar x) = TermVar $ f' x
-  bimap f' g' (TermComposite x) = TermComposite $ map g' x
-
--- For a given functor `F`, form the functor `Fa` defined by
--- `Fa[x] = a * F[x]`.  We call it `TreeFunctor` because it turns
--- an endofunctor which we can interpret as representing a datatype
--- into one which we can interpret as representing potentially infinite
--- trees of that datatype with labels drawn from type `v`.
--- This is the dual of `TermFunctor`.
-public export
-data TreeFunctor : (Type -> Type) -> Type -> (Type -> Type) where
-  TreeNode : {f : Type -> Type} -> {0 l, a : Type} ->
-    l -> f a -> TreeFunctor f l a
-
-export
-Functor f => Bifunctor (TreeFunctor f) where
-  bimap f' g' (TreeNode x fx) = TreeNode (f' x) (map g' fx)
-
--- The product-category version of `TermFunctor`.  In the case of just two
+-- The product-category version of `TermFunctor'`.  In the case of just two
 -- categories, for example, if `F` and `G` are the components of the input
 -- functor, each going from the product category to one of the components,
 -- and `v` and `w` are the components of the variable type, then this
@@ -467,7 +703,7 @@ data ProductCatTermFunctor : {idx : Type} ->
     f a i -> ProductCatTermFunctor f v a i
 
 -- The dual of `ProductCatTermFunctor`, also known as the product-category
--- version of `TreeFunctor`.
+-- version of `TreeFunctor'`.
 public export
 data ProductCatTreeFunctor : {idx : Type} ->
     ProductCatObjectEndoMap idx ->
@@ -480,11 +716,11 @@ data ProductCatTreeFunctor : {idx : Type} ->
     l i -> f a i -> ProductCatTreeFunctor f l a i
 
 export
-treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
+treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor' f l a -> l
 treeLabel (TreeNode a' _) = a'
 
 export
-treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> f a
+treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor' f l a -> f a
 treeSubtree (TreeNode _ fx) = fx
 
 export
@@ -496,13 +732,13 @@ treeSubtreeProduct : ProductCatTreeFunctor f l a i -> f a i
 treeSubtreeProduct (ProductCatTreeNode _ fx) = fx
 
 -- An algebra on a functor representing a type of open terms (as generated
--- by `TermFunctor` above) may be viewed as a polymorphic algebra, because
+-- by `TermFunctor'` above) may be viewed as a polymorphic algebra, because
 -- for each object `v` it generates an `F[v]`-algebra on an any given carrier
 -- object.  When `v` is the initial object (`Void`), it specializes to
 -- generating `F`-algebras.
 public export
 TermAlgebra : (Type -> Type) -> Type -> Type -> Type
-TermAlgebra f v a = Algebra (TermFunctor f v) a
+TermAlgebra f v a = Algebra (TermFunctor' f v) a
 
 public export
 ProductCatTermAlgebra : {idx : Type} ->
@@ -513,7 +749,7 @@ ProductCatTermAlgebra f v a =
 
 public export
 TermCoalgebra : (Type -> Type) -> Type -> Type -> Type
-TermCoalgebra f v a = Coalgebra (TermFunctor f v) a
+TermCoalgebra f v a = Coalgebra (TermFunctor' f v) a
 
 public export
 ProductCatTermCoalgebra : {idx : Type} ->
@@ -523,13 +759,13 @@ ProductCatTermCoalgebra f v a =
   ProductCatCoalgebra (ProductCatTermFunctor f v) a
 
 -- A coalgebra on a functor representing a type of labeled trees (as generated
--- by `TreeFunctor` above) may be viewed as a polymorphic coalgebra, because
+-- by `TreeFunctor'` above) may be viewed as a polymorphic coalgebra, because
 -- for each object `v` it generates an `F[v]`-coalgebra on an any given carrier
 -- object.  When `v` is the terminal object (`Unit`), it specializes to
 -- generating `F`-coalgebras.
 public export
 TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
-TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
+TreeCoalgebra f v a = Coalgebra (TreeFunctor' f v) a
 
 public export
 ProductCatTreeCoalgebra : {idx : Type} ->
@@ -540,7 +776,7 @@ ProductCatTreeCoalgebra f v a =
 
 public export
 TreeAlgebra : (Type -> Type) -> Type -> Type -> Type
-TreeAlgebra f v a = Algebra (TreeFunctor f v) a
+TreeAlgebra f v a = Algebra (TreeFunctor' f v) a
 
 public export
 ProductCatTreeAlgebra : {idx : Type} ->
@@ -571,12 +807,12 @@ data FreeMonad : (Type -> Type) -> (Type -> Type) where
     TermAlgebra f a (FreeMonad f a)
 
 public export
-FreeAlgebra : (Type -> Type) -> Type -> Type
-FreeAlgebra f a = Algebra f (FreeMonad f a)
+FreeAlgebra' : (Type -> Type) -> Type -> Type
+FreeAlgebra' f a = Algebra f (FreeMonad f a)
 
 public export
 InitialAlgebra : (Type -> Type) -> Type
-InitialAlgebra f = FreeAlgebra f Void
+InitialAlgebra f = FreeAlgebra' f Void
 
 -- The product-category version of `FreeMonad`.
 public export
@@ -596,7 +832,7 @@ public export
 data CofreeComonad : (Type -> Type) -> (Type -> Type) where
   InCofree :
     {f : Type -> Type} -> {a : Type} ->
-    Inf (TreeFunctor f a (CofreeComonad f a)) -> CofreeComonad f a
+    Inf (TreeFunctor' f a (CofreeComonad f a)) -> CofreeComonad f a
 
 public export
 CofreeCoalgebra : (Type -> Type) -> Type -> Type
@@ -827,198 +1063,6 @@ IdFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
     (map {f=IdF} m' . map {f=IdF} m)
 IdFunctorialityCompose _ _ _ = Refl
 
--------------------
----- Constants ----
--------------------
-
--- Given an object `a`, `Const a` is an endofunctor which takes all objects
--- to `a`.
-public export
-ConstF : Type -> Type -> Type
-ConstF a _ = a
-
-public export
-Functor (ConstF a) where
-  map = const id
-
---------------------------------------
----- Terminal and initial objects ----
---------------------------------------
-
-public export
-TerminalMonad : Type -> Type
-TerminalMonad = ConstF Unit
-
-public export
-Functor TerminalMonad where
-  map _ () = ()
-
-public export
-TerminalNTUnit : (a : Type) -> a -> TerminalMonad a
-TerminalNTUnit _ = const ()
-
-public export
-TerminalNaturality : {a, b : Type} -> (m : a -> b) ->
-  map {f=TerminalMonad} m . TerminalNTUnit a = TerminalNTUnit b . m
-TerminalNaturality _ = Refl
-
-public export
-InitialComonad : Type -> Type
-InitialComonad = ConstF Void
-
-public export
-Functor InitialComonad where
-  map _ v = v
-
-public export
-InitialNTCounit : (a : Type) -> InitialComonad a -> a
-InitialNTCounit = voidF
-
-public export
-InitialNaturality : {a, b : Type} -> (m : a -> b) ->
-  ExtEq (InitialNTCounit b . map {f=InitialComonad} m) (m . InitialNTCounit a)
-InitialNaturality _ v = void v
-
-------------------
----- Products ----
-------------------
-
--- `ProductF` is an operator on endofunctors which takes two endofunctors
--- to their product.  `ProductF` is therefore not itself an endofunctor; it
--- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
--- endofunctors on some category `C` -- if all of `C`'s endofunctors are
--- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
--- [PolyC x PolyC, PolyC].  That is, it is a bifunctor on `Poly[C]`.)
-public export
-ProductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
-ProductF f g a = (f a, g a)
-
-public export
-(Functor f, Functor g) => Functor (ProductF f g) where
-  map m (x, y) = (map m x, map m y)
-
-public export
-ProductMonad : Type -> Type
-ProductMonad a = Pair a a
-
-public export
-ProductNTUnit : {a : Type} -> a -> ProductMonad a
-ProductNTUnit x = (x, x)
-
--- The right adjoint to the diagonal functor from the Idris type system
--- (`Type`).
-public export
-ProductAdjunct : (Type, Type) -> Type
-ProductAdjunct (t, t') = Pair t t'
-
--- The right adjoint to the diagonal functor from the category of Idris
--- functors (`Type -> Type`).
-public export
-ProductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
-ProductAdjunctFCat p = ProductF (fst p) (snd p)
-
---------------------
----- Coproducts ----
---------------------
-
--- `CoproductF` is also in `[PolyC x PolyC, PolyC]`, and takes two
--- endofunctors to their coproduct.
-public export
-CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
-CoproductF f g a = Either (f a) (g a)
-
-public export
-(Functor f, Functor g) => Functor (CoproductF f g) where
-  map m (Left x) = Left $ map m x
-  map m (Right y) = Right $ map m y
-
-public export
-CoproductComonad : Type -> Type
-CoproductComonad a = Either a a
-
-public export
-CoproductNTCounit : {a : Type} -> CoproductComonad a -> a
-CoproductNTCounit (Left x) = x
-CoproductNTCounit (Right x) = x
-
--- The left adjoint to the diagonal functor, in the Idris type system.
-public export
-CoproductAdjunct : (Type, Type) -> Type
-CoproductAdjunct (t, t') = Either t t'
-
--- The left adjoint to the diagonal functor from the category of Idris
--- functors (`Type -> Type`).
-public export
-CoproductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
-CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
-
---------------------------------------------
----- F-algebra and F-coalgebra functors ----
---------------------------------------------
-
--- Called `TermFunctor` above, this version is expressed explicitly
--- in terms of products and coproducts.
-public export
-PreFreeAlgebraF : (Type -> Type) -> Type -> (Type -> Type)
-PreFreeAlgebraF f a = CoproductF (ConstF a) f
-
--- Called `TreeFunctor` above, this version is expressed explicitly
--- in terms of products and coproducts.
-public export
-PreCofreeCoalgebraF : (Type -> Type) -> Type -> (Type -> Type)
-PreCofreeCoalgebraF f a = ProductF (ConstF a) f
-
----------------------------------------
----- Higher-order utility functors ----
----------------------------------------
-
-public export
-PairWithF : Type -> Type -> Type
-PairWithF a = ProductF (ConstF a) IdF
-
-public export
-ChoiceBetweenF : Type -> Type -> Type
-ChoiceBetweenF a = CoproductF (ConstF a) IdF
-
-public export
-MaybeF : Type -> Type
-MaybeF = ChoiceBetweenF ()
-
-public export
-CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductFLNE f [] = f
-CoproductFLNE f (f' :: fs) = CoproductF f (CoproductFLNE f' fs)
-
-public export
-CoproductFL : List (Type -> Type) -> Type -> Type
-CoproductFL [] = InitialComonad
-CoproductFL (f :: fs) = CoproductFLNE f fs
-
-public export
-CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductAlgTypeNE f [] a = Algebra f a
-CoproductAlgTypeNE f (f' :: fs) a = (Algebra f a, CoproductAlgTypeNE f' fs a)
-
-public export
-CoproductAlgType : List (Type -> Type) -> Type -> Type
-CoproductAlgType [] a = Algebra InitialComonad a
-CoproductAlgType (f :: fs) a = CoproductAlgTypeNE f fs a
-
-public export
-CoproductAlgLNE :
-  {f : Type -> Type} -> {l : List (Type -> Type)} -> {a : Type} ->
-  CoproductAlgTypeNE f l a -> Algebra (CoproductFLNE f l) a
-CoproductAlgLNE {f} {l=[]} alg x = alg x
-CoproductAlgLNE {f} {l=(f' :: fs)} (alg, algs) x = case x of
-  Left x' => alg x'
-  Right x' => CoproductAlgLNE {f=f'} {l=fs} algs x'
-
-public export
-CoproductAlgL : {l : List (Type -> Type)} -> {a : Type} ->
-  CoproductAlgType l a -> Algebra (CoproductFL l) a
-CoproductAlgL {l=[]} algl = \x => void x
-CoproductAlgL {l=(f :: fs)} algl = CoproductAlgLNE {f} {l=fs} algl
-
 -------------------------
 ---- Natural numbers ----
 -------------------------
@@ -1156,7 +1200,7 @@ NuSubst0Type = Nu Subst0TypeF
 public export
 data Subst0TypeFreeMonad : Type -> Type where
   InFreeSubst0 :
-    PreFreeAlgebraF Subst0TypeF a (Subst0TypeFreeMonad a) ->
+    TermFunctor Subst0TypeF a (Subst0TypeFreeMonad a) ->
     Subst0TypeFreeMonad a
 
 public export

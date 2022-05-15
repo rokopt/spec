@@ -228,7 +228,7 @@ mutual
     CoproductProp : GebUniversalPropF prop
     EqualizerProp : GebUniversalPropF prop
     CoequalizerProp : GebUniversalPropF prop
-    FreeAlgebraProp : GebUniversalPropF prop
+    FreeAlgebra'Prop : GebUniversalPropF prop
     CofreeAlgebraProp : GebUniversalPropF prop
     HigherOrderProp : GebUniversalPropF prop
     TuringCompleteProp : GebUniversalPropF prop
