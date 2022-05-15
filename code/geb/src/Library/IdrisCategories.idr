@@ -120,7 +120,19 @@ ComposeF beta alpha a = ComposeT (beta a) (alpha a)
 public export
 ComposeFH : {f, g, h, j : ObjectF} -> Functor g =>
   MorphismF g j -> MorphismF f h -> MorphismF (ComposeT g f) (ComposeT j h)
-ComposeFH beta alpha a = (beta (h a) . map {f=g} (alpha a))
+ComposeFH {g} beta alpha a = (beta (h a) . map {f=g} (alpha a))
+
+-- The functor category also has whiskering.
+
+public export
+WhiskerL : {f, g : ObjectF} -> (h : ObjectF) -> Functor h =>
+  MorphismF f g -> MorphismF (ComposeT h f) (ComposeT h g)
+WhiskerL h nu a = map {f=h} (nu a)
+
+public export
+WhiskerR : (f : ObjectF) -> {g, h : ObjectF} -> Functor f =>
+  MorphismF g h -> MorphismF (ComposeT f g) (ComposeT f h)
+WhiskerR f nu a = map {f} (nu a)
 
 ---------------------------------------
 ---- Polynomial functors on `Type` ----
