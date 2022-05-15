@@ -29,29 +29,77 @@ EqFunctionExt Refl _ = Refl
 ExtInverse : {a, b : Type} -> (a -> b) -> (b -> a) -> Type
 ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
 
-----------------------------------------------------------------------
-----------------------------------------------------------------------
----- The Idris `Type` and endofunctor (`[Type, Type]`) categories ----
-----------------------------------------------------------------------
-----------------------------------------------------------------------
+--------------------------------------------------------------
+--------------------------------------------------------------
+---- Idris categories: `[Type]`, product, and endofunctor ----
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+---------------------------------------------------------------
+---- Objects/morphisms in `[Type]` (Idris's base category) ----
+---------------------------------------------------------------
+
+public export
+ObjectT : Type
+ObjectT = Type
+
+public export
+MorphismT : ObjectT -> ObjectT -> Type
+MorphismT a b = a -> b
+
+----------------------------------------------------------------------------
+---- Objects/morphisms in `[Type x Type]` (the base's product category) ----
+----------------------------------------------------------------------------
+
+public export
+ObjectP : Type
+ObjectP = (Type, Type)
+
+public export
+MorphismP : ObjectP -> ObjectP -> Type
+MorphismP (a, b) (c, d) = (MorphismT a c, MorphismT b d)
+
+-------------------------------------------------------------------------------
+---- Objects/morphisms in `[Type, Type]` (the base's endofunctor category) ----
+-------------------------------------------------------------------------------
+
+public export
+ObjectF : Type
+ObjectF = Type -> Type
+
+-- Morphisms in the endofunctor category are natural transformations in
+-- the base category.
+public export
+MorphismF : ObjectF -> ObjectF -> Type
+MorphismF f g = (a : Type) -> MorphismT (f a) (g a)
 
 ------------------------------------------
 ---- Identity/composition in `[Type]` ----
 ------------------------------------------
 
 public export
-IdT : Type -> Type
-IdT = Prelude.Basics.id
+IdT : (a : ObjectT) -> MorphismT a a
+IdT a = Prelude.Basics.id {a}
 
 public export
-Functor IdT where
-  map m = m
+ComposeT : {a, b, c : ObjectT} ->
+  MorphismT b c -> MorphismT a b -> MorphismT a c
+ComposeT = (.)
+
+-------------------------------------------------
+---- Identity/composition in `[Type x Type]` ----
+-------------------------------------------------
+public export
+IdP : (a : ObjectP) -> MorphismP a a
+IdP (a, b) = (IdT a, IdT b)
 
 ------------------------------------------------
 ---- Identity/composition in `[Type, Type]` ----
 ------------------------------------------------
 
 -- The identity in the functor category `[Type, Type]`.
+public export
+IdF : (a : ObjectF) -> MorphismF a a
 
 -- Composition in the functor category `[Type, Type]`.
 
@@ -197,12 +245,20 @@ CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
 ---------------------------------------
 
 public export
+IdTF : Type -> Type
+IdTF = Prelude.Basics.id {a=Type}
+
+public export
+Functor IdTF where
+  map = id
+
+public export
 PairWithF : Type -> Type -> Type
-PairWithF a = ProductF (ConstF a) IdT
+PairWithF a = ProductF (ConstF a) IdTF
 
 public export
 ChoiceBetweenF : Type -> Type -> Type
-ChoiceBetweenF a = CoproductF (ConstF a) IdT
+ChoiceBetweenF a = CoproductF (ConstF a) IdTF
 
 public export
 MaybeF : Type -> Type
@@ -278,7 +334,7 @@ Functor f => Bifunctor (TreeFunctor f) where
 public export
 data FreeMId : Type -> Type where
   InIdVar : {a : Type} -> a -> FreeMId a
-  InIdComposite : IdT (FreeMId a) -> FreeMId a
+  InIdComposite : IdTF (FreeMId a) -> FreeMId a
 
 public export
 CoproductAlgTypeNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
@@ -1018,54 +1074,54 @@ mapId : {a : Type} -> (x : a) -> map (Prelude.Basics.id {a}) x = x
 mapId x = Refl
 
 public export
-mapIdFRefl : (a : Type) ->
-  map {f=IdT} (Prelude.Basics.id {a}) = Prelude.Basics.id {a}
-mapIdFRefl _ = Refl
+mapIdTFRefl : (a : Type) ->
+  map {f=IdTF} (Prelude.Basics.id {a}) = Prelude.Basics.id {a}
+mapIdTFRefl _ = Refl
 
 public export
-mapIdFExtEq : (a : Type) ->
-  ExtEq (map {f=IdT} (Prelude.Basics.id {a})) (Prelude.Basics.id {a})
-mapIdFExtEq a = EqFunctionExt (mapIdFRefl a)
+mapIdTFExtEq : (a : Type) ->
+  ExtEq (map {f=IdTF} (Prelude.Basics.id {a})) (Prelude.Basics.id {a})
+mapIdTFExtEq a = EqFunctionExt (mapIdTFRefl a)
 
 public export
-mapIdFIdem : (a : Type) ->
-  map (map {f=IdT} (Prelude.Basics.id {a})) =
-    map {f=IdT} (Prelude.Basics.id {a})
-mapIdFIdem _ = Refl
+mapIdTFIdem : (a : Type) ->
+  map (map {f=IdTF} (Prelude.Basics.id {a})) =
+    map {f=IdTF} (Prelude.Basics.id {a})
+mapIdTFIdem _ = Refl
 
 public export
-mapIdFExtIdem : (a : Type) ->
+mapIdTFExtIdem : (a : Type) ->
   ExtEq
-    (map (map {f=IdT} (Prelude.Basics.id {a})))
-    (map {f=IdT} (Prelude.Basics.id {a}))
-mapIdFExtIdem a = EqFunctionExt (mapIdFIdem a)
+    (map (map {f=IdTF} (Prelude.Basics.id {a})))
+    (map {f=IdTF} (Prelude.Basics.id {a}))
+mapIdTFExtIdem a = EqFunctionExt (mapIdTFIdem a)
 
 public export
-mapMapIdFRefl : (a : Type) ->
-  map (map {f=IdT} (Prelude.Basics.id {a})) = Prelude.Basics.id {a}
-mapMapIdFRefl _ = Refl
+mapMapIdTFRefl : (a : Type) ->
+  map (map {f=IdTF} (Prelude.Basics.id {a})) = Prelude.Basics.id {a}
+mapMapIdTFRefl _ = Refl
 
 public export
-mapMapIdFExtEq : (a : Type) ->
-  ExtEq (map (map {f=IdT} (Prelude.Basics.id {a}))) (Prelude.Basics.id {a})
-mapMapIdFExtEq a = EqFunctionExt (mapMapIdFRefl a)
+mapMapIdTFExtEq : (a : Type) ->
+  ExtEq (map (map {f=IdTF} (Prelude.Basics.id {a}))) (Prelude.Basics.id {a})
+mapMapIdTFExtEq a = EqFunctionExt (mapMapIdTFRefl a)
 
--- `IdT` follows the functor laws; this shows that `IdT` is a
+-- `IdTF` follows the functor laws; this shows that `IdTF` is a
 -- functor in the category of the Idris type system.
 
 public export
-IdFunctorialityId : (a : Type) ->
+IdTFunctorialityId : (a : Type) ->
   ExtEq
-    (map {f=IdT} $ Prelude.Basics.id {a})
-    (Prelude.Basics.id {a=(IdT a)})
-IdFunctorialityId _ _ = Refl
+    (map {f=IdTF} $ Prelude.Basics.id {a})
+    (Prelude.Basics.id {a=(IdTF a)})
+IdTFunctorialityId _ _ = Refl
 
 public export
-IdFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
+IdTFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
   ExtEq
-    (map {f=IdT} (m' . m))
-    (map {f=IdT} m' . map {f=IdT} m)
-IdFunctorialityCompose _ _ _ = Refl
+    (map {f=IdTF} (m' . m))
+    (map {f=IdTF} m' . map {f=IdTF} m)
+IdTFunctorialityCompose _ _ _ = Refl
 
 -------------------------
 ---- Natural numbers ----
