@@ -42,25 +42,34 @@ data RefinedSexpFunctorF : (atom : Type) -> RefinedSexpCarrier -> Type where
 public export
 data RefinedSexpNatTransF : (atom : Type) -> RefinedSexpCarrier -> Type where
 
+public export
+RefinedSexpNatTransSignatureF : {atom : Type} ->
+  (carrier : RefinedSexpCarrier) ->
+  RefinedSexpNatTransF atom carrier ->
+  (RefinedSexpNatTransF atom carrier, RefinedSexpNatTransF atom carrier)
+RefinedSexpNatTransSignatureF {atom} carrier newNatTrans =
+  ?RefinedSexpNatTransSignatureF_hole
+
 mutual
   public export
-  data RefinedSexpFunctor : Type where
+  data RefinedSexpFunctor : (atom : Type) -> Type where
 
   public export
-  data RefinedSexpNatTrans : Type where
+  data RefinedSexpNatTrans : (atom : Type) -> Type where
 
   public export
-  RefinedSexpNatTransSignature :
-    RefinedSexpNatTrans -> (RefinedSexpFunctor, RefinedSexpFunctor)
+  RefinedSexpNatTransSignature : {atom : Type} ->
+    RefinedSexpNatTrans atom ->
+    (RefinedSexpFunctor atom, RefinedSexpFunctor atom)
   RefinedSexpNatTransSignature natTrans = ?RefinedSexpNatTransSignature_hole
 
   public export
-  RefinedSexpData : RefinedSexpCarrier
-  RefinedSexpData =
+  RefinedSexpData : (atom : Type) -> RefinedSexpCarrier
+  RefinedSexpData atom =
     MkRefinedSexpCarrier
-      RefinedSexpFunctor
-      RefinedSexpNatTrans
-      RefinedSexpNatTransSignature
+      (RefinedSexpFunctor atom)
+      (RefinedSexpNatTrans atom)
+      (RefinedSexpNatTransSignature {atom})
 
 --------------------
 --------------------
