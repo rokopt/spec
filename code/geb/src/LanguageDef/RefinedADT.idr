@@ -6,6 +6,62 @@ import public LanguageDef.Atom
 
 %default total
 
+-------------------------------
+-------------------------------
+---- Refined S-expressions ----
+-------------------------------
+-------------------------------
+
+-- We define a category inductively through applications of the
+-- following type constructors:
+--
+--  - `Atom` (for some given metalanguage atom type, which must be isomorphic
+--  -         to the natural numbers or some subset of them, which in particular
+--  -         means that they have a decidable equality)
+--  - `Nat`
+--  - `RefinedList` (indexed by number of atoms in the list)
+--  - `RefinedSexp` (indexed by total number of atoms in the expression)
+--
+-- We define the category by treating the type constructors as
+-- monads and comonads, and the function definitions as natural
+-- transformations, which in turn are derived from compositions of
+-- the units and counits of adjunctions.
+
+public export
+record RefinedSexpCarrier where
+  constructor MkRefinedSexpCarrier
+  RefinedSexpFunctorCarrier : Type
+  RefinedSexpNatTransCarrier : Type
+  RefinedSexpNatTransSignatureCarrier :
+    RefinedSexpNatTransCarrier ->
+    (RefinedSexpFunctorCarrier, RefinedSexpFunctorCarrier)
+
+public export
+data RefinedSexpFunctorF : (atom : Type) -> RefinedSexpCarrier -> Type where
+
+public export
+data RefinedSexpNatTransF : (atom : Type) -> RefinedSexpCarrier -> Type where
+
+mutual
+  public export
+  data RefinedSexpFunctor : Type where
+
+  public export
+  data RefinedSexpNatTrans : Type where
+
+  public export
+  RefinedSexpNatTransSignature :
+    RefinedSexpNatTrans -> (RefinedSexpFunctor, RefinedSexpFunctor)
+  RefinedSexpNatTransSignature natTrans = ?RefinedSexpNatTransSignature_hole
+
+  public export
+  RefinedSexpData : RefinedSexpCarrier
+  RefinedSexpData =
+    MkRefinedSexpCarrier
+      RefinedSexpFunctor
+      RefinedSexpNatTrans
+      RefinedSexpNatTransSignature
+
 --------------------
 --------------------
 ---- Core types ----
@@ -957,20 +1013,20 @@ data NSexpFunctor : (carrier : NSexpObject) -> NSexpObject where
     NSexpFunctor carrier NSLIST
 
 public export
-NSExpType : NSexpClass -> Type
-NSExpType = MuProduct NSexpFunctor
+NSexpType : NSexpClass -> Type
+NSexpType = MuProduct NSexpFunctor
 
 public export
 NSNat : Type
-NSNat = NSExpType NSexpNat
+NSNat = NSexpType NSexpNat
 
 public export
-NSExp : Type
-NSExp = NSExpType NSEXP
+NSexp : Type
+NSexp = NSexpType NSEXP
 
 public export
 NSList : Type
-NSList = NSExpType NSLIST
+NSList = NSexpType NSLIST
 
 public export
 nsexpCata : ProductFreeCatamorphism NSexpFunctor
@@ -1085,10 +1141,10 @@ data SexpInterpretation : NSexpClass -> Type where
 public export
 record SexpCheckResult (inputType : NSexpClass) where
   constructor SexpInterpretations
-  Input : NSExpType inputType
+  Input : NSexpType inputType
   InputInterpretation : Maybe (SexpInterpretation inputType)
   AllInterpretations :
-    (type : NSexpClass) -> NSExpType type -> Maybe (SexpInterpretation type)
+    (type : NSexpClass) -> NSexpType type -> Maybe (SexpInterpretation type)
 
 ---------------------
 ---- Polynomials ----

@@ -11,6 +11,15 @@ import Library.IdrisUtils
 ---------------------------------
 
 public export
+data FiniteTypeF : Type -> Type where
+  FinVoidF : FiniteTypeF carrier
+  FinUnitF : FiniteTypeF carrier
+  FinProductF :
+    (FiniteTypeF carrier, FiniteTypeF carrier) -> FiniteTypeF carrier
+  FinCoproductF :
+    (FiniteTypeF carrier, FiniteTypeF carrier) -> FiniteTypeF carrier
+
+public export
 data FiniteType : Type -> Type where
   FinVoid : FiniteType Void
   FinUnit : FiniteType Unit
@@ -1471,20 +1480,12 @@ Subst0TypeCoalg : Type -> Type
 Subst0TypeCoalg = Coalgebra Subst0TypeF
 
 public export
-FreeSubst0Type : Type -> Type
-FreeSubst0Type = FreeMonad' Subst0TypeF
+data MuSubst0Type : Type where
+  InMuS0 : Subst0TypeF (MuSubst0Type) -> MuSubst0Type
 
 public export
-CofreeSubst0Type : Type -> Type
-CofreeSubst0Type = CofreeComonad' Subst0TypeF
-
-public export
-MuSubst0Type : Type
-MuSubst0Type = Mu' Subst0TypeF
-
-public export
-NuSubst0Type : Type
-NuSubst0Type = Nu' Subst0TypeF
+data NuSubst0Type : Type where
+  InNuS0 : Inf (Subst0TypeF (MuSubst0Type)) -> NuSubst0Type
 
 public export
 data Subst0TypeFreeMonad' : Type -> Type where
