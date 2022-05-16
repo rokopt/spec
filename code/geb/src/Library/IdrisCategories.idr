@@ -10,6 +10,7 @@ import Library.IdrisUtils
 -------------------------------
 -------------------------------
 
+public export
 RelationOn : Type -> Type
 RelationOn a = a -> a -> Type
 
@@ -19,11 +20,11 @@ IsReflexive {a} r = (x : a) -> r x x
 
 public export
 IsSymmetric : {a : Type} -> RelationOn a -> Type
-IsSymmetric {a} r = (x, y : a) -> r x y -> r y x
+IsSymmetric {a} r = {x, y : a} -> r x y -> r y x
 
 public export
 IsTransitive : {a : Type} -> RelationOn a -> Type
-IsTransitive {a} r = (x, y, z : a) -> r x y -> r y z -> r x z
+IsTransitive {a} r = {x, y, z : a} -> r x y -> r y z -> r x z
 
 public export
 record IsEquivalence {a : Type} (r : RelationOn a) where
@@ -59,7 +60,7 @@ ExtEq : {a, b : Type} -> (a -> b) -> (a -> b) -> Type
 ExtEq {a} f g = (el : a) -> f el = g el
 
 public export
-ExtEqRefl : {a : Type} -> (f : a -> a) -> ExtEq f f
+ExtEqRefl : {a, b : Type} -> (f : a -> b) -> ExtEq f f
 ExtEqRefl _ _ = Refl
 
 public export
@@ -70,6 +71,10 @@ public export
 ExtEqTrans : {a, b : Type} ->
   {f, g, h: a -> b} -> ExtEq f g -> ExtEq g h -> ExtEq f h
 ExtEqTrans eq eq' x = trans (eq x) (eq' x)
+
+public export
+ExtEqEquiv : {a, b : Type} -> IsEquivalence {a=(a -> b)} (ExtEq {a} {b})
+ExtEqEquiv = MkEquivalence ExtEqRefl ExtEqSym ExtEqTrans
 
 public export
 EqFunctionExt : {a, b : Type} -> {f, g: a -> b} -> f = g -> ExtEq f g
