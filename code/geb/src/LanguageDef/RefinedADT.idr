@@ -47,21 +47,26 @@ RefinedSexpNatTransSignatureF : {atom : Type} ->
   (carrier : RefinedSexpCarrier) ->
   RefinedSexpNatTransF atom carrier ->
   (RefinedSexpNatTransF atom carrier, RefinedSexpNatTransF atom carrier)
-RefinedSexpNatTransSignatureF {atom} carrier newNatTrans =
-  ?RefinedSexpNatTransSignatureF_hole
+RefinedSexpNatTransSignatureF {atom} carrier newNatTrans impossible
 
 mutual
   public export
   data RefinedSexpFunctor : (atom : Type) -> Type where
+    InRSF :
+      RefinedSexpFunctorF atom (RefinedSexpData atom) ->
+      RefinedSexpFunctor atom
 
   public export
   data RefinedSexpNatTrans : (atom : Type) -> Type where
+    InRSNT :
+      RefinedSexpNatTransF atom (RefinedSexpData atom) ->
+      RefinedSexpNatTrans atom
 
   public export
   RefinedSexpNatTransSignature : {atom : Type} ->
     RefinedSexpNatTrans atom ->
     (RefinedSexpFunctor atom, RefinedSexpFunctor atom)
-  RefinedSexpNatTransSignature natTrans = ?RefinedSexpNatTransSignature_hole
+  RefinedSexpNatTransSignature (InRSNT _) impossible
 
   public export
   RefinedSexpData : (atom : Type) -> RefinedSexpCarrier
