@@ -4,6 +4,29 @@ import Library.IdrisUtils
 
 %default total
 
+---------------------------------
+---------------------------------
+---- Finite bicomplete types ----
+---------------------------------
+---------------------------------
+
+public export
+data FiniteType : Type -> Type where
+  FinVoid : FiniteType Void
+  FinUnit : FiniteType Unit
+  FinProduct : {erasedFst, erasedSnd : Type} ->
+    FiniteType erasedFst -> FiniteType erasedSnd ->
+    FiniteType (erasedFst, erasedSnd)
+  FinCoproduct : {erasedL, erasedR : Type} ->
+    FiniteType erasedL -> FiniteType erasedR ->
+    FiniteType (Either erasedL erasedR)
+
+public export
+data FiniteBicompleteType :
+    {metaType : Type} -> FiniteType metaType -> Type where
+  InFinite : {metaType : Type} ->
+    (erased : FiniteType metaType) -> FiniteBicompleteType {metaType} erased
+
 -------------------------------
 -------------------------------
 ---- Equivalence relations ----
@@ -207,19 +230,13 @@ record DecRepCat (obj, morph : Type) where
 -----------------------------------------------------------
 -----------------------------------------------------------
 
--- The ingredients needed to represent a category, with a decidable
--- equality on objects and morphisms.
-public export
-record DecCatRep where
-  ObjRep : Type
-  MorphRep : ObjRep -> ObjRep -> Type
-  IdRep : (a : ObjRep) -> MorphRep a a
-  ComposeRep : {a, b, c : ObjRep} ->
-    MorphRep b c -> MorphRep a b -> MorphRep b c
-
--- A category enriched over the metalanguage's `Type`, together with an
--- interpretation into `Type`, with morphism equality defined by (non-recursive)
--- extensional equality of functions.
+-- First, we define the notion of a category which is interpreted into
+-- functions of the metalanguage.
+--
+-- Interpretation means mapping morphisms of the category into metalanguage
+-- functions which correspond to their _meaning_.  A category which can be
+-- interpreted into the metalanguage must be no stronger as a logic than the
+-- metalanguage.
 public export
 record MetaCat where
   constructor MkMetaCat
