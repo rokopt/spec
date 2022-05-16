@@ -4,6 +4,44 @@ import Library.IdrisUtils
 
 %default total
 
+-------------------------------
+-------------------------------
+---- Equivalence relations ----
+-------------------------------
+-------------------------------
+
+RelationOn : Type -> Type
+RelationOn a = a -> a -> Type
+
+public export
+IsReflexive : {a : Type} -> RelationOn a -> Type
+IsReflexive {a} r = (x : a) -> r x x
+
+public export
+IsSymmetric : {a : Type} -> RelationOn a -> Type
+IsSymmetric {a} r = (x, y : a) -> r x y -> r y x
+
+public export
+IsTransitive : {a : Type} -> RelationOn a -> Type
+IsTransitive {a} r = (x, y, z : a) -> r x y -> r y z -> r x z
+
+public export
+record IsEquivalence {a : Type} (r : RelationOn a) where
+  constructor MkEquivalence
+  EquivRefl : IsReflexive r
+  EquivSym : IsSymmetric r
+  EquivTrans : IsTransitive r
+
+public export
+IsDecidable : {a : Type} -> (r : RelationOn a) -> Type
+IsDecidable {a} r = (x, y : a) -> Dec (r x y)
+
+public export
+record IsDecEquiv {a : Type} (r : RelationOn a) where
+  constructor MkDecEquiv
+  DecEquivEquiv : IsEquivalence r
+  DecEquivDec : IsDecidable r
+
 -----------------------------------
 -----------------------------------
 ---- Functional extensionality ----
@@ -157,6 +195,157 @@ record DecRepCat (obj, morph : Type) where
   DecRepId : obj -> morph
   DecRepCompose : morph -> morph -> morph
   DecRepSignature : morph -> (obj, obj)
+
+-----------------------------------------------------------
+-----------------------------------------------------------
+---- Interpretations and representations of categories ----
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+-- The ingredients needed to represent a category, with a decidable
+-- equality on objects and morphisms.
+public export
+record DecCatRep where
+  ObjRep : Type
+  MorphRep : ObjRep -> ObjRep -> Type
+  IdRep : (a : ObjRep) -> MorphRep a a
+  ComposeRep : {a, b, c : ObjRep} ->
+    MorphRep b c -> MorphRep a b -> MorphRep b c
+
+-- A category enriched over the metalanguage's `Type`, together with an
+-- interpretation into `Type`, with morphism equality defined by (non-recursive)
+-- extensional equality of functions.
+public export
+record MetaCat where
+  constructor MkMetaCat
+  -- The types of `Type` which represent the objects and morphisms of the
+  -- enriched category.
+  MetaObj : Type
+  MetaMorphism : MetaObj -> MetaObj -> Type
+
+  -- Identity and composition.
+  MetaId : (a : MetaObj) -> MetaMorphism a a
+  MetaCompose : {a, b, c : MetaObj} ->
+    MetaMorphism b c -> MetaMorphism a b -> MetaMorphism a c
+
+  -- The interpretations of the objects and morphisms of the enriched category.
+  MetaObjInterp : MetaObj -> Type
+  MetaMorphismInterp : {a, b : MetaObj} ->
+    MetaMorphism a b -> MetaObjInterp a -> MetaObjInterp b
+
+  -- Correctness conditions (the axioms of category theory), with
+  -- equality up to first-order (non-recursive) extensional equality of the
+  -- of the morphisms as metalanguage functions.
+  MetaLeftId : {a, b : MetaObj} ->
+    (f : MetaMorphism a b) ->
+    ExtEq
+      (MetaMorphismInterp (MetaCompose (MetaId b) f))
+      (MetaMorphismInterp f)
+  MetaRightId : {a, b : MetaObj} ->
+    (f : MetaMorphism a b) ->
+    ExtEq
+      (MetaMorphismInterp f)
+      (MetaMorphismInterp (MetaCompose f (MetaId a)))
+  MetaAssoc : {a, b, c, d : MetaObj} ->
+    (h : MetaMorphism c d) ->
+    (g : MetaMorphism b c) ->
+    (f : MetaMorphism a b) ->
+    ExtEq
+      (MetaMorphismInterp (MetaCompose h (MetaCompose g f)))
+      (MetaMorphismInterp (MetaCompose (MetaCompose h g) f))
+
+public export
+MorphismEq : {cat : MetaCat} -> {a, b : MetaObj cat} ->
+  MetaMorphism cat a b -> MetaMorphism cat a b -> Type
+MorphismEq m m' =
+  ExtEq (MetaMorphismInterp cat m) (MetaMorphismInterp cat m')
+
+-- Because we are going to enrich further categories over
+-- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
+-- properties we ensure by requiring that it be interpreted as the
+-- product in `Type` (known as `Pair`).
+record MonoidalCat where
+  constructor MkMonoidalCat
+  MonCat : MetaCat
+  MetaTensorObj : MetaObj MonCat -> MetaObj MonCat -> MetaObj MonCat
+  MetaTensorObjInterp : (a, b : MetaObj MonCat) ->
+    MetaObjInterp MonCat (MetaTensorObj a b) ->
+    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b)
+  MetaTensorObjInterpInv : (a, b : MetaObj MonCat) ->
+    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b) ->
+    MetaObjInterp MonCat (MetaTensorObj a b)
+  MetaTensorObjInterpCorrect : (a, b : MetaObj MonCat) ->
+    ExtInverse (MetaTensorObjInterpInv a b) (MetaTensorObjInterp a b)
+  MetaTensorMorph : {a, b, c, d : MetaObj MonCat} ->
+    MetaMorphism MonCat a c -> MetaMorphism MonCat b d ->
+    MetaMorphism MonCat (MetaTensorObj a b) (MetaTensorObj c d)
+  MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj MonCat} ->
+    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
+    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
+    MetaMorphismInterp MonCat {a} {b=c} m (fst $ MetaTensorObjInterp a b x) =
+      fst (MetaTensorObjInterp c d $
+        MetaMorphismInterp MonCat
+          {a=(MetaTensorObj a b)}
+          {b=(MetaTensorObj c d)}
+          (MetaTensorMorph {a} {b} {c} {d} m m')
+          x)
+  MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj MonCat} ->
+    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
+    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
+    MetaMorphismInterp MonCat {a=b} {b=d} m' (snd $ MetaTensorObjInterp a b x) =
+      snd (MetaTensorObjInterp c d $
+        MetaMorphismInterp MonCat
+          {a=(MetaTensorObj a b)}
+          {b=(MetaTensorObj c d)}
+          (MetaTensorMorph {a} {b} {c} {d} m m')
+          x)
+
+public export
+record MetaFunctor (catC, catD : MetaCat) where
+  MetaFunctorObjMap : MetaObj catC -> MetaObj catD
+  MetaFunctorMorphMap : {a, b : MetaObj catC} ->
+      MetaMorphism catC a b ->
+      MetaMorphism catD (MetaFunctorObjMap a) (MetaFunctorObjMap b)
+
+  -- Correctness conditions.
+  MetaFunctorId : (a : MetaObj catC) ->
+    MorphismEq
+      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap a)}
+      (MetaFunctorMorphMap {a} {b=a} (MetaId catC a))
+      (MetaId catD (MetaFunctorObjMap a))
+  MetaFunctorCompose : {a, b, c : MetaObj catC} ->
+    (g : MetaMorphism catC b c) ->
+    (f : MetaMorphism catC a b) ->
+    MorphismEq
+      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap c)}
+      (MetaFunctorMorphMap {a} {b=c} (MetaCompose {a} {b} {c} catC g f))
+      (MetaCompose catD
+        {a=(MetaFunctorObjMap a)}
+        {b=(MetaFunctorObjMap b)}
+        {c=(MetaFunctorObjMap c)}
+        (MetaFunctorMorphMap {a=b} {b=c} g)
+        (MetaFunctorMorphMap {a} {b} f))
+
+-- XXX id functor
+-- XXX compose functors
+-- XXX natural transformation between functors
+-- XXX id nat trans
+-- XXX vertical compose nat trans
+-- XXX horizontal compose nat trans
+-- XXX whisker nat trans
+-- XXX functor cat
+-- XXX nat trans cat
+-- XXX adjunction
+-- XXX id adjunction
+-- XXX compose adjunctions
+-- XXX adjunction cat
+
+-- XXX diagrams
+
+-- A 2-category (or higher) enriched over the metalanguage's `Type`, together
+-- with an interpretation into `Type`, with morphism equality defined by
+-- (non-recursive) extensional equality of functions.
+-- XXX more to it (nat transes, adjunctions)
 
 --------------------------------------------------------------
 --------------------------------------------------------------
@@ -524,149 +713,10 @@ CoproductAlgL {l=(f :: fs)} algl = CoproductAlgLNE {f} {l=fs} algl
 -----------------------------------
 -----------------------------------
 
----------------------------------
----------------------------------
----- Metalanguage categories ----
----------------------------------
----------------------------------
-
--- A category enriched over the metalanguage's `Type`, together with an
--- interpretation into `Type`, with morphism equality defined by (non-recursive)
--- extensional equality of functions.
-public export
-record MetaCat where
-  constructor MkMetaCat
-  -- The types of `Type` which represent the objects and morphisms of the
-  -- enriched category.
-  MetaObj : Type
-  MetaMorphism : MetaObj -> MetaObj -> Type
-
-  -- Identity and composition.
-  MetaId : (a : MetaObj) -> MetaMorphism a a
-  MetaCompose : {a, b, c : MetaObj} ->
-    MetaMorphism b c -> MetaMorphism a b -> MetaMorphism a c
-
-  -- The interpretations of the objects and morphisms of the enriched category.
-  MetaObjInterp : MetaObj -> Type
-  MetaMorphismInterp : {a, b : MetaObj} ->
-    MetaMorphism a b -> MetaObjInterp a -> MetaObjInterp b
-
-  -- Correctness conditions (the axioms of category theory), with
-  -- equality up to first-order (non-recursive) extensional equality of the
-  -- of the morphisms as metalanguage functions.
-  MetaLeftId : {a, b : MetaObj} ->
-    (f : MetaMorphism a b) ->
-    ExtEq
-      (MetaMorphismInterp (MetaCompose (MetaId b) f))
-      (MetaMorphismInterp f)
-  MetaRightId : {a, b : MetaObj} ->
-    (f : MetaMorphism a b) ->
-    ExtEq
-      (MetaMorphismInterp f)
-      (MetaMorphismInterp (MetaCompose f (MetaId a)))
-  MetaAssoc : {a, b, c, d : MetaObj} ->
-    (h : MetaMorphism c d) ->
-    (g : MetaMorphism b c) ->
-    (f : MetaMorphism a b) ->
-    ExtEq
-      (MetaMorphismInterp (MetaCompose h (MetaCompose g f)))
-      (MetaMorphismInterp (MetaCompose (MetaCompose h g) f))
-
-public export
-MorphismEq : {cat : MetaCat} -> {a, b : MetaObj cat} ->
-  MetaMorphism cat a b -> MetaMorphism cat a b -> Type
-MorphismEq m m' =
-  ExtEq (MetaMorphismInterp cat m) (MetaMorphismInterp cat m')
-
--- Because we are going to enrich further categories over
--- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
--- properties we ensure by requiring that it be interpreted as the
--- product in `Type` (known as `Pair`).
-record MonoidalCat where
-  constructor MkMonoidalCat
-  MonCat : MetaCat
-  MetaTensorObj : MetaObj MonCat -> MetaObj MonCat -> MetaObj MonCat
-  MetaTensorObjInterp : (a, b : MetaObj MonCat) ->
-    MetaObjInterp MonCat (MetaTensorObj a b) ->
-    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b)
-  MetaTensorObjInterpInv : (a, b : MetaObj MonCat) ->
-    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b) ->
-    MetaObjInterp MonCat (MetaTensorObj a b)
-  MetaTensorObjInterpCorrect : (a, b : MetaObj MonCat) ->
-    ExtInverse (MetaTensorObjInterpInv a b) (MetaTensorObjInterp a b)
-  MetaTensorMorph : {a, b, c, d : MetaObj MonCat} ->
-    MetaMorphism MonCat a c -> MetaMorphism MonCat b d ->
-    MetaMorphism MonCat (MetaTensorObj a b) (MetaTensorObj c d)
-  MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj MonCat} ->
-    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
-    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
-    MetaMorphismInterp MonCat {a} {b=c} m (fst $ MetaTensorObjInterp a b x) =
-      fst (MetaTensorObjInterp c d $
-        MetaMorphismInterp MonCat
-          {a=(MetaTensorObj a b)}
-          {b=(MetaTensorObj c d)}
-          (MetaTensorMorph {a} {b} {c} {d} m m')
-          x)
-  MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj MonCat} ->
-    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
-    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
-    MetaMorphismInterp MonCat {a=b} {b=d} m' (snd $ MetaTensorObjInterp a b x) =
-      snd (MetaTensorObjInterp c d $
-        MetaMorphismInterp MonCat
-          {a=(MetaTensorObj a b)}
-          {b=(MetaTensorObj c d)}
-          (MetaTensorMorph {a} {b} {c} {d} m m')
-          x)
-
-public export
-record MetaFunctor (catC, catD : MetaCat) where
-  MetaFunctorObjMap : MetaObj catC -> MetaObj catD
-  MetaFunctorMorphMap : {a, b : MetaObj catC} ->
-      MetaMorphism catC a b ->
-      MetaMorphism catD (MetaFunctorObjMap a) (MetaFunctorObjMap b)
-
-  -- Correctness conditions.
-  MetaFunctorId : (a : MetaObj catC) ->
-    MorphismEq
-      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap a)}
-      (MetaFunctorMorphMap {a} {b=a} (MetaId catC a))
-      (MetaId catD (MetaFunctorObjMap a))
-  MetaFunctorCompose : {a, b, c : MetaObj catC} ->
-    (g : MetaMorphism catC b c) ->
-    (f : MetaMorphism catC a b) ->
-    MorphismEq
-      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap c)}
-      (MetaFunctorMorphMap {a} {b=c} (MetaCompose {a} {b} {c} catC g f))
-      (MetaCompose catD
-        {a=(MetaFunctorObjMap a)}
-        {b=(MetaFunctorObjMap b)}
-        {c=(MetaFunctorObjMap c)}
-        (MetaFunctorMorphMap {a=b} {b=c} g)
-        (MetaFunctorMorphMap {a} {b} f))
-
--- XXX id functor
--- XXX compose functors
--- XXX natural transformation between functors
--- XXX id nat trans
--- XXX vertical compose nat trans
--- XXX horizontal compose nat trans
--- XXX whisker nat trans
--- XXX functor cat
--- XXX nat trans cat
--- XXX adjunction
--- XXX id adjunction
--- XXX compose adjunctions
--- XXX adjunction cat
-
--- XXX diagrams
-
--- A 2-category (or higher) enriched over the metalanguage's `Type`, together
--- with an interpretation into `Type`, with morphism equality defined by
--- (non-recursive) extensional equality of functions.
--- XXX more to it (nat transes, adjunctions)
-
+--------------------------------
 --------------------------------
 ---- Arrow-category algebra ----
+--------------------------------
 --------------------------------
 
 -- The components of an object of Idris's arrow category, which is simply a
@@ -1761,9 +1811,6 @@ PredicateNu {t} f = CofreeCMPredicate f $ FullPred t
 -------------------
 ---- Relations ----
 -------------------
-
-RelationOn : Type -> Type
-RelationOn a = a -> a -> Type
 
 EmptyRel : (t : Type) -> RelationOn t
 EmptyRel t el el' = Void
