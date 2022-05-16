@@ -41,6 +41,10 @@ public export
 ExtInverse : {a, b : Type} -> (a -> b) -> (b -> a) -> Type
 ExtInverse f g = (ExtEq (f . g) id, ExtEq (g . f) id)
 
+public export
+ExtInversePair : {a, b : Type} -> (a -> b, b -> a) -> Type
+ExtInversePair (f, g) = ExtInverse f g
+
 ----------------------------------------------------------
 ----------------------------------------------------------
 ---- Categories represented by metalanguage functions ----
@@ -75,7 +79,7 @@ FunctionRepresentation : (domRep, codRep : Type) -> Type
 FunctionRepresentation domRep codRep = (codRep -> domRep, domRep -> codRep)
 
 public export
-transformRep : {domRep, codRep : Type} ->
+transformRep : {domain, domRep, codomain, codRep : Type} ->
   (domain -> codomain) ->
   FunctionRepresentation domRep codRep ->
   ObjRepresentation domain domRep ->
@@ -126,12 +130,11 @@ HomObjRep domRepFunc codRepFunc =
 --    their metalanguage representations
 -- We shall call such a category "decidably representable".
 public export
-record DecRepCat (obj : Type) (morph : obj -> obj -> Type) where
+record DecRepCat (obj, morph : Type) where
   constructor MkDecRepCat
-  DecRepId : obj
-  DecRepCompose : {a, b, c : obj} -> morph b c -> morph a b -> morph a c
 
-  -- Each object is represented by an endomorphism on `DecRepObjRepType`.
+  -- Each object is represented by an endomorphism on a type
+  -- which we call `DecRepObjRepType`.
   DecRepObjRepType : Type
   DecRepObjRep : ObjRepresentation obj DecRepObjRepType
 
@@ -142,6 +145,18 @@ record DecRepCat (obj : Type) (morph : obj -> obj -> Type) where
   -- is that it creates a monoid on objects, allowing them to be
   -- composed.)
   DecRepMorphRep : obj -> obj -> HomObjRep DecRepObjRep DecRepObjRep
+
+  -- We represent the relationship of objects and morphisms by fibrations,
+  -- rather than by dependent types.  That's partly convenient in that it's
+  -- more in the style of category theory, but the more fundmental reason is
+  -- that we are treating equality of objects and morphisms as quotiented
+  -- over the extensional equivalence of the representations.
+  -- So we might, for example, be able to compose `g : c -> d` after
+  -- `f : a -> b` even if we can't prove that `b = c`, because the
+  -- functions which _represent_ `b` and `c` might be extensionally equal.
+  DecRepId : obj -> morph
+  DecRepCompose : morph -> morph -> morph
+  DecRepSignature : morph -> (obj, obj)
 
 --------------------------------------------------------------
 --------------------------------------------------------------
