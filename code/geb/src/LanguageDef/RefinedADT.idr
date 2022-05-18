@@ -6,6 +6,57 @@ import public LanguageDef.Atom
 
 %default total
 
+public export
+LengthEquals : (carrier : Type) -> (Nat, List carrier) -> Type
+LengthEquals _ (n, l) = n = length l
+
+-- A list paired with its length (effectively, storing its length together
+-- with the list at "runtime").
+public export
+ListN : Type -> Type
+ListN carrier = (nl : (Nat, List carrier) ** LengthEquals carrier nl)
+
+-- A finite-dimensional "matrix" with variable numbers of elements per row.
+-- The parameter is the dimension minus one.
+public export
+VarMatrixD : (predDimension : Nat) -> Type -> Type
+VarMatrixD Z carrier = ListN carrier
+VarMatrixD (S n) carrier = ListN (VarMatrixD n carrier)
+
+-- A finite-dimensional matrix of natural numbers.
+-- The parameter is the dimension minus one.
+VarMatrixN : (predDimension : Nat) -> Type
+VarMatrixN = flip VarMatrixD Nat
+
+-- A finite-dimensional "matrix" with variable numbers of elements per row,
+-- paired with its shape expressed as a `VarMatrixN`.
+-- public export
+-- VarMatrixD : (dimension : Nat) -> Type -> Type
+-- VarMatrixD Z carrier = carrier
+-- VarMatrixD (S predDimension) carrier = ListN (VarMatrixD predDimension carrier)
+
+-- Monomorphized types consisting of finite products and coproducts.
+public export
+data FinSetObj : Type -> Type where
+  FinProduct : (n : Nat ** Tuple n (FinSetObj a)) -> FinSetObj a
+  FinCoproduct : (n : Nat ** Tuple n (FinSetObj a)) -> FinSetObj a
+
+public export
+FinSetObjAlg : Type -> Type
+FinSetObjAlg = Algebra FinSetObj
+
+public export
+FinSetObjCoalg : Type -> Type
+FinSetObjCoalg = Coalgebra FinSetObj
+
+public export
+record FiniteShape where
+  constructor MkFiniteShape
+  numObjects : Nat
+  numMorphisms : Nat
+  domains : Vect numMorphisms (Fin numObjects)
+  codomains : Vect numMorphisms (Fin numObjects)
+
 -------------------------------
 -------------------------------
 ---- Refined S-expressions ----

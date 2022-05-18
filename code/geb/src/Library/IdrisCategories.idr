@@ -1405,6 +1405,14 @@ tupleProj {n=Z} Z {ok} () = void $ succNotLTEzero ok
 tupleProj {n=(S n)} Z {ok} (a, t) = a
 tupleProj {n=(S n)} (S i) {ok} (a, t) = tupleProj i t {ok=(fromLteSucc ok)}
 
+public export
+TupleP : Type -> Type
+TupleP = DPair Nat . flip Tuple
+
+public export
+mapTupleP : (f : a -> b) -> TupleP a -> TupleP b
+mapTupleP f (n ** t) = (n ** mapTuple f t)
+
 -----------------
 ---- Choices ----
 -----------------
@@ -1436,6 +1444,10 @@ choiceInj : {n : Nat} -> {atom : Type} -> (i : Nat) -> {auto ok : LT i n} ->
 choiceInj {n=Z} Z {ok} a = void $ succNotLTEzero ok
 choiceInj {n=(S n)} Z {ok} a = Left a
 choiceInj {n=(S n)} (S i) {ok} t = Right $ choiceInj i t {ok=(fromLteSucc ok)}
+
+public export
+ChoiceP : Type -> Type
+ChoiceP = DPair Nat . flip Choice
 
 ---------------
 ---- Lists ----
