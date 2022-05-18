@@ -1025,6 +1025,10 @@ FreeFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
 FreeFSexp = FreeMonad' . FSexpF
 
 public export
+FreeFSalg : {atom : Type} -> ArityMap atom -> Type -> Type
+FreeFSalg = FreeAlgebra' . FSexpF
+
+public export
 MuFSexp : {atom : Type} -> ArityMap atom -> Type
 MuFSexp = Mu' . FSexpF
 
@@ -1037,6 +1041,10 @@ CofreeFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
 CofreeFSexp = CofreeComonad' . FSexpF
 
 public export
+CofreeFScoalg : {atom : Type} -> ArityMap atom -> Type -> Type
+CofreeFScoalg = CofreeCoalgebra' . FSexpF
+
+public export
 NuFSexp : {atom : Type} -> ArityMap atom -> Type
 NuFSexp = Nu' . FSexpF
 
@@ -1045,29 +1053,21 @@ NuFSexp = Nu' . FSexpF
 -----------------------------------------
 
 public export
-RefineFSexpAlgResult : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
-RefineFSexpAlgResult arity left right =
-  Either (FSexpF arity left) right
+FSexpRefinementAlg : {atom : Type} -> ArityMap atom ->
+  Type -> Type -> Type -> Type
+FSexpRefinementAlg arity leftIn leftOut right =
+  FSexpF arity (FSexpF arity leftIn) -> Either (FSexpF arity leftOut) right
 
 public export
-RefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
-RefineFSexpAlg arity left right =
-  FSexpAlg arity (RefineFSexpAlgResult arity left right)
+FSexpRefinement : {atom : Type} -> ArityMap atom -> Type -> Type -> Type -> Type
+FSexpRefinement arity leftIn leftOut right =
+  FreeFSexp arity leftIn -> Either (FreeFSexp arity leftOut) right
 
 public export
-FreeRefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
-FreeRefineFSexpAlg arity left right =
-  RefineFSexpAlg arity (FreeFSexp arity left) right
-
-public export
-FreeRefineFSexpResult : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
-FreeRefineFSexpResult arity left right =
-  Either (FreeFSexp arity left) right
-
-public export
-FreeRefineFSexp : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
-FreeRefineFSexp arity left right =
-  FreeFSexp arity left -> FreeRefineFSexpResult arity left right
+FreeFSexpRefinementAlg : {atom : Type} -> ArityMap atom ->
+  Type -> Type -> Type -> Type
+FreeFSexpRefinementAlg arity leftIn leftOut right =
+  FreeFSexp arity leftIn -> Either (FreeFSexp arity leftOut) right
 
 -------------------------------------------------
 ---- S-expressions with natural number atoms ----
