@@ -1044,6 +1044,27 @@ NuFSexp = Nu' . FSexpF
 ---- Refined S-expressions and lists ----
 -----------------------------------------
 
+public export
+RefineFSexpAlgResult : {atom : Type} -> ArityMap atom -> Type -> Type
+RefineFSexpAlgResult = CoproductFComonad . FSexpF
+
+public export
+RefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type
+RefineFSexpAlg arity = FSexpAlg arity . RefineFSexpAlgResult arity
+
+public export
+FreeRefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type
+FreeRefineFSexpAlg arity = RefineFSexpAlg arity . FreeFSexp arity
+
+public export
+FreeRefineFSexpResult : {atom : Type} -> ArityMap atom -> Type -> Type
+FreeRefineFSexpResult arity = CoproductComonad . FreeFSexp arity
+
+public export
+FreeRefineFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
+FreeRefineFSexp arity type =
+  FreeFSexp arity type -> FreeRefineFSexpResult arity type
+
 -------------------------------------------------
 ---- S-expressions with natural number atoms ----
 -------------------------------------------------

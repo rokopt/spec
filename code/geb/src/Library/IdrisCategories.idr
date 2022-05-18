@@ -593,6 +593,10 @@ CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
 CoproductF f g a = Either (f a) (g a)
 
 public export
+CoproductFComonad : (Type -> Type) -> Type -> Type
+CoproductFComonad f = CoproductF f f
+
+public export
 (Functor f, Functor g) => Functor (CoproductF f g) where
   map m (Left x) = Left $ map m x
   map m (Right y) = Right $ map m y
@@ -1472,6 +1476,9 @@ TList n atom = Tuple n (TupleP atom)
 ------------------------------------------
 ---- S-expressions with fixed arities ----
 ------------------------------------------
+
+public export
+data STuple : {atom : Type} -> (arity : atom -> Nat) -> Type where
 
 ---------------
 ---- Lists ----

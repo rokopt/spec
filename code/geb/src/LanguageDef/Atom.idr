@@ -20,26 +20,32 @@ data GebAtom : Type where
   PRODUCT : GebAtom
   COPRODUCT : GebAtom
 
+  -- Must be last.
+  NAT : Nat -> GebAtom
+
 public export
 gaEncode : GebAtom -> Nat
 gaEncode PRODUCT = 0
 gaEncode COPRODUCT = 1
+gaEncode (NAT n) = 2 + n
 
 public export
 gaDecode : Nat -> Maybe GebAtom
 gaDecode 0 = Just PRODUCT
 gaDecode 1 = Just COPRODUCT
-gaDecode _ = Nothing
+gaDecode (S (S n)) = Just $ NAT n
 
 public export
 gaDecodeEncodeIsJust : (a : GebAtom) -> gaDecode (gaEncode a) = Just a
 gaDecodeEncodeIsJust PRODUCT = Refl
 gaDecodeEncodeIsJust COPRODUCT = Refl
+gaDecodeEncodeIsJust (NAT n) = Refl
 
 public export
 gaToString : GebAtom -> String
 gaToString PRODUCT = ":*:"
 gaToString COPRODUCT = ":+:"
+gaToString (NAT n) = ":" ++ show n ++ ":"
 
 public export
 Show GebAtom where
