@@ -28,13 +28,6 @@ VarMatrixD (S n) carrier = ListN (VarMatrixD n carrier)
 VarMatrixN : (predDimension : Nat) -> Type
 VarMatrixN = flip VarMatrixD Nat
 
--- A finite-dimensional "matrix" with variable numbers of elements per row,
--- paired with its shape expressed as a `VarMatrixN`.
--- public export
--- VarMatrixD : (dimension : Nat) -> Type -> Type
--- VarMatrixD Z carrier = carrier
--- VarMatrixD (S predDimension) carrier = ListN (VarMatrixD predDimension carrier)
-
 -- Monomorphized types consisting of finite products and coproducts.
 public export
 data FinSetObj : Type -> Type where

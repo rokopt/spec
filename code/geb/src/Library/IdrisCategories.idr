@@ -1390,7 +1390,19 @@ toTuple [] = ()
 toTuple (x :: xs) = (x, toTuple xs)
 
 public export
-mapTuple : {n : Nat} -> (f : a -> b) -> Tuple n a -> Tuple n b
+foldTuple : {n : Nat} -> {0 a : Type} ->
+  (f : b -> a -> b) -> b -> Tuple n a -> b
+foldTuple {n} f x t = case n of
+  Z => x
+  S n' => case t of
+    (x', t') => foldTuple f (f x x') t'
+
+public export
+sumNTuple : {n : Nat} -> Tuple n Nat -> Nat
+sumNTuple = foldTuple (+) 0
+
+public export
+mapTuple : {n : Nat} -> {0 a : Type} -> (f : a -> b) -> Tuple n a -> Tuple n b
 mapTuple {n=Z} f () = ()
 mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
 
@@ -1448,6 +1460,18 @@ choiceInj {n=(S n)} (S i) {ok} t = Right $ choiceInj i t {ok=(fromLteSucc ok)}
 public export
 ChoiceP : Type -> Type
 ChoiceP = DPair Nat . flip Choice
+
+-------------------------
+---- Lists of tuples ----
+-------------------------
+
+public export
+TList : Nat -> Type -> Type
+TList n atom = Tuple n (TupleP atom)
+
+------------------------------------------
+---- S-expressions with fixed arities ----
+------------------------------------------
 
 ---------------
 ---- Lists ----
