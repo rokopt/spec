@@ -1045,25 +1045,29 @@ NuFSexp = Nu' . FSexpF
 -----------------------------------------
 
 public export
-RefineFSexpAlgResult : {atom : Type} -> ArityMap atom -> Type -> Type
-RefineFSexpAlgResult = CoproductFComonad . FSexpF
+RefineFSexpAlgResult : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+RefineFSexpAlgResult arity left right =
+  Either (FSexpF arity left) right
 
 public export
-RefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type
-RefineFSexpAlg arity = FSexpAlg arity . RefineFSexpAlgResult arity
+RefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+RefineFSexpAlg arity left right =
+  FSexpAlg arity (RefineFSexpAlgResult arity left right)
 
 public export
-FreeRefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type
-FreeRefineFSexpAlg arity = RefineFSexpAlg arity . FreeFSexp arity
+FreeRefineFSexpAlg : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+FreeRefineFSexpAlg arity left right =
+  RefineFSexpAlg arity (FreeFSexp arity left) right
 
 public export
-FreeRefineFSexpResult : {atom : Type} -> ArityMap atom -> Type -> Type
-FreeRefineFSexpResult arity = CoproductComonad . FreeFSexp arity
+FreeRefineFSexpResult : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+FreeRefineFSexpResult arity left right =
+  Either (FreeFSexp arity left) right
 
 public export
-FreeRefineFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
-FreeRefineFSexp arity type =
-  FreeFSexp arity type -> FreeRefineFSexpResult arity type
+FreeRefineFSexp : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+FreeRefineFSexp arity left right =
+  FreeFSexp arity left -> FreeRefineFSexpResult arity left right
 
 -------------------------------------------------
 ---- S-expressions with natural number atoms ----
