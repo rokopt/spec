@@ -136,11 +136,11 @@ NatAlg = Algebra NatF
 
 public export
 FreeNat : Type -> Type
-FreeNat = FreeMonad' NatF
+FreeNat = FreeMonad NatF
 
 public export
 MuNat : Type
-MuNat = Mu' NatF
+MuNat = Mu NatF
 
 public export
 NatCoalg : Type -> Type
@@ -148,11 +148,11 @@ NatCoalg = Coalgebra NatF
 
 public export
 CofreeNat : Type -> Type
-CofreeNat = CofreeComonad' NatF
+CofreeNat = CofreeComonad NatF
 
 public export
 NuNat : Type
-NuNat = Nu' NatF
+NuNat = Nu NatF
 
 ---------------
 ---- Lists ----
@@ -173,11 +173,11 @@ ListAlg = Algebra . ListF
 
 public export
 FreeList : Type -> Type -> Type
-FreeList = FreeMonad' . ListF
+FreeList = FreeMonad . ListF
 
 public export
 MuList : Type -> Type
-MuList = Mu' . ListF
+MuList = Mu . ListF
 
 public export
 ListCoalg : Type -> Type -> Type
@@ -185,11 +185,11 @@ ListCoalg = Coalgebra . ListF
 
 public export
 CofreeList : Type -> Type -> Type
-CofreeList = CofreeComonad' . ListF
+CofreeList = CofreeComonad . ListF
 
 public export
 NuList : Type -> Type
-NuList = Nu' . ListF
+NuList = Nu . ListF
 
 -----------------------
 ---- S-expressions ----
@@ -223,7 +223,7 @@ SexpAlg = ProductCatAlgebra {idx=SexpClass} . SexpFunctor
 
 public export
 FreeSexp : Type -> SexpObject -> SexpObject
-FreeSexp atom = ProductCatFreeMonad' {idx=SexpClass} (SexpFunctor atom)
+FreeSexp atom = ProductCatFreeMonad {idx=SexpClass} (SexpFunctor atom)
 
 public export
 MuSexp : Type -> SexpObject
@@ -754,11 +754,11 @@ data RefinedSubstMorphismF : Type -> Type -> Type where
 
 public export
 SubstCatObjFree : Type -> Type
-SubstCatObjFree = FreeMonad' SubstCatObjF
+SubstCatObjFree = FreeMonad SubstCatObjF
 
 public export
 SubstCatObj : Type
-SubstCatObj = Mu' SubstCatObjF
+SubstCatObj = Mu SubstCatObjF
 
 -----------------------------------------------------------
 -----------------------------------------------------------
@@ -1031,15 +1031,15 @@ FSexpAlg = Algebra . FSexpF
 
 public export
 FreeFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
-FreeFSexp = FreeMonad' . FSexpF
+FreeFSexp = FreeMonad . FSexpF
 
 public export
 FreeFSalg : {atom : Type} -> ArityMap atom -> Type -> Type
-FreeFSalg = FreeAlgebra' . FSexpF
+FreeFSalg = FreeAlgebra . FSexpF
 
 public export
 MuFSexp : {atom : Type} -> ArityMap atom -> Type
-MuFSexp = Mu' . FSexpF
+MuFSexp = Mu . FSexpF
 
 public export
 FSexpCoalg : {atom : Type} -> ArityMap atom -> Type -> Type
@@ -1047,15 +1047,15 @@ FSexpCoalg = Coalgebra . FSexpF
 
 public export
 CofreeFSexp : {atom : Type} -> ArityMap atom -> Type -> Type
-CofreeFSexp = CofreeComonad' . FSexpF
+CofreeFSexp = CofreeComonad . FSexpF
 
 public export
 CofreeFScoalg : {atom : Type} -> ArityMap atom -> Type -> Type
-CofreeFScoalg = CofreeCoalgebra' . FSexpF
+CofreeFScoalg = CofreeCoalgebra . FSexpF
 
 public export
 NuFSexp : {atom : Type} -> ArityMap atom -> Type
-NuFSexp = Nu' . FSexpF
+NuFSexp = Nu . FSexpF
 
 --------------------------
 ---- The topos FinSet ----
@@ -1137,7 +1137,7 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataNat :
       ProductCatTermFunctor
         NSexpFunctor v
-        (ProductCatFreeMonad' NSexpFunctor v) NSexpNat
+        (ProductCatFreeMonad NSexpFunctor v) NSexpNat
         ->
       ProductCatTermFunctor NSexpFunctor v carrier NSexpNat
     nsexpCataNat (ProductCatTermVar t) = ProductCatTermVar t
@@ -1152,7 +1152,7 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataExp :
       ProductCatTermFunctor
         NSexpFunctor v
-        (ProductCatFreeMonad' NSexpFunctor v) NSEXP
+        (ProductCatFreeMonad NSexpFunctor v) NSEXP
         ->
       ProductCatTermFunctor NSexpFunctor v carrier NSEXP
     nsexpCataExp (ProductCatTermVar v) = ProductCatTermVar v
@@ -1167,7 +1167,7 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataList :
       ProductCatTermFunctor
         NSexpFunctor v
-        (ProductCatFreeMonad' NSexpFunctor v) NSLIST
+        (ProductCatFreeMonad NSexpFunctor v) NSLIST
         ->
       ProductCatTermFunctor NSexpFunctor v carrier NSLIST
     nsexpCataList (ProductCatTermVar v) = ProductCatTermVar v
@@ -1307,8 +1307,8 @@ data PolyTypeF : Type -> Type -> Type where
 -- therefore potentially of ADTs.  To turn a polynomial endofunctor
 -- which represents a non-recursive datatype into one which represents a
 -- recursive type, we apply the above-defined higher-order functor,
--- `FreeMonad'` (AKA `F*`).  So to generate polynomial _recursive_ types, we add
--- to `PolynomialF` the option of applying `FreeMonad'` to an existing polynomial
+-- `FreeMonad` (AKA `F*`).  So to generate polynomial _recursive_ types, we add
+-- to `PolynomialF` the option of applying `FreeMonad` to an existing polynomial
 -- type.
 public export
 data PolyRecTypeF : Type -> Type -> Type where

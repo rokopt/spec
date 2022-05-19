@@ -228,7 +228,7 @@ mutual
     CoproductProp : GebUniversalPropF prop
     EqualizerProp : GebUniversalPropF prop
     CoequalizerProp : GebUniversalPropF prop
-    FreeAlgebra'Prop : GebUniversalPropF prop
+    FreeAlgebraProp : GebUniversalPropF prop
     CofreeAlgebraProp : GebUniversalPropF prop
     HigherOrderProp : GebUniversalPropF prop
     TuringCompleteProp : GebUniversalPropF prop
@@ -245,7 +245,7 @@ mutual
     Geb : RefinedADTCatF prop term
 
 FreeRefinedADTCat : Type -> Type -> Type
-FreeRefinedADTCat prop = FreeMonad' $ RefinedADTCatF prop
+FreeRefinedADTCat prop = FreeMonad $ RefinedADTCatF prop
 
 CofreeRefinedADTCat : Type -> Type -> Type
-CofreeRefinedADTCat prop = CofreeComonad' $ RefinedADTCatF prop
+CofreeRefinedADTCat prop = CofreeComonad $ RefinedADTCatF prop
