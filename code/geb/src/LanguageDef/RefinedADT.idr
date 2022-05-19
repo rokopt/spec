@@ -214,7 +214,7 @@ data SexpFunctor :
   SexpF :
     atom -> carrier SLIST -> SexpFunctor atom carrier SEXP
   SlistF :
-    ListF (carrier SEXP) (carrier SLIST) ->
+    FreeList (carrier SEXP) (carrier SLIST) ->
     SexpFunctor atom carrier SLIST
 
 public export

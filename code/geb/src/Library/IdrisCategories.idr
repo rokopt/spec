@@ -1043,6 +1043,12 @@ TermAlgebra : (Type -> Type) -> Type -> Type -> Type
 TermAlgebra f v a = Algebra (TermFunctor' f v) a
 
 public export
+voidAlg : {f : Type -> Type} -> {a : Type} ->
+  Algebra f a -> TermAlgebra f Void a
+voidAlg alg (TermVar {v=Void} _) impossible
+voidAlg alg (TermComposite x) = alg x
+
+public export
 ProductCatTermAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
@@ -1068,6 +1074,11 @@ ProductCatTermCoalgebra f v a =
 public export
 TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
 TreeCoalgebra f v a = Coalgebra (TreeFunctor' f v) a
+
+public export
+unitCoAlg : {f : Type -> Type} -> {a : Type} ->
+  Coalgebra f a -> TreeCoalgebra f Unit a
+unitCoAlg alg x = TreeNode {l=()} () $ alg x
 
 public export
 ProductCatTreeCoalgebra : {idx : Type} ->
@@ -1530,10 +1541,10 @@ Subst0Type = Subst0TypeFreeMonad' Void
 -- Parameterized special induction.
 public export
 subst0TypeParamCata : {v, a : Type} ->
-  Algebra Subst0TypeF a -> (v -> a) -> Subst0TypeFreeMonad' v -> a
-subst0TypeParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
-  Left var => subst var
-  Right com => alg $ case com of
+  TermAlgebra Subst0TypeF v a -> Subst0TypeFreeMonad' v -> a
+subst0TypeParamCata {v} {a} alg (InFreeSubst0 x) = alg $ case x of
+  Left var => TermVar var
+  Right com => TermComposite $ case com of
     -- Unit
     Left () => Left ()
     Right com' => Right $ case com' of
@@ -1542,18 +1553,18 @@ subst0TypeParamCata {v} {a} alg subst (InFreeSubst0 x) = case x of
       Right com'' => Right $ case com'' of
         -- Product
         Left (p1, p2) => Left $
-          (subst0TypeParamCata alg subst p1,
-           subst0TypeParamCata alg subst p2)
+          (subst0TypeParamCata alg p1,
+           subst0TypeParamCata alg p2)
         -- Coproduct
         Right (c1, c2) => Right $
-          (subst0TypeParamCata alg subst c1,
-           subst0TypeParamCata alg subst c2)
+          (subst0TypeParamCata alg c1,
+           subst0TypeParamCata alg c2)
 
 -- Special induction.
 public export
 subst0TypeCata : {a : Type} ->
   Algebra Subst0TypeF a -> Subst0Type -> a
-subst0TypeCata alg = subst0TypeParamCata {v=Void} alg (voidF a)
+subst0TypeCata alg = subst0TypeParamCata {v=Void} (voidAlg alg)
 
 -- This algebra interprets the constructors of the substitution-0 category
 -- as types in the Idris type system.  This is possible because those
