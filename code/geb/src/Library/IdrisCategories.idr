@@ -1480,19 +1480,6 @@ TList n atom = Tuple n (TupleP atom)
 public export
 data STuple : {atom : Type} -> (arity : atom -> Nat) -> Type where
 
----------------
----- Lists ----
----------------
-
-public export
-ListF : Type -> Type -> Type
-ListF atom = MaybeF . (PairWithF atom)
-
-public export
-Bifunctor ListF where
-  bimap f g (Left ()) = (Left ())
-  bimap f g (Right p) = Right $ bimap f g p
-
 -------------------------------------
 ---- The substitution-0 category ----
 -------------------------------------

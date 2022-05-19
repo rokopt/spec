@@ -126,9 +126,46 @@ mutual
 --------------------
 --------------------
 
+-------------------------
+---- Natural numbers ----
+-------------------------
+
+public export
+NatAlg : Type -> Type
+NatAlg = Algebra NatF
+
+public export
+FreeNat : Type -> Type
+FreeNat = FreeMonad' NatF
+
+public export
+MuNat : Type
+MuNat = Mu' NatF
+
+public export
+NatCoalg : Type -> Type
+NatCoalg = Coalgebra NatF
+
+public export
+CofreeNat : Type -> Type
+CofreeNat = CofreeComonad' NatF
+
+public export
+NuNat : Type
+NuNat = Nu' NatF
+
 ---------------
 ---- Lists ----
 ---------------
+
+public export
+ListF : Type -> Type -> Type
+ListF atom = MaybeF . (PairWithF atom)
+
+public export
+Bifunctor ListF where
+  bimap f g (Left ()) = (Left ())
+  bimap f g (Right p) = Right $ bimap f g p
 
 public export
 ListAlg : Type -> Type -> Type
@@ -153,6 +190,64 @@ CofreeList = CofreeComonad' . ListF
 public export
 NuList : Type -> Type
 NuList = Nu' . ListF
+
+-----------------------
+---- S-expressions ----
+-----------------------
+
+public export
+data SexpClass : Type where
+  SEXP : SexpClass
+  SLIST : SexpClass
+
+public export
+SexpObject : Type
+SexpObject = ProductCatObject SexpClass
+
+public export
+SexpObjectMap : Type
+SexpObjectMap = ProductCatObjectEndoMap SexpClass
+
+public export
+data SexpFunctor :
+    (atom : Type) -> (carrier : SexpObject) -> SexpObject where
+  SexpF :
+    atom -> carrier SLIST -> SexpFunctor atom carrier SEXP
+  SlistF :
+    ListF (carrier SEXP) (carrier SLIST) ->
+    SexpFunctor atom carrier SLIST
+
+public export
+SexpAlg : Type -> SexpObject -> Type
+SexpAlg = ProductCatAlgebra {idx=SexpClass} . SexpFunctor
+
+public export
+FreeSexp : Type -> SexpObject -> SexpObject
+FreeSexp atom = ProductCatFreeMonad' {idx=SexpClass} (SexpFunctor atom)
+
+public export
+MuSexp : Type -> SexpObject
+MuSexp atom = MuProduct {idx=SexpClass} (SexpFunctor atom)
+
+public export
+Sexp : Type -> Type
+Sexp = flip MuSexp SEXP
+
+public export
+Slist : Type -> Type
+Slist = flip MuSexp SLIST
+
+public export
+SexpCoalg : Type -> SexpObject -> Type
+SexpCoalg = ProductCatCoalgebra {idx=SexpClass} . SexpFunctor
+
+public export
+CofreeSexp : Type -> SexpObject -> SexpObject
+CofreeSexp atom = ProductCatCofreeComonad {idx=SexpClass} (SexpFunctor atom)
+
+public export
+NuSexp : Type -> SexpObject
+NuSexp atom = NuProduct {idx=SexpClass} (SexpFunctor atom)
 
 -------------------------------------------------
 -------------------------------------------------
@@ -917,92 +1012,6 @@ record RefinedExpCategoryType where
   REC_Obj : RefinedExpCategory_Obj
   REC_Int : RefinedExpInterpretation REC_Obj
 
--------------------------
----- Natural numbers ----
--------------------------
-
-public export
-NatAlg : Type -> Type
-NatAlg = Algebra NatF
-
-public export
-FreeNat : Type -> Type
-FreeNat = FreeMonad' NatF
-
-public export
-MuNat : Type
-MuNat = Mu' NatF
-
-public export
-NatCoalg : Type -> Type
-NatCoalg = Coalgebra NatF
-
-public export
-CofreeNat : Type -> Type
-CofreeNat = CofreeComonad' NatF
-
-public export
-NuNat : Type
-NuNat = Nu' NatF
-
------------------------
----- S-expressions ----
------------------------
-
-public export
-data SexpClass : Type where
-  SEXP : SexpClass
-  SLIST : SexpClass
-
-public export
-SexpObject : Type
-SexpObject = ProductCatObject SexpClass
-
-public export
-SexpObjectMap : Type
-SexpObjectMap = ProductCatObjectEndoMap SexpClass
-
-public export
-data SexpFunctor :
-    (atom : Type) -> (carrier : SexpObject) -> SexpObject where
-  SexpF :
-    atom -> carrier SLIST -> SexpFunctor atom carrier SEXP
-  SlistF :
-    ListF (carrier SEXP) (carrier SLIST) ->
-    SexpFunctor atom carrier SLIST
-
-public export
-SexpAlg : Type -> SexpObject -> Type
-SexpAlg = ProductCatAlgebra {idx=SexpClass} . SexpFunctor
-
-public export
-FreeSexp : Type -> SexpObject -> SexpObject
-FreeSexp atom = ProductCatFreeMonad' {idx=SexpClass} (SexpFunctor atom)
-
-public export
-MuSexp : Type -> SexpObject
-MuSexp atom = MuProduct {idx=SexpClass} (SexpFunctor atom)
-
-public export
-Sexp : Type -> Type
-Sexp = flip MuSexp SEXP
-
-public export
-Slist : Type -> Type
-Slist = flip MuSexp SLIST
-
-public export
-SexpCoalg : Type -> SexpObject -> Type
-SexpCoalg = ProductCatCoalgebra {idx=SexpClass} . SexpFunctor
-
-public export
-CofreeSexp : Type -> SexpObject -> SexpObject
-CofreeSexp atom = ProductCatCofreeComonad {idx=SexpClass} (SexpFunctor atom)
-
-public export
-NuSexp : Type -> SexpObject
-NuSexp atom = NuProduct {idx=SexpClass} (SexpFunctor atom)
-
 -------------------------------
 ---- "Fixed" S-expressions ----
 -------------------------------
@@ -1048,20 +1057,26 @@ public export
 NuFSexp : {atom : Type} -> ArityMap atom -> Type
 NuFSexp = Nu' . FSexpF
 
+--------------------------
+---- The topos FinSet ----
+--------------------------
+
+public export
+record FSTCarrier where
+
 -----------------------------------------
 ---- Refined S-expressions and lists ----
 -----------------------------------------
 
 public export
-FSexpRefinementAlg : {atom : Type} -> ArityMap atom ->
-  Type -> Type -> Type -> Type
-FSexpRefinementAlg arity leftIn leftOut right =
-  FSexpF arity (FSexpF arity leftIn) -> Either (FSexpF arity leftOut) right
+FSexpRefinementAlg : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+FSexpRefinementAlg {atom} arity carrier right =
+  FSexpF arity (FSexpF arity carrier) -> Either (FreeFSexp arity carrier) right
 
 public export
-FSexpRefinement : {atom : Type} -> ArityMap atom -> Type -> Type -> Type -> Type
-FSexpRefinement arity leftIn leftOut right =
-  FreeFSexp arity leftIn -> Either (FreeFSexp arity leftOut) right
+FSexpRefinement : {atom : Type} -> ArityMap atom -> Type -> Type -> Type
+FSexpRefinement arity carrier right =
+  FreeFSexp arity carrier -> Either (FreeFSexp arity carrier) right
 
 public export
 FreeFSexpRefinementAlg : {atom : Type} -> ArityMap atom ->
