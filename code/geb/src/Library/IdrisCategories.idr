@@ -1076,9 +1076,9 @@ TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
 TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
 
 public export
-unitCoAlg : {f : Type -> Type} -> {a : Type} ->
+unitCoalg : {f : Type -> Type} -> {a : Type} ->
   Coalgebra f a -> TreeCoalgebra f Unit a
-unitCoAlg alg x = TreeNode {l=()} () $ alg x
+unitCoalg alg x = TreeNode {l=()} () $ alg x
 
 public export
 ProductCatTreeCoalgebra : {idx : Type} ->
@@ -1249,7 +1249,7 @@ NuProduct f = ProductCatCofreeComonad f (const ())
 public export
 FreeCatamorphism : (Type -> Type) -> Type
 FreeCatamorphism f =
-  (v, a : Type) -> TermAlgebra f v a -> FreeMonad f v -> a
+  {v, a : Type} -> TermAlgebra f v a -> FreeMonad f v -> a
 
 public export
 ProductFreeCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
@@ -1263,7 +1263,7 @@ ProductFreeCatamorphism f =
 -- its parameterized anamorphism (unfold).
 FreeAnamorphism : (Type -> Type) -> Type
 FreeAnamorphism f =
-  (v, l : Type) -> TreeCoalgebra f v l -> l -> CofreeComonad f v
+  {v, l : Type} -> TreeCoalgebra f v l -> l -> CofreeComonad f v
 
 ProductFreeAnamorphism : {idx : Type} ->
   ProductCatObjectEndoMap idx ->
@@ -1276,7 +1276,11 @@ ProductFreeAnamorphism f =
 -- Non-parameterized catamorphism (fold).
 public export
 Catamorphism : (Type -> Type) -> Type
-Catamorphism f = (a : Type) -> Algebra f a -> Mu f -> a
+Catamorphism f = {a : Type} -> Algebra f a -> Mu f -> a
+
+public export
+cataFromFree : {f : Type -> Type} -> FreeCatamorphism f -> Catamorphism f
+cataFromFree cata alg = cata (voidAlg alg)
 
 public export
 ProductCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
@@ -1288,7 +1292,11 @@ ProductCatamorphism {idx} f =
 -- Non-parameterized anamorphism (unfold).
 public export
 Anamorphism : (Type -> Type) -> Type
-Anamorphism f = (a : Type) -> Coalgebra f a -> a -> Nu f
+Anamorphism f = {a : Type} -> Coalgebra f a -> a -> Nu f
+
+public export
+anaFromFree : {f : Type -> Type} -> FreeAnamorphism f -> Anamorphism f
+anaFromFree ana alg = ana (unitCoalg alg)
 
 public export
 ProductAnamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
@@ -1296,6 +1304,11 @@ ProductAnamorphism {idx} f =
   (a : ProductCatObject idx) ->
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
+
+-- XXX general fold/unfold :
+-- FreeAlg -> FreeMonad -> a
+-- CofreeCoalg -> a -> CofreeComonad
+-- XXX then use this in signature
 
 --------------------
 --------------------
@@ -1540,7 +1553,7 @@ Subst0TypeCofreeComonad = CofreeComonad Subst0TypeF
 public export
 subst0TypeParamCata : {v, a : Type} ->
   TermAlgebra Subst0TypeF v a -> Subst0TypeFreeMonad v -> a
-subst0TypeParamCata {v} {a} alg (InFree x) = alg $ case x of
+subst0TypeParamCata alg (InFree x) = alg $ case x of
   TermVar var => TermVar var
   TermComposite com => TermComposite $ case com of
     -- Unit
@@ -1562,7 +1575,7 @@ subst0TypeParamCata {v} {a} alg (InFree x) = alg $ case x of
 public export
 subst0TypeCata : {a : Type} ->
   Algebra Subst0TypeF a -> MuSubst0Type -> a
-subst0TypeCata alg = subst0TypeParamCata {v=Void} (voidAlg alg)
+subst0TypeCata = cataFromFree subst0TypeParamCata
 
 -- This algebra interprets the constructors of the substitution-0 category
 -- as types in the Idris type system.  This is possible because those
@@ -1740,7 +1753,7 @@ subst0TypeGenParamCata {v} {a} alg (InFree x) = alg $ case x of
 public export
 subst0TypeGenCata : {a : Type} ->
   Algebra Subst0TypeFreeMonad a -> MuSubst0Type -> a
-subst0TypeGenCata {a} alg (InFree x) = ?generalhole -- subst0TypeGenParamCata {v=Void} alg (voidF a)
+subst0TypeGenCata {a} alg (InFree x) = ?subst0TypGenCata_hole -- subst0TypeGenParamCata {v=Void} alg (voidF a)
 
 mutual
   public export
