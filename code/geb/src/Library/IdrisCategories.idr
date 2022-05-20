@@ -1121,7 +1121,11 @@ data FreeMonad : (Type -> Type) -> (Type -> Type) where
 
 public export
 FreeAlgebra : (Type -> Type) -> Type -> Type
-FreeAlgebra f a = Algebra f (FreeMonad f a)
+FreeAlgebra f a = Algebra (FreeMonad f) a
+
+public export
+ParamFreeAlgebra : (Type -> Type) -> Type -> Type -> Type
+ParamFreeAlgebra f v a = TermAlgebra (FreeMonad f) v a
 
 public export
 InitialAlgebra : (Type -> Type) -> Type
@@ -1149,7 +1153,11 @@ data CofreeComonad : (Type -> Type) -> (Type -> Type) where
 
 public export
 CofreeCoalgebra : (Type -> Type) -> Type -> Type
-CofreeCoalgebra f a = Coalgebra f (CofreeComonad f a)
+CofreeCoalgebra f a = Coalgebra (CofreeComonad f) a
+
+public export
+ParamCofreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
+ParamCofreeCoalgebra f l a = TreeCoalgebra (CofreeComonad f) l a
 
 public export
 TerminalCoalgebra : (Type -> Type) -> Type
@@ -1243,13 +1251,15 @@ NuProduct : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx
 NuProduct f = ProductCatCofreeComonad f (const ())
 
--- Not all endofunctors have initial algebras.  If an endofunctor
--- _does_ have an initial algebra, then this is the signature of
--- its parameterized catamorphism (fold).
+public export
+ParamFreeCatamorphism : (Type -> Type) -> Type
+ParamFreeCatamorphism f =
+  {v, a : Type} -> ParamFreeAlgebra f v a -> FreeMonad f v -> a
+
 public export
 FreeCatamorphism : (Type -> Type) -> Type
 FreeCatamorphism f =
-  {v, a : Type} -> TermAlgebra f v a -> FreeMonad f v -> a
+  {a : Type} -> FreeAlgebra f a -> FreeMonad f a -> a
 
 public export
 ProductFreeCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
@@ -1258,29 +1268,32 @@ ProductFreeCatamorphism f =
   ProductCatTermAlgebra f v a ->
   ProductCatMorphism (ProductCatFreeMonad f v) a
 
--- Not all endofunctors have terminal coalgebras.  If an endofunctor
--- _does_ have a terminal coalgebra, then this is the signature of
--- its parameterized anamorphism (unfold).
-FreeAnamorphism : (Type -> Type) -> Type
-FreeAnamorphism f =
-  {v, l : Type} -> TreeCoalgebra f v l -> l -> CofreeComonad f v
+public export
+ParamCofreeAnamorphism : (Type -> Type) -> Type
+ParamCofreeAnamorphism f =
+  {l, a : Type} -> ParamCofreeCoalgebra f l a -> a -> CofreeComonad f l
 
-ProductFreeAnamorphism : {idx : Type} ->
+public export
+CofreeAnamorphism : (Type -> Type) -> Type
+CofreeAnamorphism f =
+  {a : Type} -> CofreeCoalgebra f a -> a -> CofreeComonad f a
+
+public export
+ProductCofreeAnamorphism : {idx : Type} ->
   ProductCatObjectEndoMap idx ->
   Type
-ProductFreeAnamorphism f =
+ProductCofreeAnamorphism f =
   (v, l : ProductCatObject idx) ->
   ProductCatTreeCoalgebra f v l ->
   ProductCatMorphism (ProductCatCofreeComonad f v) l
 
--- Non-parameterized catamorphism (fold).
 public export
-Catamorphism : (Type -> Type) -> Type
-Catamorphism f = {a : Type} -> Algebra f a -> Mu f -> a
+ParamCatamorphism : (Type -> Type) -> Type
+ParamCatamorphism f = {v, a : Type} -> TermAlgebra f v a -> FreeMonad f v -> a
 
 public export
-cataFromFree : {f : Type -> Type} -> FreeCatamorphism f -> Catamorphism f
-cataFromFree cata alg = cata (voidAlg alg)
+Catamorphism : (Type -> Type) -> Type
+Catamorphism f = {a : Type} -> Algebra f a -> FreeMonad f a -> a
 
 public export
 ProductCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
@@ -1289,14 +1302,14 @@ ProductCatamorphism {idx} f =
   ProductCatAlgebra f a ->
   ProductCatMorphism (MuProduct f) a
 
--- Non-parameterized anamorphism (unfold).
 public export
-Anamorphism : (Type -> Type) -> Type
-Anamorphism f = {a : Type} -> Coalgebra f a -> a -> Nu f
+ParamAnamorphism : (Type -> Type) -> Type
+ParamAnamorphism f = {l, a : Type} ->
+  TreeCoalgebra f l a -> a -> CofreeComonad f l
 
 public export
-anaFromFree : {f : Type -> Type} -> FreeAnamorphism f -> Anamorphism f
-anaFromFree ana alg = ana (unitCoalg alg)
+Anamorphism : (Type -> Type) -> Type
+Anamorphism f = {a : Type} -> Coalgebra f a -> a -> CofreeComonad f a
 
 public export
 ProductAnamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
@@ -1304,11 +1317,6 @@ ProductAnamorphism {idx} f =
   (a : ProductCatObject idx) ->
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
-
--- XXX general fold/unfold :
--- FreeAlg -> FreeMonad -> a
--- CofreeCoalg -> a -> CofreeComonad
--- XXX then use this in signature
 
 --------------------
 --------------------
@@ -1549,13 +1557,29 @@ public export
 Subst0TypeCofreeComonad : Type -> Type
 Subst0TypeCofreeComonad = CofreeComonad Subst0TypeF
 
--- Parameterized special induction.
+-- Special induction.
 public export
-subst0TypeParamCata : {v, a : Type} ->
-  TermAlgebra Subst0TypeF v a -> Subst0TypeFreeMonad v -> a
-subst0TypeParamCata alg (InFree x) = alg $ case x of
-  TermVar var => TermVar var
-  TermComposite com => TermComposite $ case com of
+subst0TypeCata : Catamorphism Subst0TypeF
+subst0TypeCata alg (InFree x) = case x of
+  TermVar var => var
+  TermComposite com => alg $ case com of
+    -- Unit
+    Left () => Left ()
+    Right com' => Right $ case com' of
+      -- Void
+      Left () => Left ()
+      Right com'' => Right $ case com'' of
+        -- Product
+        Left (p1, p2) => Left $ (subst0TypeCata alg p1, subst0TypeCata alg p2)
+        -- Coproduct
+        Right (c1, c2) => Right $ (subst0TypeCata alg c1, subst0TypeCata alg c2)
+
+-- General induction.
+public export
+subst0TypeFreeCatamorphism : FreeCatamorphism Subst0TypeF
+subst0TypeFreeCatamorphism alg (InFree x) = alg $ case x of
+  TermVar var => InFree $ TermVar var
+  TermComposite com => InFree $ TermComposite $ case com of
     -- Unit
     Left () => Left ()
     Right com' => Right $ case com' of
@@ -1564,18 +1588,12 @@ subst0TypeParamCata alg (InFree x) = alg $ case x of
       Right com'' => Right $ case com'' of
         -- Product
         Left (p1, p2) => Left $
-          (subst0TypeParamCata alg p1,
-           subst0TypeParamCata alg p2)
+          (InFree $ TermVar $ subst0TypeFreeCatamorphism alg p1,
+           InFree $ TermVar $ subst0TypeFreeCatamorphism alg p2)
         -- Coproduct
         Right (c1, c2) => Right $
-          (subst0TypeParamCata alg c1,
-           subst0TypeParamCata alg c2)
-
--- Special induction.
-public export
-subst0TypeCata : {a : Type} ->
-  Algebra Subst0TypeF a -> MuSubst0Type -> a
-subst0TypeCata = cataFromFree subst0TypeParamCata
+          (InFree $ TermVar $ subst0TypeFreeCatamorphism alg c1,
+           InFree $ TermVar $ subst0TypeFreeCatamorphism alg c2)
 
 -- This algebra interprets the constructors of the substitution-0 category
 -- as types in the Idris type system.  This is possible because those
@@ -1723,37 +1741,6 @@ subst0NewConstraintFunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
 ----------------------------------------------
 ---- Category of first-order refined ADTs ----
 ----------------------------------------------
-
--- Parameterized general induction.
-public export
-subst0TypeGenParamCata : {v, a : Type} ->
-  FreeAlgebra Subst0TypeF a -> Subst0TypeFreeMonad v -> a
-subst0TypeGenParamCata {v} {a} alg (InFree x) = ?parameterizedgeneralhole
-{-
-subst0TypeGenParamCata {v} {a} alg (InFree x) = alg $ case x of
-  TermVar var => TermVar var
-  TermComposite com => InFree $ TermComposite $ case com of
-    -- Unit
-    Left () => Left ()
-    Right com' => Right $ case com' of
-      -- Void
-      Left () => Left ()
-      Right com'' => Right $ case com'' of
-        -- Product
-        Left (p1, p2) => Left $
-          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p1,
-           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst p2)
-        -- Coproduct
-        Right (c1, c2) => Right $
-          (InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c1,
-           InFreeSubst0 $ Left $ subst0TypeGenParamCata alg subst c2)
-           -}
-
--- General induction.
-public export
-subst0TypeGenCata : {a : Type} ->
-  Algebra Subst0TypeFreeMonad a -> MuSubst0Type -> a
-subst0TypeGenCata {a} alg (InFree x) = ?subst0TypGenCata_hole -- subst0TypeGenParamCata {v=Void} alg (voidF a)
 
 mutual
   public export
