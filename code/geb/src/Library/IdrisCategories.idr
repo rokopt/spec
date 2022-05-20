@@ -1557,12 +1557,12 @@ public export
 Subst0TypeCofreeComonad : Type -> Type
 Subst0TypeCofreeComonad = CofreeComonad Subst0TypeF
 
--- Special induction.
+-- Parameterized special induction.
 public export
-subst0TypeCata : Catamorphism Subst0TypeF
-subst0TypeCata alg (InFree x) = case x of
-  TermVar var => var
-  TermComposite com => alg $ case com of
+subst0TypeCata : ParamCatamorphism Subst0TypeF
+subst0TypeCata alg (InFree x) = alg $ case x of
+  TermVar var => TermVar var
+  TermComposite com => TermComposite $ case com of
     -- Unit
     Left () => Left ()
     Right com' => Right $ case com' of
@@ -1574,12 +1574,12 @@ subst0TypeCata alg (InFree x) = case x of
         -- Coproduct
         Right (c1, c2) => Right $ (subst0TypeCata alg c1, subst0TypeCata alg c2)
 
--- General induction.
+-- Parameterized general induction.
 public export
-subst0TypeFreeCatamorphism : FreeCatamorphism Subst0TypeF
+subst0TypeFreeCatamorphism : ParamFreeCatamorphism Subst0TypeF
 subst0TypeFreeCatamorphism alg (InFree x) = alg $ case x of
-  TermVar var => InFree $ TermVar var
-  TermComposite com => InFree $ TermComposite $ case com of
+  TermVar var => TermVar var
+  TermComposite com => TermComposite $ InFree $ TermComposite $ case com of
     -- Unit
     Left () => Left ()
     Right com' => Right $ case com' of
