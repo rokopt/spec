@@ -94,10 +94,6 @@ ExtInversePair (f, g) = ExtInverse f g
 --------------------------------------
 --------------------------------------
 
--------------------------------------
----- F-algebras and F-coalgebras ----
--------------------------------------
-
 -- The categorial definition of an F-algebra.
 public export
 Algebra : (Type -> Type) -> Type -> Type
@@ -107,6 +103,230 @@ Algebra f a = f a -> a
 public export
 Coalgebra : (Type -> Type) -> Type -> Type
 Coalgebra f a = a -> f a
+
+-- For a given functor `F` and object `v`, form the functor `Fv` defined by
+-- `Fv[x] = v + F[x]`.  We call it `TermFunctor` because it turns
+-- an endofunctor which we can interpret as representing a datatype
+-- into one which we can interpret as representing open terms of
+-- that datatype with variables drawn from type `v`.
+public export
+data TermFunctor : (Type -> Type) -> Type -> (Type -> Type) where
+  TermVar : {f : Type -> Type} -> {0 v, a : Type} ->
+    v -> TermFunctor f v a
+  TermComposite : {f : Type -> Type} -> {0 v, a : Type} ->
+    f a -> TermFunctor f v a
+
+public export
+Functor f => Bifunctor (TermFunctor f) where
+  bimap f' g' (TermVar x) = TermVar $ f' x
+  bimap f' g' (TermComposite x) = TermComposite $ map g' x
+
+-- For a given functor `F`, form the functor `Fa` defined by
+-- `Fa[x] = a * F[x]`.  We call it `TreeFunctor` because it turns
+-- an endofunctor which we can interpret as representing a datatype
+-- into one which we can interpret as representing potentially infinite
+-- trees of that datatype with labels drawn from type `v`.
+-- This is the dual of `TermFunctor`.
+public export
+data TreeFunctor : (Type -> Type) -> Type -> (Type -> Type) where
+  TreeNode : {f : Type -> Type} -> {0 l, a : Type} ->
+    l -> f a -> TreeFunctor f l a
+
+export
+Functor f => Bifunctor (TreeFunctor f) where
+  bimap f' g' (TreeNode x fx) = TreeNode (f' x) (map g' fx)
+
+export
+treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
+treeLabel (TreeNode a' _) = a'
+
+export
+treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> f a
+treeSubtree (TreeNode _ fx) = fx
+
+-- An algebra on a functor representing a type of open terms (as generated
+-- by `TermFunctor` above) may be viewed as a polymorphic algebra, because
+-- for each object `v` it generates an `F[v]`-algebra on an any given carrier
+-- object.  When `v` is the initial object (`Void`), it specializes to
+-- generating `F`-algebras.
+public export
+TermAlgebra : (Type -> Type) -> Type -> Type -> Type
+TermAlgebra f v a = Algebra (TermFunctor f v) a
+
+public export
+voidAlg : {f : Type -> Type} -> {a : Type} ->
+  Algebra f a -> TermAlgebra f Void a
+voidAlg alg (TermVar {v=Void} _) impossible
+voidAlg alg (TermComposite x) = alg x
+
+public export
+TermCoalgebra : (Type -> Type) -> Type -> Type -> Type
+TermCoalgebra f v a = Coalgebra (TermFunctor f v) a
+
+-- A coalgebra on a functor representing a type of labeled trees (as generated
+-- by `TreeFunctor` above) may be viewed as a polymorphic coalgebra, because
+-- for each object `v` it generates an `F[v]`-coalgebra on an any given carrier
+-- object.  When `v` is the terminal object (`Unit`), it specializes to
+-- generating `F`-coalgebras.
+public export
+TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
+TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
+
+public export
+unitCoalg : {f : Type -> Type} -> {a : Type} ->
+  Coalgebra f a -> TreeCoalgebra f Unit a
+unitCoalg alg x = TreeNode {l=()} () $ alg x
+
+public export
+TreeAlgebra : (Type -> Type) -> Type -> Type -> Type
+TreeAlgebra f v a = Algebra (TreeFunctor f v) a
+
+--------------------------------------------------
+---- Initial algebras and terminal coalgebras ----
+--------------------------------------------------
+
+-- If `F` has an initial algebra, then for every object `a`, the functor
+-- `Fa` defined above also has an initial algebra, which is isomorphic
+-- to `FreeMonad[F, a]`.  Thus `FreeMonad` allows us to create initial
+-- `Fa`-algebras parameterized over arbitrary objects `a`, with the initial
+-- algebra of `F` itself being the special case where `a` is the initial object
+-- (`Void`).  `FreeMonad` is sometimes written `F*`.
+--
+-- Note that `FreeMonad` itself is a composition, but one which leaves
+-- the category in which the endofunctors live before returning:  it is
+-- the monad induced by the free-forgetful adjunction between the category
+-- of endofunctors and the category of their F-algebras.  (The comonad
+-- induced by the dual forgetful-cofree adjunction is `CofreeComonad`.)
+public export
+data FreeMonad : (Type -> Type) -> (Type -> Type) where
+  InFree : {f : Type -> Type} -> {0 a : Type} ->
+    TermAlgebra f a (FreeMonad f a)
+
+public export
+FreeAlgebra : (Type -> Type) -> Type -> Type
+FreeAlgebra f a = Algebra (FreeMonad f) a
+
+public export
+ParamFreeAlgebra : (Type -> Type) -> Type -> Type -> Type
+ParamFreeAlgebra f v a = TermAlgebra (FreeMonad f) v a
+
+public export
+InitialAlgebra : (Type -> Type) -> Type
+InitialAlgebra f = FreeAlgebra f Void
+
+-- If `F` has a terminal coalgebra, then for every object `a`, the functor
+-- `Fa` defined above also has a terminal coalgebra, which is isomorphic
+-- to `CofreeComonad[F, a]`.  Thus `CofreeComonad` allows us to create terminal
+-- `Fa`-coalgebras parameterized over arbitrary objects `a`, with the terminal
+-- coalgebra of `F` itself being the special case where `a` is the terminal
+-- object (`Unit`).  `CofreeComonad` is sometimes written `Finf`.
+public export
+data CofreeComonad : (Type -> Type) -> (Type -> Type) where
+  InCofree :
+    {f : Type -> Type} -> {a : Type} ->
+    Inf (TreeFunctor f a (CofreeComonad f a)) -> CofreeComonad f a
+
+public export
+CofreeCoalgebra : (Type -> Type) -> Type -> Type
+CofreeCoalgebra f a = Coalgebra (CofreeComonad f) a
+
+public export
+ParamCofreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
+ParamCofreeCoalgebra f l a = TreeCoalgebra (CofreeComonad f) l a
+
+public export
+TerminalCoalgebra : (Type -> Type) -> Type
+TerminalCoalgebra f = CofreeCoalgebra f Unit
+
+public export
+inFreeVar : {f : Type -> Type} -> Coalgebra (FreeMonad f) a
+inFreeVar = InFree . TermVar
+
+public export
+inFreeComposite : {f : Type -> Type} -> Algebra f (FreeMonad f a)
+inFreeComposite = InFree . TermComposite
+
+public export
+outFree : TermCoalgebra f a (FreeMonad f a)
+outFree (InFree x) = x
+
+public export
+inCofreeTree : {a : Type} -> {f : Type -> Type} ->
+  a -> Algebra f (CofreeComonad f a)
+inCofreeTree x fx = InCofree $ TreeNode x fx
+
+public export
+outCofree : {f : Type -> Type} -> {a : Type} ->
+  TreeCoalgebra f a (CofreeComonad f a)
+outCofree (InCofree x) = x
+
+-- Special case of `FreeMonad` where `v` is `Void`.
+-- This is the fixpoint of an endofunctor (if it exists).
+public export
+Mu : (Type -> Type) -> Type
+Mu f = FreeMonad f Void
+
+-- Special case of `CofreeComonad` where `v` is `Unit`.
+-- This is the cofixpoint of an endofunctor (if it exists).
+public export
+Nu : (Type -> Type) -> Type
+Nu f = CofreeComonad f ()
+
+public export
+ParamFreeCatamorphism : (Type -> Type) -> Type
+ParamFreeCatamorphism f =
+  {v, a : Type} -> ParamFreeAlgebra f v a -> FreeMonad f v -> a
+
+public export
+FreeCatamorphism : (Type -> Type) -> Type
+FreeCatamorphism f =
+  {a : Type} -> FreeAlgebra f a -> FreeMonad f a -> a
+
+public export
+ParamCofreeAnamorphism : (Type -> Type) -> Type
+ParamCofreeAnamorphism f =
+  {l, a : Type} -> ParamCofreeCoalgebra f l a -> a -> CofreeComonad f l
+
+public export
+CofreeAnamorphism : (Type -> Type) -> Type
+CofreeAnamorphism f =
+  {a : Type} -> CofreeCoalgebra f a -> a -> CofreeComonad f a
+
+public export
+ParamCatamorphism : (Type -> Type) -> Type
+ParamCatamorphism f = {v, a : Type} -> TermAlgebra f v a -> FreeMonad f v -> a
+
+public export
+Catamorphism : (Type -> Type) -> Type
+Catamorphism f = {a : Type} -> Algebra f a -> FreeMonad f a -> a
+
+public export
+ParamAnamorphism : (Type -> Type) -> Type
+ParamAnamorphism f = {l, a : Type} ->
+  TreeCoalgebra f l a -> a -> CofreeComonad f l
+
+public export
+Anamorphism : (Type -> Type) -> Type
+Anamorphism f = {a : Type} -> Coalgebra f a -> a -> CofreeComonad f a
+
+--------------------
+--------------------
+---- Bifunctors ----
+--------------------
+--------------------
+
+-- A bifunctor applied to a type is a functor.  This is simply the
+-- currying adjunction in the category of functors -- the functor
+-- categories `[C, [D, E]]` and `[C × D, E]` are equivalent.
+public export
+Bifunctor f => Functor (f a) where
+  map = mapSnd
+
+-- A bifunctor with its arguments flipped is a bifunctor.  This
+-- reflects the symmetry of the product.
+public export
+Bifunctor f => Bifunctor (flip f) where
+  bimap f g = bimap g f
 
 ------------------------------------------------------
 ------------------------------------------------------
@@ -207,47 +427,11 @@ public export
 FunctorCatEndofunctor : Type
 FunctorCatEndofunctor = ProductCatEndofunctor Type
 
-------------------------------------------------
-------------------------------------------------
----- Categorial algebra on Idris categories ----
-------------------------------------------------
-------------------------------------------------
-
--- For a given functor `F` and object `v`, form the functor `Fv` defined by
--- `Fv[x] = v + F[x]`.  We call it `TermFunctor` because it turns
--- an endofunctor which we can interpret as representing a datatype
--- into one which we can interpret as representing open terms of
--- that datatype with variables drawn from type `v`.
-public export
-data TermFunctor : (Type -> Type) -> Type -> (Type -> Type) where
-  TermVar : {f : Type -> Type} -> {0 v, a : Type} ->
-    v -> TermFunctor f v a
-  TermComposite : {f : Type -> Type} -> {0 v, a : Type} ->
-    f a -> TermFunctor f v a
-
-public export
-Functor f => Bifunctor (TermFunctor f) where
-  bimap f' g' (TermVar x) = TermVar $ f' x
-  bimap f' g' (TermComposite x) = TermComposite $ map g' x
-
--- For a given functor `F`, form the functor `Fa` defined by
--- `Fa[x] = a * F[x]`.  We call it `TreeFunctor` because it turns
--- an endofunctor which we can interpret as representing a datatype
--- into one which we can interpret as representing potentially infinite
--- trees of that datatype with labels drawn from type `v`.
--- This is the dual of `TermFunctor`.
-public export
-data TreeFunctor : (Type -> Type) -> Type -> (Type -> Type) where
-  TreeNode : {f : Type -> Type} -> {0 l, a : Type} ->
-    l -> f a -> TreeFunctor f l a
-
-export
-Functor f => Bifunctor (TreeFunctor f) where
-  bimap f' g' (TreeNode x fx) = TreeNode (f' x) (map g' fx)
-
--------------------------------------
----- F-algebras and F-coalgebras ----
--------------------------------------
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+---- Categorial algebra on sigma, product, and functor categories ----
+----------------------------------------------------------------------
+----------------------------------------------------------------------
 
 -- The version of `Algebra` for an Idris product category.
 public export
@@ -297,13 +481,12 @@ data ProductCatTreeFunctor : {idx : Type} ->
     {i : idx} ->
     l i -> f a i -> ProductCatTreeFunctor f l a i
 
-export
-treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
-treeLabel (TreeNode a' _) = a'
-
-export
-treeSubtree : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> f a
-treeSubtree (TreeNode _ fx) = fx
+public export
+ProductCatTermCoalgebra : {idx : Type} ->
+  ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
+  Type
+ProductCatTermCoalgebra f v a =
+  ProductCatCoalgebra (ProductCatTermFunctor f v) a
 
 export
 treeLabelProduct : ProductCatTreeFunctor f l a i -> l i
@@ -313,52 +496,12 @@ export
 treeSubtreeProduct : ProductCatTreeFunctor f l a i -> f a i
 treeSubtreeProduct (ProductCatTreeNode _ fx) = fx
 
--- An algebra on a functor representing a type of open terms (as generated
--- by `TermFunctor` above) may be viewed as a polymorphic algebra, because
--- for each object `v` it generates an `F[v]`-algebra on an any given carrier
--- object.  When `v` is the initial object (`Void`), it specializes to
--- generating `F`-algebras.
-public export
-TermAlgebra : (Type -> Type) -> Type -> Type -> Type
-TermAlgebra f v a = Algebra (TermFunctor f v) a
-
-public export
-voidAlg : {f : Type -> Type} -> {a : Type} ->
-  Algebra f a -> TermAlgebra f Void a
-voidAlg alg (TermVar {v=Void} _) impossible
-voidAlg alg (TermComposite x) = alg x
-
 public export
 ProductCatTermAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
 ProductCatTermAlgebra f v a =
   ProductCatAlgebra (ProductCatTermFunctor f v) a
-
-public export
-TermCoalgebra : (Type -> Type) -> Type -> Type -> Type
-TermCoalgebra f v a = Coalgebra (TermFunctor f v) a
-
-public export
-ProductCatTermCoalgebra : {idx : Type} ->
-  ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
-  Type
-ProductCatTermCoalgebra f v a =
-  ProductCatCoalgebra (ProductCatTermFunctor f v) a
-
--- A coalgebra on a functor representing a type of labeled trees (as generated
--- by `TreeFunctor` above) may be viewed as a polymorphic coalgebra, because
--- for each object `v` it generates an `F[v]`-coalgebra on an any given carrier
--- object.  When `v` is the terminal object (`Unit`), it specializes to
--- generating `F`-coalgebras.
-public export
-TreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
-TreeCoalgebra f v a = Coalgebra (TreeFunctor f v) a
-
-public export
-unitCoalg : {f : Type -> Type} -> {a : Type} ->
-  Coalgebra f a -> TreeCoalgebra f Unit a
-unitCoalg alg x = TreeNode {l=()} () $ alg x
 
 public export
 ProductCatTreeCoalgebra : {idx : Type} ->
@@ -368,48 +511,11 @@ ProductCatTreeCoalgebra f v a =
   ProductCatCoalgebra (ProductCatTreeFunctor f v) a
 
 public export
-TreeAlgebra : (Type -> Type) -> Type -> Type -> Type
-TreeAlgebra f v a = Algebra (TreeFunctor f v) a
-
-public export
 ProductCatTreeAlgebra : {idx : Type} ->
   ProductCatObjectEndoMap idx -> ProductCatObject idx -> ProductCatObject idx ->
   Type
 ProductCatTreeAlgebra f v a =
   ProductCatAlgebra (ProductCatTreeFunctor f v) a
-
---------------------------------------------------
----- Initial algebras and terminal coalgebras ----
---------------------------------------------------
-
--- If `F` has an initial algebra, then for every object `a`, the functor
--- `Fa` defined above also has an initial algebra, which is isomorphic
--- to `FreeMonad[F, a]`.  Thus `FreeMonad` allows us to create initial
--- `Fa`-algebras parameterized over arbitrary objects `a`, with the initial
--- algebra of `F` itself being the special case where `a` is the initial object
--- (`Void`).  `FreeMonad` is sometimes written `F*`.
---
--- Note that `FreeMonad` itself is a composition, but one which leaves
--- the category in which the endofunctors live before returning:  it is
--- the monad induced by the free-forgetful adjunction between the category
--- of endofunctors and the category of their F-algebras.  (The comonad
--- induced by the dual forgetful-cofree adjunction is `CofreeComonad`.)
-public export
-data FreeMonad : (Type -> Type) -> (Type -> Type) where
-  InFree : {f : Type -> Type} -> {0 a : Type} ->
-    TermAlgebra f a (FreeMonad f a)
-
-public export
-FreeAlgebra : (Type -> Type) -> Type -> Type
-FreeAlgebra f a = Algebra (FreeMonad f) a
-
-public export
-ParamFreeAlgebra : (Type -> Type) -> Type -> Type -> Type
-ParamFreeAlgebra f v a = TermAlgebra (FreeMonad f) v a
-
-public export
-InitialAlgebra : (Type -> Type) -> Type
-InitialAlgebra f = FreeAlgebra f Void
 
 -- The product-category version of `FreeMonad`.
 public export
@@ -418,30 +524,6 @@ data ProductCatFreeMonad : {idx : Type} ->
   InFreeProduct : {idx : Type} ->
     {f : ProductCatObjectEndoMap idx} -> {0 a : ProductCatObject idx} ->
     ProductCatTermAlgebra f a (ProductCatFreeMonad f a)
-
--- If `F` has a terminal coalgebra, then for every object `a`, the functor
--- `Fa` defined above also has a terminal coalgebra, which is isomorphic
--- to `CofreeComonad[F, a]`.  Thus `CofreeComonad` allows us to create terminal
--- `Fa`-coalgebras parameterized over arbitrary objects `a`, with the terminal
--- coalgebra of `F` itself being the special case where `a` is the terminal
--- object (`Unit`).  `CofreeComonad` is sometimes written `Finf`.
-public export
-data CofreeComonad : (Type -> Type) -> (Type -> Type) where
-  InCofree :
-    {f : Type -> Type} -> {a : Type} ->
-    Inf (TreeFunctor f a (CofreeComonad f a)) -> CofreeComonad f a
-
-public export
-CofreeCoalgebra : (Type -> Type) -> Type -> Type
-CofreeCoalgebra f a = Coalgebra (CofreeComonad f) a
-
-public export
-ParamCofreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
-ParamCofreeCoalgebra f l a = TreeCoalgebra (CofreeComonad f) l a
-
-public export
-TerminalCoalgebra : (Type -> Type) -> Type
-TerminalCoalgebra f = CofreeCoalgebra f Unit
 
 public export
 data ProductCatCofreeComonad : {idx : Type} ->
@@ -453,18 +535,10 @@ data ProductCatCofreeComonad : {idx : Type} ->
     ProductCatCofreeComonad f l i
 
 public export
-inFreeVar : {f : Type -> Type} -> Coalgebra (FreeMonad f) a
-inFreeVar = InFree . TermVar
-
-public export
 inFreeVarProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {0 a : ProductCatObject idx} ->
   ProductCatCoalgebra (ProductCatFreeMonad f) a
 inFreeVarProduct i = InFreeProduct i . ProductCatTermVar
-
-public export
-inFreeComposite : {f : Type -> Type} -> Algebra f (FreeMonad f a)
-inFreeComposite = InFree . TermComposite
 
 public export
 inFreeCompositeProduct : {idx : Type} ->
@@ -473,19 +547,10 @@ inFreeCompositeProduct : {idx : Type} ->
 inFreeCompositeProduct i = InFreeProduct i . ProductCatTermComposite
 
 public export
-outFree : TermCoalgebra f a (FreeMonad f a)
-outFree (InFree x) = x
-
-public export
 outFreeProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {a : ProductCatObject idx} ->
   ProductCatTermCoalgebra f a (ProductCatFreeMonad f a)
 outFreeProduct i (InFreeProduct i x) = x
-
-public export
-inCofreeTree : {a : Type} -> {f : Type -> Type} ->
-  a -> Algebra f (CofreeComonad f a)
-inCofreeTree x fx = InCofree $ TreeNode x fx
 
 public export
 inCofreeTreeProduct : {idx : Type} ->
@@ -498,11 +563,6 @@ inCofreeTreeProduct : {idx : Type} ->
 inCofreeTreeProduct x fx = InCofreeProduct $ ProductCatTreeNode x fx
 
 public export
-outCofree : {f : Type -> Type} -> {a : Type} ->
-  TreeCoalgebra f a (CofreeComonad f a)
-outCofree (InCofree x) = x
-
-public export
 outCofreeProduct : {idx : Type} ->
   {f : ProductCatObjectEndoMap idx} -> {l : ProductCatObject idx} ->
   {i : idx} ->
@@ -510,21 +570,9 @@ outCofreeProduct : {idx : Type} ->
   ProductCatTreeFunctor f l (ProductCatCofreeComonad f l) i
 outCofreeProduct (InCofreeProduct x) = x
 
--- Special case of `FreeMonad` where `v` is `Void`.
--- This is the fixpoint of an endofunctor (if it exists).
-public export
-Mu : (Type -> Type) -> Type
-Mu f = FreeMonad f Void
-
 public export
 MuProduct : {idx : Type} -> ProductCatObjectEndoMap idx -> ProductCatObject idx
 MuProduct f = ProductCatFreeMonad f (const Void)
-
--- Special case of `CofreeComonad` where `v` is `Unit`.
--- This is the cofixpoint of an endofunctor (if it exists).
-public export
-Nu : (Type -> Type) -> Type
-Nu f = CofreeComonad f ()
 
 public export
 NuProduct : {idx : Type} ->
@@ -532,31 +580,11 @@ NuProduct : {idx : Type} ->
 NuProduct f = ProductCatCofreeComonad f (const ())
 
 public export
-ParamFreeCatamorphism : (Type -> Type) -> Type
-ParamFreeCatamorphism f =
-  {v, a : Type} -> ParamFreeAlgebra f v a -> FreeMonad f v -> a
-
-public export
-FreeCatamorphism : (Type -> Type) -> Type
-FreeCatamorphism f =
-  {a : Type} -> FreeAlgebra f a -> FreeMonad f a -> a
-
-public export
 ProductFreeCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
 ProductFreeCatamorphism f =
   (v, a : ProductCatObject idx) ->
   ProductCatTermAlgebra f v a ->
   ProductCatMorphism (ProductCatFreeMonad f v) a
-
-public export
-ParamCofreeAnamorphism : (Type -> Type) -> Type
-ParamCofreeAnamorphism f =
-  {l, a : Type} -> ParamCofreeCoalgebra f l a -> a -> CofreeComonad f l
-
-public export
-CofreeAnamorphism : (Type -> Type) -> Type
-CofreeAnamorphism f =
-  {a : Type} -> CofreeCoalgebra f a -> a -> CofreeComonad f a
 
 public export
 ProductCofreeAnamorphism : {idx : Type} ->
@@ -568,14 +596,6 @@ ProductCofreeAnamorphism f =
   ProductCatMorphism (ProductCatCofreeComonad f v) l
 
 public export
-ParamCatamorphism : (Type -> Type) -> Type
-ParamCatamorphism f = {v, a : Type} -> TermAlgebra f v a -> FreeMonad f v -> a
-
-public export
-Catamorphism : (Type -> Type) -> Type
-Catamorphism f = {a : Type} -> Algebra f a -> FreeMonad f a -> a
-
-public export
 ProductCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
 ProductCatamorphism {idx} f =
   (a : ProductCatObject idx) ->
@@ -583,39 +603,11 @@ ProductCatamorphism {idx} f =
   ProductCatMorphism (MuProduct f) a
 
 public export
-ParamAnamorphism : (Type -> Type) -> Type
-ParamAnamorphism f = {l, a : Type} ->
-  TreeCoalgebra f l a -> a -> CofreeComonad f l
-
-public export
-Anamorphism : (Type -> Type) -> Type
-Anamorphism f = {a : Type} -> Coalgebra f a -> a -> CofreeComonad f a
-
-public export
 ProductAnamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
 ProductAnamorphism {idx} f =
   (a : ProductCatObject idx) ->
   ProductCatCoalgebra f a ->
   ProductCatMorphism a (NuProduct f)
-
---------------------
---------------------
----- Bifunctors ----
---------------------
---------------------
-
--- A bifunctor applied to a type is a functor.  This is simply the
--- currying adjunction in the category of functors -- the functor
--- categories `[C, [D, E]]` and `[C × D, E]` are equivalent.
-public export
-Bifunctor f => Functor (f a) where
-  map = mapSnd
-
--- A bifunctor with its arguments flipped is a bifunctor.  This
--- reflects the symmetry of the product.
-public export
-Bifunctor f => Bifunctor (flip f) where
-  bimap f g = bimap g f
 
 ---------------------------------
 ---------------------------------
