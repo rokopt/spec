@@ -110,7 +110,7 @@ polyToPowerAlg alg = alg . PolyTermsF
 public export
 polyToListAlg :
   Algebra (PolynomialF v) a -> Algebra (ListF (ListF (v, NatF a) a)) a
-polyToListAlg alg = polyToPowerAlg alg . mapSnd (mapFst FactorsF)
+polyToListAlg alg = polyToPowerAlg alg . mapFst FactorsF
 
 -- Although not _all_ endofunctors have initial algebras, there are some
 -- _classes_ of endofunctors that can be guaranteed to have initial algebras.

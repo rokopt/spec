@@ -126,71 +126,6 @@ mutual
 --------------------
 --------------------
 
--------------------------
----- Natural numbers ----
--------------------------
-
-public export
-NatAlg : Type -> Type
-NatAlg = Algebra NatF
-
-public export
-FreeNat : Type -> Type
-FreeNat = FreeMonad NatF
-
-public export
-MuNat : Type
-MuNat = Mu NatF
-
-public export
-NatCoalg : Type -> Type
-NatCoalg = Coalgebra NatF
-
-public export
-CofreeNat : Type -> Type
-CofreeNat = CofreeComonad NatF
-
-public export
-NuNat : Type
-NuNat = Nu NatF
-
----------------
----- Lists ----
----------------
-
-public export
-ListF : Type -> Type -> Type
-ListF atom = MaybeF . (PairWithF atom)
-
-public export
-Bifunctor ListF where
-  bimap f g (Left ()) = (Left ())
-  bimap f g (Right p) = Right $ bimap f g p
-
-public export
-ListAlg : Type -> Type -> Type
-ListAlg = Algebra . ListF
-
-public export
-FreeList : Type -> Type -> Type
-FreeList = FreeMonad . ListF
-
-public export
-MuList : Type -> Type
-MuList = Mu . ListF
-
-public export
-ListCoalg : Type -> Type -> Type
-ListCoalg = Coalgebra . ListF
-
-public export
-CofreeList : Type -> Type -> Type
-CofreeList = CofreeComonad . ListF
-
-public export
-NuList : Type -> Type
-NuList = Nu . ListF
-
 -----------------------
 ---- S-expressions ----
 -----------------------
@@ -214,7 +149,7 @@ data SexpFunctor :
   SexpF :
     atom -> carrier SLIST -> SexpFunctor atom carrier SEXP
   SlistF :
-    FreeList (carrier SEXP) (carrier SLIST) ->
+    ListF (carrier SEXP) (carrier SLIST) ->
     SexpFunctor atom carrier SLIST
 
 public export
@@ -1144,10 +1079,10 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataNat (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
         NSatomF a => NSatomF $ case a of
-          Left () => Left ()
-          Right n => case n of
+          ZeroF => ZeroF
+          SuccF n => case n of
             InFreeProduct NSexpNat n =>
-              Right $ alg NSexpNat $ nsexpCataNat n
+              SuccF $ alg NSexpNat $ nsexpCataNat n
 
     nsexpCataExp :
       ProductCatTermFunctor
@@ -1160,9 +1095,9 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
       case com of
         NSexpF (InFreeProduct NSexpNat n) l =>
           case l of
-            InFreeProduct NSLIST l =>
+            InFreeProduct NSLIST l' =>
               NSexpF
-                (alg NSexpNat $ nsexpCataNat n) (alg NSLIST $ nsexpCataList l)
+                (alg NSexpNat $ nsexpCataNat n) (alg NSLIST $ nsexpCataList l')
 
     nsexpCataList :
       ProductCatTermFunctor
@@ -1174,13 +1109,13 @@ nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
     nsexpCataList (ProductCatTermComposite com) = ProductCatTermComposite $
       case com of
         NSlistF l => NSlistF $ case l of
-          Left () => Left ()
-          Right ((InFreeProduct NSEXP x), l') =>
+          NilF => NilF
+          ConsF (InFreeProduct NSEXP x) l' =>
             case l' of
               InFreeProduct NSLIST l'' =>
-                Right
-                  ((alg NSEXP $ nsexpCataExp x),
-                   (alg NSLIST $ nsexpCataList l''))
+                ConsF
+                  (alg NSEXP $ nsexpCataExp x)
+                  (alg NSLIST $ nsexpCataList l'')
 
 ---------------------------------------------------------
 ---------------------------------------------------------
@@ -1257,7 +1192,7 @@ data PowerF : Type -> Type -> Type where
 
 public export
 Bifunctor PowerF where
-  bimap f g (FactorsF l) = FactorsF $ mapSnd (bimap (bimap f $ mapSnd g) g) l
+  bimap f g (FactorsF l) = FactorsF $ bimap (bimap f $ map g) g l
 
 export
 powerFactors :
@@ -1274,7 +1209,7 @@ data PolynomialF : Type -> Type -> Type where
 
 public export
 Bifunctor PolynomialF where
-  bimap f g (PolyTermsF t) = PolyTermsF $ mapSnd (bimap (bimap f g) g) t
+  bimap f g (PolyTermsF t) = PolyTermsF $ bimap (bimap f g) g t
 
 export
 polyTerms :
@@ -1286,7 +1221,7 @@ export
 polyFactors :
   PolynomialF coefficient carrier ->
   ListF (ListF (coefficient, NatF carrier) carrier) carrier
-polyFactors = mapSnd (mapFst powerFactors) . polyTerms
+polyFactors = mapFst powerFactors . polyTerms
 
 -- Next, we introduce a way of interpreting polynomials as datatypes.
 -- A polynomial endofunctor may be viewed as simply a polynomial, and

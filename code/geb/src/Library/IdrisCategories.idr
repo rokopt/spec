@@ -328,6 +328,88 @@ public export
 Bifunctor f => Bifunctor (flip f) where
   bimap f g = bimap g f
 
+--------------------
+--------------------
+---- Core types ----
+--------------------
+--------------------
+
+-------------------------
+---- Natural numbers ----
+-------------------------
+
+public export
+data NatF : Type -> Type where
+  ZeroF : NatF carrier
+  SuccF : carrier -> NatF carrier
+
+public export
+Functor NatF where
+  map _ ZeroF = ZeroF
+  map f (SuccF n) = SuccF $ f n
+
+public export
+NatAlg : Type -> Type
+NatAlg = Algebra NatF
+
+public export
+FreeNat : Type -> Type
+FreeNat = FreeMonad NatF
+
+public export
+MuNat : Type
+MuNat = Mu NatF
+
+public export
+NatCoalg : Type -> Type
+NatCoalg = Coalgebra NatF
+
+public export
+CofreeNat : Type -> Type
+CofreeNat = CofreeComonad NatF
+
+public export
+NuNat : Type
+NuNat = Nu NatF
+
+---------------
+---- Lists ----
+---------------
+
+public export
+data ListF : Type -> Type -> Type where
+  NilF : ListF atom carrier
+  ConsF : atom -> carrier -> ListF atom carrier
+
+public export
+Bifunctor ListF where
+  bimap f g NilF = NilF
+  bimap f g (ConsF x l) = ConsF (f x) (g l)
+
+public export
+ListAlg : Type -> Type -> Type
+ListAlg = Algebra . ListF
+
+public export
+FreeList : Type -> Type -> Type
+FreeList = FreeMonad . ListF
+
+public export
+MuList : Type -> Type
+MuList = Mu . ListF
+
+public export
+ListCoalg : Type -> Type -> Type
+ListCoalg = Coalgebra . ListF
+
+public export
+CofreeList : Type -> Type -> Type
+CofreeList = CofreeComonad . ListF
+
+public export
+NuList : Type -> Type
+NuList = Nu . ListF
+
 ------------------------------------------------------
 ------------------------------------------------------
 ---- Idris sigma, product, and functor categories ----
@@ -1389,14 +1471,6 @@ IdTFunctorialityCompose : {a, b, c : Type} -> (m : a -> b) -> (m' : b -> c) ->
     (map {f=IdTF} m' . map {f=IdTF} m)
 IdTFunctorialityCompose _ _ _ = Refl
 
--------------------------
----- Natural numbers ----
--------------------------
-
-public export
-NatF : Type -> Type
-NatF = MaybeF
-
 ----------------
 ---- Tuples ----
 ----------------
@@ -1404,8 +1478,8 @@ NatF = MaybeF
 public export
 TupleF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-TupleF natCarrier (Left ()) carrier = TerminalMonad
-TupleF natCarrier (Right n) carrier = flip Pair (carrier n)
+TupleF natCarrier ZeroF carrier = TerminalMonad
+TupleF natCarrier (SuccF n) carrier = flip Pair (carrier n)
 
 public export
 Tuple : Nat -> Type -> Type
@@ -1460,8 +1534,8 @@ mapTupleP f (n ** t) = (n ** mapTuple f t)
 public export
 ChoiceF : (natCarrier : Type) -> NatF natCarrier ->
   (carrier : natCarrier -> Type) -> (atom : Type) -> Type
-ChoiceF natCarrier (Left ()) carrier = InitialComonad
-ChoiceF natCarrier (Right n) carrier = flip Either (carrier n)
+ChoiceF natCarrier ZeroF carrier = InitialComonad
+ChoiceF natCarrier (SuccF n) carrier = flip Either (carrier n)
 
 public export
 Choice : Nat -> Type -> Type
