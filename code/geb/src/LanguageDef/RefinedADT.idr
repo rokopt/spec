@@ -16,18 +16,6 @@ public export
 ListN : Type -> Type
 ListN carrier = (nl : (Nat, List carrier) ** LengthEquals carrier nl)
 
--- A finite-dimensional "matrix" with variable numbers of elements per row.
--- The parameter is the dimension minus one.
-public export
-VarMatrixD : (predDimension : Nat) -> Type -> Type
-VarMatrixD Z carrier = ListN carrier
-VarMatrixD (S n) carrier = ListN (VarMatrixD n carrier)
-
--- A finite-dimensional matrix of natural numbers.
--- The parameter is the dimension minus one.
-VarMatrixN : (predDimension : Nat) -> Type
-VarMatrixN = flip VarMatrixD Nat
-
 -- Monomorphized types consisting of finite products and coproducts.
 public export
 data FinSetObj : Type -> Type where
@@ -41,6 +29,18 @@ FinSetObjAlg = Algebra FinSetObj
 public export
 FinSetObjCoalg : Type -> Type
 FinSetObjCoalg = Coalgebra FinSetObj
+
+-- A finite-dimensional "matrix" with variable numbers of elements per row.
+-- The parameter is the dimension minus one.
+public export
+VarMatrixD : (predDimension : Nat) -> Type -> Type
+VarMatrixD Z carrier = ListN carrier
+VarMatrixD (S n) carrier = ListN (VarMatrixD n carrier)
+
+-- A finite-dimensional matrix of natural numbers.
+-- The parameter is the dimension minus one.
+VarMatrixN : (predDimension : Nat) -> Type
+VarMatrixN = flip VarMatrixD Nat
 
 public export
 record FiniteShape where
