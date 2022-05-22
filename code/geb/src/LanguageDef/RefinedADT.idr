@@ -6,6 +6,26 @@ import public LanguageDef.Atom
 
 %default total
 
+---------------------
+---------------------
+---- Finite ADTs ----
+---------------------
+---------------------
+
+-- Given a `carrier` tuple constant types in a product category, `ADTObjF`
+-- is a polynomial ADT comprising coproducts of products of types drawn
+-- from the tuple of input (carrier) types.
+public export
+data ADTObjProjF : TupleP Type -> Type where
+  ADT : {carrier : TupleP Type} ->
+    TupleP (TupleP (TupleIndex {atom=Type} carrier)) -> ADTObjProjF carrier
+
+-- The type of polynomial endofunctors in the product of categories
+-- with types drawn from elements of the carrier tuple.
+public export
+ADTObjF : TupleP Type -> TupleP Type
+ADTObjF t = mapTupleP (const $ ADTObjProjF t) t
+
 public export
 LengthEquals : (carrier : Type) -> (Nat, List carrier) -> Type
 LengthEquals _ (n, l) = n = length l
@@ -15,20 +35,6 @@ LengthEquals _ (n, l) = n = length l
 public export
 ListN : Type -> Type
 ListN carrier = (nl : (Nat, List carrier) ** LengthEquals carrier nl)
-
--- Monomorphized types consisting of finite products and coproducts.
-public export
-data FinSetObj : Type -> Type where
-  FinProduct : (n : Nat ** Tuple n (FinSetObj a)) -> FinSetObj a
-  FinCoproduct : (n : Nat ** Tuple n (FinSetObj a)) -> FinSetObj a
-
-public export
-FinSetObjAlg : Type -> Type
-FinSetObjAlg = Algebra FinSetObj
-
-public export
-FinSetObjCoalg : Type -> Type
-FinSetObjCoalg = Coalgebra FinSetObj
 
 -- A finite-dimensional "matrix" with variable numbers of elements per row.
 -- The parameter is the dimension minus one.

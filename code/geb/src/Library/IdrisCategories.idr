@@ -1524,6 +1524,16 @@ TupleP : Type -> Type
 TupleP = DPair Nat . flip Tuple
 
 public export
+TupleIndex : {atom : Type} -> TupleP atom -> Type
+TupleIndex (n ** _) = Fin n
+
+public export
+TupleElem : {atom : Type} -> (t : TupleP atom) -> TupleIndex {atom} t -> atom
+TupleElem {atom} (Z ** _) _ impossible
+TupleElem {atom} (S Z ** (x, ())) (FS _) = x
+TupleElem {atom} (S (S n) ** (_, _, xs)) (FS (FS i)) = TupleElem (n ** xs) i
+
+public export
 mapTupleP : (f : a -> b) -> TupleP a -> TupleP b
 mapTupleP f (n ** t) = (n ** mapTuple f t)
 
