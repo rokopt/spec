@@ -20,11 +20,9 @@ data ADTObjProjF : TupleP Type -> Type where
   ADT : {carrier : TupleP Type} ->
     TupleP (TupleP (TupleIndex {atom=Type} carrier)) -> ADTObjProjF carrier
 
--- The type of polynomial endofunctors in the product of categories
--- with types drawn from elements of the carrier tuple.
 public export
-ADTObjF : TupleP Type -> TupleP Type
-ADTObjF t = mapTupleP (const $ ADTObjProjF t) t
+ADTProductObjF : TupleP Type -> TupleP Type
+ADTProductObjF t = mapTupleP (const $ ADTObjProjF t) t
 
 public export
 LengthEquals : (carrier : Type) -> (Nat, List carrier) -> Type
