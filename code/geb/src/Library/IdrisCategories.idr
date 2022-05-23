@@ -1683,6 +1683,14 @@ interpretSubst0Alg : Subst0TypeAlg Type
 interpretSubst0Alg = CoproductAlgL {l=Subst0TypeFCases}
   (const (), const Void, ProductAdjunct, CoproductAdjunct)
 
+{-
+public export
+data Subst0MorphismF : {a, b : Type} -> (a -> (b, b)) ->
+    (a' : Type ** a' -> (Subst0TypeF b, Subst0TypeF b)) where
+  Subst0ToUnit : Subst0MorphismF carrier dom (Left())
+  Subst0FromVoid : Subst0MorphismF carrier (Right (Left())) cod
+  -}
+
 ----------------------------------------
 ---- The 2x-substitution-0 category ----
 ----------------------------------------

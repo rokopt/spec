@@ -12,6 +12,64 @@ import public LanguageDef.Atom
 ---------------------
 ---------------------
 
+public export
+data ADTObjF : Type -> Type where
+  ADTF : TupleP (TupleP carrier) -> ADTObjF carrier
+
+public export
+ADTObjAlgebra : Type -> Type
+ADTObjAlgebra = Algebra ADTObjF
+
+public export
+ADTObjCoalgebra : Type -> Type
+ADTObjCoalgebra = Coalgebra ADTObjF
+
+public export
+FreeADTObj : Type -> Type
+FreeADTObj = FreeMonad ADTObjF
+
+public export
+CofreeADTObj : Type -> Type
+CofreeADTObj = CofreeComonad ADTObjF
+
+public export
+MuADTObj : Type
+MuADTObj = Mu ADTObjF
+
+public export
+NuADTObj : Type
+NuADTObj = Nu ADTObjF
+
+public export
+record ADTMorphCarrier (objCarrier, objCarrier' : Type) where
+  constructor MkADTMorphCarrier
+  morphObj : Type
+  morphSignature : morphObj -> (ADTObjF objCarrier, ADTObjF objCarrier')
+
+mutual
+  public export
+  ADTMorphObjF : {objCarrier, objCarrier' : Type} ->
+    (morphCarrier : ADTMorphCarrier objCarrier objCarrier') -> Type
+  ADTMorphObjF {objCarrier} {objCarrier'} morphCarrier = ?ADTMorphObjF_hole
+
+  public export
+  ADTMorphSignatureF : {objCarrier, objCarrier' : Type} ->
+    (morphCarrier : ADTMorphCarrier objCarrier objCarrier') ->
+    ADTMorphObjF morphCarrier ->
+    (ADTObjF objCarrier, ADTObjF objCarrier')
+  ADTMorphSignatureF = ?ADTMorphSignatureF_hole
+
+public export
+data MuADTMorphObj : {objCarrier, objCarrier' : Type} ->
+    ADTMorphCarrier objCarrier objCarrier' -> Type where
+
+public export
+muADTMorphSignature : {objCarrier, objCarrier' : Type} ->
+  {morphCarrier : ADTMorphCarrier objCarrier objCarrier'} ->
+  MuADTMorphObj morphCarrier ->
+  (FreeADTObj objCarrier, FreeADTObj objCarrier')
+muADTMorphSignature = ?muADTMorphSignature_hole
+
 -- Given a `carrier` tuple constant types in a product category, `ADTObjF`
 -- is a polynomial ADT comprising coproducts of products of types drawn
 -- from the tuple of input (carrier) types.
