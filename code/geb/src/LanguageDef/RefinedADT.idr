@@ -1057,7 +1057,9 @@ record RefinedExpCategoryType where
   REC_Int : RefinedExpInterpretation REC_Obj
 
 -------------------------------
+-------------------------------
 ---- "Fixed" S-expressions ----
+-------------------------------
 -------------------------------
 
 public export
@@ -1101,8 +1103,25 @@ public export
 NuFSexp : {atom : Type} -> ArityMap atom -> Type
 NuFSexp = Nu . FSexpF
 
+public export
+record FSexpMorphCarrier {atom : Type} (arity : ArityMap atom) where
+  constructor FSexpMorphBundle
+  FSexpMorph : Type
+  FSexpObj : Type
+  FSexpDomain : FSexpMorph -> TupleP FSexpObj
+  FSexpCodomain : FSexpMorph -> FSexpObj
+
+{-
+public export
+data FSexpMorphF : {atom : Type} -> {arity : ArityMap atom} ->
+    (expCarrier : Type) -> (morphCarrier : Type) ->
+    (signature : morphCarrier -> (TupleP expCarrier, expCarrier))
+    -}
+
+--------------------------
 --------------------------
 ---- The topos FinSet ----
+--------------------------
 --------------------------
 
 public export

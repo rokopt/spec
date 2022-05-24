@@ -212,11 +212,11 @@ data FreeMonad : (Type -> Type) -> (Type -> Type) where
 
 public export
 FreeAlgebra : (Type -> Type) -> Type -> Type
-FreeAlgebra f a = Algebra (FreeMonad f) a
+FreeAlgebra f a = Algebra (FreeMonad f) (FreeMonad f a)
 
 public export
-ParamFreeAlgebra : (Type -> Type) -> Type -> Type -> Type
-ParamFreeAlgebra f v a = TermAlgebra (FreeMonad f) v a
+FreeAlgEval : (f : Type -> Type) -> Type
+FreeAlgEval f = (a, b : Type) -> (a -> b) -> FreeAlgebra f a -> FreeAlgebra f b
 
 public export
 InitialAlgebra : (Type -> Type) -> Type
@@ -236,11 +236,17 @@ data CofreeComonad : (Type -> Type) -> (Type -> Type) where
 
 public export
 CofreeCoalgebra : (Type -> Type) -> Type -> Type
-CofreeCoalgebra f a = Coalgebra (CofreeComonad f) a
+CofreeCoalgebra f a = Coalgebra f (CofreeComonad f a)
 
 public export
-ParamCofreeCoalgebra : (Type -> Type) -> Type -> Type -> Type
-ParamCofreeCoalgebra f l a = TreeCoalgebra (CofreeComonad f) l a
+CofreeCoalgMap : (f : Type -> Type) -> Type
+CofreeCoalgMap f =
+  (a, b : Type) -> (a -> b) -> CofreeCoalgebra f a -> CofreeCoalgebra f b
+
+public export
+CofreeCoalgSubtrees : (f : Type -> Type) -> Type
+CofreeCoalgSubtrees f =
+  (a, b : Type) -> (a -> b) -> CofreeCoalgebra f a -> Coalgebra f b
 
 public export
 TerminalCoalgebra : (Type -> Type) -> Type
@@ -280,42 +286,45 @@ public export
 Nu : (Type -> Type) -> Type
 Nu f = CofreeComonad f ()
 
+-- Parameterized general induction.
 public export
-ParamFreeCatamorphism : (Type -> Type) -> Type
-ParamFreeCatamorphism f =
-  {v, a : Type} -> ParamFreeAlgebra f v a -> FreeMonad f v -> a
+ParamFreeCata : (Type -> Type) -> Type
+ParamFreeCata f =
+  (v, a : Type) -> (v -> a) -> FreeAlgebra f a -> FreeMonad f v -> a
 
+-- Parameterized special induction.
 public export
-FreeCatamorphism : (Type -> Type) -> Type
-FreeCatamorphism f =
-  {a : Type} -> FreeAlgebra f a -> FreeMonad f a -> a
+ParamCata : (Type -> Type) -> Type
+ParamCata f =
+  (v, a : Type) -> (v -> a) -> Algebra f a -> FreeMonad f v -> a
 
+-- General induction.
 public export
-ParamCofreeAnamorphism : (Type -> Type) -> Type
-ParamCofreeAnamorphism f =
-  {l, a : Type} -> ParamCofreeCoalgebra f l a -> a -> CofreeComonad f l
+FreeCata : (Type -> Type) -> Type
+FreeCata f = (a : Type) -> FreeAlgebra f a -> FreeMonad f Void -> a
 
-public export
-CofreeAnamorphism : (Type -> Type) -> Type
-CofreeAnamorphism f =
-  {a : Type} -> CofreeCoalgebra f a -> a -> CofreeComonad f a
-
-public export
-ParamCatamorphism : (Type -> Type) -> Type
-ParamCatamorphism f = {v, a : Type} -> TermAlgebra f v a -> FreeMonad f v -> a
-
+-- Special induction.
 public export
 Catamorphism : (Type -> Type) -> Type
-Catamorphism f = {a : Type} -> Algebra f a -> FreeMonad f a -> a
+Catamorphism f = (a : Type) -> Algebra f a -> FreeMonad f Void -> a
 
 public export
-ParamAnamorphism : (Type -> Type) -> Type
-ParamAnamorphism f = {l, a : Type} ->
-  TreeCoalgebra f l a -> a -> CofreeComonad f l
+ParamCofreeAna : (Type -> Type) -> Type
+ParamCofreeAna f =
+  (l, a : Type) -> (a -> l) -> CofreeCoalgebra f a -> a -> CofreeComonad f l
+
+public export
+ParamAna : (Type -> Type) -> Type
+ParamAna f =
+  (l, a : Type) -> (a -> l) -> Coalgebra f a -> a -> CofreeComonad f l
+
+public export
+CofreeAna : (Type -> Type) -> Type
+CofreeAna f = (a : Type) -> CofreeCoalgebra f a -> a -> CofreeComonad f Unit
 
 public export
 Anamorphism : (Type -> Type) -> Type
-Anamorphism f = {a : Type} -> Coalgebra f a -> a -> CofreeComonad f a
+Anamorphism f = (a : Type) -> Coalgebra f a -> a -> CofreeComonad f Unit
 
 --------------------
 --------------------
@@ -1680,10 +1689,10 @@ CofreeSubst0Type = CofreeComonad Subst0TypeF
 
 -- Parameterized special induction.
 public export
-subst0TypeCata : ParamCatamorphism Subst0TypeF
-subst0TypeCata alg (InFree x) = alg $ case x of
-  TermVar var => TermVar var
-  TermComposite com => TermComposite $ case com of
+subst0TypeCata : ParamCata Subst0TypeF
+subst0TypeCata v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite com => alg $ case com of
     -- Unit
     Left () => Left ()
     Right com' => Right $ case com' of
@@ -1691,30 +1700,15 @@ subst0TypeCata alg (InFree x) = alg $ case x of
       Left () => Left ()
       Right com'' => Right $ case com'' of
         -- Product
-        Left (p1, p2) => Left $ (subst0TypeCata alg p1, subst0TypeCata alg p2)
+        Left (p1, p2) =>
+          Left
+            (subst0TypeCata v a subst alg p1,
+             subst0TypeCata v a subst alg p2)
         -- Coproduct
-        Right (c1, c2) => Right $ (subst0TypeCata alg c1, subst0TypeCata alg c2)
-
--- Parameterized general induction.
-public export
-subst0TypeFreeCatamorphism : ParamFreeCatamorphism Subst0TypeF
-subst0TypeFreeCatamorphism alg (InFree x) = alg $ case x of
-  TermVar var => TermVar var
-  TermComposite com => TermComposite $ InFree $ TermComposite $ case com of
-    -- Unit
-    Left () => Left ()
-    Right com' => Right $ case com' of
-      -- Void
-      Left () => Left ()
-      Right com'' => Right $ case com'' of
-        -- Product
-        Left (p1, p2) => Left $
-          (InFree $ TermVar $ subst0TypeFreeCatamorphism alg p1,
-           InFree $ TermVar $ subst0TypeFreeCatamorphism alg p2)
-        -- Coproduct
-        Right (c1, c2) => Right $
-          (InFree $ TermVar $ subst0TypeFreeCatamorphism alg c1,
-           InFree $ TermVar $ subst0TypeFreeCatamorphism alg c2)
+        Right (c1, c2) =>
+          Right
+            (subst0TypeCata v a subst alg c1,
+             subst0TypeCata v a subst alg c2)
 
 -- This algebra interprets the constructors of the substitution-0 category
 -- as types in the Idris type system.  This is possible because those
