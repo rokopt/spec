@@ -121,6 +121,10 @@ Functor f => Bifunctor (TermFunctor f) where
   bimap f' g' (TermVar x) = TermVar $ f' x
   bimap f' g' (TermComposite x) = TermComposite $ map g' x
 
+public export
+LimitIterF : (Type -> Type) -> (Type -> Type)
+LimitIterF f a = TermFunctor f a a
+
 -- For a given functor `F`, form the functor `Fa` defined by
 -- `Fa[x] = a * F[x]`.  We call it `TreeFunctor` because it turns
 -- an endofunctor which we can interpret as representing a datatype
@@ -135,6 +139,10 @@ data TreeFunctor : (Type -> Type) -> Type -> (Type -> Type) where
 export
 Functor f => Bifunctor (TreeFunctor f) where
   bimap f' g' (TreeNode x fx) = TreeNode (f' x) (map g' fx)
+
+public export
+ColimitIterF : (Type -> Type) -> (Type -> Type)
+ColimitIterF f a = TreeFunctor f a a
 
 export
 treeLabel : {f : Type -> Type} -> {l, a : Type} -> TreeFunctor f l a -> l
@@ -1504,6 +1512,14 @@ sumNTuple : {n : Nat} -> Tuple n Nat -> Nat
 sumNTuple = foldTuple (+) 0
 
 public export
+TupleProductType : {n : Nat} -> Tuple n Type -> Type
+TupleProductType = foldTuple Pair Unit
+
+public export
+tupleSumType : {n : Nat} -> Tuple n Type -> Type
+tupleSumType = foldTuple Either Void
+
+public export
 mapTuple : {n : Nat} -> {0 a : Type} -> (f : a -> b) -> Tuple n a -> Tuple n b
 mapTuple {n=Z} f () = ()
 mapTuple {n=(S n)} f (x, t) = (f x, mapTuple f {n} t)
@@ -1536,6 +1552,27 @@ TupleElem {atom} (S (S n) ** (_, _, xs)) (FS (FS i)) = TupleElem (n ** xs) i
 public export
 mapTupleP : (f : a -> b) -> TupleP a -> TupleP b
 mapTupleP f (n ** t) = (n ** mapTuple f t)
+
+public export
+TupleTypeMorphism : {m, n : Nat} ->
+  (domain : Tuple m Type) -> (codomain : Tuple n Type) ->
+  (atom :
+    (i : Nat) -> {auto ok : LT i n} ->
+    TupleProductType {n=m} domain -> tupleProj {n} i {ok} codomain) ->
+  Type
+TupleTypeMorphism {m} {n} domain codomain atom =
+  foldTuple ?blah Unit codomain
+
+public export
+interpretTupleTypeMorphism : {m, n : Nat} ->
+  {domain : Tuple m Type} -> {codomain : Tuple n Type} ->
+  {atom :
+    (i : Nat) -> {auto ok : LT i n} ->
+    TupleProductType {n=m} domain -> tupleProj {n} i {ok} codomain} ->
+  TupleTypeMorphism {m} {n} domain codomain atom ->
+  TupleProductType {n=m} domain -> TupleProductType {n} codomain
+interpretTupleTypeMorphism {m} {n} {domain} {codomain} {atom} morphism =
+  ?interpretTupleTypeMorphism_hole
 
 -----------------
 ---- Choices ----
@@ -1610,6 +1647,14 @@ Subst0TypeF : Type -> Type
 Subst0TypeF = CoproductFL Subst0TypeFCases
 
 public export
+Subst0TypeLimitIter : Type -> Type
+Subst0TypeLimitIter = LimitIterF Subst0TypeF
+
+public export
+Subst0TypeColimitIter : Type -> Type
+Subst0TypeColimitIter = ColimitIterF Subst0TypeF
+
+public export
 Subst0TypeAlg : Type -> Type
 Subst0TypeAlg = Algebra Subst0TypeF
 
@@ -1626,12 +1671,12 @@ NuSubst0Type : Type
 NuSubst0Type = Nu Subst0TypeF
 
 public export
-Subst0TypeFreeMonad : Type -> Type
-Subst0TypeFreeMonad = FreeMonad Subst0TypeF
+FreeSubst0Type : Type -> Type
+FreeSubst0Type = FreeMonad Subst0TypeF
 
 public export
-Subst0TypeCofreeComonad : Type -> Type
-Subst0TypeCofreeComonad = CofreeComonad Subst0TypeF
+CofreeSubst0Type : Type -> Type
+CofreeSubst0Type = CofreeComonad Subst0TypeF
 
 -- Parameterized special induction.
 public export
@@ -1683,13 +1728,59 @@ interpretSubst0Alg : Subst0TypeAlg Type
 interpretSubst0Alg = CoproductAlgL {l=Subst0TypeFCases}
   (const (), const Void, ProductAdjunct, CoproductAdjunct)
 
-{-
 public export
-data Subst0MorphismF : {a, b : Type} -> (a -> (b, b)) ->
-    (a' : Type ** a' -> (Subst0TypeF b, Subst0TypeF b)) where
-  Subst0ToUnit : Subst0MorphismF carrier dom (Left())
-  Subst0FromVoid : Subst0MorphismF carrier (Right (Left())) cod
-  -}
+Subst0Unit : FreeSubst0Type carrier
+Subst0Unit = inFreeComposite $ Left ()
+
+public export
+Subst0Void : FreeSubst0Type carrier
+Subst0Void = inFreeComposite $ Right $ Left ()
+
+public export
+Subst0Product :
+  FreeSubst0Type carrier -> FreeSubst0Type carrier -> FreeSubst0Type carrier
+Subst0Product a b = inFreeComposite $ Right $ Right $ Left (a, b)
+
+public export
+Subst0Coproduct :
+  FreeSubst0Type carrier -> FreeSubst0Type carrier -> FreeSubst0Type carrier
+Subst0Coproduct a b = inFreeComposite $ Right $ Right $ Right (a, b)
+
+public export
+data Subst0MorphismF :
+    {objCarrier : Type} ->
+    (morphCarrier :
+      FreeSubst0Type objCarrier -> FreeSubst0Type objCarrier -> Type) ->
+    FreeSubst0Type objCarrier -> FreeSubst0Type objCarrier ->
+    Type where
+  Subst0Id :
+    Subst0MorphismF morphCarrier obj obj
+  Subst0ToUnit :
+    Subst0MorphismF morphCarrier domain Subst0Unit
+  Subst0FromVoid :
+    Subst0MorphismF morphCarrier Subst0Void codomain
+  Subst0TermLeft :
+    {objCarrier : Type} -> {a, b, c : FreeSubst0Type objCarrier} ->
+    (morphCarrier :
+      FreeSubst0Type objCarrier -> FreeSubst0Type objCarrier -> Type) ->
+    morphCarrier Subst0Unit a ->
+    morphCarrier (Subst0Coproduct a b) c ->
+    Subst0MorphismF morphCarrier Subst0Unit c
+  Subst0TermRight :
+    {objCarrier : Type} -> {a, b, c : FreeSubst0Type objCarrier} ->
+    (morphCarrier :
+      FreeSubst0Type objCarrier -> FreeSubst0Type objCarrier -> Type) ->
+    morphCarrier Subst0Unit b ->
+    morphCarrier (Subst0Coproduct a b) c ->
+    Subst0MorphismF morphCarrier Subst0Unit c
+  Subst0TermPair :
+    {objCarrier : Type} -> {a, b, c : FreeSubst0Type objCarrier} ->
+    (morphCarrier :
+      FreeSubst0Type objCarrier -> FreeSubst0Type objCarrier -> Type) ->
+    morphCarrier Subst0Unit a ->
+    morphCarrier Subst0Unit b ->
+    morphCarrier (Subst0Product a b) c ->
+    Subst0MorphismF morphCarrier Subst0Unit c
 
 ----------------------------------------
 ---- The 2x-substitution-0 category ----
@@ -1829,41 +1920,41 @@ subst0NewConstraintFunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
 mutual
   public export
   subst0TypeMap : {0 a, b : Type} ->
-    (a -> b) -> Subst0TypeFreeMonad a -> Subst0TypeFreeMonad b
+    (a -> b) -> FreeSubst0Type a -> FreeSubst0Type b
   subst0TypeMap f x = ?mapSubst0TypeFree_hole
 
   public export
-  subst0TypeReturn : {0 a : Type} -> a -> Subst0TypeFreeMonad a
+  subst0TypeReturn : {0 a : Type} -> a -> FreeSubst0Type a
   subst0TypeReturn x = InFree $ TermVar x
 
   public export
   subst0TypeApply : {0 a, b : Type} ->
-    Subst0TypeFreeMonad (a -> b) ->
-    Subst0TypeFreeMonad a ->
-    Subst0TypeFreeMonad b
+    FreeSubst0Type (a -> b) ->
+    FreeSubst0Type a ->
+    FreeSubst0Type b
   subst0TypeApply x = ?subst0TypeApply_hole
 
   public export
   subst0TypeJoin : {0 a : Type} ->
-    Subst0TypeFreeMonad (Subst0TypeFreeMonad a) -> Subst0TypeFreeMonad a
+    FreeSubst0Type (FreeSubst0Type a) -> FreeSubst0Type a
   subst0TypeJoin x = ?subst0TypeJoin_hole
 
   public export
   Subst0TypeFreeAlgebra : (0 a : Type) ->
-    Algebra Subst0TypeF (Subst0TypeFreeMonad a)
+    Algebra Subst0TypeF (FreeSubst0Type a)
   Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
 
 public export
-Functor Subst0TypeFreeMonad where
+Functor FreeSubst0Type where
   map = subst0TypeMap
 
 public export
-Applicative Subst0TypeFreeMonad where
+Applicative FreeSubst0Type where
   pure = subst0TypeReturn
   (<*>) = subst0TypeApply
 
 public export
-Monad Subst0TypeFreeMonad where
+Monad FreeSubst0Type where
   join = subst0TypeJoin
 
 public export

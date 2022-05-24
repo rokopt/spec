@@ -6,6 +6,60 @@ import public LanguageDef.Atom
 
 %default total
 
+-------------------------------------
+-------------------------------------
+---- S-expressions made of pairs ----
+-------------------------------------
+-------------------------------------
+
+public export
+SExpBaseF : Type -> Type
+SExpBaseF = ProductMonad
+
+public export
+SExpAlg : Type -> Type
+SExpAlg = Algebra SExpBaseF
+
+public export
+SExpCoalg : Type -> Type
+SExpCoalg = Coalgebra SExpBaseF
+
+public export
+SExpTermF : Type -> Type -> Type
+SExpTermF = TermFunctor SExpBaseF
+
+public export
+SExpTreeF : Type -> Type -> Type
+SExpTreeF = TreeFunctor SExpBaseF
+
+public export
+SExpTermAlg : Type -> Type -> Type
+SExpTermAlg = TermAlgebra SExpBaseF
+
+public export
+SExpTreeCoalg : Type -> Type -> Type
+SExpTreeCoalg = TreeCoalgebra SExpBaseF
+
+public export
+FreeSExp : Type -> Type
+FreeSExp = FreeMonad SExpBaseF
+
+public export
+CofreeSExp : Type -> Type
+CofreeSExp = CofreeComonad SExpBaseF
+
+public export
+SPairF : Type -> Type -> Type
+SPairF var carrier = ProductMonad (SExpTermF var carrier)
+
+public export
+SPairTermF : Type -> Type -> Type
+SPairTermF var = TermFunctor (ProductMonad . SExpTermF var) var
+
+public export
+SPairTreeF : Type -> Type -> Type
+SPairTreeF var = TreeFunctor (ProductMonad . SExpTermF var) var
+
 ---------------------
 ---------------------
 ---- Finite ADTs ----
@@ -41,34 +95,27 @@ NuADTObj : Type
 NuADTObj = Nu ADTObjF
 
 public export
-record ADTMorphCarrier (objCarrier, objCarrier' : Type) where
+adtCases : {carrier : Type} -> ADTObjF carrier -> TupleP (TupleP carrier)
+adtCases (ADTF t) = t
+
+public export
+adtIndex : {carrier : Type} -> ADTObjF carrier -> Type
+adtIndex = TupleIndex . adtCases
+
+public export
+adtConstructor :
+  {carrier : Type} -> (adt : ADTObjF carrier) -> adtIndex adt -> TupleP carrier
+adtConstructor adt i = TupleElem (adtCases adt) i
+
+public export
+adtCase :
+  {carrier : Type} -> (adt : ADTObjF carrier) -> adtIndex adt -> TupleP carrier
+
+public export
+record ADTMorphCarrier (objCarrier : Type) where
   constructor MkADTMorphCarrier
   morphObj : Type
-  morphSignature : morphObj -> (ADTObjF objCarrier, ADTObjF objCarrier')
-
-mutual
-  public export
-  ADTMorphObjF : {objCarrier, objCarrier' : Type} ->
-    (morphCarrier : ADTMorphCarrier objCarrier objCarrier') -> Type
-  ADTMorphObjF {objCarrier} {objCarrier'} morphCarrier = ?ADTMorphObjF_hole
-
-  public export
-  ADTMorphSignatureF : {objCarrier, objCarrier' : Type} ->
-    (morphCarrier : ADTMorphCarrier objCarrier objCarrier') ->
-    ADTMorphObjF morphCarrier ->
-    (ADTObjF objCarrier, ADTObjF objCarrier')
-  ADTMorphSignatureF = ?ADTMorphSignatureF_hole
-
-public export
-data MuADTMorphObj : {objCarrier, objCarrier' : Type} ->
-    ADTMorphCarrier objCarrier objCarrier' -> Type where
-
-public export
-muADTMorphSignature : {objCarrier, objCarrier' : Type} ->
-  {morphCarrier : ADTMorphCarrier objCarrier objCarrier'} ->
-  MuADTMorphObj morphCarrier ->
-  (FreeADTObj objCarrier, FreeADTObj objCarrier')
-muADTMorphSignature = ?muADTMorphSignature_hole
+  morphSignature : morphObj -> (TupleP objCarrier, objCarrier)
 
 -- Given a `carrier` tuple constant types in a product category, `ADTObjF`
 -- is a polynomial ADT comprising coproducts of products of types drawn
