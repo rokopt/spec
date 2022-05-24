@@ -48,6 +48,9 @@ mutual
     Either (interpFinADTObj t) $ interpFinNECoproduct t' ts
 
 public export
+data FinADTMorph : FinADTObj -> FinADTObj -> Type where
+
+public export
 data FinADTFunctor : Type where
   FinIdF : FinADTFunctor
   FinComposeF : FinADTFunctor -> FinADTFunctor -> FinADTFunctor
