@@ -6,6 +6,54 @@ import public LanguageDef.Atom
 
 %default total
 
+---------------------
+---------------------
+---- Finite ADTs ----
+---------------------
+---------------------
+
+public export
+data FinADTObj : Type where
+  FinProduct : List FinADTObj -> FinADTObj
+  FinCoproduct : List FinADTObj -> FinADTObj
+
+mutual
+  public export
+  interpFinADTObj : FinADTObj -> Type
+  interpFinADTObj (FinProduct l) = interpFinProduct l
+  interpFinADTObj (FinCoproduct l) = interpFinCoproduct l
+
+  public export
+  interpFinNEProduct : FinADTObj -> List FinADTObj -> Type
+  interpFinNEProduct t [] =
+    interpFinADTObj t
+  interpFinNEProduct t (t' :: ts) =
+    Pair (interpFinADTObj t) $ interpFinNEProduct t' ts
+
+  public export
+  interpFinProduct : List FinADTObj -> Type
+  interpFinProduct [] = Unit
+  interpFinProduct (t :: ts) = interpFinNEProduct t ts
+
+  public export
+  interpFinCoproduct : List FinADTObj -> Type
+  interpFinCoproduct [] = Void
+  interpFinCoproduct (t :: ts) = interpFinNECoproduct t ts
+
+  public export
+  interpFinNECoproduct : FinADTObj -> List FinADTObj -> Type
+  interpFinNECoproduct t [] =
+    interpFinADTObj t
+  interpFinNECoproduct t (t' :: ts) =
+    Either (interpFinADTObj t) $ interpFinNECoproduct t' ts
+
+public export
+data FinADTFunctor : Type where
+  FinIdF : FinADTFunctor
+  FinComposeF : FinADTFunctor -> FinADTFunctor -> FinADTFunctor
+  FinProductF : List FinADTFunctor -> FinADTFunctor
+  FinCoproductF : List FinADTFunctor -> FinADTFunctor
+
 -------------------------------------
 -------------------------------------
 ---- S-expressions made of pairs ----
