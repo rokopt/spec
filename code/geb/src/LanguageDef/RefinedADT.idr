@@ -12,6 +12,14 @@ import public LanguageDef.Atom
 ---------------------------------------------------
 ---------------------------------------------------
 
+-- The finite ordinal of the size equal to the natural number
+-- that represents it.  We will treat it as an object of the
+-- "augmented" or "algebraist's" version of the "simplex category",
+-- known as `FinOrd`.  It is the category whose objects are finite ordinals
+-- and whose morphisms are order-preserving maps.
+--
+-- Thus, 0 represents empty, and for all `n`, `S n` represents
+-- [0..n] inclusive.
 public export
 FinOrdObj : Type
 FinOrdObj = Nat
@@ -34,8 +42,16 @@ natRangeToList (NatRangeMapOne _ _ _ i) = [i]
 natRangeToList (NatRangeMapMulti _ _ _ _ i rmap) = i :: natRangeToList rmap
 
 public export
+showNatRange : {0 m, n, m', n' : _} -> NatRangeMap m n m' n' -> String
+showNatRange (NatRangeMapOne m m' n' i) =
+  show m ++ "/" ++ show m ++ "->" ++ show i ++ "/" ++ show n'
+showNatRange (NatRangeMapMulti m n m' n' i rmap) =
+  show m ++ "/" ++ show (S n + m) ++ "->" ++ show i ++ "/" ++ show n' ++ ", " ++
+  showNatRange rmap
+
+public export
 Show (NatRangeMap m n m' n') where
-  show = show . natRangeToList
+  show = showNatRange
 
 public export
 listToNatRange :
@@ -51,6 +67,8 @@ listToNatRange m (S n) m' n' i (i' :: is) =
     (Yes _, Yes _, Just rmap) => Just (NatRangeMapMulti m n m' n' i rmap)
     (_, _, _) => Nothing
 
+-- A morphism in the augmented simplex category, namely, an
+-- order-preserving map.
 public export
 data FinOrdMorph : FinOrdObj -> FinOrdObj -> Type where
   FinOrdFromVoid : (n : Nat) -> FinOrdMorph 0 n
@@ -63,7 +81,9 @@ finOrdMorphToList (FinOrdRange rmap) = natRangeToList rmap
 
 public export
 Show (FinOrdMorph m n) where
-  show = show . finOrdMorphToList
+  show (FinOrdFromVoid 0) = "([]->[])"
+  show (FinOrdFromVoid (S n)) = "([]->[0.." ++ show n ++ "])"
+  show (FinOrdRange rmap) = "(" ++ showNatRange rmap ++ ")"
 
 public export
 listToFinOrdMorph : (m, n : Nat) -> List Nat -> Maybe (FinOrdMorph m n)
