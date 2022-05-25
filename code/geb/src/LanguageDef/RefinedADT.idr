@@ -32,8 +32,8 @@ FinOrdObj = Nat
 ---- Simplex category morphisms ----
 ------------------------------------
 
--- A representation of a mapping from the ranges of natural numbers
--- [m..n] -> [m'..n'] (inclusive).
+-- A representation of an order-preserving mapping from the ranges of natural
+-- numbers [m..n] -> [m'..n'] (inclusive).
 public export
 data NatRangeMap : (m, n, m', n' : Nat) -> Type where
   NatRangeMapOne : (m, m', n', i : Nat) ->
@@ -44,6 +44,31 @@ data NatRangeMap : (m, n, m', n' : Nat) -> Type where
     {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
     NatRangeMap (S m) n i n' ->
     NatRangeMap m n m' n'
+
+-- A diagonally-increasing mapping from the range [m..l+m] to [m'..l'+l+m'].
+public export
+natRangeDiagonal : (m, m', l, l' : Nat) ->
+  NatRangeMap m (l + m) m' (l' + l + m')
+natRangeDiagonal m m' 0 l' =
+  rewrite plusZeroRightNeutral l' in
+  NatRangeMapOne m m' (l' + m') m' {mlti=reflexive} {iltn=(lteAddLeft l' m')}
+natRangeDiagonal m m' (S l) l' =
+  let
+    psll' = sym $ plusSuccRightSucc l' l
+    pslm = plusSuccRightSucc l m
+  in
+  NatRangeMapMulti m (S l + m) m' (l' + S l + m') m'
+    {mltn=(LTESucc $ lteAddLeft l m)}
+    {mlti=reflexive}
+    {iltn=(rewrite psll' in lteSuccRight $ lteAddLeft (l' + l) m')}
+    $
+    rewrite psll' in
+    rewrite pslm in
+    natRangeDiagonal (S m) m' l (S l')
+
+public export
+natRangeId : (m, i : Nat) -> NatRangeMap m (i + m) m (i + m)
+natRangeId m i = natRangeDiagonal m m i 0
 
 public export
 natRangeToList : {0 m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> List Nat
@@ -105,6 +130,13 @@ MkFinOrdMorph : (m, n : Nat) -> (l : List Nat) ->
 MkFinOrdMorph m n l {valid} with (listToFinOrdMorph m n l)
   MkFinOrdMorph m n l {valid=Refl} | Just morph = morph
   MkFinOrdMorph m n l {valid=Refl} | Nothing impossible
+
+public export
+finOrdId : (n : Nat) -> FinOrdMorph n n
+finOrdId 0 = FinOrdFromVoid 0
+finOrdId (S n) =
+  rewrite sym (plusZeroRightNeutral n) in
+  FinOrdRange $ natRangeId 0 n
 
 ---------------------
 ---------------------
