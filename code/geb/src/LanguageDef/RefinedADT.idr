@@ -45,6 +45,22 @@ data NatRangeMap : (m, n, m', n' : Nat) -> Type where
     NatRangeMap (S m) n i n' ->
     NatRangeMap m n m' n'
 
+public export
+natRangeExtendCodomainBelow : NatRangeMap m n (S m') n -> NatRangeMap m n m' n
+natRangeExtendCodomainBelow
+  (NatRangeMapOne m (S m') m i {mlti} {iltn}) =
+    NatRangeMapOne
+      m m' m m
+      {mlti=(transitive (lteSuccLeft mlti) iltn)}
+      {iltn=reflexive}
+natRangeExtendCodomainBelow
+  (NatRangeMapMulti m n (S m') n i {mltn} {mlti} {iltn} nrm) =
+    NatRangeMapMulti
+      m n m' n i nrm
+      {mltn}
+      {mlti=(lteSuccLeft mlti)}
+      {iltn}
+
 -- A diagonally-increasing mapping from [n..i+n] to [n..i+n].
 -- (n=next idx to use)
 -- (i=pred # remaining)
@@ -53,14 +69,15 @@ natRangeId : (n, i : Nat) -> NatRangeMap n (i + n) n (i + n)
 natRangeId n 0 = NatRangeMapOne n n n n {mlti=reflexive} {iltn=reflexive}
 natRangeId n (S i) =
   let iltn = LTESucc $ lteAddLeft i n in
+  -- natRangeExtendCodomainBelow $
   NatRangeMapMulti
-    n (S i + n) n (S i + n) (S n)
+    n (S i + n) n (S i + n) n
     {mltn=iltn}
-    {mlti=(lteSuccRight reflexive)}
-    {iltn}
+    {mlti=reflexive}
+    {iltn=(lteSuccRight $ lteAddLeft i n)}
     $
     rewrite plusSuccRightSucc i n in
-    natRangeId (S n) i
+    natRangeExtendCodomainBelow $ natRangeId (S n) i
 
 public export
 natRangeToList : {0 m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> List Nat
@@ -132,7 +149,9 @@ finOrdId (S n) =
 public export
 finOrdCompose : {m, n, p : Nat} ->
   FinOrdMorph n p -> FinOrdMorph m n -> FinOrdMorph m p
-finOrdCompose {m} {n} {p} np mn = ?finOrdCompose_hole
+finOrdCompose {m} {n=0} {p} (FinOrdFromVoid _) mn = ?finOrdCompose_hole
+finOrdCompose {m=0} {n} {p} np (FinOrdFromVoid _) = ?finOrdCompose_hole_2
+finOrdCompose {m} {n} {p} np mn = ?finOrdCompose_hole_3
 
 ---------------------
 ---------------------

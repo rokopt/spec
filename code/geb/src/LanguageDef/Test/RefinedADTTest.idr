@@ -45,8 +45,17 @@ finOrdMorphTest10 =
 finOrdMorphTest11 : FinOrdMorph 0 0
 finOrdMorphTest11 = finOrdId 0
 
-finOrdMorphTest12 : FinOrdMorph 3 3
-finOrdMorphTest12 = finOrdId 3
+finOrdMorphTest12 : FinOrdMorph 1 1
+finOrdMorphTest12 = finOrdId 1
+
+finOrdMorphTest13 : FinOrdMorph 2 2
+finOrdMorphTest13 = finOrdId 2
+
+finOrdMorphTest14 : FinOrdMorph 3 3
+finOrdMorphTest14 = finOrdId 3
+
+finOrdMorphTest15 : FinOrdMorph 4 4
+finOrdMorphTest15 = finOrdId 4
 
 export
 languageDefRefinedADTTest : IO ()
@@ -60,5 +69,8 @@ languageDefRefinedADTTest = do
   printLn $ show finOrdMorphTest9
   printLn $ show finOrdMorphTest11
   printLn $ show finOrdMorphTest12
+  printLn $ show finOrdMorphTest13
+  printLn $ show finOrdMorphTest14
+  printLn $ show finOrdMorphTest15
   printLn "End languageDefRefinedADTTest."
   pure ()
