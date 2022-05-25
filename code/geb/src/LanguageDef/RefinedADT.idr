@@ -45,30 +45,22 @@ data NatRangeMap : (m, n, m', n' : Nat) -> Type where
     NatRangeMap (S m) n i n' ->
     NatRangeMap m n m' n'
 
--- A diagonally-increasing mapping from the range [m..l+m] to [m'..l'+l+m'].
+-- A diagonally-increasing mapping from [n..i+n] to [n..i+n].
+-- (n=next idx to use)
+-- (i=pred # remaining)
 public export
-natRangeDiagonal : (m, m', l, l' : Nat) ->
-  NatRangeMap m (l + m) m' (l' + l + m')
-natRangeDiagonal m m' 0 l' =
-  rewrite plusZeroRightNeutral l' in
-  NatRangeMapOne m m' (l' + m') m' {mlti=reflexive} {iltn=(lteAddLeft l' m')}
-natRangeDiagonal m m' (S l) l' =
-  let
-    psll' = sym $ plusSuccRightSucc l' l
-    pslm = plusSuccRightSucc l m
-  in
-  NatRangeMapMulti m (S l + m) m' (l' + S l + m') m'
-    {mltn=(LTESucc $ lteAddLeft l m)}
-    {mlti=reflexive}
-    {iltn=(rewrite psll' in lteSuccRight $ lteAddLeft (l' + l) m')}
+natRangeId : (n, i : Nat) -> NatRangeMap n (i + n) n (i + n)
+natRangeId n 0 = NatRangeMapOne n n n n {mlti=reflexive} {iltn=reflexive}
+natRangeId n (S i) =
+  let iltn = LTESucc $ lteAddLeft i n in
+  NatRangeMapMulti
+    n (S i + n) n (S i + n) (S n)
+    {mltn=iltn}
+    {mlti=(lteSuccRight reflexive)}
+    {iltn}
     $
-    rewrite psll' in
-    rewrite pslm in
-    natRangeDiagonal (S m) m' l (S l')
-
-public export
-natRangeId : (m, i : Nat) -> NatRangeMap m (i + m) m (i + m)
-natRangeId m i = natRangeDiagonal m m i 0
+    rewrite plusSuccRightSucc i n in
+    natRangeId (S n) i
 
 public export
 natRangeToList : {0 m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> List Nat
@@ -135,8 +127,12 @@ public export
 finOrdId : (n : Nat) -> FinOrdMorph n n
 finOrdId 0 = FinOrdFromVoid 0
 finOrdId (S n) =
-  rewrite sym (plusZeroRightNeutral n) in
-  FinOrdRange $ natRangeId 0 n
+  FinOrdRange $ rewrite sym (plusZeroRightNeutral n) in natRangeId 0 n
+
+public export
+finOrdCompose : {m, n, p : Nat} ->
+  FinOrdMorph n p -> FinOrdMorph m n -> FinOrdMorph m p
+finOrdCompose {m} {n} {p} np mn = ?finOrdCompose_hole
 
 ---------------------
 ---------------------
