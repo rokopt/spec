@@ -62,19 +62,16 @@ natRangeExtendCodomainBelow
       {iltn}
 
 -- A diagonally-increasing mapping from [n..i+n] to [n..i+n].
--- (n=next idx to use)
--- (i=pred # remaining)
 public export
 natRangeId : (n, i : Nat) -> NatRangeMap n (i + n) n (i + n)
 natRangeId n 0 = NatRangeMapOne n n n n {mlti=reflexive} {iltn=reflexive}
 natRangeId n (S i) =
-  let iltn = LTESucc $ lteAddLeft i n in
-  -- natRangeExtendCodomainBelow $
+  let ialn = lteAddLeft i n in
   NatRangeMapMulti
     n (S i + n) n (S i + n) n
-    {mltn=iltn}
+    {mltn=(LTESucc ialn)}
     {mlti=reflexive}
-    {iltn=(lteSuccRight $ lteAddLeft i n)}
+    {iltn=(lteSuccRight ialn)}
     $
     rewrite plusSuccRightSucc i n in
     natRangeExtendCodomainBelow $ natRangeId (S n) i
