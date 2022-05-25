@@ -42,6 +42,12 @@ finOrdMorphTest10 : Assertion
 finOrdMorphTest10 =
   Assert $ isNothing (listToFinOrdMorph 5 20 [3, 7, 6, 13, 19])
 
+finOrdMorphTest11 : FinOrdMorph 0 0
+finOrdMorphTest11 = finOrdId 0
+
+finOrdMorphTest12 : FinOrdMorph 3 3
+finOrdMorphTest12 = finOrdId 3
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -52,5 +58,7 @@ languageDefRefinedADTTest = do
   printLn $ show finOrdMorphTest6
   printLn $ show finOrdMorphTest7
   printLn $ show finOrdMorphTest9
+  printLn $ show finOrdMorphTest11
+  printLn $ show finOrdMorphTest12
   printLn "End languageDefRefinedADTTest."
   pure ()
