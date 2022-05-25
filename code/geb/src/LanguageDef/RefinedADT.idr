@@ -12,6 +12,10 @@ import public LanguageDef.Atom
 ---------------------------------------------------
 ---------------------------------------------------
 
+----------------------------------
+---- Simplex category objects ----
+----------------------------------
+
 -- The finite ordinal of the size equal to the natural number
 -- that represents it.  We will treat it as an object of the
 -- "augmented" or "algebraist's" version of the "simplex category",
@@ -23,6 +27,10 @@ import public LanguageDef.Atom
 public export
 FinOrdObj : Type
 FinOrdObj = Nat
+
+------------------------------------
+---- Simplex category morphisms ----
+------------------------------------
 
 -- A representation of a mapping from the ranges of natural numbers
 -- [m..n+m] -> [m'..n'] (inclusive).
