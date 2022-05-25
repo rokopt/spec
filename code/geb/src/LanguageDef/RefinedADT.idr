@@ -107,20 +107,20 @@ public export
 natRangeCompose : {m, n, m', n', m'', n'' : Nat} ->
   NatRangeMap m' n' m'' n'' -> NatRangeMap m n m' n' -> NatRangeMap m n m'' n''
 natRangeCompose
-  (NatRangeMapOne m m' n' i {mlti} {iltn})
-  (NatRangeMapOne p m m j {mlti=mltj} {iltn=jltn}) =
+  (NatRangeMapOne m' m'' n'' i {mlti} {iltn})
+  (NatRangeMapOne m m' m' j {mlti=mltj} {iltn=jltn}) =
     ?natRangeCompose_hole
 natRangeCompose
-  (NatRangeMapOne m m' n' i {mlti} {iltn})
-  (NatRangeMapMulti p p' m m j {mltn} {mlti=mltj} {iltn=jltn} rmap) =
+  (NatRangeMapOne m' m'' n'' i {mlti} {iltn})
+  (NatRangeMapMulti l m m' m' j {mltn=lltm} {mlti=mltj} {iltn=jltm} rmap) =
     ?natRangeCompose_hole_2
 natRangeCompose
-  (NatRangeMapMulti m m' n n' i {mltn} {mlti} {iltn} rmap)
-  (NatRangeMapOne p m m' j {mlti=mltj} {iltn=jtlm}) =
+  (NatRangeMapMulti m' m'' n' n'' i {mltn} {mlti} {iltn} rmap)
+  (NatRangeMapOne m m' m'' j {mlti=mltj} {iltn=jtlm}) =
     ?natRangeCompose_hole_3
 natRangeCompose
-  (NatRangeMapMulti m m' n n' i {mltn} {mlti} {iltn} rmap)
-  (NatRangeMapMulti p p' m m' j {mltn=mltn'} {mlti=mltj} {iltn=jtln} rmap') =
+  (NatRangeMapMulti m' m'' n' n'' i {mltn} {mlti} {iltn} rmap)
+  (NatRangeMapMulti l m m' m'' j {mltn=lltm} {mlti=mltj} {iltn=jtlm} rmap') =
     ?natRangeCompose_hole_4
 
 -- A morphism in the augmented simplex category, namely, an
