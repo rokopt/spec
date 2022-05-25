@@ -23,15 +23,59 @@ data NatRangeMap : (m, n, m', n' : Nat) -> Type where
   NatRangeMapOne : (m, m', n', i : Nat) ->
     {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
     NatRangeMap m 0 m' n'
-  NatRangeMapMulti : (m, n, m', n', m'', n'' : Nat) ->
+  NatRangeMapMulti : (m, n, m', n', i : Nat) ->
     {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
     NatRangeMap (S m) n i n' ->
     NatRangeMap m (S n) m' n'
 
 public export
+natRangeToList : {0 m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> List Nat
+natRangeToList (NatRangeMapOne _ _ _ i) = [i]
+natRangeToList (NatRangeMapMulti _ _ _ _ i rmap) = i :: natRangeToList rmap
+
+public export
+Show (NatRangeMap m n m' n') where
+  show = show . natRangeToList
+
+public export
+listToNatRange :
+  (m, n, m', n' : Nat) -> Nat -> List Nat -> Maybe (NatRangeMap m n m' n')
+listToNatRange m 0 m' n' i [] =
+  case (isLTE m' i, isLTE i n') of
+    (Yes _, Yes _) => Just (NatRangeMapOne m m' n' i)
+    (_, _) => Nothing
+listToNatRange m 0 m' n' i (_ :: _) = Nothing
+listToNatRange m (S n) m' n' i [] = Nothing
+listToNatRange m (S n) m' n' i (i' :: is) =
+  case (isLTE m' i, isLTE i n', listToNatRange (S m) n i n' i' is) of
+    (Yes _, Yes _, Just rmap) => Just (NatRangeMapMulti m n m' n' i rmap)
+    (_, _, _) => Nothing
+
+public export
 data FinOrdMorph : FinOrdObj -> FinOrdObj -> Type where
   FinOrdFromVoid : (n : Nat) -> FinOrdMorph 0 n
   FinOrdRange : NatRangeMap 0 n 0 n' -> FinOrdMorph (S n) (S n')
+
+public export
+finOrdMorphToList : {0 m, n : Nat} -> FinOrdMorph m n -> List Nat
+finOrdMorphToList (FinOrdFromVoid _) = []
+finOrdMorphToList (FinOrdRange rmap) = natRangeToList rmap
+
+public export
+Show (FinOrdMorph m n) where
+  show = show . finOrdMorphToList
+
+public export
+listToFinOrdMorph : (m, n : Nat) -> List Nat -> Maybe (FinOrdMorph m n)
+listToFinOrdMorph 0 n [] = Just $ FinOrdFromVoid n
+listToFinOrdMorph 0 n (_ :: _) = Nothing
+listToFinOrdMorph (S _) _ [] = Nothing
+listToFinOrdMorph _ (S _) [] = Nothing
+listToFinOrdMorph Z _ (_ :: _) = Nothing
+listToFinOrdMorph _ Z (_ :: _) = Nothing
+listToFinOrdMorph (S n) (S n') (i :: l) = case listToNatRange 0 n 0 n' i l of
+  Just rmap => Just (FinOrdRange rmap)
+  Nothing => Nothing
 
 ---------------------
 ---------------------
