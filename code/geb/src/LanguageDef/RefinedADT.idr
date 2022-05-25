@@ -6,6 +6,33 @@ import public LanguageDef.Atom
 
 %default total
 
+---------------------------------------------------
+---------------------------------------------------
+---- Simplex (augmented/algebraist's) category ----
+---------------------------------------------------
+---------------------------------------------------
+
+public export
+FinOrdObj : Type
+FinOrdObj = Nat
+
+-- A representation of a mapping from the ranges of natural numbers
+-- [m..n+m] -> [m'..n'] (inclusive).
+public export
+data NatRangeMap : (m, n, m', n' : Nat) -> Type where
+  NatRangeMapOne : (m, m', n', i : Nat) ->
+    {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
+    NatRangeMap m 0 m' n'
+  NatRangeMapMulti : (m, n, m', n', m'', n'' : Nat) ->
+    {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
+    NatRangeMap (S m) n i n' ->
+    NatRangeMap m (S n) m' n'
+
+public export
+data FinOrdMorph : FinOrdObj -> FinOrdObj -> Type where
+  FinOrdFromVoid : (n : Nat) -> FinOrdMorph 0 n
+  FinOrdRange : NatRangeMap 0 n 0 n' -> FinOrdMorph (S n) (S n')
+
 ---------------------
 ---------------------
 ---- Finite ADTs ----
