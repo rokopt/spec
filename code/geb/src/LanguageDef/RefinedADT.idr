@@ -77,6 +77,13 @@ listToFinOrdMorph (S n) (S n') (i :: l) = case listToNatRange 0 n 0 n' i l of
   Just rmap => Just (FinOrdRange rmap)
   Nothing => Nothing
 
+public export
+MkFinOrdMorph : (m, n : Nat) -> (l : List Nat) ->
+  {auto valid : isJust (listToFinOrdMorph m n l) = True} -> FinOrdMorph m n
+MkFinOrdMorph m n l {valid} with (listToFinOrdMorph m n l)
+  MkFinOrdMorph m n l {valid=Refl} | Just morph = morph
+  MkFinOrdMorph m n l {valid=Refl} | Nothing impossible
+
 ---------------------
 ---------------------
 ---- Finite ADTs ----
