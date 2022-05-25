@@ -10,6 +10,17 @@ import public Control.Function
 %default total
 
 public export
+lteTolt : {m, n : Nat} -> LTE m n -> Not (m = n) -> LT m n
+lteTolt {m=0} {n=Z} LTEZero neq = void $ neq Refl
+lteTolt {m=0} {n=(S n)} LTEZero neq = LTESucc LTEZero
+lteTolt {m=(S m)} {n=(S n)} (LTESucc x) neq =
+  LTESucc $ lteTolt {m} {n} x (\eq => case eq of Refl => neq Refl)
+
+public export
+lteAddLeft : (m, n : Nat) -> LTE n (m + n)
+lteAddLeft m n = rewrite plusCommutative m n in lteAddRight {m} n
+
+public export
 voidF : (a : Type) -> Void -> a
 voidF _ x = void x
 
