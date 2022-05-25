@@ -189,9 +189,13 @@ natRangeCompose {m} {n} {m'} {n'} {m''} {n''} rng rng' =
       (NatRangeMapOne {mlti=mlti'} {iltn=iltn'} p q r i,
        NatRangeMapMulti {mltn} {mlti=mlti''} {iltn=iltn''} s t p p u rng'') =>
         ?h2
-      (NatRangeMapMulti _ _ _ _ i rng'', NatRangeMapOne _ _ _ j) =>
+      (NatRangeMapMulti {mltn} {mlti} {iltn} p q r s i rng'',
+       NatRangeMapOne {mlti=mlti'} {iltn=iltn'} t p q j) =>
         ?h3
-      (NatRangeMapMulti _ _ _ _ i rng'', NatRangeMapMulti _ _ _ _ j rng''') =>
+      (NatRangeMapMulti
+        {mltn} {mlti} {iltn} p q r s i rng'',
+       NatRangeMapMulti
+        {mltn=mltn'} {mlti=mlti'} {iltn=iltn'} t u p q j rng''') =>
         ?h4
     {-
       NatRangeMapMulti
