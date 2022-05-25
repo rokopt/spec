@@ -72,11 +72,15 @@ listToNatRange m n m' n' i (i' :: is) =
 
 public export
 natRangeLeftBounds : NatRangeMap m n m' n' -> LTE m n
-natRangeLeftBounds = ?natRangeLeftBounds_hole
+natRangeLeftBounds (NatRangeMapOne _ _ _ _) = reflexive
+natRangeLeftBounds (NatRangeMapMulti {mltn} _ _ _ _ _ _) = lteSuccLeft mltn
 
 public export
 natRangeRightBounds : NatRangeMap m n m' n' -> LTE m' n'
-natRangeRightBounds = ?natRangeRightBounds_hole
+natRangeRightBounds (NatRangeMapOne {mlti} {iltn} _ _ _ _) =
+  transitive mlti iltn
+natRangeRightBounds (NatRangeMapMulti {mlti} {iltn} _ _ _ _ _ _) =
+  transitive mlti iltn
 
 public export
 natRangeExtendCodomainBelow : NatRangeMap m n (S m') n -> NatRangeMap m n m' n
