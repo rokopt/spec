@@ -71,6 +71,14 @@ listToNatRange m n m' n' i (i' :: is) =
     (_, _, _) => Nothing
 
 public export
+natRangeLeftBounds : NatRangeMap m n m' n' -> LTE m n
+natRangeLeftBounds = ?natRangeLeftBounds_hole
+
+public export
+natRangeRightBounds : NatRangeMap m n m' n' -> LTE m' n'
+natRangeRightBounds = ?natRangeRightBounds_hole
+
+public export
 natRangeExtendCodomainBelow : NatRangeMap m n (S m') n -> NatRangeMap m n m' n
 natRangeExtendCodomainBelow
   (NatRangeMapOne m (S m') m i {mlti} {iltn}) =
@@ -101,6 +109,49 @@ natRangeId n (S i) =
     rewrite plusSuccRightSucc i n in
     natRangeExtendCodomainBelow $ natRangeId (S n) i
 
+public export
+natRangeEval : {m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> (i : Nat) ->
+  {auto mlti : LTE m i} -> {auto iltn : LTE i n} -> Nat
+natRangeEval (NatRangeMapOne _ _ _ i') _ = i'
+natRangeEval {mlti} {iltn}
+  (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i =
+    case decEq m i of
+      Yes Refl => i'
+      No neq => natRangeEval rng i {mlti=(lteTolt mlti neq)} {iltn}
+
+public export
+natRangeEvalGT : {m, n, m', n' : Nat} ->
+  (rng : NatRangeMap m n m' n') -> (i : Nat) ->
+  {auto mlti : LTE m i} -> {auto iltn : LTE i n} ->
+  LTE m' (natRangeEval rng i {mlti} {iltn})
+natRangeEvalGT (NatRangeMapOne {mlti=mlti'} _ _ _ _) _ = mlti'
+natRangeEvalGT {mlti} {iltn}
+  (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i
+  with (decEq m i)
+    natRangeEvalGT {mlti} {iltn}
+      (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} i n m' n' i' rng) i
+      | Yes Refl = mlti'
+    natRangeEvalGT {mlti} {iltn}
+      (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i
+      | No neq =
+        transitive mlti' $ natRangeEvalGT rng i {mlti=(lteTolt mlti neq)}
+
+public export
+natRangeEvalLT : {m, n, m', n' : Nat} ->
+  (rng : NatRangeMap m n m' n') -> (i : Nat) ->
+  {auto mlti : LTE m i} -> {auto iltn : LTE i n} ->
+  LTE (natRangeEval rng i {mlti} {iltn}) n'
+natRangeEvalLT (NatRangeMapOne {iltn=iltn'} _ _ _ _) _ = iltn'
+natRangeEvalLT {mlti} {iltn}
+  (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i
+  with (decEq m i)
+    natRangeEvalLT {mlti} {iltn}
+      (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} i n m' n' i' rng) i
+      | Yes Refl = iltn'
+    natRangeEvalLT {mlti} {iltn}
+      (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i
+      | No neq = natRangeEvalLT rng i {mlti=(lteTolt mlti neq)}
+
 -- Compose a mapping from [m'..n'] to [m''..n''] after a mapping from
 -- [m..n] to [m'..n'] to produce a mapping from [m..n] to [m''..n''].
 public export
@@ -109,7 +160,9 @@ natRangeCompose : {m, n, m', n', m'', n'' : Nat} ->
 natRangeCompose
   (NatRangeMapOne m' m'' n'' i {mlti} {iltn})
   (NatRangeMapOne m m' m' j {mlti=mltj} {iltn=jltn}) =
-    ?natRangeCompose_hole
+    case isLTE i j of
+      Yes lij => ?hmmmmm
+      No nlij => ?natRangeCompose_hole_1b
 natRangeCompose
   (NatRangeMapOne m' m'' n'' i {mlti} {iltn})
   (NatRangeMapMulti l m m' m' j {mltn=lltm} {mlti=mltj} {iltn=jltm} rmap) =
