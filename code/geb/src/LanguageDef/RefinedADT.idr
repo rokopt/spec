@@ -42,16 +42,12 @@ natRangeToList (NatRangeMapOne _ _ _ i) = [i]
 natRangeToList (NatRangeMapMulti _ _ _ _ i rmap) = i :: natRangeToList rmap
 
 public export
-showNatRange : {0 m, n, m', n' : _} -> NatRangeMap m n m' n' -> String
-showNatRange (NatRangeMapOne m m' n' i) =
-  show m ++ "/" ++ show m ++ "->" ++ show i ++ "/" ++ show n'
-showNatRange (NatRangeMapMulti m n m' n' i rmap) =
-  show m ++ "/" ++ show (S n + m) ++ "->" ++ show i ++ "/" ++ show n' ++ ", " ++
-  showNatRange rmap
-
-public export
 Show (NatRangeMap m n m' n') where
-  show = showNatRange
+  show (NatRangeMapOne m m' n' i) =
+    show m ++ "/" ++ show m ++ "->" ++ show i ++ "/" ++ show n'
+  show (NatRangeMapMulti m n m' n' i rmap) =
+    show m ++ "/" ++ show (S n + m) ++ "->" ++ show i ++ "/" ++ show n' ++
+    ", " ++ show rmap
 
 public export
 listToNatRange :
@@ -83,7 +79,7 @@ public export
 Show (FinOrdMorph m n) where
   show (FinOrdFromVoid 0) = "([]->[])"
   show (FinOrdFromVoid (S n)) = "([]->[0.." ++ show n ++ "])"
-  show (FinOrdRange rmap) = "(" ++ showNatRange rmap ++ ")"
+  show (FinOrdRange rmap) = "(" ++ show rmap ++ ")"
 
 public export
 listToFinOrdMorph : (m, n : Nat) -> List Nat -> Maybe (FinOrdMorph m n)
