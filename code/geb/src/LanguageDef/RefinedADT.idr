@@ -106,7 +106,22 @@ natRangeId n (S i) =
 public export
 natRangeCompose : {m, n, m', n', m'', n'' : Nat} ->
   NatRangeMap m' n' m'' n'' -> NatRangeMap m n m' n' -> NatRangeMap m n m'' n''
-natRangeCompose rng rng' = ?natRangeCompose_hole
+natRangeCompose
+  (NatRangeMapOne m m' n' i {mlti} {iltn})
+  (NatRangeMapOne p m m j {mlti=mltj} {iltn=jltn}) =
+    ?natRangeCompose_hole
+natRangeCompose
+  (NatRangeMapOne m m' n' i {mlti} {iltn})
+  (NatRangeMapMulti p p' m m j {mltn} {mlti=mltj} {iltn=jltn} rmap) =
+    ?natRangeCompose_hole_2
+natRangeCompose
+  (NatRangeMapMulti m m' n n' i {mltn} {mlti} {iltn} rmap)
+  (NatRangeMapOne p m m' j {mlti=mltj} {iltn=jtlm}) =
+    ?natRangeCompose_hole_3
+natRangeCompose
+  (NatRangeMapMulti m m' n n' i {mltn} {mlti} {iltn} rmap)
+  (NatRangeMapMulti p p' m m' j {mltn=mltn'} {mlti=mltj} {iltn=jtln} rmap') =
+    ?natRangeCompose_hole_4
 
 -- A morphism in the augmented simplex category, namely, an
 -- order-preserving map.
