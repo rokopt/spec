@@ -46,6 +46,31 @@ data NatRangeMap : (m, n, m', n' : Nat) -> Type where
     NatRangeMap m n m' n'
 
 public export
+natRangeToList : {0 m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> List Nat
+natRangeToList (NatRangeMapOne _ _ _ i) = [i]
+natRangeToList (NatRangeMapMulti _ _ _ _ i rmap) = i :: natRangeToList rmap
+
+public export
+Show (NatRangeMap m n m' n') where
+  show (NatRangeMapOne m m' n' i) =
+    show m ++ "/" ++ show m ++ "->" ++ show i ++ "/" ++ show n'
+  show (NatRangeMapMulti m n m' n' i rmap) =
+    show m ++ "/" ++ show n ++ "->" ++ show i ++ "/" ++ show n' ++ ", " ++
+    show rmap
+
+public export
+listToNatRange :
+  (m, n, m', n' : Nat) -> Nat -> List Nat -> Maybe (NatRangeMap m n m' n')
+listToNatRange m n m' n' i [] =
+  case (decEq m n, isLTE m' i, isLTE i n') of
+    (Yes Refl, Yes _, Yes _) => Just (NatRangeMapOne m m' n' i)
+    (_, _) => Nothing
+listToNatRange m n m' n' i (i' :: is) =
+  case (isLT m n, isLTE m' i, isLTE i n', listToNatRange (S m) n i n' i' is) of
+    (Yes _, Yes _, Yes _, Just rmap) => Just (NatRangeMapMulti m n m' n' i rmap)
+    (_, _, _) => Nothing
+
+public export
 natRangeExtendCodomainBelow : NatRangeMap m n (S m') n -> NatRangeMap m n m' n
 natRangeExtendCodomainBelow
   (NatRangeMapOne m (S m') m i {mlti} {iltn}) =
@@ -76,30 +101,12 @@ natRangeId n (S i) =
     rewrite plusSuccRightSucc i n in
     natRangeExtendCodomainBelow $ natRangeId (S n) i
 
+-- Compose a mapping from [m'..n'] to [m''..n''] after a mapping from
+-- [m..n] to [m'..n'] to produce a mapping from [m..n] to [m''..n''].
 public export
-natRangeToList : {0 m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> List Nat
-natRangeToList (NatRangeMapOne _ _ _ i) = [i]
-natRangeToList (NatRangeMapMulti _ _ _ _ i rmap) = i :: natRangeToList rmap
-
-public export
-Show (NatRangeMap m n m' n') where
-  show (NatRangeMapOne m m' n' i) =
-    show m ++ "/" ++ show m ++ "->" ++ show i ++ "/" ++ show n'
-  show (NatRangeMapMulti m n m' n' i rmap) =
-    show m ++ "/" ++ show n ++ "->" ++ show i ++ "/" ++ show n' ++ ", " ++
-    show rmap
-
-public export
-listToNatRange :
-  (m, n, m', n' : Nat) -> Nat -> List Nat -> Maybe (NatRangeMap m n m' n')
-listToNatRange m n m' n' i [] =
-  case (decEq m n, isLTE m' i, isLTE i n') of
-    (Yes Refl, Yes _, Yes _) => Just (NatRangeMapOne m m' n' i)
-    (_, _) => Nothing
-listToNatRange m n m' n' i (i' :: is) =
-  case (isLT m n, isLTE m' i, isLTE i n', listToNatRange (S m) n i n' i' is) of
-    (Yes _, Yes _, Yes _, Just rmap) => Just (NatRangeMapMulti m n m' n' i rmap)
-    (_, _, _) => Nothing
+natRangeCompose : {m, n, m', n', m'', n'' : Nat} ->
+  NatRangeMap m' n' m'' n'' -> NatRangeMap m n m' n' -> NatRangeMap m n m'' n''
+natRangeCompose rng rng' = ?natRangeCompose_hole
 
 -- A morphism in the augmented simplex category, namely, an
 -- order-preserving map.
@@ -146,9 +153,13 @@ finOrdId (S n) =
 public export
 finOrdCompose : {m, n, p : Nat} ->
   FinOrdMorph n p -> FinOrdMorph m n -> FinOrdMorph m p
-finOrdCompose {m} {n=0} {p} (FinOrdFromVoid _) mn = ?finOrdCompose_hole
-finOrdCompose {m=0} {n} {p} np (FinOrdFromVoid _) = ?finOrdCompose_hole_2
-finOrdCompose {m} {n} {p} np mn = ?finOrdCompose_hole_3
+finOrdCompose {m=0} {n} {p} _ (FinOrdFromVoid n) = FinOrdFromVoid p
+finOrdCompose {m=(S m)} {n=0} (FinOrdFromVoid _) _ impossible
+finOrdCompose {m=(S m)} {n=(S n)} {p=0} _ _ impossible
+finOrdCompose {m=(S m)} {n=(S n)} {p=(S p)} (FinOrdFromVoid _) _ impossible
+finOrdCompose {m=(S m)} {n=(S n)} {p=(S p)} _ (FinOrdFromVoid _) impossible
+finOrdCompose {m=(S m)} {n=(S n)} {p=(S p)}
+  (FinOrdRange np) (FinOrdRange mn) = FinOrdRange $ natRangeCompose np mn
 
 ---------------------
 ---------------------
