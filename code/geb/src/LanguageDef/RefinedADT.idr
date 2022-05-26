@@ -19,9 +19,18 @@ record FinNERangeObj where
   frPredLength : Nat
 
 public export
+finNERangeLast : FinNERangeObj -> Nat
+finNERangeLast (MkFinRange s pl) = pl + s
+
+public export
+finNERangeLength : FinNERangeObj -> Nat
+finNERangeLength = S . frPredLength
+
+public export
 Show FinNERangeObj where
-  show (MkFinRange s pl) =
-    "[" ++ show s ++ ".." ++ show (s + pl) ++ "](" ++ show (S pl) ++ ")"
+  show r =
+    "[" ++ show (frStart r) ++ ".." ++ show (finNERangeLast r) ++ "](" ++
+    show (finNERangeLength r) ++ ")"
 
 public export
 Eq FinNERangeObj where
@@ -50,11 +59,11 @@ record FinNERangeMorph where
   frDomain : FinNERangeObj
   frCodomain : FinNERangeObj
   frMap : List Nat
-  0 frValidLen : length frMap = S (frPredLength frDomain)
+  0 frValidLen : length frMap = (finNERangeLength frDomain)
   0 frPreserving :
     boundAndOrdered
       (frStart frCodomain)
-      (frStart frCodomain + frPredLength frCodomain)
+      (finNERangeLast frCodomain)
       frMap
     = True
 
@@ -82,6 +91,24 @@ Ord FinNERangeMorph where
           GT => GT
         LT => LT
         GT => GT
+
+public export
+incList : (predLen : Nat) -> (start : Nat) -> List Nat
+incList Z s = [s]
+incList (S pl) s = s :: incList pl (S s)
+
+public export
+incListLen :
+  (predLen : Nat) -> (start : Nat) -> length (incList predLen start) = S predLen
+incListLen Z _ = Refl
+incListLen (S pl) _ = cong S $ incListLen pl _
+
+public export
+finNERangeId : FinNERangeObj -> FinNERangeMorph
+finNERangeId r@(MkFinRange s pl) =
+  MkFinNERangeMorph r r (incList pl s)
+    (incListLen pl s)
+    ?finNERangeID_hole_pres
 
 ---------------------------------------------------
 ---------------------------------------------------
