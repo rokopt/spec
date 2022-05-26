@@ -71,6 +71,14 @@ listToNatRange m n m' n' i (i' :: is) =
     (_, _, _) => Nothing
 
 public export
+MkNatRange : (m, n, m', n', i : Nat) -> (l : List Nat) ->
+  {auto valid : isJust (listToNatRange m n m' n' i l) = True} ->
+  NatRangeMap m n m' n'
+MkNatRange m n m' n' i l {valid} with (listToNatRange m n m' n' i l)
+  MkNatRange m n m' n' i l {valid=Refl} | Just rng = rng
+  MkNatRange m n m' n' i l {valid=Refl} | Nothing impossible
+
+public export
 natRangeLeftBounds : NatRangeMap m n m' n' -> LTE m n
 natRangeLeftBounds (NatRangeMapOne _ _ _ _) = reflexive
 natRangeLeftBounds (NatRangeMapMulti {mltn} _ _ _ _ _ _) = lteSuccLeft mltn

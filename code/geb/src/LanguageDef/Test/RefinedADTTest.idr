@@ -57,6 +57,15 @@ finOrdMorphTest14 = finOrdId 3
 finOrdMorphTest15 : FinOrdMorph 4 4
 finOrdMorphTest15 = finOrdId 4
 
+finOrdMorphTest16 : NatRangeMap 3 9 1 10
+finOrdMorphTest16 = MkNatRange 3 9 1 10 2 [2, 4, 5, 5, 9, 10]
+
+finOrdMorphTest17 : NatRangeMap 1 10 3 7
+finOrdMorphTest17 = MkNatRange 1 10 3 7 3 [3, 3, 3, 3, 4, 5, 6, 6, 7]
+
+finOrdMorphTest18 : NatRangeMap 3 9 3 7
+finOrdMorphTest18 = natRangeCompose finOrdMorphTest17 finOrdMorphTest16
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -72,5 +81,8 @@ languageDefRefinedADTTest = do
   printLn $ show finOrdMorphTest13
   printLn $ show finOrdMorphTest14
   printLn $ show finOrdMorphTest15
+  printLn $ show finOrdMorphTest16
+  printLn $ show finOrdMorphTest17
+  printLn $ show finOrdMorphTest18
   printLn "End languageDefRefinedADTTest."
   pure ()
