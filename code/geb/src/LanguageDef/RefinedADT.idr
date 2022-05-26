@@ -135,14 +135,14 @@ record FinNERangeMorph where
 public export
 record FinNERangeMorphIsValid (morph : FinNERangeMorph) where
   constructor FinNERangeMorphConditions
-  0 frValidLen : length morph.frMap = (finNERangeLength morph.frDomain)
-  0 frBoundedBelow : boundedBelow (frStart morph.frCodomain) morph.frMap
-  0 frBoundedAbove : boundedAbove (finNERangeLast morph.frCodomain) morph.frMap
-  0 frOrdered : ordered morph.frMap
+  frValidLen : length morph.frMap = (finNERangeLength morph.frDomain)
+  frBoundedBelow : boundedBelow (frStart morph.frCodomain) morph.frMap
+  frBoundedAbove : boundedAbove (finNERangeLast morph.frCodomain) morph.frMap
+  frOrdered : ordered morph.frMap
 
 public export
 ValidFinNERangeMorph : Type
-ValidFinNERangeMorph = Subset FinNERangeMorph FinNERangeMorphIsValid
+ValidFinNERangeMorph = DPair FinNERangeMorph FinNERangeMorphIsValid
 
 public export
 Show FinNERangeMorph where
@@ -172,13 +172,25 @@ Ord FinNERangeMorph where
 public export
 finNERangeId : FinNERangeObj -> ValidFinNERangeMorph
 finNERangeId r@(MkFinRange s pl) =
-  Element
-    (MkFinNERangeMorph r r (incList pl s))
-    (FinNERangeMorphConditions
-      (incListLen pl s)
-      (incListBoundedBelow pl s)
-      (incListBoundedAbove pl s)
-      (incListOrdered pl s))
+  (MkFinNERangeMorph r r (incList pl s) **
+   (FinNERangeMorphConditions
+    (incListLen pl s)
+    (incListBoundedBelow pl s)
+    (incListBoundedAbove pl s)
+    (incListOrdered pl s)))
+
+public export
+Composable : FinNERangeMorph -> FinNERangeMorph -> Type
+Composable g f = g.frDomain = f.frCodomain
+
+public export
+composeFinNERange :
+  (g, f : ValidFinNERangeMorph) ->
+  Composable g.fst f.fst ->
+  (gf : ValidFinNERangeMorph **
+   (gf.fst.frDomain = f.fst.frDomain,
+    gf.fst.frCodomain = g.fst.frCodomain))
+composeFinNERange g f c = ?composeFinNERange_hole
 
 ---------------------------------------------------
 ---------------------------------------------------
