@@ -4,6 +4,8 @@ import public Data.Maybe
 import public Data.List
 import public Data.Nat
 import public Data.Vect
+import public Data.DPair
+import public Data.Bool
 import public Decidable.Equality
 import public Control.Function
 

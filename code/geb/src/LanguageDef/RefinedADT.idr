@@ -6,6 +6,81 @@ import public LanguageDef.Atom
 
 %default total
 
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+---- Category of ranges of natural numbers with order-preserving maps ----
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+
+public export
+record FinNERangeObj where
+  constructor MkFinRange
+  frStart : Nat
+  frPredLength : Nat
+
+public export
+Show FinNERangeObj where
+  show (MkFinRange s pl) =
+    "[" ++ show s ++ ".." ++ show (s + pl) ++ "](" ++ show (S pl) ++ ")"
+
+public export
+Eq FinNERangeObj where
+  (==) (MkFinRange s1 pl1) (MkFinRange s2 pl2) =
+    s1 == s2 && pl1 == pl2
+
+public export
+Ord FinNERangeObj where
+  compare (MkFinRange s1 pl1) (MkFinRange s2 pl2) =
+    case compare s1 s2 of
+      EQ => compare pl1 pl2
+      LT => LT
+      GT => GT
+
+public export
+boundAndOrdered : Ord a => a -> a -> List a -> Bool
+boundAndOrdered min max [] = True
+boundAndOrdered min max (x :: xs) =
+  min <= x && x <= max && boundAndOrdered min max xs
+
+public export
+record FinNERangeMorph where
+  constructor MkFinNERangeMorph
+  frDomain : FinNERangeObj
+  frCodomain : FinNERangeObj
+  frMap : List Nat
+  0 frValidLen : length frMap = S (frPredLength frDomain)
+  0 frPreserving :
+    boundAndOrdered
+      (frStart frCodomain)
+      (frStart frCodomain + frPredLength frCodomain)
+      frMap
+    = True
+
+public export
+Show FinNERangeMorph where
+  show (MkFinNERangeMorph dom cod map _ _) =
+    "[" ++ show dom ++ "->" ++ show cod ++ ":" ++ show map ++ "]"
+
+public export
+Eq FinNERangeMorph where
+  (==)
+    (MkFinNERangeMorph dom1 cod1 map1 _ _)
+    (MkFinNERangeMorph dom2 cod2 map2 _ _) =
+      dom1 == dom2 && cod1 == cod2 && map1 == map2
+
+public export
+Ord FinNERangeMorph where
+  compare
+    (MkFinNERangeMorph dom1 cod1 map1 _ _)
+    (MkFinNERangeMorph dom2 cod2 map2 _ _) =
+      case compare dom1 dom2 of
+        EQ => case compare cod1 cod2 of
+          EQ => compare map1 map2
+          LT => LT
+          GT => GT
+        LT => LT
+        GT => GT
+
 ---------------------------------------------------
 ---------------------------------------------------
 ---- Simplex (augmented/algebraist's) category ----
