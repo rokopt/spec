@@ -84,7 +84,7 @@ record FinNERangeMorphIsValid (morph : FinNERangeMorph) where
 
 public export
 ValidFinNERangeMorph : Type
-ValidFinNERangeMorph = DPair FinNERangeMorph FinNERangeMorphIsValid
+ValidFinNERangeMorph = Subset FinNERangeMorph FinNERangeMorphIsValid
 
 public export
 Show FinNERangeMorph where
@@ -163,8 +163,9 @@ incListOrdered predLen start with (incList predLen start) proof pf
 public export
 finNERangeId : FinNERangeObj -> ValidFinNERangeMorph
 finNERangeId r@(MkFinRange s pl) =
-  (MkFinNERangeMorph r r (incList pl s) **
-    FinNERangeMorphConditions
+  Element
+    (MkFinNERangeMorph r r (incList pl s))
+    (FinNERangeMorphConditions
       (incListLen pl s)
       (incListBoundedBelow pl s)
       (incListBoundedAbove pl s)
