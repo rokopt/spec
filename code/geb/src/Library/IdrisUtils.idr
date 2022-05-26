@@ -8,6 +8,8 @@ import public Data.DPair
 import public Data.Bool
 import public Decidable.Equality
 import public Control.Function
+import public Control.Relation
+import public Control.Order
 
 %default total
 

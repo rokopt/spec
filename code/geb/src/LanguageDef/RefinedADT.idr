@@ -40,7 +40,9 @@ public export
 boundAndOrdered : Ord a => a -> a -> List a -> Bool
 boundAndOrdered min max [] = True
 boundAndOrdered min max (x :: xs) =
-  min <= x && x <= max && boundAndOrdered min max xs
+  min <= x && x <= max && case xs of
+    [] => True
+    (x' :: _) => x <= x' && boundAndOrdered min max xs
 
 public export
 record FinNERangeMorph where
