@@ -73,28 +73,36 @@ record FinNERangeMorph where
   frDomain : FinNERangeObj
   frCodomain : FinNERangeObj
   frMap : List Nat
-  0 frValidLen : length frMap = (finNERangeLength frDomain)
-  0 frBoundedBelow : boundedBelow (frStart frCodomain) frMap
-  0 frBoundedAbove : boundedAbove (finNERangeLast frCodomain) frMap
-  0 frOrdered : ordered frMap
+
+public export
+record FinNERangeMorphIsValid (morph : FinNERangeMorph) where
+  constructor FinNERangeMorphConditions
+  0 frValidLen : length morph.frMap = (finNERangeLength morph.frDomain)
+  0 frBoundedBelow : boundedBelow (frStart morph.frCodomain) morph.frMap
+  0 frBoundedAbove : boundedAbove (finNERangeLast morph.frCodomain) morph.frMap
+  0 frOrdered : ordered morph.frMap
+
+public export
+ValidFinNERangeMorph : Type
+ValidFinNERangeMorph = DPair FinNERangeMorph FinNERangeMorphIsValid
 
 public export
 Show FinNERangeMorph where
-  show (MkFinNERangeMorph dom cod map _ _ _ _) =
+  show (MkFinNERangeMorph dom cod map) =
     "[" ++ show dom ++ "->" ++ show cod ++ ":" ++ show map ++ "]"
 
 public export
 Eq FinNERangeMorph where
   (==)
-    (MkFinNERangeMorph dom1 cod1 map1 _ _ _ _)
-    (MkFinNERangeMorph dom2 cod2 map2 _ _ _ _) =
+    (MkFinNERangeMorph dom1 cod1 map1)
+    (MkFinNERangeMorph dom2 cod2 map2) =
       dom1 == dom2 && cod1 == cod2 && map1 == map2
 
 public export
 Ord FinNERangeMorph where
   compare
-    (MkFinNERangeMorph dom1 cod1 map1 _ _ _ _)
-    (MkFinNERangeMorph dom2 cod2 map2 _ _ _ _) =
+    (MkFinNERangeMorph dom1 cod1 map1)
+    (MkFinNERangeMorph dom2 cod2 map2) =
       case compare dom1 dom2 of
         EQ => case compare cod1 cod2 of
           EQ => compare map1 map2
@@ -133,21 +141,34 @@ public export
 incListOrdered : (predLen : Nat) -> (start : Nat) ->
   ordered (incList predLen start)
 incListOrdered predLen start with (incList predLen start) proof pf
-  incListOrdered Z start | [] = ?incListOrdered_hole
-  incListOrdered Z start | [x] = ?incListOrdered_hole_2a
-  incListOrdered Z start | (x :: x' :: xs) = ?incListOrdered_hole_2b
-  incListOrdered (S pl) start | [] = ?incListOrdered_hole_3
-  incListOrdered (S pl) start | [x] = ?incListOrdered_hole_3a
-  incListOrdered (S pl) start | (x :: x' :: xs) = ?incListOrdered_hole_3b
+  incListOrdered Z start | [] = case pf of Refl impossible
+  incListOrdered Z start | [x] = ()
+  incListOrdered Z start | (x :: x' :: xs) = case pf of Refl impossible
+  incListOrdered (S pl) start | [] = case pf of Refl impossible
+  incListOrdered (S pl) start | [x] = case pl of
+    Z => case pf of Refl impossible
+    (S _) => case pf of Refl impossible
+  incListOrdered (S pl) start | (x :: x' :: xs) =
+    let recurse = incListOrdered pl (S start) in
+    let tleq = snd (consInjective pf) in
+    rewrite sym (fst (consInjective pf)) in
+    case pl of
+      Z => case tleq of
+        Refl => (lteSuccRight reflexive, ())
+      (S pl') =>
+        rewrite sym (fst (consInjective tleq)) in
+        rewrite sym (snd (consInjective tleq)) in
+        (lteSuccRight reflexive, recurse)
 
 public export
-finNERangeId : FinNERangeObj -> FinNERangeMorph
+finNERangeId : FinNERangeObj -> ValidFinNERangeMorph
 finNERangeId r@(MkFinRange s pl) =
-  MkFinNERangeMorph r r (incList pl s)
-    (incListLen pl s)
-    (incListBoundedBelow pl s)
-    (incListBoundedAbove pl s)
-    (incListOrdered pl s)
+  (MkFinNERangeMorph r r (incList pl s) **
+    FinNERangeMorphConditions
+      (incListLen pl s)
+      (incListBoundedBelow pl s)
+      (incListBoundedAbove pl s)
+      (incListOrdered pl s))
 
 ---------------------------------------------------
 ---------------------------------------------------
