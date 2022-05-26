@@ -25,6 +25,11 @@ lteAddLeft : (m, n : Nat) -> LTE n (m + n)
 lteAddLeft m n = rewrite plusCommutative m n in lteAddRight {m} n
 
 public export
+compareNatSucc : (n : Nat) -> compareNat n (S n) = LT
+compareNatSucc Z = Refl
+compareNatSucc (S n) = compareNatSucc n
+
+public export
 voidF : (a : Type) -> Void -> a
 voidF _ x = void x
 

@@ -46,12 +46,26 @@ Ord FinNERangeObj where
       GT => GT
 
 public export
-boundAndOrdered : Ord a => a -> a -> List a -> Bool
-boundAndOrdered min max [] = True
-boundAndOrdered min max (x :: xs) =
-  min <= x && x <= max && case xs of
-    [] => True
-    (x' :: _) => x <= x' && boundAndOrdered min max xs
+boundedBelow : Nat -> List Nat -> Type
+boundedBelow min [] = ()
+boundedBelow min (x :: xs) = (LTE min x, boundedBelow min xs)
+
+public export
+boundedAbove : Nat -> List Nat -> Type
+boundedAbove max [] = ()
+boundedAbove max (x :: xs) = (LTE x max, boundedAbove max xs)
+
+public export
+ordered : List Nat -> Type
+ordered [] = ()
+ordered [x] = ()
+ordered (x :: x' :: xs) = (LTE x x', ordered (x' :: xs))
+
+public export
+boundedBelowSucc : {n : Nat} -> {l : List Nat} ->
+  boundedBelow (S n) l -> boundedBelow n l
+boundedBelowSucc {l=[]} _ = ()
+boundedBelowSucc {l=(x :: xs)} (b, bs) = (lteSuccLeft b, boundedBelowSucc bs)
 
 public export
 record FinNERangeMorph where
@@ -60,30 +74,27 @@ record FinNERangeMorph where
   frCodomain : FinNERangeObj
   frMap : List Nat
   0 frValidLen : length frMap = (finNERangeLength frDomain)
-  0 frPreserving :
-    boundAndOrdered
-      (frStart frCodomain)
-      (finNERangeLast frCodomain)
-      frMap
-    = True
+  0 frBoundedBelow : boundedBelow (frStart frCodomain) frMap
+  0 frBoundedAbove : boundedAbove (finNERangeLast frCodomain) frMap
+  0 frOrdered : ordered frMap
 
 public export
 Show FinNERangeMorph where
-  show (MkFinNERangeMorph dom cod map _ _) =
+  show (MkFinNERangeMorph dom cod map _ _ _ _) =
     "[" ++ show dom ++ "->" ++ show cod ++ ":" ++ show map ++ "]"
 
 public export
 Eq FinNERangeMorph where
   (==)
-    (MkFinNERangeMorph dom1 cod1 map1 _ _)
-    (MkFinNERangeMorph dom2 cod2 map2 _ _) =
+    (MkFinNERangeMorph dom1 cod1 map1 _ _ _ _)
+    (MkFinNERangeMorph dom2 cod2 map2 _ _ _ _) =
       dom1 == dom2 && cod1 == cod2 && map1 == map2
 
 public export
 Ord FinNERangeMorph where
   compare
-    (MkFinNERangeMorph dom1 cod1 map1 _ _)
-    (MkFinNERangeMorph dom2 cod2 map2 _ _) =
+    (MkFinNERangeMorph dom1 cod1 map1 _ _ _ _)
+    (MkFinNERangeMorph dom2 cod2 map2 _ _ _ _) =
       case compare dom1 dom2 of
         EQ => case compare cod1 cod2 of
           EQ => compare map1 map2
@@ -104,11 +115,39 @@ incListLen Z _ = Refl
 incListLen (S pl) _ = cong S $ incListLen pl _
 
 public export
+incListBoundedBelow : (predLen : Nat) -> (start : Nat) ->
+  boundedBelow start (incList predLen start)
+incListBoundedBelow Z start = (reflexive, ())
+incListBoundedBelow (S pl) start =
+  (reflexive, boundedBelowSucc $ incListBoundedBelow pl (S start))
+
+public export
+incListBoundedAbove : (predLen : Nat) -> (start : Nat) ->
+  boundedAbove (predLen + start) (incList predLen start)
+incListBoundedAbove Z start = (reflexive, ())
+incListBoundedAbove (S pl) start =
+  (lteSuccRight $ lteAddLeft pl start,
+   rewrite plusSuccRightSucc pl start in incListBoundedAbove pl (S start))
+
+public export
+incListOrdered : (predLen : Nat) -> (start : Nat) ->
+  ordered (incList predLen start)
+incListOrdered predLen start with (incList predLen start) proof pf
+  incListOrdered Z start | [] = ?incListOrdered_hole
+  incListOrdered Z start | [x] = ?incListOrdered_hole_2a
+  incListOrdered Z start | (x :: x' :: xs) = ?incListOrdered_hole_2b
+  incListOrdered (S pl) start | [] = ?incListOrdered_hole_3
+  incListOrdered (S pl) start | [x] = ?incListOrdered_hole_3a
+  incListOrdered (S pl) start | (x :: x' :: xs) = ?incListOrdered_hole_3b
+
+public export
 finNERangeId : FinNERangeObj -> FinNERangeMorph
 finNERangeId r@(MkFinRange s pl) =
   MkFinNERangeMorph r r (incList pl s)
     (incListLen pl s)
-    ?finNERangeID_hole_pres
+    (incListBoundedBelow pl s)
+    (incListBoundedAbove pl s)
+    (incListOrdered pl s)
 
 ---------------------------------------------------
 ---------------------------------------------------
