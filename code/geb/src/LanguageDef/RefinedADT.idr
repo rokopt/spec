@@ -112,11 +112,6 @@ Ord FinNERangeMorph where
         GT => GT
 
 public export
-incList : (predLen : Nat) -> (start : Nat) -> List Nat
-incList Z s = [s]
-incList (S pl) s = s :: incList pl (S s)
-
-public export
 validIncList : (predLen : Nat) -> (start : Nat) ->
   (l : List Nat **
    (length l = S predLen,
@@ -140,48 +135,30 @@ validIncList (S pl) s with (validIncList pl (S s))
         x :: xs => (lteSuccLeft $ fst below, ord)))
 
 public export
+incList : (predLen : Nat) -> (start : Nat) -> List Nat
+incList predLen start = fst $ validIncList predLen start
+
+public export
 incListLen :
   (predLen : Nat) -> (start : Nat) -> length (incList predLen start) = S predLen
-incListLen Z _ = Refl
-incListLen (S pl) _ = cong S $ incListLen pl _
+incListLen predLen start = fst $ snd $ validIncList predLen start
 
 public export
 incListBoundedBelow : (predLen : Nat) -> (start : Nat) ->
   boundedBelow start (incList predLen start)
-incListBoundedBelow Z start = (reflexive, ())
-incListBoundedBelow (S pl) start =
-  (reflexive, boundedBelowSucc $ incListBoundedBelow pl (S start))
+incListBoundedBelow predLen start = fst $ snd $ snd $ validIncList predLen start
 
 public export
 incListBoundedAbove : (predLen : Nat) -> (start : Nat) ->
   boundedAbove (predLen + start) (incList predLen start)
-incListBoundedAbove Z start = (reflexive, ())
-incListBoundedAbove (S pl) start =
-  (lteSuccRight $ lteAddLeft pl start,
-   rewrite plusSuccRightSucc pl start in incListBoundedAbove pl (S start))
+incListBoundedAbove predLen start =
+  fst $ snd $ snd $ snd $ validIncList predLen start
 
 public export
 incListOrdered : (predLen : Nat) -> (start : Nat) ->
   ordered (incList predLen start)
-incListOrdered predLen start with (incList predLen start) proof pf
-  incListOrdered Z start | [] = case pf of Refl impossible
-  incListOrdered Z start | [x] = ()
-  incListOrdered Z start | (x :: x' :: xs) = case pf of Refl impossible
-  incListOrdered (S pl) start | [] = case pf of Refl impossible
-  incListOrdered (S pl) start | [x] = case pl of
-    Z => case pf of Refl impossible
-    (S _) => case pf of Refl impossible
-  incListOrdered (S pl) start | (x :: x' :: xs) =
-    let recurse = incListOrdered pl (S start) in
-    let tleq = snd (consInjective pf) in
-    rewrite sym (fst (consInjective pf)) in
-    case pl of
-      Z => case tleq of
-        Refl => (lteSuccRight reflexive, ())
-      (S pl') =>
-        rewrite sym (fst (consInjective tleq)) in
-        rewrite sym (snd (consInjective tleq)) in
-        (lteSuccRight reflexive, recurse)
+incListOrdered predLen start =
+  snd $ snd $ snd $ snd $ validIncList predLen start
 
 public export
 finNERangeId : FinNERangeObj -> ValidFinNERangeMorph
