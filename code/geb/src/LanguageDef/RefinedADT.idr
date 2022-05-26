@@ -164,39 +164,69 @@ natRangeEvalCert : {m, n, m', n' : Nat} ->
 natRangeEvalCert rng i =
   (natRangeEval rng i ** (natRangeEvalGT rng i, natRangeEvalLT rng i))
 
+public export
+natRangeConstInc : (m, p, m', n', i : Nat) ->
+  {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
+  NatRangeMap m (p + m) m' n'
+natRangeConstInc m 0 m' n' i {mlti} {iltn} =
+  NatRangeMapOne m m' n' i
+natRangeConstInc m (S p) m' n' i {mlti} {iltn} =
+  NatRangeMapMulti m (S p + m) m' n' i
+  {mltn=(LTESucc $ lteAddLeft p m)}
+  {mlti}
+  {iltn}
+  $
+  rewrite plusSuccRightSucc p m in
+  natRangeConstInc (S m) p i n' i {mlti=reflexive}
+
+public export
+natRangeConst : (m, n, m', n', i : Nat) ->
+  {auto mltn : LTE m n} ->
+  {auto mlti : LTE m' i} -> {auto iltn : LTE i n'} ->
+  NatRangeMap m n m' n'
+natRangeConst m n m' n' i {mltn} {mlti} {iltn} =
+  rewrite sym (plusMinusLte m n mltn) in
+  natRangeConstInc m (minus n m) m' n' i
+{-
+natRangeConst m n m' n' i {mlti} {iltn} with (decEq m n)
+  natRangeConst m m m' n' i {mlti} {iltn} | Yes Refl =
+    NatRangeMapOne m m' n' i
+  natRangeConst m n m' n' i {mlti} {iltn} | No eqmn =
+    let lsmn = lteTolt mltn eqmn in
+    NatRangeMapMulti m n m' n' i
+      {mltn=(lteTolt mltn eqmn)}
+      {mlti}
+      {iltn}
+      $
+      natRangeConst (S m) n i n' i {mlti=reflexive}
+-}
+
 -- Compose a mapping from [m'..n'] to [m''..n''] after a mapping from
 -- [m..n] to [m'..n'] to produce a mapping from [m..n] to [m''..n''].
 public export
 natRangeCompose : {m, n, m', n', m'', n'' : Nat} ->
   NatRangeMap m' n' m'' n'' -> NatRangeMap m n m' n' -> NatRangeMap m n m'' n''
-natRangeCompose {m} {n} {m'} {n'} {m''} {n''} rng rng' =
+natRangeCompose {m} {n} {m'} {n'} {m''} {n''} rng' rng =
   let
-    b1 = natRangeLeftBounds rng
-    b2 = natRangeRightBounds rng
-    nlrng' = natRangeLeftBounds rng'
-    b4 = natRangeRightBounds rng'
+    b1 = natRangeLeftBounds rng'
+    b2 = natRangeRightBounds rng'
+    nlrng = natRangeLeftBounds rng
+    b4 = natRangeRightBounds rng
     (ev ** (evgt, evlt)) =
       natRangeEvalCert
-        rng' m {mlti=reflexive} {iltn=nlrng'}
-    (ev' ** (evgt', evlt')) = natRangeEvalCert rng ev {mlti=evgt} {iltn=evlt}
+        rng m {mlti=reflexive} {iltn=nlrng}
+    (ev' ** (evgt', evlt')) = natRangeEvalCert rng' ev {mlti=evgt} {iltn=evlt}
   in
-  case decEq m n of
-    Yes Refl =>
-      NatRangeMapOne m m'' n'' ev' {mlti=evgt'} {iltn=evlt'}
-    No neq => case (rng, rng') of
-      (NatRangeMapOne _ _ _ _, NatRangeMapOne _ _ _ _) =>
-        NatRangeMapOne m m'' n'' ev' {mlti=evgt'} {iltn=evlt'}
-      (NatRangeMapOne {mlti=mlti'} {iltn=iltn'} p q r i,
-       NatRangeMapMulti {mltn} {mlti=mlti''} {iltn=iltn''} s t p p u rng'') =>
-        ?h2
-      (NatRangeMapMulti {mltn} {mlti} {iltn} p q r s i rng'',
-       NatRangeMapOne {mlti=mlti'} {iltn=iltn'} t p q j) =>
-        ?h3
-      (NatRangeMapMulti
-        {mltn} {mlti} {iltn} p q r s i rng'',
-       NatRangeMapMulti
-        {mltn=mltn'} {mlti=mlti'} {iltn=iltn'} t u p q j rng''') =>
-        ?h4
+  case rng of
+    NatRangeMapOne p q r s {mlti} {iltn} =>
+      NatRangeMapOne p m'' n'' ev' {mlti=evgt'} {iltn=evlt'}
+    NatRangeMapMulti {mltn} {mlti} {iltn} p q r s t rngint =>
+      case rng' of
+        NatRangeMapOne u v w x {mlti=mlti'} {iltn=iltn'} =>
+          case antisymmetric evgt evlt of
+            Refl => case antisymmetric iltn mlti of
+              Refl => natRangeConst p q v w x
+        _ => ?natRangeCompose_hole_multimulti
 
 -- A morphism in the augmented simplex category, namely, an
 -- order-preserving map.
