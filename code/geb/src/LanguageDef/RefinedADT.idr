@@ -68,6 +68,64 @@ boundedBelowSucc {l=[]} _ = ()
 boundedBelowSucc {l=(x :: xs)} (b, bs) = (lteSuccLeft b, boundedBelowSucc bs)
 
 public export
+record ListIsBoundedAndOrdered (predLen, start : Nat) (l : List Nat) where
+  constructor BoundedOrderedListConditions
+  validLength : length l = S predLen
+  validLower : boundedBelow start l
+  validUpper : boundedAbove (predLen + start) l
+  validOrder : ordered l
+
+public export
+validIncList : (predLen : Nat) -> (start : Nat) ->
+  (l : List Nat ** ListIsBoundedAndOrdered predLen start l)
+validIncList Z s =
+  ([s] **
+   BoundedOrderedListConditions
+    Refl
+    (reflexive, ())
+    (reflexive, ())
+    ())
+validIncList (S pl) s with (validIncList pl (S s))
+  validIncList (S pl) s |
+    (l ** BoundedOrderedListConditions validLen below above ord) =
+      (s :: l **
+       BoundedOrderedListConditions
+        (cong S validLen)
+        (reflexive, boundedBelowSucc below)
+        (lteSuccRight $ lteAddLeft pl s,
+         rewrite plusSuccRightSucc pl s in above)
+        (case l of
+          [] => ()
+          x :: xs => (lteSuccLeft $ fst below, ord)))
+
+public export
+incList : (predLen : Nat) -> (start : Nat) -> List Nat
+incList predLen start = fst $ validIncList predLen start
+
+public export
+incListLen :
+  (predLen : Nat) -> (start : Nat) -> length (incList predLen start) = S predLen
+incListLen predLen start = validLength $ snd $ validIncList predLen start
+
+public export
+incListBoundedBelow : (predLen : Nat) -> (start : Nat) ->
+  boundedBelow start (incList predLen start)
+incListBoundedBelow predLen start =
+  validLower $ snd $ validIncList predLen start
+
+public export
+incListBoundedAbove : (predLen : Nat) -> (start : Nat) ->
+  boundedAbove (predLen + start) (incList predLen start)
+incListBoundedAbove predLen start =
+  validUpper $ snd $ validIncList predLen start
+
+public export
+incListOrdered : (predLen : Nat) -> (start : Nat) ->
+  ordered (incList predLen start)
+incListOrdered predLen start =
+  validOrder $ snd $ validIncList predLen start
+
+public export
 record FinNERangeMorph where
   constructor MkFinNERangeMorph
   frDomain : FinNERangeObj
@@ -110,55 +168,6 @@ Ord FinNERangeMorph where
           GT => GT
         LT => LT
         GT => GT
-
-public export
-validIncList : (predLen : Nat) -> (start : Nat) ->
-  (l : List Nat **
-   (length l = S predLen,
-    boundedBelow start l,
-    boundedAbove (predLen + start) l,
-    ordered l))
-validIncList Z s =
-  ([s] **
-   (Refl,
-    (reflexive, ()),
-    (reflexive, ()),
-    ()))
-validIncList (S pl) s with (validIncList pl (S s))
-  validIncList (S pl) s | (l ** (validLen, below, above, ord)) =
-    (s :: l **
-     (cong S validLen,
-     (reflexive, boundedBelowSucc below),
-     (lteSuccRight $ lteAddLeft pl s, rewrite plusSuccRightSucc pl s in above),
-      case l of
-        [] => ()
-        x :: xs => (lteSuccLeft $ fst below, ord)))
-
-public export
-incList : (predLen : Nat) -> (start : Nat) -> List Nat
-incList predLen start = fst $ validIncList predLen start
-
-public export
-incListLen :
-  (predLen : Nat) -> (start : Nat) -> length (incList predLen start) = S predLen
-incListLen predLen start = fst $ snd $ validIncList predLen start
-
-public export
-incListBoundedBelow : (predLen : Nat) -> (start : Nat) ->
-  boundedBelow start (incList predLen start)
-incListBoundedBelow predLen start = fst $ snd $ snd $ validIncList predLen start
-
-public export
-incListBoundedAbove : (predLen : Nat) -> (start : Nat) ->
-  boundedAbove (predLen + start) (incList predLen start)
-incListBoundedAbove predLen start =
-  fst $ snd $ snd $ snd $ validIncList predLen start
-
-public export
-incListOrdered : (predLen : Nat) -> (start : Nat) ->
-  ordered (incList predLen start)
-incListOrdered predLen start =
-  snd $ snd $ snd $ snd $ validIncList predLen start
 
 public export
 finNERangeId : FinNERangeObj -> ValidFinNERangeMorph
