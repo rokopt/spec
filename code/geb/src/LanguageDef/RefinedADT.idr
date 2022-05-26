@@ -187,19 +187,6 @@ natRangeConst : (m, n, m', n', i : Nat) ->
 natRangeConst m n m' n' i {mltn} {mlti} {iltn} =
   rewrite sym (plusMinusLte m n mltn) in
   natRangeConstInc m (minus n m) m' n' i
-{-
-natRangeConst m n m' n' i {mlti} {iltn} with (decEq m n)
-  natRangeConst m m m' n' i {mlti} {iltn} | Yes Refl =
-    NatRangeMapOne m m' n' i
-  natRangeConst m n m' n' i {mlti} {iltn} | No eqmn =
-    let lsmn = lteTolt mltn eqmn in
-    NatRangeMapMulti m n m' n' i
-      {mltn=(lteTolt mltn eqmn)}
-      {mlti}
-      {iltn}
-      $
-      natRangeConst (S m) n i n' i {mlti=reflexive}
--}
 
 -- Compose a mapping from [m'..n'] to [m''..n''] after a mapping from
 -- [m..n] to [m'..n'] to produce a mapping from [m..n] to [m''..n''].
@@ -207,29 +194,22 @@ public export
 natRangeCompose : {m, n, m', n', m'', n'' : Nat} ->
   NatRangeMap m' n' m'' n'' -> NatRangeMap m n m' n' -> NatRangeMap m n m'' n''
 natRangeCompose {m} {n} {m'} {n'} {m''} {n''} rng' rng =
-  let
-    b1 = natRangeLeftBounds rng'
-    b2 = natRangeRightBounds rng'
-    nlrng = natRangeLeftBounds rng
-    b4 = natRangeRightBounds rng
-    (ev ** (evgt, evlt)) =
-      natRangeEvalCert
-        rng m {mlti=reflexive} {iltn=nlrng}
-    (ev' ** (evgt', evlt')) = natRangeEvalCert rng' ev {mlti=evgt} {iltn=evlt}
-  in
   case rng of
-    NatRangeMapOne p q r s {mlti} {iltn} =>
+    NatRangeMapOne p q r i {mlti} {iltn} =>
+      let (ev' ** (evgt', evlt')) = natRangeEvalCert rng' i {mlti} {iltn} in
       NatRangeMapOne p m'' n'' ev' {mlti=evgt'} {iltn=evlt'}
-    NatRangeMapMulti {mltn} {mlti} {iltn} p q r s t rngint =>
-      case rng' of
-        NatRangeMapOne u v w x {mlti=mlti'} {iltn=iltn'} =>
-          case antisymmetric evgt evlt of
-            Refl => case antisymmetric iltn mlti of
-              Refl => natRangeConst p q v w x
-        NatRangeMapMulti
-          {mltn=mltn''} {mlti=mlti''} {iltn=iltn''}
-          y z a b c rng'' =>
-            ?natRangeCompose_hole_multimulti
+    NatRangeMapMulti {mltn} {mlti} {iltn} p q r s j rngint =>
+      let
+        (ev' ** (evgt', evlt')) = natRangeEvalCert rng' j {mlti} {iltn}
+      in
+      NatRangeMapMulti
+        p q m'' n'' ev'
+        {mltn}
+        {mlti=evgt'}
+        {iltn=evlt'}
+        $
+        ?natRangeCompose_hole_multimulti $
+        natRangeCompose {m''} {n''} (?rnghole rng') rngint
 
 -- A morphism in the augmented simplex category, namely, an
 -- order-preserving map.
