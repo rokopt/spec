@@ -194,11 +194,18 @@ natRangeSlice : {m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> (i : Nat) ->
   (i' : Nat ** (LTE m' i', LTE i' n', NatRangeMap i n i' n'))
 natRangeSlice {mlti} {iltn}
   (NatRangeMapOne {mlti=mlti'} {iltn=iltn'} _ _ _ i') i =
-    (i' ** ?hooo)
+    (i' **
+     (mlti', iltn',
+      natRangeConst i n i' n' i' {mltn=(iltn)} {iltn=(iltn')} {mlti=reflexive}))
 natRangeSlice {mlti} {iltn}
-  (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i =
+  (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} {mltn=mltn'} m n m' n' i' rng) i =
     case decEq m i of
-      Yes Refl => (i' ** ?haaa)
+      Yes Refl =>
+        (i' **
+         (mlti', iltn',
+          NatRangeMapMulti
+            {mlti=reflexive} {iltn=iltn'} {mltn=mltn'}
+            m n i' n' i' rng))
       No neq =>
         let
           (i'' ** (ltmi'', ltin'', rng'')) =
