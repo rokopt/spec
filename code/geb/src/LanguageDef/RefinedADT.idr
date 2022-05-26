@@ -117,6 +117,29 @@ incList Z s = [s]
 incList (S pl) s = s :: incList pl (S s)
 
 public export
+validIncList : (predLen : Nat) -> (start : Nat) ->
+  (l : List Nat **
+   (length l = S predLen,
+    boundedBelow start l,
+    boundedAbove (predLen + start) l,
+    ordered l))
+validIncList Z s =
+  ([s] **
+   (Refl,
+    (reflexive, ()),
+    (reflexive, ()),
+    ()))
+validIncList (S pl) s with (validIncList pl (S s))
+  validIncList (S pl) s | (l ** (validLen, below, above, ord)) =
+    (s :: l **
+     (cong S validLen,
+     (reflexive, boundedBelowSucc below),
+     (lteSuccRight $ lteAddLeft pl s, rewrite plusSuccRightSucc pl s in above),
+      case l of
+        [] => ()
+        x :: xs => (lteSuccLeft $ fst below, ord)))
+
+public export
 incListLen :
   (predLen : Nat) -> (start : Nat) -> length (incList predLen start) = S predLen
 incListLen Z _ = Refl
