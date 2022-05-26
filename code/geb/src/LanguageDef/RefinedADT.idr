@@ -83,17 +83,17 @@ natRangeRightBounds (NatRangeMapMulti {mlti} {iltn} _ _ _ _ _ _) =
   transitive mlti iltn
 
 public export
-natRangeExtendCodomainBelow : NatRangeMap m n (S m') n -> NatRangeMap m n m' n
+natRangeExtendCodomainBelow : NatRangeMap m n (S m') n' -> NatRangeMap m n m' n'
 natRangeExtendCodomainBelow
-  (NatRangeMapOne m (S m') m i {mlti} {iltn}) =
+  (NatRangeMapOne m (S m') n' i {mlti} {iltn}) =
     NatRangeMapOne
-      m m' m m
-      {mlti=(transitive (lteSuccLeft mlti) iltn)}
-      {iltn=reflexive}
+      m m' n' i
+      {mlti=(lteSuccLeft mlti)}
+      {iltn}
 natRangeExtendCodomainBelow
-  (NatRangeMapMulti m n (S m') n i {mltn} {mlti} {iltn} nrm) =
+  (NatRangeMapMulti m n (S m') n' i {mltn} {mlti} {iltn} nrm) =
     NatRangeMapMulti
-      m n m' n i nrm
+      m n m' n' i nrm
       {mltn}
       {mlti=(lteSuccLeft mlti)}
       {iltn}
@@ -188,6 +188,24 @@ natRangeConst m n m' n' i {mltn} {mlti} {iltn} =
   rewrite sym (plusMinusLte m n mltn) in
   natRangeConstInc m (minus n m) m' n' i
 
+public export
+natRangeSlice : {m, n, m', n' : Nat} -> NatRangeMap m n m' n' -> (i : Nat) ->
+  {auto mlti : LTE m i} -> {auto iltn : LTE i n} ->
+  (i' : Nat ** (LTE m' i', LTE i' n', NatRangeMap i n i' n'))
+natRangeSlice {mlti} {iltn}
+  (NatRangeMapOne {mlti=mlti'} {iltn=iltn'} _ _ _ i') i =
+    (i' ** ?hooo)
+natRangeSlice {mlti} {iltn}
+  (NatRangeMapMulti {mlti=mlti'} {iltn=iltn'} m n m' n' i' rng) i =
+    case decEq m i of
+      Yes Refl => (i' ** ?haaa)
+      No neq =>
+        let
+          (i'' ** (ltmi'', ltin'', rng'')) =
+            natRangeSlice rng i {mlti=(lteTolt mlti neq)} {iltn}
+        in
+        (i'' ** (transitive mlti' ltmi'', ltin'', rng''))
+
 -- Compose a mapping from [m'..n'] to [m''..n''] after a mapping from
 -- [m..n] to [m'..n'] to produce a mapping from [m..n] to [m''..n''].
 public export
@@ -200,16 +218,15 @@ natRangeCompose {m} {n} {m'} {n'} {m''} {n''} rng' rng =
       NatRangeMapOne p m'' n'' ev' {mlti=evgt'} {iltn=evlt'}
     NatRangeMapMulti {mltn} {mlti} {iltn} p q r s j rngint =>
       let
-        (ev' ** (evgt', evlt')) = natRangeEvalCert rng' j {mlti} {iltn}
+        (i'' ** (ltmi'', ltin'', rng'')) = natRangeSlice rng' j
       in
       NatRangeMapMulti
-        p q m'' n'' ev'
+        p q m'' n'' i''
         {mltn}
-        {mlti=evgt'}
-        {iltn=evlt'}
+        {mlti=ltmi''}
+        {iltn=ltin''}
         $
-        ?natRangeCompose_hole_multimulti $
-        natRangeCompose {m''} {n''} (?rnghole rng') rngint
+        natRangeCompose rng'' rngint
 
 -- A morphism in the augmented simplex category, namely, an
 -- order-preserving map.
