@@ -226,7 +226,10 @@ natRangeCompose {m} {n} {m'} {n'} {m''} {n''} rng' rng =
           case antisymmetric evgt evlt of
             Refl => case antisymmetric iltn mlti of
               Refl => natRangeConst p q v w x
-        _ => ?natRangeCompose_hole_multimulti
+        NatRangeMapMulti
+          {mltn=mltn''} {mlti=mlti''} {iltn=iltn''}
+          y z a b c rng'' =>
+            ?natRangeCompose_hole_multimulti
 
 -- A morphism in the augmented simplex category, namely, an
 -- order-preserving map.
