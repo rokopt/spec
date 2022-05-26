@@ -977,26 +977,26 @@ record MetaFunctor (catC, catD : MetaCat) where
         (MetaFunctorMorphMap {a=b} {b=c} g)
         (MetaFunctorMorphMap {a} {b} f))
 
--- XXX id functor
--- XXX compose functors
--- XXX natural transformation between functors
--- XXX id nat trans
--- XXX vertical compose nat trans
--- XXX horizontal compose nat trans
--- XXX whisker nat trans
--- XXX functor cat
--- XXX nat trans cat
--- XXX adjunction
--- XXX id adjunction
--- XXX compose adjunctions
--- XXX adjunction cat
+-- id functor
+-- compose functors
+-- natural transformation between functors
+-- id nat trans
+-- vertical compose nat trans
+-- horizontal compose nat trans
+-- whisker nat trans
+-- functor cat
+-- nat trans cat
+-- adjunction
+-- id adjunction
+-- compose adjunctions
+-- adjunction cat
 
--- XXX diagrams
+-- diagrams
 
 -- A 2-category (or higher) enriched over the metalanguage's `Type`, together
 -- with an interpretation into `Type`, with morphism equality defined by
 -- (non-recursive) extensional equality of functions.
--- XXX more to it (nat transes, adjunctions)
+-- more to it (nat transes, adjunctions)
 
 --------------------------------------------------------------
 --------------------------------------------------------------
@@ -1404,19 +1404,20 @@ data ArrowTermFunctor : (f : ArrowFunctor) ->
     arrowCobaseChangeDep f a newBase ->
     ArrowTermFunctor f v a
 
+{-
 mutual
   public export
   FreeArrowTot : (f : ArrowFunctor) -> (a : Arrow) -> Type
-  FreeArrowTot f a = ?FreeArrowTot_hole
+  FreeArrowTot f a = FreeArrowTot_hole
 
   public export
   FreeArrowBase : (f : ArrowFunctor) -> (a : Arrow) -> Type
-  FreeArrowBase f a = ?FreeArrowBase_hole
+  FreeArrowBase f a = FreeArrowBase_hole
 
   public export
   freeArrowProj : (f : ArrowFunctor) -> (a : Arrow) ->
     FreeArrowTot f a -> FreeArrowBase f a
-  freeArrowProj f a tot = ?freeArrowProj_hole
+  freeArrowProj f a tot = freeArrowProj_hole
 
   public export
   data FreeArrowType : ArrowFunctor -> Arrow -> Type where
@@ -1426,7 +1427,8 @@ mutual
 
   public export
   FreeArrowMonad : ArrowFunctor -> Arrow -> Arrow
-  FreeArrowMonad f a = let type = FreeArrowType f a in ?FreeArrowMonad_hole
+  FreeArrowMonad f a = let type = FreeArrowType f a in FreeArrowMonad_hole
+  -}
 
 ------------------------------------------
 ------------------------------------------
@@ -1561,27 +1563,6 @@ TupleElem {atom} (S (S n) ** (_, _, xs)) (FS (FS i)) = TupleElem (n ** xs) i
 public export
 mapTupleP : (f : a -> b) -> TupleP a -> TupleP b
 mapTupleP f (n ** t) = (n ** mapTuple f t)
-
-public export
-TupleTypeMorphism : {m, n : Nat} ->
-  (domain : Tuple m Type) -> (codomain : Tuple n Type) ->
-  (atom :
-    (i : Nat) -> {auto ok : LT i n} ->
-    TupleProductType {n=m} domain -> tupleProj {n} i {ok} codomain) ->
-  Type
-TupleTypeMorphism {m} {n} domain codomain atom =
-  foldTuple ?blah Unit codomain
-
-public export
-interpretTupleTypeMorphism : {m, n : Nat} ->
-  {domain : Tuple m Type} -> {codomain : Tuple n Type} ->
-  {atom :
-    (i : Nat) -> {auto ok : LT i n} ->
-    TupleProductType {n=m} domain -> tupleProj {n} i {ok} codomain} ->
-  TupleTypeMorphism {m} {n} domain codomain atom ->
-  TupleProductType {n=m} domain -> TupleProductType {n} codomain
-interpretTupleTypeMorphism {m} {n} {domain} {codomain} {atom} morphism =
-  ?interpretTupleTypeMorphism_hole
 
 -----------------
 ---- Choices ----
@@ -1787,7 +1768,7 @@ data Subst0MorphismF :
 ---- Refined categories ----
 ----------------------------
 
--- XX
+-- 
 
 -- This algebra -- which together with `interpretSubst0Alg` induces
 -- a functor in the arrow (sigma) category of the substitution-0 category --
@@ -1838,26 +1819,6 @@ data ErasedSubst0TypeF : Subst0TypeArrow -> Type where
 public export
 data RefinedSubst0TypeF : Subst0TypeArrow -> Type where
 
-public export
-subst0TypeEraseF : (a : Subst0TypeArrow) ->
-  RefinedSubst0TypeF a -> ErasedSubst0TypeF a
-subst0TypeEraseF a r = ?subst0TypeEraseF_hole
-
-public export
-Subst0TypeArrowF : Subst0TypeArrow -> Subst0TypeArrow
-Subst0TypeArrowF a = ?Subst0TypeArrowF_hole
-
-mutual
-  public export
-  data ErasedSubst0Type : Type where
-
-  public export
-  data RefinedSubst0Type : Type where
-
-public export
-subst0TypeErase : RefinedSubst0Type -> ErasedSubst0Type
-subst0TypeErase r = ?subst0TypeErase_hole
-
 --------------------------------------------------------------------
 ---- The category of zeroth-order Idris polynomial endofunctors ----
 --------------------------------------------------------------------
@@ -1886,7 +1847,7 @@ subst0FunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
 -- algebra to define, within the category of all initial algebras of
 -- endofunctors of the substitution-0 category, the the object which represents
 -- the type of all types of the _refined_ substitution-0 category.)
--- XXX
+-- 
 
 -- The functor analogue of `subst0NewConstraintAlg`, as
 -- `subst0FunctorAlg` is the functor analogue of `interpretSubst0Alg`.
@@ -1911,11 +1872,12 @@ subst0NewConstraintFunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
 ---- Category of first-order refined ADTs ----
 ----------------------------------------------
 
+{-
 mutual
   public export
   subst0TypeMap : {0 a, b : Type} ->
     (a -> b) -> FreeSubst0Type a -> FreeSubst0Type b
-  subst0TypeMap f x = ?mapSubst0TypeFree_hole
+  subst0TypeMap f x = mapSubst0TypeFree_hole
 
   public export
   subst0TypeReturn : {0 a : Type} -> a -> FreeSubst0Type a
@@ -1926,17 +1888,17 @@ mutual
     FreeSubst0Type (a -> b) ->
     FreeSubst0Type a ->
     FreeSubst0Type b
-  subst0TypeApply x = ?subst0TypeApply_hole
+  subst0TypeApply x = subst0TypeApply_hole
 
   public export
   subst0TypeJoin : {0 a : Type} ->
     FreeSubst0Type (FreeSubst0Type a) -> FreeSubst0Type a
-  subst0TypeJoin x = ?subst0TypeJoin_hole
+  subst0TypeJoin x = subst0TypeJoin_hole
 
   public export
   Subst0TypeFreeAlgebra : (0 a : Type) ->
     Algebra Subst0TypeF (FreeSubst0Type a)
-  Subst0TypeFreeAlgebra a x = ?Subst0TypeFreeAlgebra_hole
+  Subst0TypeFreeAlgebra a x = Subst0TypeFreeAlgebra_hole
 
 public export
 Functor FreeSubst0Type where
@@ -1955,6 +1917,7 @@ public export
 Subst0TypeInitialAlgebra :
   Algebra Subst0TypeF MuSubst0Type
 Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
+-}
 
 ------------------------------------------------------
 ------------------------------------------------------
