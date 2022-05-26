@@ -304,12 +304,14 @@ finOrdCompose {m=(S m)} {n=(S n)} {p=(S p)}
 
 public export
 data FinADTObj : Type where
+  FinADTOrd : FinADTObj
   FinProduct : List FinADTObj -> FinADTObj
   FinCoproduct : List FinADTObj -> FinADTObj
 
 mutual
   public export
   interpFinADTObj : FinADTObj -> Type
+  interpFinADTObj FinADTOrd = FinOrdObj
   interpFinADTObj (FinProduct l) = interpFinProduct l
   interpFinADTObj (FinCoproduct l) = interpFinCoproduct l
 
