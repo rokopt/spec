@@ -190,7 +190,14 @@ composeFinNERange :
   (gf : ValidFinNERangeMorph **
    (gf.fst.frDomain = f.fst.frDomain,
     gf.fst.frCodomain = g.fst.frCodomain))
-composeFinNERange g f c = ?composeFinNERange_hole
+composeFinNERange g f c with (f.fst.frMap) proof pf
+  composeFinNERange g f c | [] =
+    let
+      vl = f.snd.frValidLen
+      vl' = replace {p=(\x => length x = finNERangeLength f.fst.frDomain)} pf vl
+    in
+    case vl' of Refl impossible
+  composeFinNERange g f c | (i :: l) = ?composeFinNERange_hole
 
 ---------------------------------------------------
 ---------------------------------------------------
