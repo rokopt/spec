@@ -18,8 +18,8 @@ public export
 data RNatF : Type -> Type where
   RNat0 : RNatF carrier
   RNat1 : RNatF carrier
-  RNatSum : List carrier -> RNatF carrier
-  RNatProduct : List carrier -> RNatF carrier
+  RNatSum : carrier -> carrier -> RNatF carrier
+  RNatProduct : carrier -> carrier -> RNatF carrier
 
 public export
 RNatAlg : Type -> Type
@@ -28,6 +28,38 @@ RNatAlg = Algebra RNatF
 public export
 RNatCoalg : Type -> Type
 RNatCoalg = Coalgebra RNatF
+
+public export
+TermRNat : Type -> Type -> Type
+TermRNat = TermFunctor RNatF
+
+public export
+TreeRNat : Type -> Type -> Type
+TreeRNat = TreeFunctor RNatF
+
+public export
+LimitRNat : Type -> Type
+LimitRNat = LimitIterF RNatF
+
+public export
+ColimitRNat : Type -> Type
+ColimitRNat = ColimitIterF RNatF
+
+public export
+TRNat0 : TermRNat v a
+TRNat0 = TermComposite RNat0
+
+public export
+TRNat1 : TermRNat v a
+TRNat1 = TermComposite RNat1
+
+public export
+TRNatSum : a -> a -> TermRNat v a
+TRNatSum m n = TermComposite (RNatSum m n)
+
+public export
+TRNatProduct : a -> a -> TermRNat v a
+TRNatProduct m n = TermComposite (RNatProduct m n)
 
 public export
 FreeRNatF : Type -> Type
@@ -44,6 +76,19 @@ MuRNatF = Mu RNatF
 public export
 NuRNatF : Type
 NuRNatF = Nu RNatF
+
+public export
+data EqRNatF :
+    (natCarrier : Type) -> (eqCarrier : natCarrier -> natCarrier -> Type) ->
+    LimitRNat natCarrier -> LimitRNat natCarrier -> Type where
+  EqRNat0 : EqRNatF natCarrier eqCarrier TRNat0 TRNat0
+  EqRNat1 : EqRNatF natCarrier eqCarrier TRNat1 TRNat1
+  EqRNatSum : (m, m', n, n' : natCarrier) ->
+    eqCarrier m m' -> eqCarrier n n' ->
+    EqRNatF natCarrier eqCarrier (TRNatSum m n) (TRNatSum m' n')
+  EqRNatProduct : (m, m', n, n' : natCarrier) ->
+    eqCarrier m m' -> eqCarrier n n' ->
+    EqRNatF natCarrier eqCarrier (TRNatProduct m n) (TRNatProduct m' n')
 
 public export
 data ENatF : Type -> Type where
