@@ -6,6 +6,95 @@ import public LanguageDef.Atom
 
 %default total
 
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+---- Natural numbers:  finitary Robinson and elementary-function arithmetic ----
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- Robinson number.
+public export
+data RNatF : Type -> Type where
+  RNat0 : RNatF carrier
+  RNat1 : RNatF carrier
+  RNatSum : List carrier -> RNatF carrier
+  RNatProduct : List carrier -> RNatF carrier
+
+public export
+RNatAlg : Type -> Type
+RNatAlg = Algebra RNatF
+
+public export
+RNatCoalg : Type -> Type
+RNatCoalg = Coalgebra RNatF
+
+public export
+FreeRNatF : Type -> Type
+FreeRNatF = FreeMonad RNatF
+
+public export
+CofreeRNatF : Type -> Type
+CofreeRNatF = CofreeComonad RNatF
+
+public export
+MuRNatF : Type
+MuRNatF = Mu RNatF
+
+public export
+NuRNatF : Type
+NuRNatF = Nu RNatF
+
+public export
+data ENatF : Type -> Type where
+  ENatR : RNatF carrier -> ENatF carrier
+  ENatExp : carrier -> carrier -> ENatF carrier
+
+public export
+ENatAlg : Type -> Type
+ENatAlg = Algebra ENatF
+
+public export
+ENatCoalg : Type -> Type
+ENatCoalg = Coalgebra ENatF
+
+public export
+FreeENatF : Type -> Type
+FreeENatF = FreeMonad ENatF
+
+public export
+CofreeENatF : Type -> Type
+CofreeENatF = CofreeComonad ENatF
+
+public export
+MuENatF : Type
+MuENatF = Mu ENatF
+
+public export
+NuENatF : Type
+NuENatF = Nu ENatF
+
+public export
+data FOrder : Type where
+  OrderN : Nat -> FOrder
+  OrderHigh : FOrder
+  OrderComplete : FOrder
+
+public export
+Eq FOrder where
+  (==) (OrderN m) (OrderN n) = m == n
+  (==) OrderHigh OrderHigh = True
+  (==) OrderComplete OrderComplete = True
+  (==) _ _ = False
+
+public export
+Ord FOrder where
+  (<) (OrderN m) (OrderN n) = m < n
+  (<) (OrderN _) OrderHigh = True
+  (<) (OrderN _) OrderComplete = True
+  (<) OrderHigh OrderComplete = True
+  (<) _ _ = False
+
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
 ---- Category of ranges of natural numbers with order-preserving maps ----
