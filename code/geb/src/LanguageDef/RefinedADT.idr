@@ -6,7 +6,6 @@ import public LanguageDef.Atom
 
 %default total
 
-
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 ---- Natural numbers:  finitary Robinson and elementary-function arithmetic ----
@@ -18,8 +17,8 @@ public export
 data RNatF : Type -> Type where
   RNat0 : RNatF carrier
   RNat1 : RNatF carrier
-  RNatSum : carrier -> carrier -> RNatF carrier
-  RNatProduct : carrier -> carrier -> RNatF carrier
+  RNatSum : List carrier -> RNatF carrier
+  RNatProduct : List carrier -> RNatF carrier
 
 public export
 RNatAlg : Type -> Type
@@ -54,12 +53,12 @@ TRNat1 : TermRNat v a
 TRNat1 = TermComposite RNat1
 
 public export
-TRNatSum : a -> a -> TermRNat v a
-TRNatSum m n = TermComposite (RNatSum m n)
+TRNatSum : List a -> TermRNat v a
+TRNatSum = TermComposite . RNatSum
 
 public export
-TRNatProduct : a -> a -> TermRNat v a
-TRNatProduct m n = TermComposite (RNatProduct m n)
+TRNatProduct : List a -> TermRNat v a
+TRNatProduct = TermComposite . RNatProduct
 
 public export
 FreeRNatF : Type -> Type
@@ -76,34 +75,6 @@ MuRNatF = Mu RNatF
 public export
 NuRNatF : Type
 NuRNatF = Nu RNatF
-
-public export
-data EqRNatF :
-    (natCarrier : Type) -> (eqCarrier : natCarrier -> natCarrier -> Type) ->
-    LimitRNat natCarrier -> LimitRNat natCarrier -> Type where
-  EqNatRefl :
-    (n : natCarrier) -> EqRNatF natCarrier eqCarrier (TermVar n) (TermVar n)
-  EqNatSym :
-    (m, n : natCarrier) ->
-    EqRNatF natCarrier eqCarrier (TermVar m) (TermVar n) ->
-    EqRNatF natCarrier eqCarrier (TermVar n) (TermVar m)
-  EqNatTrans :
-    (m, n, p : natCarrier) ->
-    EqRNatF natCarrier eqCarrier (TermVar m) (TermVar n) ->
-    EqRNatF natCarrier eqCarrier (TermVar n) (TermVar p) ->
-    EqRNatF natCarrier eqCarrier (TermVar m) (TermVar p)
-  EqRNat0 : EqRNatF natCarrier eqCarrier TRNat0 TRNat0
-  EqRNat1 : EqRNatF natCarrier eqCarrier TRNat1 TRNat1
-  EqRNatSum : (m, m', n, n' : natCarrier) ->
-    eqCarrier m m' -> eqCarrier n n' ->
-    EqRNatF natCarrier eqCarrier (TRNatSum m n) (TRNatSum m' n')
-  EqRNatProduct : (m, m', n, n' : natCarrier) ->
-    eqCarrier m m' -> eqCarrier n n' ->
-    EqRNatF natCarrier eqCarrier (TRNatProduct m n) (TRNatProduct m' n')
-    {-
-  EqRNatSumZ : (m : natCarrier) ->
-    EqRNatF natCarrier eqCarrier (RNatSum m RNat0) (TermVar m)
-    -}
 
 public export
 data ENatF : Type -> Type where

@@ -389,6 +389,27 @@ public export
 NuNat : Type
 NuNat = Nu NatF
 
+public export
+cataNatF : ParamCata NatF
+cataNatF v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite n => alg $ case n of
+    ZeroF => ZeroF
+    SuccF n' => SuccF $ cataNatF v a subst alg n'
+
+public export
+interpNatFAlg : NatAlg Nat
+interpNatFAlg ZeroF = Z
+interpNatFAlg (SuccF n) = S n
+
+public export
+interpFreeNatF : {v : Type} -> (subst : v -> Nat) -> FreeNat v -> Nat
+interpFreeNatF {v} subst = cataNatF v Nat subst interpNatFAlg
+
+public export
+interpMutNatF : MuNat -> Nat
+interpMutNatF = interpFreeNatF {v=Void} (voidF Nat)
+
 ---------------
 ---- Lists ----
 ---------------
