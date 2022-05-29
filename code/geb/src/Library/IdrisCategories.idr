@@ -407,8 +407,8 @@ interpFreeNatF : {v : Type} -> (subst : v -> Nat) -> FreeNat v -> Nat
 interpFreeNatF {v} subst = cataNatF v Nat subst interpNatFAlg
 
 public export
-interpMutNatF : MuNat -> Nat
-interpMutNatF = interpFreeNatF {v=Void} (voidF Nat)
+interpMuNatF : MuNat -> Nat
+interpMuNatF = interpFreeNatF {v=Void} (voidF Nat)
 
 ---------------
 ---- Lists ----

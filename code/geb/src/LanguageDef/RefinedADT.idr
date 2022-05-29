@@ -17,8 +17,8 @@ public export
 data RNatF : Type -> Type where
   RNat0 : RNatF carrier
   RNat1 : RNatF carrier
-  RNatSum : MuList carrier -> RNatF carrier
-  RNatProduct : MuList carrier -> RNatF carrier
+  RNatSum : carrier -> carrier -> RNatF carrier
+  RNatProduct : carrier -> carrier -> RNatF carrier
 
 public export
 RNatAlg : Type -> Type
@@ -53,12 +53,12 @@ TRNat1 : TermRNat v a
 TRNat1 = TermComposite RNat1
 
 public export
-TRNatSum : MuList a -> TermRNat v a
-TRNatSum = TermComposite . RNatSum
+TRNatSum : a -> a -> TermRNat v a
+TRNatSum m n = TermComposite (RNatSum m n)
 
 public export
-TRNatProduct : MuList a -> TermRNat v a
-TRNatProduct = TermComposite . RNatProduct
+TRNatProduct : a -> a -> TermRNat v a
+TRNatProduct m n = TermComposite (RNatProduct m n)
 
 public export
 FreeRNatF : Type -> Type
@@ -75,6 +75,33 @@ MuRNatF = Mu RNatF
 public export
 NuRNatF : Type
 NuRNatF = Nu RNatF
+
+public export
+cataRNatF : ParamCata RNatF
+cataRNatF v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite n => alg $ case n of
+    RNat0 => RNat0
+    RNat1 => RNat1
+    RNatSum m n =>
+      RNatSum (cataRNatF v a subst alg m) (cataRNatF v a subst alg n)
+    RNatProduct m n =>
+      RNatProduct (cataRNatF v a subst alg m) (cataRNatF v a subst alg n)
+
+public export
+interpRNatFAlg : RNatAlg Nat
+interpRNatFAlg RNat0 = 0
+interpRNatFAlg RNat1 = 1
+interpRNatFAlg (RNatSum m n) = m + n
+interpRNatFAlg (RNatProduct m n) = m * n
+
+public export
+interpFreeRNatF : {v : Type} -> (subst : v -> Nat) -> FreeRNatF v -> Nat
+interpFreeRNatF {v} subst = cataRNatF v Nat subst interpRNatFAlg
+
+public export
+interpMuRNatF : MuRNatF -> Nat
+interpMuRNatF = interpFreeRNatF {v=Void} (voidF Nat)
 
 public export
 data ENatF : Type -> Type where
@@ -303,6 +330,7 @@ public export
 Composable : FinNERangeMorph -> FinNERangeMorph -> Type
 Composable g f = g.frDomain = f.frCodomain
 
+{-
 public export
 composeFinNERange :
   (g, f : ValidFinNERangeMorph) ->
@@ -317,7 +345,8 @@ composeFinNERange g f c with (f.fst.frMap) proof pf
       vl' = replace {p=(\x => length x = finNERangeLength f.fst.frDomain)} pf vl
     in
     case vl' of Refl impossible
-  composeFinNERange g f c | (i :: l) = ?composeFinNERange_hole
+  composeFinNERange g f c | (i :: l) = composeFinNERange_hole
+  -}
 
 ---------------------------------------------------
 ---------------------------------------------------
