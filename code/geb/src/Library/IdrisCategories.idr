@@ -448,6 +448,28 @@ public export
 NuList : Type -> Type
 NuList = Nu . ListF
 
+public export
+cataListF : {atom : Type} -> ParamCata $ ListF atom
+cataListF v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite l => alg $ case l of
+    NilF => NilF
+    ConsF x l' => ConsF x $ cataListF v a subst alg l'
+
+public export
+interpListFAlg : {atom : Type} -> ListAlg atom $ List atom
+interpListFAlg NilF = []
+interpListFAlg (ConsF x l') = x :: l'
+
+public export
+interpFreeListF : {atom : Type} -> {v : Type} ->
+  (subst : v -> List atom) -> FreeList atom v -> List atom
+interpFreeListF {atom} {v} subst = cataListF v (List atom) subst interpListFAlg
+
+public export
+interpMutListF : {atom : Type} -> MuList atom -> List atom
+interpMutListF {atom} = interpFreeListF {v=Void} (voidF $ List atom)
+
 ------------------------------------------------------
 ------------------------------------------------------
 ---- Idris sigma, product, and functor categories ----

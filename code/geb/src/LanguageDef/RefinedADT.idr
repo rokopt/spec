@@ -17,8 +17,8 @@ public export
 data RNatF : Type -> Type where
   RNat0 : RNatF carrier
   RNat1 : RNatF carrier
-  RNatSum : List carrier -> RNatF carrier
-  RNatProduct : List carrier -> RNatF carrier
+  RNatSum : MuList carrier -> RNatF carrier
+  RNatProduct : MuList carrier -> RNatF carrier
 
 public export
 RNatAlg : Type -> Type
@@ -53,11 +53,11 @@ TRNat1 : TermRNat v a
 TRNat1 = TermComposite RNat1
 
 public export
-TRNatSum : List a -> TermRNat v a
+TRNatSum : MuList a -> TermRNat v a
 TRNatSum = TermComposite . RNatSum
 
 public export
-TRNatProduct : List a -> TermRNat v a
+TRNatProduct : MuList a -> TermRNat v a
 TRNatProduct = TermComposite . RNatProduct
 
 public export
