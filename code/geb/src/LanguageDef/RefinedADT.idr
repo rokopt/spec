@@ -81,6 +81,17 @@ public export
 data EqRNatF :
     (natCarrier : Type) -> (eqCarrier : natCarrier -> natCarrier -> Type) ->
     LimitRNat natCarrier -> LimitRNat natCarrier -> Type where
+  EqNatRefl :
+    (n : natCarrier) -> EqRNatF natCarrier eqCarrier (TermVar n) (TermVar n)
+  EqNatSym :
+    (m, n : natCarrier) ->
+    EqRNatF natCarrier eqCarrier (TermVar m) (TermVar n) ->
+    EqRNatF natCarrier eqCarrier (TermVar n) (TermVar m)
+  EqNatTrans :
+    (m, n, p : natCarrier) ->
+    EqRNatF natCarrier eqCarrier (TermVar m) (TermVar n) ->
+    EqRNatF natCarrier eqCarrier (TermVar n) (TermVar p) ->
+    EqRNatF natCarrier eqCarrier (TermVar m) (TermVar p)
   EqRNat0 : EqRNatF natCarrier eqCarrier TRNat0 TRNat0
   EqRNat1 : EqRNatF natCarrier eqCarrier TRNat1 TRNat1
   EqRNatSum : (m, m', n, n' : natCarrier) ->
@@ -89,6 +100,10 @@ data EqRNatF :
   EqRNatProduct : (m, m', n, n' : natCarrier) ->
     eqCarrier m m' -> eqCarrier n n' ->
     EqRNatF natCarrier eqCarrier (TRNatProduct m n) (TRNatProduct m' n')
+    {-
+  EqRNatSumZ : (m : natCarrier) ->
+    EqRNatF natCarrier eqCarrier (RNatSum m RNat0) (TermVar m)
+    -}
 
 public export
 data ENatF : Type -> Type where
