@@ -467,8 +467,8 @@ interpFreeListF : {atom : Type} -> {v : Type} ->
 interpFreeListF {atom} {v} subst = cataListF v (List atom) subst interpListFAlg
 
 public export
-interpMutListF : {atom : Type} -> MuList atom -> List atom
-interpMutListF {atom} = interpFreeListF {v=Void} (voidF $ List atom)
+interpMuListF : {atom : Type} -> MuList atom -> List atom
+interpMuListF {atom} = interpFreeListF {v=Void} (voidF $ List atom)
 
 ------------------------------------------------------
 ------------------------------------------------------
