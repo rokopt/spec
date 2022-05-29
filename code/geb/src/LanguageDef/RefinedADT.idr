@@ -21,6 +21,13 @@ data RNatF : Type -> Type where
   RNatProduct : carrier -> carrier -> RNatF carrier
 
 public export
+Functor RNatF where
+  map f RNat0 = RNat0
+  map f RNat1 = RNat1
+  map f (RNatSum m n) = RNatSum (f m) (f n)
+  map f (RNatProduct m n) = RNatProduct (f m) (f n)
+
+public export
 RNatAlg : Type -> Type
 RNatAlg = Algebra RNatF
 
@@ -131,6 +138,34 @@ MuENatF = Mu ENatF
 public export
 NuENatF : Type
 NuENatF = Nu ENatF
+
+public export
+cataENatF : ParamCata ENatF
+cataENatF v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite n => alg $ case n of
+    ENatR n => ENatR $ case n of
+      RNat0 => RNat0
+      RNat1 => RNat1
+      RNatSum m' n' =>
+        RNatSum (cataENatF v a subst alg m') (cataENatF v a subst alg n')
+      RNatProduct m' n' =>
+        RNatProduct (cataENatF v a subst alg m') (cataENatF v a subst alg n')
+    ENatExp m n =>
+      ENatExp (cataENatF v a subst alg m) (cataENatF v a subst alg n)
+
+public export
+interpENatFAlg : ENatAlg Nat
+interpENatFAlg (ENatR n) = interpRNatFAlg n
+interpENatFAlg (ENatExp m n) = power m n
+
+public export
+interpFreeENatF : {v : Type} -> (subst : v -> Nat) -> FreeENatF v -> Nat
+interpFreeENatF {v} subst = cataENatF v Nat subst interpENatFAlg
+
+public export
+interpMuENatF : MuENatF -> Nat
+interpMuENatF = interpFreeENatF {v=Void} (voidF Nat)
 
 public export
 data FOrder : Type where
