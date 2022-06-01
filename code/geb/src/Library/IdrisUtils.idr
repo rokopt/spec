@@ -12,6 +12,8 @@ import public Control.Relation
 import public Control.Order
 import public Data.Binary
 import public Data.Nat.Properties
+import public Data.Nat.Exponentiation
+import public Data.Tree.Perfect
 import public Data.Binary.Digit
 import public Syntax.PreorderReasoning
 

@@ -31,7 +31,7 @@ modules =
     , Library.Test.IdrisCategoriesTest
     , Library.Test.CategoryTheoryTest
 
-depends = contrib, network
+depends = contrib, network, test, linear, papers
 
 sourcedir = "src"
 
