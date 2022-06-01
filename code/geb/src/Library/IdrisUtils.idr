@@ -10,6 +10,10 @@ import public Decidable.Equality
 import public Control.Function
 import public Control.Relation
 import public Control.Order
+import public Data.Binary
+import public Data.Nat.Properties
+import public Data.Binary.Digit
+import public Syntax.PreorderReasoning
 
 %default total
 
