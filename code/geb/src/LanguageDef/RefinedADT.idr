@@ -6,6 +6,59 @@ import public LanguageDef.Atom
 
 %default total
 
+public export
+data FinSubstF : Type -> Type where
+  FSVoid : FinSubstF carrier
+  FSUnit : FinSubstF carrier
+  FSProduct : carrier -> carrier -> FinSubstF carrier
+  FSCoproduct : carrier -> carrier -> FinSubstF carrier
+  FSHomObj : carrier -> carrier -> FinSubstF carrier
+
+public export
+Show carrier => Show (FinSubstF carrier) where
+  show FSVoid = show 0
+  show FSUnit = show 1
+  show (FSProduct a b) = "(" ++ show a ++ " * " ++ show b ++ ")"
+  show (FSCoproduct a b) = "(" ++ show a ++ " + " ++ show b ++ ")"
+  show (FSHomObj a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
+
+public export
+data TermFinSubstF : Type -> Type -> Type where
+  TFSVar : var -> TermFinSubstF var carrier
+  TFSComposite : FinSubstF carrier -> TermFinSubstF var carrier
+
+public export
+TermFinSubstAlg : Type -> Type -> Type
+TermFinSubstAlg var a = TermFinSubstF var a -> a
+
+public export
+(Show var, Show carrier) => Show (TermFinSubstF var carrier) where
+  show (TFSVar v) = show "(v = " ++ show v ++ ")"
+  show (TFSComposite com) = show "(com = " ++ show com ++ ")"
+
+public export
+termFinSubstShowAlg : Show var => TermFinSubstAlg var String
+termFinSubstShowAlg = show
+
+public export
+data FreeFinSubst : Type -> Type where
+  FSIn : TermFinSubstF var (FreeFinSubst var) -> FreeFinSubst var
+
+public export
+cataFinSubst : {var, a : Type} -> TermFinSubstAlg var a -> FreeFinSubst var -> a
+cataFinSubst {var} {a} alg (FSIn x) = alg $ case x of
+  TFSVar v => TFSVar v
+  TFSComposite com => TFSComposite $ case com of
+    FSVoid => FSVoid
+    FSUnit => FSUnit
+    FSProduct a b => FSProduct (cataFinSubst alg a) (cataFinSubst alg b)
+    FSCoproduct a b => FSCoproduct (cataFinSubst alg a) (cataFinSubst alg b)
+    FSHomObj a b => FSHomObj (cataFinSubst alg a) (cataFinSubst alg b)
+
+public export
+(var : Type) => Show var => Show (FreeFinSubst var) where
+  show = cataFinSubst termFinSubstShowAlg
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 ---- Natural numbers:  finitary Robinson and elementary-function arithmetic ----
