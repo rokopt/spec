@@ -345,6 +345,82 @@ public export
 Bifunctor f => Bifunctor (flip f) where
   bimap f g = bimap g f
 
+----------------------------------------
+----------------------------------------
+---- Representables and polynomials ----
+----------------------------------------
+----------------------------------------
+
+public export
+CovarHomFunc : Type -> (Type -> Type)
+CovarHomFunc a = \ty => a -> ty
+
+public export
+CovarHomAlg : Type -> Type -> Type
+CovarHomAlg a b = (a -> b) -> b
+
+CovarHomAlgCorrect : (a, b : Type) ->
+  CovarHomAlg a b = Algebra (CovarHomFunc a) b
+CovarHomAlgCorrect a b = Refl
+
+public export
+CovarHomCoalg : Type -> Type -> Type
+CovarHomCoalg a b = b -> (a -> b)
+
+CovarHomCoalgCorrect : (a, b : Type) ->
+  CovarHomCoalg a b = Coalgebra (CovarHomFunc a) b
+CovarHomCoalgCorrect a b = Refl
+
+public export
+ContravarHomFunc : Type -> (Type -> Type)
+ContravarHomFunc a = \ty => ty -> a
+
+public export
+ContravarHomAlg : Type -> Type -> Type
+ContravarHomAlg a b = (b -> a) -> b
+
+public export
+ContravarHomAlgCorrect : (a, b : Type) ->
+  ContravarHomAlg a b = Algebra (ContravarHomFunc a) b
+ContravarHomAlgCorrect a b = Refl
+
+public export
+ContravarHomCoalg : Type -> Type -> Type
+ContravarHomCoalg a b = b -> (b -> a)
+
+public export
+ContravarHomCoalgCorrect : (a, b : Type) ->
+  ContravarHomCoalg a b = Coalgebra (ContravarHomFunc a) b
+ContravarHomCoalgCorrect a b = Refl
+
+public export
+FreeCovar : Type -> Type -> Type
+FreeCovar = FreeMonad . CovarHomFunc
+
+public export
+CataCovar : {r : Type} -> ParamCata (CovarHomFunc r)
+CataCovar {r} v a subst alg =
+  \x => case x of
+    InFree x' => case x' of
+      TermVar var => subst var
+      TermComposite com => alg (CataCovar v a subst alg . com)
+
+public export
+PolyData : Type
+PolyData = List (Type, Type)
+
+public export
+PolyFunc : PolyData -> (Type -> Type)
+PolyFunc [] _ = Void
+PolyFunc ((coeff, rep) :: l) ty =
+  Either (coeff, CovarHomFunc rep ty) (PolyFunc l ty)
+
+public export
+DirichFunc : PolyData -> (Type -> Type)
+DirichFunc [] _ = Void
+DirichFunc ((coeff, rep) :: l) ty =
+  Either (coeff, ContravarHomFunc rep ty) (DirichFunc l ty)
+
 --------------------
 --------------------
 ---- Core types ----

@@ -59,6 +59,15 @@ public export
 (var : Type) => Show var => Show (FreeFinSubst var) where
   show = cataFinSubst termFinSubstShowAlg
 
+public export
+data FinSubstMorphF : {var : Type} ->
+    (carrier : FreeFinSubst var -> FreeFinSubst var -> Type) ->
+    FreeFinSubst var -> FreeFinSubst var -> Type where
+  FSFromVoid : {b : FreeFinSubst var} ->
+    FinSubstMorphF carrier (FSIn (TFSComposite FSVoid)) b
+  FSToUnit : {a : FreeFinSubst var} ->
+    FinSubstMorphF carrier a (FSIn (TFSComposite FSUnit))
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 ---- Natural numbers:  finitary Robinson and elementary-function arithmetic ----
