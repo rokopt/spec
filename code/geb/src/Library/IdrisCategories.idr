@@ -449,27 +449,24 @@ FinCovarHomAlgToAlg {n=(S n)} alg (x, p) = FinCovarHomAlgToAlg (alg x) p
 
 mutual
   public export
-  cataFinCovar : (n : Nat) -> (v, a : Type) ->
-    (v -> a) -> FinCovarHomAlg n a -> FreeFinCovar n v -> a
+  cataFinCovar : (n : Nat) -> ParamCata (FinCovarHomFunc n)
   cataFinCovar n v a subst alg (InFree x) = case x of
     TermVar var => subst var
-    TermComposite com => case n of
-      Z => alg
+    TermComposite com => alg $ case n of
+      Z => com
       S n' => case com of
         (x', com') =>
-          let
-            recurseLeft = cataFinCovar (S n') v a subst alg x'
-            recurseRight = cataFinCovarN n' (S n') v a subst alg com'
-          in
-          FinCovarHomAlgToAlg (alg recurseLeft) recurseRight
+          (cataFinCovar (S n') v a subst alg x',
+           cataFinCovarN n' (S n') v a subst alg com')
 
   public export
   cataFinCovarN : (n, n' : Nat) -> (v, a : Type) ->
-    (v -> a) -> FinCovarHomAlg n' a ->
+    (v -> a) -> Algebra (FinCovarHomFunc n') a ->
     ProductN n (FreeFinCovar n' v) -> ProductN n a
   cataFinCovarN Z n' v a subst alg () = ()
   cataFinCovarN (S n) n' v a subst alg (x, p) =
-    (cataFinCovar n' v a subst alg x, cataFinCovarN n n' v a subst alg p)
+    (cataFinCovar n' v a subst alg x,
+     cataFinCovarN n n' v a subst alg p)
 
 public export
 PolyData : Type
