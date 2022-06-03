@@ -352,12 +352,36 @@ Bifunctor f => Bifunctor (flip f) where
 ----------------------------------------
 
 public export
+ProductN : Nat -> Type -> Type
+ProductN 0 _ = ()
+ProductN (S n) a = (a, ProductN n a)
+
+public export
+mapProductN : (n : Nat) -> {0 a, b : Type} ->
+  (f : a -> b) -> ProductN n a -> ProductN n b
+mapProductN Z f () = ()
+mapProductN (S n) f (x, p) = (f x, mapProductN n f p)
+
+public export
+(n : Nat) => Functor (ProductN n) where
+  map {n} = mapProductN n
+
+public export
 CovarHomFunc : Type -> (Type -> Type)
 CovarHomFunc a = \ty => a -> ty
 
 public export
+FinCovarHomFunc : Nat -> (Type -> Type)
+FinCovarHomFunc = ProductN
+
+public export
 CovarHomAlg : Type -> Type -> Type
 CovarHomAlg a b = (a -> b) -> b
+
+public export
+FinCovarHomAlg : Nat -> Type -> Type
+FinCovarHomAlg Z b = b
+FinCovarHomAlg (S n) b = b -> FinCovarHomAlg n b
 
 CovarHomAlgCorrect : (a, b : Type) ->
   CovarHomAlg a b = Algebra (CovarHomFunc a) b
@@ -366,6 +390,10 @@ CovarHomAlgCorrect a b = Refl
 public export
 CovarHomCoalg : Type -> Type -> Type
 CovarHomCoalg a b = b -> (a -> b)
+
+public export
+FinCovarHomCoalg : Nat -> Type -> Type
+FinCovarHomCoalg n b = ProductN n (b -> b)
 
 CovarHomCoalgCorrect : (a, b : Type) ->
   CovarHomCoalg a b = Coalgebra (CovarHomFunc a) b
@@ -376,8 +404,16 @@ ContravarHomFunc : Type -> (Type -> Type)
 ContravarHomFunc a = \ty => ty -> a
 
 public export
+FinContravarHomFunc : Nat -> (Type -> Type)
+FinContravarHomFunc n = \ty => ty -> Fin n
+
+public export
 ContravarHomAlg : Type -> Type -> Type
 ContravarHomAlg a b = (b -> a) -> b
+
+public export
+FinContravarHomAlg : Nat -> Type -> Type
+FinContravarHomAlg n b = (b -> Fin n) -> b
 
 public export
 ContravarHomAlgCorrect : (a, b : Type) ->
@@ -389,6 +425,10 @@ ContravarHomCoalg : Type -> Type -> Type
 ContravarHomCoalg a b = b -> (b -> a)
 
 public export
+FinContravarHomCoalg : Nat -> Type -> Type
+FinContravarHomCoalg n b = b -> b -> Fin n
+
+public export
 ContravarHomCoalgCorrect : (a, b : Type) ->
   ContravarHomCoalg a b = Coalgebra (ContravarHomFunc a) b
 ContravarHomCoalgCorrect a b = Refl
@@ -398,12 +438,38 @@ FreeCovar : Type -> Type -> Type
 FreeCovar = FreeMonad . CovarHomFunc
 
 public export
-CataCovar : {r : Type} -> ParamCata (CovarHomFunc r)
-CataCovar {r} v a subst alg =
-  \x => case x of
-    InFree x' => case x' of
-      TermVar var => subst var
-      TermComposite com => alg (CataCovar v a subst alg . com)
+FreeFinCovar : Nat -> Type -> Type
+FreeFinCovar = FreeMonad . FinCovarHomFunc
+
+public export
+FinCovarHomAlgToAlg : {n : Nat} -> {b : Type} ->
+  FinCovarHomAlg n b -> Algebra (FinCovarHomFunc n) b
+FinCovarHomAlgToAlg {n=0} alg x = alg
+FinCovarHomAlgToAlg {n=(S n)} alg (x, p) = FinCovarHomAlgToAlg (alg x) p
+
+mutual
+  public export
+  cataFinCovar : (n : Nat) -> (v, a : Type) ->
+    (v -> a) -> FinCovarHomAlg n a -> FreeFinCovar n v -> a
+  cataFinCovar n v a subst alg (InFree x) = case x of
+    TermVar var => subst var
+    TermComposite com => case n of
+      Z => alg
+      S n' => case com of
+        (x', com') =>
+          let
+            recurseLeft = cataFinCovar (S n') v a subst alg x'
+            recurseRight = cataFinCovarN n' (S n') v a subst alg com'
+          in
+          FinCovarHomAlgToAlg (alg recurseLeft) recurseRight
+
+  public export
+  cataFinCovarN : (n, n' : Nat) -> (v, a : Type) ->
+    (v -> a) -> FinCovarHomAlg n' a ->
+    ProductN n (FreeFinCovar n' v) -> ProductN n a
+  cataFinCovarN Z n' v a subst alg () = ()
+  cataFinCovarN (S n) n' v a subst alg (x, p) =
+    (cataFinCovar n' v a subst alg x, cataFinCovarN n n' v a subst alg p)
 
 public export
 PolyData : Type
