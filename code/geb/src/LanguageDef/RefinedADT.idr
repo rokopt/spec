@@ -88,6 +88,26 @@ public export
 Show FinSubstObj where
   show = cataFS showFSAlg
 
+public export
+FinSubstSig : Type
+FinSubstSig = (FinSubstObj, FinSubstObj)
+
+public export
+FinSubstMorphType : Type
+FinSubstMorphType = FinSubstSig -> Type
+
+public export
+data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
+  FSMFromVoid : {carrier : FinSubstMorphType} -> {codomain : FinSubstObj} ->
+    FinSubstMorphF carrier ((!+), codomain)
+  FSMToUnit : {carrier : FinSubstMorphType} -> {domain : FinSubstObj} ->
+    Not (domain = (!+)) -> FinSubstMorphF carrier (domain, (!*))
+
+public export
+data FinSubstMorph : FinSubstMorphType where
+  InFSM : {sig : FinSubstSig} ->
+    FinSubstMorphF FinSubstMorph sig -> FinSubstMorph sig
+
 {-
 public export
 data TermFinSubstF : Type -> Type -> Type where
