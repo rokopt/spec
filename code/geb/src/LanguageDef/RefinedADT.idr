@@ -65,6 +65,7 @@ public export
 Show FinSubstObj where
   show = cataFS showFSAlg
 
+{-
 public export
 data TermFinSubstF : Type -> Type -> Type where
   TFSVar : var -> TermFinSubstF var carrier
@@ -110,6 +111,7 @@ data FinSubstMorphF : {var : Type} ->
     FinSubstMorphF carrier (FSIn (TFSComposite FSVoid)) b
   FSToUnit : {a : FreeFinSubst var} ->
     FinSubstMorphF carrier a (FSIn (TFSComposite FSUnit))
+    -}
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
