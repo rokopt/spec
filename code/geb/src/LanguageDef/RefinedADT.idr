@@ -12,7 +12,8 @@ data FinSubstF : Type -> Type where
   FSUnit : FinSubstF carrier
   FSProduct : carrier -> carrier -> FinSubstF carrier
   FSCoproduct : carrier -> carrier -> FinSubstF carrier
-  FSHomObj : carrier -> carrier -> FinSubstF carrier
+  -- `Exp X Y` is the hom-set `Y->X`.
+  FSExponential : carrier -> carrier -> FinSubstF carrier
 
 public export
 Show carrier => Show (FinSubstF carrier) where
@@ -20,7 +21,11 @@ Show carrier => Show (FinSubstF carrier) where
   show FSUnit = show 1
   show (FSProduct a b) = "(" ++ show a ++ " * " ++ show b ++ ")"
   show (FSCoproduct a b) = "(" ++ show a ++ " + " ++ show b ++ ")"
-  show (FSHomObj a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
+  show (FSExponential a b) = "(" ++ show a ++ " ^ " ++ show b ++ ")"
+
+public export
+data FinSubstObj : Type where
+  InFS : FinSubstF FinSubstObj -> FinSubstObj
 
 public export
 data TermFinSubstF : Type -> Type -> Type where
@@ -53,7 +58,7 @@ cataFinSubst {var} {a} alg (FSIn x) = alg $ case x of
     FSUnit => FSUnit
     FSProduct a b => FSProduct (cataFinSubst alg a) (cataFinSubst alg b)
     FSCoproduct a b => FSCoproduct (cataFinSubst alg a) (cataFinSubst alg b)
-    FSHomObj a b => FSHomObj (cataFinSubst alg a) (cataFinSubst alg b)
+    FSExponential a b => FSExponential (cataFinSubst alg a) (cataFinSubst alg b)
 
 public export
 (var : Type) => Show var => Show (FreeFinSubst var) where
