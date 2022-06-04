@@ -16,16 +16,54 @@ data FinSubstF : Type -> Type where
   FSExponential : carrier -> carrier -> FinSubstF carrier
 
 public export
+Functor FinSubstF where
+  map f FSVoid = FSVoid
+  map f FSUnit = FSUnit
+  map f (FSProduct a b) = FSProduct (f a) (f b)
+  map f (FSCoproduct a b) = FSCoproduct (f a) (f b)
+  map f (FSExponential a b) = FSExponential (f a) (f b)
+
+public export
+showFSF : {0 carrier : Type} ->
+  (carrier -> String) -> FinSubstF carrier -> String
+showFSF s FSVoid = show 0
+showFSF s FSUnit = show 1
+showFSF s (FSProduct a b) = "(" ++ s a ++ " * " ++ s b ++ ")"
+showFSF s (FSCoproduct a b) = "(" ++ s a ++ " + " ++ s b ++ ")"
+showFSF s (FSExponential a b) = "(" ++ s a ++ " ^ " ++ s b ++ ")"
+
+public export
 Show carrier => Show (FinSubstF carrier) where
-  show FSVoid = show 0
-  show FSUnit = show 1
-  show (FSProduct a b) = "(" ++ show a ++ " * " ++ show b ++ ")"
-  show (FSCoproduct a b) = "(" ++ show a ++ " + " ++ show b ++ ")"
-  show (FSExponential a b) = "(" ++ show a ++ " ^ " ++ show b ++ ")"
+  show = showFSF show
 
 public export
 data FinSubstObj : Type where
   InFS : FinSubstF FinSubstObj -> FinSubstObj
+
+public export
+FinSubstAlg : Type -> Type
+FinSubstAlg a = FinSubstF a -> a
+
+public export
+cataFS : {a : Type} -> FinSubstAlg a -> FinSubstObj -> a
+cataFS alg (InFS x) = alg $ case x of
+  FSVoid => FSVoid
+  FSUnit => FSUnit
+  FSProduct a b => FSProduct (cataFS alg a) (cataFS alg b)
+  FSCoproduct a b => FSCoproduct (cataFS alg a) (cataFS alg b)
+  FSExponential a b => FSExponential (cataFS alg a) (cataFS alg b)
+
+public export
+showFSAlg : FinSubstAlg String
+showFSAlg = showFSF id
+
+public export
+showFS : FinSubstObj -> String
+showFS = cataFS showFSAlg
+
+public export
+Show FinSubstObj where
+  show = cataFS showFSAlg
 
 public export
 data TermFinSubstF : Type -> Type -> Type where
