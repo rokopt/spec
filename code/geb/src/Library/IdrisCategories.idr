@@ -442,6 +442,10 @@ FreeFinCovar : Nat -> Type -> Type
 FreeFinCovar = FreeMonad . FinCovarHomFunc
 
 public export
+MuFinCovar : Nat -> Type
+MuFinCovar = Mu . FinCovarHomFunc
+
+public export
 FinCovarHomAlgToAlg : {n : Nat} -> {b : Type} ->
   FinCovarHomAlg n b -> Algebra (FinCovarHomFunc n) b
 FinCovarHomAlgToAlg {n=0} alg x = alg
@@ -467,6 +471,27 @@ mutual
   cataFinCovarN (S n) n' v a subst alg (x, p) =
     (cataFinCovar n' v a subst alg x,
      cataFinCovarN n n' v a subst alg p)
+
+public export
+NatCovarHomFunc : Type -> Type
+NatCovarHomFunc = CovarHomFunc Nat
+
+public export
+FreeNatCovar : Type -> Type
+FreeNatCovar = FreeMonad NatCovarHomFunc
+
+{-
+mutual
+  public export
+  cataNatCovar : ParamCata NatCovarHomFunc
+  cataNatCovar v a subst alg (InFree x) = case x of
+    TermVar var => subst var
+    TermComposite com => alg $ (cataNatCovar v a subst alg) . com
+    -}
+
+public export
+FinRepHomFunc : Nat -> Type -> Type
+FinRepHomFunc n = \ty => MuFinCovar n -> ty
 
 public export
 PolyData : Type
