@@ -41,6 +41,29 @@ data FinSubstObj : Type where
   InFS : FinSubstF FinSubstObj -> FinSubstObj
 
 public export
+(!+) : FinSubstObj
+(!+) = InFS FSVoid
+
+public export
+(!*) : FinSubstObj
+(!*) = InFS FSUnit
+
+infixl 7 :+:
+public export
+(:+:) : FinSubstObj -> FinSubstObj -> FinSubstObj
+a :+: b = InFS $ FSCoproduct a b
+
+infixl 7 :*:
+public export
+(:*:) : FinSubstObj -> FinSubstObj -> FinSubstObj
+a :*: b = InFS $ FSProduct a b
+
+infixl 7 :^:
+public export
+(:^:) : FinSubstObj -> FinSubstObj -> FinSubstObj
+a :^: b = InFS $ FSExponential a b
+
+public export
 FinSubstAlg : Type -> Type
 FinSubstAlg a = FinSubstF a -> a
 

@@ -70,7 +70,7 @@ fsObjTest1 : FinSubstObj
 fsObjTest1 = InFS FSVoid
 
 fsObjTest2 : FinSubstObj
-fsObjTest2 = InFS (FSProduct (InFS FSVoid) (InFS FSUnit))
+fsObjTest2 = ((!+) :*: (!*)) :^: ((!+) :*: (!+) :+: (!*))
 
 export
 languageDefRefinedADTTest : IO ()
