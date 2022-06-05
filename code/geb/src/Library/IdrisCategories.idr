@@ -1003,17 +1003,17 @@ NuProduct : {idx : Type} ->
 NuProduct f = ProductCatCofreeComonad f (const ())
 
 public export
-ProductFreeCatamorphism : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
-ProductFreeCatamorphism f =
+ProductCatParamCata : {idx : Type} -> ProductCatObjectEndoMap idx -> Type
+ProductCatParamCata f =
   (v, a : ProductCatObject idx) ->
   ProductCatTermAlgebra f v a ->
   ProductCatMorphism (ProductCatFreeMonad f v) a
 
 public export
-ProductCofreeAnamorphism : {idx : Type} ->
+ProductCatParamAna : {idx : Type} ->
   ProductCatObjectEndoMap idx ->
   Type
-ProductCofreeAnamorphism f =
+ProductCatParamAna f =
   (v, l : ProductCatObject idx) ->
   ProductCatTreeCoalgebra f v l ->
   ProductCatMorphism (ProductCatCofreeComonad f v) l

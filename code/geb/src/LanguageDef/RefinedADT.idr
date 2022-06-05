@@ -2122,7 +2122,7 @@ NSList : Type
 NSList = NSexpType NSLIST
 
 public export
-nsexpCata : ProductFreeCatamorphism NSexpFunctor
+nsexpCata : ProductCatParamCata NSexpFunctor
 nsexpCata v carrier alg type (InFreeProduct type term) = alg type $ case type of
   NSexpNat => nsexpCataNat term
   NSEXP => nsexpCataExp term
