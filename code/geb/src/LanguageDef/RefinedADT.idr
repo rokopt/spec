@@ -119,6 +119,19 @@ cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
   FSMFromVoid => FSMFromVoid
   FSMToUnit domainInhabited => FSMToUnit domainInhabited
 
+public export
+showFSMAlg : FinSubstMorphAlg (const String)
+showFSMAlg ((!+), cod) FSMFromVoid = "(void->" ++ show cod ++ ")"
+showFSMAlg (dom, (!*)) (FSMToUnit _) = "(" ++ show dom ++ "->unit)"
+
+public export
+showFSM : {sig : FinSubstSig} -> FinSubstMorph sig -> String
+showFSM {sig} = cataFSM showFSMAlg sig
+
+public export
+(sig : FinSubstSig) => Show (FinSubstMorph sig) where
+  show = showFSM
+
 {-
 public export
 data TermFinSubstF : Type -> Type -> Type where
