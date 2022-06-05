@@ -314,15 +314,6 @@ GenInd f =
   (a : Type) -> GenIndAlgebra f a -> FreeMonad f Void -> a
 
 public export
-ParamFreeCata : (Type -> Type) -> Type
-ParamFreeCata f =
-  (v, a : Type) -> (v -> a) -> FreeAlgebra f a -> FreeMonad f v -> a
-
-public export
-FreeCata : (Type -> Type) -> Type
-FreeCata f = (a : Type) -> FreeAlgebra f a -> FreeMonad f Void -> a
-
-public export
 ParamAna : (Type -> Type) -> Type
 ParamAna f =
   (l, a : Type) -> (a -> l) -> Coalgebra f a -> a -> CofreeComonad f l
@@ -340,15 +331,6 @@ public export
 GenCoind : (Type -> Type) -> Type
 GenCoind f =
   (a : Type) -> GenCoindCoalgebra f a -> a -> CofreeComonad f Unit
-
-public export
-ParamCofreeAna : (Type -> Type) -> Type
-ParamCofreeAna f =
-  (l, a : Type) -> (a -> l) -> CofreeCoalgebra f a -> a -> CofreeComonad f l
-
-public export
-CofreeAna : (Type -> Type) -> Type
-CofreeAna f = (a : Type) -> CofreeCoalgebra f a -> a -> CofreeComonad f Unit
 
 --------------------
 --------------------
