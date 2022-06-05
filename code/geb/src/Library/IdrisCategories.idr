@@ -212,7 +212,7 @@ data FreeMonad : (Type -> Type) -> (Type -> Type) where
 
 public export
 FreeAlgebra : (Type -> Type) -> Type -> Type
-FreeAlgebra f a = Algebra (FreeMonad f) (FreeMonad f a)
+FreeAlgebra f a = Algebra f (FreeMonad f a)
 
 public export
 FreeAlgEval : (f : Type -> Type) -> Type
@@ -471,6 +471,58 @@ mutual
   cataFinCovarN (S n) n' v a subst alg (x, p) =
     (cataFinCovar n' v a subst alg x,
      cataFinCovarN n n' v a subst alg p)
+
+mutual
+  public export
+  finCovarMap : {n : Nat} -> {0 a, b : Type} ->
+    (a -> b) -> FreeFinCovar n a -> FreeFinCovar n b
+  finCovarMap {n} {a} {b} f x = ?finCovarMap_hole
+
+  public export
+  finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
+  finCovarReturn x = InFree $ TermVar x
+
+  public export
+  finCovarApply : {n : Nat} -> {0 a, b : Type} ->
+    FreeFinCovar n (a -> b) ->
+    FreeFinCovar n a ->
+    FreeFinCovar n b
+  finCovarApply x = ?finCovarApply_hole
+
+  public export
+  finCovarJoin : {n : Nat} -> {0 a : Type} ->
+    FreeFinCovar n (FreeFinCovar n a) -> FreeFinCovar n a
+  finCovarJoin x = ?finCovarJoin_hole
+
+  public export
+  finCovarFreeAlgebra : (n : Nat) -> (0 a : Type) ->
+    FreeAlgebra (FinCovarHomFunc n) a
+  finCovarFreeAlgebra a x = ?finCovarFreeAlgebra_hole
+
+public export
+[FinCovarFunctor] (n : Nat) => Functor (FreeFinCovar n) where
+  map = finCovarMap {n}
+
+{-
+ - Idris for some reason can't find the Functor or Applicative instances in
+ - the Applicative or Monad declarations respectively.
+ -
+public export
+[FinCovarApplicative] (n : Nat) =>
+    Applicative (FreeFinCovar n) using FinCovarFunctor where
+  pure = finCovarReturn {n}
+  (<*>) = finCovarApply {n}
+
+public export
+[FinCovarMonad] (n : Nat) =>
+    Monad (FreeFinCovar n) using FinCovarApplicative where
+  join = finCovarJoin {n}
+ -
+ -}
+
+public export
+FinCovarInitialAlgebra : (n : Nat) -> InitialAlgebra (FinCovarHomFunc n)
+FinCovarInitialAlgebra n = finCovarFreeAlgebra n Void
 
 public export
 NatCovarHomFunc : Type -> Type
@@ -2078,53 +2130,6 @@ subst0NewConstraintFunctorAlg = CoproductAlgL {l=Subst0TypeFCases}
 ----------------------------------------------
 ---- Category of first-order refined ADTs ----
 ----------------------------------------------
-
-{-
-mutual
-  public export
-  subst0TypeMap : {0 a, b : Type} ->
-    (a -> b) -> FreeSubst0Type a -> FreeSubst0Type b
-  subst0TypeMap f x = mapSubst0TypeFree_hole
-
-  public export
-  subst0TypeReturn : {0 a : Type} -> a -> FreeSubst0Type a
-  subst0TypeReturn x = InFree $ TermVar x
-
-  public export
-  subst0TypeApply : {0 a, b : Type} ->
-    FreeSubst0Type (a -> b) ->
-    FreeSubst0Type a ->
-    FreeSubst0Type b
-  subst0TypeApply x = subst0TypeApply_hole
-
-  public export
-  subst0TypeJoin : {0 a : Type} ->
-    FreeSubst0Type (FreeSubst0Type a) -> FreeSubst0Type a
-  subst0TypeJoin x = subst0TypeJoin_hole
-
-  public export
-  Subst0TypeFreeAlgebra : (0 a : Type) ->
-    Algebra Subst0TypeF (FreeSubst0Type a)
-  Subst0TypeFreeAlgebra a x = Subst0TypeFreeAlgebra_hole
-
-public export
-Functor FreeSubst0Type where
-  map = subst0TypeMap
-
-public export
-Applicative FreeSubst0Type where
-  pure = subst0TypeReturn
-  (<*>) = subst0TypeApply
-
-public export
-Monad FreeSubst0Type where
-  join = subst0TypeJoin
-
-public export
-Subst0TypeInitialAlgebra :
-  Algebra Subst0TypeF MuSubst0Type
-Subst0TypeInitialAlgebra = Subst0TypeFreeAlgebra Void
--}
 
 ------------------------------------------------------
 ------------------------------------------------------
