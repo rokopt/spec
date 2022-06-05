@@ -486,18 +486,68 @@ mutual
   finCovarMapN {n=Z} f () = ()
   finCovarMapN {n=(S n)} f (x, p) = (finCovarMap f x, finCovarMapN f p)
 
-mutual
   public export
   finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
   finCovarReturn x = InFree $ TermVar x
 
+mutual
   public export
   finCovarApply : {n : Nat} -> {0 a, b : Type} ->
     FreeFinCovar n (a -> b) ->
     FreeFinCovar n a ->
     FreeFinCovar n b
-  finCovarApply x = ?finCovarApply_hole
+  finCovarApply (InFree f) (InFree x) = InFree $ case (f, x) of
+    (TermVar fv, TermVar xv) =>
+      TermVar $ fv xv
+    (TermVar fv, TermComposite xc) =>
+      TermComposite $ finCovarMapN fv xc
+    (TermComposite fc, TermVar xv) =>
+      TermComposite $ finCovarApplyN1 fc xv
+    (TermComposite fc, TermComposite xc) =>
+      TermComposite $ finCovarApplyNN fc xc
 
+  public export
+  finCovarApply11 : {n : Nat} -> {0 a, b : Type} ->
+    FreeFinCovar n (a -> b) ->
+    a ->
+    FreeFinCovar n b
+  finCovarApply11 {n=Z} (InFree f) x = InFree $ TermComposite ()
+  finCovarApply11 {n=(S n)} (InFree f) x = InFree $ case f of
+    TermVar fv => TermVar $ fv x
+    TermComposite (f, fp) => TermComposite $
+      (finCovarApply11 f x, finCovarApplyN1 fp x)
+
+  public export
+  finCovarApplyN1 : {n, n' : Nat} -> {0 a, b : Type} ->
+    ProductN n (FreeFinCovar n' (a -> b)) ->
+    a ->
+    ProductN n (FreeFinCovar n' b)
+  finCovarApplyN1 {n=Z} () x = ()
+  finCovarApplyN1 {n=(S n)} (f, fp) x =
+    (finCovarApply11 f x, finCovarApplyN1 fp x)
+
+  public export
+  finCovarApplyNN : {n, n' : Nat} -> {0 a, b : Type} ->
+    ProductN n (FreeFinCovar n' (a -> b)) ->
+    ProductN n (FreeFinCovar n' a) ->
+    ProductN n (FreeFinCovar n' b)
+  finCovarApplyNN {n=Z} () () = ()
+  finCovarApplyNN {n=(S n)} (InFree f, fp) (InFree x, xp) =
+    let
+      recnn = finCovarApplyNN fp xp
+      recapply = InFree $ case (f, x) of
+        (TermVar fv, TermVar xv) =>
+          TermVar $ fv xv
+        (TermVar fv, TermComposite xc) =>
+          TermComposite $ finCovarMapN fv xc
+        (TermComposite fc, TermVar xv) =>
+          TermComposite $ finCovarApplyN1 fc xv
+        (TermComposite fc, TermComposite xc) =>
+          TermComposite $ finCovarApplyNN fc xc
+    in
+    (recapply, recnn)
+
+mutual
   public export
   finCovarJoin : {n : Nat} -> {0 a : Type} ->
     FreeFinCovar n (FreeFinCovar n a) -> FreeFinCovar n a
