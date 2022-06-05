@@ -215,10 +215,6 @@ FreeAlgebra : (Type -> Type) -> Type -> Type
 FreeAlgebra f a = Algebra f (FreeMonad f a)
 
 public export
-FreeAlgEval : (f : Type -> Type) -> Type
-FreeAlgEval f = (a, b : Type) -> (a -> b) -> FreeAlgebra f a -> FreeAlgebra f b
-
-public export
 InitialAlgebra : (Type -> Type) -> Type
 InitialAlgebra f = FreeAlgebra f Void
 
@@ -451,6 +447,12 @@ FinCovarHomAlgToAlg : {n : Nat} -> {b : Type} ->
 FinCovarHomAlgToAlg {n=0} alg x = alg
 FinCovarHomAlgToAlg {n=(S n)} alg (x, p) = FinCovarHomAlgToAlg (alg x) p
 
+public export
+finCovarFreeAlgebra : (n : Nat) -> (0 a : Type) ->
+  FreeAlgebra (FinCovarHomFunc n) a
+finCovarFreeAlgebra Z a x = InFree $ TermComposite ()
+finCovarFreeAlgebra (S n) a (x, p) = InFree $ TermComposite (x, p)
+
 mutual
   public export
   cataFinCovar : (n : Nat) -> ParamCata (FinCovarHomFunc n)
@@ -551,12 +553,16 @@ mutual
   public export
   finCovarJoin : {n : Nat} -> {0 a : Type} ->
     FreeFinCovar n (FreeFinCovar n a) -> FreeFinCovar n a
-  finCovarJoin x = ?finCovarJoin_hole
+  finCovarJoin (InFree x) = case x of
+    TermVar var => var
+    TermComposite com => finCovarFreeAlgebra n a $ finCovarJoinN com
 
   public export
-  finCovarFreeAlgebra : (n : Nat) -> (0 a : Type) ->
-    FreeAlgebra (FinCovarHomFunc n) a
-  finCovarFreeAlgebra a x = ?finCovarFreeAlgebra_hole
+  finCovarJoinN : {n, n' : Nat} -> {0 a : Type} ->
+    ProductN n (FreeFinCovar n' (FreeFinCovar n' a)) ->
+    ProductN n (FreeFinCovar n' a)
+  finCovarJoinN {n=Z} () = ()
+  finCovarJoinN {n=(S n)} (x, p) = (finCovarJoin x, finCovarJoinN p)
 
 public export
 [FinCovarFunctor] (n : Nat) => Functor (FreeFinCovar n) where
