@@ -462,6 +462,10 @@ finCovarFreeAlgebra : (n : Nat) -> (0 a : Type) ->
 finCovarFreeAlgebra Z a x = InFree $ TermComposite ()
 finCovarFreeAlgebra (S n) a (x, p) = InFree $ TermComposite (x, p)
 
+public export
+FinCovarInitialAlgebra : (n : Nat) -> InitialAlgebra (FinCovarHomFunc n)
+FinCovarInitialAlgebra n = finCovarFreeAlgebra n Void
+
 mutual
   public export
   cataFinCovar : (n : Nat) -> ParamCata (FinCovarHomFunc n)
@@ -593,10 +597,6 @@ public export
   join = finCovarJoin {n}
  -
  -}
-
-public export
-FinCovarInitialAlgebra : (n : Nat) -> InitialAlgebra (FinCovarHomFunc n)
-FinCovarInitialAlgebra n = finCovarFreeAlgebra n Void
 
 public export
 NatCovarHomFunc : Type -> Type
