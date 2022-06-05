@@ -502,9 +502,9 @@ mutual
   finCovarMapN {n=Z} f () = ()
   finCovarMapN {n=(S n)} f (x, p) = (finCovarMap f x, finCovarMapN f p)
 
-  public export
-  finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
-  finCovarReturn x = InFree $ TermVar x
+public export
+finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
+finCovarReturn x = InFree $ TermVar x
 
 public export
 finCovarGenInd : {n : Nat} -> ParamGenInd (FinCovarHomFunc n)
