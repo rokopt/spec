@@ -108,6 +108,24 @@ data FinSubstMorph : FinSubstMorphType where
   InFSM : {sig : FinSubstSig} ->
     FinSubstMorphF FinSubstMorph sig -> FinSubstMorph sig
 
+public export
+FinSubstMorphAlg : {a : Type} ->
+  (b : a -> Type) -> (f : FinSubstSig -> a) -> Type
+FinSubstMorphAlg {a} b f = (sig : FinSubstSig) -> FinSubstMorphF (b . f) sig -> b (f sig)
+
+{-
+public export
+FinSubstMorphAlg : 
+  (a : FinSubstSig -> Type) -> Type
+FinSubstMorphAlg {a} b f = (sig : FinSubstSig) -> FinSubstMorphF (b . f) sig -> b (f sig)
+-}
+
+public export
+cataFSM : {a : Type} -> {b : a -> Type} -> {f : FinSubstSig -> a} ->
+  {sig : FinSubstSig} -> FinSubstMorphAlg {a} b f -> FinSubstMorph sig ->
+  b (f sig)
+cataFSM {a} {b} {f} {sig} alg m = ?cataFSM_hole
+
 {-
 public export
 data TermFinSubstF : Type -> Type -> Type where
