@@ -109,22 +109,15 @@ data FinSubstMorph : FinSubstMorphType where
     FinSubstMorphF FinSubstMorph sig -> FinSubstMorph sig
 
 public export
-FinSubstMorphAlg : {a : Type} ->
-  (b : a -> Type) -> (f : FinSubstSig -> a) -> Type
-FinSubstMorphAlg {a} b f = (sig : FinSubstSig) -> FinSubstMorphF (b . f) sig -> b (f sig)
-
-{-
-public export
-FinSubstMorphAlg : 
-  (a : FinSubstSig -> Type) -> Type
-FinSubstMorphAlg {a} b f = (sig : FinSubstSig) -> FinSubstMorphF (b . f) sig -> b (f sig)
--}
+FinSubstMorphAlg : (a : FinSubstSig -> Type) -> Type
+FinSubstMorphAlg a = (sig : FinSubstSig) -> FinSubstMorphF a sig -> a sig
 
 public export
-cataFSM : {a : Type} -> {b : a -> Type} -> {f : FinSubstSig -> a} ->
-  {sig : FinSubstSig} -> FinSubstMorphAlg {a} b f -> FinSubstMorph sig ->
-  b (f sig)
-cataFSM {a} {b} {f} {sig} alg m = ?cataFSM_hole
+cataFSM : {a : FinSubstSig -> Type} ->
+  FinSubstMorphAlg a -> (sig : FinSubstSig) -> FinSubstMorph sig -> a sig
+cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
+  FSMFromVoid => FSMFromVoid
+  FSMToUnit domainInhabited => FSMToUnit domainInhabited
 
 {-
 public export
