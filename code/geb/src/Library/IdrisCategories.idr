@@ -476,8 +476,17 @@ mutual
   public export
   finCovarMap : {n : Nat} -> {0 a, b : Type} ->
     (a -> b) -> FreeFinCovar n a -> FreeFinCovar n b
-  finCovarMap {n} {a} {b} f x = ?finCovarMap_hole
+  finCovarMap {n} {a} {b} f (InFree x) = InFree $ case x of
+    TermVar var => TermVar $ f var
+    TermComposite com => TermComposite $ finCovarMapN f com
 
+  public export
+  finCovarMapN : {n, n' : Nat} -> {0 a, b : Type} ->
+    (a -> b) -> ProductN n (FreeFinCovar n' a) -> ProductN n (FreeFinCovar n' b)
+  finCovarMapN {n=Z} f () = ()
+  finCovarMapN {n=(S n)} f (x, p) = (finCovarMap f x, finCovarMapN f p)
+
+mutual
   public export
   finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
   finCovarReturn x = InFree $ TermVar x
