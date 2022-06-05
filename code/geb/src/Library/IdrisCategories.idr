@@ -215,6 +215,10 @@ FreeAlgebra : (Type -> Type) -> Type -> Type
 FreeAlgebra f a = Algebra f (FreeMonad f a)
 
 public export
+GenIndAlgebra : (Type -> Type) -> Type -> Type
+GenIndAlgebra f a = Algebra (FreeMonad f) a
+
+public export
 InitialAlgebra : (Type -> Type) -> Type
 InitialAlgebra f = FreeAlgebra f Void
 
@@ -233,6 +237,10 @@ data CofreeComonad : (Type -> Type) -> (Type -> Type) where
 public export
 CofreeCoalgebra : (Type -> Type) -> Type -> Type
 CofreeCoalgebra f a = Coalgebra f (CofreeComonad f a)
+
+public export
+GenCoindCoalgebra : (Type -> Type) -> Type -> Type
+GenCoindCoalgebra f a = Coalgebra (CofreeComonad f) a
 
 public export
 CofreeCoalgMap : (f : Type -> Type) -> Type
@@ -282,32 +290,27 @@ public export
 Nu : (Type -> Type) -> Type
 Nu f = CofreeComonad f ()
 
--- Parameterized general induction.
-public export
-ParamFreeCata : (Type -> Type) -> Type
-ParamFreeCata f =
-  (v, a : Type) -> (v -> a) -> FreeAlgebra f a -> FreeMonad f v -> a
-
 -- Parameterized special induction.
 public export
 ParamCata : (Type -> Type) -> Type
 ParamCata f =
   (v, a : Type) -> (v -> a) -> Algebra f a -> FreeMonad f v -> a
 
--- General induction.
-public export
-FreeCata : (Type -> Type) -> Type
-FreeCata f = (a : Type) -> FreeAlgebra f a -> FreeMonad f Void -> a
-
 -- Special induction.
 public export
 Catamorphism : (Type -> Type) -> Type
 Catamorphism f = (a : Type) -> Algebra f a -> FreeMonad f Void -> a
 
+-- Parameterized general induction.
 public export
-ParamCofreeAna : (Type -> Type) -> Type
-ParamCofreeAna f =
-  (l, a : Type) -> (a -> l) -> CofreeCoalgebra f a -> a -> CofreeComonad f l
+ParamGenInd : (Type -> Type) -> Type
+ParamGenInd f =
+  (v, a : Type) -> (v -> a) -> GenIndAlgebra f a -> FreeMonad f v -> a
+
+-- General induction.
+GenInd : (Type -> Type) -> Type
+GenInd f =
+  (a : Type) -> GenIndAlgebra f a -> FreeMonad f Void -> a
 
 public export
 ParamAna : (Type -> Type) -> Type
@@ -315,12 +318,18 @@ ParamAna f =
   (l, a : Type) -> (a -> l) -> Coalgebra f a -> a -> CofreeComonad f l
 
 public export
-CofreeAna : (Type -> Type) -> Type
-CofreeAna f = (a : Type) -> CofreeCoalgebra f a -> a -> CofreeComonad f Unit
-
-public export
 Anamorphism : (Type -> Type) -> Type
 Anamorphism f = (a : Type) -> Coalgebra f a -> a -> CofreeComonad f Unit
+
+public export
+ParamGenCoind : (Type -> Type) -> Type
+ParamGenCoind f =
+  (l, a : Type) -> (a -> l) -> GenCoindCoalgebra f a -> a -> CofreeComonad f l
+
+public export
+GenCoind : (Type -> Type) -> Type
+GenCoind f =
+  (a : Type) -> GenCoindCoalgebra f a -> a -> CofreeComonad f Unit
 
 --------------------
 --------------------
