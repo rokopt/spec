@@ -102,6 +102,8 @@ data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
     FinSubstMorphF carrier ((!+), codomain)
   FSMToUnit : {carrier : FinSubstMorphType} -> {domain : FinSubstObj} ->
     Not (domain = (!+)) -> FinSubstMorphF carrier (domain, (!*))
+  FSMApply : {carrier : FinSubstMorphType} -> {a, b : FinSubstObj} ->
+    carrier (a, b) -> carrier ((!*), a) -> FinSubstMorphF carrier ((!*), b)
 
 public export
 data FinSubstMorph : FinSubstMorphType where
@@ -118,11 +120,13 @@ cataFSM : {a : FinSubstSig -> Type} ->
 cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
   FSMFromVoid => FSMFromVoid
   FSMToUnit domainInhabited => FSMToUnit domainInhabited
+  FSMApply f x => FSMApply (cataFSM alg _ f) (cataFSM alg _ x)
 
 public export
 showFSMAlg : FinSubstMorphAlg (const String)
 showFSMAlg ((!+), cod) FSMFromVoid = "(void->" ++ show cod ++ ")"
 showFSMAlg (dom, (!*)) (FSMToUnit _) = "(" ++ show dom ++ "->unit)"
+showFSMAlg _ (FSMApply f x) = "(" ++ show f ++ "(" ++ show x ++ "))"
 
 public export
 showFSM : {sig : FinSubstSig} -> FinSubstMorph sig -> String
