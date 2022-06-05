@@ -125,6 +125,7 @@ data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
     FinSubstMorphF carrier ((!*), domain :^: codomain)
   FSMCase : {carrier : FinSubstMorphType} ->
     {domain, domain', codomain : FinSubstObj} ->
+    Not (codomain = (!*)) -> -- already covered by "ToUnit"
     carrier (domain, codomain) -> carrier (domain', codomain) ->
     FinSubstMorphF carrier (domain :+: domain', codomain)
 
@@ -148,7 +149,7 @@ cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
   FSMLeftTerm x => FSMLeftTerm (cataFSM alg _ x)
   FSMRightTerm x => FSMRightTerm (cataFSM alg _ x)
   FSMMorphTerm f => FSMMorphTerm (cataFSM alg _ f)
-  FSMCase x y => FSMCase (cataFSM alg _ x) (cataFSM alg _ y)
+  FSMCase notId x y => FSMCase notId (cataFSM alg _ x) (cataFSM alg _ y)
 
 public export
 showFSMAlg : FinSubstMorphAlg (const String)
@@ -159,7 +160,7 @@ showFSMAlg _ (FSMPairTerm x x') = "(" ++ show x ++ ", " ++ show x' ++ ")"
 showFSMAlg _ (FSMLeftTerm x) = "(<-" ++ show x ++ ")"
 showFSMAlg _ (FSMRightTerm x) = "(" ++ show x ++ "->)"
 showFSMAlg _ (FSMMorphTerm f) = "('" ++ show f ++ "')"
-showFSMAlg _ (FSMCase x y) = "('" ++ show x ++ " :+: " ++ show y ++ "')"
+showFSMAlg _ (FSMCase _ x y) = "('" ++ show x ++ " :+: " ++ show y ++ "')"
 
 public export
 showFSM : {sig : FinSubstSig} -> FinSubstMorph sig -> String
