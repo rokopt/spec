@@ -308,9 +308,19 @@ ParamGenInd f =
   (v, a : Type) -> (v -> a) -> GenIndAlgebra f a -> FreeMonad f v -> a
 
 -- General induction.
+public export
 GenInd : (Type -> Type) -> Type
 GenInd f =
   (a : Type) -> GenIndAlgebra f a -> FreeMonad f Void -> a
+
+public export
+ParamFreeCata : (Type -> Type) -> Type
+ParamFreeCata f =
+  (v, a : Type) -> (v -> a) -> FreeAlgebra f a -> FreeMonad f v -> a
+
+public export
+FreeCata : (Type -> Type) -> Type
+FreeCata f = (a : Type) -> FreeAlgebra f a -> FreeMonad f Void -> a
 
 public export
 ParamAna : (Type -> Type) -> Type
@@ -330,6 +340,15 @@ public export
 GenCoind : (Type -> Type) -> Type
 GenCoind f =
   (a : Type) -> GenCoindCoalgebra f a -> a -> CofreeComonad f Unit
+
+public export
+ParamCofreeAna : (Type -> Type) -> Type
+ParamCofreeAna f =
+  (l, a : Type) -> (a -> l) -> CofreeCoalgebra f a -> a -> CofreeComonad f l
+
+public export
+CofreeAna : (Type -> Type) -> Type
+CofreeAna f = (a : Type) -> CofreeCoalgebra f a -> a -> CofreeComonad f Unit
 
 --------------------
 --------------------
@@ -504,6 +523,21 @@ mutual
   public export
   finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
   finCovarReturn x = InFree $ TermVar x
+
+public export
+finCovarGenInd : {n : Nat} -> ParamGenInd (FinCovarHomFunc n)
+finCovarGenInd {n} v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite com => alg $ InFree $ TermComposite $
+    mapProductN n (finCovarMap subst) com
+
+public export
+finCovarGenIndN : (n, n' : Nat) -> (v, a : Type) ->
+  (v -> a) -> Algebra (FreeFinCovar n') a ->
+  ProductN n (FreeFinCovar n' v) ->
+  ProductN n a
+finCovarGenIndN n n' v a subst alg =
+  mapProductN n (finCovarGenInd v a subst alg)
 
 mutual
   public export
