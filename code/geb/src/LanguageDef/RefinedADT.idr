@@ -104,6 +104,22 @@ data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
     Not (domain = (!+)) -> FinSubstMorphF carrier (domain, (!*))
   FSMApply : {carrier : FinSubstMorphType} -> {a, b : FinSubstObj} ->
     carrier (a, b) -> carrier ((!*), a) -> FinSubstMorphF carrier ((!*), b)
+  FSMPairTerm : {carrier : FinSubstMorphType} ->
+    {codomain, codomain' : FinSubstObj} ->
+    carrier ((!*), codomain) -> carrier ((!*), codomain') ->
+    FinSubstMorphF carrier ((!*), codomain :*: codomain')
+  FSMLeftTerm : {carrier : FinSubstMorphType} ->
+    {codomain, codomain' : FinSubstObj} ->
+    carrier ((!*), codomain) ->
+    FinSubstMorphF carrier ((!*), codomain :+: codomain')
+  FSMRightTerm : {carrier : FinSubstMorphType} ->
+    {codomain, codomain' : FinSubstObj} ->
+    carrier ((!*), codomain') ->
+    FinSubstMorphF carrier ((!*), codomain :+: codomain')
+  FSMMorphTerm : {carrier : FinSubstMorphType} ->
+    {domain, codomain : FinSubstObj} ->
+    carrier (domain, codomain) ->
+    FinSubstMorphF carrier ((!*), domain :^: codomain)
 
 public export
 data FinSubstMorph : FinSubstMorphType where
@@ -121,12 +137,20 @@ cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
   FSMFromVoid => FSMFromVoid
   FSMToUnit domainInhabited => FSMToUnit domainInhabited
   FSMApply f x => FSMApply (cataFSM alg _ f) (cataFSM alg _ x)
+  FSMPairTerm x x' => FSMPairTerm (cataFSM alg _ x) (cataFSM alg _ x')
+  FSMLeftTerm x => FSMLeftTerm (cataFSM alg _ x)
+  FSMRightTerm x => FSMRightTerm (cataFSM alg _ x)
+  FSMMorphTerm f => FSMMorphTerm (cataFSM alg _ f)
 
 public export
 showFSMAlg : FinSubstMorphAlg (const String)
 showFSMAlg ((!+), cod) FSMFromVoid = "(void->" ++ show cod ++ ")"
 showFSMAlg (dom, (!*)) (FSMToUnit _) = "(" ++ show dom ++ "->unit)"
 showFSMAlg _ (FSMApply f x) = "(" ++ show f ++ "(" ++ show x ++ "))"
+showFSMAlg _ (FSMPairTerm x x') = "(" ++ show x ++ ", " ++ show x' ++ ")"
+showFSMAlg _ (FSMLeftTerm x) = "(<-" ++ show x ++ ")"
+showFSMAlg _ (FSMRightTerm x) = "(" ++ show x ++ "->)"
+showFSMAlg _ (FSMMorphTerm f) = "('" ++ show f ++ "')"
 
 public export
 showFSM : {sig : FinSubstSig} -> FinSubstMorph sig -> String
