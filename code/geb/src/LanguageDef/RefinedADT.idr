@@ -98,10 +98,15 @@ FinSubstMorphType = FinSubstSig -> Type
 
 public export
 data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
+  FSMId : {carrier : FinSubstMorphType} -> (a : FinSubstObj) ->
+    FinSubstMorphF carrier (a, a)
   FSMFromVoid : {carrier : FinSubstMorphType} -> {codomain : FinSubstObj} ->
+    Not (codomain = (!+)) -> -- already covered by "Id"
     FinSubstMorphF carrier ((!+), codomain)
   FSMToUnit : {carrier : FinSubstMorphType} -> {domain : FinSubstObj} ->
-    Not (domain = (!+)) -> FinSubstMorphF carrier (domain, (!*))
+    Not (domain = (!*)) -> -- already covered by "Id"
+    Not (domain = (!+)) -> -- already covered by "FromVoid"
+    FinSubstMorphF carrier (domain, (!*))
   FSMPairTerm : {carrier : FinSubstMorphType} ->
     {codomain, codomain' : FinSubstObj} ->
     carrier ((!*), codomain) -> carrier ((!*), codomain') ->
@@ -136,8 +141,9 @@ public export
 cataFSM : {a : FinSubstSig -> Type} ->
   FinSubstMorphAlg a -> (sig : FinSubstSig) -> FinSubstMorph sig -> a sig
 cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
-  FSMFromVoid => FSMFromVoid
-  FSMToUnit domainInhabited => FSMToUnit domainInhabited
+  FSMId a => FSMId a
+  FSMFromVoid notId => FSMFromVoid notId
+  FSMToUnit notId notVoid => FSMToUnit notId notVoid
   FSMPairTerm x x' => FSMPairTerm (cataFSM alg _ x) (cataFSM alg _ x')
   FSMLeftTerm x => FSMLeftTerm (cataFSM alg _ x)
   FSMRightTerm x => FSMRightTerm (cataFSM alg _ x)
@@ -146,8 +152,9 @@ cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
 
 public export
 showFSMAlg : FinSubstMorphAlg (const String)
-showFSMAlg ((!+), cod) FSMFromVoid = "(void->" ++ show cod ++ ")"
-showFSMAlg (dom, (!*)) (FSMToUnit _) = "(" ++ show dom ++ "->unit)"
+showFSMAlg (a, a) (FSMId a) = "(id[" ++ show a ++ "])"
+showFSMAlg ((!+), cod) (FSMFromVoid _) = "(void->" ++ show cod ++ ")"
+showFSMAlg (dom, (!*)) (FSMToUnit _ _) = "(" ++ show dom ++ "->unit)"
 showFSMAlg _ (FSMPairTerm x x') = "(" ++ show x ++ ", " ++ show x' ++ ")"
 showFSMAlg _ (FSMLeftTerm x) = "(<-" ++ show x ++ ")"
 showFSMAlg _ (FSMRightTerm x) = "(" ++ show x ++ "->)"
