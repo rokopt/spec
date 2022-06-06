@@ -615,25 +615,38 @@ public export
  -}
 
 public export
-NatCovarHomFunc : Type -> Type
-NatCovarHomFunc = CovarHomFunc Nat
+FinPolyData : Type
+FinPolyData = List (Type, Nat)
 
 public export
-FreeNatCovar : Type -> Type
-FreeNatCovar = FreeMonad NatCovarHomFunc
-
-{-
-mutual
-  public export
-  cataNatCovar : ParamCata NatCovarHomFunc
-  cataNatCovar v a subst alg (InFree x) = case x of
-    TermVar var => subst var
-    TermComposite com => alg $ (cataNatCovar v a subst alg) . com
-    -}
+FinPolyFunc : FinPolyData -> (Type -> Type)
+FinPolyFunc [] _ = Void
+FinPolyFunc ((coeff, pow) :: l) ty =
+  Either (coeff, FinCovarHomFunc pow ty) (FinPolyFunc l ty)
 
 public export
-FinRepHomFunc : Nat -> Type -> Type
-FinRepHomFunc n = \ty => MuFinCovar n -> ty
+FinPolyAlg : FinPolyData -> Type -> Type
+FinPolyAlg [] _ = ()
+FinPolyAlg ((coeff, pow) :: l) ty =
+  (coeff -> Algebra (FinCovarHomFunc pow) ty, FinPolyAlg l ty)
+
+public export
+FreeFinPoly : FinPolyData -> Type -> Type
+FreeFinPoly = FreeMonad . FinPolyFunc
+
+public export
+MuFinPoly : FinPolyData -> Type
+MuFinPoly = Mu . FinPolyFunc
+
+public export
+finPolyFreeAlgebra : (fpd : FinPolyData) -> (0 a : Type) ->
+  FreeAlgebra (FinPolyFunc fpd) a
+finPolyFreeAlgebra [] a v = void v
+finPolyFreeAlgebra fpd a x = InFree $ TermComposite x
+
+------------------------------------------
+---- Potentially-infinite polynomials ----
+------------------------------------------
 
 public export
 PolyData : Type
@@ -660,6 +673,27 @@ DirichFunc ((coeff, rep) :: l) ty =
 -------------------------
 ---- Natural numbers ----
 -------------------------
+
+public export
+NatCovarHomFunc : Type -> Type
+NatCovarHomFunc = CovarHomFunc Nat
+
+public export
+FreeNatCovar : Type -> Type
+FreeNatCovar = FreeMonad NatCovarHomFunc
+
+{-
+mutual
+  public export
+  cataNatCovar : ParamCata NatCovarHomFunc
+  cataNatCovar v a subst alg (InFree x) = case x of
+    TermVar var => subst var
+    TermComposite com => alg $ (cataNatCovar v a subst alg) . com
+    -}
+
+public export
+FinRepHomFunc : Nat -> Type -> Type
+FinRepHomFunc n = \ty => MuFinCovar n -> ty
 
 public export
 data NatF : Type -> Type where
