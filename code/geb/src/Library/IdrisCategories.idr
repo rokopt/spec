@@ -692,8 +692,16 @@ mutual
 
 public export
 finPolyMap : {fpd : FinPolyData} -> {a, b : Type} ->
+  (a -> b) -> FinPolyFunc fpd a -> FinPolyFunc fpd b
+finPolyMap {fpd=[]} {a} {b} f poly = void poly
+finPolyMap {fpd=((coeff, pow) :: terms)} {a} {b} f poly = case poly of
+  Left (c, p) => Left (c, mapProductN pow f p)
+  Right poly' => Right $ finPolyMap f poly'
+
+public export
+freeFinPolyMap : {fpd : FinPolyData} -> {a, b : Type} ->
   (a -> b) -> FreeFinPoly fpd a -> FreeFinPoly fpd b
-finPolyMap {fpd} {a} {b} f =
+freeFinPolyMap {fpd} {a} {b} f =
   cataFinPoly fpd
     a (FreeFinPoly fpd b) (InFree . TermVar . f) (InFree . TermComposite)
 
@@ -707,12 +715,40 @@ finPolyFuncMap {a} {b} f =
     (InFree . TermVar . f) (InFree . TermComposite)
 
 public export
-finPolyMapN : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
+freeFinPolyMapN : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
   (a -> b) ->
   ProductN pow (FreeFinPoly fpd a) -> ProductN pow (FreeFinPoly fpd b)
-finPolyMapN {pow} {fpd} {a} {b} f =
+freeFinPolyMapN {pow} {fpd} {a} {b} f =
   cataFinPolyFuncN {fpd} {v=a} {a=(FreeFinPoly fpd b)}
     (InFree . TermVar . f) (InFree . TermComposite)
+
+public export
+finPolyReturn : {fpd : FinPolyData} -> {0 a : Type} -> a -> FreeFinPoly fpd a
+finPolyReturn x = InFree $ TermVar x
+
+public export
+finPolyBigStepCata : {fpd : FinPolyData} ->
+  ParamBigStepCata (FinPolyFunc fpd)
+finPolyBigStepCata {fpd} v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite com => alg $ InFree $ TermComposite $ finPolyFuncMap subst com
+
+public export
+finPolyBigStepCataFunc : (fpd, fpd' : FinPolyData) -> (v, a : Type) ->
+  (v -> a) -> Algebra (FreeFinPoly fpd') a ->
+  FinPolyFunc fpd (FreeFinPoly fpd' v) ->
+  FinPolyFunc fpd a
+finPolyBigStepCataFunc fpd fpd' v a subst alg =
+  finPolyMap {fpd} {a=(FreeFinPoly fpd' v)} {b=a}
+    (finPolyBigStepCata {fpd=fpd'} v a subst alg)
+
+public export
+finPolyBigStepCataN : (fpd : FinPolyData) -> (n : Nat) -> (v, a : Type) ->
+  (v -> a) -> Algebra (FreeFinPoly fpd) a ->
+  ProductN n (FreeFinPoly fpd v) ->
+  ProductN n a
+finPolyBigStepCataN fpd n v a subst alg =
+  mapProductN n (finPolyBigStepCata {fpd} v a subst alg)
 
 ------------------------------------------
 ---- Potentially-infinite polynomials ----
