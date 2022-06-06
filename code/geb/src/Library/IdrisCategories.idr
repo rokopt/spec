@@ -629,7 +629,16 @@ public export
 FinPolyAlg : FinPolyData -> Type -> Type
 FinPolyAlg [] _ = ()
 FinPolyAlg ((coeff, pow) :: l) ty =
-  (coeff -> Algebra (FinCovarHomFunc pow) ty, FinPolyAlg l ty)
+  (coeff -> FinCovarHomAlg pow ty, FinPolyAlg l ty)
+
+public export
+FinPolyAlgToAlg : {fpd : FinPolyData} -> {a : Type} ->
+  FinPolyAlg fpd a -> Algebra (FinPolyFunc fpd) a
+FinPolyAlgToAlg {fpd=[]} {a} alg x = void x
+FinPolyAlgToAlg {fpd=((coeff, pow) :: fpd')} {a} (leftAlg, rightAlg) x =
+  case x of
+    Left (c, fields) => FinCovarHomAlgToAlg (leftAlg c) fields
+    Right terms => FinPolyAlgToAlg {fpd=fpd'} rightAlg terms
 
 public export
 FreeFinPoly : FinPolyData -> Type -> Type
