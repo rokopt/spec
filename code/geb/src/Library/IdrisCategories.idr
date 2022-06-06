@@ -488,19 +488,21 @@ mutual
     (cataFinCovar n' v a subst alg x,
      cataFinCovarN n n' v a subst alg p)
 
-mutual
-  public export
-  finCovarMap : {n : Nat} -> {0 a, b : Type} ->
-    (a -> b) -> FreeFinCovar n a -> FreeFinCovar n b
-  finCovarMap {n} {a} {b} f (InFree x) = InFree $ case x of
-    TermVar var => TermVar $ f var
-    TermComposite com => TermComposite $ finCovarMapN f com
+public export
+finCovarMap : {n : Nat} -> {a, b : Type} ->
+  (a -> b) -> FreeFinCovar n a -> FreeFinCovar n b
+finCovarMap {n} {a} {b} f =
+  cataFinCovar n a (FreeFinCovar n b)
+    (InFree . TermVar . f)
+    (InFree . TermComposite)
 
-  public export
-  finCovarMapN : {n, n' : Nat} -> {0 a, b : Type} ->
+public export
+finCovarMapN : {n, n' : Nat} -> {a, b : Type} ->
     (a -> b) -> ProductN n (FreeFinCovar n' a) -> ProductN n (FreeFinCovar n' b)
-  finCovarMapN {n=Z} f () = ()
-  finCovarMapN {n=(S n)} f (x, p) = (finCovarMap f x, finCovarMapN f p)
+finCovarMapN {n} {n'} f =
+  cataFinCovarN n n' a (FreeFinCovar n' b)
+    (InFree . TermVar . f)
+    (InFree . TermComposite)
 
 public export
 finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
@@ -523,7 +525,7 @@ finCovarGenIndN n n' v a subst alg =
 
 mutual
   public export
-  finCovarApply : {n : Nat} -> {0 a, b : Type} ->
+  finCovarApply : {n : Nat} -> {a, b : Type} ->
     FreeFinCovar n (a -> b) ->
     FreeFinCovar n a ->
     FreeFinCovar n b
@@ -558,7 +560,7 @@ mutual
     (finCovarApply11 f x, finCovarApplyN1 fp x)
 
   public export
-  finCovarApplyNN : {n, n' : Nat} -> {0 a, b : Type} ->
+  finCovarApplyNN : {n, n' : Nat} -> {a, b : Type} ->
     ProductN n (FreeFinCovar n' (a -> b)) ->
     ProductN n (FreeFinCovar n' a) ->
     ProductN n (FreeFinCovar n' b)
@@ -593,11 +595,12 @@ mutual
   finCovarJoinN {n=Z} () = ()
   finCovarJoinN {n=(S n)} (x, p) = (finCovarJoin x, finCovarJoinN p)
 
+{-
+ -
 public export
 [FinCovarFunctor] (n : Nat) => Functor (FreeFinCovar n) where
   map = finCovarMap {n}
-
-{-
+ -
  - Idris for some reason can't find the Functor or Applicative instances in
  - the Applicative or Monad declarations respectively.
  -
