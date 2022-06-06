@@ -644,6 +644,34 @@ finPolyFreeAlgebra : (fpd : FinPolyData) -> (0 a : Type) ->
 finPolyFreeAlgebra [] a v = void v
 finPolyFreeAlgebra fpd a x = InFree $ TermComposite x
 
+public export
+FinPolyInitialAlgebra : (fpd : FinPolyData) -> InitialAlgebra (FinPolyFunc fpd)
+FinPolyInitialAlgebra fpd = finPolyFreeAlgebra fpd Void
+
+mutual
+  public export
+  finPolyMap : {fpd : FinPolyData} -> {0 a, b : Type} ->
+    (a -> b) -> FreeFinPoly fpd a -> FreeFinPoly fpd b
+  finPolyMap {fpd} {a} {b} f (InFree x) = InFree $ case x of
+    TermVar var => TermVar $ f var
+    TermComposite com => TermComposite $ finPolyFuncMap f com
+
+  public export
+  finPolyFuncMap : {fpd, fpd' : FinPolyData} -> {0 a, b : Type} ->
+    (a -> b) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' a) -> FinPolyFunc fpd (FreeFinPoly fpd' b)
+  finPolyFuncMap {fpd=[]} {a} {b} f poly = void poly
+  finPolyFuncMap {fpd=((coeff, pow) :: terms)} {a} {b} f poly = case poly of
+    Left (c, p) => Left (c, finPolyMapN f p)
+    Right poly' => Right $ finPolyFuncMap {fpd=terms} f poly'
+
+  public export
+  finPolyMapN : {pow : Nat} -> {fpd : FinPolyData} -> {0 a, b : Type} ->
+    (a -> b) ->
+    ProductN pow (FreeFinPoly fpd a) -> ProductN pow (FreeFinPoly fpd b)
+  finPolyMapN {pow=Z} f () = ()
+  finPolyMapN {pow=(S n)} f (x, p) = (finPolyMap f x, finPolyMapN f p)
+
 ------------------------------------------
 ---- Potentially-infinite polynomials ----
 ------------------------------------------
