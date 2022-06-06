@@ -681,31 +681,29 @@ mutual
   cataFinPolyFuncN {pow=(S pow)} subst alg (x, p) =
     (cataFinPoly fpd v a subst alg x, cataFinPolyFuncN {pow} subst alg p)
 
-{-
-mutual
-  public export
-  finPolyMap : {fpd : FinPolyData} -> {0 a, b : Type} ->
-    (a -> b) -> FreeFinPoly fpd a -> FreeFinPoly fpd b
-  finPolyMap {fpd} {a} {b} f (InFree x) = InFree $ case x of
-    TermVar var => TermVar $ f var
-    TermComposite com => TermComposite $ finPolyFuncMap f com
+public export
+finPolyMap : {fpd : FinPolyData} -> {a, b : Type} ->
+  (a -> b) -> FreeFinPoly fpd a -> FreeFinPoly fpd b
+finPolyMap {fpd} {a} {b} f =
+  cataFinPoly fpd
+    a (FreeFinPoly fpd b) (InFree . TermVar . f) (InFree . TermComposite)
 
-  public export
-  finPolyFuncMap : {fpd, fpd' : FinPolyData} -> {0 a, b : Type} ->
-    (a -> b) ->
-    FinPolyFunc fpd (FreeFinPoly fpd' a) -> FinPolyFunc fpd (FreeFinPoly fpd' b)
-  finPolyFuncMap {fpd=[]} {a} {b} f poly = void poly
-  finPolyFuncMap {fpd=((coeff, pow) :: terms)} {a} {b} f poly = case poly of
-    Left (c, p) => Left (c, finPolyMapN {pow} {fpd=fpd'} f p)
-    Right poly' => Right $ finPolyFuncMap {fpd=terms} f poly'
+public export
+finPolyFuncMap : {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
+  (a -> b) ->
+  FinPolyFunc fpd (FreeFinPoly fpd' a) -> FinPolyFunc fpd (FreeFinPoly fpd' b)
+finPolyFuncMap {a} {b} f =
+  cataFinPolyFunc
+    {v=a} {a=(FreeFinPoly fpd' b)}
+    (InFree . TermVar . f) (InFree . TermComposite)
 
-  public export
-  finPolyMapN : {pow : Nat} -> {fpd : FinPolyData} -> {0 a, b : Type} ->
-    (a -> b) ->
-    ProductN pow (FreeFinPoly fpd a) -> ProductN pow (FreeFinPoly fpd b)
-  finPolyMapN {pow=Z} f () = ()
-  finPolyMapN {pow=(S n)} f (x, p) = (finPolyMap f x, finPolyMapN f p)
-  -}
+public export
+finPolyMapN : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
+  (a -> b) ->
+  ProductN pow (FreeFinPoly fpd a) -> ProductN pow (FreeFinPoly fpd b)
+finPolyMapN {pow} {fpd} {a} {b} f =
+  cataFinPolyFuncN {fpd} {v=a} {a=(FreeFinPoly fpd b)}
+    (InFree . TermVar . f) (InFree . TermComposite)
 
 ------------------------------------------
 ---- Potentially-infinite polynomials ----
