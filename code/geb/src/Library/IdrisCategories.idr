@@ -215,8 +215,8 @@ FreeAlgebra : (Type -> Type) -> Type -> Type
 FreeAlgebra f a = Algebra f (FreeMonad f a)
 
 public export
-GenIndAlgebra : (Type -> Type) -> Type -> Type
-GenIndAlgebra f a = Algebra (FreeMonad f) a
+BigStepAlgebra : (Type -> Type) -> Type -> Type
+BigStepAlgebra f a = Algebra (FreeMonad f) a
 
 public export
 InitialAlgebra : (Type -> Type) -> Type
@@ -239,8 +239,8 @@ CofreeCoalgebra : (Type -> Type) -> Type -> Type
 CofreeCoalgebra f a = Coalgebra f (CofreeComonad f a)
 
 public export
-GenCoindCoalgebra : (Type -> Type) -> Type -> Type
-GenCoindCoalgebra f a = Coalgebra (CofreeComonad f) a
+BigStepCoalgebra : (Type -> Type) -> Type -> Type
+BigStepCoalgebra f a = Coalgebra (CofreeComonad f) a
 
 public export
 CofreeCoalgMap : (f : Type -> Type) -> Type
@@ -301,17 +301,15 @@ public export
 Catamorphism : (Type -> Type) -> Type
 Catamorphism f = (a : Type) -> Algebra f a -> FreeMonad f Void -> a
 
--- Parameterized general induction.
 public export
-ParamGenInd : (Type -> Type) -> Type
-ParamGenInd f =
-  (v, a : Type) -> (v -> a) -> GenIndAlgebra f a -> FreeMonad f v -> a
+ParamBigStepCata : (Type -> Type) -> Type
+ParamBigStepCata f =
+  (v, a : Type) -> (v -> a) -> BigStepAlgebra f a -> FreeMonad f v -> a
 
--- General induction.
 public export
-GenInd : (Type -> Type) -> Type
-GenInd f =
-  (a : Type) -> GenIndAlgebra f a -> FreeMonad f Void -> a
+BigStepCata : (Type -> Type) -> Type
+BigStepCata f =
+  (a : Type) -> BigStepAlgebra f a -> FreeMonad f Void -> a
 
 public export
 ParamAna : (Type -> Type) -> Type
@@ -323,14 +321,14 @@ Anamorphism : (Type -> Type) -> Type
 Anamorphism f = (a : Type) -> Coalgebra f a -> a -> CofreeComonad f Unit
 
 public export
-ParamGenCoind : (Type -> Type) -> Type
-ParamGenCoind f =
-  (l, a : Type) -> (a -> l) -> GenCoindCoalgebra f a -> a -> CofreeComonad f l
+ParamBigStepAna : (Type -> Type) -> Type
+ParamBigStepAna f =
+  (l, a : Type) -> (a -> l) -> BigStepCoalgebra f a -> a -> CofreeComonad f l
 
 public export
-GenCoind : (Type -> Type) -> Type
-GenCoind f =
-  (a : Type) -> GenCoindCoalgebra f a -> a -> CofreeComonad f Unit
+BigStepAna : (Type -> Type) -> Type
+BigStepAna f =
+  (a : Type) -> BigStepCoalgebra f a -> a -> CofreeComonad f Unit
 
 --------------------
 --------------------
@@ -509,19 +507,19 @@ finCovarReturn : {n : Nat} -> {0 a : Type} -> a -> FreeFinCovar n a
 finCovarReturn x = InFree $ TermVar x
 
 public export
-finCovarGenInd : {n : Nat} -> ParamGenInd (FinCovarHomFunc n)
-finCovarGenInd {n} v a subst alg (InFree x) = case x of
+finCovarBigStepCata : {n : Nat} -> ParamBigStepCata (FinCovarHomFunc n)
+finCovarBigStepCata {n} v a subst alg (InFree x) = case x of
   TermVar var => subst var
   TermComposite com => alg $ InFree $ TermComposite $
     mapProductN n (finCovarMap subst) com
 
 public export
-finCovarGenIndN : (n, n' : Nat) -> (v, a : Type) ->
+finCovarBigStepCataN : (n, n' : Nat) -> (v, a : Type) ->
   (v -> a) -> Algebra (FreeFinCovar n') a ->
   ProductN n (FreeFinCovar n' v) ->
   ProductN n a
-finCovarGenIndN n n' v a subst alg =
-  mapProductN n (finCovarGenInd v a subst alg)
+finCovarBigStepCataN n n' v a subst alg =
+  mapProductN n (finCovarBigStepCata v a subst alg)
 
 mutual
   public export
@@ -653,6 +651,39 @@ FinPolyInitialAlgebra fpd = finPolyFreeAlgebra fpd Void
 
 mutual
   public export
+  cataFinPoly : (fpd : FinPolyData) -> ParamCata (FinPolyFunc fpd)
+  cataFinPoly fpd v a subst alg (InFree poly) = case poly of
+    TermVar var => subst var
+    TermComposite com => alg $ case fpd of
+      [] => void com
+      ((coeff, pow) :: terms) => case com of
+        Left (c, p) => Left (c, cataFinPolyFuncN subst alg p)
+        Right poly => Right $
+          cataFinPolyFunc
+            {fpd=terms} {fpd'=((coeff, pow) :: terms)} {v} {a} subst alg poly
+
+  public export
+  cataFinPolyFunc : {fpd, fpd' : FinPolyData} -> {v, a : Type} ->
+    (v -> a) -> Algebra (FinPolyFunc fpd') a ->
+    FinPolyFunc fpd (FreeFinPoly fpd' v) -> FinPolyFunc fpd a
+  cataFinPolyFunc {fpd=[]} {fpd'} {a} subst alg poly = void poly
+  cataFinPolyFunc {fpd=((_, pow) :: terms)} {fpd'} {v} {a} subst alg poly =
+    case poly of
+      Left (c, p) => Left (c, cataFinPolyFuncN {fpd=fpd'} {pow} subst alg p)
+      Right poly' => Right $ cataFinPolyFunc {fpd=terms} {fpd'} subst alg poly'
+
+  public export
+  cataFinPolyFuncN : {fpd : FinPolyData} -> {v, a : Type} -> {pow : Nat} ->
+    (v -> a) -> Algebra (FinPolyFunc fpd) a ->
+    ProductN pow (FreeFinPoly fpd v) ->
+    ProductN pow a
+  cataFinPolyFuncN {pow=Z} subst alg () = ()
+  cataFinPolyFuncN {pow=(S pow)} subst alg (x, p) =
+    (cataFinPoly fpd v a subst alg x, cataFinPolyFuncN {pow} subst alg p)
+
+{-
+mutual
+  public export
   finPolyMap : {fpd : FinPolyData} -> {0 a, b : Type} ->
     (a -> b) -> FreeFinPoly fpd a -> FreeFinPoly fpd b
   finPolyMap {fpd} {a} {b} f (InFree x) = InFree $ case x of
@@ -665,7 +696,7 @@ mutual
     FinPolyFunc fpd (FreeFinPoly fpd' a) -> FinPolyFunc fpd (FreeFinPoly fpd' b)
   finPolyFuncMap {fpd=[]} {a} {b} f poly = void poly
   finPolyFuncMap {fpd=((coeff, pow) :: terms)} {a} {b} f poly = case poly of
-    Left (c, p) => Left (c, finPolyMapN f p)
+    Left (c, p) => Left (c, finPolyMapN {pow} {fpd=fpd'} f p)
     Right poly' => Right $ finPolyFuncMap {fpd=terms} f poly'
 
   public export
@@ -674,6 +705,7 @@ mutual
     ProductN pow (FreeFinPoly fpd a) -> ProductN pow (FreeFinPoly fpd b)
   finPolyMapN {pow=Z} f () = ()
   finPolyMapN {pow=(S n)} f (x, p) = (finPolyMap f x, finPolyMapN f p)
+  -}
 
 ------------------------------------------
 ---- Potentially-infinite polynomials ----
