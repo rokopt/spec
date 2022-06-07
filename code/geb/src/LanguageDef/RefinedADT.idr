@@ -10,27 +10,23 @@ public export
 data FinSubstF : Type -> Type where
   FSVoid : FinSubstF carrier
   FSUnit : FinSubstF carrier
-  FSProduct : carrier -> carrier -> FinSubstF carrier
   FSCoproduct : carrier -> carrier -> FinSubstF carrier
-  -- `Exp X Y` is the hom-set `Y->X`.
-  FSExponential : carrier -> carrier -> FinSubstF carrier
+  FSHomObj : carrier -> carrier -> FinSubstF carrier
 
 public export
 Functor FinSubstF where
   map f FSVoid = FSVoid
   map f FSUnit = FSUnit
-  map f (FSProduct a b) = FSProduct (f a) (f b)
   map f (FSCoproduct a b) = FSCoproduct (f a) (f b)
-  map f (FSExponential a b) = FSExponential (f a) (f b)
+  map f (FSHomObj a b) = FSHomObj (f a) (f b)
 
 public export
 showFSF : {0 carrier : Type} ->
   (carrier -> String) -> FinSubstF carrier -> String
 showFSF s FSVoid = show 0
 showFSF s FSUnit = show 1
-showFSF s (FSProduct a b) = "(" ++ s a ++ " * " ++ s b ++ ")"
 showFSF s (FSCoproduct a b) = "(" ++ s a ++ " + " ++ s b ++ ")"
-showFSF s (FSExponential a b) = "(" ++ s a ++ " ^ " ++ s b ++ ")"
+showFSF s (FSHomObj a b) = "(" ++ s a ++ " -> " ++ s b ++ ")"
 
 public export
 Show carrier => Show (FinSubstF carrier) where
@@ -53,15 +49,10 @@ public export
 (:+:) : FinSubstObj -> FinSubstObj -> FinSubstObj
 a :+: b = InFS $ FSCoproduct a b
 
-infixl 7 :*:
+infixl 7 :>:
 public export
-(:*:) : FinSubstObj -> FinSubstObj -> FinSubstObj
-a :*: b = InFS $ FSProduct a b
-
-infixl 7 :^:
-public export
-(:^:) : FinSubstObj -> FinSubstObj -> FinSubstObj
-a :^: b = InFS $ FSExponential a b
+(:>:) : FinSubstObj -> FinSubstObj -> FinSubstObj
+a :>: b = InFS $ FSHomObj a b
 
 public export
 FinSubstAlg : Type -> Type
@@ -72,9 +63,8 @@ cataFS : {a : Type} -> FinSubstAlg a -> FinSubstObj -> a
 cataFS alg (InFS x) = alg $ case x of
   FSVoid => FSVoid
   FSUnit => FSUnit
-  FSProduct a b => FSProduct (cataFS alg a) (cataFS alg b)
   FSCoproduct a b => FSCoproduct (cataFS alg a) (cataFS alg b)
-  FSExponential a b => FSExponential (cataFS alg a) (cataFS alg b)
+  FSHomObj a b => FSHomObj (cataFS alg a) (cataFS alg b)
 
 public export
 showFSAlg : FinSubstAlg String
@@ -107,10 +97,6 @@ data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
     Not (domain = (!*)) -> -- already covered by "Id"
     Not (domain = (!+)) -> -- already covered by "FromVoid"
     FinSubstMorphF carrier (domain, (!*))
-  FSMPairTerm : {carrier : FinSubstMorphType} ->
-    {codomain, codomain' : FinSubstObj} ->
-    carrier ((!*), codomain) -> carrier ((!*), codomain') ->
-    FinSubstMorphF carrier ((!*), codomain :*: codomain')
   FSMLeftTerm : {carrier : FinSubstMorphType} ->
     {codomain, codomain' : FinSubstObj} ->
     carrier ((!*), codomain) ->
@@ -122,7 +108,7 @@ data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
   FSMMorphTerm : {carrier : FinSubstMorphType} ->
     {domain, codomain : FinSubstObj} ->
     carrier (domain, codomain) ->
-    FinSubstMorphF carrier ((!*), domain :^: codomain)
+    FinSubstMorphF carrier ((!*), domain :>: codomain)
   FSMCase : {carrier : FinSubstMorphType} ->
     {domain, domain', codomain : FinSubstObj} ->
     Not (codomain = (!*)) -> -- already covered by "ToUnit"
@@ -145,7 +131,6 @@ cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
   FSMId a => FSMId a
   FSMFromVoid notId => FSMFromVoid notId
   FSMToUnit notId notVoid => FSMToUnit notId notVoid
-  FSMPairTerm x x' => FSMPairTerm (cataFSM alg _ x) (cataFSM alg _ x')
   FSMLeftTerm x => FSMLeftTerm (cataFSM alg _ x)
   FSMRightTerm x => FSMRightTerm (cataFSM alg _ x)
   FSMMorphTerm f => FSMMorphTerm (cataFSM alg _ f)
@@ -156,7 +141,6 @@ showFSMAlg : FinSubstMorphAlg (const String)
 showFSMAlg (a, a) (FSMId a) = "(id[" ++ show a ++ "])"
 showFSMAlg ((!+), cod) (FSMFromVoid _) = "(void->" ++ show cod ++ ")"
 showFSMAlg (dom, (!*)) (FSMToUnit _ _) = "(" ++ show dom ++ "->unit)"
-showFSMAlg _ (FSMPairTerm x x') = "(" ++ show x ++ ", " ++ show x' ++ ")"
 showFSMAlg _ (FSMLeftTerm x) = "(<-" ++ show x ++ ")"
 showFSMAlg _ (FSMRightTerm x) = "(" ++ show x ++ "->)"
 showFSMAlg _ (FSMMorphTerm f) = "('" ++ show f ++ "')"
@@ -202,7 +186,7 @@ cataFinSubst {var} {a} alg (FSIn x) = alg $ case x of
     FSUnit => FSUnit
     FSProduct a b => FSProduct (cataFinSubst alg a) (cataFinSubst alg b)
     FSCoproduct a b => FSCoproduct (cataFinSubst alg a) (cataFinSubst alg b)
-    FSExponential a b => FSExponential (cataFinSubst alg a) (cataFinSubst alg b)
+    FSHomObj a b => FSHomObj (cataFinSubst alg a) (cataFinSubst alg b)
 
 public export
 (var : Type) => Show var => Show (FreeFinSubst var) where
