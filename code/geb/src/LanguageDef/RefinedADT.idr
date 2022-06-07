@@ -6,6 +6,12 @@ import public LanguageDef.Atom
 
 %default total
 
+----------------------------------------------------
+----------------------------------------------------
+---- Representable and corepresentable functors ----
+----------------------------------------------------
+----------------------------------------------------
+
 -- A functor which, given a type of objects and a carrier type of functors,
 -- generates a covariant representable functor.
 --
@@ -21,6 +27,29 @@ Bifunctor CovarRepF where
 public export
 Show obj => Show (CovarRepF obj carrier) where
   show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
+
+public export
+interpCovarRepF : {obj, carrier : Type} ->
+  (obj -> Type) -> CovarRepF obj carrier -> Type
+interpCovarRepF {obj} interpObj (CovarHom x) =
+  (a : obj) -> interpObj a -> interpObj x
+
+-- A functor which generates a contravariant representable functor.
+-- As with covariant representable functors, there's simply one per
+-- object -- the only difference between the types is how we interpret
+-- them.
+
+-----------------------------------------
+-----------------------------------------
+---- General polynomial endofunctors ----
+-----------------------------------------
+-----------------------------------------
+
+---------------------------------------------------------------
+---------------------------------------------------------------
+---- Polynomial endofunctors of unrefined 0-order category ----
+---------------------------------------------------------------
+---------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
