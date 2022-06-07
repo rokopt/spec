@@ -72,10 +72,20 @@ fsObjTest1 = InFS FSVoid
 fsObjTest2 : FinSubstObj
 fsObjTest2 = ((!+) :+: (!*)) :>: ((!+) :>: (!+) :+: (!*))
 
+data TestType : Type where
+  TestTypeN : Nat -> TestType
+
+Show TestType where
+  show (TestTypeN n) = "TestType-" ++ show n
+
+repFuncTest : CovarRepF TestType Void
+repFuncTest = CovarHom (TestTypeN 1)
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
   printLn "Begin languageDefRefinedADTTest:"
+  {-
   printLn $ show exampleFinNatPoly
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5
@@ -92,5 +102,7 @@ languageDefRefinedADTTest = do
   printLn $ show finOrdMorphTest18
   printLn $ show fsObjTest1
   printLn $ show fsObjTest2
+  -}
+  printLn $ show repFuncTest
   printLn "End languageDefRefinedADTTest."
   pure ()

@@ -6,6 +6,25 @@ import public LanguageDef.Atom
 
 %default total
 
+-- A functor which, given a type of objects and a carrier type of functors,
+-- generates a covariant representable functor.
+--
+-- There is simply one covariant representable functor for each object.
+public export
+data CovarRepF : Type -> Type -> Type where
+  CovarHom : obj -> CovarRepF obj carrier
+
+public export
+Bifunctor CovarRepF where
+  bimap f g (CovarHom obj) = CovarHom (f obj)
+
+public export
+Show obj => Show (CovarRepF obj carrier) where
+  show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 public export
 data FinSubstF : Type -> Type where
   FSVoid : FinSubstF carrier
