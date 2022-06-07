@@ -76,10 +76,13 @@ data TestType : Type where
   TestTypeN : Nat -> TestType
 
 Show TestType where
-  show (TestTypeN n) = "TestType-" ++ show n
+  show (TestTypeN n) = "Fin-" ++ show n
 
-repFuncTest : CovarRepF TestType Void
-repFuncTest = CovarHom (TestTypeN 1)
+interpTestType : TestType -> Type
+interpTestType (TestTypeN n) = Fin n
+
+testRepFunc : CovarRepF TestType Void
+testRepFunc = CovarHom (TestTypeN 3)
 
 export
 languageDefRefinedADTTest : IO ()
@@ -103,6 +106,6 @@ languageDefRefinedADTTest = do
   printLn $ show fsObjTest1
   printLn $ show fsObjTest2
   -}
-  printLn $ show repFuncTest
+  printLn $ show testRepFunc
   printLn "End languageDefRefinedADTTest."
   pure ()
