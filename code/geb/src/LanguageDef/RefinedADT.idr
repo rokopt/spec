@@ -88,32 +88,18 @@ FinSubstMorphType = FinSubstSig -> Type
 
 public export
 data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
-  FSMId : {carrier : FinSubstMorphType} -> (a : FinSubstObj) ->
-    FinSubstMorphF carrier (a, a)
   FSMFromVoid : {carrier : FinSubstMorphType} -> {codomain : FinSubstObj} ->
-    Not (codomain = (!+)) -> -- already covered by "Id"
     FinSubstMorphF carrier ((!+), codomain)
   FSMToUnit : {carrier : FinSubstMorphType} -> {domain : FinSubstObj} ->
-    Not (domain = (!*)) -> -- already covered by "Id"
-    Not (domain = (!+)) -> -- already covered by "FromVoid"
     FinSubstMorphF carrier (domain, (!*))
-  FSMLeftTerm : {carrier : FinSubstMorphType} ->
-    {codomain, codomain' : FinSubstObj} ->
-    carrier ((!*), codomain) ->
-    FinSubstMorphF carrier ((!*), codomain :+: codomain')
-  FSMRightTerm : {carrier : FinSubstMorphType} ->
-    {codomain, codomain' : FinSubstObj} ->
-    carrier ((!*), codomain') ->
-    FinSubstMorphF carrier ((!*), codomain :+: codomain')
+  FSMCase : {carrier : FinSubstMorphType} ->
+    {domain, domain', codomain : FinSubstObj} ->
+    carrier (domain, codomain) -> carrier (domain', codomain) ->
+    FinSubstMorphF carrier (domain :+: domain', codomain)
   FSMMorphTerm : {carrier : FinSubstMorphType} ->
     {domain, codomain : FinSubstObj} ->
     carrier (domain, codomain) ->
     FinSubstMorphF carrier ((!*), domain :>: codomain)
-  FSMCase : {carrier : FinSubstMorphType} ->
-    {domain, domain', codomain : FinSubstObj} ->
-    Not (codomain = (!*)) -> -- already covered by "ToUnit"
-    carrier (domain, codomain) -> carrier (domain', codomain) ->
-    FinSubstMorphF carrier (domain :+: domain', codomain)
 
 public export
 data FinSubstMorph : FinSubstMorphType where
@@ -128,23 +114,17 @@ public export
 cataFSM : {a : FinSubstSig -> Type} ->
   FinSubstMorphAlg a -> (sig : FinSubstSig) -> FinSubstMorph sig -> a sig
 cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
-  FSMId a => FSMId a
-  FSMFromVoid notId => FSMFromVoid notId
-  FSMToUnit notId notVoid => FSMToUnit notId notVoid
-  FSMLeftTerm x => FSMLeftTerm (cataFSM alg _ x)
-  FSMRightTerm x => FSMRightTerm (cataFSM alg _ x)
+  FSMFromVoid => FSMFromVoid
+  FSMToUnit => FSMToUnit
+  FSMCase x y => FSMCase (cataFSM alg _ x) (cataFSM alg _ y)
   FSMMorphTerm f => FSMMorphTerm (cataFSM alg _ f)
-  FSMCase notId x y => FSMCase notId (cataFSM alg _ x) (cataFSM alg _ y)
 
 public export
 showFSMAlg : FinSubstMorphAlg (const String)
-showFSMAlg (a, a) (FSMId a) = "(id[" ++ show a ++ "])"
-showFSMAlg ((!+), cod) (FSMFromVoid _) = "(void->" ++ show cod ++ ")"
-showFSMAlg (dom, (!*)) (FSMToUnit _ _) = "(" ++ show dom ++ "->unit)"
-showFSMAlg _ (FSMLeftTerm x) = "(<-" ++ show x ++ ")"
-showFSMAlg _ (FSMRightTerm x) = "(" ++ show x ++ "->)"
+showFSMAlg ((!+), cod) FSMFromVoid = "(void->" ++ show cod ++ ")"
+showFSMAlg (dom, (!*)) FSMToUnit = "(" ++ show dom ++ "->unit)"
 showFSMAlg _ (FSMMorphTerm f) = "('" ++ show f ++ "')"
-showFSMAlg _ (FSMCase _ x y) = "('" ++ show x ++ " :+: " ++ show y ++ "')"
+showFSMAlg _ (FSMCase x y) = "('" ++ show x ++ " :+: " ++ show y ++ "')"
 
 public export
 showFSM : {sig : FinSubstSig} -> FinSubstMorph sig -> String
