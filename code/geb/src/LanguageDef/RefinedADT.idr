@@ -76,7 +76,7 @@ showFS = cataFS showFSAlg
 
 public export
 Show FinSubstObj where
-  show = cataFS showFSAlg
+  show = showFS
 
 public export
 FinSubstSig : Type
