@@ -74,6 +74,34 @@ interpContravarRepF {obj} interpObj hf =
 -----------------------------------------
 -----------------------------------------
 
+-- A functor which, given a type of representables and a carrier type
+-- of non-empty sums of representables, generates a new type of non-empty
+-- sums of representables.
+public export
+data NESumCovarRepF : Type -> Type -> Type where
+  NESumCovarRep : rep -> NESumCovarRepF rep carrier
+  NESumCovarSum : carrier -> carrier -> NESumCovarRepF rep carrier
+
+public export
+Bifunctor NESumCovarRepF where
+  bimap f g (NESumCovarRep r) = NESumCovarRep (f r)
+  bimap f g (NESumCovarSum s s') = NESumCovarSum (g s) (g s')
+
+public export
+(Show rep, Show carrier) => Show (NESumCovarRepF rep carrier) where
+  show (NESumCovarRep r) = show r
+  show (NESumCovarSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
+
+public export
+interpSumCovarRep : {obj, rep, carrier : Type} ->
+  (interpRepApply : rep -> obj -> Type) ->
+  (interpCarrier : carrier -> obj -> Type) ->
+  NESumCovarRepF rep carrier -> obj -> Type
+interpSumCovarRep interpRepApply interpCarrier (NESumCovarRep rep) a =
+  interpRepApply rep a
+interpSumCovarRep interpRepApply interpCarrier (NESumCovarSum s s') a =
+  Either (interpCarrier s a) (interpCarrier s' a)
+
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 ---- Polynomial endofunctors of unrefined 0-order category ----
