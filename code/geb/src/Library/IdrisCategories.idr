@@ -871,6 +871,11 @@ Bifunctor ListF where
   bimap f g (ConsF x l) = ConsF (f x) (g l)
 
 public export
+(Show atom, Show carrier) => Show (ListF atom carrier) where
+  show NilF = "[]"
+  show (ConsF x l) = "(" ++ show x ++ " :: " ++ show l ++ ")"
+
+public export
 ListAlg : Type -> Type -> Type
 ListAlg = Algebra . ListF
 
@@ -915,6 +920,10 @@ interpFreeListF {atom} {v} subst = cataListF v (List atom) subst interpListFAlg
 public export
 interpMuListF : {atom : Type} -> MuList atom -> List atom
 interpMuListF {atom} = interpFreeListF {v=Void} (voidF $ List atom)
+
+public export
+(atom : Type) => Show atom => Show (MuList atom) where
+  show = show . interpMuListF
 
 ------------------------------------------------------
 ------------------------------------------------------
