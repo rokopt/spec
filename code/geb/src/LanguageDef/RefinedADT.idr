@@ -29,16 +29,10 @@ Show obj => Show (CovarRepF obj carrier) where
   show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
 
 public export
-interpCovarRepFApply : {obj, carrier : Type} ->
-  (obj -> Type) -> CovarRepF obj carrier -> obj -> Type
-interpCovarRepFApply {obj} interpObj (CovarHom x) a =
-  interpObj a -> interpObj x
-
-public export
 interpCovarRepF : {obj, carrier : Type} ->
-  (obj -> Type) -> CovarRepF obj carrier -> Type
-interpCovarRepF {obj} interpObj hf =
-  (a : obj) -> interpCovarRepFApply interpObj hf a
+  (obj -> Type) -> CovarRepF obj carrier -> obj -> Type
+interpCovarRepF {obj} interpObj (CovarHom x) a =
+  interpObj a -> interpObj x
 
 -- A functor which generates a contravariant representable functor.
 -- As with covariant representable functors, there's simply one per
@@ -57,16 +51,10 @@ Show obj => Show (ContravarRepF obj carrier) where
   show (ContravarHom obj) = "Hom(" ++ show obj ++ ", _)"
 
 public export
-interpContravarRepFApply : {obj, carrier : Type} ->
-  (obj -> Type) -> ContravarRepF obj carrier -> obj -> Type
-interpContravarRepFApply {obj} interpObj (ContravarHom x) a =
-  interpObj x -> interpObj a
-
-public export
 interpContravarRepF : {obj, carrier : Type} ->
-  (obj -> Type) -> ContravarRepF obj carrier -> Type
-interpContravarRepF {obj} interpObj hf =
-  (a : obj) -> interpContravarRepFApply interpObj hf a
+  (obj -> Type) -> ContravarRepF obj carrier -> obj -> Type
+interpContravarRepF {obj} interpObj (ContravarHom x) a =
+  interpObj x -> interpObj a
 
 -----------------------------------------
 -----------------------------------------
@@ -74,33 +62,34 @@ interpContravarRepF {obj} interpObj hf =
 -----------------------------------------
 -----------------------------------------
 
--- A functor which, given a type of representables and a carrier type
--- of non-empty sums of representables, generates a new type of non-empty
--- sums of representables.
+-- A functor which, given types of objects and covariant representables and a
+-- carrier type of non-empty sums of representables, generates a new type of
+-- non-empty sums of representables.
 public export
-data NESumCovarRepF : Type -> Type -> Type where
-  NESumCovarRep : rep -> NESumCovarRepF rep carrier
-  NESumCovarSum : carrier -> carrier -> NESumCovarRepF rep carrier
+data NESumCovarRepF : Type -> Type -> Type -> Type where
+  NESumCovarRep : CovarRepF obj rep -> NESumCovarRepF obj rep carrier
+  NESumCovarSum : carrier -> carrier -> NESumCovarRepF obj rep carrier
 
 public export
-Bifunctor NESumCovarRepF where
-  bimap f g (NESumCovarRep r) = NESumCovarRep (f r)
-  bimap f g (NESumCovarSum s s') = NESumCovarSum (g s) (g s')
+Functor (NESumCovarRepF obj rep) where
+  map f (NESumCovarRep r) = NESumCovarRep r
+  map f (NESumCovarSum s s') = NESumCovarSum (f s) (f s')
 
 public export
-(Show rep, Show carrier) => Show (NESumCovarRepF rep carrier) where
+(Show obj, Show rep, Show carrier) =>
+    Show (NESumCovarRepF obj rep carrier) where
   show (NESumCovarRep r) = show r
   show (NESumCovarSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
 
 public export
 interpSumCovarRep : {obj, rep, carrier : Type} ->
-  (interpRepApply : rep -> obj -> Type) ->
-  (interpCarrier : carrier -> obj -> Type) ->
-  NESumCovarRepF rep carrier -> obj -> Type
-interpSumCovarRep interpRepApply interpCarrier (NESumCovarRep rep) a =
-  interpRepApply rep a
-interpSumCovarRep interpRepApply interpCarrier (NESumCovarSum s s') a =
-  Either (interpCarrier s a) (interpCarrier s' a)
+  (interpObj : obj -> Type) ->
+  (interpSum : carrier -> obj -> Type) ->
+  NESumCovarRepF obj rep carrier -> obj -> Type
+interpSumCovarRep interpObj interpSum (NESumCovarRep r) a =
+  interpCovarRepF interpObj r a
+interpSumCovarRep interpObj interpSum (NESumCovarSum s s') a =
+  Either (interpSum s a) (interpSum s' a)
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------

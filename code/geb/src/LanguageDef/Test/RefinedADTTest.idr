@@ -84,28 +84,25 @@ interpTestType (TestTypeN n) = Fin n
 testCovarHomFunc : CovarRepF TestType Void
 testCovarHomFunc = CovarHom (TestTypeN 3)
 
-TestCovarApplyType : Type
-TestCovarApplyType =
-  interpCovarRepFApply interpTestType testCovarHomFunc (TestTypeN 2)
+TestCovarType : Type
+TestCovarType =
+  interpCovarRepF interpTestType testCovarHomFunc (TestTypeN 2)
 
-testCovarApply : TestCovarApplyType
-testCovarApply FZ = FS (FS (FZ))
-testCovarApply (FS FZ) = FZ
-
-TestCovarFuncType : Type
-TestCovarFuncType = interpCovarRepF interpTestType testCovarHomFunc
+testCovar : TestCovarType
+testCovar FZ = FS (FS (FZ))
+testCovar (FS FZ) = FZ
 
 testContravarHomFunc : ContravarRepF TestType Void
 testContravarHomFunc = ContravarHom (TestTypeN 3)
 
-TestContravarApplyType : Type
-TestContravarApplyType =
-  interpContravarRepFApply interpTestType testContravarHomFunc (TestTypeN 2)
+TestContravarType : Type
+TestContravarType =
+  interpContravarRepF interpTestType testContravarHomFunc (TestTypeN 2)
 
-testContravarApply : TestContravarApplyType
-testContravarApply FZ = FS (FZ)
-testContravarApply (FS FZ) = FZ
-testContravarApply (FS (FS FZ)) = FS (FZ)
+testContravar : TestContravarType
+testContravar FZ = FS (FZ)
+testContravar (FS FZ) = FZ
+testContravar (FS (FS FZ)) = FS (FZ)
 
 export
 languageDefRefinedADTTest : IO ()
