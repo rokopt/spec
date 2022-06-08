@@ -81,8 +81,19 @@ Show TestType where
 interpTestType : TestType -> Type
 interpTestType (TestTypeN n) = Fin n
 
-testRepFunc : CovarRepF TestType Void
-testRepFunc = CovarHom (TestTypeN 3)
+testCovarHomFunc : CovarRepF TestType Void
+testCovarHomFunc = CovarHom (TestTypeN 3)
+
+TestApplyType : Type
+TestApplyType =
+  interpCovarRepFApply interpTestType testCovarHomFunc (TestTypeN 2)
+
+testApply : TestApplyType
+testApply FZ = FS (FS (FZ))
+testApply (FS FZ) = FZ
+
+TestFuncType : Type
+TestFuncType = interpCovarRepF interpTestType testCovarHomFunc
 
 export
 languageDefRefinedADTTest : IO ()
@@ -106,6 +117,6 @@ languageDefRefinedADTTest = do
   printLn $ show fsObjTest1
   printLn $ show fsObjTest2
   -}
-  printLn $ show testRepFunc
+  printLn $ show testCovarHomFunc
   printLn "End languageDefRefinedADTTest."
   pure ()

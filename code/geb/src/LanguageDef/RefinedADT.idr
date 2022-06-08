@@ -29,10 +29,16 @@ Show obj => Show (CovarRepF obj carrier) where
   show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
 
 public export
+interpCovarRepFApply : {obj, carrier : Type} ->
+  (obj -> Type) -> CovarRepF obj carrier -> obj -> Type
+interpCovarRepFApply {obj} interpObj (CovarHom x) a =
+  interpObj a -> interpObj x
+
+public export
 interpCovarRepF : {obj, carrier : Type} ->
   (obj -> Type) -> CovarRepF obj carrier -> Type
-interpCovarRepF {obj} interpObj (CovarHom x) =
-  (a : obj) -> interpObj a -> interpObj x
+interpCovarRepF {obj} interpObj hf =
+  (a : obj) -> interpCovarRepFApply interpObj hf a
 
 -- A functor which generates a contravariant representable functor.
 -- As with covariant representable functors, there's simply one per
