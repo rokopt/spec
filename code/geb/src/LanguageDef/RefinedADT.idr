@@ -44,6 +44,29 @@ interpCovarRepF {obj} interpObj hf =
 -- As with covariant representable functors, there's simply one per
 -- object -- the only difference between the types is how we interpret
 -- them.
+public export
+data ContravarRepF : Type -> Type -> Type where
+  ContravarHom : obj -> ContravarRepF obj carrier
+
+public export
+Bifunctor ContravarRepF where
+  bimap f g (ContravarHom obj) = ContravarHom (f obj)
+
+public export
+Show obj => Show (ContravarRepF obj carrier) where
+  show (ContravarHom obj) = "Hom(" ++ show obj ++ ", _)"
+
+public export
+interpContravarRepFApply : {obj, carrier : Type} ->
+  (obj -> Type) -> ContravarRepF obj carrier -> obj -> Type
+interpContravarRepFApply {obj} interpObj (ContravarHom x) a =
+  interpObj x -> interpObj a
+
+public export
+interpContravarRepF : {obj, carrier : Type} ->
+  (obj -> Type) -> ContravarRepF obj carrier -> Type
+interpContravarRepF {obj} interpObj hf =
+  (a : obj) -> interpContravarRepFApply interpObj hf a
 
 -----------------------------------------
 -----------------------------------------
