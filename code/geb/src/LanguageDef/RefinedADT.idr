@@ -6,10 +6,14 @@ import public LanguageDef.Atom
 
 %default total
 
-----------------------------------------------------
+----------------------
+----------------------
+---- Endofunctors ----
+----------------------
+----------------------
+
 ----------------------------------------------------
 ---- Representable and corepresentable functors ----
-----------------------------------------------------
 ----------------------------------------------------
 
 -- A functor which, given a type of objects and a carrier type of functors,
@@ -56,77 +60,88 @@ interpContravarRepF : {obj, carrier : Type} ->
 interpContravarRepF {obj} interpObj (ContravarHom x) a =
   interpObj x -> interpObj a
 
------------------------------------------
------------------------------------------
----- General polynomial endofunctors ----
------------------------------------------
------------------------------------------
+----------------------------------------------------
+---- Sums of representables or corepresentables ----
+----------------------------------------------------
+
+-- Given a type of objects, a carrier type of representable or corepresentable
+-- functors, a generator functor for representable or corepresentable functors,
+-- and a carrier type of sums of representables or corepresentables, generate
+-- a new type of sums of representables or corepresentables.
+public export
+data SumRepOrCorepF :
+    (Type -> Type -> Type) -> Type -> Type -> Type -> Type where
+  SumRepOrCorepGen :
+    generator obj rep -> SumRepOrCorepF generator obj rep carrier
+  SumRepOrCorepEmpty :
+    SumRepOrCorepF generator obj rep carrier
+  SumRepOrCorepSum :
+    carrier -> carrier -> SumRepOrCorepF generator obj rep carrier
+
+public export
+Functor (SumRepOrCorepF generator obj rep) where
+  map f (SumRepOrCorepGen r) = SumRepOrCorepGen r
+  map f SumRepOrCorepEmpty = SumRepOrCorepEmpty
+  map f (SumRepOrCorepSum s s') = SumRepOrCorepSum (f s) (f s')
+
+public export
+(Show obj, Show rep, Show carrier, Show (generator obj rep)) =>
+    Show (SumRepOrCorepF generator obj rep carrier) where
+  show (SumRepOrCorepGen r) = show r
+  show SumRepOrCorepEmpty = show "[VoidF]"
+  show (SumRepOrCorepSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
+
+public export
+interpSumRepOrCorepF :
+  {generator : Type -> Type -> Type} -> {obj, rep, carrier : Type} ->
+  (interpObj : obj -> Type) ->
+  (interpRep : (obj -> Type) -> generator obj rep -> obj -> Type) ->
+  (interpSum : carrier -> obj -> Type) ->
+  SumRepOrCorepF generator obj rep carrier -> obj -> Type
+interpSumRepOrCorepF interpObj interpRep interpSum (SumRepOrCorepGen r) a =
+  interpRep interpObj r a
+interpSumRepOrCorepF interpObj interpRep interpSum SumRepOrCorepEmpty a =
+  Void
+interpSumRepOrCorepF interpObj interpRep interpSum (SumRepOrCorepSum s s') a =
+  Either (interpSum s a) (interpSum s' a)
+
+---------------------------------
+---- Polynomial endofunctors ----
+---------------------------------
 
 -- A functor which, given types of objects and covariant representables and a
--- carrier type of non-empty sums of representables, generates a new type of
--- non-empty sums of representables.
+-- carrier type of sums of covariant representables, generates a new type of
+-- sums of covariant representables -- that is, polynomial endofunctors.
 public export
-data NESumCovarRepF : Type -> Type -> Type -> Type where
-  NESumCovarRep : CovarRepF obj rep -> NESumCovarRepF obj rep carrier
-  NESumCovarSum : carrier -> carrier -> NESumCovarRepF obj rep carrier
+PolyEndoF : Type -> Type -> Type -> Type
+PolyEndoF = SumRepOrCorepF CovarRepF
 
 public export
-Functor (NESumCovarRepF obj rep) where
-  map f (NESumCovarRep r) = NESumCovarRep r
-  map f (NESumCovarSum s s') = NESumCovarSum (f s) (f s')
-
-public export
-(Show obj, Show rep, Show carrier) =>
-    Show (NESumCovarRepF obj rep carrier) where
-  show (NESumCovarRep r) = show r
-  show (NESumCovarSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
-
-public export
-interpSumCovarRep : {obj, rep, carrier : Type} ->
+interpPolyEndoF : {obj, rep, carrier : Type} ->
   (interpObj : obj -> Type) ->
   (interpSum : carrier -> obj -> Type) ->
-  NESumCovarRepF obj rep carrier -> obj -> Type
-interpSumCovarRep interpObj interpSum (NESumCovarRep r) a =
-  interpCovarRepF interpObj r a
-interpSumCovarRep interpObj interpSum (NESumCovarSum s s') a =
-  Either (interpSum s a) (interpSum s' a)
+  PolyEndoF obj rep carrier -> obj -> Type
+interpPolyEndoF interpObj interpSum =
+  interpSumRepOrCorepF interpObj interpCovarRepF interpSum
 
-----------------------------------------
-----------------------------------------
----- General Dirichlet endofunctors ----
-----------------------------------------
-----------------------------------------
+--------------------------------
+---- Dirichlet endofunctors ----
+--------------------------------
 
 -- A functor which, given types of objects and contravariant representables and
--- a carrier type of non-empty sums of representables, generates a new type of
--- non-empty sums of representables.
+-- a carrier type of sums of contravariant representables, generates a new type
+-- of sums of contravariant representables -- that is, Dirichlet endofunctors.
 public export
-data NESumContravarRepF : Type -> Type -> Type -> Type where
-  NESumContravarRep :
-    ContravarRepF obj rep -> NESumContravarRepF obj rep carrier
-  NESumContravarSum :
-    carrier -> carrier -> NESumContravarRepF obj rep carrier
+DirichletEndoF : Type -> Type -> Type -> Type
+DirichletEndoF = SumRepOrCorepF ContravarRepF
 
 public export
-Functor (NESumContravarRepF obj rep) where
-  map f (NESumContravarRep r) = NESumContravarRep r
-  map f (NESumContravarSum s s') = NESumContravarSum (f s) (f s')
-
-public export
-(Show obj, Show rep, Show carrier) =>
-    Show (NESumContravarRepF obj rep carrier) where
-  show (NESumContravarRep r) = show r
-  show (NESumContravarSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
-
-public export
-interpSumContravarRep : {obj, rep, carrier : Type} ->
+interpDirichletEndoF : {obj, rep, carrier : Type} ->
   (interpObj : obj -> Type) ->
   (interpSum : carrier -> obj -> Type) ->
-  NESumContravarRepF obj rep carrier -> obj -> Type
-interpSumContravarRep interpObj interpSum (NESumContravarRep r) a =
-  interpContravarRepF interpObj r a
-interpSumContravarRep interpObj interpSum (NESumContravarSum s s') a =
-  Either (interpSum s a) (interpSum s' a)
+  DirichletEndoF obj rep carrier -> obj -> Type
+interpDirichletEndoF interpObj interpSum =
+  interpSumRepOrCorepF interpObj interpContravarRepF interpSum
 
 ---------------------------------------------------------------
 ---------------------------------------------------------------
