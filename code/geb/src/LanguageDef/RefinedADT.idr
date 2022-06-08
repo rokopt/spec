@@ -91,6 +91,43 @@ interpSumCovarRep interpObj interpSum (NESumCovarRep r) a =
 interpSumCovarRep interpObj interpSum (NESumCovarSum s s') a =
   Either (interpSum s a) (interpSum s' a)
 
+----------------------------------------
+----------------------------------------
+---- General Dirichlet endofunctors ----
+----------------------------------------
+----------------------------------------
+
+-- A functor which, given types of objects and contravariant representables and
+-- a carrier type of non-empty sums of representables, generates a new type of
+-- non-empty sums of representables.
+public export
+data NESumContravarRepF : Type -> Type -> Type -> Type where
+  NESumContravarRep :
+    ContravarRepF obj rep -> NESumContravarRepF obj rep carrier
+  NESumContravarSum :
+    carrier -> carrier -> NESumContravarRepF obj rep carrier
+
+public export
+Functor (NESumContravarRepF obj rep) where
+  map f (NESumContravarRep r) = NESumContravarRep r
+  map f (NESumContravarSum s s') = NESumContravarSum (f s) (f s')
+
+public export
+(Show obj, Show rep, Show carrier) =>
+    Show (NESumContravarRepF obj rep carrier) where
+  show (NESumContravarRep r) = show r
+  show (NESumContravarSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
+
+public export
+interpSumContravarRep : {obj, rep, carrier : Type} ->
+  (interpObj : obj -> Type) ->
+  (interpSum : carrier -> obj -> Type) ->
+  NESumContravarRepF obj rep carrier -> obj -> Type
+interpSumContravarRep interpObj interpSum (NESumContravarRep r) a =
+  interpContravarRepF interpObj r a
+interpSumContravarRep interpObj interpSum (NESumContravarSum s s') a =
+  Either (interpSum s a) (interpSum s' a)
+
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 ---- Polynomial endofunctors of unrefined 0-order category ----
