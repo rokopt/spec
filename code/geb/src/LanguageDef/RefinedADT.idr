@@ -6,6 +6,35 @@ import public LanguageDef.Atom
 
 %default total
 
+public export
+data RepresentationF : (repCarrier : Type) -> Type where
+
+public export
+data InterpTypeF : {repCarrier : Type} ->
+    (interpTypeCarrier : repCarrier -> Type) ->
+    RepresentationF repCarrier -> Type where
+
+public export
+data ErrorTypeF : {repCarrier : Type} ->
+    (errorTypeCarrier : repCarrier -> Type) ->
+    RepresentationF repCarrier -> Type where
+
+public export
+checkRepF :
+  {repCarrier : Type} ->
+  {interpTypeCarrier : repCarrier -> Type} ->
+  {errorTypeCarrier : repCarrier -> Type} ->
+  (checkCarrier :
+    (rep : repCarrier) ->
+      Either
+        (interpTypeCarrier rep)
+        (errorTypeCarrier rep)) ->
+  (repF : RepresentationF repCarrier) ->
+    Either
+      (InterpTypeF interpTypeCarrier repF)
+      (ErrorTypeF errorTypeCarrier repF)
+checkRepF checkCarrier rep impossible
+
 -------------------------------------------------------------
 -------------------------------------------------------------
 ---- Unrefined zero-order category ("assembly language") ----
@@ -83,6 +112,24 @@ showFS = cataFS showFSAlg
 public export
 Show FinSubstObj where
   show = showFS
+
+public export
+interpretFSAlg : FinSubstAlg Type
+interpretFSAlg x = ?hole
+
+public export
+interpFinSubstF : {obj, carrier : Type} ->
+  (interpObj : obj -> Type) ->
+  (interpCarrier : carrier -> obj -> Type) ->
+  FinSubstF carrier -> obj -> Type
+interpFinSubstF interpObj interpCarrier FSVoid a =
+  Void
+interpFinSubstF interpObj interpCarrier FSUnit a =
+  Unit
+interpFinSubstF interpObj interpCarrier (FSCoproduct x y) a =
+  Either (interpCarrier x a) (interpCarrier y a)
+interpFinSubstF interpObj interpCarrier (FSHomObj x y) a =
+  interpCarrier x a -> interpCarrier y a
 
 ----------------------
 ----------------------
