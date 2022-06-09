@@ -6,6 +6,84 @@ import public LanguageDef.Atom
 
 %default total
 
+-------------------------------------------------------------
+-------------------------------------------------------------
+---- Unrefined zero-order category ("assembly language") ----
+-------------------------------------------------------------
+-------------------------------------------------------------
+
+public export
+data FinSubstF : Type -> Type where
+  FSVoid : FinSubstF carrier
+  FSUnit : FinSubstF carrier
+  FSCoproduct : carrier -> carrier -> FinSubstF carrier
+  FSHomObj : carrier -> carrier -> FinSubstF carrier
+
+public export
+Functor FinSubstF where
+  map f FSVoid = FSVoid
+  map f FSUnit = FSUnit
+  map f (FSCoproduct a b) = FSCoproduct (f a) (f b)
+  map f (FSHomObj a b) = FSHomObj (f a) (f b)
+
+public export
+showFSF : {0 carrier : Type} ->
+  (carrier -> String) -> FinSubstF carrier -> String
+showFSF s FSVoid = show 0
+showFSF s FSUnit = show 1
+showFSF s (FSCoproduct a b) = "(" ++ s a ++ " + " ++ s b ++ ")"
+showFSF s (FSHomObj a b) = "(" ++ s a ++ " -> " ++ s b ++ ")"
+
+public export
+Show carrier => Show (FinSubstF carrier) where
+  show = showFSF show
+
+public export
+data FinSubstObj : Type where
+  InFS : FinSubstF FinSubstObj -> FinSubstObj
+
+public export
+(!+) : FinSubstObj
+(!+) = InFS FSVoid
+
+public export
+(!*) : FinSubstObj
+(!*) = InFS FSUnit
+
+infixl 7 :+:
+public export
+(:+:) : FinSubstObj -> FinSubstObj -> FinSubstObj
+a :+: b = InFS $ FSCoproduct a b
+
+infixl 7 :>:
+public export
+(:>:) : FinSubstObj -> FinSubstObj -> FinSubstObj
+a :>: b = InFS $ FSHomObj a b
+
+public export
+FinSubstAlg : Type -> Type
+FinSubstAlg a = FinSubstF a -> a
+
+public export
+cataFS : {a : Type} -> FinSubstAlg a -> FinSubstObj -> a
+cataFS alg (InFS x) = alg $ case x of
+  FSVoid => FSVoid
+  FSUnit => FSUnit
+  FSCoproduct a b => FSCoproduct (cataFS alg a) (cataFS alg b)
+  FSHomObj a b => FSHomObj (cataFS alg a) (cataFS alg b)
+
+public export
+showFSAlg : FinSubstAlg String
+showFSAlg = showFSF id
+
+public export
+showFS : FinSubstObj -> String
+showFS = cataFS showFSAlg
+
+public export
+Show FinSubstObj where
+  show = showFS
+
 ----------------------
 ----------------------
 ---- Endofunctors ----
@@ -143,86 +221,49 @@ interpDirichletEndoF : {obj, rep, carrier : Type} ->
 interpDirichletEndoF interpObj interpSum =
   interpSumRepOrCorepF interpObj interpContravarRepF interpSum
 
+-------------------------------------------------
+-------------------------------------------------
+---- Substitution category from endofunctors ----
+-------------------------------------------------
+-------------------------------------------------
+
+-----------------------------------------
+-----------------------------------------
+---- Attempt at big mutual recursion ----
+-----------------------------------------
+-----------------------------------------
+
+public export
+data GebTypeFamily : Type where
+  GEB_HIGHER_CATEGORY : GebTypeFamily
+  GEB_CATEGORY : GebTypeFamily
+  GEB_OBJECT : GebTypeFamily
+  GEB_MORPHISM : GebTypeFamily
+  GEB_POLY_ENDOFUNCTOR : GebTypeFamily
+  GEB_DIRICHLET_ENDOFUNCTOR : GebTypeFamily
+  GEB_FUNCTOR : GebTypeFamily
+  GEB_CARTESIAN_TRANS : GebTypeFamily
+  GEB_NAT_TRANS : GebTypeFamily
+  GEB_ADJUNCTION : GebTypeFamily
+
+public export
+GebCarrier : GebTypeFamily -> Type
+GebCarrier GEB_HIGHER_CATEGORY = Type
+GebCarrier GEB_CATEGORY = Type
+GebCarrier GEB_OBJECT = {cat : Type} -> cat -> Type
+GebCarrier GEB_MORPHISM = {obj : Type} -> obj -> obj -> Type
+GebCarrier GEB_POLY_ENDOFUNCTOR = {cat : Type} -> cat -> Type
+GebCarrier GEB_DIRICHLET_ENDOFUNCTOR = {cat : Type} -> cat -> Type
+GebCarrier GEB_FUNCTOR = {cat : Type} -> cat -> cat -> Type
+GebCarrier GEB_CARTESIAN_TRANS = {functor : Type} -> functor -> functor -> Type
+GebCarrier GEB_NAT_TRANS = {functor : Type} -> functor -> functor -> Type
+GebCarrier GEB_ADJUNCTION = {functor : Type} -> functor -> functor -> Type
+
 ----------------------------------------------------
 ----------------------------------------------------
 ---- Endofunctors of unrefined 0-order category ----
 ----------------------------------------------------
 ----------------------------------------------------
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-public export
-data FinSubstF : Type -> Type where
-  FSVoid : FinSubstF carrier
-  FSUnit : FinSubstF carrier
-  FSCoproduct : carrier -> carrier -> FinSubstF carrier
-  FSHomObj : carrier -> carrier -> FinSubstF carrier
-
-public export
-Functor FinSubstF where
-  map f FSVoid = FSVoid
-  map f FSUnit = FSUnit
-  map f (FSCoproduct a b) = FSCoproduct (f a) (f b)
-  map f (FSHomObj a b) = FSHomObj (f a) (f b)
-
-public export
-showFSF : {0 carrier : Type} ->
-  (carrier -> String) -> FinSubstF carrier -> String
-showFSF s FSVoid = show 0
-showFSF s FSUnit = show 1
-showFSF s (FSCoproduct a b) = "(" ++ s a ++ " + " ++ s b ++ ")"
-showFSF s (FSHomObj a b) = "(" ++ s a ++ " -> " ++ s b ++ ")"
-
-public export
-Show carrier => Show (FinSubstF carrier) where
-  show = showFSF show
-
-public export
-data FinSubstObj : Type where
-  InFS : FinSubstF FinSubstObj -> FinSubstObj
-
-public export
-(!+) : FinSubstObj
-(!+) = InFS FSVoid
-
-public export
-(!*) : FinSubstObj
-(!*) = InFS FSUnit
-
-infixl 7 :+:
-public export
-(:+:) : FinSubstObj -> FinSubstObj -> FinSubstObj
-a :+: b = InFS $ FSCoproduct a b
-
-infixl 7 :>:
-public export
-(:>:) : FinSubstObj -> FinSubstObj -> FinSubstObj
-a :>: b = InFS $ FSHomObj a b
-
-public export
-FinSubstAlg : Type -> Type
-FinSubstAlg a = FinSubstF a -> a
-
-public export
-cataFS : {a : Type} -> FinSubstAlg a -> FinSubstObj -> a
-cataFS alg (InFS x) = alg $ case x of
-  FSVoid => FSVoid
-  FSUnit => FSUnit
-  FSCoproduct a b => FSCoproduct (cataFS alg a) (cataFS alg b)
-  FSHomObj a b => FSHomObj (cataFS alg a) (cataFS alg b)
-
-public export
-showFSAlg : FinSubstAlg String
-showFSAlg = showFSF id
-
-public export
-showFS : FinSubstObj -> String
-showFS = cataFS showFSAlg
-
-public export
-Show FinSubstObj where
-  show = showFS
 
 public export
 FinSubstSig : Type
