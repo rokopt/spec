@@ -750,6 +750,38 @@ finPolyBigStepCataN : (fpd : FinPolyData) -> (n : Nat) -> (v, a : Type) ->
 finPolyBigStepCataN fpd n v a subst alg =
   mapProductN n (finPolyBigStepCata {fpd} v a subst alg)
 
+mutual
+  public export
+  finPolyApply : {fpd : FinPolyData} -> {a, b : Type} ->
+    FreeFinPoly fpd (a -> b) ->
+    FreeFinPoly fpd a ->
+    FreeFinPoly fpd b
+  finPolyApply = ?finPolyApply_hole
+
+mutual
+  public export
+  finPolyJoin : {fpd : FinPolyData} -> {0 a : Type} ->
+    FreeFinPoly fpd (FreeFinPoly fpd a) -> FreeFinPoly fpd a
+  finPolyJoin {fpd} {a} (InFree x) = case x of
+    TermVar var => var
+    TermComposite com => finPolyFreeAlgebra fpd a $ finPolyJoinFunc com
+
+  public export
+  finPolyJoinN : {pow : Nat} -> {fpd : FinPolyData} -> {0 a : Type} ->
+    ProductN pow (FreeFinPoly fpd (FreeFinPoly fpd a)) ->
+    ProductN pow (FreeFinPoly fpd a)
+  finPolyJoinN {pow=Z} () = ()
+  finPolyJoinN {pow=(S pow)} (x, p) = (finPolyJoin x, finPolyJoinN {pow} p)
+
+  public export
+  finPolyJoinFunc : {fpd, fpd' : FinPolyData} -> {0 a : Type} ->
+    FinPolyFunc fpd (FreeFinPoly fpd' (FreeFinPoly fpd' a)) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' a)
+  finPolyJoinFunc {fpd=[]} {fpd'} v = void v
+  finPolyJoinFunc {fpd=((coeff, pow) :: terms)} {fpd'} poly = case poly of
+    Left (c, p) => Left (c, finPolyJoinN p)
+    Right poly' => Right $ finPolyJoinFunc poly'
+
 ------------------------------------------
 ---- Potentially-infinite polynomials ----
 ------------------------------------------
