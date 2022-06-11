@@ -934,6 +934,11 @@ Functor NatF where
   map f (SuccF n) = SuccF $ f n
 
 public export
+Show carrier => Show (NatF carrier) where
+  show ZeroF = "0"
+  show (SuccF n) = "S(" ++ show n ++ ")"
+
+public export
 NatAlg : Type -> Type
 NatAlg = Algebra NatF
 
@@ -971,12 +976,23 @@ interpNatFAlg ZeroF = Z
 interpNatFAlg (SuccF n) = S n
 
 public export
+showNatFAlg : NatAlg String
+showNatFAlg = show
+
+public export
 interpFreeNatF : {v : Type} -> (subst : v -> Nat) -> FreeNat v -> Nat
 interpFreeNatF {v} subst = cataNatF v Nat subst interpNatFAlg
 
 public export
 interpMuNatF : MuNat -> Nat
 interpMuNatF = interpFreeNatF {v=Void} (voidF Nat)
+
+--------------------------------------------
+---- Fixed-width binary natural numbers ----
+--------------------------------------------
+
+public export
+data BinNatF : Type -> Type where
 
 ---------------
 ---- Lists ----
