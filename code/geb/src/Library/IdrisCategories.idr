@@ -783,14 +783,34 @@ mutual
   public export
   finPolyApply11 : {fpd : FinPolyData} -> {a, b : Type} ->
     a -> FreeFinPoly fpd (a -> b) -> FreeFinPoly fpd b
-  finPolyApply11 = ?finPolyApply11_hole
+  finPolyApply11 ax (InFree fx) = InFree $ case fx of
+    TermVar fv => TermVar $ fv ax
+    TermComposite fcom => TermComposite $ finPolyApplyF1 ax fcom
 
   public export
   finPolyApplyNF : {pow : Nat} -> {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
     ProductN pow (FreeFinPoly fpd' (a -> b)) ->
     FinPolyFunc fpd (FreeFinPoly fpd' a) ->
     ProductN pow (FreeFinPoly fpd' b)
-  finPolyApplyNF = ?finPolyApplyNF_hole
+  finPolyApplyNF {pow=Z} () ap = ()
+  finPolyApplyNF {pow=(S pow)} (fp, fn) ap =
+    (finPolyApplyFP fp ap, finPolyApplyNF fn ap)
+
+  public export
+  finPolyApplyFP : {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
+    FreeFinPoly fpd' (a -> b) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' a) ->
+    FreeFinPoly fpd' b
+  finPolyApplyFP {fpd=[]} (InFree fx) v = void v
+  finPolyApplyFP {fpd=((coeff, pow) :: terms)} (InFree fx) xp = case (fx, xp) of
+    (TermVar fv, Left xfields) =>
+      InFree $ TermComposite $ ?finPolyApplyFP_hole_fvxf
+    (TermComposite fc, Left xfields) =>
+      ?finPolyApplyFP_hole_fcxf
+    (TermVar fv, Right xterms) =>
+      ?finPolyApplyFP_hole_fvxt
+    (TermComposite fc, Right xterms) =>
+      ?finPolyApplyFP_hole_fcxt
 
   public export
   finPolyApplyFN : {pow : Nat} -> {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
