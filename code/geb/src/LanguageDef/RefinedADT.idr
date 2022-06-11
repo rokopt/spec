@@ -114,10 +114,6 @@ Show FinSubstObj where
   show = showFS
 
 public export
-interpretFSAlg : FinSubstAlg Type
-interpretFSAlg x = ?hole
-
-public export
 interpFinSubstF : {obj, carrier : Type} ->
   (interpObj : obj -> Type) ->
   (interpCarrier : carrier -> obj -> Type) ->

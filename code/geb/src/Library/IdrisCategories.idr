@@ -623,13 +623,13 @@ public export
 FinPolyFunc : FinPolyData -> (Type -> Type)
 FinPolyFunc [] _ = Void
 FinPolyFunc ((coeff, pow) :: l) ty =
-  Either (coeff, FinCovarHomFunc pow ty) (FinPolyFunc l ty)
+  Either (coeff -> FinCovarHomFunc pow ty) (FinPolyFunc l ty)
 
 public export
 FinPolyAlg : FinPolyData -> Type -> Type
 FinPolyAlg [] _ = ()
 FinPolyAlg ((coeff, pow) :: l) ty =
-  (coeff -> FinCovarHomAlg pow ty, FinPolyAlg l ty)
+  ((coeff -> FinCovarHomFunc pow ty) -> ty, FinPolyAlg l ty)
 
 public export
 FinPolyAlgToAlg : {fpd : FinPolyData} -> {a : Type} ->
@@ -637,8 +637,8 @@ FinPolyAlgToAlg : {fpd : FinPolyData} -> {a : Type} ->
 FinPolyAlgToAlg {fpd=[]} {a} alg x = void x
 FinPolyAlgToAlg {fpd=((coeff, pow) :: fpd')} {a} (leftAlg, rightAlg) x =
   case x of
-    Left (c, fields) => FinCovarHomAlgToAlg (leftAlg c) fields
-    Right terms => FinPolyAlgToAlg {fpd=fpd'} rightAlg terms
+    Left fields => leftAlg fields
+    Right records => FinPolyAlgToAlg {fpd=fpd'} rightAlg records
 
 public export
 FreeFinPoly : FinPolyData -> Type -> Type
@@ -666,7 +666,7 @@ mutual
     TermComposite com => alg $ case fpd of
       [] => void com
       ((coeff, pow) :: terms) => case com of
-        Left (c, p) => Left (c, cataFinPolyFuncN subst alg p)
+        Left fields => Left $ cataFinPolyFuncN subst alg . fields -- (c, cataFinPolyFuncN subst alg p)
         Right poly => Right $
           cataFinPolyFunc
             {fpd=terms} {fpd'=((coeff, pow) :: terms)} {v} {a} subst alg poly
@@ -678,7 +678,7 @@ mutual
   cataFinPolyFunc {fpd=[]} {fpd'} {a} subst alg poly = void poly
   cataFinPolyFunc {fpd=((_, pow) :: terms)} {fpd'} {v} {a} subst alg poly =
     case poly of
-      Left (c, p) => Left (c, cataFinPolyFuncN {fpd=fpd'} {pow} subst alg p)
+      Left fields => Left $ cataFinPolyFuncN {fpd=fpd'} {pow} subst alg . fields
       Right poly' => Right $ cataFinPolyFunc {fpd=terms} {fpd'} subst alg poly'
 
   public export
@@ -695,7 +695,7 @@ finPolyMap : {fpd : FinPolyData} -> {a, b : Type} ->
   (a -> b) -> FinPolyFunc fpd a -> FinPolyFunc fpd b
 finPolyMap {fpd=[]} {a} {b} f poly = void poly
 finPolyMap {fpd=((coeff, pow) :: terms)} {a} {b} f poly = case poly of
-  Left (c, p) => Left (c, mapProductN pow f p)
+  Left fields => Left $ mapProductN pow f . fields
   Right poly' => Right $ finPolyMap f poly'
 
 public export
@@ -756,7 +756,77 @@ mutual
     FreeFinPoly fpd (a -> b) ->
     FreeFinPoly fpd a ->
     FreeFinPoly fpd b
-  finPolyApply = ?finPolyApply_hole
+  finPolyApply {fpd} (InFree f) (InFree x) = InFree $ case fpd of
+    [] => case f of
+      TermVar fvar => TermVar $ case x of
+        TermVar xvar => fvar xvar
+        TermComposite xcom => void xcom
+      TermComposite fcom => void fcom
+    ((coeff, pow) :: terms) => case (f, x) of
+      (TermVar fv, TermVar xv) => TermVar $ fv xv
+      (TermVar fv, TermComposite xc) => TermComposite $ case xc of
+        Left fields => Left $ freeFinPolyMapN fv . fields
+        Right xcr => Right $ finPolyFuncMap fv xcr
+      (TermComposite fc, TermVar xv) => TermComposite $ case fc of
+        Left fields => Left $ mapProductN pow (finPolyApply11 xv) . fields
+        Right terms => Right $ finPolyApplyF1 xv terms
+      (TermComposite fc, TermComposite xc) => TermComposite $ case (fc, xc) of
+        (Left ffields, Left xfields) =>
+          Left $ \c => finPolyApplyNN (ffields c) (xfields c)
+        (Left ffields, Right xterms) =>
+          Left $ \c => finPolyApplyNF (ffields c) xterms
+        (Right fterm, Left xfields) =>
+          Left $ \c => finPolyApplyFN fterm (xfields c)
+        (Right fterm, Right xterms) =>
+          Right $ finPolyApplyFF fterm xterms
+
+  public export
+  finPolyApply11 : {fpd : FinPolyData} -> {a, b : Type} ->
+    a -> FreeFinPoly fpd (a -> b) -> FreeFinPoly fpd b
+  finPolyApply11 = ?finPolyApply11_hole
+
+  public export
+  finPolyApplyNF : {pow : Nat} -> {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
+    ProductN pow (FreeFinPoly fpd' (a -> b)) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' a) ->
+    ProductN pow (FreeFinPoly fpd' b)
+  finPolyApplyNF = ?finPolyApplyNF_hole
+
+  public export
+  finPolyApplyFN : {pow : Nat} -> {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
+    FinPolyFunc fpd (FreeFinPoly fpd' (a -> b)) ->
+    ProductN pow (FreeFinPoly fpd' a) ->
+    ProductN pow (FreeFinPoly fpd' b)
+  finPolyApplyFN = ?finPolyApplyFN_hole
+
+  public export
+  finPolyApplyF1 : {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
+    a ->
+    FinPolyFunc fpd (FreeFinPoly fpd' (a -> b)) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' b)
+  finPolyApplyF1 = ?finPolyApply1F_hole
+
+  public export
+  finPolyApply1N : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
+    a ->
+    ProductN pow (FreeFinPoly fpd (a -> b)) ->
+    ProductN pow (FreeFinPoly fpd b)
+  finPolyApply1N = ?finPolyApplyN_hole
+
+  public export
+  finPolyApplyNN : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
+    ProductN pow (FreeFinPoly fpd (a -> b)) ->
+    ProductN pow (FreeFinPoly fpd a) ->
+    ProductN pow (FreeFinPoly fpd b)
+  finPolyApplyNN = ?finPolyApplyNN_hole
+
+  public export
+  finPolyApplyFF : {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
+    FinPolyFunc fpd (FreeFinPoly fpd' (a -> b)) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' a) ->
+    FinPolyFunc fpd (FreeFinPoly fpd' b)
+  finPolyApplyFF {fpd=[]} _ v = void v
+  finPolyApplyFF {fpd=((coeff, pow) :: terms)} f x = ?finPolyApplyFF_hole
 
 mutual
   public export
@@ -779,7 +849,7 @@ mutual
     FinPolyFunc fpd (FreeFinPoly fpd' a)
   finPolyJoinFunc {fpd=[]} {fpd'} v = void v
   finPolyJoinFunc {fpd=((coeff, pow) :: terms)} {fpd'} poly = case poly of
-    Left (c, p) => Left (c, finPolyJoinN p)
+    Left fields => Left $ finPolyJoinN . fields
     Right poly' => Right $ finPolyJoinFunc poly'
 
 ------------------------------------------
