@@ -898,9 +898,9 @@ DirichFunc ((coeff, rep) :: l) ty =
 --------------------
 --------------------
 
--------------------------
----- Natural numbers ----
--------------------------
+------------------------------------------------------------
+---- Non-terminating attempt at Nat-indexed hom-functor ----
+------------------------------------------------------------
 
 public export
 NatCovarHomFunc : Type -> Type
@@ -922,6 +922,10 @@ mutual
 public export
 FinRepHomFunc : Nat -> Type -> Type
 FinRepHomFunc n = \ty => MuFinCovar n -> ty
+
+-------------------------
+---- Natural numbers ----
+-------------------------
 
 public export
 data NatF : Type -> Type where
@@ -986,13 +990,6 @@ interpFreeNatF {v} subst = cataNatF v Nat subst interpNatFAlg
 public export
 interpMuNatF : MuNat -> Nat
 interpMuNatF = interpFreeNatF {v=Void} (voidF Nat)
-
---------------------------------------------
----- Fixed-width binary natural numbers ----
---------------------------------------------
-
-public export
-data BinNatF : Type -> Type where
 
 ---------------
 ---- Lists ----
@@ -1062,6 +1059,79 @@ interpMuListF {atom} = interpFreeListF {v=Void} (voidF $ List atom)
 public export
 (atom : Type) => Show atom => Show (MuList atom) where
   show = show . interpMuListF
+
+--------------------------------------------
+---- Fixed-width binary natural numbers ----
+--------------------------------------------
+
+public export
+BinNatF : Type -> Type
+BinNatF = ListF Bool
+
+-- Inherited from ListF.
+public export
+Functor BinNatF
+
+-- Inherited from ListF.
+public export
+(Show carrier) => Show (BinNatF carrier)
+
+public export
+BinNatAlg : Type -> Type
+BinNatAlg = Algebra BinNatF
+
+public export
+FreeBinNat : Type -> Type
+FreeBinNat = FreeMonad BinNatF
+
+public export
+MuBinNat : Type
+MuBinNat = Mu BinNatF
+
+public export
+BinNatCoalg : Type -> Type
+BinNatCoalg = Coalgebra BinNatF
+
+public export
+CofreeBinNat : Type -> Type
+CofreeBinNat = CofreeComonad BinNatF
+
+public export
+NuBinNat : Type
+NuBinNat = Nu BinNatF
+
+public export
+cataBinNatF : ParamCata BinNatF
+cataBinNatF = cataListF {atom=Bool}
+
+public export
+Show MuBinNat
+
+public export
+interpBinNatFListBoolAlg : BinNatAlg $ List Bool
+interpBinNatFListBoolAlg = interpListFAlg {atom=Bool}
+
+public export
+interpFreeBinNatListBoolF : {v : Type} ->
+  (subst : v -> List Bool) -> FreeBinNat v -> List Bool
+interpFreeBinNatListBoolF = interpFreeListF {atom=Bool}
+
+public export
+interpMuBinNatListBoolF : MuBinNat -> List Bool
+interpMuBinNatListBoolF = interpMuListF {atom=Bool}
+
+public export
+interpBinNatFBinAlg : BinNatAlg Bin
+interpBinNatFBinAlg NilF = []
+interpBinNatFBinAlg (ConsF b n) = boolToDigit b :: n
+
+public export
+interpMuBinNatBin : MuBinNat -> Bin
+interpMuBinNatBin = cataBinNatF Void Bin (voidF Bin) interpBinNatFBinAlg
+
+public export
+muBinNatToNat : MuBinNat -> Nat
+muBinNatToNat = toNat . interpMuBinNatBin
 
 ------------------------------------------------------
 ------------------------------------------------------

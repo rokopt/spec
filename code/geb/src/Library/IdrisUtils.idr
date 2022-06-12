@@ -20,6 +20,11 @@ import public Syntax.PreorderReasoning
 %default total
 
 public export
+boolToDigit : Bool -> Digit
+boolToDigit True = I
+boolToDigit False = O
+
+public export
 lteTolt : {m, n : Nat} -> LTE m n -> Not (m = n) -> LT m n
 lteTolt {m=0} {n=Z} LTEZero neq = void $ neq Refl
 lteTolt {m=0} {n=(S n)} LTEZero neq = LTESucc LTEZero
