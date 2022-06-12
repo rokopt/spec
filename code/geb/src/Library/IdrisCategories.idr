@@ -349,6 +349,311 @@ public export
 Bifunctor f => Bifunctor (flip f) where
   bimap f g = bimap g f
 
+--------------------------------------------------------------
+--------------------------------------------------------------
+---- Idris categories: `[Type]`, product, and endofunctor ----
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+---------------------------------------------------------------
+---- Objects/morphisms in `[Type]` (Idris's base category) ----
+---------------------------------------------------------------
+
+public export
+ObjectT : Type
+ObjectT = Type
+
+public export
+MorphismT : ObjectT -> ObjectT -> Type
+MorphismT a b = a -> b
+
+----------------------------------------------------------------------------
+---- Objects/morphisms in `[Type x Type]` (the base's product category) ----
+----------------------------------------------------------------------------
+
+public export
+ObjectP : Type
+ObjectP = (Type, Type)
+
+public export
+MorphismP : ObjectP -> ObjectP -> Type
+MorphismP (a, b) (c, d) = (MorphismT a c, MorphismT b d)
+
+-------------------------------------------------------------------------------
+---- Objects/morphisms in `[Type, Type]` (the base's endofunctor category) ----
+-------------------------------------------------------------------------------
+
+public export
+ObjectF : Type
+ObjectF = Type -> Type
+
+-- Morphisms in the endofunctor category are natural transformations in
+-- the base category.
+public export
+MorphismF : ObjectF -> ObjectF -> Type
+MorphismF f g = (a : Type) -> MorphismT (f a) (g a)
+
+------------------------------------------
+---- Identity/composition in `[Type]` ----
+------------------------------------------
+
+public export
+IdT : (a : ObjectT) -> MorphismT a a
+IdT a = Prelude.Basics.id {a}
+
+public export
+ComposeT : {a, b, c : ObjectT} ->
+  MorphismT b c -> MorphismT a b -> MorphismT a c
+ComposeT = (.)
+
+-------------------------------------------------
+---- Identity/composition in `[Type x Type]` ----
+-------------------------------------------------
+
+public export
+IdP : (a : ObjectP) -> MorphismP a a
+IdP (a, b) = (IdT a, IdT b)
+
+public export
+ComposeP : {a, b, c : ObjectP} ->
+  MorphismP b c -> MorphismP a b -> MorphismP a c
+ComposeP {a=(a, a')} {b=(b, b')} {c=(c, c')} (g, g') (f, f') =
+  (ComposeT {a} {b} {c} g f, ComposeT {a=a'} {b=b'} {c=c'} g' f')
+
+------------------------------------------------
+---- Identity/composition in `[Type, Type]` ----
+------------------------------------------------
+
+-- The identity in the functor category `[Type, Type]`.
+public export
+IdF : (f : ObjectF) -> MorphismF f f
+IdF f a = Prelude.Basics.id {a=(f a)}
+
+-- Composition in the functor category `[Type, Type]`.
+-- This is vertical composition of natural transformations.
+public export
+ComposeF : {f, g, h : ObjectF} ->
+  MorphismF g h -> MorphismF f g -> MorphismF f h
+ComposeF beta alpha a = ComposeT (beta a) (alpha a)
+
+-- The functor category also has composition of _objects_.
+public export
+ComposeFObj : ObjectF -> ObjectF -> ObjectF
+ComposeFObj = (.)
+
+-- The functor category also has horizonal composition.
+public export
+ComposeFH : {f, g, h, j : ObjectF} -> Functor g =>
+  MorphismF g j -> MorphismF f h -> MorphismF (ComposeT g f) (ComposeT j h)
+ComposeFH {g} beta alpha a = (beta (h a) . map {f=g} (alpha a))
+
+-- The functor category also has whiskering.
+
+public export
+WhiskerL : {f, g : ObjectF} -> (h : ObjectF) -> Functor h =>
+  MorphismF f g -> MorphismF (ComposeT h f) (ComposeT h g)
+WhiskerL h nu a = map {f=h} (nu a)
+
+public export
+WhiskerR : (f : ObjectF) -> {g, h : ObjectF} -> Functor f =>
+  MorphismF g h -> MorphismF (ComposeT f g) (ComposeT f h)
+WhiskerR f nu a = map {f} (nu a)
+
+---------------------------------------
+---- Polynomial functors on `Type` ----
+---------------------------------------
+
+-------------------
+---- Constants ----
+-------------------
+
+-- Given an object `a`, `Const a` is an endofunctor which takes all objects
+-- to `a`.
+public export
+ConstF : Type -> Type -> Type
+ConstF a _ = a
+
+public export
+Functor (ConstF a) where
+  map = const id
+
+--------------------------------------
+---- Terminal and initial objects ----
+--------------------------------------
+
+public export
+TerminalMonad : Type -> Type
+TerminalMonad = ConstF Unit
+
+public export
+Functor TerminalMonad where
+  map _ () = ()
+
+public export
+TerminalNTUnit : (a : Type) -> a -> TerminalMonad a
+TerminalNTUnit _ = const ()
+
+public export
+TerminalNaturality : {a, b : Type} -> (m : a -> b) ->
+  map {f=TerminalMonad} m . TerminalNTUnit a = TerminalNTUnit b . m
+TerminalNaturality _ = Refl
+
+public export
+InitialComonad : Type -> Type
+InitialComonad = ConstF Void
+
+public export
+Functor InitialComonad where
+  map _ v = v
+
+public export
+InitialNTCounit : (a : Type) -> InitialComonad a -> a
+InitialNTCounit = voidF
+
+public export
+InitialNaturality : {a, b : Type} -> (m : a -> b) ->
+  ExtEq (InitialNTCounit b . map {f=InitialComonad} m) (m . InitialNTCounit a)
+InitialNaturality _ v = void v
+
+------------------
+---- Products ----
+------------------
+
+-- `ProductF` is an operator on endofunctors which takes two endofunctors
+-- to their product.  `ProductF` is therefore not itself an endofunctor; it
+-- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
+-- endofunctors on some category `C` -- if all of `C`'s endofunctors are
+-- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
+-- [Poly[C] x Poly[C], Poly[C].  That is, it is a bifunctor on `Poly[C]`.)
+public export
+ProductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ProductF f g a = (f a, g a)
+
+public export
+(Functor f, Functor g) => Functor (ProductF f g) where
+  map m (x, y) = (map m x, map m y)
+
+public export
+ProductMonad : Type -> Type
+ProductMonad a = Pair a a
+
+public export
+ProductNTUnit : {a : Type} -> a -> ProductMonad a
+ProductNTUnit x = (x, x)
+
+-- The right adjoint to the diagonal functor from the Idris type system
+-- (`Type`).
+public export
+ProductAdjunct : (Type, Type) -> Type
+ProductAdjunct (t, t') = Pair t t'
+
+-- The right adjoint to the diagonal functor from the category of Idris
+-- functors (`Type -> Type`).
+public export
+ProductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
+ProductAdjunctFCat p = ProductF (fst p) (snd p)
+
+public export
+ProductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ProductFAlg f g a = f a -> g a -> a
+
+public export
+ProductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
+  ProductFAlg f g a -> Algebra (ProductF f g) a
+ProductFAlgToAlg {f} {g} {a} alg (fx, gx) = alg fx gx
+
+--------------------
+---- Coproducts ----
+--------------------
+
+-- `CoproductF` is in `[PolyC x PolyC, PolyC]`, and takes two
+-- endofunctors to their coproduct.
+public export
+CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
+CoproductF f g a = Either (f a) (g a)
+
+public export
+CoproductFComonad : (Type -> Type) -> Type -> Type
+CoproductFComonad f = CoproductF f f
+
+public export
+(Functor f, Functor g) => Functor (CoproductF f g) where
+  map m (Left x) = Left $ map m x
+  map m (Right y) = Right $ map m y
+
+public export
+CoproductComonad : Type -> Type
+CoproductComonad a = Either a a
+
+public export
+CoproductNTCounit : {a : Type} -> CoproductComonad a -> a
+CoproductNTCounit (Left x) = x
+CoproductNTCounit (Right x) = x
+
+-- The left adjoint to the diagonal functor, in the Idris type system.
+public export
+CoproductAdjunct : (Type, Type) -> Type
+CoproductAdjunct (t, t') = Either t t'
+
+-- The left adjoint to the diagonal functor from the category of Idris
+-- functors (`Type -> Type`).
+public export
+CoproductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
+CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
+
+public export
+CoproductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
+CoproductFAlg f g a = (f a -> a, g a -> a)
+
+public export
+CoproductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
+  CoproductFAlg f g a -> Algebra (CoproductF f g) a
+CoproductFAlgToAlg (algf, algg) (Left fx) = algf fx
+CoproductFAlgToAlg (algf, algg) (Right gx) = algg gx
+
+public export
+CoproductToCoproductFAlg :
+  (Type -> Type) -> (Type -> Type) ->
+  (Type -> Type) -> (Type -> Type) ->
+  Type -> Type
+-- An algebra for computing a morphism `(f + g) a -> (f' + g') a`.
+CoproductToCoproductFAlg f g f' g' a =
+  (f a -> CoproductF f' g' a, g a -> CoproductF f' g' a)
+
+---------------------------------------
+---- Higher-order utility functors ----
+---------------------------------------
+
+public export
+IdTF : Type -> Type
+IdTF = Prelude.Basics.id {a=Type}
+
+public export
+Functor IdTF where
+  map = id
+
+public export
+PairWithF : Type -> Type -> Type
+PairWithF a = ProductF (ConstF a) IdTF
+
+public export
+ChoiceBetweenF : Type -> Type -> Type
+ChoiceBetweenF a = CoproductF (ConstF a) IdTF
+
+public export
+MaybeF : Type -> Type
+MaybeF = ChoiceBetweenF ()
+
+public export
+CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
+CoproductFLNE f [] = f
+CoproductFLNE f (f' :: fs) = CoproductF f (CoproductFLNE f' fs)
+
+public export
+CoproductFL : List (Type -> Type) -> Type -> Type
+CoproductFL [] = InitialComonad
+CoproductFL (f :: fs) = CoproductFLNE f fs
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
@@ -1139,7 +1444,7 @@ muBinNatToNat = toNat . interpMuBinNatBin
 
 public export
 data BinPairF : Type -> Type where
-  BinPair : BinNatF carrier -> BinNatF carrier -> BinPairF carrier
+  BinPair : ProductF BinNatF BinNatF carrier -> BinPairF carrier
 
 ------------------------------------------------------
 ------------------------------------------------------
@@ -1712,313 +2017,10 @@ record MetaFunctor (catC, catD : MetaCat) where
 -- (non-recursive) extensional equality of functions.
 -- more to it (nat transes, adjunctions)
 
---------------------------------------------------------------
---------------------------------------------------------------
----- Idris categories: `[Type]`, product, and endofunctor ----
---------------------------------------------------------------
---------------------------------------------------------------
-
----------------------------------------------------------------
----- Objects/morphisms in `[Type]` (Idris's base category) ----
----------------------------------------------------------------
-
-public export
-ObjectT : Type
-ObjectT = Type
-
-public export
-MorphismT : ObjectT -> ObjectT -> Type
-MorphismT a b = a -> b
-
-----------------------------------------------------------------------------
----- Objects/morphisms in `[Type x Type]` (the base's product category) ----
-----------------------------------------------------------------------------
-
-public export
-ObjectP : Type
-ObjectP = (Type, Type)
-
-public export
-MorphismP : ObjectP -> ObjectP -> Type
-MorphismP (a, b) (c, d) = (MorphismT a c, MorphismT b d)
-
--------------------------------------------------------------------------------
----- Objects/morphisms in `[Type, Type]` (the base's endofunctor category) ----
--------------------------------------------------------------------------------
-
-public export
-ObjectF : Type
-ObjectF = Type -> Type
-
--- Morphisms in the endofunctor category are natural transformations in
--- the base category.
-public export
-MorphismF : ObjectF -> ObjectF -> Type
-MorphismF f g = (a : Type) -> MorphismT (f a) (g a)
-
-------------------------------------------
----- Identity/composition in `[Type]` ----
-------------------------------------------
-
-public export
-IdT : (a : ObjectT) -> MorphismT a a
-IdT a = Prelude.Basics.id {a}
-
-public export
-ComposeT : {a, b, c : ObjectT} ->
-  MorphismT b c -> MorphismT a b -> MorphismT a c
-ComposeT = (.)
-
--------------------------------------------------
----- Identity/composition in `[Type x Type]` ----
--------------------------------------------------
-
-public export
-IdP : (a : ObjectP) -> MorphismP a a
-IdP (a, b) = (IdT a, IdT b)
-
-public export
-ComposeP : {a, b, c : ObjectP} ->
-  MorphismP b c -> MorphismP a b -> MorphismP a c
-ComposeP {a=(a, a')} {b=(b, b')} {c=(c, c')} (g, g') (f, f') =
-  (ComposeT {a} {b} {c} g f, ComposeT {a=a'} {b=b'} {c=c'} g' f')
-
-------------------------------------------------
----- Identity/composition in `[Type, Type]` ----
-------------------------------------------------
-
--- The identity in the functor category `[Type, Type]`.
-public export
-IdF : (f : ObjectF) -> MorphismF f f
-IdF f a = Prelude.Basics.id {a=(f a)}
-
--- Composition in the functor category `[Type, Type]`.
--- This is vertical composition of natural transformations.
-public export
-ComposeF : {f, g, h : ObjectF} ->
-  MorphismF g h -> MorphismF f g -> MorphismF f h
-ComposeF beta alpha a = ComposeT (beta a) (alpha a)
-
--- The functor category also has composition of _objects_.
-public export
-ComposeFObj : ObjectF -> ObjectF -> ObjectF
-ComposeFObj = (.)
-
--- The functor category also has horizonal composition.
-public export
-ComposeFH : {f, g, h, j : ObjectF} -> Functor g =>
-  MorphismF g j -> MorphismF f h -> MorphismF (ComposeT g f) (ComposeT j h)
-ComposeFH {g} beta alpha a = (beta (h a) . map {f=g} (alpha a))
-
--- The functor category also has whiskering.
-
-public export
-WhiskerL : {f, g : ObjectF} -> (h : ObjectF) -> Functor h =>
-  MorphismF f g -> MorphismF (ComposeT h f) (ComposeT h g)
-WhiskerL h nu a = map {f=h} (nu a)
-
-public export
-WhiskerR : (f : ObjectF) -> {g, h : ObjectF} -> Functor f =>
-  MorphismF g h -> MorphismF (ComposeT f g) (ComposeT f h)
-WhiskerR f nu a = map {f} (nu a)
-
----------------------------------------
----- Polynomial functors on `Type` ----
----------------------------------------
-
--------------------
----- Constants ----
--------------------
-
--- Given an object `a`, `Const a` is an endofunctor which takes all objects
--- to `a`.
-public export
-ConstF : Type -> Type -> Type
-ConstF a _ = a
-
-public export
-Functor (ConstF a) where
-  map = const id
-
---------------------------------------
----- Terminal and initial objects ----
---------------------------------------
-
-public export
-TerminalMonad : Type -> Type
-TerminalMonad = ConstF Unit
-
-public export
-Functor TerminalMonad where
-  map _ () = ()
-
-public export
-TerminalNTUnit : (a : Type) -> a -> TerminalMonad a
-TerminalNTUnit _ = const ()
-
-public export
-TerminalNaturality : {a, b : Type} -> (m : a -> b) ->
-  map {f=TerminalMonad} m . TerminalNTUnit a = TerminalNTUnit b . m
-TerminalNaturality _ = Refl
-
-public export
-InitialComonad : Type -> Type
-InitialComonad = ConstF Void
-
-public export
-Functor InitialComonad where
-  map _ v = v
-
-public export
-InitialNTCounit : (a : Type) -> InitialComonad a -> a
-InitialNTCounit = voidF
-
-public export
-InitialNaturality : {a, b : Type} -> (m : a -> b) ->
-  ExtEq (InitialNTCounit b . map {f=InitialComonad} m) (m . InitialNTCounit a)
-InitialNaturality _ v = void v
-
-------------------
----- Products ----
-------------------
-
--- `ProductF` is an operator on endofunctors which takes two endofunctors
--- to their product.  `ProductF` is therefore not itself an endofunctor; it
--- is a higher-order functor.  (If `Poly[C]` is the category of polynomial
--- endofunctors on some category `C` -- if all of `C`'s endofunctors are
--- polynomial, then `Poly[C]` is `[C,C]` -- then `ProductF` is an object of
--- [Poly[C] x Poly[C], Poly[C].  That is, it is a bifunctor on `Poly[C]`.)
-public export
-ProductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
-ProductF f g a = (f a, g a)
-
-public export
-(Functor f, Functor g) => Functor (ProductF f g) where
-  map m (x, y) = (map m x, map m y)
-
-public export
-ProductMonad : Type -> Type
-ProductMonad a = Pair a a
-
-public export
-ProductNTUnit : {a : Type} -> a -> ProductMonad a
-ProductNTUnit x = (x, x)
-
--- The right adjoint to the diagonal functor from the Idris type system
--- (`Type`).
-public export
-ProductAdjunct : (Type, Type) -> Type
-ProductAdjunct (t, t') = Pair t t'
-
--- The right adjoint to the diagonal functor from the category of Idris
--- functors (`Type -> Type`).
-public export
-ProductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
-ProductAdjunctFCat p = ProductF (fst p) (snd p)
-
-public export
-ProductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
-ProductFAlg f g a = f a -> g a -> a
-
-public export
-ProductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
-  ProductFAlg f g a -> Algebra (ProductF f g) a
-ProductFAlgToAlg {f} {g} {a} alg (fx, gx) = alg fx gx
-
---------------------
----- Coproducts ----
---------------------
-
--- `CoproductF` is in `[PolyC x PolyC, PolyC]`, and takes two
--- endofunctors to their coproduct.
-public export
-CoproductF : (Type -> Type) -> (Type -> Type) -> Type -> Type
-CoproductF f g a = Either (f a) (g a)
-
-public export
-CoproductFComonad : (Type -> Type) -> Type -> Type
-CoproductFComonad f = CoproductF f f
-
-public export
-(Functor f, Functor g) => Functor (CoproductF f g) where
-  map m (Left x) = Left $ map m x
-  map m (Right y) = Right $ map m y
-
-public export
-CoproductComonad : Type -> Type
-CoproductComonad a = Either a a
-
-public export
-CoproductNTCounit : {a : Type} -> CoproductComonad a -> a
-CoproductNTCounit (Left x) = x
-CoproductNTCounit (Right x) = x
-
--- The left adjoint to the diagonal functor, in the Idris type system.
-public export
-CoproductAdjunct : (Type, Type) -> Type
-CoproductAdjunct (t, t') = Either t t'
-
--- The left adjoint to the diagonal functor from the category of Idris
--- functors (`Type -> Type`).
-public export
-CoproductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
-CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
-
-public export
-CoproductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
-CoproductFAlg f g a = (f a -> a, g a -> a)
-
-public export
-CoproductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
-  CoproductFAlg f g a -> Algebra (CoproductF f g) a
-CoproductFAlgToAlg (algf, algg) (Left fx) = algf fx
-CoproductFAlgToAlg (algf, algg) (Right gx) = algg gx
-
-public export
-CoproductToCoproductFAlg :
-  (Type -> Type) -> (Type -> Type) ->
-  (Type -> Type) -> (Type -> Type) ->
-  Type -> Type
--- An algebra for computing a morphism `(f + g) a -> (f' + g') a`.
-CoproductToCoproductFAlg f g f' g' a =
-  (f a -> CoproductF f' g' a, g a -> CoproductF f' g' a)
-
----------------------------------------
----- Higher-order utility functors ----
----------------------------------------
-
-public export
-IdTF : Type -> Type
-IdTF = Prelude.Basics.id {a=Type}
-
-public export
-Functor IdTF where
-  map = id
-
-public export
-PairWithF : Type -> Type -> Type
-PairWithF a = ProductF (ConstF a) IdTF
-
-public export
-ChoiceBetweenF : Type -> Type -> Type
-ChoiceBetweenF a = CoproductF (ConstF a) IdTF
-
-public export
-MaybeF : Type -> Type
-MaybeF = ChoiceBetweenF ()
-
-public export
-CoproductFLNE : (Type -> Type) -> List (Type -> Type) -> Type -> Type
-CoproductFLNE f [] = f
-CoproductFLNE f (f' :: fs) = CoproductF f (CoproductFLNE f' fs)
-
-public export
-CoproductFL : List (Type -> Type) -> Type -> Type
-CoproductFL [] = InitialComonad
-CoproductFL (f :: fs) = CoproductFLNE f fs
-
+----------------------------------------------
 ----------------------------------------------
 ---- Polynomial-functor algebra on `Type` ----
+----------------------------------------------
 ----------------------------------------------
 
 --------------------------------------
