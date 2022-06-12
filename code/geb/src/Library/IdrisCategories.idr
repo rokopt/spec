@@ -1133,6 +1133,14 @@ public export
 muBinNatToNat : MuBinNat -> Nat
 muBinNatToNat = toNat . interpMuBinNatBin
 
+-----------------------------------------------------
+---- Pairs of fixed-width binary natural numbers ----
+-----------------------------------------------------
+
+public export
+data BinPairF : Type -> Type where
+  BinPair : BinNatF carrier -> BinNatF carrier -> BinPairF carrier
+
 ------------------------------------------------------
 ------------------------------------------------------
 ---- Idris sigma, product, and functor categories ----
@@ -1908,6 +1916,15 @@ public export
 ProductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
 ProductAdjunctFCat p = ProductF (fst p) (snd p)
 
+public export
+ProductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
+ProductFAlg f g a = f a -> g a -> a
+
+public export
+ProductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
+  ProductFAlg f g a -> Algebra (ProductF f g) a
+ProductFAlgToAlg {f} {g} {a} alg (fx, gx) = alg fx gx
+
 --------------------
 ---- Coproducts ----
 --------------------
@@ -1946,6 +1963,25 @@ CoproductAdjunct (t, t') = Either t t'
 public export
 CoproductAdjunctFCat : ((Type -> Type), (Type -> Type)) -> Type -> Type
 CoproductAdjunctFCat p = CoproductF (fst p) (snd p)
+
+public export
+CoproductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
+CoproductFAlg f g a = (f a -> a, g a -> a)
+
+public export
+CoproductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
+  CoproductFAlg f g a -> Algebra (CoproductF f g) a
+CoproductFAlgToAlg (algf, algg) (Left fx) = algf fx
+CoproductFAlgToAlg (algf, algg) (Right gx) = algg gx
+
+public export
+CoproductToCoproductFAlg :
+  (Type -> Type) -> (Type -> Type) ->
+  (Type -> Type) -> (Type -> Type) ->
+  Type -> Type
+-- An algebra for computing a morphism `(f + g) a -> (f' + g') a`.
+CoproductToCoproductFAlg f g f' g' a =
+  (f a -> CoproductF f' g' a, g a -> CoproductF f' g' a)
 
 ---------------------------------------
 ---- Higher-order utility functors ----
