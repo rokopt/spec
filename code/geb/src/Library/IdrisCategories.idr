@@ -484,6 +484,10 @@ FreeNaturalTransformation m f g =
   (x : Type) -> f (FreeMonad m x) -> g (FreeMonad m x)
 
 public export
+FreeMonadNatTrans : (Type -> Type) -> (Type -> Type) -> Type
+FreeMonadNatTrans f g = NaturalTransformation (FreeMonad f) (FreeMonad g)
+
+public export
 FreeAdjUnit : (f, g : Type -> Type) -> Type
 FreeAdjUnit m f = FreeNaturalTransformation m id f
 
@@ -501,11 +505,10 @@ natTransMapFree :
   {f, g : Type -> Type} ->
   ParamCata f ->
   NaturalTransformation f g ->
-  AdjUnit (FreeMonad g) ->
-  NaturalTransformation (FreeMonad f) (FreeMonad g)
-natTransMapFree {f} {g} cataF nt freeUnit carrier =
+  FreeMonadNatTrans f g
+natTransMapFree {f} {g} cataF nt carrier =
   cataF carrier
-    (FreeMonad g carrier) (freeUnit carrier) (natTransFreeAlg nt carrier)
+    (FreeMonad g carrier) (InFree . TermVar) (natTransFreeAlg nt carrier)
 
 ---------------------------------------
 ---- Polynomial functors on `Type` ----
@@ -1427,8 +1430,7 @@ freeLengthAlg : {atom : Type} -> FreeAdjCounit NatF (ListF atom)
 freeLengthAlg = natTransFreeAlg lengthAlg
 
 public export
-lengthLF : {atom : Type} ->
-  AdjUnit FreeNat -> NaturalTransformation (FreeList atom) FreeNat
+lengthLF : {atom : Type} -> NaturalTransformation (FreeList atom) FreeNat
 lengthLF = natTransMapFree cataListF lengthAlg
 
 --------------------------------------------
@@ -1507,6 +1509,10 @@ muBinNatToNat = toNat . interpMuBinNatBin
 public export
 binNatLengthAlg : NaturalTransformation BinNatF NatF
 binNatLengthAlg = lengthAlg {atom=Bool}
+
+public export
+binNatLength : FreeMonadNatTrans BinNatF NatF
+binNatLength = natTransMapFree cataBinNatF binNatLengthAlg
 
 -----------------------------------------------------
 ---- Pairs of fixed-width binary natural numbers ----
