@@ -1055,6 +1055,9 @@ finPolyBigStepCataN : (fpd : FinPolyData) -> (n : Nat) -> (v, a : Type) ->
 finPolyBigStepCataN fpd n v a subst alg =
   mapProductN n (finPolyBigStepCata {fpd} v a subst alg)
 
+{-
+ - This won't work until the specification for polynomial endofunctors
+ - becomes narrower.
 mutual
   public export
   finPolyApply : {fpd : FinPolyData} -> {a, b : Type} ->
@@ -1109,41 +1112,41 @@ mutual
   finPolyApplyFP {fpd=[]} (InFree fx) v = void v
   finPolyApplyFP {fpd=((coeff, pow) :: terms)} (InFree fx) xp = case (fx, xp) of
     (TermVar fv, Left xfields) =>
-      InFree $ TermComposite $ ?finPolyApplyFP_hole_fvxf
+      InFree $ TermComposite $ finPolyApplyFP_hole_fvxf
     (TermComposite fc, Left xfields) =>
-      ?finPolyApplyFP_hole_fcxf
+      finPolyApplyFP_hole_fcxf
     (TermVar fv, Right xterms) =>
-      ?finPolyApplyFP_hole_fvxt
+      finPolyApplyFP_hole_fvxt
     (TermComposite fc, Right xterms) =>
-      ?finPolyApplyFP_hole_fcxt
+      finPolyApplyFP_hole_fcxt
 
   public export
   finPolyApplyFN : {pow : Nat} -> {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
     FinPolyFunc fpd (FreeFinPoly fpd' (a -> b)) ->
     ProductN pow (FreeFinPoly fpd' a) ->
     ProductN pow (FreeFinPoly fpd' b)
-  finPolyApplyFN = ?finPolyApplyFN_hole
+  finPolyApplyFN = finPolyApplyFN_hole
 
   public export
   finPolyApplyF1 : {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
     a ->
     FinPolyFunc fpd (FreeFinPoly fpd' (a -> b)) ->
     FinPolyFunc fpd (FreeFinPoly fpd' b)
-  finPolyApplyF1 = ?finPolyApply1F_hole
+  finPolyApplyF1 = finPolyApply1F_hole
 
   public export
   finPolyApply1N : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
     a ->
     ProductN pow (FreeFinPoly fpd (a -> b)) ->
     ProductN pow (FreeFinPoly fpd b)
-  finPolyApply1N = ?finPolyApplyN_hole
+  finPolyApply1N = finPolyApplyN_hole
 
   public export
   finPolyApplyNN : {pow : Nat} -> {fpd : FinPolyData} -> {a, b : Type} ->
     ProductN pow (FreeFinPoly fpd (a -> b)) ->
     ProductN pow (FreeFinPoly fpd a) ->
     ProductN pow (FreeFinPoly fpd b)
-  finPolyApplyNN = ?finPolyApplyNN_hole
+  finPolyApplyNN = finPolyApplyNN_hole
 
   public export
   finPolyApplyFF : {fpd, fpd' : FinPolyData} -> {a, b : Type} ->
@@ -1151,7 +1154,7 @@ mutual
     FinPolyFunc fpd (FreeFinPoly fpd' a) ->
     FinPolyFunc fpd (FreeFinPoly fpd' b)
   finPolyApplyFF {fpd=[]} _ v = void v
-  finPolyApplyFF {fpd=((coeff, pow) :: terms)} f x = ?finPolyApplyFF_hole
+  finPolyApplyFF {fpd=((coeff, pow) :: terms)} f x = finPolyApplyFF_hole
 
 mutual
   public export
@@ -1176,6 +1179,7 @@ mutual
   finPolyJoinFunc {fpd=((coeff, pow) :: terms)} {fpd'} poly = case poly of
     Left fields => Left $ finPolyJoinN . fields
     Right poly' => Right $ finPolyJoinFunc poly'
+ -}
 
 ------------------------------------------
 ---- Potentially-infinite polynomials ----
@@ -1365,6 +1369,21 @@ public export
 (atom : Type) => Show atom => Show (MuList atom) where
   show = show . interpMuListF
 
+public export
+lengthAlg : {atom, carrier : Type} -> ListF atom carrier -> NatF carrier
+lengthAlg NilF = ZeroF
+lengthAlg (ConsF _ l) = SuccF l
+
+public export
+freeLengthAlg : {atom, carrier : Type} ->
+  ListF atom (FreeNat carrier) -> FreeNat carrier
+freeLengthAlg = InFree . TermComposite . lengthAlg
+
+public export
+lengthLF : {atom, carrier : Type} -> (carrier -> FreeNat carrier) ->
+  FreeList atom carrier -> FreeNat carrier
+lengthLF subst = cataListF carrier (FreeNat carrier) subst freeLengthAlg
+
 --------------------------------------------
 ---- Fixed-width binary natural numbers ----
 --------------------------------------------
@@ -1437,6 +1456,10 @@ interpMuBinNatBin = cataBinNatF Void Bin (voidF Bin) interpBinNatFBinAlg
 public export
 muBinNatToNat : MuBinNat -> Nat
 muBinNatToNat = toNat . interpMuBinNatBin
+
+public export
+binNatLengthAlg : {carrier : Type} -> BinNatF carrier -> NatF carrier
+binNatLengthAlg = lengthAlg {atom=Bool}
 
 -----------------------------------------------------
 ---- Pairs of fixed-width binary natural numbers ----
