@@ -349,6 +349,21 @@ public export
 Bifunctor f => Bifunctor (flip f) where
   bimap f g = bimap g f
 
+----------------------------------------------------
+----------------------------------------------------
+---- Natural transformations and their algebras ----
+----------------------------------------------------
+----------------------------------------------------
+
+public export
+NaturalTransformation : (Type -> Type) -> (Type -> Type) -> Type
+NaturalTransformation f g = (x : Type) -> f x -> g x
+
+public export
+natTransFreeAlg : {f, g : Type -> Type} -> NaturalTransformation f g ->
+  {a : Type} -> f (FreeMonad g a) -> FreeMonad g a
+natTransFreeAlg {f} {g} nt {a} = InFree . TermComposite . nt (FreeMonad g a)
+
 --------------------------------------------------------------
 --------------------------------------------------------------
 ---- Idris categories: `[Type]`, product, and endofunctor ----
@@ -1370,19 +1385,20 @@ public export
   show = show . interpMuListF
 
 public export
-lengthAlg : {atom, carrier : Type} -> ListF atom carrier -> NatF carrier
-lengthAlg NilF = ZeroF
-lengthAlg (ConsF _ l) = SuccF l
+lengthAlg : {atom : Type} -> NaturalTransformation (ListF atom) NatF
+lengthAlg _ NilF = ZeroF
+lengthAlg _ (ConsF _ l) = SuccF l
 
 public export
-freeLengthAlg : {atom, carrier : Type} ->
-  ListF atom (FreeNat carrier) -> FreeNat carrier
-freeLengthAlg = InFree . TermComposite . lengthAlg
+freeLengthAlg : {atom : Type} ->
+  (carrier : Type) -> ListF atom (FreeNat carrier) -> FreeNat carrier
+freeLengthAlg carrier = natTransFreeAlg lengthAlg
 
 public export
 lengthLF : {atom, carrier : Type} -> (carrier -> FreeNat carrier) ->
   FreeList atom carrier -> FreeNat carrier
-lengthLF subst = cataListF carrier (FreeNat carrier) subst freeLengthAlg
+lengthLF {carrier} subst =
+  cataListF carrier (FreeNat carrier) subst (freeLengthAlg carrier)
 
 --------------------------------------------
 ---- Fixed-width binary natural numbers ----
@@ -1458,7 +1474,7 @@ muBinNatToNat : MuBinNat -> Nat
 muBinNatToNat = toNat . interpMuBinNatBin
 
 public export
-binNatLengthAlg : {carrier : Type} -> BinNatF carrier -> NatF carrier
+binNatLengthAlg : NaturalTransformation BinNatF NatF
 binNatLengthAlg = lengthAlg {atom=Bool}
 
 -----------------------------------------------------
