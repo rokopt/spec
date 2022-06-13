@@ -10,6 +10,7 @@ import public Decidable.Equality
 import public Control.Function
 import public Control.Relation
 import public Control.Order
+import public Control.Monad.Identity
 import public Data.Binary
 import public Data.Nat.Properties
 import public Data.Nat.Exponentiation

@@ -349,21 +349,6 @@ public export
 Bifunctor f => Bifunctor (flip f) where
   bimap f g = bimap g f
 
-----------------------------------------------------
-----------------------------------------------------
----- Natural transformations and their algebras ----
-----------------------------------------------------
-----------------------------------------------------
-
-public export
-NaturalTransformation : (Type -> Type) -> (Type -> Type) -> Type
-NaturalTransformation f g = (x : Type) -> f x -> g x
-
-public export
-natTransFreeAlg : {f, g : Type -> Type} -> NaturalTransformation f g ->
-  {a : Type} -> f (FreeMonad g a) -> FreeMonad g a
-natTransFreeAlg {f} {g} nt {a} = InFree . TermComposite . nt (FreeMonad g a)
-
 --------------------------------------------------------------
 --------------------------------------------------------------
 ---- Idris categories: `[Type]`, product, and endofunctor ----
@@ -473,6 +458,54 @@ public export
 WhiskerR : (f : ObjectF) -> {g, h : ObjectF} -> Functor f =>
   MorphismF g h -> MorphismF (ComposeT f g) (ComposeT f h)
 WhiskerR f nu a = map {f} (nu a)
+
+----------------------------------------------------
+----------------------------------------------------
+---- Natural transformations and their algebras ----
+----------------------------------------------------
+----------------------------------------------------
+
+public export
+NaturalTransformation : (Type -> Type) -> (Type -> Type) -> Type
+NaturalTransformation f g = (x : Type) -> f x -> g x
+
+public export
+AdjUnit : (Type -> Type) -> Type
+AdjUnit f = NaturalTransformation id f
+
+public export
+AdjCounit : (Type -> Type) -> Type
+AdjCounit f = NaturalTransformation f id
+
+public export
+FreeNaturalTransformation :
+  (Type -> Type) -> (Type -> Type) -> (Type -> Type) -> Type
+FreeNaturalTransformation m f g =
+  (x : Type) -> f (FreeMonad m x) -> g (FreeMonad m x)
+
+public export
+FreeAdjUnit : (f, g : Type -> Type) -> Type
+FreeAdjUnit m f = FreeNaturalTransformation m id f
+
+public export
+FreeAdjCounit : (f, g : Type -> Type) -> Type
+FreeAdjCounit m f = FreeNaturalTransformation m f id
+
+public export
+natTransFreeAlg : {f, g : Type -> Type} ->
+  NaturalTransformation f g -> FreeAdjCounit g f
+natTransFreeAlg {f} {g} nt a = InFree . TermComposite . nt (FreeMonad g a)
+
+public export
+natTransMapFree :
+  {f, g : Type -> Type} ->
+  ParamCata f ->
+  NaturalTransformation f g ->
+  AdjUnit (FreeMonad g) ->
+  NaturalTransformation (FreeMonad f) (FreeMonad g)
+natTransMapFree {f} {g} cataF nt freeUnit carrier =
+  cataF carrier
+    (FreeMonad g carrier) (freeUnit carrier) (natTransFreeAlg nt carrier)
 
 ---------------------------------------
 ---- Polynomial functors on `Type` ----
@@ -1390,15 +1423,13 @@ lengthAlg _ NilF = ZeroF
 lengthAlg _ (ConsF _ l) = SuccF l
 
 public export
-freeLengthAlg : {atom : Type} ->
-  (carrier : Type) -> ListF atom (FreeNat carrier) -> FreeNat carrier
-freeLengthAlg carrier = natTransFreeAlg lengthAlg
+freeLengthAlg : {atom : Type} -> FreeAdjCounit NatF (ListF atom)
+freeLengthAlg = natTransFreeAlg lengthAlg
 
 public export
-lengthLF : {atom, carrier : Type} -> (carrier -> FreeNat carrier) ->
-  FreeList atom carrier -> FreeNat carrier
-lengthLF {carrier} subst =
-  cataListF carrier (FreeNat carrier) subst (freeLengthAlg carrier)
+lengthLF : {atom : Type} ->
+  AdjUnit FreeNat -> NaturalTransformation (FreeList atom) FreeNat
+lengthLF = natTransMapFree cataListF lengthAlg
 
 --------------------------------------------
 ---- Fixed-width binary natural numbers ----
