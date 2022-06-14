@@ -484,8 +484,20 @@ FreeNaturalTransformation m f g =
   (x : Type) -> f (FreeMonad m x) -> g (FreeMonad m x)
 
 public export
+CofreeNaturalTransformation :
+  (Type -> Type) -> (Type -> Type) -> (Type -> Type) -> Type
+CofreeNaturalTransformation m f g =
+  (x : Type) -> f (CofreeComonad m x) -> g (CofreeComonad m x)
+
+public export
 FreeMonadNatTrans : (Type -> Type) -> (Type -> Type) -> Type
-FreeMonadNatTrans f g = NaturalTransformation (FreeMonad f) (FreeMonad g)
+FreeMonadNatTrans f g =
+  NaturalTransformation (FreeMonad f) (FreeMonad g)
+
+public export
+CofreeComonadNatTrans : (Type -> Type) -> (Type -> Type) -> Type
+CofreeComonadNatTrans f g =
+  NaturalTransformation (CofreeComonad f) (CofreeComonad g)
 
 public export
 FreeAdjUnit : (f, g : Type -> Type) -> Type
@@ -494,6 +506,14 @@ FreeAdjUnit m f = FreeNaturalTransformation m id f
 public export
 FreeAdjCounit : (f, g : Type -> Type) -> Type
 FreeAdjCounit m f = FreeNaturalTransformation m f id
+
+public export
+CofreeAdjUnit : (f, g : Type -> Type) -> Type
+CofreeAdjUnit m f = CofreeNaturalTransformation m id f
+
+public export
+CofreeAdjCounit : (f, g : Type -> Type) -> Type
+CofreeAdjCounit m f = CofreeNaturalTransformation m f id
 
 public export
 natTransFreeAlg : {f, g : Type -> Type} ->

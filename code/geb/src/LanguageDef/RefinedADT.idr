@@ -6,35 +6,6 @@ import public LanguageDef.Atom
 
 %default total
 
-public export
-data RepresentationF : (repCarrier : Type) -> Type where
-
-public export
-data InterpTypeF : {repCarrier : Type} ->
-    (interpTypeCarrier : repCarrier -> Type) ->
-    RepresentationF repCarrier -> Type where
-
-public export
-data ErrorTypeF : {repCarrier : Type} ->
-    (errorTypeCarrier : repCarrier -> Type) ->
-    RepresentationF repCarrier -> Type where
-
-public export
-checkRepF :
-  {repCarrier : Type} ->
-  {interpTypeCarrier : repCarrier -> Type} ->
-  {errorTypeCarrier : repCarrier -> Type} ->
-  (checkCarrier :
-    (rep : repCarrier) ->
-      Either
-        (interpTypeCarrier rep)
-        (errorTypeCarrier rep)) ->
-  (repF : RepresentationF repCarrier) ->
-    Either
-      (InterpTypeF interpTypeCarrier repF)
-      (ErrorTypeF errorTypeCarrier repF)
-checkRepF checkCarrier rep impossible
-
 -------------------------------------------------------------
 -------------------------------------------------------------
 ---- Unrefined zero-order category ("assembly language") ----
@@ -269,6 +240,41 @@ interpDirichletEndoF interpObj interpSum =
 ---- Substitution category from endofunctors ----
 -------------------------------------------------
 -------------------------------------------------
+
+----------------------------------
+----------------------------------
+---- Geb term representations ----
+----------------------------------
+----------------------------------
+
+public export
+data RepresentationF : (repCarrier : Type) -> Type where
+
+public export
+data InterpTypeF : {repCarrier : Type} ->
+    (interpTypeCarrier : repCarrier -> Type) ->
+    RepresentationF repCarrier -> Type where
+
+public export
+data ErrorTypeF : {repCarrier : Type} ->
+    (errorTypeCarrier : repCarrier -> Type) ->
+    RepresentationF repCarrier -> Type where
+
+public export
+checkRepF :
+  {repCarrier : Type} ->
+  {interpTypeCarrier : repCarrier -> Type} ->
+  {errorTypeCarrier : repCarrier -> Type} ->
+  (checkCarrier :
+    (rep : repCarrier) ->
+      Either
+        (interpTypeCarrier rep)
+        (errorTypeCarrier rep)) ->
+  (repF : RepresentationF repCarrier) ->
+    Either
+      (InterpTypeF interpTypeCarrier repF)
+      (ErrorTypeF errorTypeCarrier repF)
+checkRepF checkCarrier rep impossible
 
 -----------------------------------------
 -----------------------------------------
