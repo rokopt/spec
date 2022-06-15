@@ -2204,6 +2204,11 @@ IdNatTrans {catC} f = MkMetaNatTrans $
   \a => MetaFunctorMorphMap f (MetaId catC a)
 
 public export
+IdNatTransCorrect : {catC, catD : MetaCat} -> (f : MetaFunctor catC catD) ->
+  MetaNatTransCorrect (IdNatTrans f)
+IdNatTransCorrect = ?IdNatTransCorrect_hole
+
+public export
 VerticalCompose : {catC, catD : MetaCat} -> {f, g, h : MetaFunctor catC catD} ->
   MetaNatTrans g h -> MetaNatTrans f g -> MetaNatTrans f h
 VerticalCompose {catC} {catD} {f} {g} {h} beta alpha = MkMetaNatTrans $
@@ -2215,11 +2220,27 @@ VerticalCompose {catC} {catD} {f} {g} {h} beta alpha = MkMetaNatTrans $
     (MetaNTComponent alpha a)
 
 public export
+VerticalComposeCorrect :
+  {catC, catD : MetaCat} ->
+  {f, g, h : MetaFunctor catC catD} ->
+  (beta : MetaNatTrans g h) -> (alpha : MetaNatTrans f g) ->
+  MetaNatTransCorrect (VerticalCompose beta alpha)
+VerticalComposeCorrect = ?VerticalComposeCorrect_hole
+
+public export
 HorizontalCompose : {catC, catD, catE : MetaCat} ->
   {f, f' : MetaFunctor catC catD} -> {g, g' : MetaFunctor catD catE} ->
-  MetaNatTrans f f' -> MetaNatTrans g g' ->
+  MetaNatTrans g g' ->
+  MetaNatTrans f f' ->
   MetaNatTrans (ComposeFunctor g f) (ComposeFunctor g' f')
 HorizontalCompose = ?HorizontalCompose_hole
+
+public export
+HorizontalComposeCorrect : {catC, catD, catE : MetaCat} ->
+  {f, f' : MetaFunctor catC catD} -> {g, g' : MetaFunctor catD catE} ->
+  (beta : MetaNatTrans g g') -> (alpha : MetaNatTrans f f') ->
+  MetaNatTransCorrect (HorizontalCompose beta alpha)
+HorizontalComposeCorrect = ?HorizontalComposeCorrect_hole
 
 public export
 WhiskerLeft : {catB, catC, catD : MetaCat} -> {f, g : MetaFunctor catC catD} ->
@@ -2228,10 +2249,26 @@ WhiskerLeft : {catB, catC, catD : MetaCat} -> {f, g : MetaFunctor catC catD} ->
 WhiskerLeft = ?WhiskerLeft_hole
 
 public export
+WhiskerLeftCorrect :
+  {catB, catC, catD : MetaCat} ->
+  {f, g : MetaFunctor catC catD} ->
+  (nu : MetaNatTrans f g) -> (k : MetaFunctor catB catC) ->
+  MetaNatTransCorrect (WhiskerLeft nu k)
+WhiskerLeftCorrect = ?WhiskerLeftCorrect_hole
+
+public export
 WhiskerRight : {catC, catD, catE : MetaCat} -> {f, g : MetaFunctor catC catD} ->
   (h : MetaFunctor catD catE) -> (nu : MetaNatTrans f g) ->
   MetaNatTrans (ComposeFunctor h f) (ComposeFunctor h g)
 WhiskerRight = ?WhiskerRight_hole
+
+public export
+WhiskerRightCorrect :
+  {catC, catD, catE : MetaCat} ->
+  {f, g : MetaFunctor catC catD} ->
+  (h : MetaFunctor catD catE) -> (nu : MetaNatTrans f g) ->
+  MetaNatTransCorrect (WhiskerRight h nu)
+WhiskerRightCorrect = ?WhiskerRightCorrect_hole
 
 public export
 record Adjunction (catC, catD : MetaCat) where
@@ -2270,6 +2307,25 @@ record AdjunctionEq
   counitEq : NatTransEq (adjCounit adj) (adjCounit adj')
 
 public export
+IdAdjunction : (c : MetaCat) -> Adjunction c c
+IdAdjunction = ?IdAdjunction_hole
+
+public export
+IdAdjunctionCorrect : (c : MetaCat) -> AdjunctionCorrect (IdAdjunction c)
+IdAdjunctionCorrect = ?IdAdjunctionCorrect_hole
+
+public export
+ComposeAdjunction : {c, d, e : MetaCat} ->
+  Adjunction d e -> Adjunction c d -> Adjunction c e
+ComposeAdjunction {c} {d} {e} adjr adjl = ?ComposeAdjunction_hole
+
+public export
+ComposeAdjunctionCorrect : {c, d, e : MetaCat} ->
+  (adjr : Adjunction d e) -> (adjl : Adjunction c d) ->
+  AdjunctionCorrect (ComposeAdjunction adjr adjl)
+ComposeAdjunctionCorrect {c} {d} {e} adjr adjl = ?ComposeAdjunctionCorrect_hole
+
+public export
 LeftAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
   (a : MetaObj catD) -> (b : MetaObj catC) ->
   MetaMorphism catC (MetaFunctorObjMap (leftAdjoint adj) a) b ->
@@ -2285,8 +2341,6 @@ RightAdjunct adj = ?rightAdjunct_hole
 
 -- functor cat
 -- nat trans cat
--- id adjunction
--- compose adjunctions
 -- adjunction cat
 
 -- diagrams
