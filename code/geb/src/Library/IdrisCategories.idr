@@ -2237,15 +2237,6 @@ record Adjunction (catC, catD : MetaCat) where
     MetaNatTrans (ComposeFunctor leftAdjoint rightAdjoint) (IdFunctor catC)
 
 public export
-record AdjunctionEq
-    {catC, catD : MetaCat} (adj, adj' : Adjunction catC catD) where
-  constructor MkAdjunctionEq
-  leftAdjointEq : FunctorEq (leftAdjoint adj) (leftAdjoint adj')
-  rightAdjointEq : FunctorEq (rightAdjoint adj) (rightAdjoint adj')
-  unitEq : NatTransEq (adjUnit adj) (adjUnit adj')
-  counitEq : NatTransEq (adjCounit adj) (adjCounit adj')
-
-public export
 record AdjunctionCorrect
     {catC, catD : MetaCat} (adj : Adjunction catC catD) where
   constructor MkAdjunctionCorrect
@@ -2261,6 +2252,15 @@ record AdjunctionCorrect
         (WhiskerRight (rightAdjoint adj) (adjCounit adj))
         (WhiskerLeft (adjUnit adj) (rightAdjoint adj)))
       (IdNatTrans (rightAdjoint adj))
+
+public export
+record AdjunctionEq
+    {catC, catD : MetaCat} (adj, adj' : Adjunction catC catD) where
+  constructor MkAdjunctionEq
+  leftAdjointEq : FunctorEq (leftAdjoint adj) (leftAdjoint adj')
+  rightAdjointEq : FunctorEq (rightAdjoint adj) (rightAdjoint adj')
+  unitEq : NatTransEq (adjUnit adj) (adjUnit adj')
+  counitEq : NatTransEq (adjCounit adj) (adjCounit adj')
 
 public export
 LeftAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
