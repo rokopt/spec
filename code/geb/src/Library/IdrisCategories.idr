@@ -1985,7 +1985,7 @@ public export
 record MetaCat where
   constructor MkMetaCat
   -- The types of `Type` which represent the objects and morphisms of the
-  -- enriched category.
+  -- interpreted category.
   MetaObj : Type
   MetaMorphism : MetaObj -> MetaObj -> Type
 
@@ -1994,7 +1994,7 @@ record MetaCat where
   MetaCompose : {a, b, c : MetaObj} ->
     MetaMorphism b c -> MetaMorphism a b -> MetaMorphism a c
 
-  -- The interpretations of the objects and morphisms of the enriched category.
+  -- The interpretations of the objects and morphisms of the category.
   MetaObjInterp : MetaObj -> Type
   MetaMorphismInterp : {a, b : MetaObj} ->
     MetaMorphism a b -> MetaObjInterp a -> MetaObjInterp b
@@ -2090,6 +2090,29 @@ record MetaFunctor (catC, catD : MetaCat) where
         {c=(MetaFunctorObjMap c)}
         (MetaFunctorMorphMap {a=b} {b=c} g)
         (MetaFunctorMorphMap {a} {b} f))
+
+public export
+record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
+  -- Components of the natural transformation.
+  MetaNTComponent : (a : MetaObj catC) ->
+    MetaMorphism catD (MetaFunctorObjMap f a) (MetaFunctorObjMap g a)
+
+  -- Correctness conditions.
+  MetaNTNaturality : (a, b : MetaObj catC) -> (m : MetaMorphism catC a b) ->
+    MorphismEq
+      {cat=catD} {a=(MetaFunctorObjMap f a)} {b=(MetaFunctorObjMap g b)}
+      (MetaCompose catD
+        {a=(MetaFunctorObjMap f a)}
+        {b=(MetaFunctorObjMap f b)}
+        {c=(MetaFunctorObjMap g b)}
+        (MetaNTComponent b)
+        (MetaFunctorMorphMap {catC} {catD} {a} {b} f m))
+      (MetaCompose catD
+        {a=(MetaFunctorObjMap f a)}
+        {b=(MetaFunctorObjMap g a)}
+        {c=(MetaFunctorObjMap g b)}
+        (MetaFunctorMorphMap {catC} {catD} {a} {b} g m)
+        (MetaNTComponent a))
 
 -- id functor
 -- compose functors
