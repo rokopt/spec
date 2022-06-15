@@ -2179,9 +2179,23 @@ record MetaNatTransCorrect {catC, catD : MetaCat} {f, g : MetaFunctor catC catD}
         (MetaNTComponent natTrans a))
 
 public export
-NatTransEq : {catC, catD : MetaCat} -> {f, f', g, g' : MetaFunctor catC catD} ->
-  MetaNatTrans f g -> MetaNatTrans f' g' -> Type
-NatTransEq = ?NatTransEq_hole
+record NatTransEq {catC, catD : MetaCat} {f, f', g, g' : MetaFunctor catC catD}
+    (alpha : MetaNatTrans f g) (beta : MetaNatTrans f' g') where
+  constructor MkNatTransEq
+  ntEqF : FunctorEq f f'
+  ntEqG : FunctorEq g g'
+  ntEqComponent : (a : MetaObj catC) ->
+    MorphismEq
+      {cat=catD}
+      {a=(MetaFunctorObjMap f a)} {b=(MetaFunctorObjMap g a)}
+      (MetaNTComponent alpha a)
+      (replace
+        {p=(\a' => MetaMorphism catD a' (MetaFunctorObjMap g a))}
+        (sym (ObjMapEq ntEqF a)) $
+       replace
+        {p=(\a' => MetaMorphism catD (MetaFunctorObjMap f' a) a')}
+        (sym (ObjMapEq ntEqG a))
+        (MetaNTComponent beta a))
 
 public export
 IdNatTrans : {catC, catD : MetaCat} -> (f : MetaFunctor catC catD) ->
