@@ -2112,9 +2112,21 @@ record MetaFunctorCorrect
         (MetaFunctorMorphMap functor {a} {b} f))
 
 public export
-FunctorEq : {catC, catD : MetaCat} ->
-  MetaFunctor catC catD -> MetaFunctor catC catD -> Type
-FunctorEq {catC} {catD} f g = ?FunctorEq_hole
+record FunctorEq {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
+  constructor MkFunctorEq
+  ObjMapEq : (a : MetaObj catC) -> MetaFunctorObjMap f a = MetaFunctorObjMap g a
+  MorphMapEq : {a, b : MetaObj catC} -> (m : MetaMorphism catC a b) ->
+    MorphismEq
+      {cat=catD}
+      {a=(MetaFunctorObjMap f a)} {b=(MetaFunctorObjMap f b)}
+      (MetaFunctorMorphMap f {a} {b} m)
+      (replace
+        {p=(\a' : MetaObj catD => MetaMorphism catD a' (MetaFunctorObjMap f b))}
+        (sym (ObjMapEq a)) $
+       replace
+        {p=(\b' : MetaObj catD => MetaMorphism catD (MetaFunctorObjMap g a) b')}
+        (sym (ObjMapEq b))
+        (MetaFunctorMorphMap g {a} {b} m))
 
 public export
 IdFunctor : (cat : MetaCat) -> MetaFunctor cat cat
