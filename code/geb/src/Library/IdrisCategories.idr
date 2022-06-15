@@ -2087,24 +2087,29 @@ record MetaFunctor (catC, catD : MetaCat) where
       MetaMorphism catC a b ->
       MetaMorphism catD (MetaFunctorObjMap a) (MetaFunctorObjMap b)
 
+public export
+record MetaFunctorCorrect
+    {catC, catD : MetaCat} (functor : MetaFunctor catC catD) where
   -- Correctness conditions.
   MetaFunctorId : (a : MetaObj catC) ->
     MorphismEq
-      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap a)}
-      (MetaFunctorMorphMap {a} {b=a} (MetaId catC a))
-      (MetaId catD (MetaFunctorObjMap a))
+      {cat=catD}
+      {a=(MetaFunctorObjMap functor a)} {b=(MetaFunctorObjMap functor a)}
+      (MetaFunctorMorphMap functor {a} {b=a} (MetaId catC a))
+      (MetaId catD (MetaFunctorObjMap functor a))
   MetaFunctorCompose : {a, b, c : MetaObj catC} ->
     (g : MetaMorphism catC b c) ->
     (f : MetaMorphism catC a b) ->
     MorphismEq
-      {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap c)}
-      (MetaFunctorMorphMap {a} {b=c} (MetaCompose catC a b c g f))
+      {cat=catD}
+      {a=(MetaFunctorObjMap functor a)} {b=(MetaFunctorObjMap functor c)}
+      (MetaFunctorMorphMap functor {a} {b=c} (MetaCompose catC a b c g f))
       (MetaCompose catD
-        (MetaFunctorObjMap a)
-        (MetaFunctorObjMap b)
-        (MetaFunctorObjMap c)
-        (MetaFunctorMorphMap {a=b} {b=c} g)
-        (MetaFunctorMorphMap {a} {b} f))
+        (MetaFunctorObjMap functor a)
+        (MetaFunctorObjMap functor b)
+        (MetaFunctorObjMap functor c)
+        (MetaFunctorMorphMap functor {a=b} {b=c} g)
+        (MetaFunctorMorphMap functor {a} {b} f))
 
 public export
 FunctorEq : {catC, catD : MetaCat} ->
@@ -2113,11 +2118,11 @@ FunctorEq {catC} {catD} f g = ?FunctorEq_hole
 
 public export
 IdFunctor : (cat : MetaCat) -> MetaFunctor cat cat
-IdFunctor cat = MkMetaFunctor
-  id
-  id
-  ?IdFunctor_id_correct
-  ?IdFunctor_compose_correct
+IdFunctor cat = MkMetaFunctor id id
+
+public export
+IdFunctorCorrect : (cat : MetaCat) -> MetaFunctorCorrect (IdFunctor cat)
+IdFunctorCorrect cat = ?IdFunctorCorrect_hole
 
 public export
 ComposeFunctor : {catC, catD, catE : MetaCat} ->
@@ -2126,8 +2131,12 @@ ComposeFunctor : {catC, catD, catE : MetaCat} ->
 ComposeFunctor g f = MkMetaFunctor
   (MetaFunctorObjMap g . MetaFunctorObjMap f)
   (MetaFunctorMorphMap g . MetaFunctorMorphMap f)
-  ?ComposeFunctor_id_correct
-  ?ComposeFunctor_compose_correct
+
+public export
+ComposeFunctorCorrect : {catC, catD, catE : MetaCat} ->
+  (g : MetaFunctor catD catE) -> (f : MetaFunctor catC catD) ->
+  MetaFunctorCorrect (ComposeFunctor g f)
+ComposeFunctorCorrect g f = ?ComposeFunctorCorrect_hole
 
 public export
 record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
