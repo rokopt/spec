@@ -2035,39 +2035,48 @@ MorphismEq m m' =
 -- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
 -- properties we ensure by requiring that it be interpreted as the
 -- product in `Type` (known as `Pair`).
-record MonoidalCat (MonCat : MetaCat) where
+record MonoidalCat (underlying : MetaCat) where
   constructor MkMonoidalCat
-  MetaTensorObj : MetaObj MonCat -> MetaObj MonCat -> MetaObj MonCat
-  MetaTensorObjInterp : (a, b : MetaObj MonCat) ->
-    MetaObjInterp MonCat (MetaTensorObj a b) ->
-    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b)
-  MetaTensorObjInterpInv : (a, b : MetaObj MonCat) ->
-    Pair (MetaObjInterp MonCat a) (MetaObjInterp MonCat b) ->
-    MetaObjInterp MonCat (MetaTensorObj a b)
-  MetaTensorObjInterpCorrect : (a, b : MetaObj MonCat) ->
-    ExtInverse (MetaTensorObjInterpInv a b) (MetaTensorObjInterp a b)
-  MetaTensorMorph : {a, b, c, d : MetaObj MonCat} ->
-    MetaMorphism MonCat a c -> MetaMorphism MonCat b d ->
-    MetaMorphism MonCat (MetaTensorObj a b) (MetaTensorObj c d)
-  MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj MonCat} ->
-    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
-    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
-    MetaMorphismInterp MonCat a c m (fst $ MetaTensorObjInterp a b x) =
-      fst (MetaTensorObjInterp c d $
-        MetaMorphismInterp MonCat
-          (MetaTensorObj a b)
-          (MetaTensorObj c d)
-          (MetaTensorMorph {a} {b} {c} {d} m m')
+  MetaTensorObj : MetaObj underlying -> MetaObj underlying -> MetaObj underlying
+  MetaTensorObjInterp : (a, b : MetaObj underlying) ->
+    MetaObjInterp underlying (MetaTensorObj a b) ->
+    Pair (MetaObjInterp underlying a) (MetaObjInterp underlying b)
+  MetaTensorObjInterpInv : (a, b : MetaObj underlying) ->
+    Pair (MetaObjInterp underlying a) (MetaObjInterp underlying b) ->
+    MetaObjInterp underlying (MetaTensorObj a b)
+  MetaTensorMorph : {a, b, c, d : MetaObj underlying} ->
+    MetaMorphism underlying a c -> MetaMorphism underlying b d ->
+    MetaMorphism underlying (MetaTensorObj a b) (MetaTensorObj c d)
+
+public export
+record MonoidalCatCorrect
+    (underlying : MetaCat) (monCat : MonoidalCat underlying) where
+  constructor MkMonoidalCatCorrect
+  MetaTensorObjInterpCorrect : (a, b : MetaObj underlying) ->
+    ExtInverse
+      (MetaTensorObjInterpInv monCat a b)
+      (MetaTensorObjInterp monCat a b)
+  MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj underlying} ->
+    (m : MetaMorphism underlying a c) -> (m' : MetaMorphism underlying b d) ->
+    (x : MetaObjInterp underlying (MetaTensorObj monCat a b)) ->
+    MetaMorphismInterp underlying a c m
+        (fst $ MetaTensorObjInterp monCat a b x) =
+      fst (MetaTensorObjInterp monCat c d $
+        MetaMorphismInterp underlying
+          (MetaTensorObj monCat a b)
+          (MetaTensorObj monCat c d)
+          (MetaTensorMorph monCat {a} {b} {c} {d} m m')
           x)
-  MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj MonCat} ->
-    (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
-    (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
-    MetaMorphismInterp MonCat b d m' (snd $ MetaTensorObjInterp a b x) =
-      snd (MetaTensorObjInterp c d $
-        MetaMorphismInterp MonCat
-          (MetaTensorObj a b)
-          (MetaTensorObj c d)
-          (MetaTensorMorph {a} {b} {c} {d} m m')
+  MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj underlying} ->
+    (m : MetaMorphism underlying a c) -> (m' : MetaMorphism underlying b d) ->
+    (x : MetaObjInterp underlying (MetaTensorObj monCat a b)) ->
+    MetaMorphismInterp underlying b d m'
+        (snd $ MetaTensorObjInterp monCat a b x) =
+      snd (MetaTensorObjInterp monCat c d $
+        MetaMorphismInterp underlying
+          (MetaTensorObj monCat a b)
+          (MetaTensorObj monCat c d)
+          (MetaTensorMorph monCat {a} {b} {c} {d} m m')
           x)
 
 public export
