@@ -2145,6 +2145,10 @@ record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
   MetaNTComponent : (a : MetaObj catC) ->
     MetaMorphism catD (MetaFunctorObjMap f a) (MetaFunctorObjMap g a)
 
+public export
+record MetaNatTransCorrect {catC, catD : MetaCat} {f, g : MetaFunctor catC catD}
+    (natTrans : MetaNatTrans f g) where
+  constructor MkMetaNatTransCorrect
   -- Correctness conditions.
   MetaNTNaturality : (a, b : MetaObj catC) -> (m : MetaMorphism catC a b) ->
     MorphismEq
@@ -2153,14 +2157,14 @@ record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
         (MetaFunctorObjMap f a)
         (MetaFunctorObjMap f b)
         (MetaFunctorObjMap g b)
-        (MetaNTComponent b)
+        (MetaNTComponent natTrans b)
         (MetaFunctorMorphMap {catC} {catD} {a} {b} f m))
       (MetaCompose catD
         (MetaFunctorObjMap f a)
         (MetaFunctorObjMap g a)
         (MetaFunctorObjMap g b)
         (MetaFunctorMorphMap {catC} {catD} {a} {b} g m)
-        (MetaNTComponent a))
+        (MetaNTComponent natTrans a))
 
 public export
 NatTransEq : {catC, catD : MetaCat} -> {f, f', g, g' : MetaFunctor catC catD} ->
