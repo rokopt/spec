@@ -2200,7 +2200,8 @@ record NatTransEq {catC, catD : MetaCat} {f, f', g, g' : MetaFunctor catC catD}
 public export
 IdNatTrans : {catC, catD : MetaCat} -> (f : MetaFunctor catC catD) ->
   MetaNatTrans f f
-IdNatTrans = ?IdNatTrans_hole
+IdNatTrans {catC} f = MkMetaNatTrans $
+  \a => MetaFunctorMorphMap f (MetaId catC a)
 
 public export
 VerticalCompose : {catC, catD : MetaCat} -> {f, g, h : MetaFunctor catC catD} ->
