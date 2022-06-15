@@ -2206,7 +2206,13 @@ IdNatTrans {catC} f = MkMetaNatTrans $
 public export
 VerticalCompose : {catC, catD : MetaCat} -> {f, g, h : MetaFunctor catC catD} ->
   MetaNatTrans g h -> MetaNatTrans f g -> MetaNatTrans f h
-VerticalCompose = ?VerticalCompose_hole
+VerticalCompose {catC} {catD} {f} {g} {h} beta alpha = MkMetaNatTrans $
+  \a => MetaCompose catD
+    (MetaFunctorObjMap f a)
+    (MetaFunctorObjMap g a)
+    (MetaFunctorObjMap h a)
+    (MetaNTComponent beta a)
+    (MetaNTComponent alpha a)
 
 public export
 HorizontalCompose : {catC, catD, catE : MetaCat} ->
