@@ -2067,6 +2067,7 @@ record MonoidalCat (MonCat : MetaCat) where
 
 public export
 record MetaFunctor (catC, catD : MetaCat) where
+  constructor MkMetaFunctor
   MetaFunctorObjMap : MetaObj catC -> MetaObj catD
   MetaFunctorMorphMap : {a, b : MetaObj catC} ->
       MetaMorphism catC a b ->
@@ -2092,7 +2093,31 @@ record MetaFunctor (catC, catD : MetaCat) where
         (MetaFunctorMorphMap {a} {b} f))
 
 public export
+FunctorEq : {catC, catD : MetaCat} ->
+  MetaFunctor catC catD -> MetaFunctor catC catD -> Type
+FunctorEq {catC} {catD} f g = ?FunctorEq_hole
+
+public export
+IdFunctor : (cat : MetaCat) -> MetaFunctor cat cat
+IdFunctor cat = MkMetaFunctor
+  id
+  id
+  ?IdFunctor_id_correct
+  ?IdFunctor_compose_correct
+
+public export
+ComposeFunctor : {catC, catD, catE : MetaCat} ->
+  MetaFunctor catD catE -> MetaFunctor catC catD ->
+  MetaFunctor catC catE
+ComposeFunctor g f = MkMetaFunctor
+  (MetaFunctorObjMap g . MetaFunctorObjMap f)
+  (MetaFunctorMorphMap g . MetaFunctorMorphMap f)
+  ?ComposeFunctor_id_correct
+  ?ComposeFunctor_compose_correct
+
+public export
 record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
+  constructor MkMetaNatTrans
   -- Components of the natural transformation.
   MetaNTComponent : (a : MetaObj catC) ->
     MetaMorphism catD (MetaFunctorObjMap f a) (MetaFunctorObjMap g a)
@@ -2114,16 +2139,81 @@ record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
         (MetaFunctorMorphMap {catC} {catD} {a} {b} g m)
         (MetaNTComponent a))
 
--- id functor
--- compose functors
--- natural transformation between functors
--- id nat trans
--- vertical compose nat trans
--- horizontal compose nat trans
--- whisker nat trans
+public export
+NatTransEq : {catC, catD : MetaCat} -> {f, f', g, g' : MetaFunctor catC catD} ->
+  MetaNatTrans f g -> MetaNatTrans f' g' -> Type
+NatTransEq = ?NatTransEq_hole
+
+public export
+IdNatTrans : {catC, catD : MetaCat} -> (f : MetaFunctor catC catD) ->
+  MetaNatTrans f f
+IdNatTrans = ?IdNatTrans_hole
+
+public export
+VerticalCompose : {catC, catD : MetaCat} -> {f, g, h : MetaFunctor catC catD} ->
+  MetaNatTrans g h -> MetaNatTrans f g -> MetaNatTrans f h
+VerticalCompose = ?VerticalCompose_hole
+
+public export
+HorizontalCompose : {catC, catD, catE : MetaCat} ->
+  {f, f' : MetaFunctor catC catD} -> {g, g' : MetaFunctor catD catE} ->
+  MetaNatTrans f f' -> MetaNatTrans g g' ->
+  MetaNatTrans (ComposeFunctor g f) (ComposeFunctor g' f')
+HorizontalCompose = ?HorizontalCompose_hole
+
+public export
+WhiskerLeft : {catB, catC, catD : MetaCat} -> {f, g : MetaFunctor catC catD} ->
+  (nu : MetaNatTrans f g) -> (k : MetaFunctor catB catC) ->
+  MetaNatTrans (ComposeFunctor f k) (ComposeFunctor g k)
+WhiskerLeft = ?WhiskerLeft_hole
+
+public export
+WhiskerRight : {catC, catD, catE : MetaCat} -> {f, g : MetaFunctor catC catD} ->
+  (h : MetaFunctor catD catE) -> (nu : MetaNatTrans f g) ->
+  MetaNatTrans (ComposeFunctor h f) (ComposeFunctor h g)
+WhiskerRight = ?WhiskerRight_hole
+
+public export
+record Adjunction (catC, catD : MetaCat) where
+  constructor MkAdjunction
+  leftAdjoint : MetaFunctor catD catC
+  rightAdjoint : MetaFunctor catC catD
+  adjUnit :
+    MetaNatTrans (IdFunctor catD) (ComposeFunctor rightAdjoint leftAdjoint)
+  adjCounit :
+    MetaNatTrans (ComposeFunctor leftAdjoint rightAdjoint) (IdFunctor catC)
+    {-
+     - XXX triangle identities
+  triangleLeft :
+    NatTransEq
+      (VerticalCompose
+        (WhiskerLeft adjCounit leftAdjoint)
+        (WhiskerRight leftAdjoint adjUnit))
+      (IdNatTrans leftAdjoint)
+  triangleRight :
+    NatTransEq
+      (VerticalCompose
+        (WhiskerRight rightAdjoint adjCounit)
+        (WhiskerLeft adjUnit rightAdjoint))
+      (IdNatTrans rightAdjoint)
+      -}
+
+public export
+LeftAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
+  (a : MetaObj catD) -> (b : MetaObj catC) ->
+  MetaMorphism catC (MetaFunctorObjMap (leftAdjoint adj) a) b ->
+  MetaMorphism catD a (MetaFunctorObjMap (rightAdjoint adj) b)
+LeftAdjunct adj = ?leftAdjunct_hole
+
+public export
+RightAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
+  (a : MetaObj catD) -> (b : MetaObj catC) ->
+  MetaMorphism catD a (MetaFunctorObjMap (rightAdjoint adj) b) ->
+  MetaMorphism catC (MetaFunctorObjMap (leftAdjoint adj) a) b
+RightAdjunct adj = ?rightAdjunct_hole
+
 -- functor cat
 -- nat trans cat
--- adjunction
 -- id adjunction
 -- compose adjunctions
 -- adjunction cat
