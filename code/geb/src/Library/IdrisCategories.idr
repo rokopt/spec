@@ -1991,40 +1991,45 @@ record MetaCat where
 
   -- Identity and composition.
   MetaId : (a : MetaObj) -> MetaMorphism a a
-  MetaCompose : {a, b, c : MetaObj} ->
+  MetaCompose : (a, b, c : MetaObj) ->
     MetaMorphism b c -> MetaMorphism a b -> MetaMorphism a c
 
   -- The interpretations of the objects and morphisms of the category.
   MetaObjInterp : MetaObj -> Type
-  MetaMorphismInterp : {a, b : MetaObj} ->
+  MetaMorphismInterp : (a, b : MetaObj) ->
     MetaMorphism a b -> MetaObjInterp a -> MetaObjInterp b
 
+public export
+record MetaCatCorrect (cat : MetaCat) where
+  constructor MkMetaCatCorrect
   -- Correctness conditions (the axioms of category theory), with
   -- equality up to first-order (non-recursive) extensional equality of the
   -- of the morphisms as metalanguage functions.
-  MetaLeftId : {a, b : MetaObj} ->
-    (f : MetaMorphism a b) ->
+  MetaLeftId : {a, b : MetaObj cat} ->
+    (f : MetaMorphism cat a b) ->
     ExtEq
-      (MetaMorphismInterp (MetaCompose (MetaId b) f))
-      (MetaMorphismInterp f)
-  MetaRightId : {a, b : MetaObj} ->
-    (f : MetaMorphism a b) ->
+      (MetaMorphismInterp cat a b (MetaCompose cat a b b (MetaId cat b) f))
+      (MetaMorphismInterp cat a b f)
+  MetaRightId : {a, b : MetaObj cat} ->
+    (f : MetaMorphism cat a b) ->
     ExtEq
-      (MetaMorphismInterp f)
-      (MetaMorphismInterp (MetaCompose f (MetaId a)))
-  MetaAssoc : {a, b, c, d : MetaObj} ->
-    (h : MetaMorphism c d) ->
-    (g : MetaMorphism b c) ->
-    (f : MetaMorphism a b) ->
+      (MetaMorphismInterp cat a b f)
+      (MetaMorphismInterp cat a b (MetaCompose cat a a b f (MetaId cat a)))
+  MetaAssoc : {a, b, c, d : MetaObj cat} ->
+    (h : MetaMorphism cat c d) ->
+    (g : MetaMorphism cat b c) ->
+    (f : MetaMorphism cat a b) ->
     ExtEq
-      (MetaMorphismInterp (MetaCompose h (MetaCompose g f)))
-      (MetaMorphismInterp (MetaCompose (MetaCompose h g) f))
+      (MetaMorphismInterp cat a d
+        (MetaCompose cat a c d h (MetaCompose cat a b c g f)))
+      (MetaMorphismInterp cat a d
+        (MetaCompose cat a b d (MetaCompose cat b c d h g) f))
 
 public export
 MorphismEq : {cat : MetaCat} -> {a, b : MetaObj cat} ->
   MetaMorphism cat a b -> MetaMorphism cat a b -> Type
 MorphismEq m m' =
-  ExtEq (MetaMorphismInterp cat m) (MetaMorphismInterp cat m')
+  ExtEq (MetaMorphismInterp cat a b m) (MetaMorphismInterp cat a b m')
 
 -- Because we are going to enrich further categories over
 -- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
@@ -2047,21 +2052,21 @@ record MonoidalCat (MonCat : MetaCat) where
   MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj MonCat} ->
     (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
     (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
-    MetaMorphismInterp MonCat {a} {b=c} m (fst $ MetaTensorObjInterp a b x) =
+    MetaMorphismInterp MonCat a c m (fst $ MetaTensorObjInterp a b x) =
       fst (MetaTensorObjInterp c d $
         MetaMorphismInterp MonCat
-          {a=(MetaTensorObj a b)}
-          {b=(MetaTensorObj c d)}
+          (MetaTensorObj a b)
+          (MetaTensorObj c d)
           (MetaTensorMorph {a} {b} {c} {d} m m')
           x)
   MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj MonCat} ->
     (m : MetaMorphism MonCat a c) -> (m' : MetaMorphism MonCat b d) ->
     (x : MetaObjInterp MonCat (MetaTensorObj a b)) ->
-    MetaMorphismInterp MonCat {a=b} {b=d} m' (snd $ MetaTensorObjInterp a b x) =
+    MetaMorphismInterp MonCat b d m' (snd $ MetaTensorObjInterp a b x) =
       snd (MetaTensorObjInterp c d $
         MetaMorphismInterp MonCat
-          {a=(MetaTensorObj a b)}
-          {b=(MetaTensorObj c d)}
+          (MetaTensorObj a b)
+          (MetaTensorObj c d)
           (MetaTensorMorph {a} {b} {c} {d} m m')
           x)
 
@@ -2084,11 +2089,11 @@ record MetaFunctor (catC, catD : MetaCat) where
     (f : MetaMorphism catC a b) ->
     MorphismEq
       {cat=catD} {a=(MetaFunctorObjMap a)} {b=(MetaFunctorObjMap c)}
-      (MetaFunctorMorphMap {a} {b=c} (MetaCompose {a} {b} {c} catC g f))
+      (MetaFunctorMorphMap {a} {b=c} (MetaCompose catC a b c g f))
       (MetaCompose catD
-        {a=(MetaFunctorObjMap a)}
-        {b=(MetaFunctorObjMap b)}
-        {c=(MetaFunctorObjMap c)}
+        (MetaFunctorObjMap a)
+        (MetaFunctorObjMap b)
+        (MetaFunctorObjMap c)
         (MetaFunctorMorphMap {a=b} {b=c} g)
         (MetaFunctorMorphMap {a} {b} f))
 
@@ -2127,15 +2132,15 @@ record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
     MorphismEq
       {cat=catD} {a=(MetaFunctorObjMap f a)} {b=(MetaFunctorObjMap g b)}
       (MetaCompose catD
-        {a=(MetaFunctorObjMap f a)}
-        {b=(MetaFunctorObjMap f b)}
-        {c=(MetaFunctorObjMap g b)}
+        (MetaFunctorObjMap f a)
+        (MetaFunctorObjMap f b)
+        (MetaFunctorObjMap g b)
         (MetaNTComponent b)
         (MetaFunctorMorphMap {catC} {catD} {a} {b} f m))
       (MetaCompose catD
-        {a=(MetaFunctorObjMap f a)}
-        {b=(MetaFunctorObjMap g a)}
-        {c=(MetaFunctorObjMap g b)}
+        (MetaFunctorObjMap f a)
+        (MetaFunctorObjMap g a)
+        (MetaFunctorObjMap g b)
         (MetaFunctorMorphMap {catC} {catD} {a} {b} g m)
         (MetaNTComponent a))
 
