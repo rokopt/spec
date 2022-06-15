@@ -2233,7 +2233,17 @@ HorizontalCompose : {catC, catD, catE : MetaCat} ->
   MetaNatTrans g g' ->
   MetaNatTrans f f' ->
   MetaNatTrans (ComposeFunctor g f) (ComposeFunctor g' f')
-HorizontalCompose = ?HorizontalCompose_hole
+HorizontalCompose {catC} {catD} {f} {f'} {g} {g'} beta alpha = MkMetaNatTrans $
+  \a => MetaCompose catE
+    (MetaFunctorObjMap (ComposeFunctor g f) a)
+    (MetaFunctorObjMap (ComposeFunctor g f') a)
+    (MetaFunctorObjMap (ComposeFunctor g' f') a)
+    (MetaNTComponent beta (MetaFunctorObjMap f' a))
+    (MetaFunctorMorphMap
+      {a=(MetaFunctorObjMap f a)}
+      {b=(MetaFunctorObjMap f' a)}
+      g
+      (MetaNTComponent alpha a))
 
 public export
 HorizontalComposeCorrect : {catC, catD, catE : MetaCat} ->
@@ -2241,6 +2251,31 @@ HorizontalComposeCorrect : {catC, catD, catE : MetaCat} ->
   (beta : MetaNatTrans g g') -> (alpha : MetaNatTrans f f') ->
   MetaNatTransCorrect (HorizontalCompose beta alpha)
 HorizontalComposeCorrect = ?HorizontalComposeCorrect_hole
+
+public export
+HorizontalComposeConsistent : {catC, catD, catE : MetaCat} ->
+  {f, f' : MetaFunctor catC catD} -> {g, g' : MetaFunctor catD catE} ->
+  (beta : MetaNatTrans g g') ->
+  (alpha : MetaNatTrans f f') ->
+  MetaNatTransCorrect beta ->
+  MetaNatTransCorrect alpha ->
+  (a : MetaObj catC) ->
+    MorphismEq
+      {cat=catE}
+      {a=(MetaFunctorObjMap (ComposeFunctor g f) a)}
+      {b=(MetaFunctorObjMap (ComposeFunctor g' f') a)}
+      (MetaNTComponent (HorizontalCompose beta alpha) a)
+      (MetaCompose catE
+        (MetaFunctorObjMap (ComposeFunctor g f) a)
+        (MetaFunctorObjMap (ComposeFunctor g' f) a)
+        (MetaFunctorObjMap (ComposeFunctor g' f') a)
+        (MetaFunctorMorphMap
+          {a=(MetaFunctorObjMap f a)}
+          {b=(MetaFunctorObjMap f' a)}
+          g'
+          (MetaNTComponent alpha a))
+        (MetaNTComponent beta (MetaFunctorObjMap f a)))
+HorizontalComposeConsistent = ?HorizontalComposeConsistent_hole
 
 public export
 WhiskerLeft : {catB, catC, catD : MetaCat} -> {f, g : MetaFunctor catC catD} ->
