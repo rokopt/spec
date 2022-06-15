@@ -2030,9 +2030,8 @@ MorphismEq m m' =
 -- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
 -- properties we ensure by requiring that it be interpreted as the
 -- product in `Type` (known as `Pair`).
-record MonoidalCat where
+record MonoidalCat (MonCat : MetaCat) where
   constructor MkMonoidalCat
-  MonCat : MetaCat
   MetaTensorObj : MetaObj MonCat -> MetaObj MonCat -> MetaObj MonCat
   MetaTensorObjInterp : (a, b : MetaObj MonCat) ->
     MetaObjInterp MonCat (MetaTensorObj a b) ->
