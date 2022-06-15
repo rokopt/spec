@@ -2209,21 +2209,23 @@ record Adjunction (catC, catD : MetaCat) where
     MetaNatTrans (IdFunctor catD) (ComposeFunctor rightAdjoint leftAdjoint)
   adjCounit :
     MetaNatTrans (ComposeFunctor leftAdjoint rightAdjoint) (IdFunctor catC)
-    {-
-     - XXX triangle identities
+
+public export
+record AdjunctionCorrect
+    {catC, catD : MetaCat} (adj : Adjunction catC catD) where
+  constructor MkAdjunctionCorrect
   triangleLeft :
     NatTransEq
       (VerticalCompose
-        (WhiskerLeft adjCounit leftAdjoint)
-        (WhiskerRight leftAdjoint adjUnit))
-      (IdNatTrans leftAdjoint)
+        (WhiskerLeft (adjCounit adj) (leftAdjoint adj))
+        (WhiskerRight (leftAdjoint adj) (adjUnit adj)))
+      (IdNatTrans (leftAdjoint adj))
   triangleRight :
     NatTransEq
       (VerticalCompose
-        (WhiskerRight rightAdjoint adjCounit)
-        (WhiskerLeft adjUnit rightAdjoint))
-      (IdNatTrans rightAdjoint)
-      -}
+        (WhiskerRight (rightAdjoint adj) (adjCounit adj))
+        (WhiskerLeft (adjUnit adj) (rightAdjoint adj)))
+      (IdNatTrans (rightAdjoint adj))
 
 public export
 LeftAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
