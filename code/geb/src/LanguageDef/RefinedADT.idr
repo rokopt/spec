@@ -6,6 +6,192 @@ import public LanguageDef.Atom
 
 %default total
 
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+---- Endofunctors of the 0-order language (all and only polynomials) -----
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+
+public export
+data EndoFF : Type -> Type where
+  EndoFId : EndoFF carrier
+  EndoFCompose : carrier -> carrier -> EndoFF carrier
+
+public export
+data Poly0F : Type -> Type where
+  Poly0Endo : EndoFF carrier -> Poly0F carrier
+  Poly0Empty : Poly0F carrier
+  Poly0Coproduct : carrier -> carrier -> Poly0F carrier
+  Poly0HomFunc : carrier -> Poly0F carrier
+
+public export
+data Poly0ObjF : Type -> Type -> Type where
+  Poly0FMapObj : functor -> Poly0ObjF functor carrier
+
+public export
+data Poly0Morph :
+    (carrier : Type) -> Poly0F carrier -> Poly0F carrier -> Type where
+{-
+  Poly0Id : functor -> Poly0Morph functor carrier
+  Poly0ComposeL : carrier -> carrier -> carrier -> Poly0Morph functor carrier
+  Poly0ComposeR : carrier -> carrier -> carrier -> Poly0Morph functor carrier
+  Poly0FromVoid : functor -> Poly0Morph functor carrier
+  -}
+
+public export
+data CartNT0F : Type -> Type where
+
+----------------------
+----------------------
+---- Endofunctors ----
+----------------------
+----------------------
+
+----------------------------------------------------
+---- Representable and corepresentable functors ----
+----------------------------------------------------
+
+-- A functor which, given a type of objects and a carrier type of functors,
+-- generates a covariant representable functor.
+--
+-- There is simply one covariant representable functor for each object.
+public export
+data CovarRepF : Type -> Type -> Type where
+  CovarHom : obj -> CovarRepF obj carrier
+
+public export
+Bifunctor CovarRepF where
+  bimap f g (CovarHom obj) = CovarHom (f obj)
+
+public export
+Show obj => Show (CovarRepF obj carrier) where
+  show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
+
+public export
+interpCovarRepF : {obj, carrier : Type} ->
+  (obj -> Type) -> CovarRepF obj carrier -> obj -> Type
+interpCovarRepF {obj} interpObj (CovarHom x) a =
+  interpObj a -> interpObj x
+
+-- A functor which generates a contravariant representable functor.
+-- As with covariant representable functors, there's simply one per
+-- object -- the only difference between the types is how we interpret
+-- them.
+public export
+data ContravarRepF : Type -> Type -> Type where
+  ContravarHom : obj -> ContravarRepF obj carrier
+
+public export
+Bifunctor ContravarRepF where
+  bimap f g (ContravarHom obj) = ContravarHom (f obj)
+
+public export
+Show obj => Show (ContravarRepF obj carrier) where
+  show (ContravarHom obj) = "Hom(" ++ show obj ++ ", _)"
+
+public export
+interpContravarRepF : {obj, carrier : Type} ->
+  (obj -> Type) -> ContravarRepF obj carrier -> obj -> Type
+interpContravarRepF {obj} interpObj (ContravarHom x) a =
+  interpObj x -> interpObj a
+
+----------------------------------------------------
+---- Sums of representables or corepresentables ----
+----------------------------------------------------
+
+-- Given a type of objects, a carrier type of representable or corepresentable
+-- functors, a generator functor for representable or corepresentable functors,
+-- and a carrier type of sums of representables or corepresentables, generate
+-- a new type of sums of representables or corepresentables.
+public export
+data SumRepOrCorepF :
+    (Type -> Type -> Type) -> Type -> Type -> Type -> Type where
+  SumRepOrCorep :
+    ListF (generator obj rep) carrier ->
+    SumRepOrCorepF generator obj rep carrier
+
+public export
+Functor (SumRepOrCorepF generator obj rep) where
+  map f (SumRepOrCorep l) = SumRepOrCorep $ map f l
+
+public export
+(Show obj, Show rep, Show carrier, Show (generator obj rep)) =>
+    Show (SumRepOrCorepF generator obj rep carrier) where
+  show (SumRepOrCorep l) = "Σ" ++ show l
+
+public export
+interpSumRepOrCorepF :
+  {generator : Type -> Type -> Type} -> {obj, rep, carrier : Type} ->
+  (interpObj : obj -> Type) ->
+  (interpRep : (obj -> Type) -> generator obj rep -> obj -> Type) ->
+  (interpSum : carrier -> obj -> Type) ->
+  SumRepOrCorepF generator obj rep carrier -> obj -> Type
+interpSumRepOrCorepF interpObj interpRep interpSum (SumRepOrCorep l) a =
+  case l of
+    NilF => Void
+    ConsF r l => Either (interpRep interpObj r a) (interpSum l a)
+
+---------------------------------
+---- Polynomial endofunctors ----
+---------------------------------
+
+-- A functor which, given types of objects and covariant representables and a
+-- carrier type of sums of covariant representables, generates a new type of
+-- sums of covariant representables -- that is, polynomial endofunctors.
+public export
+PolyEndoF : Type -> Type -> Type -> Type
+PolyEndoF = SumRepOrCorepF CovarRepF
+
+public export
+interpPolyEndoF : {obj, rep, carrier : Type} ->
+  (interpObj : obj -> Type) ->
+  (interpSum : carrier -> obj -> Type) ->
+  PolyEndoF obj rep carrier -> obj -> Type
+interpPolyEndoF interpObj interpSum =
+  interpSumRepOrCorepF interpObj interpCovarRepF interpSum
+
+--------------------------------
+---- Dirichlet endofunctors ----
+--------------------------------
+
+-- A functor which, given types of objects and contravariant representables and
+-- a carrier type of sums of contravariant representables, generates a new type
+-- of sums of contravariant representables -- that is, Dirichlet endofunctors.
+public export
+DirichletEndoF : Type -> Type -> Type -> Type
+DirichletEndoF = SumRepOrCorepF ContravarRepF
+
+public export
+interpDirichletEndoF : {obj, rep, carrier : Type} ->
+  (interpObj : obj -> Type) ->
+  (interpSum : carrier -> obj -> Type) ->
+  DirichletEndoF obj rep carrier -> obj -> Type
+interpDirichletEndoF interpObj interpSum =
+  interpSumRepOrCorepF interpObj interpContravarRepF interpSum
+
+-----------------------------------------------------------
+-----------------------------------------------------------
+---- Category of non-dependent polynomial endofunctors ----
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+public export
+data Subst0ExpF : Type -> Type where
+  -- Initial object (Void)
+  S0EInitial : Subst0ExpF carrier
+
+  -- Terminal object (Unit)
+  S0ETerminal : Subst0ExpF carrier
+
+  -- Object from functor application to terminal object
+  S0EFmapObj : carrier -> Subst0ExpF carrier
+
+  -- Morphism from initial object to given object
+  S0EFromInitial : carrier -> Subst0ExpF carrier
+
+  -- Morphism from given object to terminal object
+  S0EToTerminal : carrier -> Subst0ExpF carrier
+
 -------------------------------------------------------------
 -------------------------------------------------------------
 ---- Unrefined zero-order category ("assembly language") ----
@@ -97,143 +283,6 @@ interpFinSubstF interpObj interpCarrier (FSCoproduct x y) a =
   Either (interpCarrier x a) (interpCarrier y a)
 interpFinSubstF interpObj interpCarrier (FSHomObj x y) a =
   interpCarrier x a -> interpCarrier y a
-
-----------------------
-----------------------
----- Endofunctors ----
-----------------------
-----------------------
-
-----------------------------------------------------
----- Representable and corepresentable functors ----
-----------------------------------------------------
-
--- A functor which, given a type of objects and a carrier type of functors,
--- generates a covariant representable functor.
---
--- There is simply one covariant representable functor for each object.
-public export
-data CovarRepF : Type -> Type -> Type where
-  CovarHom : obj -> CovarRepF obj carrier
-
-public export
-Bifunctor CovarRepF where
-  bimap f g (CovarHom obj) = CovarHom (f obj)
-
-public export
-Show obj => Show (CovarRepF obj carrier) where
-  show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
-
-public export
-interpCovarRepF : {obj, carrier : Type} ->
-  (obj -> Type) -> CovarRepF obj carrier -> obj -> Type
-interpCovarRepF {obj} interpObj (CovarHom x) a =
-  interpObj a -> interpObj x
-
--- A functor which generates a contravariant representable functor.
--- As with covariant representable functors, there's simply one per
--- object -- the only difference between the types is how we interpret
--- them.
-public export
-data ContravarRepF : Type -> Type -> Type where
-  ContravarHom : obj -> ContravarRepF obj carrier
-
-public export
-Bifunctor ContravarRepF where
-  bimap f g (ContravarHom obj) = ContravarHom (f obj)
-
-public export
-Show obj => Show (ContravarRepF obj carrier) where
-  show (ContravarHom obj) = "Hom(" ++ show obj ++ ", _)"
-
-public export
-interpContravarRepF : {obj, carrier : Type} ->
-  (obj -> Type) -> ContravarRepF obj carrier -> obj -> Type
-interpContravarRepF {obj} interpObj (ContravarHom x) a =
-  interpObj x -> interpObj a
-
-----------------------------------------------------
----- Sums of representables or corepresentables ----
-----------------------------------------------------
-
--- Given a type of objects, a carrier type of representable or corepresentable
--- functors, a generator functor for representable or corepresentable functors,
--- and a carrier type of sums of representables or corepresentables, generate
--- a new type of sums of representables or corepresentables.
-public export
-data SumRepOrCorepF :
-    (Type -> Type -> Type) -> Type -> Type -> Type -> Type where
-  SumRepOrCorepGen :
-    generator obj rep -> SumRepOrCorepF generator obj rep carrier
-  SumRepOrCorepEmpty :
-    SumRepOrCorepF generator obj rep carrier
-  SumRepOrCorepSum :
-    carrier -> carrier -> SumRepOrCorepF generator obj rep carrier
-
-public export
-Functor (SumRepOrCorepF generator obj rep) where
-  map f (SumRepOrCorepGen r) = SumRepOrCorepGen r
-  map f SumRepOrCorepEmpty = SumRepOrCorepEmpty
-  map f (SumRepOrCorepSum s s') = SumRepOrCorepSum (f s) (f s')
-
-public export
-(Show obj, Show rep, Show carrier, Show (generator obj rep)) =>
-    Show (SumRepOrCorepF generator obj rep carrier) where
-  show (SumRepOrCorepGen r) = show r
-  show SumRepOrCorepEmpty = show "[VoidF]"
-  show (SumRepOrCorepSum s s') = "[" ++ show s ++ " + " ++ show s' ++ "]"
-
-public export
-interpSumRepOrCorepF :
-  {generator : Type -> Type -> Type} -> {obj, rep, carrier : Type} ->
-  (interpObj : obj -> Type) ->
-  (interpRep : (obj -> Type) -> generator obj rep -> obj -> Type) ->
-  (interpSum : carrier -> obj -> Type) ->
-  SumRepOrCorepF generator obj rep carrier -> obj -> Type
-interpSumRepOrCorepF interpObj interpRep interpSum (SumRepOrCorepGen r) a =
-  interpRep interpObj r a
-interpSumRepOrCorepF interpObj interpRep interpSum SumRepOrCorepEmpty a =
-  Void
-interpSumRepOrCorepF interpObj interpRep interpSum (SumRepOrCorepSum s s') a =
-  Either (interpSum s a) (interpSum s' a)
-
----------------------------------
----- Polynomial endofunctors ----
----------------------------------
-
--- A functor which, given types of objects and covariant representables and a
--- carrier type of sums of covariant representables, generates a new type of
--- sums of covariant representables -- that is, polynomial endofunctors.
-public export
-PolyEndoF : Type -> Type -> Type -> Type
-PolyEndoF = SumRepOrCorepF CovarRepF
-
-public export
-interpPolyEndoF : {obj, rep, carrier : Type} ->
-  (interpObj : obj -> Type) ->
-  (interpSum : carrier -> obj -> Type) ->
-  PolyEndoF obj rep carrier -> obj -> Type
-interpPolyEndoF interpObj interpSum =
-  interpSumRepOrCorepF interpObj interpCovarRepF interpSum
-
---------------------------------
----- Dirichlet endofunctors ----
---------------------------------
-
--- A functor which, given types of objects and contravariant representables and
--- a carrier type of sums of contravariant representables, generates a new type
--- of sums of contravariant representables -- that is, Dirichlet endofunctors.
-public export
-DirichletEndoF : Type -> Type -> Type -> Type
-DirichletEndoF = SumRepOrCorepF ContravarRepF
-
-public export
-interpDirichletEndoF : {obj, rep, carrier : Type} ->
-  (interpObj : obj -> Type) ->
-  (interpSum : carrier -> obj -> Type) ->
-  DirichletEndoF obj rep carrier -> obj -> Type
-interpDirichletEndoF interpObj interpSum =
-  interpSumRepOrCorepF interpObj interpContravarRepF interpSum
 
 -------------------------------------------------
 -------------------------------------------------
