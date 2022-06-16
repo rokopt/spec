@@ -8,6 +8,6 @@ import LanguageDef.Interpretation
 export
 languageDefInterpretationTest : IO ()
 languageDefInterpretationTest = do
-  printLn "Begin languageDefInterpretationTest:"
-  printLn "End languageDefInterpretationTest."
+  -- printLn "Begin languageDefInterpretationTest:"
+  -- printLn "End languageDefInterpretationTest."
   pure ()

@@ -8,6 +8,6 @@ import Library.IdrisUtils
 export
 idrisUtilsTest : IO ()
 idrisUtilsTest = do
-  printLn "Begin idrisUtilsTest:"
-  printLn "End idrisUtilsTest."
+  -- printLn "Begin idrisUtilsTest:"
+  -- printLn "End idrisUtilsTest."
   pure ()

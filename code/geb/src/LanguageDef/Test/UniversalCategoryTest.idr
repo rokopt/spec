@@ -8,6 +8,6 @@ import LanguageDef.UniversalCategory
 export
 languageDefUniversalCategoryTest : IO ()
 languageDefUniversalCategoryTest = do
-  printLn "Begin languageDefUniversalCategoryTest:"
-  printLn "End languageDefUniversalCategoryTest."
+  -- printLn "Begin languageDefUniversalCategoryTest:"
+  -- printLn "End languageDefUniversalCategoryTest."
   pure ()

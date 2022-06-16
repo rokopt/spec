@@ -8,6 +8,6 @@ import Library.IdrisCategories
 export
 libraryIdrisCategoriesTest : IO ()
 libraryIdrisCategoriesTest = do
-  printLn "Begin libraryIdrisCategoriesTest:"
-  printLn "End libraryIdrisCategoriesTest."
+  -- printLn "Begin libraryIdrisCategoriesTest:"
+  -- printLn "End libraryIdrisCategoriesTest."
   pure ()

@@ -8,6 +8,6 @@ import Library.CategoryTheory
 export
 libraryCategoryTheoryTest : IO ()
 libraryCategoryTheoryTest = do
-  printLn "Begin libraryCategoryTheoryTest:"
-  printLn "End libraryCategoryTheoryTest."
+  -- printLn "Begin libraryCategoryTheoryTest:"
+  -- printLn "End libraryCategoryTheoryTest."
   pure ()

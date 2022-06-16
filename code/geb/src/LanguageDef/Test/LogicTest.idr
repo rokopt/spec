@@ -8,6 +8,6 @@ import LanguageDef.Logic
 export
 languageDefLogicTest : IO ()
 languageDefLogicTest = do
-  printLn "Begin languageDefLogicTest:"
-  printLn "End languageDefLogicTest."
+  -- printLn "Begin languageDefLogicTest:"
+  -- printLn "End languageDefLogicTest."
   pure ()
