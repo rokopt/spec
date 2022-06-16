@@ -19,38 +19,28 @@ import public LanguageDef.Atom
 public export
 data Subst0EndoF : Type -> Type where
   Subst0EndoCovarRep : carrier -> Subst0EndoF carrier
-  Subst0EndoSum : ListF carrier carrier -> Subst0EndoF carrier
+  Subst0EndoEmpty : Subst0EndoF carrier
+  Subst0EndoSum : carrier -> carrier -> Subst0EndoF carrier
   Subst0EndoCompose : carrier -> carrier -> Subst0EndoF carrier
 
 public export
 Functor Subst0EndoF where
   map m (Subst0EndoCovarRep f) = Subst0EndoCovarRep (m f)
-  map m (Subst0EndoSum l) = Subst0EndoSum (bimap m m l)
+  map m Subst0EndoEmpty = Subst0EndoEmpty
+  map m (Subst0EndoSum f g) = Subst0EndoSum (m f) (m g)
   map m (Subst0EndoCompose g f) = Subst0EndoCompose (m g) (m f)
 
 public export
 showS0EF : {0 carrier : Type} ->
   (carrier -> String) -> Subst0EndoF carrier -> String
-showS0EF sc (Subst0EndoCovarRep f) = "Hom((" ++ sc f ++ ")[1], _)"
-showS0EF sc (Subst0EndoSum l) = "(+)(" ++ showListF sc sc l ++ ")"
-showS0EF sc (Subst0EndoCompose g f) = "((" ++ sc g ++ ") . (" ++ sc f ++ "))"
+showS0EF sc (Subst0EndoCovarRep f) = "Hom(" ++ sc f ++ "[1], _)"
+showS0EF sc Subst0EndoEmpty = "0F"
+showS0EF sc (Subst0EndoSum f g) = "(" ++ sc f ++ " :+: " ++ sc g ++ ")"
+showS0EF sc (Subst0EndoCompose g f) = "(" ++ sc g ++ " . " ++ sc f ++ ")"
 
 public export
 Show carrier => Show (Subst0EndoF carrier) where
   show = showS0EF show
-
-public export
-Subst0EndoVoidF : Subst0EndoF a
-Subst0EndoVoidF = Subst0EndoSum NilF
-
-public export
-interpSubst0EndoFSum : {carrier : Type} ->
-  (carrier -> (Type -> Type)) ->
-  ListF carrier carrier -> (Type -> Type)
-interpSubst0EndoFSum interpCarrier NilF x =
-  Void
-interpSubst0EndoFSum interpCarrier (ConsF f g) x =
-  Either (interpCarrier f x) (interpCarrier g x)
 
 public export
 interpSubst0EndoF : {carrier : Type} ->
@@ -58,8 +48,10 @@ interpSubst0EndoF : {carrier : Type} ->
   Subst0EndoF carrier -> (Type -> Type)
 interpSubst0EndoF interpCarrier (Subst0EndoCovarRep f) x =
   interpCarrier f () -> x
-interpSubst0EndoF interpCarrier (Subst0EndoSum l) x =
-  interpSubst0EndoFSum interpCarrier l x
+interpSubst0EndoF interpCarrier Subst0EndoEmpty x =
+  Void
+interpSubst0EndoF interpCarrier (Subst0EndoSum f g) x =
+  Either (interpCarrier f x) (interpCarrier g x)
 interpSubst0EndoF interpCarrier (Subst0EndoCompose g f) x =
   interpCarrier g (interpCarrier f x)
 
@@ -85,9 +77,9 @@ pCataS0EF v a subst alg (InFree x) = case x of
   TermVar var => subst var
   TermComposite com => alg $ case com of
     Subst0EndoCovarRep f => Subst0EndoCovarRep $ pCataS0EF v a subst alg f
-    Subst0EndoSum l => Subst0EndoSum $ case l of
-      NilF => NilF
-      ConsF f g => ConsF (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
+    Subst0EndoEmpty => Subst0EndoEmpty
+    Subst0EndoSum f g =>
+      Subst0EndoSum (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
     Subst0EndoCompose g f =>
       Subst0EndoCompose (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
 
@@ -126,7 +118,7 @@ interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
 -- The void-valued constant endofunctor -- the sum of no endofunctors.
 public export
 (!+) : FreeS0EF v
-(!+) = inFreeComposite Subst0EndoVoidF
+(!+) = inFreeComposite Subst0EndoEmpty
 
 -- The representable endofunctor represented by a given object -- in the
 -- endofunctor category, that is, by some endofunctor, which implicitly
@@ -148,7 +140,7 @@ public export
 infixl 7 :+:
 public export
 (:+:) : FreeS0EF v -> FreeS0EF v -> FreeS0EF v
-a :+: b = inFreeComposite $ Subst0EndoSum $ ConsF a b
+a :+: b = inFreeComposite $ Subst0EndoSum a b
 
 ----------------------------------------
 ----------------------------------------

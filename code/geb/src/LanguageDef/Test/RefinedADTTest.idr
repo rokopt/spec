@@ -66,12 +66,6 @@ finOrdMorphTest17 = MkNatRange 1 10 3 7 3 [3, 3, 3, 3, 4, 5, 6, 6, 7]
 finOrdMorphTest18 : NatRangeMap 3 9 3 7
 finOrdMorphTest18 = natRangeCompose finOrdMorphTest17 finOrdMorphTest16
 
-fsObjTest1 : MuS0EF
-fsObjTest1 = (!+)
-
-fsObjTest2 : MuS0EF
-fsObjTest2 = :>: ((!+) :+: (!+) :+: (!*))
-
 data TestType : Type where
   TestTypeN : Nat -> TestType
 
@@ -103,6 +97,12 @@ testContravar : TestContravarType
 testContravar FZ = FS (FZ)
 testContravar (FS FZ) = FZ
 testContravar (FS (FS FZ)) = FS (FZ)
+
+fsObjTest1 : MuS0EF
+fsObjTest1 = (!+)
+
+fsObjTest2 : MuS0EF
+fsObjTest2 = :>: ((!+) :+: (!+) :+: (!*))
 
 export
 languageDefRefinedADTTest : IO ()
