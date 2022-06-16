@@ -43,19 +43,6 @@ Show carrier => Show (Subst0EndoF carrier) where
   show = showS0EF show
 
 public export
-interpSubst0EndoF : {carrier : Type} ->
-  (carrier -> (Type -> Type)) ->
-  Subst0EndoF carrier -> (Type -> Type)
-interpSubst0EndoF interpCarrier (Subst0EndoCovarRep f) x =
-  interpCarrier f () -> x
-interpSubst0EndoF interpCarrier Subst0EndoEmpty x =
-  Void
-interpSubst0EndoF interpCarrier (Subst0EndoSum f g) x =
-  Either (interpCarrier f x) (interpCarrier g x)
-interpSubst0EndoF interpCarrier (Subst0EndoCompose g f) x =
-  interpCarrier g (interpCarrier f x)
-
-public export
 AlgS0EF : Type -> Type
 AlgS0EF = Algebra Subst0EndoF
 
@@ -99,18 +86,6 @@ public export
 Show MuS0EF where
   show = cataS0EF String showS0EFAlg
 
-public export
-interpS0EFAlg : AlgS0EF (Type -> Type)
-interpS0EFAlg = interpSubst0EndoF (const id)
-
-public export
-interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
-interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
-
-public export
-interpMuS0EF : MuS0EF -> (Type -> Type)
-interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
-
 ------------------
 ---- Notation ----
 ------------------
@@ -142,6 +117,25 @@ public export
 (:+:) : FreeS0EF v -> FreeS0EF v -> FreeS0EF v
 a :+: b = inFreeComposite $ Subst0EndoSum a b
 
+-----------------------------------------------------------------------
+---- Interpretation of MuS0EF as monoid of polynomial endofunctors ----
+-----------------------------------------------------------------------
+
+public export
+interpS0EFAlg : AlgS0EF (Type -> Type)
+interpS0EFAlg (Subst0EndoCovarRep f) x = f () -> x
+interpS0EFAlg Subst0EndoEmpty x = ()
+interpS0EFAlg (Subst0EndoSum f g) x = Either (f x) (g x)
+interpS0EFAlg (Subst0EndoCompose g f) x = g (f x)
+
+public export
+interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
+interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
+
+public export
+interpMuS0EF : MuS0EF -> (Type -> Type)
+interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
+
 ---------------------------------------------
 ---- Algebras of polynomial endofunctors ----
 ---------------------------------------------
@@ -161,7 +155,23 @@ MuS0E = Mu . interpMuS0EF
 mutual
   public export
   pCataS0E : (f : MuS0EF) -> ParamCata $ interpMuS0EF f
-  pCataS0E f v a subst alg x = ?pCataS0E_hole
+  pCataS0E (InFree f) v a subst alg (InFree x) = case f of
+    TermVar fv => void fv
+    TermComposite fc => case fc of
+      Subst0EndoCovarRep fa => case x of
+        TermVar xv => subst xv
+        TermComposite xc => ?hmmletsseethatagain
+      Subst0EndoEmpty => case x of
+        TermVar xv => subst xv
+        TermComposite xc => ?pCataS0E_empty_comp
+      Subst0EndoSum ff fg => ?pCataS0E_hole_fc_sum
+      Subst0EndoCompose fg ff => ?pCataS0E_hole_fc_compose
+
+  public export
+  pCataS0EAlg : (f : MuS0EF) ->
+    ParamCata (interpMuS0EF f) ->
+    ParamCata (Subst0EndoF . interpMuS0EF f)
+  pCataS0EAlg = ?pCataS0EAlg_hole
 
 ----------------------------------------
 ----------------------------------------
