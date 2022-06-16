@@ -67,7 +67,7 @@ finOrdMorphTest18 : NatRangeMap 3 9 3 7
 finOrdMorphTest18 = natRangeCompose finOrdMorphTest17 finOrdMorphTest16
 
 fsObjTest1 : FinSubstObj
-fsObjTest1 = InFS FSVoid
+fsObjTest1 = (!+)
 
 fsObjTest2 : FinSubstObj
 fsObjTest2 = ((!+) :+: (!*)) :>: ((!+) :>: (!+) :+: (!*))
