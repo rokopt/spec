@@ -142,6 +142,27 @@ public export
 (:+:) : FreeS0EF v -> FreeS0EF v -> FreeS0EF v
 a :+: b = inFreeComposite $ Subst0EndoSum a b
 
+---------------------------------------------
+---- Algebras of polynomial endofunctors ----
+---------------------------------------------
+
+public export
+AlgS0E : MuS0EF -> Type -> Type
+AlgS0E = Algebra . interpMuS0EF
+
+public export
+FreeS0E : MuS0EF -> Type -> Type
+FreeS0E = FreeMonad . interpMuS0EF
+
+public export
+MuS0E : MuS0EF -> Type
+MuS0E = Mu . interpMuS0EF
+
+mutual
+  public export
+  pCataS0E : (f : MuS0EF) -> ParamCata $ interpMuS0EF f
+  pCataS0E f v a subst alg x = ?pCataS0E_hole
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
