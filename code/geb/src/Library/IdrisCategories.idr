@@ -2370,17 +2370,31 @@ ComposeAdjunctionCorrect {c} {d} {e} adjr adjl = ?ComposeAdjunctionCorrect_hole
 
 public export
 LeftAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
-  (a : MetaObj catD) -> (b : MetaObj catC) ->
+  {a : MetaObj catD} -> {b : MetaObj catC} ->
   MetaMorphism catC (MetaFunctorObjMap (leftAdjoint adj) a) b ->
   MetaMorphism catD a (MetaFunctorObjMap (rightAdjoint adj) b)
-LeftAdjunct adj = ?leftAdjunct_hole
+LeftAdjunct {catC} {catD} adj {a} {b} f =
+  MetaCompose catD
+    a
+    (MetaFunctorObjMap
+      (rightAdjoint adj) (MetaFunctorObjMap (leftAdjoint adj) a))
+    (MetaFunctorObjMap (rightAdjoint adj) b)
+    (MetaFunctorMorphMap (rightAdjoint adj) f)
+    (MetaNTComponent (adjUnit adj) a)
 
 public export
 RightAdjunct : {catC, catD : MetaCat} -> (adj : Adjunction catC catD) ->
-  (a : MetaObj catD) -> (b : MetaObj catC) ->
+  {a : MetaObj catD} -> {b : MetaObj catC} ->
   MetaMorphism catD a (MetaFunctorObjMap (rightAdjoint adj) b) ->
   MetaMorphism catC (MetaFunctorObjMap (leftAdjoint adj) a) b
-RightAdjunct adj = ?rightAdjunct_hole
+RightAdjunct {catC} {catD} adj {a} {b} g =
+  MetaCompose catC
+    (MetaFunctorObjMap (leftAdjoint adj) a)
+    (MetaFunctorObjMap
+      (leftAdjoint adj) (MetaFunctorObjMap (rightAdjoint adj) b))
+    b
+    (MetaNTComponent (adjCounit adj) b)
+    (MetaFunctorMorphMap (leftAdjoint adj) g)
 
 -- functor cat
 -- nat trans cat
