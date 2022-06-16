@@ -6,46 +6,24 @@ import public LanguageDef.Atom
 
 %default total
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
----- Endofunctors of the 0-order language (all and only polynomials) -----
---------------------------------------------------------------------------
---------------------------------------------------------------------------
+-----------------------------------------------------------
+-----------------------------------------------------------
+---- Category of non-dependent polynomial endofunctors ----
+-----------------------------------------------------------
+-----------------------------------------------------------
 
 public export
-data EndoFF : Type -> Type where
-  EndoFId : EndoFF carrier
-  EndoFCompose : carrier -> carrier -> EndoFF carrier
+data Subst0EndoF : Type -> Type where
+  Subst0EndoCovarRep : carrier -> Subst0EndoF carrier
+  Subst0EndoEmpty : Subst0EndoF carrier
+  Subst0EndoSum : carrier -> carrier -> Subst0EndoF carrier
+  Subst0EndoCompose : carrier -> carrier -> Subst0EndoF carrier
 
-public export
-data Poly0F : Type -> Type where
-  Poly0Endo : EndoFF carrier -> Poly0F carrier
-  Poly0Empty : Poly0F carrier
-  Poly0Coproduct : carrier -> carrier -> Poly0F carrier
-  Poly0HomFunc : carrier -> Poly0F carrier
-
-public export
-data Poly0ObjF : Type -> Type -> Type where
-  Poly0FMapObj : functor -> Poly0ObjF functor carrier
-
-public export
-data Poly0Morph :
-    (carrier : Type) -> Poly0F carrier -> Poly0F carrier -> Type where
-{-
-  Poly0Id : functor -> Poly0Morph functor carrier
-  Poly0ComposeL : carrier -> carrier -> carrier -> Poly0Morph functor carrier
-  Poly0ComposeR : carrier -> carrier -> carrier -> Poly0Morph functor carrier
-  Poly0FromVoid : functor -> Poly0Morph functor carrier
-  -}
-
-public export
-data CartNT0F : Type -> Type where
-
-----------------------
-----------------------
----- Endofunctors ----
-----------------------
-----------------------
+----------------------------------------
+----------------------------------------
+---- Representables and polynomials ----
+----------------------------------------
+----------------------------------------
 
 ----------------------------------------------------
 ---- Representable and corepresentable functors ----
@@ -55,6 +33,11 @@ data CartNT0F : Type -> Type where
 -- generates a covariant representable functor.
 --
 -- There is simply one covariant representable functor for each object.
+--
+-- Examples of representable functors:
+--  - The constant functor which takes every object to a terminal object
+--    is representable by an initial object
+--  - The identity functor is representable by a terminal object
 public export
 data CovarRepF : Type -> Type -> Type where
   CovarHom : obj -> CovarRepF obj carrier
@@ -168,29 +151,6 @@ interpDirichletEndoF : {obj, rep, carrier : Type} ->
   DirichletEndoF obj rep carrier -> obj -> Type
 interpDirichletEndoF interpObj interpSum =
   interpSumRepOrCorepF interpObj interpContravarRepF interpSum
-
------------------------------------------------------------
------------------------------------------------------------
----- Category of non-dependent polynomial endofunctors ----
------------------------------------------------------------
------------------------------------------------------------
-
-public export
-data Subst0ExpF : Type -> Type where
-  -- Initial object (Void)
-  S0EInitial : Subst0ExpF carrier
-
-  -- Terminal object (Unit)
-  S0ETerminal : Subst0ExpF carrier
-
-  -- Object from functor application to terminal object
-  S0EFmapObj : carrier -> Subst0ExpF carrier
-
-  -- Morphism from initial object to given object
-  S0EFromInitial : carrier -> Subst0ExpF carrier
-
-  -- Morphism from given object to terminal object
-  S0EToTerminal : carrier -> Subst0ExpF carrier
 
 -------------------------------------------------------------
 -------------------------------------------------------------
