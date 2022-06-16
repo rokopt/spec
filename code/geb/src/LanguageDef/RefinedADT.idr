@@ -39,7 +39,8 @@ public export
 interpSubst0EndoFSum : {carrier : Type} ->
   (carrier -> (Type -> Type)) ->
   ListF carrier carrier -> (Type -> Type)
-interpSubst0EndoFSum interpCarrier NilF x = Void
+interpSubst0EndoFSum interpCarrier NilF x =
+  Void
 interpSubst0EndoFSum interpCarrier (ConsF f g) x =
   Either (interpCarrier f x) (interpCarrier g x)
 
@@ -77,6 +78,10 @@ pCataS0EF v a subst alg (InFree x) = case x of
       ConsF f g => ConsF (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
     Subst0EndoCompose g f =>
       Subst0EndoCompose (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
+
+public export
+cataS0EF : Catamorphism Subst0EndoF
+cataS0EF = cataFromParam pCataS0EF
 
 ----------------------------------------
 ----------------------------------------

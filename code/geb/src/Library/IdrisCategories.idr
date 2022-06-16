@@ -302,6 +302,10 @@ Catamorphism : (Type -> Type) -> Type
 Catamorphism f = (a : Type) -> Algebra f a -> FreeMonad f Void -> a
 
 public export
+cataFromParam : {f : Type -> Type} -> ParamCata f -> Catamorphism f
+cataFromParam pcata a = pcata Void a (voidF a)
+
+public export
 ParamBigStepCata : (Type -> Type) -> Type
 ParamBigStepCata f =
   (v, a : Type) -> (v -> a) -> BigStepAlgebra f a -> FreeMonad f v -> a
