@@ -2197,6 +2197,10 @@ IdNatTransCorrect : {catC, catD : MetaCat} -> (f : MetaFunctor catC catD) ->
 IdNatTransCorrect = ?IdNatTransCorrect_hole
 
 public export
+IdNatTransIdF : (c : MetaCat) -> MetaNatTrans (IdFunctor c) (IdFunctor c)
+IdNatTransIdF c = MkMetaNatTrans $ \a => MetaId c a
+
+public export
 VerticalCompose : {catC, catD : MetaCat} -> {f, g, h : MetaFunctor catC catD} ->
   MetaNatTrans g h -> MetaNatTrans f g -> MetaNatTrans f h
 VerticalCompose {catC} {catD} {f} {g} {h} beta alpha = MkMetaNatTrans $
@@ -2333,7 +2337,11 @@ record AdjunctionEq
 
 public export
 IdAdjunction : (c : MetaCat) -> Adjunction c c
-IdAdjunction = ?IdAdjunction_hole
+IdAdjunction c = MkAdjunction
+  (IdFunctor c)
+  (IdFunctor c)
+  (IdNatTransIdF c)
+  (IdNatTransIdF c)
 
 public export
 IdAdjunctionCorrect : (c : MetaCat) -> AdjunctionCorrect (IdAdjunction c)
