@@ -447,18 +447,6 @@ ComposeFH : {f, g, h, j : ObjectF} -> Functor g =>
   MorphismF g j -> MorphismF f h -> MorphismF (ComposeT g f) (ComposeT j h)
 ComposeFH {g} beta alpha a = (beta (h a) . map {f=g} (alpha a))
 
--- The functor category also has whiskering.
-
-public export
-WhiskerL : {f, g : ObjectF} -> (h : ObjectF) -> Functor h =>
-  MorphismF f g -> MorphismF (ComposeT h f) (ComposeT h g)
-WhiskerL h nu a = map {f=h} (nu a)
-
-public export
-WhiskerR : (f : ObjectF) -> {g, h : ObjectF} -> Functor f =>
-  MorphismF g h -> MorphismF (ComposeT f g) (ComposeT f h)
-WhiskerR f nu a = map {f} (nu a)
-
 ----------------------------------------------------
 ----------------------------------------------------
 ---- Natural transformations and their algebras ----
@@ -2281,7 +2269,8 @@ public export
 WhiskerLeft : {catB, catC, catD : MetaCat} -> {f, g : MetaFunctor catC catD} ->
   (nu : MetaNatTrans f g) -> (k : MetaFunctor catB catC) ->
   MetaNatTrans (ComposeFunctor f k) (ComposeFunctor g k)
-WhiskerLeft = ?WhiskerLeft_hole
+WhiskerLeft {catB} {catC} {catD} {f} {g} nu k = MkMetaNatTrans $
+  \a => MetaNTComponent nu $ MetaFunctorObjMap k a
 
 public export
 WhiskerLeftCorrect :
@@ -2295,7 +2284,8 @@ public export
 WhiskerRight : {catC, catD, catE : MetaCat} -> {f, g : MetaFunctor catC catD} ->
   (h : MetaFunctor catD catE) -> (nu : MetaNatTrans f g) ->
   MetaNatTrans (ComposeFunctor h f) (ComposeFunctor h g)
-WhiskerRight = ?WhiskerRight_hole
+WhiskerRight h nu = MkMetaNatTrans $
+  \a => MetaFunctorMorphMap h $ MetaNTComponent nu a
 
 public export
 WhiskerRightCorrect :
