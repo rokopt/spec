@@ -325,6 +325,10 @@ Anamorphism : (Type -> Type) -> Type
 Anamorphism f = (a : Type) -> Coalgebra f a -> a -> CofreeComonad f Unit
 
 public export
+anaFromParam : {f : Type -> Type} -> ParamAna f -> Anamorphism f
+anaFromParam pana a = pana Unit a (const ())
+
+public export
 ParamBigStepAna : (Type -> Type) -> Type
 ParamBigStepAna f =
   (l, a : Type) -> (a -> l) -> BigStepCoalgebra f a -> a -> CofreeComonad f l

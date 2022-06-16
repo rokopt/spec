@@ -83,6 +83,30 @@ public export
 cataS0EF : Catamorphism Subst0EndoF
 cataS0EF = cataFromParam pCataS0EF
 
+public export
+showS0EFAlg : AlgS0EF String
+showS0EFAlg = showS0EF id
+
+public export
+showFreeS0EF : {v : Type} -> (v -> String) -> FreeS0EF v -> String
+showFreeS0EF subst = pCataS0EF v String subst showS0EFAlg
+
+public export
+Show MuS0EF where
+  show = cataS0EF String showS0EFAlg
+
+public export
+interpS0EFAlg : AlgS0EF (Type -> Type)
+interpS0EFAlg = interpSubst0EndoF (const id)
+
+public export
+interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
+interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
+
+public export
+interpMuS0EF : MuS0EF -> (Type -> Type)
+interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
