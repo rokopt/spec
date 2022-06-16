@@ -66,11 +66,11 @@ finOrdMorphTest17 = MkNatRange 1 10 3 7 3 [3, 3, 3, 3, 4, 5, 6, 6, 7]
 finOrdMorphTest18 : NatRangeMap 3 9 3 7
 finOrdMorphTest18 = natRangeCompose finOrdMorphTest17 finOrdMorphTest16
 
-fsObjTest1 : FinSubstObj
+fsObjTest1 : MuS0EF
 fsObjTest1 = (!+)
 
-fsObjTest2 : FinSubstObj
-fsObjTest2 = ((!+) :+: (!*)) :>: ((!+) :>: (!+) :+: (!*))
+fsObjTest2 : MuS0EF
+fsObjTest2 = :>: ((!+) :+: (!+) :+: (!*))
 
 data TestType : Type where
   TestTypeN : Nat -> TestType
@@ -123,10 +123,10 @@ languageDefRefinedADTTest = do
   printLn $ show finOrdMorphTest16
   printLn $ show finOrdMorphTest17
   printLn $ show finOrdMorphTest18
-  printLn $ show fsObjTest1
-  printLn $ show fsObjTest2
-  -}
   printLn $ show testCovarHomFunc
   printLn $ show testContravarHomFunc
+  -}
+  printLn $ show fsObjTest1
+  printLn $ show fsObjTest2
   printLn "End languageDefRefinedADTTest."
   pure ()

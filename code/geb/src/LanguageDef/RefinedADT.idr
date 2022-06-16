@@ -12,6 +12,10 @@ import public LanguageDef.Atom
 -----------------------------------------------------------
 -----------------------------------------------------------
 
+--------------------------------------
+---- Endofunctor-defining functor ----
+--------------------------------------
+
 public export
 data Subst0EndoF : Type -> Type where
   Subst0EndoCovarRep : carrier -> Subst0EndoF carrier
@@ -28,12 +32,16 @@ public export
 showS0EF : {0 carrier : Type} ->
   (carrier -> String) -> Subst0EndoF carrier -> String
 showS0EF sc (Subst0EndoCovarRep f) = "Hom((" ++ sc f ++ ")[1], _)"
-showS0EF sc (Subst0EndoSum l) = "Σ(" ++ showListF sc sc l ++ ")"
+showS0EF sc (Subst0EndoSum l) = "(+)(" ++ showListF sc sc l ++ ")"
 showS0EF sc (Subst0EndoCompose g f) = "((" ++ sc g ++ ") . (" ++ sc f ++ "))"
 
 public export
 Show carrier => Show (Subst0EndoF carrier) where
   show = showS0EF show
+
+public export
+Subst0EndoVoidF : Subst0EndoF a
+Subst0EndoVoidF = Subst0EndoSum NilF
 
 public export
 interpSubst0EndoFSum : {carrier : Type} ->
@@ -58,6 +66,10 @@ interpSubst0EndoF interpCarrier (Subst0EndoCompose g f) x =
 public export
 AlgS0EF : Type -> Type
 AlgS0EF = Algebra Subst0EndoF
+
+---------------------------------------------------
+---- Fixed points (object of all endofunctors) ----
+---------------------------------------------------
 
 public export
 FreeS0EF : Type -> Type
@@ -106,6 +118,37 @@ interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
 public export
 interpMuS0EF : MuS0EF -> (Type -> Type)
 interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
+
+------------------
+---- Notation ----
+------------------
+
+-- The void-valued constant endofunctor -- the sum of no endofunctors.
+public export
+(!+) : FreeS0EF v
+(!+) = inFreeComposite Subst0EndoVoidF
+
+-- The representable endofunctor represented by a given object -- in the
+-- endofunctor category, that is, by some endofunctor, which implicitly
+-- means that endofunctor applied to the terminal object.
+prefix 11 :>:
+public export
+(:>:) : FreeS0EF v -> FreeS0EF v
+(:>:) a = inFreeComposite $ Subst0EndoCovarRep a
+
+-- The unit-valued constant endofunctor -- represented by the initial object
+-- (Void), and hence in the endofunctor category by the void-valued constant
+-- endofunctor.
+public export
+(!*) : FreeS0EF v
+(!*) = :>: (!+)
+
+-- The sum of two endofunctors.  (In particular, any sum of representables
+-- is a polynomial; so, therefore, is any sum of polynomials.)
+infixl 7 :+:
+public export
+(:+:) : FreeS0EF v -> FreeS0EF v -> FreeS0EF v
+a :+: b = inFreeComposite $ Subst0EndoSum $ ConsF a b
 
 ----------------------------------------
 ----------------------------------------
@@ -277,24 +320,6 @@ data FinSubstObj : Type where
   InFS : FinSubstF FinSubstObj -> FinSubstObj
 
 public export
-(!+) : FinSubstObj
-(!+) = InFS FSVoid
-
-public export
-(!*) : FinSubstObj
-(!*) = InFS FSUnit
-
-infixl 7 :+:
-public export
-(:+:) : FinSubstObj -> FinSubstObj -> FinSubstObj
-a :+: b = InFS $ FSCoproduct a b
-
-infixl 7 :>:
-public export
-(:>:) : FinSubstObj -> FinSubstObj -> FinSubstObj
-a :>: b = InFS $ FSHomObj a b
-
-public export
 FinSubstAlg : Type -> Type
 FinSubstAlg a = FinSubstF a -> a
 
@@ -422,17 +447,17 @@ FinSubstMorphType = FinSubstSig -> Type
 public export
 data FinSubstMorphF : FinSubstMorphType -> FinSubstMorphType where
   FSMFromVoid : {carrier : FinSubstMorphType} -> {codomain : FinSubstObj} ->
-    FinSubstMorphF carrier ((!+), codomain)
+    FinSubstMorphF carrier (InFS FSVoid, codomain)
   FSMToUnit : {carrier : FinSubstMorphType} -> {domain : FinSubstObj} ->
-    FinSubstMorphF carrier (domain, (!*))
+    FinSubstMorphF carrier (domain, InFS FSUnit)
   FSMCase : {carrier : FinSubstMorphType} ->
     {domain, domain', codomain : FinSubstObj} ->
     carrier (domain, codomain) -> carrier (domain', codomain) ->
-    FinSubstMorphF carrier (domain :+: domain', codomain)
+    FinSubstMorphF carrier (InFS $ FSCoproduct domain domain', codomain)
   FSMMorphTerm : {carrier : FinSubstMorphType} ->
     {domain, codomain : FinSubstObj} ->
     carrier (domain, codomain) ->
-    FinSubstMorphF carrier ((!*), domain :>: codomain)
+    FinSubstMorphF carrier (InFS FSUnit, InFS $ FSHomObj domain codomain)
 
 public export
 data FinSubstMorph : FinSubstMorphType where
@@ -441,31 +466,33 @@ data FinSubstMorph : FinSubstMorphType where
 
 public export
 FinSubstMorphAlg : (a : FinSubstSig -> Type) -> Type
-FinSubstMorphAlg a = (sig : FinSubstSig) -> FinSubstMorphF a sig -> a sig
+FinSubstMorphAlg a = {sig : FinSubstSig} -> FinSubstMorphF a sig -> a sig
 
+{-
 public export
 cataFSM : {a : FinSubstSig -> Type} ->
-  FinSubstMorphAlg a -> (sig : FinSubstSig) -> FinSubstMorph sig -> a sig
-cataFSM {a} alg sig (InFSM m) = alg sig $ case m of
+  FinSubstMorphAlg a -> {sig : FinSubstSig} -> FinSubstMorph sig -> a sig
+cataFSM {a} alg (InFSM m) = alg $ case m of
   FSMFromVoid => FSMFromVoid
   FSMToUnit => FSMToUnit
-  FSMCase x y => FSMCase (cataFSM alg _ x) (cataFSM alg _ y)
-  FSMMorphTerm f => FSMMorphTerm (cataFSM alg _ f)
+  FSMCase x y => FSMCase (cataFSM alg x) (cataFSM alg y)
+  FSMMorphTerm f => FSMMorphTerm (cataFSM alg f)
 
 public export
 showFSMAlg : FinSubstMorphAlg (const String)
-showFSMAlg ((!+), cod) FSMFromVoid = "(void->" ++ show cod ++ ")"
-showFSMAlg (dom, (!*)) FSMToUnit = "(" ++ show dom ++ "->unit)"
-showFSMAlg _ (FSMMorphTerm f) = "('" ++ show f ++ "')"
-showFSMAlg _ (FSMCase x y) = "('" ++ show x ++ " :+: " ++ show y ++ "')"
+showFSMAlg {sig=(InFS FSVoid, codomain)} FSMFromVoid = "(void->" ++ show codomain ++ ")"
+showFSMAlg {sig=(domain, InFS FSUnit)} FSMToUnit = "(" ++ show domain ++ "->unit)"
+showFSMAlg (FSMMorphTerm f) = "('" ++ show f ++ "')"
+showFSMAlg (FSMCase x y) = "('" ++ show x ++ " :+: " ++ show y ++ "')"
 
 public export
 showFSM : {sig : FinSubstSig} -> FinSubstMorph sig -> String
-showFSM {sig} = cataFSM showFSMAlg sig
+showFSM = cataFSM showFSMAlg
 
 public export
 (sig : FinSubstSig) => Show (FinSubstMorph sig) where
   show = showFSM
+  -}
 
 {-
 public export

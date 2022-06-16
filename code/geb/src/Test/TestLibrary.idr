@@ -1,6 +1,7 @@
 module Test.TestLibrary
 
 import public Library.IdrisUtils
+import public Library.IdrisCategories
 
 %default total
 
