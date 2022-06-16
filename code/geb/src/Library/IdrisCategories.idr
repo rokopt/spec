@@ -2348,9 +2348,19 @@ IdAdjunctionCorrect : (c : MetaCat) -> AdjunctionCorrect (IdAdjunction c)
 IdAdjunctionCorrect = ?IdAdjunctionCorrect_hole
 
 public export
-ComposeAdjunction : {c, d, e : MetaCat} ->
-  Adjunction d e -> Adjunction c d -> Adjunction c e
-ComposeAdjunction {c} {d} {e} adjr adjl = ?ComposeAdjunction_hole
+ComposeAdjunction : {catC, catD, catE : MetaCat} ->
+  Adjunction catD catE -> Adjunction catC catD -> Adjunction catC catE
+ComposeAdjunction {catC} {catD} {catE} adjr adjl = MkAdjunction
+  (ComposeFunctor (leftAdjoint adjl) (leftAdjoint adjr))
+  (ComposeFunctor (rightAdjoint adjr) (rightAdjoint adjl))
+  (VerticalCompose
+    (WhiskerRight
+      (rightAdjoint adjr) (WhiskerLeft (adjUnit adjl) (leftAdjoint adjr)))
+    (adjUnit adjr))
+  (VerticalCompose
+    (adjCounit adjl)
+    (WhiskerLeft
+      (WhiskerRight (leftAdjoint adjl) (adjCounit adjr)) (rightAdjoint adjl)))
 
 public export
 ComposeAdjunctionCorrect : {c, d, e : MetaCat} ->
