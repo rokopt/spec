@@ -1374,9 +1374,15 @@ Bifunctor ListF where
   bimap f g (ConsF x l) = ConsF (f x) (g l)
 
 public export
+showListF : {0 atom, carrier : Type} ->
+  (atom -> String) -> (carrier -> String) ->
+  ListF atom carrier -> String
+showListF sa sc NilF = "[]"
+showListF sa sc (ConsF x l) = "(" ++ sa x ++ " :: " ++ sc l ++ ")"
+
+public export
 (Show atom, Show carrier) => Show (ListF atom carrier) where
-  show NilF = "[]"
-  show (ConsF x l) = "(" ++ show x ++ " :: " ++ show l ++ ")"
+  show = showListF show show
 
 public export
 ListAlg : Type -> Type -> Type

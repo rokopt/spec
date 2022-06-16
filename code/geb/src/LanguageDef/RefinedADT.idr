@@ -25,16 +25,23 @@ Functor Subst0EndoF where
   map m (Subst0EndoCompose g f) = Subst0EndoCompose (m g) (m f)
 
 public export
+showS0EF : {0 carrier : Type} ->
+  (carrier -> String) -> Subst0EndoF carrier -> String
+showS0EF sc (Subst0EndoCovarRep f) = "Hom((" ++ sc f ++ ")[1], _)"
+showS0EF sc (Subst0EndoSum l) = "Σ(" ++ showListF sc sc l ++ ")"
+showS0EF sc (Subst0EndoCompose g f) = "((" ++ sc g ++ ") . (" ++ sc f ++ "))"
+
+public export
 Show carrier => Show (Subst0EndoF carrier) where
-  show (Subst0EndoCovarRep f) = "Hom((" ++ show f ++ ")[1], _)"
-  show (Subst0EndoSum l) = "Σ(" ++ show l ++ ")"
-  show (Subst0EndoCompose g f) = "((" ++ show g ++ ") . (" ++ show f ++ "))"
+  show = showS0EF show
 
 public export
 interpSubst0EndoFSum : {carrier : Type} ->
   (carrier -> (Type -> Type)) ->
   ListF carrier carrier -> (Type -> Type)
-interpSubst0EndoFSum = ?interpSubst0EndoFSum_hole
+interpSubst0EndoFSum interpCarrier NilF x = Void
+interpSubst0EndoFSum interpCarrier (ConsF f g) x =
+  Either (interpCarrier f x) (interpCarrier g x)
 
 public export
 interpSubst0EndoF : {carrier : Type} ->
@@ -46,6 +53,30 @@ interpSubst0EndoF interpCarrier (Subst0EndoSum l) x =
   interpSubst0EndoFSum interpCarrier l x
 interpSubst0EndoF interpCarrier (Subst0EndoCompose g f) x =
   interpCarrier g (interpCarrier f x)
+
+public export
+AlgS0EF : Type -> Type
+AlgS0EF = Algebra Subst0EndoF
+
+public export
+FreeS0EF : Type -> Type
+FreeS0EF = FreeMonad Subst0EndoF
+
+public export
+MuS0EF : Type
+MuS0EF = Mu Subst0EndoF
+
+public export
+pCataS0EF : ParamCata Subst0EndoF
+pCataS0EF v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite com => alg $ case com of
+    Subst0EndoCovarRep f => Subst0EndoCovarRep $ pCataS0EF v a subst alg f
+    Subst0EndoSum l => Subst0EndoSum $ case l of
+      NilF => NilF
+      ConsF f g => ConsF (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
+    Subst0EndoCompose g f =>
+      Subst0EndoCompose (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
 
 ----------------------------------------
 ----------------------------------------
