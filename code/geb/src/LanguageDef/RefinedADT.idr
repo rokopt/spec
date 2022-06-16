@@ -15,9 +15,37 @@ import public LanguageDef.Atom
 public export
 data Subst0EndoF : Type -> Type where
   Subst0EndoCovarRep : carrier -> Subst0EndoF carrier
-  Subst0EndoEmpty : Subst0EndoF carrier
-  Subst0EndoSum : carrier -> carrier -> Subst0EndoF carrier
+  Subst0EndoSum : ListF carrier carrier -> Subst0EndoF carrier
   Subst0EndoCompose : carrier -> carrier -> Subst0EndoF carrier
+
+public export
+Functor Subst0EndoF where
+  map m (Subst0EndoCovarRep f) = Subst0EndoCovarRep (m f)
+  map m (Subst0EndoSum l) = Subst0EndoSum (bimap m m l)
+  map m (Subst0EndoCompose g f) = Subst0EndoCompose (m g) (m f)
+
+public export
+Show carrier => Show (Subst0EndoF carrier) where
+  show (Subst0EndoCovarRep f) = "Hom((" ++ show f ++ ")[1], _)"
+  show (Subst0EndoSum l) = "Σ(" ++ show l ++ ")"
+  show (Subst0EndoCompose g f) = "((" ++ show g ++ ") . (" ++ show f ++ "))"
+
+public export
+interpSubst0EndoFSum : {carrier : Type} ->
+  (carrier -> (Type -> Type)) ->
+  ListF carrier carrier -> (Type -> Type)
+interpSubst0EndoFSum = ?interpSubst0EndoFSum_hole
+
+public export
+interpSubst0EndoF : {carrier : Type} ->
+  (carrier -> (Type -> Type)) ->
+  Subst0EndoF carrier -> (Type -> Type)
+interpSubst0EndoF interpCarrier (Subst0EndoCovarRep f) x =
+  interpCarrier f () -> x
+interpSubst0EndoF interpCarrier (Subst0EndoSum l) x =
+  interpSubst0EndoFSum interpCarrier l x
+interpSubst0EndoF interpCarrier (Subst0EndoCompose g f) x =
+  interpCarrier g (interpCarrier f x)
 
 ----------------------------------------
 ----------------------------------------
