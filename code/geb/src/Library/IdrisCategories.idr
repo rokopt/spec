@@ -1408,19 +1408,19 @@ inFreePN : ProductMNatFObj -> ProductMNatObj
 inFreePN = mapHom inFreeComposite
 
 public export
-pairZero : {ty : Type} -> NatF ty -> ProductMNatF ty
-pairZero {ty} = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
+pairZero : NaturalTransformation NatF ProductMNatF
+pairZero ty = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
 
 public export
-pairSucc : {ty : Type} -> ProductMonad ty -> ProductMNatF ty
-pairSucc {ty} = mapHom {a=ty} {b=(NatF ty)} SuccF
+pairSucc : NaturalTransformation ProductMonad ProductMNatF
+pairSucc ty = mapHom {a=ty} {b=(NatF ty)} SuccF
 
 public export
 data NatLTMorphF : FNatTransDep ProductMonad NatF where
   NatLTZ : (n : NatF natCarrier) ->
-    NatLTMorphF natCarrier morphCarrier (pairZero n)
+    NatLTMorphF natCarrier morphCarrier (pairZero natCarrier n)
   NatLTS : (mn : ProductMonad natCarrier) -> morphCarrier mn ->
-    NatLTMorphF natCarrier morphCarrier (pairSucc mn)
+    NatLTMorphF natCarrier morphCarrier (pairSucc natCarrier mn)
 
 public export
 data NatLTMorph : ProductMNatPred where
