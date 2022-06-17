@@ -1367,6 +1367,29 @@ public export
 interpMuNatF : MuNat -> Nat
 interpMuNatF = interpFreeNatF {v=Void} (voidF Nat)
 
+---------------------------------------
+---- Natural numbers as a category ----
+---------------------------------------
+
+public export
+data NatObj : Type where
+  InNat : NatF NatObj -> NatObj
+
+public export
+data NatLTMorphF : (natCarrier : Type) ->
+    (natCarrier -> natCarrier -> Type) ->
+    NatF natCarrier -> NatF natCarrier -> Type where
+  NatLTZ : NatLTMorphF natCarrier morphCarrier ZeroF n
+  NatLTS : (m, n : natCarrier) -> morphCarrier m n ->
+    NatLTMorphF natCarrier morphCarrier (SuccF m) (SuccF n)
+
+public export
+data NatLTMorph : NatObj -> NatObj -> Type where
+  InNatLT :
+    (m, n : NatF NatObj) ->
+    NatLTMorphF NatObj NatLTMorph m n ->
+    NatLTMorph (InNat m) (InNat n)
+
 ---------------
 ---- Lists ----
 ---------------
