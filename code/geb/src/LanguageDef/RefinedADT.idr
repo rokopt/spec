@@ -124,7 +124,7 @@ a :+: b = inFreeComposite $ Subst0EndoSum a b
 public export
 interpS0EFAlg : AlgS0EF (Type -> Type)
 interpS0EFAlg (Subst0EndoCovarRep f) x = f () -> x
-interpS0EFAlg Subst0EndoEmpty x = ()
+interpS0EFAlg Subst0EndoEmpty x = Void
 interpS0EFAlg (Subst0EndoSum f g) x = Either (f x) (g x)
 interpS0EFAlg (Subst0EndoCompose g f) x = g (f x)
 
