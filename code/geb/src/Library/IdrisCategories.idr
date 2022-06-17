@@ -1388,8 +1388,32 @@ ProductMNatObj : Type
 ProductMNatObj = ProductMonad NatObj
 
 public export
+inFreePN : ProductMNatFObj -> ProductMNatObj
+inFreePN = mapHom inFreeComposite
+
+public export
+NTToProductMNatF : (Type -> Type) -> Type
+NTToProductMNatF ty = NaturalTransformation ty ProductMNatF
+
+public export
+pairZero : NTToProductMNatF NatF
+pairZero ty = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
+
+public export
+pairSucc : NTToProductMNatF ProductMonad
+pairSucc ty = mapHom {a=ty} {b=(NatF ty)} SuccF
+
+public export
 FPred : (Type -> Type) -> Type -> Type
 FPred f ty = f ty -> Type
+
+public export
+NatMorphCarrier : Type -> Type
+NatMorphCarrier = FPred ProductMonad
+
+public export
+ProductMNatPred : Type
+ProductMNatPred = NatMorphCarrier NatObj
 
 public export
 FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
@@ -1397,29 +1421,17 @@ FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
 
 public export
 FNatTransDep : (Type -> Type) -> (Type -> Type) -> Type
-FNatTransDep f g = NaturalTransformation (FPred f) (FPred (f . g))
-
-public export
-ProductMNatPred : Type
-ProductMNatPred = FPred ProductMonad NatObj
-
-public export
-inFreePN : ProductMNatFObj -> ProductMNatObj
-inFreePN = mapHom inFreeComposite
-
-public export
-pairZero : NaturalTransformation NatF ProductMNatF
-pairZero ty = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
-
-public export
-pairSucc : NaturalTransformation ProductMonad ProductMNatF
-pairSucc ty = mapHom {a=ty} {b=(NatF ty)} SuccF
+FNatTransDep f g = FNatTrans f (f . g)
 
 public export
 data NatLTMorphF : FNatTransDep ProductMonad NatF where
-  NatLTZ : (n : NatF natCarrier) ->
+  NatLTZ :
+    {natCarrier : Type} -> {morphCarrier : NatMorphCarrier natCarrier} ->
+    (n : NatF natCarrier) ->
     NatLTMorphF natCarrier morphCarrier (pairZero natCarrier n)
-  NatLTS : (mn : ProductMonad natCarrier) -> morphCarrier mn ->
+  NatLTS :
+    {natCarrier : Type} -> {morphCarrier : NatMorphCarrier natCarrier} ->
+    (mn : ProductMonad natCarrier) -> morphCarrier mn ->
     NatLTMorphF natCarrier morphCarrier (pairSucc natCarrier mn)
 
 public export
