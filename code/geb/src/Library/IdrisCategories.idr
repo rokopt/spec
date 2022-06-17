@@ -1380,6 +1380,10 @@ NatObj : Type
 NatObj = MuNat
 
 public export
+ProductMNatFObj : Type
+ProductMNatFObj = ProductMNatF NatObj
+
+public export
 ProductMNatObj : Type
 ProductMNatObj = ProductMonad NatObj
 
@@ -1392,12 +1396,21 @@ FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
 FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
 
 public export
+FNatTransDep : (Type -> Type) -> (Type -> Type) -> Type
+FNatTransDep f g = NaturalTransformation (FPred f) (FPred (f . g))
+
+public export
 ProductMNatPred : Type
 ProductMNatPred = FPred ProductMonad NatObj
 
 public export
-data NatLTMorphF : FNatTrans ProductMonad ProductMNatF where
-  NatLTZ : NatLTMorphF natCarrier morphCarrier (ZeroF, n)
+inFreePN : ProductMNatFObj -> ProductMNatObj
+inFreePN = mapHom inFreeComposite
+
+public export
+data NatLTMorphF : FNatTransDep ProductMonad NatF where
+  NatLTZ : (n : NatF natCarrier) ->
+    NatLTMorphF natCarrier morphCarrier (MkPair ZeroF n)
   NatLTS : (mn : ProductMonad natCarrier) -> morphCarrier mn ->
     NatLTMorphF natCarrier morphCarrier (mapHom SuccF mn)
 
@@ -1406,7 +1419,7 @@ data NatLTMorph : ProductMNatPred where
   InNatLT :
     (mn : ProductMNatF NatObj) ->
     NatLTMorphF NatObj NatLTMorph mn ->
-    NatLTMorph (mapHom Library.IdrisCategories.inFreeComposite mn)
+    NatLTMorph (inFreePN mn)
 
 ---------------
 ---- Lists ----
