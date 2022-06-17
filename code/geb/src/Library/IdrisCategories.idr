@@ -1384,15 +1384,25 @@ ProductMNatObj : Type
 ProductMNatObj = ProductMonad NatObj
 
 public export
-data NatLTMorphF : (natCarrier : Type) ->
-    (ProductMonad natCarrier -> Type) ->
-    (ProductMNatF natCarrier -> Type) where
+FPred : (Type -> Type) -> Type -> Type
+FPred f ty = f ty -> Type
+
+public export
+FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
+FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
+
+public export
+ProductMNatPred : Type
+ProductMNatPred = FPred ProductMonad NatObj
+
+public export
+data NatLTMorphF : FNatTrans ProductMonad ProductMNatF where
   NatLTZ : NatLTMorphF natCarrier morphCarrier (ZeroF, n)
   NatLTS : (mn : ProductMonad natCarrier) -> morphCarrier mn ->
     NatLTMorphF natCarrier morphCarrier (mapHom SuccF mn)
 
 public export
-data NatLTMorph : ProductMNatObj -> Type where
+data NatLTMorph : ProductMNatPred where
   InNatLT :
     (mn : ProductMNatF NatObj) ->
     NatLTMorphF NatObj NatLTMorph mn ->
