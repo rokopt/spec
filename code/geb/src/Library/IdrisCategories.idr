@@ -1408,18 +1408,26 @@ inFreePN : ProductMNatFObj -> ProductMNatObj
 inFreePN = mapHom inFreeComposite
 
 public export
+pairZero : {ty : Type} -> NatF ty -> ProductMNatF ty
+pairZero {ty} = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
+
+public export
+pairSucc : {ty : Type} -> ProductMonad ty -> ProductMNatF ty
+pairSucc {ty} = mapHom {a=ty} {b=(NatF ty)} SuccF
+
+public export
 data NatLTMorphF : FNatTransDep ProductMonad NatF where
   NatLTZ : (n : NatF natCarrier) ->
-    NatLTMorphF natCarrier morphCarrier (MkPair ZeroF n)
+    NatLTMorphF natCarrier morphCarrier (pairZero n)
   NatLTS : (mn : ProductMonad natCarrier) -> morphCarrier mn ->
-    NatLTMorphF natCarrier morphCarrier (mapHom SuccF mn)
+    NatLTMorphF natCarrier morphCarrier (pairSucc mn)
 
 public export
 data NatLTMorph : ProductMNatPred where
   InNatLT :
     (mn : ProductMNatF NatObj) ->
     NatLTMorphF NatObj NatLTMorph mn ->
-    NatLTMorph (inFreePN mn)
+    (NatLTMorph . Library.IdrisCategories.inFreePN) mn
 
 ---------------
 ---- Lists ----
