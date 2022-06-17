@@ -605,6 +605,10 @@ ProductMonad : Type -> Type
 ProductMonad a = Pair a a
 
 public export
+Functor ProductMonad where
+  map = mapHom
+
+public export
 ProductNTUnit : {a : Type} -> a -> ProductMonad a
 ProductNTUnit x = (x, x)
 
@@ -1390,7 +1394,7 @@ ProductMNatObj = ProductMonad NatObj
 -- A natural transformation in the product category.
 public export
 inFreePN : ProductMonad (NatF NatObj) -> ProductMonad NatObj
-inFreePN = mapHom inFreeComposite
+inFreePN = map {f=ProductMonad} inFreeComposite
 
 public export
 NTToProductMNatF : (Type -> Type) -> Type
@@ -1402,7 +1406,7 @@ pairZero ty = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
 
 public export
 pairSucc : NTToProductMNatF ProductMonad
-pairSucc ty = mapHom {a=ty} {b=(NatF ty)} SuccF
+pairSucc ty = map {f=ProductMonad} {a=ty} {b=(NatF ty)} SuccF
 
 public export
 FPred : (Type -> Type) -> Type -> Type
