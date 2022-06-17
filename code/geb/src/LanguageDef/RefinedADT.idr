@@ -152,27 +152,6 @@ public export
 MuS0E : MuS0EF -> Type
 MuS0E = Mu . interpMuS0EF
 
-mutual
-  public export
-  pCataS0E : (f : MuS0EF) -> ParamCata $ interpMuS0EF f
-  pCataS0E (InFree f) v a subst alg (InFree x) = case f of
-    TermVar fv => void fv
-    TermComposite fc => case fc of
-      Subst0EndoCovarRep fa => case x of
-        TermVar xv => subst xv
-        TermComposite xc => ?hmmletsseethatagain
-      Subst0EndoEmpty => case x of
-        TermVar xv => subst xv
-        TermComposite xc => ?pCataS0E_empty_comp
-      Subst0EndoSum ff fg => ?pCataS0E_hole_fc_sum
-      Subst0EndoCompose fg ff => ?pCataS0E_hole_fc_compose
-
-  public export
-  pCataS0EAlg : (f : MuS0EF) ->
-    ParamCata (interpMuS0EF f) ->
-    ParamCata (Subst0EndoF . interpMuS0EF f)
-  pCataS0EAlg = ?pCataS0EAlg_hole
-
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
