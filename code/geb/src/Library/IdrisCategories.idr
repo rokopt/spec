@@ -1387,8 +1387,9 @@ public export
 ProductMNatObj : Type
 ProductMNatObj = ProductMonad NatObj
 
+-- A natural transformation in the product category.
 public export
-inFreePN : ProductMNatFObj -> ProductMNatObj
+inFreePN : ProductMonad (NatF NatObj) -> ProductMonad NatObj
 inFreePN = mapHom inFreeComposite
 
 public export
