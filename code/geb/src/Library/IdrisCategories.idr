@@ -1372,31 +1372,31 @@ interpMuNatF = interpFreeNatF {v=Void} (voidF Nat)
 ---------------------------------------
 
 public export
-NatFPair : Type -> Type
-NatFPair = ProductMonad . NatF
+ProductMNatF : Type -> Type
+ProductMNatF = ProductMonad . NatF
 
 public export
 data NatObj : Type where
   InNat : NatF NatObj -> NatObj
 
 public export
-NatObjPair : Type
-NatObjPair = ProductMonad NatObj
+ProductMNatObj : Type
+ProductMNatObj = ProductMonad NatObj
 
 public export
 data NatLTMorphF : (natCarrier : Type) ->
     (ProductMonad natCarrier -> Type) ->
-    (NatFPair natCarrier -> Type) where
+    (ProductMNatF natCarrier -> Type) where
   NatLTZ : NatLTMorphF natCarrier morphCarrier (ZeroF, n)
-  NatLTS : (m, n : natCarrier) -> morphCarrier (m, n) ->
-    NatLTMorphF natCarrier morphCarrier (SuccF m, SuccF n)
+  NatLTS : (mn : ProductMonad natCarrier) -> morphCarrier mn ->
+    NatLTMorphF natCarrier morphCarrier (mapHom SuccF mn)
 
 public export
-data NatLTMorph : NatObjPair -> Type where
+data NatLTMorph : ProductMNatObj -> Type where
   InNatLT :
-    (m, n : NatF NatObj) ->
-    NatLTMorphF NatObj NatLTMorph (m, n) ->
-    NatLTMorph (InNat m, InNat n)
+    (mn : ProductMNatF NatObj) ->
+    NatLTMorphF NatObj NatLTMorph mn ->
+    NatLTMorph (mapHom InNat mn)
 
 ---------------
 ---- Lists ----
