@@ -1394,7 +1394,7 @@ inFreePN = mapHom inFreeComposite
 
 public export
 NTToProductMNatF : (Type -> Type) -> Type
-NTToProductMNatF ty = NaturalTransformation ty ProductMNatF
+NTToProductMNatF f = NaturalTransformation f ProductMNatF
 
 public export
 pairZero : NTToProductMNatF NatF
