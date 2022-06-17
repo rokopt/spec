@@ -1427,7 +1427,7 @@ data NatLTMorph : ProductMNatPred where
   InNatLT :
     (mn : ProductMNatF NatObj) ->
     NatLTMorphF NatObj NatLTMorph mn ->
-    (NatLTMorph . Library.IdrisCategories.inFreePN) mn
+    NatLTMorph (Library.IdrisCategories.inFreePN mn)
 
 ---------------
 ---- Lists ----
