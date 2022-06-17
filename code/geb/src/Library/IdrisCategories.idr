@@ -1380,23 +1380,6 @@ ProductMNatF : Type -> Type
 ProductMNatF = ProductMonad . NatF
 
 public export
-NatObj : Type
-NatObj = MuNat
-
-public export
-ProductMNatFObj : Type
-ProductMNatFObj = ProductMNatF NatObj
-
-public export
-ProductMNatObj : Type
-ProductMNatObj = ProductMonad NatObj
-
--- A natural transformation in the product category.
-public export
-inFreePN : ProductMonad (NatF NatObj) -> ProductMonad NatObj
-inFreePN = map {f=ProductMonad} inFreeComposite
-
-public export
 NTToProductMNatF : (Type -> Type) -> Type
 NTToProductMNatF f = NaturalTransformation f ProductMNatF
 
@@ -1417,10 +1400,6 @@ NatMorphCarrier : Type -> Type
 NatMorphCarrier = FPred ProductMonad
 
 public export
-ProductMNatPred : Type
-ProductMNatPred = NatMorphCarrier NatObj
-
-public export
 FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
 FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
 
@@ -1438,6 +1417,27 @@ data NatLTMorphF : FNatTransDep ProductMonad NatF where
     {natCarrier : Type} -> {morphCarrier : NatMorphCarrier natCarrier} ->
     (mn : ProductMonad natCarrier) -> morphCarrier mn ->
     NatLTMorphF natCarrier morphCarrier (pairSucc natCarrier mn)
+
+public export
+NatObj : Type
+NatObj = MuNat
+
+public export
+ProductMNatFObj : Type
+ProductMNatFObj = ProductMNatF NatObj
+
+public export
+ProductMNatObj : Type
+ProductMNatObj = ProductMonad NatObj
+
+-- A natural transformation in the product category.
+public export
+inFreePN : ProductMonad (NatF NatObj) -> ProductMonad NatObj
+inFreePN = map {f=ProductMonad} inFreeComposite
+
+public export
+ProductMNatPred : Type
+ProductMNatPred = NatMorphCarrier NatObj
 
 public export
 data NatLTMorph : ProductMNatPred where
