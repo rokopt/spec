@@ -1376,8 +1376,8 @@ ProductMNatF : Type -> Type
 ProductMNatF = ProductMonad . NatF
 
 public export
-data NatObj : Type where
-  InNat : NatF NatObj -> NatObj
+NatObj : Type
+NatObj = MuNat
 
 public export
 ProductMNatObj : Type
@@ -1396,7 +1396,7 @@ data NatLTMorph : ProductMNatObj -> Type where
   InNatLT :
     (mn : ProductMNatF NatObj) ->
     NatLTMorphF NatObj NatLTMorph mn ->
-    NatLTMorph (mapHom InNat mn)
+    NatLTMorph (mapHom Library.IdrisCategories.inFreeComposite mn)
 
 ---------------
 ---- Lists ----
