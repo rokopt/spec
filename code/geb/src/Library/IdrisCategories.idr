@@ -1497,7 +1497,11 @@ NatFSlice n = (m : MuNat ** NatLTMorph (m, n))
 
 public export
 OnlyZLtZ : (n : MuNat) -> NatLTMorph (n, NatFZ) -> n = NatFZ
-OnlyZLtZ = ?OnlyZLtZ_hole
+OnlyZLtZ (InFree $ TermComposite n) (InNatLT (n, ZeroF) m) = case n of
+  ZeroF => Refl
+  SuccF n' => let r = OnlyZLtZ n' in case m of
+    NatLTZ ZeroF impossible
+    NatLTS (s, z) m' impossible
 
 public export
 NatMorphSucc : (m, n : MuNat) -> NatLTMorph (m, NatFS n) ->
