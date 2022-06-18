@@ -1371,6 +1371,14 @@ public export
 interpMuNatF : MuNat -> Nat
 interpMuNatF = interpFreeNatF {v=Void} (voidF Nat)
 
+public export
+NatFZ : FreeMonad NatF a
+NatFZ = InFree $ TermComposite ZeroF
+
+public export
+NatFS : FreeMonad NatF a -> FreeMonad NatF a
+NatFS = InFree . TermComposite . SuccF
+
 ---------------------------------------
 ---- Natural numbers as a category ----
 ---------------------------------------
@@ -1465,6 +1473,82 @@ data NatLTMorph : ProductMNatPred where
     (mn : ProductMNatF NatObj) ->
     NatLTMorphF NatObj NatLTMorph mn ->
     NatLTMorph (Library.IdrisCategories.inFreePN mn)
+
+-------------------
+---- Induction ----
+-------------------
+
+public export
+NatFInd :
+  (p : MuNat -> Type) ->
+  (p NatFZ) ->
+  ((n' : MuNat) -> p n' -> p (NatFS n')) ->
+  (n : MuNat) -> p n
+NatFInd p z s n = case n of
+  InFree n' => case n' of
+    TermVar var => void var
+    TermComposite com => case com of
+      ZeroF => z
+      SuccF n'' => s n'' $ NatFInd p z s n''
+
+public export
+NatFSlice : MuNat -> Type
+NatFSlice n = (m : MuNat ** NatLTMorph (m, n))
+
+public export
+OnlyZLtZ : (n : MuNat) -> NatLTMorph (n, NatFZ) -> n = NatFZ
+OnlyZLtZ = ?OnlyZLtZ_hole
+
+public export
+NatMorphSucc : (m, n : MuNat) -> NatLTMorph (m, NatFS n) ->
+  Either (NatLTMorph (m, n)) (m = NatFS n)
+NatMorphSucc = ?NatMorphSu_hole
+
+public export
+NatMorphId : (n : MuNat) -> NatLTMorph (n, n)
+NatMorphId = ?NatMorphId_hole
+
+public export
+NatFGenIndStrengthened :
+  (p : MuNat -> Type) ->
+  (p NatFZ) ->
+  ((n' : MuNat) -> ((sl : NatFSlice n') -> p (fst sl)) -> p (NatFS n')) ->
+  (n : MuNat) -> ((sl : NatFSlice n) -> p (fst sl))
+NatFGenIndStrengthened p z s n = case n of
+  InFree n' => case n' of
+    TermVar var => void var
+    TermComposite com => case com of
+      ZeroF => \sl => case sl of
+        (n'' ** m) => rewrite OnlyZLtZ n'' m in z
+      SuccF n'' =>
+        let reccall = NatFGenIndStrengthened p z s n'' in
+        \sl => case sl of
+          (n''' ** m) => case NatMorphSucc n''' n'' m of
+            Left m' => reccall (n''' ** m')
+            Right eqn'' => rewrite eqn'' in s n'' reccall
+
+public export
+NatFGenInd :
+  (p : MuNat -> Type) ->
+  (p NatFZ) ->
+  ((n' : MuNat) -> ((sl : NatFSlice n') -> p (fst sl)) -> p (NatFS n')) ->
+  (n : MuNat) -> p n
+NatFGenInd p z s n = NatFGenIndStrengthened p z s n (n ** NatMorphId n)
+
+public export
+OmegaChain : (Type -> Type) -> Nat -> (Type -> Type)
+OmegaChain f Z a = a
+OmegaChain f (S n) a = OmegaChain f n (f a)
+
+public export
+Induction : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : Nat) -> OmegaChain f n' a -> Type) ->
+  ((z : OmegaChain f Z a) -> p Z z) ->
+  ((n' : Nat) ->
+   ((ty : OmegaChain f n' a) -> p n' ty) ->
+   ((ty : OmegaChain f (S n') a) -> p (S n') ty)) ->
+  (n : Nat) -> (ty : OmegaChain f n a) -> p n ty
+Induction {f} {a} p z s n ty = ?Induction_hole
 
 ---------------
 ---- Lists ----
