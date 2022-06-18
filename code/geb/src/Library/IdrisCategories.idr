@@ -1510,7 +1510,11 @@ NatMorphSucc = ?NatMorphSu_hole
 
 public export
 NatMorphId : (n : MuNat) -> NatLTMorph (n, n)
-NatMorphId = ?NatMorphId_hole
+NatMorphId (InFree n) = case n of
+  TermVar var => void var
+  TermComposite com =>  case com of
+    ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ com
+    SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
 
 public export
 NatFGenIndStrengthened :
