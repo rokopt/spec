@@ -1551,6 +1551,92 @@ NatIndFromNatObj p z s n = case n of
     s n' $ rewrite MetaToNatId n' in NatIndFromNatObj p z s n'
 
 public export
+NatObjPair : Type
+NatObjPair = ProductMonad NatObj
+
+public export
+NatPair : Type
+NatPair = ProductMonad Nat
+
+public export
+NatObjPairInd :
+  (p : NatObjPair -> Type) ->
+  (p (NatOZ, NatOZ)) ->
+  ((n' : NatObj) -> p (NatOZ, n') -> p (NatOZ, NatOS n')) ->
+  ((n' : NatObj) -> p (n', NatOZ) -> p (NatOS n', NatOZ)) ->
+  ((m', n' : NatObj) -> p (m', n') -> p (NatOS m', NatOS n')) ->
+  (mn : NatObjPair) -> p mn
+NatObjPairInd = ?NatObjPairInd_hole
+
+public export
+NatObjPairToMeta : NatObjPair -> NatPair
+NatObjPairToMeta = map {f=ProductMonad} NatObjToMeta
+
+public export
+NatMetaPairToObj : NatPair -> NatObjPair
+NatMetaPairToObj = map {f=ProductMonad} MetaToNatObj
+
+public export
+NatPairToMetaId :
+  (mn : NatObjPair) -> NatMetaPairToObj (NatObjPairToMeta mn) = mn
+NatPairToMetaId = ?NatPairToMetaId_hole
+
+public export
+MetaToNatPairId :
+  (mn : NatPair) -> NatObjPairToMeta (NatMetaPairToObj mn) = mn
+MetaToNatPairId = ?MetaToNatPairId_hole
+
+public export
+NatObjPairPredToNat : (NatObjPair -> Type) -> NatPair -> Type
+NatObjPairPredToNat p = p . NatMetaPairToObj
+
+public export
+NatPairPredToNatObj : (NatPair -> Type) -> NatObjPair -> Type
+NatPairPredToNatObj p = p . NatObjPairToMeta
+
+public export
+NatObjPairIndFromNat :
+  (p : NatObjPair -> Type) ->
+  (NatObjPairPredToNat p (NatObjPairToMeta (NatOZ, NatOZ))) ->
+  ((n' : NatObj) ->
+   NatObjPairPredToNat p (NatObjPairToMeta (NatOZ, n')) ->
+   NatObjPairPredToNat p (NatObjPairToMeta (NatOZ, NatOS n'))) ->
+  ((n' : NatObj) ->
+   NatObjPairPredToNat p (NatObjPairToMeta (n', NatOZ)) ->
+   NatObjPairPredToNat p (NatObjPairToMeta (NatOS n', NatOZ))) ->
+  ((m', n' : NatObj) ->
+   NatObjPairPredToNat p (NatObjPairToMeta (m', n')) ->
+   NatObjPairPredToNat p (NatObjPairToMeta (NatOS m', NatOS n'))) ->
+  (mn : NatObjPair) -> p mn
+NatObjPairIndFromNat = ?NatObjPairIndFromNat_hole
+
+public export
+NatPairIndFromNatObj :
+  (p : NatPair -> Type) ->
+  (NatPairPredToNatObj p (NatMetaPairToObj (Z, Z))) ->
+  ((n' : Nat) ->
+   NatPairPredToNatObj p (NatMetaPairToObj (Z, n')) ->
+   NatPairPredToNatObj p (NatMetaPairToObj (Z, S n'))) ->
+  ((n' : Nat) ->
+   NatPairPredToNatObj p (NatMetaPairToObj (n', Z)) ->
+   NatPairPredToNatObj p (NatMetaPairToObj (S n', Z))) ->
+  ((m', n' : Nat) ->
+   NatPairPredToNatObj p (NatMetaPairToObj (m', n')) ->
+   NatPairPredToNatObj p (NatMetaPairToObj (S m', S n'))) ->
+  (mn : NatPair) -> p mn
+NatPairIndFromNatObj = ?NatPairIndFromNatObj_hole
+
+public export
+NatMorphToLTE : {m, n : NatObj} ->
+  NatLTMorph (m, n) -> LTE (NatObjToMeta m) (NatObjToMeta n)
+NatMorphToLTE = ?NatMorphToLTE_hole
+
+public export
+LTEToNatMorph : {m, n : Nat} ->
+  LTE m n -> NatLTMorph (MetaToNatObj m, MetaToNatObj n)
+LTEToNatMorph = ?LTEToNatMorph_hole
+
+public export
 NatCatThin : (m, n : NatObj) ->
   (morph, morph' : NatLTMorph (m, n)) -> morph = morph'
 NatCatThin m n morph morph' = ?NatCatThin_hole
