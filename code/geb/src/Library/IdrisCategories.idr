@@ -1497,6 +1497,65 @@ NatObjInd p z s (InNat n) = case n of
   SuccF n' => s n' $ NatObjInd p z s n'
 
 public export
+NatObjToMeta : NatObj -> Nat
+NatObjToMeta = NatObjInd (const Nat) Z (const S)
+
+public export
+MetaToNatObj : Nat -> NatObj
+MetaToNatObj Z = NatOZ
+MetaToNatObj (S n) = NatOS (MetaToNatObj n)
+
+public export
+NatToMetaId : (n : NatObj) -> MetaToNatObj (NatObjToMeta n) = n
+NatToMetaId = NatObjInd _ Refl $ \n, eq => rewrite eq in Refl
+
+public export
+MetaToNatId : (n : Nat) -> (NatObjToMeta (MetaToNatObj n)) = n
+MetaToNatId Z = Refl
+MetaToNatId (S n) = cong S $ MetaToNatId n
+
+public export
+NatObjPredToNat : (NatObj -> Type) -> Nat -> Type
+NatObjPredToNat p = p . MetaToNatObj
+
+public export
+NatPredToNatObj : (Nat -> Type) -> NatObj -> Type
+NatPredToNatObj p = p . NatObjToMeta
+
+public export
+NatObjIndFromNat :
+  (p : NatObj -> Type) ->
+  (NatObjPredToNat p (NatObjToMeta NatOZ)) ->
+  ((n' : NatObj) ->
+   NatObjPredToNat p (NatObjToMeta n') ->
+   NatObjPredToNat p (NatObjToMeta (NatOS n'))) ->
+  (n : NatObj) -> p n
+NatObjIndFromNat p z s (InNat n) = case n of
+  ZeroF => z
+  SuccF n' =>
+    rewrite sym (NatToMetaId n') in
+    s n' $ rewrite NatToMetaId n' in NatObjIndFromNat p z s n'
+
+public export
+NatIndFromNatObj :
+  (p : Nat -> Type) ->
+  (NatPredToNatObj p (MetaToNatObj Z)) ->
+  ((n' : Nat) ->
+   NatPredToNatObj p (MetaToNatObj n') ->
+   NatPredToNatObj p (MetaToNatObj (S n'))) ->
+  (n : Nat) -> p n
+NatIndFromNatObj p z s n = case n of
+  Z => z
+  S n' =>
+    rewrite sym (MetaToNatId n') in
+    s n' $ rewrite MetaToNatId n' in NatIndFromNatObj p z s n'
+
+public export
+NatCatThin : (m, n : NatObj) ->
+  (morph, morph' : NatLTMorph (m, n)) -> morph = morph'
+NatCatThin m n morph morph' = ?NatCatThin_hole
+
+public export
 NatOSlice : NatObj -> Type
 NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
 
