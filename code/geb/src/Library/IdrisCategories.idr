@@ -1722,18 +1722,18 @@ NatFGenInd p z s n = NatFGenIndStrengthened p z s n (n ** NatMorphId n)
 
 -- XXX switch Nat -> NatObj
 public export
-OmegaChain : (Type -> Type) -> Nat -> (Type -> Type)
-OmegaChain f Z a = a
-OmegaChain f (S n) a = OmegaChain f n (f a)
+OmegaChain : Nat -> (Type -> Type) -> (Type -> Type)
+OmegaChain Z f a = a
+OmegaChain (S n) f a = OmegaChain n f (f a)
 
 public export
 Induction : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : Nat) -> OmegaChain f n' a -> Type) ->
-  ((z : OmegaChain f Z a) -> p Z z) ->
+  (p : (n' : Nat) -> OmegaChain n' f a -> Type) ->
+  ((z : OmegaChain Z f a) -> p Z z) ->
   ((n' : Nat) ->
-   ((ty : OmegaChain f n' a) -> p n' ty) ->
-   ((ty : OmegaChain f (S n') a) -> p (S n') ty)) ->
-  (n : Nat) -> (ty : OmegaChain f n a) -> p n ty
+   ((ty : OmegaChain n' f a) -> p n' ty) ->
+   ((ty : OmegaChain (S n') f a) -> p (S n') ty)) ->
+  (n : Nat) -> (ty : OmegaChain n f a) -> p n ty
 Induction {f} {a} p z s n ty = ?Induction_hole
 
 ---------------
