@@ -1559,6 +1559,22 @@ NatPair : Type
 NatPair = ProductMonad Nat
 
 public export
+NatObjPairIndCurried :
+  (p : NatObjPair -> Type) ->
+  (p (NatOZ, NatOZ)) ->
+  ((n' : NatObj) -> p (NatOZ, n') -> p (NatOZ, NatOS n')) ->
+  ((n' : NatObj) -> p (n', NatOZ) -> p (NatOS n', NatOZ)) ->
+  ((m', n' : NatObj) -> p (m', n') -> p (NatOS m', NatOS n')) ->
+  (m, n : NatObj) -> p (m, n)
+NatObjPairIndCurried p zz zs sz ss (InNat ZeroF) (InNat ZeroF) = zz
+NatObjPairIndCurried p zz zs sz ss (InNat ZeroF) (InNat (SuccF n')) =
+  zs n' $ NatObjPairIndCurried p zz zs sz ss (InNat ZeroF) n'
+NatObjPairIndCurried p zz zs sz ss (InNat (SuccF m')) (InNat ZeroF) =
+  sz m' $ NatObjPairIndCurried p zz zs sz ss m' (InNat ZeroF)
+NatObjPairIndCurried p zz zs sz ss (InNat (SuccF m')) (InNat (SuccF n')) =
+  ss m' n' $ NatObjPairIndCurried p zz zs sz ss m' n'
+
+public export
 NatObjPairInd :
   (p : NatObjPair -> Type) ->
   (p (NatOZ, NatOZ)) ->
@@ -1566,7 +1582,7 @@ NatObjPairInd :
   ((n' : NatObj) -> p (n', NatOZ) -> p (NatOS n', NatOZ)) ->
   ((m', n' : NatObj) -> p (m', n') -> p (NatOS m', NatOS n')) ->
   (mn : NatObjPair) -> p mn
-NatObjPairInd = ?NatObjPairInd_hole
+NatObjPairInd p zz zs sz ss (m, n) = NatObjPairIndCurried p zz zs sz ss m n
 
 public export
 NatObjPairToMeta : NatObjPair -> NatPair
