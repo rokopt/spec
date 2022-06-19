@@ -1487,14 +1487,14 @@ data NatLTMorph : ProductMNatPred where
 -------------------
 
 public export
-NatFInd :
+NatObjInd :
   (p : NatObj -> Type) ->
   (p NatOZ) ->
   ((n' : NatObj) -> p n' -> p (NatOS n')) ->
   (n : NatObj) -> p n
-NatFInd p z s (InNat n) = case n of
+NatObjInd p z s (InNat n) = case n of
   ZeroF => z
-  SuccF n' => s n' $ NatFInd p z s n'
+  SuccF n' => s n' $ NatObjInd p z s n'
 
 public export
 NatOSlice : NatObj -> Type
