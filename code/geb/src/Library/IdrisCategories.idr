@@ -1627,19 +1627,26 @@ NatPairIndFromNatObj :
 NatPairIndFromNatObj = ?NatPairIndFromNatObj_hole
 
 public export
-NatMorphToLTE : {m, n : NatObj} ->
-  NatLTMorph (m, n) -> LTE (NatObjToMeta m) (NatObjToMeta n)
-NatMorphToLTE = ?NatMorphToLTE_hole
-
-public export
-LTEToNatMorph : {m, n : Nat} ->
-  LTE m n -> NatLTMorph (MetaToNatObj m, MetaToNatObj n)
-LTEToNatMorph = ?LTEToNatMorph_hole
-
-public export
 NatCatThin : (m, n : NatObj) ->
   (morph, morph' : NatLTMorph (m, n)) -> morph = morph'
 NatCatThin m n morph morph' = ?NatCatThin_hole
+
+public export
+LTEThin : {m, n : Nat} -> (l, l' : LTE m n) -> l = l'
+LTEThin LTEZero LTEZero = Refl
+LTEThin LTEZero (LTESucc l) impossible
+LTEThin (LTESucc l) LTEZero impossible
+LTEThin (LTESucc l) (LTESucc l') = cong LTESucc (LTEThin l l')
+
+public export
+NatMorphToLTE : {mn : NatObjPair} ->
+  NatLTMorph mn -> LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn))
+NatMorphToLTE = ?NatMorphToLTE_hole
+
+public export
+LTEToNatMorph : {mn : NatPair} ->
+  LTE (fst mn) (snd mn) -> NatLTMorph (NatMetaPairToObj mn)
+LTEToNatMorph = ?LTEToNatMorph_hole
 
 public export
 NatOSlice : NatObj -> Type
