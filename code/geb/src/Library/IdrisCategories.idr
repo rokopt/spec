@@ -1447,8 +1447,16 @@ data NatLTMorphF : FNatTransDep ProductMonad NatF where
     NatLTMorphF natCarrier morphCarrier (pairSucc natCarrier mn)
 
 public export
-NatObj : Type
-NatObj = MuNat
+data NatObj : Type where
+  InNat : NatF NatObj -> NatObj
+
+public export
+NatOZ : NatObj
+NatOZ = InNat ZeroF
+
+public export
+NatOS : NatObj -> NatObj
+NatOS = InNat . SuccF
 
 public export
 ProductMNatFObj : Type
@@ -1461,7 +1469,7 @@ ProductMNatObj = ProductMonad NatObj
 -- A natural transformation in the product category.
 public export
 inFreePN : ProductMonad (NatF NatObj) -> ProductMonad NatObj
-inFreePN = map {f=ProductMonad} inFreeComposite
+inFreePN = map {f=ProductMonad} InNat
 
 public export
 ProductMNatPred : Type
@@ -1480,69 +1488,87 @@ data NatLTMorph : ProductMNatPred where
 
 public export
 NatFInd :
-  (p : MuNat -> Type) ->
-  (p NatFZ) ->
-  ((n' : MuNat) -> p n' -> p (NatFS n')) ->
-  (n : MuNat) -> p n
-NatFInd p z s n = case n of
-  InFree n' => case n' of
-    TermVar var => void var
-    TermComposite com => case com of
-      ZeroF => z
-      SuccF n'' => s n'' $ NatFInd p z s n''
+  (p : NatObj -> Type) ->
+  (p NatOZ) ->
+  ((n' : NatObj) -> p n' -> p (NatOS n')) ->
+  (n : NatObj) -> p n
+NatFInd p z s (InNat n) = case n of
+  ZeroF => z
+  SuccF n' => s n' $ NatFInd p z s n'
 
 public export
-NatFSlice : MuNat -> Type
-NatFSlice n = (m : MuNat ** NatLTMorph (m, n))
+NatOSlice : NatObj -> Type
+NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
 
 public export
-OnlyZLtZ : (n : MuNat) -> NatLTMorph (n, NatFZ) -> n = NatFZ
-OnlyZLtZ (InFree $ TermComposite n) (InNatLT (n, ZeroF) m) = case n of
+NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
+NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
+
+public export
+NatLTStrict : NatObj -> NatObj -> Type
+NatLTStrict m n = NatLTMorph (NatOS m, n)
+
+public export
+OnlyZLtZ : (n : NatObj) -> NatLTMorph (n, NatOZ) -> n = NatOZ
+OnlyZLtZ (InNat n) (InNatLT (n, ZeroF) m) = case n of
   ZeroF => Refl
-  SuccF n' => let r = OnlyZLtZ n' in case m of
+  SuccF n' => let _ = OnlyZLtZ n' in case m of
     NatLTZ ZeroF impossible
     NatLTS (s, z) m' impossible
 
 public export
-NatMorphSucc : (m, n : MuNat) -> NatLTMorph (m, NatFS n) ->
-  Either (NatLTMorph (m, n)) (m = NatFS n)
-NatMorphSucc = ?NatMorphSu_hole
+NatMorphId : (n : NatObj) -> NatLTMorph (n, n)
+NatMorphId (InNat n) = case n of
+  ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
+  SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
 
 public export
-NatMorphId : (n : MuNat) -> NatLTMorph (n, n)
-NatMorphId (InFree n) = case n of
-  TermVar var => void var
-  TermComposite com =>  case com of
-    ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ com
-    SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
+NatMorphCompare : (m, n : NatObj) ->
+  Either (m = n) $ Either (NatLTStrict m n) (NatLTStrict n m)
+NatMorphCompare = ?NatMorphCompare_hole
+
+public export
+NatLTFromSucc : (m, n : NatObj) -> NatLTMorph (NatOS m, NatOS n) ->
+  NatLTMorph (m, n)
+NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
+  NatLTZ (SuccF n') impossible
+  NatLTS (m', n') mn' => mn'
+
+public export
+NatMorphSucc : (m, n : NatObj) -> NatLTMorph (m, NatOS n) ->
+  Either (NatLTMorph (m, n)) (m = NatOS n)
+NatMorphSucc m n morph =
+  case NatMorphCompare m (NatOS n) of
+    Left eq => Right eq
+    Right (Left lt) => Left $ NatLTFromSucc m n lt
+    Right (Right gt) => ?NatMorphSucc_hole_gt
 
 public export
 NatFGenIndStrengthened :
-  (p : MuNat -> Type) ->
-  (p NatFZ) ->
-  ((n' : MuNat) -> ((sl : NatFSlice n') -> p (fst sl)) -> p (NatFS n')) ->
-  (n : MuNat) -> ((sl : NatFSlice n) -> p (fst sl))
+  (p : NatObj -> Type) ->
+  (p NatOZ) ->
+  ((n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')) ->
+  (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
 NatFGenIndStrengthened p z s n = case n of
-  InFree n' => case n' of
-    TermVar var => void var
-    TermComposite com => case com of
-      ZeroF => \sl => case sl of
-        (n'' ** m) => rewrite OnlyZLtZ n'' m in z
-      SuccF n'' =>
-        let reccall = NatFGenIndStrengthened p z s n'' in
-        \sl => case sl of
-          (n''' ** m) => case NatMorphSucc n''' n'' m of
-            Left m' => reccall (n''' ** m')
-            Right eqn'' => rewrite eqn'' in s n'' reccall
+  InNat n' => case n' of
+    ZeroF => \sl => case sl of
+      (n'' ** m) => rewrite OnlyZLtZ n'' m in z
+    SuccF n'' =>
+      let reccall = NatFGenIndStrengthened p z s n'' in
+      \sl => case sl of
+        (n''' ** m) => case NatMorphSucc n''' n'' m of
+          Left m' => reccall (n''' ** m')
+          Right eqn'' => rewrite eqn'' in s n'' reccall
 
 public export
 NatFGenInd :
-  (p : MuNat -> Type) ->
-  (p NatFZ) ->
-  ((n' : MuNat) -> ((sl : NatFSlice n') -> p (fst sl)) -> p (NatFS n')) ->
-  (n : MuNat) -> p n
+  (p : NatObj -> Type) ->
+  (p NatOZ) ->
+  ((n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')) ->
+  (n : NatObj) -> p n
 NatFGenInd p z s n = NatFGenIndStrengthened p z s n (n ** NatMorphId n)
 
+-- XXX switch Nat -> NatObj
 public export
 OmegaChain : (Type -> Type) -> Nat -> (Type -> Type)
 OmegaChain f Z a = a
