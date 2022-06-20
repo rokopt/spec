@@ -1629,8 +1629,24 @@ NatObjPairIndFromNat :
   ((m', n' : NatObj) ->
    NatObjPairPredToNat p (NatObjPairToMeta (m', n')) ->
    NatObjPairPredToNat p (NatObjPairToMeta (NatOS m', NatOS n'))) ->
-  (mn : NatObjPair) -> p mn
-NatObjPairIndFromNat = ?NatObjPairIndFromNat_hole
+  (m, n : NatObj) -> p (m, n)
+NatObjPairIndFromNat p zz zs sz ss (InNat ZeroF) (InNat ZeroF) =
+  zz
+NatObjPairIndFromNat p zz zs sz ss (InNat ZeroF) (InNat $ SuccF n') =
+  rewrite sym (NatPairToMetaId (NatOZ, InNat $ SuccF n')) in
+  zs n' $
+    rewrite NatPairToMetaId (NatOZ, n') in
+    NatObjPairIndFromNat p zz zs sz ss (InNat ZeroF) n'
+NatObjPairIndFromNat p zz zs sz ss (InNat $ SuccF m') (InNat ZeroF) =
+  rewrite sym (NatPairToMetaId (InNat $ SuccF m', NatOZ)) in
+  sz m' $
+    rewrite NatPairToMetaId (m', NatOZ) in
+    NatObjPairIndFromNat p zz zs sz ss m' (InNat ZeroF)
+NatObjPairIndFromNat p zz zs sz ss (InNat $ SuccF m') (InNat $ SuccF n') =
+  rewrite sym (NatPairToMetaId (InNat $ SuccF m', InNat $ SuccF n')) in
+  ss m' n' $
+    rewrite NatPairToMetaId (m', n') in
+    NatObjPairIndFromNat p zz zs sz ss m' n'
 
 public export
 NatPairIndFromNatObj :
@@ -1645,7 +1661,7 @@ NatPairIndFromNatObj :
   ((m', n' : Nat) ->
    NatPairPredToNatObj p (NatMetaPairToObj (m', n')) ->
    NatPairPredToNatObj p (NatMetaPairToObj (S m', S n'))) ->
-  (mn : NatPair) -> p mn
+  (m, n : Nat) -> p (m, n)
 NatPairIndFromNatObj = ?NatPairIndFromNatObj_hole
 
 public export
