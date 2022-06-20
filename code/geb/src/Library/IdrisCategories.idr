@@ -1879,7 +1879,7 @@ NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
 
 public export
 FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
-FromSuccContra n morph = ?fromSuccContra_hole
+FromSuccContra n morph = void $ succNotLTEpred $ NatMorphToLTE morph
 
 public export
 NatMorphSucc : (m, n : NatObj) -> NatLTMorph (m, NatOS n) ->
