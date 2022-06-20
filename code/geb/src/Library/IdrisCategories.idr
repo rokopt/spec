@@ -1737,7 +1737,15 @@ NatMorphSThin :
   ((morph' : NatLTMorph (m, n)) -> morph = morph') ->
   (morph' : NatLTMorph (InNat (SuccF m), InNat (SuccF n))) ->
   InNatLT (SuccF m, SuccF n) (NatLTS (m, n) morph) = morph'
-NatMorphSThin = ?NatMorphSThin_hole
+NatMorphSThin (InNat m) (InNat n) morph eq morph' = case m of
+  ZeroF => case morph of
+    InNatLT _ (NatLTZ m') => case morph' of
+      InNatLT _ (NatLTZ $ SuccF $ InNat n') impossible
+      InNatLT _ (NatLTS (InNat ZeroF, InNat n'') morphs) =>
+        rewrite eq morphs in
+        Refl
+    InNatLT _ (NatLTS (m', n') morphs) impossible
+  SuccF m' => ?foo1
 
 public export
 NatCatThin : (mn : NatObjPair) ->
