@@ -1690,13 +1690,20 @@ NatMorphIndCurried :
    p (InNat $ SuccF m, InNat $ SuccF n) $
     InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
   (m, n : NatObj) -> (morph : NatLTMorph (m, n)) -> p (m, n) morph
-NatMorphIndCurried p zn ss =
-  NatObjPairIndCurried
-    (\mn => (morph : NatLTMorph mn) -> p mn morph)
-    (\morph => ?zzhole)
-    (\n', morph, pn' => ?zshole)
-    (\m', morph, pm' => ?szhole)
-    (\m', n', morph, pm'n' => ?sshole)
+NatMorphIndCurried p zn ss (InNat ZeroF) _ morph =
+  case morph of
+    InNatLT _ (NatLTZ $ n'') =>
+      zn n''
+    InNatLT _ (NatLTS (_, _) _) impossible
+NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat ZeroF) morph =
+  case morph of
+    InNatLT _ (NatLTZ $ ZeroF) impossible
+    InNatLT _ (NatLTS (_, _) _) impossible
+NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat $ SuccF _) morph =
+  case morph of
+    InNatLT _ (NatLTZ $ SuccF _) impossible
+    InNatLT _ (NatLTS (m'', n'') morph') =>
+      ss m'' n'' morph' $ NatMorphIndCurried p zn ss m'' n'' morph'
 
 public export
 NatMorphInd :
