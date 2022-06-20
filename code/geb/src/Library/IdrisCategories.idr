@@ -1745,7 +1745,13 @@ NatMorphSThin (InNat m) (InNat n) morph eq morph' = case m of
         rewrite eq morphs in
         Refl
     InNatLT _ (NatLTS (m', n') morphs) impossible
-  SuccF m' => ?foo1
+  SuccF m' => case morph of
+    InNatLT _ (NatLTZ m'') impossible
+    InNatLT _ (NatLTS (m'', n'') morphs) => case morph' of
+      InNatLT _ (NatLTZ $ SuccF $ InNat m''') impossible
+      InNatLT _ (NatLTS (InNat $ SuccF m''', InNat $ SuccF n''') morphs') =>
+        rewrite eq morphs' in
+        Refl
 
 public export
 NatCatThin : (mn : NatObjPair) ->
