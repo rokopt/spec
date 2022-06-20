@@ -1878,13 +1878,18 @@ NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
   NatLTS (m', n') mn' => mn'
 
 public export
+FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
+FromSuccContra n morph = ?fromSuccContra_hole
+
+public export
 NatMorphSucc : (m, n : NatObj) -> NatLTMorph (m, NatOS n) ->
   Either (NatLTMorph (m, n)) (m = NatOS n)
 NatMorphSucc m n morph =
   case NatMorphCompare m (NatOS n) of
     Left eq => Right eq
     Right (Left lt) => Left $ NatLTFromSucc m n lt
-    Right (Right gt) => ?NatMorphSucc_hole_gt
+    Right (Right gt) =>
+      void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
 public export
 NatFGenIndStrengthened :
