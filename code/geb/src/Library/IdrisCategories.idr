@@ -1515,6 +1515,20 @@ MetaToNatId Z = Refl
 MetaToNatId (S n) = cong S $ MetaToNatId n
 
 public export
+NatObjToMetaInj : (m, n : NatObj) -> NatObjToMeta m = NatObjToMeta n -> m = n
+NatObjToMetaInj m n eq =
+  rewrite sym (NatToMetaId m) in
+  rewrite sym (NatToMetaId n) in
+  cong MetaToNatObj eq
+
+public export
+MetaToNatObjInj : (m, n : Nat) -> MetaToNatObj m = MetaToNatObj n -> m = n
+MetaToNatObjInj m n eq =
+  rewrite sym (MetaToNatId m) in
+  rewrite sym (MetaToNatId n) in
+  cong NatObjToMeta eq
+
+public export
 NatObjPredToNat : (NatObj -> Type) -> Nat -> Type
 NatObjPredToNat p = p . MetaToNatObj
 
@@ -1836,7 +1850,25 @@ NatMorphId (InNat n) = case n of
 public export
 NatMorphCompare : (m, n : NatObj) ->
   Either (m = n) $ Either (NatLTStrict m n) (NatLTStrict n m)
-NatMorphCompare = ?NatMorphCompare_hole
+NatMorphCompare m n with (decEq (NatObjToMeta m) (NatObjToMeta n))
+  NatMorphCompare m n | Yes eq = Left $ NatObjToMetaInj m n eq
+  NatMorphCompare m n | No neq = Right $ case connex {rel=LTE} neq of
+    Left lte => Left $
+      let
+        lt = lteTolt lte neq
+        morph = LTEToNatMorph {mn=(S $ NatObjToMeta m, NatObjToMeta n)} lt
+      in
+      rewrite sym (NatToMetaId m) in
+      rewrite sym (NatToMetaId n) in
+      morph
+    Right gte => Right $
+      let
+        lt = lteTolt gte $ \eq => neq $ sym eq
+        morph = LTEToNatMorph {mn=(S $ NatObjToMeta n, NatObjToMeta m)} lt
+      in
+      rewrite sym (NatToMetaId m) in
+      rewrite sym (NatToMetaId n) in
+      morph
 
 public export
 NatLTFromSucc : (m, n : NatObj) -> NatLTMorph (NatOS m, NatOS n) ->
