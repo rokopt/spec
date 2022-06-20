@@ -1719,9 +1719,16 @@ NatMorphInd p zn ss (m, n) = NatMorphIndCurried p zn ss m n
 
 public export
 NatMorphZThin : (n : NatF NatObj) ->
-  (morph' : NatLTMorph (InNat ZeroF, InNat n)) ->
-  InNatLT (ZeroF, n) (NatLTZ n) = morph'
-NatMorphZThin = ?NatMorphZThin_hole
+  (morph : NatLTMorph (InNat ZeroF, InNat n)) ->
+  InNatLT (ZeroF, n) (NatLTZ n) = morph
+NatMorphZThin ZeroF morph =
+  case morph of
+    InNatLT _ (NatLTZ $ ZeroF) => Refl
+    InNatLT _ (NatLTS (m', n') morph') impossible
+NatMorphZThin (SuccF n') morph =
+  case morph of
+    InNatLT _ (NatLTZ $ ZeroF) impossible
+    InNatLT _ (NatLTS (m', n') morph') impossible
 
 public export
 NatMorphSThin :
@@ -1751,12 +1758,29 @@ LTEThin (LTESucc l) (LTESucc l') = cong LTESucc (LTEThin l l')
 public export
 NatMorphToLTE : {mn : NatObjPair} ->
   NatLTMorph mn -> LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn))
-NatMorphToLTE = ?NatMorphToLTE_hole
+NatMorphToLTE {mn=mn'} =
+  NatMorphInd
+    (\mn, morph => LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn)))
+    (\n => LTEZero {right=(NatObjToMeta $ InNat n)})
+    (\m, n, morph, lt => LTESucc lt)
+    mn'
 
 public export
 LTEToNatMorph : {mn : NatPair} ->
   LTE (fst mn) (snd mn) -> NatLTMorph (NatMetaPairToObj mn)
-LTEToNatMorph = ?LTEToNatMorph_hole
+LTEToNatMorph {mn=(Z, Z)} LTEZero =
+  InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
+LTEToNatMorph {mn=(Z, Z)} (LTESucc _) impossible
+LTEToNatMorph {mn=(Z, S n)} LTEZero =
+  InNatLT (ZeroF, SuccF $ MetaToNatObj n) $ NatLTZ $ SuccF $ MetaToNatObj n
+LTEToNatMorph {mn=(Z, S n)} (LTESucc _) impossible
+LTEToNatMorph {mn=(S m, Z)} LTEZero impossible
+LTEToNatMorph {mn=(S m, Z)} (LTESucc _) impossible
+LTEToNatMorph {mn=(S m, S n)} LTEZero impossible
+LTEToNatMorph {mn=(S m, S n)} (LTESucc lt) =
+  InNatLT (SuccF $ MetaToNatObj m, SuccF $ MetaToNatObj n) $
+    NatLTS (MetaToNatObj m, MetaToNatObj n) $
+      LTEToNatMorph {mn=(m, n)} lt
 
 public export
 NatOSlice : NatObj -> Type
