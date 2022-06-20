@@ -1662,7 +1662,23 @@ NatPairIndFromNatObj :
    NatPairPredToNatObj p (NatMetaPairToObj (m', n')) ->
    NatPairPredToNatObj p (NatMetaPairToObj (S m', S n'))) ->
   (m, n : Nat) -> p (m, n)
-NatPairIndFromNatObj = ?NatPairIndFromNatObj_hole
+NatPairIndFromNatObj p zz zs sz ss Z Z =
+  zz
+NatPairIndFromNatObj p zz zs sz ss Z (S n') =
+  rewrite sym (MetaToNatPairId (Z, S n')) in
+  zs n' $
+    rewrite MetaToNatPairId (Z, n') in
+    NatPairIndFromNatObj p zz zs sz ss Z n'
+NatPairIndFromNatObj p zz zs sz ss (S m') Z =
+  rewrite sym (MetaToNatPairId (S m', Z)) in
+  sz m' $
+    rewrite MetaToNatPairId (m', Z) in
+    NatPairIndFromNatObj p zz zs sz ss m' Z
+NatPairIndFromNatObj p zz zs sz ss (S m') (S n') =
+  rewrite sym (MetaToNatPairId (S m', S n')) in
+  ss m' n' $
+    rewrite MetaToNatPairId (m', n') in
+    NatPairIndFromNatObj p zz zs sz ss m' n'
 
 public export
 NatMorphIndCurried :
