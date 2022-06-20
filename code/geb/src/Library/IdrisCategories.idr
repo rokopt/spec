@@ -1690,7 +1690,13 @@ NatMorphIndCurried :
    p (InNat $ SuccF m, InNat $ SuccF n) $
     InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
   (m, n : NatObj) -> (morph : NatLTMorph (m, n)) -> p (m, n) morph
-NatMorphIndCurried p zn ss m n morph = ?NatMorphIndCurried_hole
+NatMorphIndCurried p zn ss =
+  NatObjPairIndCurried
+    (\mn => (morph : NatLTMorph mn) -> p mn morph)
+    (\morph => ?zzhole)
+    (\n', morph, pn' => ?zshole)
+    (\m', morph, pm' => ?szhole)
+    (\m', n', morph, pm'n' => ?sshole)
 
 public export
 NatMorphInd :
