@@ -1718,9 +1718,28 @@ NatMorphInd :
 NatMorphInd p zn ss (m, n) = NatMorphIndCurried p zn ss m n
 
 public export
+NatMorphZThin : (n : NatF NatObj) ->
+  (morph' : NatLTMorph (InNat ZeroF, InNat n)) ->
+  InNatLT (ZeroF, n) (NatLTZ n) = morph'
+NatMorphZThin = ?NatMorphZThin_hole
+
+public export
+NatMorphSThin :
+  (m, n : NatObj) ->
+  (morph : NatLTMorph (m, n)) ->
+  ((morph' : NatLTMorph (m, n)) -> morph = morph') ->
+  (morph' : NatLTMorph (InNat (SuccF m), InNat (SuccF n))) ->
+  InNatLT (SuccF m, SuccF n) (NatLTS (m, n) morph) = morph'
+NatMorphSThin = ?NatMorphSThin_hole
+
+public export
 NatCatThin : (mn : NatObjPair) ->
   (morph, morph' : NatLTMorph mn) -> morph = morph'
-NatCatThin mn morph morph' = ?NatCatThin_hole
+NatCatThin =
+  NatMorphInd
+    (\mn, morph => (morph' : NatLTMorph mn) -> morph = morph')
+    NatMorphZThin
+    NatMorphSThin
 
 public export
 LTEThin : {m, n : Nat} -> (l, l' : LTE m n) -> l = l'
