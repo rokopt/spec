@@ -1595,12 +1595,18 @@ NatMetaPairToObj = map {f=ProductMonad} MetaToNatObj
 public export
 NatPairToMetaId :
   (mn : NatObjPair) -> NatMetaPairToObj (NatObjPairToMeta mn) = mn
-NatPairToMetaId = ?NatPairToMetaId_hole
+NatPairToMetaId (m, n) =
+  rewrite NatToMetaId m in
+  rewrite NatToMetaId n in
+  Refl
 
 public export
 MetaToNatPairId :
   (mn : NatPair) -> NatObjPairToMeta (NatMetaPairToObj mn) = mn
-MetaToNatPairId = ?MetaToNatPairId_hole
+MetaToNatPairId (m, n) =
+  rewrite MetaToNatId m in
+  rewrite MetaToNatId n in
+  Refl
 
 public export
 NatObjPairPredToNat : (NatObjPair -> Type) -> NatPair -> Type
@@ -1643,9 +1649,33 @@ NatPairIndFromNatObj :
 NatPairIndFromNatObj = ?NatPairIndFromNatObj_hole
 
 public export
-NatCatThin : (m, n : NatObj) ->
-  (morph, morph' : NatLTMorph (m, n)) -> morph = morph'
-NatCatThin m n morph morph' = ?NatCatThin_hole
+NatMorphIndCurried :
+  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  ((n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n) ->
+  ((m, n : NatObj) ->
+   (morph : NatLTMorph (m, n)) ->
+   p (m, n) morph ->
+   p (InNat $ SuccF m, InNat $ SuccF n) $
+    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
+  (m, n : NatObj) -> (morph : NatLTMorph (m, n)) -> p (m, n) morph
+NatMorphIndCurried p zn ss m n morph = ?NatMorphIndCurried_hole
+
+public export
+NatMorphInd :
+  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  ((n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n) ->
+  ((m, n : NatObj) ->
+   (morph : NatLTMorph (m, n)) ->
+   p (m, n) morph ->
+   p (InNat $ SuccF m, InNat $ SuccF n) $
+    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
+  (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph
+NatMorphInd p zn ss (m, n) = NatMorphIndCurried p zn ss m n
+
+public export
+NatCatThin : (mn : NatObjPair) ->
+  (morph, morph' : NatLTMorph mn) -> morph = morph'
+NatCatThin mn morph morph' = ?NatCatThin_hole
 
 public export
 LTEThin : {m, n : Nat} -> (l, l' : LTE m n) -> l = l'
