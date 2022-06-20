@@ -1797,6 +1797,17 @@ LTEToNatMorph {mn=(S m, S n)} (LTESucc lt) =
       LTEToNatMorph {mn=(m, n)} lt
 
 public export
+NatMorphCompose : {m, n, p : NatObj} ->
+  NatLTMorph (n, p) ->
+  NatLTMorph (m, n) ->
+  NatLTMorph (m, p)
+NatMorphCompose {m} {n} {p} g f =
+  rewrite sym (NatToMetaId m) in
+  rewrite sym (NatToMetaId p) in
+  LTEToNatMorph {mn=(NatObjToMeta m, NatObjToMeta p)} $
+    transitive (NatMorphToLTE f) (NatMorphToLTE g)
+
+public export
 NatOSlice : NatObj -> Type
 NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
 
