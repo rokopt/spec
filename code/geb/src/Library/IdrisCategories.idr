@@ -1424,16 +1424,16 @@ FPred : (Type -> Type) -> Type -> Type
 FPred f ty = f ty -> Type
 
 public export
-NatMorphCarrier : Type -> Type
-NatMorphCarrier = FPred ProductMonad
-
-public export
 FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
 FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
 
 public export
 FNatTransDep : (Type -> Type) -> (Type -> Type) -> Type
 FNatTransDep f g = FNatTrans f (f . g)
+
+public export
+NatMorphCarrier : Type -> Type
+NatMorphCarrier = FPred ProductMonad
 
 public export
 data NatLTMorphF : FNatTransDep ProductMonad NatF where
@@ -1457,6 +1457,10 @@ NatOZ = InNat ZeroF
 public export
 NatOS : NatObj -> NatObj
 NatOS = InNat . SuccF
+
+public export
+NatO1 : NatObj
+NatO1 = NatOS NatOZ
 
 public export
 ProductMNatFObj : Type
@@ -1916,20 +1920,18 @@ NatFGenInd :
   (n : NatObj) -> p n
 NatFGenInd p z s n = NatFGenIndStrengthened p z s n (n ** NatMorphId n)
 
--- XXX switch Nat -> NatObj
 public export
-OmegaChain : Nat -> (Type -> Type) -> (Type -> Type)
-OmegaChain Z f a = a
-OmegaChain (S n) f a = OmegaChain n f (f a)
+OmegaChain : (Type -> Type) -> Type -> NatObj -> Type
+OmegaChain f a = NatObjInd (const Type) a (const f)
 
 public export
 Induction : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : Nat) -> OmegaChain n' f a -> Type) ->
-  ((z : OmegaChain Z f a) -> p Z z) ->
-  ((n' : Nat) ->
-   ((ty : OmegaChain n' f a) -> p n' ty) ->
-   ((ty : OmegaChain (S n') f a) -> p (S n') ty)) ->
-  (n : Nat) -> (ty : OmegaChain n f a) -> p n ty
+  (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
+  ((z : OmegaChain f a NatOZ) -> p NatOZ z) ->
+  ((n' : NatObj) ->
+   ((ty : OmegaChain f a n') -> p n' ty) ->
+   ((ty : OmegaChain f a (NatOS n')) -> p (NatOS n') ty)) ->
+  (n : NatObj) -> (ty : OmegaChain f a n) -> p n ty
 Induction {f} {a} p z s n ty = ?Induction_hole
 
 ---------------
