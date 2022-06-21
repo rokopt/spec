@@ -1925,14 +1925,14 @@ OmegaChain : (Type -> Type) -> Type -> NatObj -> Type
 OmegaChain f a = NatObjInd (const Type) a (const f)
 
 public export
-Induction : {f : Type -> Type} -> {a : Type} ->
+OmegaChainInd : {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
   ((z : a) -> p NatOZ z) ->
   ((n' : NatObj) ->
    ((ty : OmegaChain f a n') -> p n' ty) ->
    ((ty : OmegaChain f a (NatOS n')) -> p (NatOS n') ty)) ->
   (n : NatObj) -> (ty : OmegaChain f a n) -> p n ty
-Induction {f} {a} p = NatObjInd (\n' => (ty : OmegaChain f a n') -> p n' ty)
+OmegaChainInd {f} {a} p = NatObjInd (\n' => (ty : OmegaChain f a n') -> p n' ty)
 
 ---------------
 ---- Lists ----
