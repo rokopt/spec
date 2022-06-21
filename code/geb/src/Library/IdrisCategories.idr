@@ -1935,6 +1935,20 @@ FunctorIterInd : {f : Type -> Type} -> {a : Type} ->
 FunctorIterInd {f} {a} p =
   NatObjInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
 
+public export
+data OmegaChain : (Type -> Type) -> Type -> NatObj -> Type where
+  OmegaInj : {n, n' : NatObj} ->
+    FunctorIter f a n -> NatLTMorph (n, n') -> OmegaChain f a n'
+
+public export
+OmegaN : {f : Type -> Type} -> {a : Type} -> {n : NatObj} ->
+  FunctorIter f a n -> OmegaChain f a n
+OmegaN {n} fit = OmegaInj {n'=n} fit (NatMorphId n)
+
+public export
+OmegaColimit : (Type -> Type) -> Type -> Type
+OmegaColimit f a = DPair NatObj (OmegaChain f a)
+
 ---------------
 ---- Lists ----
 ---------------
