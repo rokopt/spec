@@ -1932,7 +1932,7 @@ Induction : {f : Type -> Type} -> {a : Type} ->
    ((ty : OmegaChain f a n') -> p n' ty) ->
    ((ty : OmegaChain f a (NatOS n')) -> p (NatOS n') ty)) ->
   (n : NatObj) -> (ty : OmegaChain f a n) -> p n ty
-Induction {f} {a} p z s n ty = ?Induction_hole
+Induction {f} {a} p = NatObjInd (\n' => (ty : OmegaChain f a n') -> p n' ty)
 
 ---------------
 ---- Lists ----
