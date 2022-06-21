@@ -1896,29 +1896,29 @@ NatMorphSucc m n morph =
       void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
 public export
-NatFGenIndStrengthened :
+NatObjGenIndStrengthened :
   (p : NatObj -> Type) ->
   (p NatOZ) ->
   ((n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')) ->
   (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
-NatFGenIndStrengthened p z s n = case n of
+NatObjGenIndStrengthened p z s n = case n of
   InNat n' => case n' of
     ZeroF => \sl => case sl of
       (n'' ** m) => rewrite OnlyZLtZ n'' m in z
     SuccF n'' =>
-      let reccall = NatFGenIndStrengthened p z s n'' in
+      let reccall = NatObjGenIndStrengthened p z s n'' in
       \sl => case sl of
         (n''' ** m) => case NatMorphSucc n''' n'' m of
           Left m' => reccall (n''' ** m')
           Right eqn'' => rewrite eqn'' in s n'' reccall
 
 public export
-NatFGenInd :
+NatObjGenInd :
   (p : NatObj -> Type) ->
   (p NatOZ) ->
   ((n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')) ->
   (n : NatObj) -> p n
-NatFGenInd p z s n = NatFGenIndStrengthened p z s n (n ** NatMorphId n)
+NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
 
 public export
 FunctorIter : (Type -> Type) -> Type -> NatObj -> Type
