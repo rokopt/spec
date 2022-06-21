@@ -1921,18 +1921,19 @@ NatFGenInd :
 NatFGenInd p z s n = NatFGenIndStrengthened p z s n (n ** NatMorphId n)
 
 public export
-OmegaChain : (Type -> Type) -> Type -> NatObj -> Type
-OmegaChain f a = NatObjInd (const Type) a (const f)
+FunctorIter : (Type -> Type) -> Type -> NatObj -> Type
+FunctorIter f a = NatObjInd (const Type) a (const f)
 
 public export
-OmegaChainInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
+FunctorIterInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> FunctorIter f a n' -> Type) ->
   ((z : a) -> p NatOZ z) ->
   ((n' : NatObj) ->
-   ((ty : OmegaChain f a n') -> p n' ty) ->
-   ((ty : OmegaChain f a (NatOS n')) -> p (NatOS n') ty)) ->
-  (n : NatObj) -> (ty : OmegaChain f a n) -> p n ty
-OmegaChainInd {f} {a} p = NatObjInd (\n' => (ty : OmegaChain f a n') -> p n' ty)
+   ((ty : FunctorIter f a n') -> p n' ty) ->
+   ((ty : FunctorIter f a (NatOS n')) -> p (NatOS n') ty)) ->
+  (n : NatObj) -> (ty : FunctorIter f a n) -> p n ty
+FunctorIterInd {f} {a} p =
+  NatObjInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
 
 ---------------
 ---- Lists ----
