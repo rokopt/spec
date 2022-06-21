@@ -1960,6 +1960,11 @@ public export
 OmegaColimit : (Type -> Type) -> Type -> Type
 OmegaColimit f a = DPair NatObj (OmegaChain f a)
 
+public export
+SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
+  NatObj -> x -> Type
+SliceFunctorIter {x} f a = NatObjInd (const $ x -> Type) a (const f)
+
 ---------------
 ---- Lists ----
 ---------------
