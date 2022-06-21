@@ -152,6 +152,39 @@ public export
 MuS0E : MuS0EF -> Type
 MuS0E = Mu . interpMuS0EF
 
+-------------------------------------------------------------
+---- Natural-number-induction-based endofunctor category ----
+-------------------------------------------------------------
+
+public export
+S0EIter : Type -> NatObj -> Type
+S0EIter = FunctorIter Subst0EndoF
+
+public export
+showS0EIter :
+  {a : Type} -> (a -> String) -> {n : NatObj} -> S0EIter a n -> String
+showS0EIter showa {n} = FunctorIterInd _ showa (\_ => showS0EF) n
+
+public export
+(a : Type) => (Show a) => (n : NatObj) => Show (S0EIter a n) where
+  show = showS0EIter show
+
+public export
+OmegaS0E : Type -> NatObj -> Type
+OmegaS0E = OmegaChain Subst0EndoF
+
+public export
+(a : Type) => (Show a) => (n : NatObj) => Show (OmegaS0E a n) where
+  show (InOmega _ ty) = showS0EIter show ty
+
+public export
+OmegaCS0E : Type -> Type
+OmegaCS0E = OmegaColimit Subst0EndoF
+
+public export
+(a : Type) => (Show a) => Show (OmegaCS0E a) where
+  show (n' ** InOmega {n} {n'} morph ty) = showS0EIter {a} show {n} ty
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
