@@ -1938,12 +1938,12 @@ FunctorIterInd {f} {a} p =
 public export
 data OmegaChain : (Type -> Type) -> Type -> NatObj -> Type where
   OmegaInj : {n, n' : NatObj} ->
-    FunctorIter f a n -> NatLTMorph (n, n') -> OmegaChain f a n'
+    NatLTMorph (n, n') -> FunctorIter f a n -> OmegaChain f a n'
 
 public export
 OmegaN : {f : Type -> Type} -> {a : Type} -> {n : NatObj} ->
   FunctorIter f a n -> OmegaChain f a n
-OmegaN {n} fit = OmegaInj {n'=n} fit (NatMorphId n)
+OmegaN {n} = OmegaInj {n'=n} (NatMorphId n)
 
 public export
 OmegaColimit : (Type -> Type) -> Type -> Type
