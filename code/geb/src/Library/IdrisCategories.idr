@@ -1936,6 +1936,17 @@ FunctorIterInd {f} {a} p =
   NatObjInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
 
 public export
+FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> FunctorIter f a n' -> Type) ->
+  ((z : a) -> p NatOZ z) ->
+  ((n' : NatObj) ->
+   ((sl : NatOSlice n') -> (ty : FunctorIter f a (fst sl)) -> p (fst sl) ty) ->
+   ((ty : FunctorIter f a (NatOS n')) -> p (NatOS n') ty)) ->
+  (n : NatObj) -> (ty : FunctorIter f a n) -> p n ty
+FunctorIterGenInd {f} {a} p =
+  NatObjGenInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
+
+public export
 data OmegaChain : (Type -> Type) -> Type -> NatObj -> Type where
   InOmega : {n, n' : NatObj} ->
     NatLTMorph (n, n') -> FunctorIter f a n -> OmegaChain f a n'
