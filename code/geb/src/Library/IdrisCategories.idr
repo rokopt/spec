@@ -1927,7 +1927,7 @@ OmegaChain f a = NatObjInd (const Type) a (const f)
 public export
 Induction : {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
-  ((z : OmegaChain f a NatOZ) -> p NatOZ z) ->
+  ((z : a) -> p NatOZ z) ->
   ((n' : NatObj) ->
    ((ty : OmegaChain f a n') -> p n' ty) ->
    ((ty : OmegaChain f a (NatOS n')) -> p (NatOS n') ty)) ->
