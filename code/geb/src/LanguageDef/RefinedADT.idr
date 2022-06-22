@@ -122,11 +122,20 @@ a :+: b = inFreeComposite $ Subst0EndoSum a b
 -----------------------------------------------------------------------
 
 public export
+interpS0EF : {a : Type} ->
+  (a -> Type -> Type) -> (Subst0EndoF a -> Type -> Type)
+interpS0EF {a} carrier (Subst0EndoCovarRep fv) x =
+  carrier fv () -> x
+interpS0EF {a} carrier Subst0EndoEmpty x =
+  Void
+interpS0EF {a} carrier (Subst0EndoSum fv gv) x =
+  Either (carrier fv x) (carrier gv x)
+interpS0EF {a} carrier (Subst0EndoCompose gv fv) x =
+  carrier gv $ carrier fv x
+
+public export
 interpS0EFAlg : AlgS0EF (Type -> Type)
-interpS0EFAlg (Subst0EndoCovarRep f) x = f () -> x
-interpS0EFAlg Subst0EndoEmpty x = Void
-interpS0EFAlg (Subst0EndoSum f g) x = Either (f x) (g x)
-interpS0EFAlg (Subst0EndoCompose g f) x = g (f x)
+interpS0EFAlg = interpS0EF {a=(Type -> Type)} id
 
 public export
 interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
@@ -163,11 +172,18 @@ S0EIter = FunctorIter Subst0EndoF
 public export
 showS0EIter :
   {a : Type} -> (a -> String) -> {n : NatObj} -> S0EIter a n -> String
-showS0EIter showa {n} = FunctorIterInd _ showa (\_ => showS0EF) n
+showS0EIter showa {n} =
+  FunctorIterInd (\_, _ => String) showa (\_ => showS0EF) n
 
 public export
 (a : Type) => (Show a) => (n : NatObj) => Show (S0EIter a n) where
   show = showS0EIter show
+
+public export
+interpS0EIter : {a : Type} ->
+  (a -> Type -> Type) -> {n : NatObj} -> S0EIter a n -> Type -> Type
+interpS0EIter carrier {n} =
+  FunctorIterInd (\_, _ => Type -> Type) carrier (\_ => interpS0EF) n
 
 public export
 OmegaS0E : Type -> NatObj -> Type
