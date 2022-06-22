@@ -194,12 +194,23 @@ public export
   show (InOmega _ ty) = showS0EIter show ty
 
 public export
+interpOmegaS0E : {a : Type} ->
+  (a -> Type -> Type) -> {n : NatObj} -> OmegaS0E a n -> Type -> Type
+interpOmegaS0E carrier (InOmega _ ty) = interpS0EIter carrier ty
+
+public export
 OmegaCS0E : Type -> Type
 OmegaCS0E = OmegaColimit Subst0EndoF
 
 public export
 (a : Type) => (Show a) => Show (OmegaCS0E a) where
   show (n' ** InOmega {n} {n'} morph ty) = showS0EIter {a} show {n} ty
+
+public export
+interpOmegaCS0E : {a : Type} ->
+  (a -> Type -> Type) -> OmegaCS0E a -> Type -> Type
+interpOmegaCS0E carrier (n' ** InOmega {n} {n'} morph ty) =
+  interpS0EIter {a} {n} carrier ty
 
 ----------------------------------------
 ----------------------------------------
