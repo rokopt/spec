@@ -212,6 +212,25 @@ interpOmegaCS0E : {a : Type} ->
 interpOmegaCS0E carrier (n' ** InOmega {n} {n'} morph ty) =
   interpS0EIter {a} {n} carrier ty
 
+---------------------------------------------
+---- Algebras of polynomial endofunctors ----
+---------------------------------------------
+
+public export
+OmegaCS0EIter : {a : Type} ->
+  (a -> Type -> Type) -> OmegaCS0E a -> Type -> NatObj -> Type
+OmegaCS0EIter carrier = FunctorIter . interpOmegaCS0E carrier
+
+public export
+OmegaCS0EChain : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a ->
+  Type -> NatObj -> Type
+OmegaCS0EChain carrier = OmegaChain . interpOmegaCS0E carrier
+
+public export
+OmegaCS0EColimit : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a ->
+  Type -> Type
+OmegaCS0EColimit carrier = OmegaColimit . interpOmegaCS0E carrier
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
