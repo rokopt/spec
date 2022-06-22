@@ -231,6 +231,73 @@ OmegaCS0EColimit : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a ->
   Type -> Type
 OmegaCS0EColimit carrier = OmegaColimit . interpOmegaCS0E carrier
 
+public export
+OmegaCS0EIterCata : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a -> Type
+OmegaCS0EIterCata {a} carrier f =
+  (v, a' : Type) ->
+  (v -> a') ->
+  Algebra (interpOmegaCS0E carrier f) a' ->
+  (n : NatObj) ->
+  OmegaCS0EIter {a} carrier f v n ->
+  a'
+
+public export
+omegaCS0EIterCataStep :
+  {v, a, a' : Type} ->
+  {carrier : a -> Type -> Type} ->
+  {f : OmegaCS0E a} ->
+  (v -> a') ->
+  Algebra (interpOmegaCS0E carrier f) a' ->
+  (n : NatObj) ->
+  ((sl : NatOSlice n) -> OmegaCS0EIter carrier f v (fst sl) -> a') ->
+  interpOmegaCS0E carrier f (OmegaCS0EIter carrier f v n) -> a'
+omegaCS0EIterCataStep {v} {a} {a'} {carrier} {f} n hyp f' =
+  ?omegaCS0EIterCataStep_hole
+
+public export
+omegaCS0EIterCata : {a : Type} ->
+  (carrier : a -> Type -> Type) -> (f : OmegaCS0E a) ->
+  OmegaCS0EIterCata carrier f
+omegaCS0EIterCata {a} carrier f v a' subst alg =
+  FunctorIterGenInd
+    {f=(interpOmegaCS0E carrier f)}
+    {a=v}
+    (\n', iter => a')
+    subst
+    (omegaCS0EIterCataStep subst alg)
+
+public export
+OmegaCS0EChainCata : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a -> Type
+OmegaCS0EChainCata {a} carrier f =
+  (v, a' : Type) ->
+  (v -> a') ->
+  Algebra (interpOmegaCS0E carrier f) a' ->
+  (n : NatObj) ->
+  OmegaCS0EChain {a} carrier f v n ->
+  a'
+
+public export
+omegaCS0EChainCata : {a : Type} ->
+  (carrier : a -> Type -> Type) -> (f : OmegaCS0E a) ->
+  OmegaCS0EChainCata carrier f
+omegaCS0EChainCata {a} carrier f v a' subst alg n' (InOmega {n} {n'} morph f') =
+  omegaCS0EIterCata {a} carrier f v a' subst alg n f'
+
+public export
+OmegaCS0ECata : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a -> Type
+OmegaCS0ECata {a} carrier f =
+  (v, a' : Type) ->
+  (v -> a') ->
+  Algebra (interpOmegaCS0E carrier f) a' ->
+  OmegaCS0EColimit {a} carrier f v ->
+  a'
+
+public export
+omegaCS0ECata : {a : Type} ->
+  (carrier : a -> Type -> Type) -> (f : OmegaCS0E a) -> OmegaCS0ECata carrier f
+omegaCS0ECata {a} carrier f v a' subst alg (n ** f') =
+  omegaCS0EChainCata {a} carrier f v a' subst alg n f'
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
