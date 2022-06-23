@@ -2036,8 +2036,14 @@ OmegaColimitInd :
    p (InNat (SuccF n') ** OmegaN {n=(InNat (SuccF n'))} ty)) ->
   (colimit : OmegaColimit f a) ->
   p colimit
-OmegaColimitInd {f} {a} p inc zstep sstep (n' ** InOmega {n} {n'} morph ty) =
-  ?OmegaColimitInd_hole
+OmegaColimitInd {f} {a} p inc zstep sstep (n' ** chain) =
+  OmegaChainInd {f} {a}
+    (\n'', chain' => p (n'' ** chain'))
+    inc
+    zstep
+    sstep
+    n'
+    chain
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
