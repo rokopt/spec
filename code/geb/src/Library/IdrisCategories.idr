@@ -1852,6 +1852,18 @@ NatMorphId (InNat n) = case n of
   SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
 
 public export
+NatLTSucc : (n : NatObj) -> NatLTMorph (n, NatOS n)
+NatLTSucc = ?NatMorphSucc_hole
+
+public export
+NatLTDec : {n, n' : NatObj} -> NatLTMorph (NatOS n, n') -> NatLTMorph (n, n')
+NatLTDec = ?NatLTDec_hole
+
+public export
+NatMorphIdZ : NatLTMorph (NatOZ, NatOZ)
+NatMorphIdZ = NatMorphId NatOZ
+
+public export
 NatMorphCompare : (m, n : NatObj) ->
   Either (m = n) $ Either (NatLTStrict m n) (NatLTStrict n m)
 NatMorphCompare m n with (decEq (NatObjToMeta m) (NatObjToMeta n))
@@ -1950,6 +1962,46 @@ public export
 data OmegaChain : (Type -> Type) -> Type -> NatObj -> Type where
   InOmega : {n, n' : NatObj} ->
     NatLTMorph (n, n') -> FunctorIter f a n -> OmegaChain f a n'
+
+public export
+OmegaChainCompose : {f : Type -> Type} -> {a : Type} -> {n'', n''' : NatObj} ->
+  NatLTMorph (n'', n''') -> OmegaChain f a n'' -> OmegaChain f a n'''
+OmegaChainCompose {n''} {n'''} morph (InOmega {n} {n'=n''} morph' iter) =
+  InOmega {n} {n'=n'''} (NatMorphCompose morph morph') iter
+
+public export
+OmegaChainInd :
+  {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
+  (inc : (n : NatObj) ->
+    (iter : FunctorIter f a n) ->
+    p n (InOmega {n} {n'=n} (NatMorphId n) iter) ->
+    (n' : NatObj) ->
+    (morph' : NatLTMorph (n, n')) ->
+    p n' (InOmega {n} {n'} morph' iter)) ->
+  ((z : a) -> p NatOZ (InOmega {n=NatOZ} {n'=NatOZ} NatMorphIdZ z)) ->
+  ((n' : NatObj) ->
+   ((ty : FunctorIter f a n') ->
+     (n''' : NatObj) ->
+     (morph : NatLTMorph (n', n''')) ->
+     p n''' (InOmega morph ty)) ->
+   (ty : FunctorIter f a (InNat (SuccF n'))) ->
+   p (InNat (SuccF n')) (InOmega (NatMorphId (InNat (SuccF n'))) ty)) ->
+  (n, n' : NatObj) -> (morph : NatLTMorph (n, n')) ->
+  (ty : FunctorIter f a n) ->
+  p n' (InOmega {n} {n'} morph ty)
+OmegaChainInd {f} {a} p inc zstep sstep n n' morph ty =
+  FunctorIterInd {f} {a}
+    (\n'', iter =>
+      (n''' : NatObj) -> (morph : NatLTMorph (n'', n''')) ->
+        p n''' (InOmega {n=n''} {n'=n'''} morph iter))
+    (\z, n''', morph' => inc NatOZ z (zstep z) n''' morph')
+    (\n'', hyp, iter, n''', morph' =>
+      inc (InNat $ SuccF n'') iter (sstep n'' hyp iter) n''' morph')
+    n
+    ty
+    n'
+    morph
 
 public export
 OmegaN : {f : Type -> Type} -> {a : Type} -> {n : NatObj} ->
