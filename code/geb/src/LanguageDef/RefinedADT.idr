@@ -241,23 +241,6 @@ OmegaCS0EIterCata {a} carrier f =
   OmegaCS0EIter {a} carrier f v n ->
   a'
 
-{-
-public export
-S0EIterCataStep :
-  {v, a, a' : Type} ->
-  {carrier : a -> Type -> Type} ->
-  {n', n'' : NatObj} ->
-  (morph : NatLTMorph n' n'') ->
-  {f : S0EIter n' a} ->
-  (v -> a') ->
-  Algebra (interpS0EIter carrier f) a' ->
-  (n : NatObj) ->
-  ((sl : NatOSlice n) -> OmegaCS0EIter carrier f v (fst sl) -> a') ->
-  interpOmegaCS0E carrier f (OmegaCS0EIter carrier f v n) -> a'
-S0EIterCataStep {v} {a} {a'} {carrier} {f} n hyp f' =
-  ?omegaCS0EIterCataStep_hole
-  -}
-
 public export
 omegaCS0EIterCataStep :
   {v, a, a' : Type} ->
@@ -269,8 +252,15 @@ omegaCS0EIterCataStep :
   ((sl : NatOSlice n) -> OmegaCS0EIter carrier f v (fst sl) -> a') ->
   interpOmegaCS0E carrier f (OmegaCS0EIter carrier f v n) -> a'
 omegaCS0EIterCataStep {v} {a} {a'} {carrier}
-  {f=(n' ** InOmega {n=n''} {n'=n'} morph f')} n hyp f'' =
-    ?omegaCS0EIterCataStep_hole
+  {f=(n' ** InOmega {n=n''} {n'=n'} morph f)} subst alg n hyp f' =
+    FunctorIterGenInd
+      {f=Subst0EndoF}
+      {a}
+      (\_, _ => a')
+      (\x => ?zhole)
+      (\n''', hyp', f'' => ?shole)
+      n''
+      f
 
 public export
 omegaCS0EIterCata : {a : Type} ->
