@@ -1856,6 +1856,10 @@ NatMorphId (InNat n) = case n of
   SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
 
 public export
+NatOSliceMax : (n : NatObj) -> NatOSlice n
+NatOSliceMax n = (n ** NatMorphId n)
+
+public export
 NatLTSucc : (n : NatObj) -> NatLTMorph (n, NatOS n)
 NatLTSucc = NatObjInd _ NatLTOZ1 $
   \n', morph => InNatLT _ $ NatLTS (n', InNat $ SuccF n') morph
@@ -1947,7 +1951,7 @@ FunctorIterInd : {f : Type -> Type} -> {a : Type} ->
   ((z : a) -> p NatOZ z) ->
   ((n' : NatObj) ->
    ((ty : FunctorIter f a n') -> p n' ty) ->
-   ((ty : FunctorIter f a (NatOS n')) -> p (NatOS n') ty)) ->
+   ((ty : f (FunctorIter f a n')) -> p (NatOS n') ty)) ->
   (n : NatObj) -> (ty : FunctorIter f a n) -> p n ty
 FunctorIterInd {f} {a} p =
   NatObjInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
@@ -1958,7 +1962,7 @@ FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
   ((z : a) -> p NatOZ z) ->
   ((n' : NatObj) ->
    ((sl : NatOSlice n') -> (ty : FunctorIter f a (fst sl)) -> p (fst sl) ty) ->
-   ((ty : FunctorIter f a (NatOS n')) -> p (NatOS n') ty)) ->
+   ((ty : f (FunctorIter f a n')) -> p (NatOS n') ty)) ->
   (n : NatObj) -> (ty : FunctorIter f a n) -> p n ty
 FunctorIterGenInd {f} {a} p =
   NatObjGenInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
@@ -2013,6 +2017,40 @@ OmegaChainInd {f} {a} p inc zstep sstep n' (InOmega {n} {n'} morph ty) =
     morph
 
 public export
+OmegaChainGenInd :
+  {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
+  (inc : (n : NatObj) ->
+    (iter : FunctorIter f a n) ->
+    p n (OmegaN {n} iter) ->
+    (n' : NatObj) ->
+    (morph' : NatLTMorph (n, n')) ->
+    p n' (InOmega {n} {n'} morph' iter)) ->
+  ((z : a) -> p NatOZ (OmegaN {n=NatOZ} z)) ->
+  ((n' : NatObj) ->
+   ((sl : NatOSlice n') ->
+    (ty : FunctorIter f a (fst sl)) ->
+     (n''' : NatObj) ->
+     (morph : NatLTMorph (fst sl, n''')) ->
+     p n''' (InOmega morph ty)) ->
+   (ty : f (FunctorIter f a n')) ->
+   p (InNat (SuccF n')) (OmegaN {n=(InNat (SuccF n'))} ty)) ->
+  (n' : NatObj) -> (chain : OmegaChain f a n') ->
+  p n' chain
+OmegaChainGenInd {f} {a} p inc zstep sstep n' (InOmega {n} {n'} morph ty) =
+  FunctorIterGenInd {f} {a}
+    (\n'', iter =>
+      (n''' : NatObj) -> (morph : NatLTMorph (n'', n''')) ->
+        p n''' (InOmega {n=n''} {n'=n'''} morph iter))
+    (\z, n''', morph' => inc NatOZ z (zstep z) n''' morph')
+    (\n'', hyp, iter, n''', morph' =>
+      inc (InNat $ SuccF n'') iter (sstep n'' hyp iter) n''' morph')
+    n
+    ty
+    n'
+    morph
+
+public export
 OmegaColimit : (Type -> Type) -> Type -> Type
 OmegaColimit f a = DPair NatObj (OmegaChain f a)
 
@@ -2038,6 +2076,36 @@ OmegaColimitInd :
   p colimit
 OmegaColimitInd {f} {a} p inc zstep sstep (n' ** chain) =
   OmegaChainInd {f} {a}
+    (\n'', chain' => p (n'' ** chain'))
+    inc
+    zstep
+    sstep
+    n'
+    chain
+
+public export
+OmegaColimitGenInd :
+  {f : Type -> Type} -> {a : Type} ->
+  (p : OmegaColimit f a -> Type) ->
+  (inc : (n : NatObj) ->
+    (iter : FunctorIter f a n) ->
+    p (n ** OmegaN {n} iter) ->
+    (n' : NatObj) ->
+    (morph' : NatLTMorph (n, n')) ->
+    p (n' ** InOmega {n} {n'} morph' iter)) ->
+  ((z : a) -> p (NatOZ ** (OmegaN {n=NatOZ} z))) ->
+  ((n' : NatObj) ->
+   ((sl : NatOSlice n') ->
+    (ty : FunctorIter f a (fst sl)) ->
+     (n''' : NatObj) ->
+     (morph : NatLTMorph (fst sl, n''')) ->
+     p (n''' ** InOmega morph ty)) ->
+   (ty : f (FunctorIter f a n')) ->
+   p (InNat (SuccF n') ** OmegaN {n=(InNat (SuccF n'))} ty)) ->
+  (colimit : OmegaColimit f a) ->
+  p colimit
+OmegaColimitGenInd {f} {a} p inc zstep sstep (n' ** chain) =
+  OmegaChainGenInd {f} {a}
     (\n'', chain' => p (n'' ** chain'))
     inc
     zstep
