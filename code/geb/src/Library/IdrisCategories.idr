@@ -1975,23 +1975,28 @@ OmegaChainCompose {n''} {n'''} morph (InOmega {n} {n'=n''} morph' iter) =
   InOmega {n} {n'=n'''} (NatMorphCompose morph morph') iter
 
 public export
+OmegaN : {f : Type -> Type} -> {a : Type} -> {n : NatObj} ->
+  FunctorIter f a n -> OmegaChain f a n
+OmegaN {n} = InOmega {n'=n} (NatMorphId n)
+
+public export
 OmegaChainInd :
   {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> OmegaChain f a n' -> Type) ->
   (inc : (n : NatObj) ->
     (iter : FunctorIter f a n) ->
-    p n (InOmega {n} {n'=n} (NatMorphId n) iter) ->
+    p n (OmegaN {n} iter) ->
     (n' : NatObj) ->
     (morph' : NatLTMorph (n, n')) ->
     p n' (InOmega {n} {n'} morph' iter)) ->
-  ((z : a) -> p NatOZ (InOmega {n=NatOZ} {n'=NatOZ} NatMorphIdZ z)) ->
+  ((z : a) -> p NatOZ (OmegaN {n=NatOZ} z)) ->
   ((n' : NatObj) ->
    ((ty : FunctorIter f a n') ->
      (n''' : NatObj) ->
      (morph : NatLTMorph (n', n''')) ->
      p n''' (InOmega morph ty)) ->
-   (ty : FunctorIter f a (InNat (SuccF n'))) ->
-   p (InNat (SuccF n')) (InOmega (NatMorphId (InNat (SuccF n'))) ty)) ->
+   (ty : f (FunctorIter f a n')) ->
+   p (InNat (SuccF n')) (OmegaN {n=(InNat (SuccF n'))} ty)) ->
   (n, n' : NatObj) -> (morph : NatLTMorph (n, n')) ->
   (ty : FunctorIter f a n) ->
   p n' (InOmega {n} {n'} morph ty)
@@ -2007,11 +2012,6 @@ OmegaChainInd {f} {a} p inc zstep sstep n n' morph ty =
     ty
     n'
     morph
-
-public export
-OmegaN : {f : Type -> Type} -> {a : Type} -> {n : NatObj} ->
-  FunctorIter f a n -> OmegaChain f a n
-OmegaN {n} = InOmega {n'=n} (NatMorphId n)
 
 public export
 OmegaColimit : (Type -> Type) -> Type -> Type
