@@ -1997,10 +1997,9 @@ OmegaChainInd :
      p n''' (InOmega morph ty)) ->
    (ty : f (FunctorIter f a n')) ->
    p (InNat (SuccF n')) (OmegaN {n=(InNat (SuccF n'))} ty)) ->
-  (n, n' : NatObj) -> (morph : NatLTMorph (n, n')) ->
-  (ty : FunctorIter f a n) ->
-  p n' (InOmega {n} {n'} morph ty)
-OmegaChainInd {f} {a} p inc zstep sstep n n' morph ty =
+  (n' : NatObj) -> (chain : OmegaChain f a n') ->
+  p n' chain
+OmegaChainInd {f} {a} p inc zstep sstep n' (InOmega {n} {n'} morph ty) =
   FunctorIterInd {f} {a}
     (\n'', iter =>
       (n''' : NatObj) -> (morph : NatLTMorph (n'', n''')) ->
@@ -2016,6 +2015,29 @@ OmegaChainInd {f} {a} p inc zstep sstep n n' morph ty =
 public export
 OmegaColimit : (Type -> Type) -> Type -> Type
 OmegaColimit f a = DPair NatObj (OmegaChain f a)
+
+public export
+OmegaColimitInd :
+  {f : Type -> Type} -> {a : Type} ->
+  (p : OmegaColimit f a -> Type) ->
+  (inc : (n : NatObj) ->
+    (iter : FunctorIter f a n) ->
+    p (n ** OmegaN {n} iter) ->
+    (n' : NatObj) ->
+    (morph' : NatLTMorph (n, n')) ->
+    p (n' ** InOmega {n} {n'} morph' iter)) ->
+  ((z : a) -> p (NatOZ ** (OmegaN {n=NatOZ} z))) ->
+  ((n' : NatObj) ->
+   ((ty : FunctorIter f a n') ->
+     (n''' : NatObj) ->
+     (morph : NatLTMorph (n', n''')) ->
+     p (n''' ** InOmega morph ty)) ->
+   (ty : f (FunctorIter f a n')) ->
+   p (InNat (SuccF n') ** OmegaN {n=(InNat (SuccF n'))} ty)) ->
+  (colimit : OmegaColimit f a) ->
+  p colimit
+OmegaColimitInd {f} {a} p inc zstep sstep (n' ** InOmega {n} {n'} morph ty) =
+  ?OmegaColimitInd_hole
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
