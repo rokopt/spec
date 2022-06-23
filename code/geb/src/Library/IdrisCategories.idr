@@ -1834,6 +1834,10 @@ NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
 NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
 
 public export
+NatLTOZ1 : NatLTMorph (NatOZ, NatO1)
+NatLTOZ1 = NatLTOZ NatO1
+
+public export
 NatLTStrict : NatObj -> NatObj -> Type
 NatLTStrict m n = NatLTMorph (NatOS m, n)
 
@@ -1853,11 +1857,12 @@ NatMorphId (InNat n) = case n of
 
 public export
 NatLTSucc : (n : NatObj) -> NatLTMorph (n, NatOS n)
-NatLTSucc = ?NatMorphSucc_hole
+NatLTSucc = NatObjInd _ NatLTOZ1 $
+  \n', morph => InNatLT _ $ NatLTS (n', InNat $ SuccF n') morph
 
 public export
 NatLTDec : {n, n' : NatObj} -> NatLTMorph (NatOS n, n') -> NatLTMorph (n, n')
-NatLTDec = ?NatLTDec_hole
+NatLTDec {n} morph = NatMorphCompose morph $ NatLTSucc n
 
 public export
 NatMorphIdZ : NatLTMorph (NatOZ, NatOZ)
