@@ -14,7 +14,6 @@ import public Control.Monad.Identity
 import public Data.Binary
 import public Data.Nat.Properties
 import public Data.Nat.Exponentiation
-import public Data.Tree.Perfect
 import public Data.Binary.Digit
 import public Syntax.PreorderReasoning
 
