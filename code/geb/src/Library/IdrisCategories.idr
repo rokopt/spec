@@ -1491,14 +1491,52 @@ data NatLTMorph : ProductMNatPred where
 -------------------
 
 public export
+NatObjIndBaseCase : (NatObj -> Type) -> Type
+NatObjIndBaseCase p = p NatOZ
+
+public export
+NatObjInductionStep : (NatObj -> Type) -> Type
+NatObjInductionStep p = (n' : NatObj) -> p n' -> p (NatOS n')
+
+public export
 NatObjInd :
   (p : NatObj -> Type) ->
-  (p NatOZ) ->
-  ((n' : NatObj) -> p n' -> p (NatOS n')) ->
+  NatObjIndBaseCase p ->
+  NatObjInductionStep p ->
   (n : NatObj) -> p n
 NatObjInd p z s (InNat n) = case n of
   ZeroF => z
   SuccF n' => s n' $ NatObjInd p z s n'
+
+public export
+NatObjDepIndBaseCase :
+  {p : NatObj -> Type} ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  Type
+NatObjDepIndBaseCase dp zp = dp NatOZ zp
+
+public export
+NatObjDepInductionStep :
+  {p : NatObj -> Type} ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (sp : NatObjInductionStep p) ->
+  Type
+NatObjDepInductionStep {p} dp sp =
+  (n' : NatObj) -> (pn : p n') -> dp n' pn -> dp (NatOS n') (sp n' pn)
+
+public export
+NatObjDepInd :
+  (p : NatObj -> Type) ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  (sp : NatObjInductionStep p) ->
+  NatObjDepIndBaseCase dp zp ->
+  NatObjDepInductionStep dp sp ->
+  (n : NatObj) -> dp n (NatObjInd p zp sp n)
+NatObjDepInd p dp zp sp dzp dsp =
+  NatObjInd (\n => dp n (NatObjInd p zp sp n))
+    dzp (\n', dpn => dsp n' (NatObjInd p zp sp n') dpn)
 
 public export
 NatObjToMeta : NatObj -> Nat

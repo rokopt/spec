@@ -257,11 +257,14 @@ omegaCS0EIterCataBaseCase : {a : Type} ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
   OmegaColimitIndBaseCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
-omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg (InNat ZeroF) f =
-  subst f
-omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg (InNat $ SuccF n) f =
-  let reccall = omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg n in
-  alg $ (cm z _ a' reccall) f
+omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg =
+  NatObjDepInd
+    (const Type)
+    (\n', ty => ty -> a')
+    v
+    (const $ carrier z)
+    subst
+    (\n, ty, ty2a, c => alg $ cm z ty a' ty2a c)
 
 public export
 omegaCS0EIterCataGenIndStep : {a : Type} ->
