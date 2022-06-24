@@ -242,37 +242,36 @@ OmegaCS0EIterCata {a} carrier f =
   a'
 
 public export
-omegaCS0EIterCataStep :
-  {v, a, a' : Type} ->
-  {carrier : a -> Type -> Type} ->
-  {f : OmegaCS0E a} ->
-  (v -> a') ->
-  Algebra (interpOmegaCS0E carrier f) a' ->
-  (n : NatObj) ->
-  ((sl : NatOSlice n) -> OmegaCS0EIter carrier f v (fst sl) -> a') ->
-  interpOmegaCS0E carrier f (OmegaCS0EIter carrier f v n) -> a'
-omegaCS0EIterCataStep {v} {a} {a'} {carrier}
-  {f=(n' ** InOmega {n=n''} {n'=n'} morph f)} subst alg n hyp f' =
-    FunctorIterGenInd
-      {f=Subst0EndoF}
-      {a}
-      (\_, _ => a')
-      (\x => ?zhole)
-      (\n''', hyp', f'' => ?shole)
-      n''
-      f
+omegaCS0EIterCataInjCase : {a : Type} ->
+  (carrier : a -> Type -> Type) ->
+  OmegaColimitIndInjCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+omegaCS0EIterCataInjCase {a} carrier n f cata n' morph v a' subst alg n'' f' =
+   ?omegaCS0EIterCataInjCase_hole
+
+public export
+omegaCS0EIterCataBaseCase : {a : Type} ->
+  (carrier : a -> Type -> Type) ->
+  OmegaColimitIndBaseCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+omegaCS0EIterCataBaseCase {a} carrier z v a' subst alg n f =
+  ?omegaCS0EIterCataBaseCase_hole
+
+public export
+omegaCS0EIterCataGenIndStep : {a : Type} ->
+  (carrier : a -> Type -> Type) ->
+  OmegaColimitGenIndStep {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+omegaCS0EIterCataGenIndStep {a} carrier n' cata ty v a' subst alg n f =
+  ?omegaCS0EIterCataGenIndStep_hole
 
 public export
 omegaCS0EIterCata : {a : Type} ->
   (carrier : a -> Type -> Type) -> (f : OmegaCS0E a) ->
   OmegaCS0EIterCata carrier f
-omegaCS0EIterCata {a} carrier f v a' subst alg =
-  FunctorIterGenInd
-    {f=(interpOmegaCS0E carrier f)}
-    {a=v}
-    (\n', iter => a')
-    subst
-    (omegaCS0EIterCataStep subst alg)
+omegaCS0EIterCata {a} carrier =
+  OmegaColimitGenInd {f=Subst0EndoF} {a}
+    (OmegaCS0EIterCata carrier)
+    (omegaCS0EIterCataInjCase {a} carrier)
+    (omegaCS0EIterCataBaseCase {a} carrier)
+    (omegaCS0EIterCataGenIndStep {a} carrier)
 
 public export
 OmegaCS0EChainCata : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a -> Type
