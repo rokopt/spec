@@ -249,8 +249,7 @@ omegaCS0EIterCataInjCase : {a : Type} ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
   OmegaColimitIndInjCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
-omegaCS0EIterCataInjCase {a} carrier cm n f cata n' m v a' subst alg n'' f' =
-   ?omegaCS0EIterCataInjCase_hole
+omegaCS0EIterCataInjCase {a} carrier cm n f cata n' m = cata
 
 public export
 omegaCS0EIterCataBaseCase : {a : Type} ->
