@@ -262,7 +262,7 @@ omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg (InNat ZeroF) f =
   subst f
 omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg (InNat $ SuccF n) f =
   let reccall = omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg n in
-  ?omegaCS0EIterCataBaseCase_hole_s
+  alg $ (cm z _ a' reccall) f
 
 public export
 omegaCS0EIterCataGenIndStep : {a : Type} ->
