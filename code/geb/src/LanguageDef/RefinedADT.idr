@@ -267,13 +267,24 @@ omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg =
     (\n, ty, ty2a, c => alg $ cm z ty a' ty2a c)
 
 public export
-omegaCS0EIterCataGenIndStep : {a : Type} ->
+omegaCS0EIterCataSimpleIndStep : {a : Type} ->
   (carrier : a -> Type -> Type) ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
-  OmegaColimitGenIndStep {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
-omegaCS0EIterCataGenIndStep {a} carrier cm n' cata ty v a' subst alg n f =
-  ?omegaCS0EIterCataGenIndStep_hole
+  OmegaColimitSimpleInductionStep
+    {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+omegaCS0EIterCataSimpleIndStep {a} carrier cm n hyp endof =
+  ?omegaCS0EIterCataSimpleIndStep_hole
+
+public export
+omegaCS0EIterCataIndStep : {a : Type} ->
+  (carrier : a -> Type -> Type) ->
+  (carrierMap : (x : a) -> (t, t' : Type) ->
+    (t -> t') -> carrier x t -> carrier x t') ->
+  OmegaColimitInductionStep {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+omegaCS0EIterCataIndStep {a} carrier cm =
+  OmegaColimitInductionStepFromSimple {p=(OmegaCS0EIterCata carrier)}
+    (omegaCS0EIterCataSimpleIndStep carrier cm)
 
 public export
 omegaCS0EIterCata : {a : Type} ->
@@ -283,11 +294,11 @@ omegaCS0EIterCata : {a : Type} ->
   (f : OmegaCS0E a) ->
   OmegaCS0EIterCata carrier f
 omegaCS0EIterCata {a} carrier cm =
-  OmegaColimitGenInd {f=Subst0EndoF} {a}
+  OmegaColimitInd {f=Subst0EndoF} {a}
     (OmegaCS0EIterCata carrier)
     (omegaCS0EIterCataInjCase {a} carrier cm)
     (omegaCS0EIterCataBaseCase {a} carrier cm)
-    (omegaCS0EIterCataGenIndStep {a} carrier cm)
+    (omegaCS0EIterCataIndStep {a} carrier cm)
 
 public export
 OmegaCS0EChainCata : {a : Type} ->

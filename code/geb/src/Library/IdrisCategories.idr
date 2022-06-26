@@ -1631,14 +1631,83 @@ NatObjPairIndCurried p zz zs sz ss (InNat (SuccF m')) (InNat (SuccF n')) =
   ss m' n' $ NatObjPairIndCurried p zz zs sz ss m' n'
 
 public export
+NatObjPairIndZeroZeroCase : (NatObjPair -> Type) -> Type
+NatObjPairIndZeroZeroCase p = p (NatOZ, NatOZ)
+
+public export
+NatObjPairIndZeroSuccCase : (NatObjPair -> Type) -> Type
+NatObjPairIndZeroSuccCase p =
+  (n' : NatObj) -> p (NatOZ, n') -> p (NatOZ, NatOS n')
+
+public export
+NatObjPairIndSuccZeroCase : (NatObjPair -> Type) -> Type
+NatObjPairIndSuccZeroCase p =
+  (n' : NatObj) -> p (n', NatOZ) -> p (NatOS n', NatOZ)
+
+public export
+NatObjPairIndSuccSuccCase : (NatObjPair -> Type) -> Type
+NatObjPairIndSuccSuccCase p =
+  (m', n' : NatObj) -> p (m', n') -> p (NatOS m', NatOS n')
+
+public export
 NatObjPairInd :
   (p : NatObjPair -> Type) ->
-  (p (NatOZ, NatOZ)) ->
-  ((n' : NatObj) -> p (NatOZ, n') -> p (NatOZ, NatOS n')) ->
-  ((n' : NatObj) -> p (n', NatOZ) -> p (NatOS n', NatOZ)) ->
-  ((m', n' : NatObj) -> p (m', n') -> p (NatOS m', NatOS n')) ->
+  NatObjPairIndZeroZeroCase p ->
+  NatObjPairIndZeroSuccCase p ->
+  NatObjPairIndSuccZeroCase p ->
+  NatObjPairIndSuccSuccCase p ->
   (mn : NatObjPair) -> p mn
 NatObjPairInd p zz zs sz ss (m, n) = NatObjPairIndCurried p zz zs sz ss m n
+
+public export
+NatObjPairDepZeroZeroCase :
+  {p : NatObjPair -> Type} -> (dp : (np : NatObjPair) -> p np -> Type) ->
+  (zzp : NatObjPairIndZeroZeroCase p) -> Type
+NatObjPairDepZeroZeroCase dp zzp = dp (NatOZ, NatOZ) zzp
+
+public export
+NatObjPairDepZeroSuccCase :
+  {p : NatObjPair -> Type} -> (dp : (np : NatObjPair) -> p np -> Type) ->
+  NatObjPairIndZeroSuccCase p -> Type
+NatObjPairDepZeroSuccCase {p} dp zsp =
+  (n' : NatObj) -> (pzn : p (NatOZ, n')) -> dp (NatOZ, n') pzn ->
+  dp (NatOZ, NatOS n') $ zsp n' pzn
+
+public export
+NatObjPairDepSuccZeroCase :
+  {p : NatObjPair -> Type} -> (dp : (np : NatObjPair) -> p np -> Type) ->
+  NatObjPairIndSuccZeroCase p -> Type
+NatObjPairDepSuccZeroCase {p} dp szp =
+  (n' : NatObj) -> (pnz : p (n', NatOZ)) -> dp (n', NatOZ) pnz ->
+  dp (NatOS n', NatOZ) $ szp n' pnz
+
+public export
+NatObjPairDepSuccSuccCase :
+  {p : NatObjPair -> Type} -> (dp : (np : NatObjPair) -> p np -> Type) ->
+  NatObjPairIndSuccSuccCase p -> Type
+NatObjPairDepSuccSuccCase {p} dp ssp =
+  (n, n' : NatObj) -> (pnn : p (n, n')) -> dp (n, n') pnn ->
+  dp (NatOS n, NatOS n') $ ssp n n' pnn
+
+public export
+NatObjPairDepInd :
+  (p : NatObjPair -> Type) ->
+  (dp : (np : NatObjPair) -> p np -> Type) ->
+  (zzp : NatObjPairIndZeroZeroCase p) ->
+  (zsp : NatObjPairIndZeroSuccCase p) ->
+  (szp : NatObjPairIndSuccZeroCase p) ->
+  (ssp : NatObjPairIndSuccSuccCase p) ->
+  NatObjPairDepZeroZeroCase dp zzp ->
+  NatObjPairDepZeroSuccCase dp zsp ->
+  NatObjPairDepSuccZeroCase dp szp ->
+  NatObjPairDepSuccSuccCase dp ssp ->
+  (mn : NatObjPair) -> dp mn (NatObjPairInd p zzp zsp szp ssp mn)
+NatObjPairDepInd p dp zzp zsp szp ssp dzzp dzsp dszp dssp =
+  NatObjPairInd (\mn => dp mn (NatObjPairInd p zzp zsp szp ssp mn))
+    dzzp
+    (\n', dpzn => dzsp n' (NatObjPairInd p zzp zsp szp ssp (NatOZ, n')) dpzn)
+    (\n', dpnz => dszp n' (NatObjPairInd p zzp zsp szp ssp (n', NatOZ)) dpnz)
+    (\n, n', dpnn => dssp n n' (NatObjPairInd p zzp zsp szp ssp (n, n')) dpnn)
 
 public export
 NatObjPairToMeta : NatObjPair -> NatPair
@@ -2201,6 +2270,23 @@ OmegaColimitGenInd {f} {a} p inj zstep sstep (n' ** chain) =
     sstep
     n'
     chain
+
+public export
+OmegaColimitSimpleInductionStep : {f : Type -> Type} -> {a : Type} ->
+  (p : OmegaColimit f a -> Type) -> Type
+OmegaColimitSimpleInductionStep {f} {a} p =
+  (n' : NatObj) ->
+  ((ty : FunctorIter f a n') -> p (n' ** InOmega (NatMorphId n') ty)) ->
+  (ty : f (FunctorIter f a n')) ->
+  p (InNat (SuccF n') ** OmegaN {n=(InNat (SuccF n'))} ty)
+
+public export
+OmegaColimitInductionStepFromSimple : {f : Type -> Type} -> {a : Type} ->
+  {p : OmegaColimit f a -> Type} ->
+  OmegaColimitSimpleInductionStep p ->
+  OmegaColimitInductionStep p
+OmegaColimitInductionStepFromSimple {f} {a} {p} sstep n hyp ty =
+  sstep n (\ty' => hyp ty' n (NatMorphId n)) ty
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
