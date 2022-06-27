@@ -2077,10 +2077,15 @@ NatMorphSucc m n morph =
       void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
 public export
+NatObjGenInductionStep : (NatObj -> Type) -> Type
+NatObjGenInductionStep p =
+  (n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')
+
+public export
 NatObjGenIndStrengthened :
   (p : NatObj -> Type) ->
-  (p NatOZ) ->
-  ((n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')) ->
+  NatObjIndBaseCase p ->
+  NatObjGenInductionStep p ->
   (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
 NatObjGenIndStrengthened p z s n = case n of
   InNat n' => case n' of
@@ -2094,12 +2099,89 @@ NatObjGenIndStrengthened p z s n = case n of
           Right eqn'' => rewrite eqn'' in s n'' reccall
 
 public export
+NatObjDepGenStrengthenedIndBaseCase :
+  {p : NatObj -> Type} ->
+  (dp : (n : NatObj) -> (sl : NatOSlice n) -> p (fst sl) -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  Type
+NatObjDepGenStrengthenedIndBaseCase dp zp = dp NatOZ (NatOZ ** NatMorphIdZ) zp
+
+public export
+NatObjDepGenStrengthenedInductionStep :
+  {p : NatObj -> Type} ->
+  (dp : (n : NatObj) -> (sl : NatOSlice n) -> p (fst sl) -> Type) ->
+  (sp : NatObjGenInductionStep p) ->
+  Type
+NatObjDepGenStrengthenedInductionStep {p} dp sp =
+  (n' : NatObj) ->
+  (pn' : (sl : NatOSlice n') -> p (fst sl)) ->
+  ((sl : NatOSlice n') -> dp n' sl (pn' sl)) ->
+  dp (NatOS n') (NatOS n' ** NatMorphId $ NatOS n') (sp n' pn')
+
+public export
+NatObjDepGenIndStrengthened :
+  (p : NatObj -> Type) ->
+  (dp : (n : NatObj) -> (sl : NatOSlice n) -> p (fst sl) -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  (sp : NatObjGenInductionStep p) ->
+  NatObjDepGenStrengthenedIndBaseCase {p} dp zp ->
+  NatObjDepGenStrengthenedInductionStep {p} dp sp ->
+  (n : NatObj) ->
+  (sl : NatOSlice n) ->
+  dp n sl (NatObjGenIndStrengthened p zp sp n sl)
+NatObjDepGenIndStrengthened p dp zp sp dzp dsp n' sl' =
+  NatObjGenIndStrengthened
+    (\n =>
+      (sl : NatOSlice n) -> dp n sl (NatObjGenIndStrengthened p zp sp n sl))
+    (\sl => case sl of
+      (m ** morph) => rewrite OnlyZLtZ m morph in case morph of
+        InNatLT _ (NatLTZ ZeroF) => dzp
+        InNatLT _ (NatLTS (_, _) _) impossible)
+    (\n, hyp, sls => ?NatObjDepGenIndStrengthehed_succ_hole)
+    n'
+    (n' ** NatMorphId n')
+    sl'
+
+public export
 NatObjGenInd :
   (p : NatObj -> Type) ->
-  (p NatOZ) ->
-  ((n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')) ->
+  NatObjIndBaseCase p ->
+  NatObjGenInductionStep p ->
   (n : NatObj) -> p n
 NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
+
+public export
+NatObjDepGenInductionStep :
+  {p : NatObj -> Type} ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (sp : NatObjGenInductionStep p) ->
+  Type
+NatObjDepGenInductionStep {p} dp sp =
+  (n' : NatObj) ->
+  (pn' : (sl : NatOSlice n') -> p (fst sl)) ->
+  ((sl : NatOSlice n') -> dp (fst sl) (pn' sl)) ->
+  dp (NatOS n') (sp n' pn')
+
+public export
+NatObjDepGenInd :
+  (p : NatObj -> Type) ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  (sp : NatObjGenInductionStep p) ->
+  NatObjDepIndBaseCase dp zp ->
+  NatObjDepGenInductionStep dp sp ->
+  (n : NatObj) ->
+  dp n (NatObjGenInd p zp sp n)
+NatObjDepGenInd p dp zp sp dzp dsp n =
+  NatObjDepGenIndStrengthened
+    p
+    (\_, sl, psl => dp (fst sl) psl)
+    zp
+    sp
+    dzp
+    dsp
+    n
+    (n ** NatMorphId n)
 
 public export
 FunctorIter : (Type -> Type) -> Type -> NatObj -> Type
