@@ -2133,6 +2133,42 @@ FunctorIterInd {f} {a} p =
   NatObjInd (\n' => (ty : FunctorIter f a n') -> p n' ty)
 
 public export
+FunctorIterDepIndBaseCase : {f : Type -> Type} -> {a : Type} ->
+  {p : (n' : NatObj) -> FunctorIter f a n' -> Type} ->
+  ((n' : NatObj) -> (it : FunctorIter f a n') -> p n' it -> Type) ->
+  FunctorIterIndBaseCase {f} {a} p ->
+  Type
+FunctorIterDepIndBaseCase {f} {a} {p} dp zp =
+  (z : a) -> dp NatOZ z (zp z)
+
+public export
+FunctorIterDepInductionStep : {f : Type -> Type} -> {a : Type} ->
+  {p : (n' : NatObj) -> FunctorIter f a n' -> Type} ->
+  ((n' : NatObj) -> (it : FunctorIter f a n') -> p n' it -> Type) ->
+  FunctorIterInductionStep {f} {a} p ->
+  Type
+FunctorIterDepInductionStep {f} {a} {p} dp sp =
+  (n' : NatObj) ->
+   (pty : ((ty : FunctorIter f a n') -> p n' ty)) ->
+   ((ty : f (FunctorIter f a n')) -> dp (NatOS n') ty (sp n' pty ty))
+
+public export
+FunctorIterDepInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> FunctorIter f a n' -> Type) ->
+  (dp : (n' : NatObj) -> (it : FunctorIter f a n') -> p n' it -> Type) ->
+  (zp : FunctorIterIndBaseCase {f} {a} p) ->
+  (sp : FunctorIterInductionStep {f} {a} p) ->
+  FunctorIterDepIndBaseCase {f} {a} {p} dp zp ->
+  FunctorIterDepInductionStep {f} {a} {p} dp sp ->
+  (n : NatObj) -> (ty : FunctorIter f a n) ->
+  dp n ty (FunctorIterInd {f} {a} p zp sp n ty)
+FunctorIterDepInd {f} {a} p dp zp sp dzp dsp =
+  FunctorIterInd {f} {a}
+    (\n', ty => dp n' ty (FunctorIterInd {f} {a} p zp sp n' ty))
+    dzp
+    (\n, hyp, ty => dsp n (FunctorIterInd {f} {a} p zp sp n) ty)
+
+public export
 FunctorIterGenIndStep : {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> FunctorIter f a n' -> Type) -> Type
 FunctorIterGenIndStep {f} {a} p =
