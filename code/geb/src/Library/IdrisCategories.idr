@@ -1831,16 +1831,69 @@ NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat $ SuccF _) morph =
       ss m'' n'' morph' $ NatMorphIndCurried p zn ss m'' n'' morph'
 
 public export
+NatMorphIndZCase : (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) -> Type
+NatMorphIndZCase p =
+  (n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n
+
+public export
+NatMorphIndSCase : (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) -> Type
+NatMorphIndSCase p =
+  (m, n : NatObj) ->
+  (morph : NatLTMorph (m, n)) ->
+  p (m, n) morph ->
+  p (InNat $ SuccF m, InNat $ SuccF n) $
+    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph
+
+public export
 NatMorphInd :
   (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
-  ((n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n) ->
-  ((m, n : NatObj) ->
-   (morph : NatLTMorph (m, n)) ->
-   p (m, n) morph ->
-   p (InNat $ SuccF m, InNat $ SuccF n) $
-    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
+  NatMorphIndZCase p ->
+  NatMorphIndSCase p ->
   (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph
 NatMorphInd p zn ss (m, n) = NatMorphIndCurried p zn ss m n
+
+public export
+NatMorphDepIndZCase :
+  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
+  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
+  (zp : NatMorphIndZCase p) ->
+  Type
+NatMorphDepIndZCase {p} dp zp =
+  (n : NatF NatObj) ->
+  dp (NatOZ, InNat n) (InNatLT (ZeroF, n) (NatLTZ n)) (zp n)
+
+public export
+NatMorphDepIndSCase :
+  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
+  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
+  (sp : NatMorphIndSCase p) ->
+  Type
+NatMorphDepIndSCase {p} dp sp =
+  (m, n : NatObj) ->
+  (morph : NatLTMorph (m, n)) ->
+  (pmn : p (m, n) morph) ->
+  dp (m, n) morph pmn ->
+  dp
+    (InNat $ SuccF m, InNat $ SuccF n)
+    (InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph)
+    (sp m n morph pmn)
+
+public export
+NatMorphDepInd :
+  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
+  (zp : NatMorphIndZCase p) ->
+  (sp : NatMorphIndSCase p) ->
+  (dzp : NatMorphDepIndZCase dp zp) ->
+  (dsp : NatMorphDepIndSCase dp sp) ->
+  (mn : NatObjPair) -> (morph : NatLTMorph mn) ->
+  dp mn morph (NatMorphInd p zp sp mn morph)
+NatMorphDepInd p dp zp sp dzp dsp =
+  NatMorphInd
+    (\mn', morph' => dp mn' morph' (NatMorphInd p zp sp mn' morph'))
+    dzp
+    (\m', n', morph', dpmn' =>
+      dsp m' n' morph' (NatMorphInd p zp sp (m', n') morph') dpmn')
 
 public export
 NatMorphZThin : (n : NatF NatObj) ->
