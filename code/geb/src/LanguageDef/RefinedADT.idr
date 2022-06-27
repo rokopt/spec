@@ -276,8 +276,10 @@ omegaCS0EIterCataSimpleIndStep : {a : Type} ->
   (carrier : a -> Type -> Type) ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
-  OmegaColimitSimpleInductionStep
-    {f=Subst0EndoF} {a} (OmegaCS0EIterCata {a} carrier)
+  (n : NatObj) ->
+  ((ty : S0EIter a n) -> FunctorIterCata (interpS0EIter {n} {a} carrier ty)) ->
+  (ty : Subst0EndoF (S0EIter a n)) ->
+  FunctorIterCata (interpS0EIter {n=(NatOS n)} {a} carrier ty)
 omegaCS0EIterCataSimpleIndStep {a} carrier cm =
   ?omegaCS0EIterCataSimpleIndStep_hole
 
