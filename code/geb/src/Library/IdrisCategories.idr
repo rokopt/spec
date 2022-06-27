@@ -2137,7 +2137,18 @@ NatObjDepGenIndStrengthened p dp zp sp dzp dsp n' sl' =
       (m ** morph) => rewrite OnlyZLtZ m morph in case morph of
         InNatLT _ (NatLTZ ZeroF) => dzp
         InNatLT _ (NatLTS (_, _) _) impossible)
-    (\n, hyp, sls => ?NatObjDepGenIndStrengthehed_succ_hole)
+    (\n, hyp, sls => case sls of
+      (m ** morph) => case NatMorphSucc m n morph of
+        Left ltmn =>
+          let h = hyp (m ** ltmn) in
+          let hn = hyp (n ** NatMorphId n) in
+          let hnm = hn (m ** ltmn) in
+          let dspn = dsp n in
+          let dspni = dspn (NatObjGenIndStrengthened p zp sp n) in
+          let dspnin = dspni hn in
+          ?NatObjGenIndStrengthened_succ_neq_hole
+        Right meqsn =>
+          ?NatObjGenIndStrengthened_succ_eq_hole)
     n'
     (n' ** NatMorphId n')
     sl'
