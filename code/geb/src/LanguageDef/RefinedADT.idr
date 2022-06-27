@@ -232,16 +232,21 @@ OmegaCS0EColimit : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a ->
 OmegaCS0EColimit carrier = OmegaColimit . interpOmegaCS0E carrier
 
 public export
+FunctorIterCata : (Type -> Type) -> Type
+FunctorIterCata f =
+  (a, v : Type) ->
+  (v -> a) ->
+  Algebra f a ->
+  (n : NatObj) ->
+  FunctorIter f v n ->
+  a
+
+public export
 OmegaCS0EIterCata : {a : Type} ->
   (carrier : a -> Type -> Type) ->
   OmegaCS0E a -> Type
 OmegaCS0EIterCata {a} carrier f =
-  (v, a' : Type) ->
-  (v -> a') ->
-  Algebra (interpOmegaCS0E carrier f) a' ->
-  (n : NatObj) ->
-  OmegaCS0EIter {a} carrier f v n ->
-  a'
+  FunctorIterCata (interpOmegaCS0E {a} carrier f)
 
 public export
 omegaCS0EIterCataInjCase : {a : Type} ->
@@ -257,7 +262,7 @@ omegaCS0EIterCataBaseCase : {a : Type} ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
   OmegaColimitIndBaseCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
-omegaCS0EIterCataBaseCase {a} carrier cm z v a' subst alg =
+omegaCS0EIterCataBaseCase {a} carrier cm z a' v subst alg =
   NatObjDepInd
     (const Type)
     (\n', ty => ty -> a')
@@ -272,8 +277,8 @@ omegaCS0EIterCataSimpleIndStep : {a : Type} ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
   OmegaColimitSimpleInductionStep
-    {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
-omegaCS0EIterCataSimpleIndStep {a} carrier cm n hyp endof =
+    {f=Subst0EndoF} {a} (OmegaCS0EIterCata {a} carrier)
+omegaCS0EIterCataSimpleIndStep {a} carrier cm =
   ?omegaCS0EIterCataSimpleIndStep_hole
 
 public export
@@ -307,7 +312,8 @@ OmegaCS0EChainCata : {a : Type} ->
     (t -> t') -> carrier x t -> carrier x t') ->
   OmegaCS0E a -> Type
 OmegaCS0EChainCata {a} carrier cm f =
-  (v, a' : Type) ->
+  (a' : Type) ->
+  (v : Type) ->
   (v -> a') ->
   Algebra (interpOmegaCS0E carrier f) a' ->
   (n : NatObj) ->
@@ -321,8 +327,8 @@ omegaCS0EChainCata : {a : Type} ->
     (t -> t') -> carrier x t -> carrier x t') ->
   (f : OmegaCS0E a) ->
   OmegaCS0EChainCata carrier carrierMap f
-omegaCS0EChainCata {a} carrier cm f v a' subst alg n' (InOmega {n} morph f') =
-  omegaCS0EIterCata {a} carrier cm f v a' subst alg n f'
+omegaCS0EChainCata {a} carrier cm f a' v subst alg n' (InOmega {n} morph f') =
+  omegaCS0EIterCata {a} carrier cm f a' v subst alg n f'
 
 public export
 OmegaCS0ECata : {a : Type} ->
@@ -331,7 +337,8 @@ OmegaCS0ECata : {a : Type} ->
     (t -> t') -> carrier x t -> carrier x t') ->
   OmegaCS0E a -> Type
 OmegaCS0ECata {a} carrier cm f =
-  (v, a' : Type) ->
+  (a' : Type) ->
+  (v : Type) ->
   (v -> a') ->
   Algebra (interpOmegaCS0E carrier f) a' ->
   OmegaCS0EColimit {a} carrier f v ->
@@ -343,8 +350,8 @@ omegaCS0ECata : {a : Type} ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
   (f : OmegaCS0E a) -> OmegaCS0ECata carrier carrierMap f
-omegaCS0ECata {a} carrier cm f v a' subst alg (n ** f') =
-  omegaCS0EChainCata {a} carrier cm f v a' subst alg n f'
+omegaCS0ECata {a} carrier cm f a' v subst alg (n ** f') =
+  omegaCS0EChainCata {a} carrier cm f a' v subst alg n f'
 
 ----------------------------------------
 ----------------------------------------
