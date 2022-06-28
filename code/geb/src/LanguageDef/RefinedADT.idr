@@ -284,11 +284,15 @@ omegaCS0EIterCataSimpleIndStep {a} carrier cm n catan fsn a' v subst alg =
   FunctorIterInd
     (\_, _ => a')
     subst
-    (\n', algfsn, interpfsn => case fsn of
-      Subst0EndoEmpty => void interpfsn
-      Subst0EndoCovarRep f' => ?omegaCS0EIterCataSimpleIndStep_hole_rep
-      Subst0EndoSum f' g' => ?omegaCS0EIterCataSimpleIndStep_hole_sum
-      Subst0EndoCompose g' f' => ?omegaCS0EIterCataSimpleIndStep_hole_comp)
+    (\n', algfsn, interpfsn => alg $ case fsn of
+      Subst0EndoEmpty =>
+        void interpfsn
+      Subst0EndoCovarRep _ =>
+        algfsn . interpfsn
+      Subst0EndoSum f' g' =>
+        ?omegaCS0EIterCataSimpleIndStep_hole_sum
+      Subst0EndoCompose g' f' =>
+        ?omegaCS0EIterCataSimpleIndStep_hole_comp)
 
 public export
 omegaCS0EIterCataIndStep : {a : Type} ->
