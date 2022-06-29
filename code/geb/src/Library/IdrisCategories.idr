@@ -2259,13 +2259,13 @@ Functor f => Functor (OmegaStep f) where
   map m = omegaStepElim (OmegaInj . m) (OmegaIter . map m)
 
 public export
-omegaMapAlgShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
+omegaStepShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   Algebra f String -> Algebra (OmegaStep f) String
-omegaMapAlgShow = omegaStepElim (\x => ">(" ++ x ++ ")")
+omegaStepShow = omegaStepElim (\x => ">(" ++ x ++ ")")
 
 public export
 Functor f => Show a => Show (f String) => Show (OmegaStep f a) where
-  show {f} {a} = omegaMapAlgShow {f} {a} show . map {f=(OmegaStep f)} show
+  show {f} {a} = omegaStepShow {f} {a} show . map {f=(OmegaStep f)} show
 
 public export
 OmegaChain : (Type -> Type) -> NatObj -> Type -> Type
@@ -2310,7 +2310,7 @@ omegaChainShow {f} {a} sf =
   ChainInduction
     (\_, _ => String)
     show
-    (\_, hyp => omegaMapAlgShow {f} {a} sf . map {f=(OmegaStep f)} hyp)
+    (\_, hyp => omegaStepShow {f} {a} sf . map {f=(OmegaStep f)} hyp)
 
 public export
 Functor f => Show a => Show (f String) => (n : NatObj) =>
