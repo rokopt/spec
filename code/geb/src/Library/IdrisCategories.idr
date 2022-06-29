@@ -2238,24 +2238,34 @@ omegaStepElim {f} {a} {b} elimInj elimIter (OmegaInj x) = elimInj x
 omegaStepElim {f} {a} {b} elimInj elimIter (OmegaIter fx) = elimIter fx
 
 public export
-omegaStep :
-  {0 f : Type -> Type} -> {0 a, b : Type} ->
-  ((a -> b) -> (f a -> b)) ->
-  ((a -> b) -> OmegaStep f a -> b)
-omegaStep {f} {a} fStep carrier = omegaStepElim carrier (fStep carrier)
+OmegaMapAlg : (Type -> Type) -> Type -> Type -> Type
+OmegaMapAlg f a b = (a -> b) -> OmegaStep f a -> b
+
+public export
+omegaMapAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
+  (f b -> b) ->
+  OmegaMapAlg f a b
+omegaMapAlg {f} {a} alg carrier = omegaStepElim carrier $ alg . map {f} carrier
+
+public export
+omegaAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
+  Algebra f a -> Algebra (OmegaStep f) a
+omegaAlg {f} {a} alg = omegaMapAlg {b=a} alg id
 
 public export
 Functor f => Functor (OmegaStep f) where
   map m = omegaStepElim (OmegaInj . m) (OmegaIter . map m)
 
 public export
-omegaStepShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
+omegaMapAlgShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   Algebra f String -> Algebra (OmegaStep f) String
-omegaStepShow = omegaStepElim (\x => ">(" ++ x ++ ")")
+omegaMapAlgShow = omegaStepElim (\x => ">(" ++ x ++ ")")
 
 public export
 Functor f => Show a => Show (f String) => Show (OmegaStep f a) where
-  show {f} {a} = omegaStepShow {f} {a} show . map {f=(OmegaStep f)} show
+  show {f} {a} = omegaMapAlgShow {f} {a} show . map {f=(OmegaStep f)} show
 
 public export
 OmegaChain : (Type -> Type) -> NatObj -> Type -> Type
@@ -2300,7 +2310,7 @@ omegaChainShow {f} {a} sf =
   ChainInduction
     (\_, _ => String)
     show
-    (\_, hyp => omegaStepShow {f} {a} sf . map {f=(OmegaStep f)} hyp)
+    (\_, hyp => omegaMapAlgShow {f} {a} sf . map {f=(OmegaStep f)} hyp)
 
 public export
 Functor f => Show a => Show (f String) => (n : NatObj) =>

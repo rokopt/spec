@@ -213,9 +213,9 @@ public export
 Show a => Show (S0EStep a)
 
 public export
-interpS0EStep : {a : Type} ->
+interpS0EMapAlg : {a : Type} ->
   (a -> Type -> Type) -> (S0EStep a -> Type -> Type)
-interpS0EStep = omegaStep interpS0EF
+interpS0EMapAlg = omegaMapAlg interpS0EFAlg
 
 public export
 S0EChain : NatObj -> Type -> Type
@@ -231,7 +231,7 @@ public export
 interpS0EChain : {a : Type} ->
   (a -> Type -> Type) -> {n : NatObj} -> S0EChain n a -> Type -> Type
 interpS0EChain carrier =
-  ChainInduction (\_, _ => Type -> Type) carrier (\_ => interpS0EStep) n
+  ChainInduction (\_, _ => Type -> Type) carrier (\_ => interpS0EMapAlg) n
 
 public export
 S0EColimit : Type -> Type
