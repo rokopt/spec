@@ -2148,16 +2148,20 @@ FunctorIterMapAlg f a b = (a -> b) -> (n : NatObj) -> FunctorIter f n a -> b
 public export
 functorIterMapAlg :
   {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
-  (f b -> b) ->
+  Algebra f b ->
   FunctorIterMapAlg f a b
 functorIterMapAlg {f} {a} {b} alg m =
   FunctorIterInd (\_, _ => b) m $ \n, hyp => alg . map {f} hyp
 
 public export
+FunctorIterAlg : (Type -> Type) -> Type -> Type
+FunctorIterAlg f a = (n : NatObj) -> Algebra (FunctorIter f n) a
+
+public export
 functorIterAlg :
   {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
   Algebra f a ->
-  (n : NatObj) -> Algebra (FunctorIter f n) a
+  FunctorIterAlg f a
 functorIterAlg {f} {a} alg = functorIterMapAlg {b=a} alg id
 
 public export
