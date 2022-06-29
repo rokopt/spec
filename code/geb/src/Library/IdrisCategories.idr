@@ -2137,6 +2137,21 @@ FunctorIterInd {f} {a} p =
   NatObjInd (\n' => (ty : FunctorIter f n' a) -> p n' ty)
 
 public export
+functorIterStep :
+  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
+  (f b -> b) ->
+  (a -> b) -> (n : NatObj) -> FunctorIter f n a -> b
+functorIterStep {f} {a} {b} alg m =
+  FunctorIterInd (\_, _ => b) m $ \n, hyp => alg . map {f} hyp
+
+public export
+functorIterAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
+  (f a -> a) ->
+  (n : NatObj) -> FunctorIter f n a -> a
+functorIterAlg {f} {a} alg = functorIterStep {b=a} alg id
+
+public export
 (n : NatObj) => Functor f => Functor (FunctorIter f n) where
   map {n} {f} {a} {b} m =
     FunctorIterInd
@@ -2148,11 +2163,7 @@ public export
 public export
 functorIterShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   (sf : Algebra f String) -> (n : NatObj) -> (ty : FunctorIter f n a) -> String
-functorIterShow {f} {a} sf =
-  FunctorIterInd
-    (\_, _ => String)
-    show
-    (\_, hyp => sf . map {f} hyp)
+functorIterShow {f} {a} sf = functorIterStep {b=String} sf show
 
 public export
 Functor f => Show a => Show (f String) => (n : NatObj) =>
