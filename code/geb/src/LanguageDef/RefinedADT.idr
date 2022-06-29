@@ -213,6 +213,11 @@ public export
 Show a => Show (S0EStep a)
 
 public export
+interpS0EStep : {a : Type} ->
+  (a -> Type -> Type) -> (S0EStep a -> Type -> Type)
+interpS0EStep = omegaStep interpS0EF
+
+public export
 S0EChain : NatObj -> Type -> Type
 S0EChain = OmegaChain Subst0EndoF
 
@@ -225,21 +230,23 @@ Show a => (n : NatObj) => Show (S0EChain n a)
 public export
 interpS0EChain : {a : Type} ->
   (a -> Type -> Type) -> {n : NatObj} -> S0EChain n a -> Type -> Type
-interpS0EChain carrier x = ?interp_omegas0e_hole -- (InOmega _ ty) = interpS0EIter carrier ty
+interpS0EChain carrier =
+  ChainInduction (\_, _ => Type -> Type) carrier (\_ => interpS0EStep) n
 
 public export
 S0EColimit : Type -> Type
 S0EColimit = OmegaColimit Subst0EndoF
 
 public export
-(a : Type) => (Show a) => Show (S0EColimit a) where
-  show x = ?show_omegacs0e_hole -- (n' ** InOmega {n} {n'} morph ty) = showS0EIter {a} show {n} ty
+Functor S0EColimit
+
+public export
+(a : Type) => (Show a) => Show (S0EColimit a)
 
 public export
 interpS0EColimit : {a : Type} ->
   (a -> Type -> Type) -> S0EColimit a -> Type -> Type
-interpS0EColimit carrier x = ?interp_omegacs0e_hole -- (n' ** InOmega {n} {n'} morph ty) =
-  -- interpS0EIter {a} {n} carrier ty
+interpS0EColimit carrier (n ** c) = interpS0EChain carrier c
 
 ---------------------------------------------
 ---- Algebras of polynomial endofunctors ----

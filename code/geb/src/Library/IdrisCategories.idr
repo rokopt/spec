@@ -2218,15 +2218,30 @@ data OmegaStep : (Type -> Type) -> Type -> Type where
   OmegaIter : f carrier -> OmegaStep f carrier
 
 public export
+omegaStepElim :
+  {0 f : Type -> Type} -> {0 a : Type} -> {0 b : OmegaStep f a -> Type} ->
+  ((x : a) -> b (OmegaInj x)) ->
+  ((fx : f a) -> b (OmegaIter fx)) ->
+  (x : OmegaStep f a) -> b x
+omegaStepElim {f} {a} {b} elimInj elimIter (OmegaInj x) = elimInj x
+omegaStepElim {f} {a} {b} elimInj elimIter (OmegaIter fx) = elimIter fx
+
+public export
+omegaStep :
+  {0 f : Type -> Type} -> {0 a : Type} ->
+  (fStep : (a -> Type -> Type) -> (f a -> Type -> Type)) ->
+  (carrier : a -> Type -> Type) ->
+  OmegaStep f a -> Type -> Type
+omegaStep {f} {a} fStep carrier = omegaStepElim carrier (fStep carrier)
+
+public export
 Functor f => Functor (OmegaStep f) where
-  map m (OmegaInj x) = OmegaInj (m x)
-  map m (OmegaIter x) = OmegaIter (map m x)
+  map m = omegaStepElim (OmegaInj . m) (OmegaIter . map m)
 
 public export
 omegaStepShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   Algebra f String -> Algebra (OmegaStep f) String
-omegaStepShow {f} {a} sf (OmegaInj x) = ">(" ++ x ++ ")"
-omegaStepShow {f} {a} sf (OmegaIter fx) = sf fx
+omegaStepShow = omegaStepElim (\x => ">(" ++ x ++ ")")
 
 public export
 Functor f => Show a => Show (f String) => Show (OmegaStep f a) where
