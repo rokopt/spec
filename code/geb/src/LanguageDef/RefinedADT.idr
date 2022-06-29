@@ -6,6 +6,27 @@ import public LanguageDef.Atom
 
 %default total
 
+-----------------------------------------------
+-----------------------------------------------
+---- Zeroth-order (unrefined) ADT category ----
+-----------------------------------------------
+-----------------------------------------------
+
+public export
+data ADT0ObjF : Type -> Type where
+  ADT0Initial : ADT0ObjF carrier
+  ADT0Terminal : ADT0ObjF carrier
+  ADT0Product : carrier -> carrier -> ADT0ObjF carrier
+  ADT0Coproduct : carrier -> carrier -> ADT0ObjF carrier
+
+public export
+ADT0ObjIter : Type -> NatObj -> Type
+ADT0ObjIter = FunctorIter ADT0ObjF
+
+public export
+ADT0ObjChain : Type -> NatObj -> Type
+ADT0ObjChain = OmegaChain ADT0ObjF
+
 -----------------------------------------------------------
 -----------------------------------------------------------
 ---- Category of non-dependent polynomial endofunctors ----
@@ -191,12 +212,12 @@ OmegaS0E = OmegaChain Subst0EndoF
 
 public export
 (a : Type) => (Show a) => (n : NatObj) => Show (OmegaS0E a n) where
-  show (InOmega _ ty) = showS0EIter show ty
+  show x = ?show_omegas0E_hole -- (InOmega _ ty) = showS0EIter show ty
 
 public export
 interpOmegaS0E : {a : Type} ->
   (a -> Type -> Type) -> {n : NatObj} -> OmegaS0E a n -> Type -> Type
-interpOmegaS0E carrier (InOmega _ ty) = interpS0EIter carrier ty
+interpOmegaS0E carrier x = ?interp_omegas0e_hole -- (InOmega _ ty) = interpS0EIter carrier ty
 
 public export
 OmegaCS0E : Type -> Type
@@ -204,13 +225,13 @@ OmegaCS0E = OmegaColimit Subst0EndoF
 
 public export
 (a : Type) => (Show a) => Show (OmegaCS0E a) where
-  show (n' ** InOmega {n} {n'} morph ty) = showS0EIter {a} show {n} ty
+  show x = ?show_omegacs0e_hole -- (n' ** InOmega {n} {n'} morph ty) = showS0EIter {a} show {n} ty
 
 public export
 interpOmegaCS0E : {a : Type} ->
   (a -> Type -> Type) -> OmegaCS0E a -> Type -> Type
-interpOmegaCS0E carrier (n' ** InOmega {n} {n'} morph ty) =
-  interpS0EIter {a} {n} carrier ty
+interpOmegaCS0E carrier x = ?interp_omegacs0e_hole -- (n' ** InOmega {n} {n'} morph ty) =
+  -- interpS0EIter {a} {n} carrier ty
 
 ---------------------------------------------
 ---- Algebras of polynomial endofunctors ----
@@ -249,20 +270,14 @@ OmegaCS0EIterCata {a} carrier f =
   FunctorIterCata (interpOmegaCS0E {a} carrier f)
 
 public export
-omegaCS0EIterCataInjCase : {a : Type} ->
-  (carrier : a -> Type -> Type) ->
-  (carrierMap : (x : a) -> (t, t' : Type) ->
-    (t -> t') -> carrier x t -> carrier x t') ->
-  OmegaColimitIndInjCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
-omegaCS0EIterCataInjCase {a} carrier cm n f cata n' m = cata
-
-public export
 omegaCS0EIterCataBaseCase : {a : Type} ->
   (carrier : a -> Type -> Type) ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
-  OmegaColimitIndBaseCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+  ColimitIndBaseCase {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
 omegaCS0EIterCataBaseCase {a} carrier cm z a' v subst alg =
+  ?omegaCS0EIterCataBaseCase_hole -- {a} carrier cm z a' v subst alg =
+  {-
   NatObjDepInd
     (const Type)
     (\n', ty => ty -> a')
@@ -270,6 +285,7 @@ omegaCS0EIterCataBaseCase {a} carrier cm z a' v subst alg =
     (const $ carrier z)
     subst
     (\n, ty, ty2a, c => alg $ cm z ty a' ty2a c)
+    -}
 
 public export
 omegaCS0EIterCataSimpleIndStep : {a : Type} ->
@@ -299,10 +315,13 @@ omegaCS0EIterCataIndStep : {a : Type} ->
   (carrier : a -> Type -> Type) ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
-  OmegaColimitInductionStep {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
+  ColimitInductionStep {f=Subst0EndoF} {a} (OmegaCS0EIterCata carrier)
 omegaCS0EIterCataIndStep {a} carrier cm =
+  ?omegaCS0EIterCataIndStep_hole -- {a} carrier cm =
+  {-
   OmegaColimitInductionStepFromSimple {p=(OmegaCS0EIterCata carrier)}
     (omegaCS0EIterCataSimpleIndStep carrier cm)
+    -}
 
 public export
 omegaCS0EIterCata : {a : Type} ->
@@ -312,11 +331,14 @@ omegaCS0EIterCata : {a : Type} ->
   (f : OmegaCS0E a) ->
   OmegaCS0EIterCata carrier f
 omegaCS0EIterCata {a} carrier cm =
-  OmegaColimitInd {f=Subst0EndoF} {a}
+  ?omegaCS0EIterCata_hole -- {a} carrier cm =
+  {-
+  ColimitInd {f=Subst0EndoF} {a}
     (OmegaCS0EIterCata carrier)
     (omegaCS0EIterCataInjCase {a} carrier cm)
     (omegaCS0EIterCataBaseCase {a} carrier cm)
     (omegaCS0EIterCataIndStep {a} carrier cm)
+    -}
 
 public export
 OmegaCS0EChainCata : {a : Type} ->
@@ -340,8 +362,12 @@ omegaCS0EChainCata : {a : Type} ->
     (t -> t') -> carrier x t -> carrier x t') ->
   (f : OmegaCS0E a) ->
   OmegaCS0EChainCata carrier carrierMap f
+omegaCS0EChainCata {a} carrier cm f a' v subst alg n' x =
+  ?omegaCS0EChainCata_hole
+  {-
 omegaCS0EChainCata {a} carrier cm f a' v subst alg n' (InOmega {n} morph f') =
   omegaCS0EIterCata {a} carrier cm f a' v subst alg n f'
+  -}
 
 public export
 OmegaCS0ECata : {a : Type} ->
