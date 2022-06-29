@@ -52,12 +52,20 @@ Functor Subst0EndoF where
   map m (Subst0EndoCompose g f) = Subst0EndoCompose (m g) (m f)
 
 public export
+AlgS0EF : Type -> Type
+AlgS0EF = Algebra Subst0EndoF
+
+public export
+showS0EFAlg : AlgS0EF String
+showS0EFAlg (Subst0EndoCovarRep f) = "Hom(" ++ f ++ "[1], _)"
+showS0EFAlg Subst0EndoEmpty = "0F"
+showS0EFAlg (Subst0EndoSum f g) = "(" ++ f ++ " :+: " ++ g ++ ")"
+showS0EFAlg (Subst0EndoCompose g f) = "(" ++ g ++ " . " ++ f ++ ")"
+
+public export
 showS0EF : {0 carrier : Type} ->
   (carrier -> String) -> Subst0EndoF carrier -> String
-showS0EF sc (Subst0EndoCovarRep f) = "Hom(" ++ sc f ++ "[1], _)"
-showS0EF sc Subst0EndoEmpty = "0F"
-showS0EF sc (Subst0EndoSum f g) = "(" ++ sc f ++ " :+: " ++ sc g ++ ")"
-showS0EF sc (Subst0EndoCompose g f) = "(" ++ sc g ++ " . " ++ sc f ++ ")"
+showS0EF = mapAlg showS0EFAlg
 
 public export
 Show carrier => Show (Subst0EndoF carrier) where
@@ -74,10 +82,6 @@ interpS0EF {a} carrier (Subst0EndoSum fv gv) x =
   Either (carrier fv x) (carrier gv x)
 interpS0EF {a} carrier (Subst0EndoCompose gv fv) x =
   carrier gv $ carrier fv x
-
-public export
-AlgS0EF : Type -> Type
-AlgS0EF = Algebra Subst0EndoF
 
 public export
 interpS0EFAlg : AlgS0EF (Type -> Type)
@@ -110,10 +114,6 @@ pCataS0EF v a subst alg (InFree x) = case x of
 public export
 cataS0EF : Catamorphism Subst0EndoF
 cataS0EF = cataFromParam pCataS0EF
-
-public export
-showS0EFAlg : AlgS0EF String
-showS0EFAlg = showS0EF id
 
 public export
 showFreeS0EF : {v : Type} -> (v -> String) -> FreeS0EF v -> String

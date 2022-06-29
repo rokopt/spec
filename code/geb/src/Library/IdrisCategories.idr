@@ -2111,6 +2111,11 @@ NatObjGenInd :
 NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
 
 public export
+mapAlg : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
+  Algebra f b -> (a -> b) -> f a -> b
+mapAlg alg m = alg . map {f} m
+
+public export
 FunctorIter : (Type -> Type) -> NatObj -> Type -> Type
 FunctorIter f n a = NatObjInd (const Type) a (const f) n
 
