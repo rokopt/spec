@@ -1607,6 +1607,10 @@ NatIndFromNatObj p z s n = case n of
     s n' $ rewrite MetaToNatId n' in NatIndFromNatObj p z s n'
 
 public export
+Show NatObj where
+  show = show . NatObjToMeta
+
+public export
 NatObjPair : Type
 NatObjPair = ProductMonad NatObj
 
@@ -2142,6 +2146,20 @@ public export
       n
 
 public export
+functorIterShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
+  (sf : Algebra f String) -> (n : NatObj) -> (ty : FunctorIter f n a) -> String
+functorIterShow {f} {a} sf =
+  FunctorIterInd
+    (\_, _ => String)
+    show
+    (\_, hyp => sf . map {f} hyp)
+
+public export
+Functor f => Show a => Show (f String) => (n : NatObj) =>
+    Show (FunctorIter f n a) where
+  show {f} {a} {n} = functorIterShow {f} {a} show n
+
+public export
 FunctorIterDepIndBaseCase : {f : Type -> Type} -> {a : Type} ->
   {p : (n' : NatObj) -> FunctorIter f n' a -> Type} ->
   ((n' : NatObj) -> (it : FunctorIter f n' a) -> p n' it -> Type) ->
@@ -2205,6 +2223,16 @@ Functor f => Functor (OmegaStep f) where
   map m (OmegaIter x) = OmegaIter (map m x)
 
 public export
+omegaStepShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
+  Algebra f String -> Algebra (OmegaStep f) String
+omegaStepShow {f} {a} sf (OmegaInj x) = ">(" ++ x ++ ")"
+omegaStepShow {f} {a} sf (OmegaIter fx) = sf fx
+
+public export
+Functor f => Show a => Show (f String) => Show (OmegaStep f a) where
+  show {f} {a} = omegaStepShow {f} {a} show . map {f=(OmegaStep f)} show
+
+public export
 OmegaChain : (Type -> Type) -> NatObj -> Type -> Type
 OmegaChain = FunctorIter . OmegaStep
 
@@ -2239,6 +2267,20 @@ omegaChainMap {f} m n =
 public export
 (n : NatObj) => Functor f => Functor (OmegaChain f n) where
   map {n} {f} m = omegaChainMap {f} m n
+
+public export
+omegaChainShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
+  (sf : Algebra f String) -> (n : NatObj) -> (ty : OmegaChain f n a) -> String
+omegaChainShow {f} {a} sf =
+  ChainInduction
+    (\_, _ => String)
+    show
+    (\_, hyp => omegaStepShow {f} {a} sf . map {f=(OmegaStep f)} hyp)
+
+public export
+Functor f => Show a => Show (f String) => (n : NatObj) =>
+    Show (OmegaChain f n a) where
+  show {f} {a} {n} = omegaChainShow {f} {a} show n
 
 public export
 ChainDepIndBaseCase : {f : Type -> Type} -> {a : Type} ->
@@ -2344,6 +2386,17 @@ ColimitInduction p z s (n ** ty) =
 public export
 Functor f => Functor (OmegaColimit f) where
   map {f} {a} {b} m (n ** c) = (n ** omegaChainMap {f} m n c)
+
+public export
+omegaColimitShow :
+  {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
+  Algebra f String -> OmegaColimit f a -> String
+omegaColimitShow {f} {a} sf (n ** c) =
+  "(" ++ show n ++ ":" ++ omegaChainShow {f} {a} sf n c ++ ")"
+
+public export
+Functor f => Show a => Show (f String) => Show (OmegaColimit f a) where
+  show {f} {a} = omegaColimitShow {f} {a} show
 
 public export
 DepPredColimitToChain : {f : Type -> Type} -> {a : Type} ->
