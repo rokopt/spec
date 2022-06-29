@@ -2229,9 +2229,8 @@ omegaStepElim {f} {a} {b} elimInj elimIter (OmegaIter fx) = elimIter fx
 public export
 omegaStep :
   {0 f : Type -> Type} -> {0 a, b : Type} ->
-  (fStep : (a -> b) -> (f a -> b)) ->
-  (carrier : a -> b) ->
-  OmegaStep f a -> b
+  ((a -> b) -> (f a -> b)) ->
+  ((a -> b) -> OmegaStep f a -> b)
 omegaStep {f} {a} fStep carrier = omegaStepElim carrier (fStep carrier)
 
 public export
