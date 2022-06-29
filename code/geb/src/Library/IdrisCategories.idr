@@ -2307,6 +2307,33 @@ ChainInduction : {0 f : Type -> Type} -> {0 a : Type} ->
 ChainInduction {f} = FunctorIterInd {f=(OmegaStep f)}
 
 public export
+ChainMapAlg : (Type -> Type) -> Type -> Type -> Type
+ChainMapAlg f a b = (a -> b) -> (n : NatObj) -> OmegaChain f n a -> b
+
+public export
+chainMapAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
+  Algebra f b ->
+  ChainMapAlg f a b
+chainMapAlg {f} {a} {b} alg m =
+  ChainInduction (\_, _ => b) m $ \_ => omegaMapAlg alg
+
+public export
+ChainAlg : (Type -> Type) -> Type -> Type
+ChainAlg f a = (n : NatObj) -> Algebra (OmegaChain f n) a
+
+public export
+ChainAlgF : (Type -> Type) -> Type
+ChainAlgF f = (a : Type) -> ChainAlg f a
+
+public export
+chainAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
+  Algebra f a ->
+  ChainAlg f a
+chainAlg {f} {a} alg = chainMapAlg {b=a} alg id
+
+public export
 omegaChainMap : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
   (m : a -> b) -> (n : NatObj) -> OmegaChain f n a -> OmegaChain f n b
 omegaChainMap {f} m n =
@@ -2323,11 +2350,7 @@ public export
 public export
 omegaChainShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   (sf : Algebra f String) -> (n : NatObj) -> (ty : OmegaChain f n a) -> String
-omegaChainShow {f} {a} sf =
-  ChainInduction
-    (\_, _ => String)
-    show
-    (\_, hyp => omegaStepShow {f} {a} sf . map {f=(OmegaStep f)} hyp)
+omegaChainShow {f} {a} sf = chainMapAlg {b=String} sf show
 
 public export
 Functor f => Show a => Show (f String) => (n : NatObj) =>
@@ -2434,6 +2457,32 @@ ColimitInduction : {0 f : Type -> Type} -> {0 a : Type} ->
   (ty : OmegaColimit f a) -> p ty
 ColimitInduction p z s (n ** ty) =
   ChainInduction (PredColimitToChain p) z s n ty
+
+public export
+ColimitMapAlg : (Type -> Type) -> Type -> Type -> Type
+ColimitMapAlg f a b = (a -> b) -> OmegaColimit f a -> b
+
+public export
+colimitMapAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
+  Algebra f b ->
+  ColimitMapAlg f a b
+colimitMapAlg {f} {a} {b} alg m (n ** c) = chainMapAlg alg m n c
+
+public export
+ColimitAlg : (Type -> Type) -> Type -> Type
+ColimitAlg f a = Algebra (OmegaColimit f) a
+
+public export
+ColimitAlgF : (Type -> Type) -> Type
+ColimitAlgF f = (a : Type) -> Algebra (OmegaColimit f) a
+
+public export
+colimitAlg :
+  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
+  Algebra f a ->
+  ColimitAlg f a
+colimitAlg {f} {a} alg = colimitMapAlg {b=a} alg id
 
 public export
 Functor f => Functor (OmegaColimit f) where
