@@ -2151,7 +2151,7 @@ functorIterMapAlg :
   Algebra f b ->
   FunctorIterMapAlg f a b
 functorIterMapAlg {f} {a} {b} alg m =
-  FunctorIterInd (\_, _ => b) m $ \n, hyp => alg . map {f} hyp
+  FunctorIterInd (\_, _ => b) m $ \n => mapAlg alg
 
 public export
 FunctorIterAlg : (Type -> Type) -> Type -> Type
@@ -2170,12 +2170,8 @@ functorIterAlg {f} {a} alg = functorIterMapAlg {b=a} alg id
 
 public export
 (n : NatObj) => Functor f => Functor (FunctorIter f n) where
-  map {n} {f} {a} {b} m =
-    FunctorIterInd
-      (\n', _ => FunctorIter f n' b)
-      m
-      (\n', hyp => map {f} hyp)
-      n
+  map {n} {f} {b} m =
+    FunctorIterInd (\n', _ => FunctorIter f n' b) m (\n' => map {f}) n
 
 public export
 functorIterShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
@@ -2263,7 +2259,7 @@ omegaMapAlg :
   {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
   (f b -> b) ->
   OmegaMapAlg f a b
-omegaMapAlg {f} {a} alg carrier = omegaStepElim carrier $ alg . map {f} carrier
+omegaMapAlg {f} {a} alg carrier = omegaStepElim carrier $ mapAlg alg carrier
 
 public export
 omegaAlg :
@@ -2336,12 +2332,8 @@ chainAlg {f} {a} alg = chainMapAlg {b=a} alg id
 public export
 omegaChainMap : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
   (m : a -> b) -> (n : NatObj) -> OmegaChain f n a -> OmegaChain f n b
-omegaChainMap {f} m n =
-  ChainInduction
-    (\n', _ => OmegaChain f n' b)
-    m
-    (\n', hyp => map {f=(OmegaStep f)} hyp)
-    n
+omegaChainMap {f} m =
+  ChainInduction (\n', _ => OmegaChain f n' b) m (\n' => map {f=(OmegaStep f)})
 
 public export
 (n : NatObj) => Functor f => Functor (OmegaChain f n) where
@@ -2410,7 +2402,7 @@ OmegaN : {f : Type -> Type} -> Functor f => {a : Type} ->
 OmegaN {f} {a} {n} =
   NatObjInd (\n' => FunctorIter f n' a -> OmegaChain f n' a)
     id
-    (\n', hyp, x => OmegaIter $ map {f} hyp x)
+    (\n', hyp => OmegaIter . map {f} hyp)
     n
 
 public export
@@ -2419,8 +2411,8 @@ OmegaChainCompose : {f : Type -> Type} -> {a : Type} -> {n, n' : NatObj} ->
 OmegaChainCompose {f} {n} {n'} =
   NatMorphInd
     (\mn, _ => OmegaChain f (fst mn) a -> OmegaChain f (snd mn) a)
-    (\k, x => OmegaInjN {f} {a} (InNat k) x)
-    (\k, k', morph, hyp, step => map {f=(OmegaStep f)} hyp step)
+    (\k => OmegaInjN {f} {a} (InNat k))
+    (\_, _, _ => map {f=(OmegaStep f)})
     (n, n')
 
 public export

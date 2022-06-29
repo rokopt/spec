@@ -228,8 +228,7 @@ Show a => (n : NatObj) => Show (S0EChain n a)
 public export
 interpS0EChain : {a : Type} ->
   (a -> Type -> Type) -> {n : NatObj} -> S0EChain n a -> Type -> Type
-interpS0EChain carrier =
-  ChainInduction (\_, _ => Type -> Type) carrier (\_ => interpS0EMapAlg) n
+interpS0EChain = chainMapAlg interpS0EFAlg
 
 public export
 S0EColimit : Type -> Type
@@ -244,7 +243,7 @@ public export
 public export
 interpS0EColimit : {a : Type} ->
   (a -> Type -> Type) -> S0EColimit a -> Type -> Type
-interpS0EColimit carrier (n ** c) = interpS0EChain carrier c
+interpS0EColimit = colimitMapAlg interpS0EFAlg
 
 ---------------------------------------------
 ---- Algebras of polynomial endofunctors ----
