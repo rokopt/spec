@@ -192,10 +192,13 @@ public export
 (a : Type) => (Show a) => (n : NatObj) => Show (S0EIter n a)
 
 public export
+interpS0EIterAlg : FunctorIterAlg Subst0EndoF (Type -> Type)
+interpS0EIterAlg = functorIterAlg interpS0EFAlg
+
+public export
 interpS0EIter : {a : Type} ->
   (a -> Type -> Type) -> {n : NatObj} -> S0EIter n a -> Type -> Type
-interpS0EIter carrier {n} =
-  FunctorIterInd (\_, _ => Type -> Type) carrier (\_ => interpS0EF) n
+interpS0EIter carrier {n} = functorIterMapAlg interpS0EFAlg carrier n
 
 public export
 S0EStep : Type -> Type

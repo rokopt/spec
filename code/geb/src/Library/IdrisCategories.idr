@@ -2158,6 +2158,10 @@ FunctorIterAlg : (Type -> Type) -> Type -> Type
 FunctorIterAlg f a = (n : NatObj) -> Algebra (FunctorIter f n) a
 
 public export
+FunctorIterAlgF : (Type -> Type) -> Type
+FunctorIterAlgF f = (a : Type) -> FunctorIterAlg f a
+
+public export
 functorIterAlg :
   {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
   Algebra f a ->
