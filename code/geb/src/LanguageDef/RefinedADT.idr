@@ -64,8 +64,24 @@ Show carrier => Show (Subst0EndoF carrier) where
   show = showS0EF show
 
 public export
+interpS0EF : {a : Type} ->
+  (a -> Type -> Type) -> (Subst0EndoF a -> Type -> Type)
+interpS0EF {a} carrier (Subst0EndoCovarRep fv) x =
+  carrier fv () -> x
+interpS0EF {a} carrier Subst0EndoEmpty x =
+  Void
+interpS0EF {a} carrier (Subst0EndoSum fv gv) x =
+  Either (carrier fv x) (carrier gv x)
+interpS0EF {a} carrier (Subst0EndoCompose gv fv) x =
+  carrier gv $ carrier fv x
+
+public export
 AlgS0EF : Type -> Type
 AlgS0EF = Algebra Subst0EndoF
+
+public export
+interpS0EFAlg : AlgS0EF (Type -> Type)
+interpS0EFAlg = interpS0EF {a=(Type -> Type)} id
 
 ---------------------------------------------------
 ---- Fixed points (object of all endofunctors) ----
@@ -143,22 +159,6 @@ a :+: b = inFreeComposite $ Subst0EndoSum a b
 -----------------------------------------------------------------------
 
 public export
-interpS0EF : {a : Type} ->
-  (a -> Type -> Type) -> (Subst0EndoF a -> Type -> Type)
-interpS0EF {a} carrier (Subst0EndoCovarRep fv) x =
-  carrier fv () -> x
-interpS0EF {a} carrier Subst0EndoEmpty x =
-  Void
-interpS0EF {a} carrier (Subst0EndoSum fv gv) x =
-  Either (carrier fv x) (carrier gv x)
-interpS0EF {a} carrier (Subst0EndoCompose gv fv) x =
-  carrier gv $ carrier fv x
-
-public export
-interpS0EFAlg : AlgS0EF (Type -> Type)
-interpS0EFAlg = interpS0EF {a=(Type -> Type)} id
-
-public export
 interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
 interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
 
@@ -191,14 +191,10 @@ S0EIter : NatObj -> Type -> Type
 S0EIter = FunctorIter Subst0EndoF
 
 public export
-showS0EIter :
-  {a : Type} -> (a -> String) -> {n : NatObj} -> S0EIter n a -> String
-showS0EIter showa {n} =
-  FunctorIterInd (\_, _ => String) showa (\_ => showS0EF) n
+(n : NatObj) => Functor f => Functor (S0EIter n)
 
 public export
-(a : Type) => (Show a) => (n : NatObj) => Show (S0EIter n a) where
-  show = showS0EIter show
+(a : Type) => (Show a) => (n : NatObj) => Show (S0EIter n a)
 
 public export
 interpS0EIter : {a : Type} ->
@@ -207,12 +203,24 @@ interpS0EIter carrier {n} =
   FunctorIterInd (\_, _ => Type -> Type) carrier (\_ => interpS0EF) n
 
 public export
+S0EStep : Type -> Type
+S0EStep = OmegaStep Subst0EndoF
+
+public export
+Functor S0EStep
+
+public export
+Show a => Show (S0EStep a)
+
+public export
 S0EChain : NatObj -> Type -> Type
 S0EChain = OmegaChain Subst0EndoF
 
 public export
-(a : Type) => (Show a) => (n : NatObj) => Show (S0EChain n a) where
-  show x = ?show_omegas0E_hole -- (InOmega _ ty) = showS0EIter show ty
+(n : NatObj) => Functor (S0EChain n)
+
+public export
+Show a => (n : NatObj) => Show (S0EChain n a)
 
 public export
 interpS0EChain : {a : Type} ->
