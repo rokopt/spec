@@ -68,24 +68,19 @@ showS0EF : {0 carrier : Type} ->
 showS0EF = mapAlg showS0EFAlg
 
 public export
-Show carrier => Show (Subst0EndoF carrier) where
-  show = showS0EF show
+Show carrier => Show (Subst0EndoF carrier)
+
+public export
+interpS0EFAlg : AlgS0EF (Type -> Type)
+interpS0EFAlg (Subst0EndoCovarRep fv) x = fv () -> x
+interpS0EFAlg Subst0EndoEmpty x = Void
+interpS0EFAlg (Subst0EndoSum fv gv) x = Either (fv x) (gv x)
+interpS0EFAlg (Subst0EndoCompose gv fv) x = gv $ fv x
 
 public export
 interpS0EF : {a : Type} ->
   (a -> Type -> Type) -> (Subst0EndoF a -> Type -> Type)
-interpS0EF {a} carrier (Subst0EndoCovarRep fv) x =
-  carrier fv () -> x
-interpS0EF {a} carrier Subst0EndoEmpty x =
-  Void
-interpS0EF {a} carrier (Subst0EndoSum fv gv) x =
-  Either (carrier fv x) (carrier gv x)
-interpS0EF {a} carrier (Subst0EndoCompose gv fv) x =
-  carrier gv $ carrier fv x
-
-public export
-interpS0EFAlg : AlgS0EF (Type -> Type)
-interpS0EFAlg = interpS0EF {a=(Type -> Type)} id
+interpS0EF = mapAlg interpS0EFAlg
 
 ---------------------------------------------------
 ---- Fixed points (object of all endofunctors) ----
