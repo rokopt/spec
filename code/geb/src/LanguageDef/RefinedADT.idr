@@ -20,11 +20,11 @@ data ADT0ObjF : Type -> Type where
   ADT0Coproduct : carrier -> carrier -> ADT0ObjF carrier
 
 public export
-ADT0ObjIter : Type -> NatObj -> Type
+ADT0ObjIter : NatObj -> Type -> Type
 ADT0ObjIter = FunctorIter ADT0ObjF
 
 public export
-ADT0ObjChain : Type -> NatObj -> Type
+ADT0ObjChain : NatObj -> Type -> Type
 ADT0ObjChain = OmegaChain ADT0ObjF
 
 -----------------------------------------------------------
@@ -187,36 +187,36 @@ MuS0E = Mu . interpMuS0EF
 -------------------------------------------------------------
 
 public export
-S0EIter : Type -> NatObj -> Type
+S0EIter : NatObj -> Type -> Type
 S0EIter = FunctorIter Subst0EndoF
 
 public export
 showS0EIter :
-  {a : Type} -> (a -> String) -> {n : NatObj} -> S0EIter a n -> String
+  {a : Type} -> (a -> String) -> {n : NatObj} -> S0EIter n a -> String
 showS0EIter showa {n} =
   FunctorIterInd (\_, _ => String) showa (\_ => showS0EF) n
 
 public export
-(a : Type) => (Show a) => (n : NatObj) => Show (S0EIter a n) where
+(a : Type) => (Show a) => (n : NatObj) => Show (S0EIter n a) where
   show = showS0EIter show
 
 public export
 interpS0EIter : {a : Type} ->
-  (a -> Type -> Type) -> {n : NatObj} -> S0EIter a n -> Type -> Type
+  (a -> Type -> Type) -> {n : NatObj} -> S0EIter n a -> Type -> Type
 interpS0EIter carrier {n} =
   FunctorIterInd (\_, _ => Type -> Type) carrier (\_ => interpS0EF) n
 
 public export
-OmegaS0E : Type -> NatObj -> Type
+OmegaS0E : NatObj -> Type -> Type
 OmegaS0E = OmegaChain Subst0EndoF
 
 public export
-(a : Type) => (Show a) => (n : NatObj) => Show (OmegaS0E a n) where
+(a : Type) => (Show a) => (n : NatObj) => Show (OmegaS0E n a) where
   show x = ?show_omegas0E_hole -- (InOmega _ ty) = showS0EIter show ty
 
 public export
 interpOmegaS0E : {a : Type} ->
-  (a -> Type -> Type) -> {n : NatObj} -> OmegaS0E a n -> Type -> Type
+  (a -> Type -> Type) -> {n : NatObj} -> OmegaS0E n a -> Type -> Type
 interpOmegaS0E carrier x = ?interp_omegas0e_hole -- (InOmega _ ty) = interpS0EIter carrier ty
 
 public export
@@ -239,12 +239,12 @@ interpOmegaCS0E carrier x = ?interp_omegacs0e_hole -- (n' ** InOmega {n} {n'} mo
 
 public export
 OmegaCS0EIter : {a : Type} ->
-  (a -> Type -> Type) -> OmegaCS0E a -> Type -> NatObj -> Type
+  (a -> Type -> Type) -> OmegaCS0E a -> NatObj -> Type -> Type
 OmegaCS0EIter carrier = FunctorIter . interpOmegaCS0E carrier
 
 public export
 OmegaCS0EChain : {a : Type} -> (a -> Type -> Type) -> OmegaCS0E a ->
-  Type -> NatObj -> Type
+  NatObj -> Type -> Type
 OmegaCS0EChain carrier = OmegaChain . interpOmegaCS0E carrier
 
 public export
@@ -259,7 +259,7 @@ FunctorIterCata f =
   (v -> a) ->
   Algebra f a ->
   (n : NatObj) ->
-  FunctorIter f v n ->
+  FunctorIter f n v ->
   a
 
 public export
@@ -293,8 +293,8 @@ omegaCS0EIterCataSimpleIndStep : {a : Type} ->
   (carrierMap : (x : a) -> (t, t' : Type) ->
     (t -> t') -> carrier x t -> carrier x t') ->
   (n : NatObj) ->
-  ((ty : S0EIter a n) -> FunctorIterCata (interpS0EIter {n} {a} carrier ty)) ->
-  (ty : Subst0EndoF (S0EIter a n)) ->
+  ((ty : S0EIter n a) -> FunctorIterCata (interpS0EIter {n} {a} carrier ty)) ->
+  (ty : Subst0EndoF (S0EIter n a)) ->
   FunctorIterCata (interpS0EIter {n=(NatOS n)} {a} carrier ty)
 omegaCS0EIterCataSimpleIndStep {a} carrier cm n catan fsn a' v subst alg =
   FunctorIterInd
@@ -352,7 +352,7 @@ OmegaCS0EChainCata {a} carrier cm f =
   (v -> a') ->
   Algebra (interpOmegaCS0E carrier f) a' ->
   (n : NatObj) ->
-  OmegaCS0EChain {a} carrier f v n ->
+  OmegaCS0EChain {a} carrier f n v ->
   a'
 
 public export
