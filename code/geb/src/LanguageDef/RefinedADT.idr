@@ -82,101 +82,6 @@ interpS0EF : {a : Type} ->
   (a -> Type -> Type) -> (Subst0EndoF a -> Type -> Type)
 interpS0EF = mapAlg interpS0EFAlg
 
----------------------------------------------------
----- Fixed points (object of all endofunctors) ----
----------------------------------------------------
-
-public export
-FreeS0EF : Type -> Type
-FreeS0EF = FreeMonad Subst0EndoF
-
-public export
-MuS0EF : Type
-MuS0EF = Mu Subst0EndoF
-
-public export
-pCataS0EF : ParamCata Subst0EndoF
-pCataS0EF v a subst alg (InFree x) = case x of
-  TermVar var => subst var
-  TermComposite com => alg $ case com of
-    Subst0EndoCovarRep f => Subst0EndoCovarRep $ pCataS0EF v a subst alg f
-    Subst0EndoEmpty => Subst0EndoEmpty
-    Subst0EndoSum f g =>
-      Subst0EndoSum (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
-    Subst0EndoCompose g f =>
-      Subst0EndoCompose (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
-
-public export
-cataS0EF : Catamorphism Subst0EndoF
-cataS0EF = cataFromParam pCataS0EF
-
-public export
-showFreeS0EF : {v : Type} -> (v -> String) -> FreeS0EF v -> String
-showFreeS0EF subst = pCataS0EF v String subst showS0EFAlg
-
-public export
-Show MuS0EF where
-  show = cataS0EF String showS0EFAlg
-
-------------------
----- Notation ----
-------------------
-
--- The void-valued constant endofunctor -- the sum of no endofunctors.
-public export
-(!+) : FreeS0EF v
-(!+) = inFreeComposite Subst0EndoEmpty
-
--- The representable endofunctor represented by a given object -- in the
--- endofunctor category, that is, by some endofunctor, which implicitly
--- means that endofunctor applied to the terminal object.
-prefix 11 :>:
-public export
-(:>:) : FreeS0EF v -> FreeS0EF v
-(:>:) a = inFreeComposite $ Subst0EndoCovarRep a
-
--- The unit-valued constant endofunctor -- represented by the initial object
--- (Void), and hence in the endofunctor category by the void-valued constant
--- endofunctor.
-public export
-(!*) : FreeS0EF v
-(!*) = :>: (!+)
-
--- The sum of two endofunctors.  (In particular, any sum of representables
--- is a polynomial; so, therefore, is any sum of polynomials.)
-infixl 7 :+:
-public export
-(:+:) : FreeS0EF v -> FreeS0EF v -> FreeS0EF v
-a :+: b = inFreeComposite $ Subst0EndoSum a b
-
------------------------------------------------------------------------
----- Interpretation of MuS0EF as monoid of polynomial endofunctors ----
------------------------------------------------------------------------
-
-public export
-interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
-interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
-
-public export
-interpMuS0EF : MuS0EF -> (Type -> Type)
-interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
-
----------------------------------------------
----- Algebras of polynomial endofunctors ----
----------------------------------------------
-
-public export
-AlgS0E : MuS0EF -> Type -> Type
-AlgS0E = Algebra . interpMuS0EF
-
-public export
-FreeS0E : MuS0EF -> Type -> Type
-FreeS0E = FreeMonad . interpMuS0EF
-
-public export
-MuS0E : MuS0EF -> Type
-MuS0E = Mu . interpMuS0EF
-
 -------------------------------------------------------------
 ---- Natural-number-induction-based endofunctor category ----
 -------------------------------------------------------------
@@ -536,6 +441,101 @@ interpDirichletEndoF : {obj, rep, carrier : Type} ->
   DirichletEndoF obj rep carrier -> obj -> Type
 interpDirichletEndoF interpObj interpSum =
   interpSumRepOrCorepF interpObj interpContravarRepF interpSum
+
+---------------------------------------------------
+---- Fixed points (object of all endofunctors) ----
+---------------------------------------------------
+
+public export
+FreeS0EF : Type -> Type
+FreeS0EF = FreeMonad Subst0EndoF
+
+public export
+MuS0EF : Type
+MuS0EF = Mu Subst0EndoF
+
+public export
+pCataS0EF : ParamCata Subst0EndoF
+pCataS0EF v a subst alg (InFree x) = case x of
+  TermVar var => subst var
+  TermComposite com => alg $ case com of
+    Subst0EndoCovarRep f => Subst0EndoCovarRep $ pCataS0EF v a subst alg f
+    Subst0EndoEmpty => Subst0EndoEmpty
+    Subst0EndoSum f g =>
+      Subst0EndoSum (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
+    Subst0EndoCompose g f =>
+      Subst0EndoCompose (pCataS0EF v a subst alg f) (pCataS0EF v a subst alg g)
+
+public export
+cataS0EF : Catamorphism Subst0EndoF
+cataS0EF = cataFromParam pCataS0EF
+
+public export
+showFreeS0EF : {v : Type} -> (v -> String) -> FreeS0EF v -> String
+showFreeS0EF subst = pCataS0EF v String subst showS0EFAlg
+
+public export
+Show MuS0EF where
+  show = cataS0EF String showS0EFAlg
+
+------------------
+---- Notation ----
+------------------
+
+-- The void-valued constant endofunctor -- the sum of no endofunctors.
+public export
+(!+) : FreeS0EF v
+(!+) = inFreeComposite Subst0EndoEmpty
+
+-- The representable endofunctor represented by a given object -- in the
+-- endofunctor category, that is, by some endofunctor, which implicitly
+-- means that endofunctor applied to the terminal object.
+prefix 11 :>:
+public export
+(:>:) : FreeS0EF v -> FreeS0EF v
+(:>:) a = inFreeComposite $ Subst0EndoCovarRep a
+
+-- The unit-valued constant endofunctor -- represented by the initial object
+-- (Void), and hence in the endofunctor category by the void-valued constant
+-- endofunctor.
+public export
+(!*) : FreeS0EF v
+(!*) = :>: (!+)
+
+-- The sum of two endofunctors.  (In particular, any sum of representables
+-- is a polynomial; so, therefore, is any sum of polynomials.)
+infixl 7 :+:
+public export
+(:+:) : FreeS0EF v -> FreeS0EF v -> FreeS0EF v
+a :+: b = inFreeComposite $ Subst0EndoSum a b
+
+-----------------------------------------------------------------------
+---- Interpretation of MuS0EF as monoid of polynomial endofunctors ----
+-----------------------------------------------------------------------
+
+public export
+interpFreeS0EF : {v : Type} -> (v -> Type -> Type) -> FreeS0EF v -> Type -> Type
+interpFreeS0EF subst = pCataS0EF v (Type -> Type) subst interpS0EFAlg
+
+public export
+interpMuS0EF : MuS0EF -> (Type -> Type)
+interpMuS0EF = cataS0EF (Type -> Type) interpS0EFAlg
+
+---------------------------------------------
+---- Algebras of polynomial endofunctors ----
+---------------------------------------------
+
+public export
+AlgS0E : MuS0EF -> Type -> Type
+AlgS0E = Algebra . interpMuS0EF
+
+public export
+FreeS0E : MuS0EF -> Type -> Type
+FreeS0E = FreeMonad . interpMuS0EF
+
+public export
+MuS0E : MuS0EF -> Type
+MuS0E = Mu . interpMuS0EF
 
 -------------------------------------------------------------
 -------------------------------------------------------------
