@@ -2111,9 +2111,24 @@ NatObjGenInd :
 NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
 
 public export
-mapAlg : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
-  Algebra f b -> (a -> b) -> f a -> b
+MapAlg : (Type -> Type) -> Type -> Type -> Type
+MapAlg f x v = (v -> x) -> f v -> x
+
+public export
+mapAlg : {0 f : Type -> Type} -> Functor f => {0 x, v : Type} ->
+  Algebra f x ->
+  MapAlg f x v
 mapAlg alg m = alg . map {f} m
+
+public export
+MapAlgF : (Type -> Type) -> Type -> Type
+MapAlgF f x = (v : Type) -> MapAlg f x v
+
+public export
+mapAlgF : {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  MapAlgF f x
+mapAlgF alg v = mapAlg {v} alg
 
 public export
 FunctorIter : (Type -> Type) -> NatObj -> Type -> Type
@@ -2143,15 +2158,26 @@ FunctorIterInd {f} {a} p =
 
 public export
 FunctorIterMapAlg : (Type -> Type) -> Type -> Type -> Type
-FunctorIterMapAlg f a b = (a -> b) -> (n : NatObj) -> FunctorIter f n a -> b
+FunctorIterMapAlg f x v = (v -> x) -> (n : NatObj) -> FunctorIter f n v -> x
 
 public export
 functorIterMapAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
-  Algebra f b ->
-  FunctorIterMapAlg f a b
-functorIterMapAlg {f} {a} {b} alg m =
-  FunctorIterInd (\_, _ => b) m $ \n => mapAlg alg
+  {0 f : Type -> Type} -> Functor f => {0 v, x : Type} ->
+  Algebra f x ->
+  FunctorIterMapAlg f x v
+functorIterMapAlg {f} {x} {v} alg m =
+  FunctorIterInd (\_, _ => x) m $ \n => mapAlg alg
+
+public export
+FunctorIterMapAlgF : (Type -> Type) -> Type -> Type
+FunctorIterMapAlgF f x = (v : Type) -> FunctorIterMapAlg f x v
+
+public export
+functorIterMapAlgF :
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  FunctorIterMapAlgF f x
+functorIterMapAlgF alg v = functorIterMapAlg {v} alg
 
 public export
 FunctorIterAlg : (Type -> Type) -> Type -> Type
@@ -2163,10 +2189,10 @@ FunctorIterAlgF f = (a : Type) -> FunctorIterAlg f a
 
 public export
 functorIterAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
-  Algebra f a ->
-  FunctorIterAlg f a
-functorIterAlg {f} {a} alg = functorIterMapAlg {b=a} alg id
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  FunctorIterAlg f x
+functorIterAlg {f} {x} alg = functorIterMapAlg {v=x} alg id
 
 public export
 (n : NatObj) => Functor f => Functor (FunctorIter f n) where
@@ -2176,7 +2202,7 @@ public export
 public export
 functorIterShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   (sf : Algebra f String) -> (n : NatObj) -> (ty : FunctorIter f n a) -> String
-functorIterShow {f} {a} sf = functorIterMapAlg {b=String} sf show
+functorIterShow {f} {a} sf = functorIterMapAlg {v=a} {x=String} sf show
 
 public export
 Functor f => Show a => Show (f String) => (n : NatObj) =>
@@ -2252,20 +2278,36 @@ omegaStepElim {f} {a} {b} elimInj elimIter (OmegaIter fx) = elimIter fx
 
 public export
 OmegaMapAlg : (Type -> Type) -> Type -> Type -> Type
-OmegaMapAlg f a b = (a -> b) -> OmegaStep f a -> b
+OmegaMapAlg f x v = (v -> x) -> OmegaStep f v -> x
 
 public export
 omegaMapAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
-  (f b -> b) ->
-  OmegaMapAlg f a b
-omegaMapAlg {f} {a} alg carrier = omegaStepElim carrier $ mapAlg alg carrier
+  {0 f : Type -> Type} -> Functor f => {0 x, v : Type} ->
+  (f x -> x) ->
+  OmegaMapAlg f x v
+omegaMapAlg alg carrier = omegaStepElim carrier $ mapAlg alg carrier
+
+public export
+OmegaMapAlgF : (Type -> Type) -> Type -> Type
+OmegaMapAlgF f x = (v : Type) -> OmegaMapAlg f x v
+
+public export
+omegaMapAlgF :
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  (f x -> x) ->
+  OmegaMapAlgF f x
+omegaMapAlgF alg v = omegaMapAlg {v} alg
+
+public export
+OmegaAlg : (Type -> Type) -> Type -> Type
+OmegaAlg f a = Algebra (OmegaStep f) a
 
 public export
 omegaAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
-  Algebra f a -> Algebra (OmegaStep f) a
-omegaAlg {f} {a} alg = omegaMapAlg {b=a} alg id
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  OmegaAlg f x
+omegaAlg {f} {x} alg = omegaMapAlg {v=x} alg id
 
 public export
 Functor f => Functor (OmegaStep f) where
@@ -2304,15 +2346,26 @@ ChainInduction {f} = FunctorIterInd {f=(OmegaStep f)}
 
 public export
 ChainMapAlg : (Type -> Type) -> Type -> Type -> Type
-ChainMapAlg f a b = (a -> b) -> (n : NatObj) -> OmegaChain f n a -> b
+ChainMapAlg f x v = (v -> x) -> (n : NatObj) -> OmegaChain f n v -> x
 
 public export
 chainMapAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
-  Algebra f b ->
-  ChainMapAlg f a b
-chainMapAlg {f} {a} {b} alg m =
-  ChainInduction (\_, _ => b) m $ \_ => omegaMapAlg alg
+  {0 f : Type -> Type} -> Functor f => {0 x, v : Type} ->
+  Algebra f x ->
+  ChainMapAlg f x v
+chainMapAlg {f} {x} alg m =
+  ChainInduction (\_, _ => x) m $ \_ => omegaMapAlg alg
+
+public export
+ChainMapAlgF : (Type -> Type) -> Type -> Type
+ChainMapAlgF f x = (v : Type) -> ChainMapAlg f x v
+
+public export
+chainMapAlgF :
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  ChainMapAlgF f x
+chainMapAlgF alg v = chainMapAlg {v} alg
 
 public export
 ChainAlg : (Type -> Type) -> Type -> Type
@@ -2324,10 +2377,10 @@ ChainAlgF f = (a : Type) -> ChainAlg f a
 
 public export
 chainAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
-  Algebra f a ->
-  ChainAlg f a
-chainAlg {f} {a} alg = chainMapAlg {b=a} alg id
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  ChainAlg f x
+chainAlg {f} {x} alg = chainMapAlg {v=x} alg id
 
 public export
 omegaChainMap : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
@@ -2342,7 +2395,7 @@ public export
 public export
 omegaChainShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
   (sf : Algebra f String) -> (n : NatObj) -> (ty : OmegaChain f n a) -> String
-omegaChainShow {f} {a} sf = chainMapAlg {b=String} sf show
+omegaChainShow {f} {a} sf = chainMapAlg {v=a} {x=String} sf show
 
 public export
 Functor f => Show a => Show (f String) => (n : NatObj) =>
@@ -2415,6 +2468,7 @@ OmegaChainCompose {f} {n} {n'} =
     (\_, _, _ => map {f=(OmegaStep f)})
     (n, n')
 
+-- AKA free monad.
 public export
 OmegaColimit : (Type -> Type) -> Type -> Type
 OmegaColimit f a = (n : NatObj ** OmegaChain f n a)
@@ -2450,16 +2504,28 @@ ColimitInduction : {0 f : Type -> Type} -> {0 a : Type} ->
 ColimitInduction p z s (n ** ty) =
   ChainInduction (PredColimitToChain p) z s n ty
 
+-- AKA parameterized catamorphism.
 public export
 ColimitMapAlg : (Type -> Type) -> Type -> Type -> Type
-ColimitMapAlg f a b = (a -> b) -> OmegaColimit f a -> b
+ColimitMapAlg f x v = (v -> x) -> OmegaColimit f v -> x
 
 public export
 colimitMapAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
-  Algebra f b ->
-  ColimitMapAlg f a b
-colimitMapAlg {f} {a} {b} alg m (n ** c) = chainMapAlg alg m n c
+  {0 f : Type -> Type} -> Functor f => {0 x, v : Type} ->
+  Algebra f x ->
+  ColimitMapAlg f x v
+colimitMapAlg alg m (n ** c) = chainMapAlg alg m n c
+
+public export
+ColimitMapAlgF : (Type -> Type) -> Type -> Type
+ColimitMapAlgF f x = (v : Type) -> ColimitMapAlg f x v
+
+public export
+colimitMapAlgF :
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  ColimitMapAlgF f x
+colimitMapAlgF alg v = colimitMapAlg {v} alg
 
 public export
 ColimitAlg : (Type -> Type) -> Type -> Type
@@ -2471,10 +2537,10 @@ ColimitAlgF f = (a : Type) -> Algebra (OmegaColimit f) a
 
 public export
 colimitAlg :
-  {0 f : Type -> Type} -> Functor f => {0 a : Type} ->
-  Algebra f a ->
-  ColimitAlg f a
-colimitAlg {f} {a} alg = colimitMapAlg {b=a} alg id
+  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  Algebra f x ->
+  ColimitAlg f x
+colimitAlg {f} {x} alg = colimitMapAlg {v=x} alg id
 
 public export
 Functor f => Functor (OmegaColimit f) where
