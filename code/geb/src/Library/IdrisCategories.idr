@@ -2195,9 +2195,16 @@ functorIterAlg :
 functorIterAlg {f} {x} alg = functorIterMapAlg {v=x} alg id
 
 public export
-(n : NatObj) => Functor f => Functor (FunctorIter f n) where
-  map {n} {f} {b} m =
+functorIterMap :
+  {0 f : Type -> Type} -> Functor f =>
+  {0 a, b : Type} ->
+  (n : NatObj) -> (a -> b) -> FunctorIter f n a -> FunctorIter f n b
+functorIterMap {f} {b} n m =
     FunctorIterInd (\n', _ => FunctorIter f n' b) m (\n' => map {f}) n
+
+public export
+(n : NatObj) => Functor f => Functor (FunctorIter f n) where
+  map m {n} = functorIterMap n m
 
 public export
 functorIterShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
@@ -2310,17 +2317,24 @@ omegaAlg :
 omegaAlg {f} {x} alg = omegaMapAlg {v=x} alg id
 
 public export
+omegaStepMap :
+  {0 f : Type -> Type} -> Functor f =>
+  {0 a, b : Type} ->
+  (a -> b) -> OmegaStep f a -> OmegaStep f b
+omegaStepMap m = omegaStepElim (OmegaInj . m) (OmegaIter . map m)
+
+public export
 Functor f => Functor (OmegaStep f) where
-  map m = omegaStepElim (OmegaInj . m) (OmegaIter . map m)
+  map = omegaStepMap
 
 public export
 omegaStepShow : {0 f : Type -> Type} -> {0 a : Type} -> Functor f => Show a =>
-  Algebra f String -> Algebra (OmegaStep f) String
-omegaStepShow = omegaStepElim (\x => ">(" ++ x ++ ")")
+  Algebra f String -> OmegaStep f a -> String
+omegaStepShow {f} {a} fAlg = omegaMapAlg {f} {x=String} {v=a} fAlg show
 
 public export
 Functor f => Show a => Show (f String) => Show (OmegaStep f a) where
-  show {f} {a} = omegaStepShow {f} {a} show . map {f=(OmegaStep f)} show
+  show = omegaStepShow show
 
 public export
 OmegaChain : (Type -> Type) -> NatObj -> Type -> Type
@@ -2543,8 +2557,13 @@ colimitAlg :
 colimitAlg {f} {x} alg = colimitMapAlg {v=x} alg id
 
 public export
+omegaColimitMap : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
+  (a -> b) -> OmegaColimit f a -> OmegaColimit f b
+omegaColimitMap {f} {a} {b} m (n ** c) = (n ** omegaChainMap {f} m n c)
+
+public export
 Functor f => Functor (OmegaColimit f) where
-  map {f} {a} {b} m (n ** c) = (n ** omegaChainMap {f} m n c)
+  map = omegaColimitMap
 
 public export
 omegaColimitShow :
