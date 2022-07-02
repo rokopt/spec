@@ -199,9 +199,7 @@ interpS0EColimitMapStep {a} {b} fv n hyp m (OmegaIter fx) =
   case fx of
     Subst0EndoCovarRep f' => \hyp => m . hyp
     Subst0EndoEmpty => \v => void v
-    Subst0EndoSum f' g' => \x => case x of
-      Left x' => Left $ hyp a b m f' x'
-      Right x' => Right $ hyp a b m g' x'
+    Subst0EndoSum f' g' => bimap {f=Either} (hyp a b m f') (hyp a b m g')
     Subst0EndoCompose g' f' => hyp _ _ (hyp a b m f') g'
 
 public export
