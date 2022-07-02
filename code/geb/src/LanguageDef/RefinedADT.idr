@@ -181,27 +181,33 @@ FSubst v = v -> Type -> Type
 
 public export
 interpS0EColimitMapStep : {0 v : Type} -> (fv : FSubst v) ->
-  (mapv : (x : v) -> {0 a, b : Type} -> fv x a -> fv x b) ->
-  {0 a, b : Type} ->
-  (a -> b) ->
   (n : NatObj) ->
   (hyp :
+    (0 a, b : Type) ->
+    (a -> b) ->
     (c : S0EChain n v) ->
     interpS0EChain v fv n c a ->
     interpS0EChain v fv n c b) ->
+  {0 a, b : Type} ->
+  (a -> b) ->
   (c : S0EChain (NatOS n) v) ->
   interpS0EChain v fv (NatOS n) c a ->
   interpS0EChain v fv (NatOS n) c b
-interpS0EColimitMapStep fv mapv m n hyp (OmegaInj x) =
-  hyp x
-interpS0EColimitMapStep fv mapv m n hyp (OmegaIter fx) =
+interpS0EColimitMapStep {a} {b} fv n hyp m (OmegaInj x) =
+  hyp a b m x
+interpS0EColimitMapStep {a} {b} fv n hyp m (OmegaIter fx) =
   case fx of
     Subst0EndoCovarRep f' => \hyp => m . hyp
     Subst0EndoEmpty => \v => void v
     Subst0EndoSum f' g' => \x => case x of
-      Left x' => Left $ hyp f' x'
-      Right x' => Right $ hyp g' x'
-    Subst0EndoCompose g' f' => ?interpS0EColimitMap_compose_hole
+      Left x' => Left $ hyp a b m f' x'
+      Right x' => Right $ hyp a b m g' x'
+    Subst0EndoCompose g' f' => \x =>
+      let
+        hf = hyp a b m f'
+        hg = hyp a b m g'
+      in
+      ?interpS0EColimitMapStep_compose_hole
 
 public export
 interpS0EColimitMap : {0 v : Type} -> (fv : FSubst v) ->
@@ -213,10 +219,23 @@ interpS0EColimitMap : {0 v : Type} -> (fv : FSubst v) ->
   interpS0EColimit v fv f b
 interpS0EColimitMap {v} {a} {b} fv mapv f m =
   ColimitInduction
-    (\f' => interpS0EColimit v fv f' a -> interpS0EColimit v fv f' b)
-    (\z => mapv {a} {b} z)
-    (\n, hyp, stepn => interpS0EColimitMapStep fv mapv m n hyp stepn)
+    (\c =>
+      (0 a', b' : Type) -> (a' -> b') ->
+      interpS0EColimit v fv c a' -> interpS0EColimit v fv c b')
+    (\z, a', b', m' =>
+      mapv z)
+    (\n, hyp, stepn, a', b', m', x =>
+      interpS0EColimitMapStep
+        fv
+        n
+        (\a'', b'', m'', f'', c'' => hyp f'' a'' b'' m'' c'')
+        m'
+        stepn
+        x)
     f
+    a
+    b
+    m
 
 public export
 interpS0EColimitFunctor :
