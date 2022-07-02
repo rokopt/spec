@@ -246,8 +246,8 @@ s0EInterpColimitCata :
   S0EInterpColimit fv f v' ->
   a
 s0EInterpColimitCata {v} fv mapv f =
-  let _ = interpS0EColimitFunctor fv mapv f in
-  colimitMapAlg {f=(interpS0EColimit v fv f)}
+  colimitMapAlg
+    {f=(interpS0EColimit v fv f)} {isF=(interpS0EColimitFunctor fv mapv f)}
 
 ----------------------------------------
 ----------------------------------------

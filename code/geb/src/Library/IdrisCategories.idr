@@ -2525,7 +2525,7 @@ ColimitMapAlg f x v = (v -> x) -> OmegaColimit f v -> x
 
 public export
 colimitMapAlg :
-  {0 f : Type -> Type} -> Functor f => {0 x, v : Type} ->
+  {0 f : Type -> Type} -> {isF : Functor f} -> {0 x, v : Type} ->
   Algebra f x ->
   ColimitMapAlg f x v
 colimitMapAlg alg m (n ** c) = chainMapAlg alg m n c
@@ -2536,10 +2536,10 @@ ColimitMapAlgF f x = (v : Type) -> ColimitMapAlg f x v
 
 public export
 colimitMapAlgF :
-  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  {0 f : Type -> Type} -> {isF : Functor f} -> {0 x : Type} ->
   Algebra f x ->
   ColimitMapAlgF f x
-colimitMapAlgF alg v = colimitMapAlg {v} alg
+colimitMapAlgF {isF} alg v = colimitMapAlg {isF} {v} alg
 
 public export
 ColimitAlg : (Type -> Type) -> Type -> Type
@@ -2551,10 +2551,10 @@ ColimitAlgF f = (a : Type) -> Algebra (OmegaColimit f) a
 
 public export
 colimitAlg :
-  {0 f : Type -> Type} -> Functor f => {0 x : Type} ->
+  {0 f : Type -> Type} -> {isF : Functor f} -> {0 x : Type} ->
   Algebra f x ->
   ColimitAlg f x
-colimitAlg {f} {x} alg = colimitMapAlg {v=x} alg id
+colimitAlg {f} {isF} {x} alg = colimitMapAlg {isF} {v=x} alg id
 
 public export
 omegaColimitMap : {0 f : Type -> Type} -> Functor f => {0 a, b : Type} ->
