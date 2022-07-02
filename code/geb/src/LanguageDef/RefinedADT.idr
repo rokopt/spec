@@ -202,12 +202,7 @@ interpS0EColimitMapStep {a} {b} fv n hyp m (OmegaIter fx) =
     Subst0EndoSum f' g' => \x => case x of
       Left x' => Left $ hyp a b m f' x'
       Right x' => Right $ hyp a b m g' x'
-    Subst0EndoCompose g' f' => \x =>
-      let
-        hf = hyp a b m f'
-        hg = hyp a b m g'
-      in
-      ?interpS0EColimitMapStep_compose_hole
+    Subst0EndoCompose g' f' => hyp _ _ (hyp a b m f') g'
 
 public export
 interpS0EColimitMap : {0 v : Type} -> (fv : FSubst v) ->
