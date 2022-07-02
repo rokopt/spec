@@ -192,7 +192,16 @@ interpS0EColimitMapStep : {0 v : Type} -> (fv : FSubst v) ->
   (c : S0EChain (NatOS n) v) ->
   interpS0EChain v fv (NatOS n) c a ->
   interpS0EChain v fv (NatOS n) c b
-interpS0EColimitMapStep fv mapv m n hyp c = ?interpS0EColimitMapStep_hole
+interpS0EColimitMapStep fv mapv m n hyp (OmegaInj x) =
+  hyp x
+interpS0EColimitMapStep fv mapv m n hyp (OmegaIter fx) =
+  case fx of
+    Subst0EndoCovarRep f' => \hyp => m . hyp
+    Subst0EndoEmpty => \v => void v
+    Subst0EndoSum f' g' => \x => case x of
+      Left x' => Left $ hyp f' x'
+      Right x' => Right $ hyp g' x'
+    Subst0EndoCompose g' f' => ?interpS0EColimitMap_compose_hole
 
 public export
 interpS0EColimitMap : {0 v : Type} -> (fv : FSubst v) ->
