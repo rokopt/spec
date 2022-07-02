@@ -104,6 +104,10 @@ fsObjTest1 = (!+)
 fsObjTest2 : MuS0EF
 fsObjTest2 = :>: ((!+) :+: (!+) :+: (!*))
 
+public export
+adt0ShowTest : ADT0ObjF Void
+adt0ShowTest = ADT0Initial
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -125,8 +129,10 @@ languageDefRefinedADTTest = do
   printLn $ show finOrdMorphTest18
   printLn $ show testCovarHomFunc
   printLn $ show testContravarHomFunc
-  -}
   printLn $ show fsObjTest1
   printLn $ show fsObjTest2
+  printLn $ show fsObjTest2
+  -}
+  printLn $ show adt0ShowTest
   printLn "End languageDefRefinedADTTest."
   pure ()
