@@ -183,7 +183,7 @@ public export
 interpS0EColimitMapStep : {0 v : Type} -> (fv : FSubst v) ->
   (n : NatObj) ->
   (hyp :
-    (0 a, b : Type) ->
+    {0 a, b : Type} ->
     (a -> b) ->
     (c : S0EChain n v) ->
     interpS0EChain v fv n c a ->
@@ -194,13 +194,13 @@ interpS0EColimitMapStep : {0 v : Type} -> (fv : FSubst v) ->
   interpS0EChain v fv (NatOS n) c a ->
   interpS0EChain v fv (NatOS n) c b
 interpS0EColimitMapStep {a} {b} fv n hyp m (OmegaInj x) =
-  hyp a b m x
+  hyp m x
 interpS0EColimitMapStep {a} {b} fv n hyp m (OmegaIter fx) =
   case fx of
     Subst0EndoCovarRep f' => \hyp => m . hyp
     Subst0EndoEmpty => \v => void v
-    Subst0EndoSum f' g' => bimap {f=Either} (hyp a b m f') (hyp a b m g')
-    Subst0EndoCompose g' f' => hyp _ _ (hyp a b m f') g'
+    Subst0EndoSum f' g' => bimap {f=Either} (hyp m f') (hyp m g')
+    Subst0EndoCompose g' f' => hyp (hyp m f') g'
 
 public export
 interpS0EColimitMap : {0 v : Type} -> (fv : FSubst v) ->
@@ -210,24 +210,16 @@ interpS0EColimitMap : {0 v : Type} -> (fv : FSubst v) ->
   (a -> b) ->
   interpS0EColimit v fv f a ->
   interpS0EColimit v fv f b
-interpS0EColimitMap {v} {a} {b} fv mapv f m =
+interpS0EColimitMap {v} fv mapv f m =
   ColimitInduction
     (\c =>
-      (0 a', b' : Type) -> (a' -> b') ->
+      {0 a', b' : Type} -> (a' -> b') ->
       interpS0EColimit v fv c a' -> interpS0EColimit v fv c b')
-    (\z, a', b', m' =>
+    (\z, m' =>
       mapv z)
-    (\n, hyp, stepn, a', b', m', x =>
-      interpS0EColimitMapStep
-        fv
-        n
-        (\a'', b'', m'', f'', c'' => hyp f'' a'' b'' m'' c'')
-        m'
-        stepn
-        x)
+    (\n, hyp, stepn, m' =>
+      interpS0EColimitMapStep fv n (\m'', f'' => hyp f'' m'') m' stepn)
     f
-    a
-    b
     m
 
 public export
