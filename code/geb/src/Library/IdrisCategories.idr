@@ -2669,17 +2669,27 @@ InitialColimit : (Type -> Type) -> Type
 InitialColimit f = OmegaColimit f Void
 
 public export
+FInitAlg : (Type -> Type) -> Type
+FInitAlg f = Algebra f (InitialColimit f)
+
+public export
 ColimitInitAlg : (Type -> Type) -> Type
-ColimitInitAlg f = Algebra f (InitialColimit f)
+ColimitInitAlg f = Algebra (OmegaStep f) (InitialColimit f)
 
 public export
 ColimitInitAlgInv : (Type -> Type) -> Type
-ColimitInitAlgInv f = Coalgebra f (InitialColimit f)
+ColimitInitAlgInv f = Coalgebra (OmegaStep f) (InitialColimit f)
 
 public export
 ColimitInitAlgCorrect : {f : Type -> Type} -> ColimitInitAlg f -> Type
 ColimitInitAlgCorrect {f} alg =
   (inv : ColimitInitAlgInv f ** ExtInverse alg inv)
+
+public export
+colimitInj :
+  {f : Type -> Type} -> Functor f =>
+  InitialColimit f -> InitialColimit f
+colimitInj (n ** f') = (NatOS n ** OmegaInj f')
 
 public export
 colimitConst : {f : Type -> Type} -> Functor f =>
@@ -2707,6 +2717,11 @@ colimitPair combine (m ** f') (n ** g') =
         (NatOS n ** OmegaIter $ combine (OmegaChainCompose ltmn f') g')
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
+
+public export
+colimitInitAlg :
+  {f : Type -> Type} -> Functor f => FInitAlg f -> ColimitInitAlg f
+colimitInitAlg {f} = omegaStepElim {f} colimitInj
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->

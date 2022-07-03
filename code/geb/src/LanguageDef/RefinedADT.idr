@@ -180,11 +180,15 @@ Show S0EInitColimit where
   show = omegaColimitShow {f=Subst0EndoF} {a=Void} showS0EFAlg
 
 public export
+FInitAlgS0EF : FInitAlg Subst0EndoF
+FInitAlgS0EF Subst0EndoEmpty = colimitConst Subst0EndoEmpty
+FInitAlgS0EF (Subst0EndoCovarRep f) = colimitOne Subst0EndoCovarRep f
+FInitAlgS0EF (Subst0EndoSum f g) = colimitPair Subst0EndoSum f g
+FInitAlgS0EF (Subst0EndoCompose g f) = colimitPair Subst0EndoCompose g f
+
+public export
 InitAlgS0EF : ColimitInitAlg Subst0EndoF
-InitAlgS0EF Subst0EndoEmpty = colimitConst Subst0EndoEmpty
-InitAlgS0EF (Subst0EndoCovarRep f) = colimitOne Subst0EndoCovarRep f
-InitAlgS0EF (Subst0EndoSum f g) = colimitPair Subst0EndoSum f g
-InitAlgS0EF (Subst0EndoCompose g f) = colimitPair Subst0EndoCompose g f
+InitAlgS0EF = colimitInitAlg FInitAlgS0EF
 
 public export
 InitAlgS0EF_Inv : ColimitInitAlgInv Subst0EndoF
