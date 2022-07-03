@@ -164,6 +164,40 @@ public export
   show = omegaColimitShow {f=Subst0EndoF} showS0EFAlg
 
 public export
+InitAlgS0EF : ColimitInitAlg Subst0EndoF
+InitAlgS0EF Subst0EndoEmpty =
+  (NatO1 ** OmegaIter Subst0EndoEmpty)
+InitAlgS0EF (Subst0EndoCovarRep (n ** f)) =
+  (NatOS n ** OmegaIter $ Subst0EndoCovarRep f)
+InitAlgS0EF (Subst0EndoSum (m ** f) (n ** g)) =
+  case NatMorphDec m n of
+    Left eq => (NatOS m ** case eq of Refl => OmegaIter $ Subst0EndoSum f g)
+    Right morph => case morph of
+      Left ltmn =>
+        (NatOS n ** OmegaIter $ Subst0EndoSum (OmegaChainCompose ltmn f) g)
+      Right ltnm =>
+        (NatOS m ** OmegaIter $ Subst0EndoSum f (OmegaChainCompose ltnm g))
+InitAlgS0EF (Subst0EndoCompose (n ** g) (m ** f)) =
+  case NatMorphDec n m of
+    Left eq => (NatOS m ** case eq of Refl => OmegaIter $ Subst0EndoCompose g f)
+    Right morph => case morph of
+      Left ltnm =>
+        (NatOS m ** OmegaIter $ Subst0EndoCompose (OmegaChainCompose ltnm g) f)
+      Right ltmn =>
+        (NatOS n ** OmegaIter $ Subst0EndoCompose g (OmegaChainCompose ltmn f))
+
+public export
+InitAlgS0EF_Inv : ColimitInitAlgInv Subst0EndoF
+InitAlgS0EF_Inv = ?InitAlgS0EF_Inv_hole
+
+public export
+InitAlgS0EF_Correct : ColimitInitAlgCorrect {f=Subst0EndoF} InitAlgS0EF
+InitAlgS0EF_Correct =
+  (InitAlgS0EF_Inv **
+   (?InitAlgS0EF_Correct_hole_l,
+    ?InitAlgS0EF_Correct_hole_r))
+
+public export
 interpS0EChain : ChainMapAlgF Subst0EndoF (Type -> Type)
 interpS0EChain = chainMapAlgF interpS0EFAlg
 

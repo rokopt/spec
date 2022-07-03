@@ -1810,6 +1810,11 @@ NatPairIndFromNatObj p zz zs sz ss (S m') (S n') =
     NatPairIndFromNatObj p zz zs sz ss m' n'
 
 public export
+NatLTMorphToSucc : {m, n : NatObj} ->
+  NatLTMorph (m, n) -> NatLTMorph (NatOS m, NatOS n)
+NatLTMorphToSucc morph = InNatLT _ (NatLTS _ morph)
+
+public export
 NatMorphIndCurried :
   (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
   ((n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n) ->
@@ -2069,6 +2074,23 @@ NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
 public export
 FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
 FromSuccContra n morph = void $ succNotLTEpred $ NatMorphToLTE morph
+
+public export
+NatMorphDec : (m, n : NatObj) ->
+  Either (m = n) $ Either (NatLTMorph (m, n)) (NatLTMorph (n, m))
+NatMorphDec m n = case NatMorphCompare m n of
+  Left eq => Left eq
+  Right morph => Right $ bimap {f=Either} NatLTDec NatLTDec morph
+
+public export
+NatMorphDecSucc : (m, n : NatObj) ->
+  Either (m = n) $
+    Either (NatLTMorph (NatOS m, NatOS n)) (NatLTMorph (NatOS n, NatOS m))
+NatMorphDecSucc m n = case NatMorphDec m n of
+  Left eq =>
+    Left eq
+  Right morph =>
+    Right $ bimap {f=Either} NatLTMorphToSucc NatLTMorphToSucc morph
 
 public export
 NatMorphSucc : (m, n : NatObj) -> NatLTMorph (m, NatOS n) ->
@@ -2637,6 +2659,23 @@ ColimitGenInd : {f : Type -> Type} -> {a : Type} ->
   ColimitGenIndStep {f} {a} p ->
   (c : OmegaColimit f a) -> p c
 ColimitGenInd p zp sp (n ** c) = ChainGenInd (PredColimitToChain p) zp sp n c
+
+public export
+InitialColimit : (Type -> Type) -> Type
+InitialColimit f = OmegaColimit f Void
+
+public export
+ColimitInitAlg : (Type -> Type) -> Type
+ColimitInitAlg f = Algebra f (InitialColimit f)
+
+public export
+ColimitInitAlgInv : (Type -> Type) -> Type
+ColimitInitAlgInv f = Coalgebra f (InitialColimit f)
+
+public export
+ColimitInitAlgCorrect : {f : Type -> Type} -> ColimitInitAlg f -> Type
+ColimitInitAlgCorrect {f} alg =
+  (inv : ColimitInitAlgInv f ** ExtInverse alg inv)
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
