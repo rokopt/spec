@@ -2661,6 +2661,10 @@ ColimitGenInd : {f : Type -> Type} -> {a : Type} ->
 ColimitGenInd p zp sp (n ** c) = ChainGenInd (PredColimitToChain p) zp sp n c
 
 public export
+InitialChain : (Type -> Type) -> NatObj -> Type
+InitialChain f n = OmegaChain f n Void
+
+public export
 InitialColimit : (Type -> Type) -> Type
 InitialColimit f = OmegaColimit f Void
 
@@ -2676,6 +2680,33 @@ public export
 ColimitInitAlgCorrect : {f : Type -> Type} -> ColimitInitAlg f -> Type
 ColimitInitAlgCorrect {f} alg =
   (inv : ColimitInitAlgInv f ** ExtInverse alg inv)
+
+public export
+colimitConst : {f : Type -> Type} -> Functor f =>
+  (one : f Void) -> InitialColimit f
+colimitConst one = (NatO1 ** OmegaIter one)
+
+public export
+colimitOne :
+  {f : Type -> Type} -> Functor f =>
+  (succ : {n : NatObj} -> InitialChain f n -> f (InitialChain f n)) ->
+  InitialColimit f -> InitialColimit f
+colimitOne succ (n ** f') = (NatOS n ** OmegaIter $ succ f')
+
+public export
+colimitPair :
+  {f : Type -> Type} -> Functor f =>
+  (combine : {n : NatObj} ->
+    InitialChain f n -> InitialChain f n -> f (InitialChain f n)) ->
+  InitialColimit f -> InitialColimit f -> InitialColimit f
+colimitPair combine (m ** f') (n ** g') =
+  case NatMorphDec m n of
+    Left eq => (NatOS m ** case eq of Refl => OmegaIter $ combine f' g')
+    Right morph => case morph of
+      Left ltmn =>
+        (NatOS n ** OmegaIter $ combine (OmegaChainCompose ltmn f') g')
+      Right ltnm =>
+        (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->

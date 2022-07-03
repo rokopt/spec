@@ -152,6 +152,14 @@ Show a => (n : NatObj) => Show (S0EChain n a) where
   show {n} = omegaChainShow {f=Subst0EndoF} showS0EFAlg n
 
 public export
+S0EInitChain : NatObj -> Type
+S0EInitChain = InitialChain Subst0EndoF
+
+public export
+(n : NatObj) => Show (S0EInitChain n) where
+  show {n} = omegaChainShow {f=Subst0EndoF} {a=Void} showS0EFAlg n
+
+public export
 S0EColimit : Type -> Type
 S0EColimit = OmegaColimit Subst0EndoF
 
@@ -164,27 +172,19 @@ public export
   show = omegaColimitShow {f=Subst0EndoF} showS0EFAlg
 
 public export
+S0EInitColimit : Type
+S0EInitColimit = InitialColimit Subst0EndoF
+
+public export
+Show S0EInitColimit where
+  show = omegaColimitShow {f=Subst0EndoF} {a=Void} showS0EFAlg
+
+public export
 InitAlgS0EF : ColimitInitAlg Subst0EndoF
-InitAlgS0EF Subst0EndoEmpty =
-  (NatO1 ** OmegaIter Subst0EndoEmpty)
-InitAlgS0EF (Subst0EndoCovarRep (n ** f)) =
-  (NatOS n ** OmegaIter $ Subst0EndoCovarRep f)
-InitAlgS0EF (Subst0EndoSum (m ** f) (n ** g)) =
-  case NatMorphDec m n of
-    Left eq => (NatOS m ** case eq of Refl => OmegaIter $ Subst0EndoSum f g)
-    Right morph => case morph of
-      Left ltmn =>
-        (NatOS n ** OmegaIter $ Subst0EndoSum (OmegaChainCompose ltmn f) g)
-      Right ltnm =>
-        (NatOS m ** OmegaIter $ Subst0EndoSum f (OmegaChainCompose ltnm g))
-InitAlgS0EF (Subst0EndoCompose (n ** g) (m ** f)) =
-  case NatMorphDec n m of
-    Left eq => (NatOS m ** case eq of Refl => OmegaIter $ Subst0EndoCompose g f)
-    Right morph => case morph of
-      Left ltnm =>
-        (NatOS m ** OmegaIter $ Subst0EndoCompose (OmegaChainCompose ltnm g) f)
-      Right ltmn =>
-        (NatOS n ** OmegaIter $ Subst0EndoCompose g (OmegaChainCompose ltmn f))
+InitAlgS0EF Subst0EndoEmpty = colimitConst Subst0EndoEmpty
+InitAlgS0EF (Subst0EndoCovarRep f) = colimitOne Subst0EndoCovarRep f
+InitAlgS0EF (Subst0EndoSum f g) = colimitPair Subst0EndoSum f g
+InitAlgS0EF (Subst0EndoCompose g f) = colimitPair Subst0EndoCompose g f
 
 public export
 InitAlgS0EF_Inv : ColimitInitAlgInv Subst0EndoF
