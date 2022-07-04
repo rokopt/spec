@@ -187,19 +187,8 @@ FInitAlgS0EF (Subst0EndoSum f g) = colimitPair Subst0EndoSum f g
 FInitAlgS0EF (Subst0EndoCompose g f) = colimitPair Subst0EndoCompose g f
 
 public export
-InitAlgS0EF : ColimitInitAlg Subst0EndoF
-InitAlgS0EF = colimitInitAlg FInitAlgS0EF
-
-public export
-InitAlgS0EF_Inv : ColimitInitAlgInv Subst0EndoF
-InitAlgS0EF_Inv = ?InitAlgS0EF_Inv_hole
-
-public export
-InitAlgS0EF_Correct : ColimitInitAlgCorrect {f=Subst0EndoF} InitAlgS0EF
-InitAlgS0EF_Correct =
-  (InitAlgS0EF_Inv **
-   (?InitAlgS0EF_Correct_hole_l,
-    ?InitAlgS0EF_Correct_hole_r))
+InitAlgS0EF_Correct : InitAlgCorrect {f=Subst0EndoF} FInitAlgS0EF
+InitAlgS0EF_Correct = ?InitAlgS0EF_Correct_hole
 
 public export
 interpS0EChain : ChainMapAlgF Subst0EndoF (Type -> Type)

@@ -43,6 +43,10 @@ record IsDecEquiv {a : Type} (r : RelationOn a) where
   DecEquivEquiv : IsEquivalence r
   DecEquivDec : IsDecidable r
 
+public export
+InverseUpTo : {a, b : Type} -> RelationOn a -> (a -> b) -> (b -> a) -> Type
+InverseUpTo r f g = (x : a) -> r (g (f x)) x
+
 -----------------------------------
 -----------------------------------
 ---- Functional extensionality ----
@@ -2669,21 +2673,37 @@ InitialColimit : (Type -> Type) -> Type
 InitialColimit f = OmegaColimit f Void
 
 public export
+ColimitCata : (Type -> Type) -> Type
+ColimitCata f = (x : Type) -> Algebra f x -> InitialColimit f -> x
+
+public export
+colimitCata : {f : Type -> Type} -> {isF : Functor f} -> ColimitCata f
+colimitCata {f} {isF} x alg = colimitMapAlg {f} {isF} {x} {v=Void} alg (voidF _)
+
+public export
 FInitAlg : (Type -> Type) -> Type
 FInitAlg f = Algebra f (InitialColimit f)
 
 public export
-ColimitInitAlg : (Type -> Type) -> Type
-ColimitInitAlg f = Algebra (OmegaStep f) (InitialColimit f)
+FInitAlgLift : (Type -> Type) -> Type
+FInitAlgLift f = Algebra f (f (InitialColimit f))
 
 public export
-ColimitInitAlgInv : (Type -> Type) -> Type
-ColimitInitAlgInv f = Coalgebra (OmegaStep f) (InitialColimit f)
+FInitAlgInv : (Type -> Type) -> Type
+FInitAlgInv f = Coalgebra f (InitialColimit f)
 
 public export
-ColimitInitAlgCorrect : {f : Type -> Type} -> ColimitInitAlg f -> Type
-ColimitInitAlgCorrect {f} alg =
-  (inv : ColimitInitAlgInv f ** ExtInverse alg inv)
+fInitAlgInv : {f : Type -> Type} -> {isF : Functor f} ->
+  FInitAlg f -> FInitAlgInv f
+fInitAlgInv {f} {isF} alg =
+  colimitCata {isF} (f (InitialColimit f)) (map {f} alg)
+
+public export
+InitAlgCorrect : {f : Type -> Type} -> {isF : Functor f} -> FInitAlg f -> Type
+InitAlgCorrect {f} {isF} alg =
+  ExtEq
+    (fInitAlgInv {isF} alg . alg)
+    (map {f} alg . map {f} (fInitAlgInv {isF} alg))
 
 public export
 colimitInj :
@@ -2717,11 +2737,6 @@ colimitPair combine (m ** f') (n ** g') =
         (NatOS n ** OmegaIter $ combine (OmegaChainCompose ltmn f') g')
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
-
-public export
-colimitInitAlg :
-  {f : Type -> Type} -> Functor f => FInitAlg f -> ColimitInitAlg f
-colimitInitAlg {f} = omegaStepElim {f} colimitInj
 
 public export
 SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
