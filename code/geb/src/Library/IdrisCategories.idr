@@ -769,6 +769,10 @@ public export
 MorphCarrier : Type -> Type
 MorphCarrier = FPred ProductMonad
 
+public export
+MorphFunctor : (Type -> Type) -> Type
+MorphFunctor = FNatTransDep ProductMonad
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
@@ -1444,7 +1448,7 @@ pairSucc : NTToProductMNatF ProductMonad
 pairSucc ty = map {f=ProductMonad} {a=ty} {b=(NatF ty)} SuccF
 
 public export
-data NatLTMorphF : FNatTransDep ProductMonad NatF where
+data NatLTMorphF : MorphFunctor NatF where
   NatLTZ :
     {natCarrier : Type} -> {morphCarrier : MorphCarrier natCarrier} ->
     (n : NatF natCarrier) ->
