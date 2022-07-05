@@ -729,6 +729,46 @@ CoproductFL : List (Type -> Type) -> Type -> Type
 CoproductFL [] = InitialComonad
 CoproductFL (f :: fs) = CoproductFLNE f fs
 
+--------------------------------------------------------------
+---- Slice categories and more on natural transformations ----
+--------------------------------------------------------------
+
+public export
+SliceO : Type -> Type
+SliceO x = (a : Type ** a -> x)
+
+public export
+SliceF : (Type -> Type) -> Type -> Type
+SliceF f = SliceO . f
+
+public export
+NMSliceCar : Type -> Type
+NMSliceCar = SliceF ProductMonad
+
+public export
+SliceNT : (Type -> Type) -> (Type -> Type) -> Type
+SliceNT f g = NaturalTransformation (SliceF f) (SliceF g)
+
+public export
+SliceNTToPreComp : (Type -> Type) -> (Type -> Type) -> Type
+SliceNTToPreComp f g = SliceNT f (f . g)
+
+public export
+FPred : (Type -> Type) -> Type -> Type
+FPred f ty = f ty -> Type
+
+public export
+FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
+FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
+
+public export
+FNatTransDep : (Type -> Type) -> (Type -> Type) -> Type
+FNatTransDep f g = FNatTrans f (f . g)
+
+public export
+NatMorphCarrier : Type -> Type
+NatMorphCarrier = FPred ProductMonad
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----
@@ -1402,42 +1442,6 @@ pairZero ty = MkPair {a=(NatF ty)} {b=(NatF ty)} ZeroF
 public export
 pairSucc : NTToProductMNatF ProductMonad
 pairSucc ty = map {f=ProductMonad} {a=ty} {b=(NatF ty)} SuccF
-
-public export
-SliceO : Type -> Type
-SliceO x = (a : Type ** a -> x)
-
-public export
-SliceF : (Type -> Type) -> Type -> Type
-SliceF f = SliceO . f
-
-public export
-NMSliceCar : Type -> Type
-NMSliceCar = SliceF ProductMonad
-
-public export
-SliceNT : (Type -> Type) -> (Type -> Type) -> Type
-SliceNT f g = NaturalTransformation (SliceF f) (SliceF g)
-
-public export
-SliceNTToPreComp : (Type -> Type) -> (Type -> Type) -> Type
-SliceNTToPreComp f g = SliceNT f (f . g)
-
-public export
-FPred : (Type -> Type) -> Type -> Type
-FPred f ty = f ty -> Type
-
-public export
-FNatTrans : (Type -> Type) -> (Type -> Type) -> Type
-FNatTrans f g = NaturalTransformation (FPred f) (FPred g)
-
-public export
-FNatTransDep : (Type -> Type) -> (Type -> Type) -> Type
-FNatTransDep f g = FNatTrans f (f . g)
-
-public export
-NatMorphCarrier : Type -> Type
-NatMorphCarrier = FPred ProductMonad
 
 public export
 data NatLTMorphF : FNatTransDep ProductMonad NatF where
