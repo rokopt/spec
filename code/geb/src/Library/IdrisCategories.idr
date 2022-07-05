@@ -766,8 +766,8 @@ FNatTransDep : (Type -> Type) -> (Type -> Type) -> Type
 FNatTransDep f g = FNatTrans f (f . g)
 
 public export
-NatMorphCarrier : Type -> Type
-NatMorphCarrier = FPred ProductMonad
+MorphCarrier : Type -> Type
+MorphCarrier = FPred ProductMonad
 
 ----------------------------------------
 ----------------------------------------
@@ -1446,11 +1446,11 @@ pairSucc ty = map {f=ProductMonad} {a=ty} {b=(NatF ty)} SuccF
 public export
 data NatLTMorphF : FNatTransDep ProductMonad NatF where
   NatLTZ :
-    {natCarrier : Type} -> {morphCarrier : NatMorphCarrier natCarrier} ->
+    {natCarrier : Type} -> {morphCarrier : MorphCarrier natCarrier} ->
     (n : NatF natCarrier) ->
     NatLTMorphF natCarrier morphCarrier (pairZero natCarrier n)
   NatLTS :
-    {natCarrier : Type} -> {morphCarrier : NatMorphCarrier natCarrier} ->
+    {natCarrier : Type} -> {morphCarrier : MorphCarrier natCarrier} ->
     (mn : ProductMonad natCarrier) -> morphCarrier mn ->
     NatLTMorphF natCarrier morphCarrier (pairSucc natCarrier mn)
 
@@ -1485,7 +1485,7 @@ inFreePN = map {f=ProductMonad} InNat
 
 public export
 ProductMNatPred : Type
-ProductMNatPred = NatMorphCarrier NatObj
+ProductMNatPred = MorphCarrier NatObj
 
 public export
 data NatLTMorph : ProductMNatPred where
