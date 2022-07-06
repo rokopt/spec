@@ -276,6 +276,17 @@ s0EInterpColimitCata {v} fv mapv f =
   colimitMapAlg
     {f=(interpS0EColimit v fv f)} {isF=(interpS0EColimitFunctor fv mapv f)}
 
+---------------------------------------------------------------------
+---- Morphisms in endofunctor category (natural transformations) ----
+---------------------------------------------------------------------
+
+public export
+data Subst0EndoNT : MorphFunctor Subst0EndoF where
+  Subst0EndoNTInitial :
+    {endoCarrier : Type} -> {ntCarrier : MorphCarrier endoCarrier} ->
+    (f : Subst0EndoF endoCarrier) ->
+    Subst0EndoNT endoCarrier ntCarrier (Subst0EndoEmpty, f)
+
 ----------------------------------------
 ----------------------------------------
 ---- Representables and polynomials ----

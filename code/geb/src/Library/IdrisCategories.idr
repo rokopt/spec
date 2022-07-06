@@ -2746,10 +2746,15 @@ colimitPair combine (m ** f') (n ** g') =
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
 
+----------------
+---- Slices ----
+----------------
+
 public export
-SliceFunctorIter : {x : Type} -> ((x -> Type) -> (x -> Type)) -> (x -> Type) ->
-  NatObj -> x -> Type
-SliceFunctorIter {x} f a = NatObjInd (const $ x -> Type) a (const f)
+DepFunctorIter : {a : Type} ->
+  (NatObj -> (a -> Type) -> (a -> Type)) ->
+  (NatObj -> (a -> Type) -> (a -> Type))
+DepFunctorIter {a} f n b = NatObjInd (const $ a -> Type) b f n
 
 ---------------
 ---- Lists ----
