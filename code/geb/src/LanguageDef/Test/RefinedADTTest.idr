@@ -83,8 +83,9 @@ TestCovarType =
   interpCovarRepF interpTestType testCovarHomFunc (TestTypeN 2)
 
 testCovar : TestCovarType
-testCovar FZ = FS (FS (FZ))
+testCovar FZ = FS (FZ)
 testCovar (FS FZ) = FZ
+testCovar (FS (FS FZ)) = FS (FZ)
 
 testContravarHomFunc : ContravarRepF TestType Void
 testContravarHomFunc = ContravarHom (TestTypeN 3)
@@ -94,9 +95,8 @@ TestContravarType =
   interpContravarRepF interpTestType testContravarHomFunc (TestTypeN 2)
 
 testContravar : TestContravarType
-testContravar FZ = FS (FZ)
+testContravar FZ = FS (FS (FZ))
 testContravar (FS FZ) = FZ
-testContravar (FS (FS FZ)) = FS (FZ)
 
 fsObjTest1 : MuS0EF
 fsObjTest1 = (!+)

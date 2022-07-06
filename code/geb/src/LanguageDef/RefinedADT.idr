@@ -316,13 +316,13 @@ Bifunctor CovarRepF where
 
 public export
 Show obj => Show (CovarRepF obj carrier) where
-  show (CovarHom obj) = "Hom(_, " ++ show obj ++ ")"
+  show (CovarHom obj) = "Hom(" ++ show obj ++ ", _)"
 
 public export
 interpCovarRepF : {obj, carrier : Type} ->
   (obj -> Type) -> CovarRepF obj carrier -> obj -> Type
 interpCovarRepF {obj} interpObj (CovarHom x) a =
-  interpObj a -> interpObj x
+  interpObj x -> interpObj a
 
 -- A functor which generates a contravariant representable functor.
 -- As with covariant representable functors, there's simply one per
@@ -338,13 +338,13 @@ Bifunctor ContravarRepF where
 
 public export
 Show obj => Show (ContravarRepF obj carrier) where
-  show (ContravarHom obj) = "Hom(" ++ show obj ++ ", _)"
+  show (ContravarHom obj) = "Hom(_, " ++ show obj ++ ")"
 
 public export
 interpContravarRepF : {obj, carrier : Type} ->
   (obj -> Type) -> ContravarRepF obj carrier -> obj -> Type
 interpContravarRepF {obj} interpObj (ContravarHom x) a =
-  interpObj x -> interpObj a
+  interpObj a -> interpObj x
 
 ----------------------------------------------------
 ---- Sums of representables or corepresentables ----
