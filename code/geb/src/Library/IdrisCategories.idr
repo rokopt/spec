@@ -2746,15 +2746,40 @@ colimitPair combine (m ** f') (n ** g') =
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
 
-----------------
----- Slices ----
-----------------
+--------------------------------
+---- Dependent endofunctors ----
+--------------------------------
 
 public export
-DepFunctorIter : {a : Type} ->
-  (NatObj -> (a -> Type) -> (a -> Type)) ->
-  (NatObj -> (a -> Type) -> (a -> Type))
-DepFunctorIter {a} f n b = NatObjInd (const $ a -> Type) b f n
+NatDepPredF : (NatObj -> Type) -> NatObj -> Type
+NatDepPredF a n = a n -> Type
+
+public export
+NatDepPred : (NatObj -> Type) -> Type
+NatDepPred a = (n : NatObj) -> NatDepPredF a n
+
+public export
+NatDepFunctorStep : (NatObj -> Type) -> Type
+NatDepFunctorStep = NatObjInductionStep . NatDepPredF
+
+public export
+NatDepFunctor : (NatObj -> Type) -> Type
+NatDepFunctor a = NatDepPredF a NatOZ -> NatDepPred a
+
+public export
+DepFunctorIter : {a : NatObj -> Type} ->
+  NatDepFunctorStep a -> NatDepFunctor a
+DepFunctorIter {a} f b = NatObjInd (NatDepPredF a) b f
+
+public export
+data DepOmegaStep :
+    {carrier : NatObj -> Type} -> NatDepPred a -> NatObj -> Type where
+  DepOmegaInj :
+    {carrier : NatObj -> Type} -> {f : NatDepPred carrier} -> {n : NatObj} ->
+    carrier n -> DepOmegaStep {carrier} f (NatOS n)
+  DepOmegaIter :
+    {carrier : NatObj -> Type} -> {f : NatDepPred carrier} -> {n : NatObj} ->
+    {type : carrier n} -> f n type -> DepOmegaStep {carrier} f (NatOS n)
 
 ---------------
 ---- Lists ----
