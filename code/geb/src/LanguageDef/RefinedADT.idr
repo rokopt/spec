@@ -38,6 +38,25 @@ data NatPolyLTP : NatPolyTermPair -> Type where
   NatPolyLTPow : {c, p, c', p' : NatObj} ->
     NatLTStrict p p' -> NatPolyLTP (NatCoeffPow (c, p), NatCoeffPow (c', p'))
 
+public export
+decNatPolyLTP : (np : NatPolyTermPair) -> Dec (NatPolyLTP np)
+decNatPolyLTP (NatCoeffPow (_, p), NatCoeffPow (_, p')) =
+  case NatMorphCompare p p' of
+    Left eq => No $ \ltp => case ltp of
+      (NatPolyLTPow lt) => ?eqhole
+    (Right (Left ltmn)) => Yes $ NatPolyLTPow ltmn
+    (Right (Right ltnm)) => No $ \ltp => case ltp of
+      (NatPolyLTPow lt) => ?rhole
+
+-- A polynomial derived from lists of `(coefficient, power)` pairs.
+public export
+NatPolyTermList : Type -> Type
+NatPolyTermList = ListF NatPolyTerm
+
+public export
+NatPolyTermsIter : NatObj -> Type -> Type
+NatPolyTermsIter = FunctorIter NatPolyTermList
+
 -----------------------------------------------
 -----------------------------------------------
 ---- Zeroth-order (unrefined) ADT category ----

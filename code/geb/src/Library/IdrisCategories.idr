@@ -3821,6 +3821,7 @@ RightAdjunct {catC} {catD} adj {a} {b} g =
 -- functor cat
 -- nat trans cat
 -- adjunction cat
+-- comma cat
 
 -- diagrams
 
