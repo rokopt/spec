@@ -2763,23 +2763,17 @@ NatDepFunctorStep : (NatObj -> Type) -> Type
 NatDepFunctorStep = NatObjInductionStep . NatDepPredF
 
 public export
+NatDepFunctorF : (NatObj -> Type) -> NatObj -> Type
+NatDepFunctorF a n = NatDepPredF a NatOZ -> NatDepPredF a n
+
+public export
 NatDepFunctor : (NatObj -> Type) -> Type
-NatDepFunctor a = NatDepPredF a NatOZ -> NatDepPred a
+NatDepFunctor a = (n : NatObj) -> NatDepFunctorF a n
 
 public export
 DepFunctorIter : {a : NatObj -> Type} ->
   NatDepFunctorStep a -> NatDepFunctor a
-DepFunctorIter {a} f b = NatObjInd (NatDepPredF a) b f
-
-public export
-data DepOmegaStep :
-    {carrier : NatObj -> Type} -> NatDepPred a -> NatObj -> Type where
-  DepOmegaInj :
-    {carrier : NatObj -> Type} -> {f : NatDepPred carrier} -> {n : NatObj} ->
-    carrier n -> DepOmegaStep {carrier} f (NatOS n)
-  DepOmegaIter :
-    {carrier : NatObj -> Type} -> {f : NatDepPred carrier} -> {n : NatObj} ->
-    {type : carrier n} -> f n type -> DepOmegaStep {carrier} f (NatOS n)
+DepFunctorIter {a} f n b = NatObjInd (NatDepPredF a) b f n
 
 ---------------
 ---- Lists ----

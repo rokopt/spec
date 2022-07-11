@@ -6,6 +6,38 @@ import public LanguageDef.Atom
 
 %default total
 
+-------------------------------------------------
+-------------------------------------------------
+---- Polynomials in terms of natural numbers ----
+-------------------------------------------------
+-------------------------------------------------
+
+public export
+data NatPolyTerm : Type where
+  NatCoeffPow : NatObjPair -> NatPolyTerm
+
+public export
+Show NatPolyTerm where
+  show (NatCoeffPow (c, p)) = show p ++ " * n ^ " ++ show p
+
+public export
+natPolyCoeff : NatPolyTerm -> NatObj
+natPolyCoeff (NatCoeffPow (c, _)) = c
+
+public export
+natPolyPower : NatPolyTerm -> NatObj
+natPolyPower (NatCoeffPow (_, p)) = p
+
+public export
+NatPolyTermPair : Type
+NatPolyTermPair = ProductMonad NatPolyTerm
+
+-- A decidable partial strict order (the "P" could be for "partial" or "power").
+public export
+data NatPolyLTP : NatPolyTermPair -> Type where
+  NatPolyLTPow : {c, p, c', p' : NatObj} ->
+    NatLTStrict p p' -> NatPolyLTP (NatCoeffPow (c, p), NatCoeffPow (c', p'))
+
 -----------------------------------------------
 -----------------------------------------------
 ---- Zeroth-order (unrefined) ADT category ----
