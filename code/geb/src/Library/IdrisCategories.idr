@@ -2115,36 +2115,6 @@ NatMorphSucc m n morph =
       void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
 public export
-NatObjGenInductionStep : (NatObj -> Type) -> Type
-NatObjGenInductionStep p =
-  (n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')
-
-public export
-NatObjGenIndStrengthened :
-  (p : NatObj -> Type) ->
-  NatObjIndBaseCase p ->
-  NatObjGenInductionStep p ->
-  (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
-NatObjGenIndStrengthened p z s =
-  NatObjInd
-    (\n' =>
-      (sl : NatOSlice n') -> p (fst sl))
-    (\sl =>
-      case sl of (n ** m) => rewrite OnlyZLtZ n m in z)
-    (\n, hyp, sl => case sl of
-      (n' ** m) => case NatMorphSucc n' n m of
-        Left m' => hyp (n' ** m')
-        Right eqn => rewrite eqn in s n hyp)
-
-public export
-NatObjGenInd :
-  (p : NatObj -> Type) ->
-  NatObjIndBaseCase p ->
-  NatObjGenInductionStep p ->
-  (n : NatObj) -> p n
-NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
-
-public export
 MapAlg : (Type -> Type) -> Type -> Type -> Type
 MapAlg f x v = (v -> x) -> f v -> x
 
@@ -2285,23 +2255,6 @@ FunctorIterDepInd {f} {a} p dp zp sp dzp dsp =
     (\n', ty => dp n' ty (FunctorIterInd {f} {a} p zp sp n' ty))
     dzp
     (\n, hyp, ty => dsp n (FunctorIterInd {f} {a} p zp sp n) ty)
-
-public export
-FunctorIterGenIndStep : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) -> Type
-FunctorIterGenIndStep {f} {a} p =
-  (n' : NatObj) ->
-   ((sl : NatOSlice n') -> (ty : FunctorIter f (fst sl) a) -> p (fst sl) ty) ->
-   ((ty : f (FunctorIter f n' a)) -> p (NatOS n') ty)
-
-public export
-FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) ->
-  FunctorIterIndBaseCase {f} {a} p ->
-  FunctorIterGenIndStep {f} {a} p ->
-  (n : NatObj) -> (ty : FunctorIter f n a) -> p n ty
-FunctorIterGenInd {f} {a} p =
-  NatObjGenInd (\n' => (ty : FunctorIter f n' a) -> p n' ty)
 
 public export
 data OmegaStep : (Type -> Type) -> Type -> Type where
@@ -2479,19 +2432,6 @@ ChainDepInd : {f : Type -> Type} -> {a : Type} ->
 ChainDepInd {f} = FunctorIterDepInd {f=(OmegaStep f)}
 
 public export
-ChainGenIndStep : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) -> Type
-ChainGenIndStep {f} = FunctorIterGenIndStep {f=(OmegaStep f)}
-
-public export
-ChainGenInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) ->
-  ChainIndBaseCase {f} {a} p ->
-  ChainGenIndStep {f} {a} p ->
-  (n : NatObj) -> (ty : OmegaChain f n a) -> p n ty
-ChainGenInd {f} = FunctorIterGenInd {f=(OmegaStep f)}
-
-public export
 OmegaInjN : {f : Type -> Type} -> {a : Type} ->
   (n : NatObj) -> (x : a) -> OmegaChain f n a
 OmegaInjN {f} {a} n x =
@@ -2660,19 +2600,6 @@ ColimitDepInd p dp zp sp dzp dsp (n ** c) =
     zp sp dzp dsp n c
 
 public export
-ColimitGenIndStep : {f : Type -> Type} -> {a : Type} ->
-  (p : OmegaColimit f a -> Type) -> Type
-ColimitGenIndStep = ChainGenIndStep . PredColimitToChain
-
-public export
-ColimitGenInd : {f : Type -> Type} -> {a : Type} ->
-  (p : OmegaColimit f a -> Type) ->
-  ColimitIndBaseCase {f} {a} p ->
-  ColimitGenIndStep {f} {a} p ->
-  (c : OmegaColimit f a) -> p c
-ColimitGenInd p zp sp (n ** c) = ChainGenInd (PredColimitToChain p) zp sp n c
-
-public export
 InitialChain : (Type -> Type) -> NatObj -> Type
 InitialChain f n = OmegaChain f n Void
 
@@ -2745,6 +2672,83 @@ colimitPair combine (m ** f') (n ** g') =
         (NatOS n ** OmegaIter $ combine (OmegaChainCompose ltmn f') g')
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
+
+---------------------------
+---- General induction ----
+---------------------------
+
+public export
+NatObjGenInductionStep : (NatObj -> Type) -> Type
+NatObjGenInductionStep p =
+  (n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')
+
+public export
+NatObjGenIndStrengthened :
+  (p : NatObj -> Type) ->
+  NatObjIndBaseCase p ->
+  NatObjGenInductionStep p ->
+  (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
+NatObjGenIndStrengthened p z s =
+  NatObjInd
+    (\n' =>
+      (sl : NatOSlice n') -> p (fst sl))
+    (\sl =>
+      case sl of (n ** m) => rewrite OnlyZLtZ n m in z)
+    (\n, hyp, sl => case sl of
+      (n' ** m) => case NatMorphSucc n' n m of
+        Left m' => hyp (n' ** m')
+        Right eqn => rewrite eqn in s n hyp)
+
+public export
+NatObjGenInd :
+  (p : NatObj -> Type) ->
+  NatObjIndBaseCase p ->
+  NatObjGenInductionStep p ->
+  (n : NatObj) -> p n
+NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
+
+public export
+FunctorIterGenIndStep : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) -> Type
+FunctorIterGenIndStep {f} {a} p =
+  (n' : NatObj) ->
+   ((sl : NatOSlice n') -> (ty : FunctorIter f (fst sl) a) -> p (fst sl) ty) ->
+   ((ty : f (FunctorIter f n' a)) -> p (NatOS n') ty)
+
+public export
+FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) ->
+  FunctorIterIndBaseCase {f} {a} p ->
+  FunctorIterGenIndStep {f} {a} p ->
+  (n : NatObj) -> (ty : FunctorIter f n a) -> p n ty
+FunctorIterGenInd {f} {a} p =
+  NatObjGenInd (\n' => (ty : FunctorIter f n' a) -> p n' ty)
+
+public export
+ChainGenIndStep : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) -> Type
+ChainGenIndStep {f} = FunctorIterGenIndStep {f=(OmegaStep f)}
+
+public export
+ChainGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) ->
+  ChainIndBaseCase {f} {a} p ->
+  ChainGenIndStep {f} {a} p ->
+  (n : NatObj) -> (ty : OmegaChain f n a) -> p n ty
+ChainGenInd {f} = FunctorIterGenInd {f=(OmegaStep f)}
+
+public export
+ColimitGenIndStep : {f : Type -> Type} -> {a : Type} ->
+  (p : OmegaColimit f a -> Type) -> Type
+ColimitGenIndStep = ChainGenIndStep . PredColimitToChain
+
+public export
+ColimitGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : OmegaColimit f a -> Type) ->
+  ColimitIndBaseCase {f} {a} p ->
+  ColimitGenIndStep {f} {a} p ->
+  (c : OmegaColimit f a) -> p c
+ColimitGenInd p zp sp (n ** c) = ChainGenInd (PredColimitToChain p) zp sp n c
 
 --------------------------------
 ---- Dependent endofunctors ----
