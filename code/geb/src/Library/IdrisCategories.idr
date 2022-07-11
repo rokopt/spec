@@ -2007,10 +2007,6 @@ NatMorphCompose {m} {n} {p} g f =
     transitive (NatMorphToLTE f) (NatMorphToLTE g)
 
 public export
-NatOSlice : NatObj -> Type
-NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
-
-public export
 NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
 NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
 
@@ -2035,10 +2031,6 @@ NatMorphId : (n : NatObj) -> NatLTMorph (n, n)
 NatMorphId (InNat n) = case n of
   ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
   SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
-
-public export
-NatOSliceMax : (n : NatObj) -> NatOSlice n
-NatOSliceMax n = (n ** NatMorphId n)
 
 public export
 NatLTSucc : (n : NatObj) -> NatLTMorph (n, NatOS n)
@@ -2676,6 +2668,14 @@ colimitPair combine (m ** f') (n ** g') =
 ---------------------------
 ---- General induction ----
 ---------------------------
+
+public export
+NatOSlice : NatObj -> Type
+NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
+
+public export
+NatOSliceMax : (n : NatObj) -> NatOSlice n
+NatOSliceMax n = (n ** NatMorphId n)
 
 public export
 NatObjGenInductionStep : (NatObj -> Type) -> Type
