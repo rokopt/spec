@@ -1810,306 +1810,6 @@ NatPairIndFromNatObj p zz zs sz ss (S m') (S n') =
     rewrite MetaToNatPairId (m', n') in
     NatPairIndFromNatObj p zz zs sz ss m' n'
 
-----------------------------------------------------------
----- Natural number morphisms (in less-than category) ----
-----------------------------------------------------------
-
-public export
-ProductMNatPred : Type
-ProductMNatPred = MorphCarrier NatObj
-
-public export
-data NatLTMorph : ProductMNatPred where
-  InNatLT :
-    (mn : ProductMNatF NatObj) ->
-    NatLTMorphF NatObj NatLTMorph mn ->
-    NatLTMorph (Library.IdrisCategories.inFreePN mn)
-
-public export
-NatLTMorphToSucc : {m, n : NatObj} ->
-  NatLTMorph (m, n) -> NatLTMorph (NatOS m, NatOS n)
-NatLTMorphToSucc morph = InNatLT _ (NatLTS _ morph)
-
-public export
-NatMorphIndCurried :
-  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
-  ((n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n) ->
-  ((m, n : NatObj) ->
-   (morph : NatLTMorph (m, n)) ->
-   p (m, n) morph ->
-   p (InNat $ SuccF m, InNat $ SuccF n) $
-    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
-  (m, n : NatObj) -> (morph : NatLTMorph (m, n)) -> p (m, n) morph
-NatMorphIndCurried p zn ss (InNat ZeroF) _ morph =
-  case morph of
-    InNatLT _ (NatLTZ $ n'') =>
-      zn n''
-    InNatLT _ (NatLTS (_, _) _) impossible
-NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat ZeroF) morph =
-  case morph of
-    InNatLT _ (NatLTZ $ ZeroF) impossible
-    InNatLT _ (NatLTS (_, _) _) impossible
-NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat $ SuccF _) morph =
-  case morph of
-    InNatLT _ (NatLTZ $ SuccF _) impossible
-    InNatLT _ (NatLTS (m'', n'') morph') =>
-      ss m'' n'' morph' $ NatMorphIndCurried p zn ss m'' n'' morph'
-
-public export
-NatMorphIndZCase : (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) -> Type
-NatMorphIndZCase p =
-  (n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n
-
-public export
-NatMorphIndSCase : (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) -> Type
-NatMorphIndSCase p =
-  (m, n : NatObj) ->
-  (morph : NatLTMorph (m, n)) ->
-  p (m, n) morph ->
-  p (InNat $ SuccF m, InNat $ SuccF n) $
-    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph
-
-public export
-NatMorphInd :
-  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
-  NatMorphIndZCase p ->
-  NatMorphIndSCase p ->
-  (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph
-NatMorphInd p zn ss (m, n) = NatMorphIndCurried p zn ss m n
-
-public export
-NatMorphDepIndZCase :
-  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
-  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
-  (zp : NatMorphIndZCase p) ->
-  Type
-NatMorphDepIndZCase {p} dp zp =
-  (n : NatF NatObj) ->
-  dp (NatOZ, InNat n) (InNatLT (ZeroF, n) (NatLTZ n)) (zp n)
-
-public export
-NatMorphDepIndSCase :
-  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
-  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
-  (sp : NatMorphIndSCase p) ->
-  Type
-NatMorphDepIndSCase {p} dp sp =
-  (m, n : NatObj) ->
-  (morph : NatLTMorph (m, n)) ->
-  (pmn : p (m, n) morph) ->
-  dp (m, n) morph pmn ->
-  dp
-    (InNat $ SuccF m, InNat $ SuccF n)
-    (InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph)
-    (sp m n morph pmn)
-
-public export
-NatMorphDepInd :
-  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
-  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
-  (zp : NatMorphIndZCase p) ->
-  (sp : NatMorphIndSCase p) ->
-  (dzp : NatMorphDepIndZCase dp zp) ->
-  (dsp : NatMorphDepIndSCase dp sp) ->
-  (mn : NatObjPair) -> (morph : NatLTMorph mn) ->
-  dp mn morph (NatMorphInd p zp sp mn morph)
-NatMorphDepInd p dp zp sp dzp dsp =
-  NatMorphInd
-    (\mn', morph' => dp mn' morph' (NatMorphInd p zp sp mn' morph'))
-    dzp
-    (\m', n', morph', dpmn' =>
-      dsp m' n' morph' (NatMorphInd p zp sp (m', n') morph') dpmn')
-
-public export
-NatMorphZThin : (n : NatF NatObj) ->
-  (morph : NatLTMorph (InNat ZeroF, InNat n)) ->
-  InNatLT (ZeroF, n) (NatLTZ n) = morph
-NatMorphZThin ZeroF morph =
-  case morph of
-    InNatLT _ (NatLTZ $ ZeroF) => Refl
-    InNatLT _ (NatLTS (m', n') morph') impossible
-NatMorphZThin (SuccF n') morph =
-  case morph of
-    InNatLT _ (NatLTZ $ ZeroF) impossible
-    InNatLT _ (NatLTS (m', n') morph') impossible
-
-public export
-NatMorphSThin :
-  (m, n : NatObj) ->
-  (morph : NatLTMorph (m, n)) ->
-  ((morph' : NatLTMorph (m, n)) -> morph = morph') ->
-  (morph' : NatLTMorph (InNat (SuccF m), InNat (SuccF n))) ->
-  InNatLT (SuccF m, SuccF n) (NatLTS (m, n) morph) = morph'
-NatMorphSThin (InNat m) (InNat n) morph eq morph' = case m of
-  ZeroF => case morph of
-    InNatLT _ (NatLTZ m') => case morph' of
-      InNatLT _ (NatLTZ $ SuccF $ InNat n') impossible
-      InNatLT _ (NatLTS (InNat ZeroF, InNat n'') morphs) =>
-        rewrite eq morphs in
-        Refl
-    InNatLT _ (NatLTS (m', n') morphs) impossible
-  SuccF m' => case morph of
-    InNatLT _ (NatLTZ m'') impossible
-    InNatLT _ (NatLTS (m'', n'') morphs) => case morph' of
-      InNatLT _ (NatLTZ $ SuccF $ InNat m''') impossible
-      InNatLT _ (NatLTS (InNat $ SuccF m''', InNat $ SuccF n''') morphs') =>
-        rewrite eq morphs' in
-        Refl
-
-public export
-NatCatThin : (mn : NatObjPair) ->
-  (morph, morph' : NatLTMorph mn) -> morph = morph'
-NatCatThin =
-  NatMorphInd
-    (\mn, morph => (morph' : NatLTMorph mn) -> morph = morph')
-    NatMorphZThin
-    NatMorphSThin
-
-public export
-LTEThin : {m, n : Nat} -> (l, l' : LTE m n) -> l = l'
-LTEThin LTEZero LTEZero = Refl
-LTEThin LTEZero (LTESucc l) impossible
-LTEThin (LTESucc l) LTEZero impossible
-LTEThin (LTESucc l) (LTESucc l') = cong LTESucc (LTEThin l l')
-
-public export
-NatMorphToLTE : {mn : NatObjPair} ->
-  NatLTMorph mn -> LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn))
-NatMorphToLTE {mn=mn'} =
-  NatMorphInd
-    (\mn, morph => LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn)))
-    (\n => LTEZero {right=(NatObjToMeta $ InNat n)})
-    (\m, n, morph, lt => LTESucc lt)
-    mn'
-
-public export
-LTEToNatMorph : {mn : NatPair} ->
-  LTE (fst mn) (snd mn) -> NatLTMorph (NatMetaPairToObj mn)
-LTEToNatMorph {mn=(Z, Z)} LTEZero =
-  InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
-LTEToNatMorph {mn=(Z, Z)} (LTESucc _) impossible
-LTEToNatMorph {mn=(Z, S n)} LTEZero =
-  InNatLT (ZeroF, SuccF $ MetaToNatObj n) $ NatLTZ $ SuccF $ MetaToNatObj n
-LTEToNatMorph {mn=(Z, S n)} (LTESucc _) impossible
-LTEToNatMorph {mn=(S m, Z)} LTEZero impossible
-LTEToNatMorph {mn=(S m, Z)} (LTESucc _) impossible
-LTEToNatMorph {mn=(S m, S n)} LTEZero impossible
-LTEToNatMorph {mn=(S m, S n)} (LTESucc lt) =
-  InNatLT (SuccF $ MetaToNatObj m, SuccF $ MetaToNatObj n) $
-    NatLTS (MetaToNatObj m, MetaToNatObj n) $
-      LTEToNatMorph {mn=(m, n)} lt
-
-public export
-NatMorphCompose : {m, n, p : NatObj} ->
-  NatLTMorph (n, p) ->
-  NatLTMorph (m, n) ->
-  NatLTMorph (m, p)
-NatMorphCompose {m} {n} {p} g f =
-  rewrite sym (NatToMetaId m) in
-  rewrite sym (NatToMetaId p) in
-  LTEToNatMorph {mn=(NatObjToMeta m, NatObjToMeta p)} $
-    transitive (NatMorphToLTE f) (NatMorphToLTE g)
-
-public export
-NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
-NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
-
-public export
-NatLTOZ1 : NatLTMorph (NatOZ, NatO1)
-NatLTOZ1 = NatLTOZ NatO1
-
-public export
-NatLTStrict : NatObj -> NatObj -> Type
-NatLTStrict m n = NatLTMorph (NatOS m, n)
-
-public export
-OnlyZLtZ : (n : NatObj) -> NatLTMorph (n, NatOZ) -> n = NatOZ
-OnlyZLtZ (InNat n) (InNatLT (n, ZeroF) m) = case n of
-  ZeroF => Refl
-  SuccF n' => let _ = OnlyZLtZ n' in case m of
-    NatLTZ ZeroF impossible
-    NatLTS (s, z) m' impossible
-
-public export
-NatMorphId : (n : NatObj) -> NatLTMorph (n, n)
-NatMorphId (InNat n) = case n of
-  ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
-  SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
-
-public export
-NatLTSucc : (n : NatObj) -> NatLTMorph (n, NatOS n)
-NatLTSucc = NatObjInd _ NatLTOZ1 $
-  \n', morph => InNatLT _ $ NatLTS (n', InNat $ SuccF n') morph
-
-public export
-NatLTDec : {n, n' : NatObj} -> NatLTMorph (NatOS n, n') -> NatLTMorph (n, n')
-NatLTDec {n} morph = NatMorphCompose morph $ NatLTSucc n
-
-public export
-NatMorphIdZ : NatLTMorph (NatOZ, NatOZ)
-NatMorphIdZ = NatMorphId NatOZ
-
-public export
-NatMorphCompare : (m, n : NatObj) ->
-  Either (m = n) $ Either (NatLTStrict m n) (NatLTStrict n m)
-NatMorphCompare m n with (decEq (NatObjToMeta m) (NatObjToMeta n))
-  NatMorphCompare m n | Yes eq = Left $ NatObjToMetaInj m n eq
-  NatMorphCompare m n | No neq = Right $ case connex {rel=LTE} neq of
-    Left lte => Left $
-      let
-        lt = lteTolt lte neq
-        morph = LTEToNatMorph {mn=(S $ NatObjToMeta m, NatObjToMeta n)} lt
-      in
-      rewrite sym (NatToMetaId m) in
-      rewrite sym (NatToMetaId n) in
-      morph
-    Right gte => Right $
-      let
-        lt = lteTolt gte $ \eq => neq $ sym eq
-        morph = LTEToNatMorph {mn=(S $ NatObjToMeta n, NatObjToMeta m)} lt
-      in
-      rewrite sym (NatToMetaId m) in
-      rewrite sym (NatToMetaId n) in
-      morph
-
-public export
-NatLTFromSucc : (m, n : NatObj) -> NatLTMorph (NatOS m, NatOS n) ->
-  NatLTMorph (m, n)
-NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
-  NatLTZ (SuccF n') impossible
-  NatLTS (m', n') mn' => mn'
-
-public export
-FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
-FromSuccContra n morph = void $ succNotLTEpred $ NatMorphToLTE morph
-
-public export
-NatMorphDec : (m, n : NatObj) ->
-  Either (m = n) $ Either (NatLTMorph (m, n)) (NatLTMorph (n, m))
-NatMorphDec m n = case NatMorphCompare m n of
-  Left eq => Left eq
-  Right morph => Right $ bimap {f=Either} NatLTDec NatLTDec morph
-
-public export
-NatMorphDecSucc : (m, n : NatObj) ->
-  Either (m = n) $
-    Either (NatLTMorph (NatOS m, NatOS n)) (NatLTMorph (NatOS n, NatOS m))
-NatMorphDecSucc m n = case NatMorphDec m n of
-  Left eq =>
-    Left eq
-  Right morph =>
-    Right $ bimap {f=Either} NatLTMorphToSucc NatLTMorphToSucc morph
-
-public export
-NatMorphSucc : (m, n : NatObj) -> NatLTMorph (m, NatOS n) ->
-  Either (NatLTMorph (m, n)) (m = NatOS n)
-NatMorphSucc m n morph =
-  case NatMorphCompare m (NatOS n) of
-    Left eq => Right eq
-    Right (Left lt) => Left $ NatLTFromSucc m n lt
-    Right (Right gt) =>
-      void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
-
 public export
 MapAlg : (Type -> Type) -> Type -> Type -> Type
 MapAlg f x v = (v -> x) -> f v -> x
@@ -2600,6 +2300,306 @@ ColimitCata f = (x : Type) -> Algebra f x -> InitialColimit f -> x
 public export
 colimitCata : {f : Type -> Type} -> {isF : Functor f} -> ColimitCata f
 colimitCata {f} {isF} x alg = colimitMapAlg {f} {isF} {x} {v=Void} alg (voidF _)
+
+----------------------------------------------------------
+---- Natural number morphisms (in less-than category) ----
+----------------------------------------------------------
+
+public export
+ProductMNatPred : Type
+ProductMNatPred = MorphCarrier NatObj
+
+public export
+data NatLTMorph : ProductMNatPred where
+  InNatLT :
+    (mn : ProductMNatF NatObj) ->
+    NatLTMorphF NatObj NatLTMorph mn ->
+    NatLTMorph (Library.IdrisCategories.inFreePN mn)
+
+public export
+NatLTMorphToSucc : {m, n : NatObj} ->
+  NatLTMorph (m, n) -> NatLTMorph (NatOS m, NatOS n)
+NatLTMorphToSucc morph = InNatLT _ (NatLTS _ morph)
+
+public export
+NatMorphIndCurried :
+  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  ((n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n) ->
+  ((m, n : NatObj) ->
+   (morph : NatLTMorph (m, n)) ->
+   p (m, n) morph ->
+   p (InNat $ SuccF m, InNat $ SuccF n) $
+    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph) ->
+  (m, n : NatObj) -> (morph : NatLTMorph (m, n)) -> p (m, n) morph
+NatMorphIndCurried p zn ss (InNat ZeroF) _ morph =
+  case morph of
+    InNatLT _ (NatLTZ $ n'') =>
+      zn n''
+    InNatLT _ (NatLTS (_, _) _) impossible
+NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat ZeroF) morph =
+  case morph of
+    InNatLT _ (NatLTZ $ ZeroF) impossible
+    InNatLT _ (NatLTS (_, _) _) impossible
+NatMorphIndCurried p zn ss (InNat $ SuccF _) (InNat $ SuccF _) morph =
+  case morph of
+    InNatLT _ (NatLTZ $ SuccF _) impossible
+    InNatLT _ (NatLTS (m'', n'') morph') =>
+      ss m'' n'' morph' $ NatMorphIndCurried p zn ss m'' n'' morph'
+
+public export
+NatMorphIndZCase : (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) -> Type
+NatMorphIndZCase p =
+  (n : NatF NatObj) -> p (NatOZ, InNat n) $ InNatLT (ZeroF, n) $ NatLTZ n
+
+public export
+NatMorphIndSCase : (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) -> Type
+NatMorphIndSCase p =
+  (m, n : NatObj) ->
+  (morph : NatLTMorph (m, n)) ->
+  p (m, n) morph ->
+  p (InNat $ SuccF m, InNat $ SuccF n) $
+    InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph
+
+public export
+NatMorphInd :
+  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  NatMorphIndZCase p ->
+  NatMorphIndSCase p ->
+  (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph
+NatMorphInd p zn ss (m, n) = NatMorphIndCurried p zn ss m n
+
+public export
+NatMorphDepIndZCase :
+  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
+  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
+  (zp : NatMorphIndZCase p) ->
+  Type
+NatMorphDepIndZCase {p} dp zp =
+  (n : NatF NatObj) ->
+  dp (NatOZ, InNat n) (InNatLT (ZeroF, n) (NatLTZ n)) (zp n)
+
+public export
+NatMorphDepIndSCase :
+  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
+  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
+  (sp : NatMorphIndSCase p) ->
+  Type
+NatMorphDepIndSCase {p} dp sp =
+  (m, n : NatObj) ->
+  (morph : NatLTMorph (m, n)) ->
+  (pmn : p (m, n) morph) ->
+  dp (m, n) morph pmn ->
+  dp
+    (InNat $ SuccF m, InNat $ SuccF n)
+    (InNatLT (SuccF m, SuccF n) $ NatLTS (m, n) morph)
+    (sp m n morph pmn)
+
+public export
+NatMorphDepInd :
+  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
+  (zp : NatMorphIndZCase p) ->
+  (sp : NatMorphIndSCase p) ->
+  (dzp : NatMorphDepIndZCase dp zp) ->
+  (dsp : NatMorphDepIndSCase dp sp) ->
+  (mn : NatObjPair) -> (morph : NatLTMorph mn) ->
+  dp mn morph (NatMorphInd p zp sp mn morph)
+NatMorphDepInd p dp zp sp dzp dsp =
+  NatMorphInd
+    (\mn', morph' => dp mn' morph' (NatMorphInd p zp sp mn' morph'))
+    dzp
+    (\m', n', morph', dpmn' =>
+      dsp m' n' morph' (NatMorphInd p zp sp (m', n') morph') dpmn')
+
+public export
+NatMorphZThin : (n : NatF NatObj) ->
+  (morph : NatLTMorph (InNat ZeroF, InNat n)) ->
+  InNatLT (ZeroF, n) (NatLTZ n) = morph
+NatMorphZThin ZeroF morph =
+  case morph of
+    InNatLT _ (NatLTZ $ ZeroF) => Refl
+    InNatLT _ (NatLTS (m', n') morph') impossible
+NatMorphZThin (SuccF n') morph =
+  case morph of
+    InNatLT _ (NatLTZ $ ZeroF) impossible
+    InNatLT _ (NatLTS (m', n') morph') impossible
+
+public export
+NatMorphSThin :
+  (m, n : NatObj) ->
+  (morph : NatLTMorph (m, n)) ->
+  ((morph' : NatLTMorph (m, n)) -> morph = morph') ->
+  (morph' : NatLTMorph (InNat (SuccF m), InNat (SuccF n))) ->
+  InNatLT (SuccF m, SuccF n) (NatLTS (m, n) morph) = morph'
+NatMorphSThin (InNat m) (InNat n) morph eq morph' = case m of
+  ZeroF => case morph of
+    InNatLT _ (NatLTZ m') => case morph' of
+      InNatLT _ (NatLTZ $ SuccF $ InNat n') impossible
+      InNatLT _ (NatLTS (InNat ZeroF, InNat n'') morphs) =>
+        rewrite eq morphs in
+        Refl
+    InNatLT _ (NatLTS (m', n') morphs) impossible
+  SuccF m' => case morph of
+    InNatLT _ (NatLTZ m'') impossible
+    InNatLT _ (NatLTS (m'', n'') morphs) => case morph' of
+      InNatLT _ (NatLTZ $ SuccF $ InNat m''') impossible
+      InNatLT _ (NatLTS (InNat $ SuccF m''', InNat $ SuccF n''') morphs') =>
+        rewrite eq morphs' in
+        Refl
+
+public export
+NatCatThin : (mn : NatObjPair) ->
+  (morph, morph' : NatLTMorph mn) -> morph = morph'
+NatCatThin =
+  NatMorphInd
+    (\mn, morph => (morph' : NatLTMorph mn) -> morph = morph')
+    NatMorphZThin
+    NatMorphSThin
+
+public export
+LTEThin : {m, n : Nat} -> (l, l' : LTE m n) -> l = l'
+LTEThin LTEZero LTEZero = Refl
+LTEThin LTEZero (LTESucc l) impossible
+LTEThin (LTESucc l) LTEZero impossible
+LTEThin (LTESucc l) (LTESucc l') = cong LTESucc (LTEThin l l')
+
+public export
+NatMorphToLTE : {mn : NatObjPair} ->
+  NatLTMorph mn -> LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn))
+NatMorphToLTE {mn=mn'} =
+  NatMorphInd
+    (\mn, morph => LTE (NatObjToMeta (fst mn)) (NatObjToMeta (snd mn)))
+    (\n => LTEZero {right=(NatObjToMeta $ InNat n)})
+    (\m, n, morph, lt => LTESucc lt)
+    mn'
+
+public export
+LTEToNatMorph : {mn : NatPair} ->
+  LTE (fst mn) (snd mn) -> NatLTMorph (NatMetaPairToObj mn)
+LTEToNatMorph {mn=(Z, Z)} LTEZero =
+  InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
+LTEToNatMorph {mn=(Z, Z)} (LTESucc _) impossible
+LTEToNatMorph {mn=(Z, S n)} LTEZero =
+  InNatLT (ZeroF, SuccF $ MetaToNatObj n) $ NatLTZ $ SuccF $ MetaToNatObj n
+LTEToNatMorph {mn=(Z, S n)} (LTESucc _) impossible
+LTEToNatMorph {mn=(S m, Z)} LTEZero impossible
+LTEToNatMorph {mn=(S m, Z)} (LTESucc _) impossible
+LTEToNatMorph {mn=(S m, S n)} LTEZero impossible
+LTEToNatMorph {mn=(S m, S n)} (LTESucc lt) =
+  InNatLT (SuccF $ MetaToNatObj m, SuccF $ MetaToNatObj n) $
+    NatLTS (MetaToNatObj m, MetaToNatObj n) $
+      LTEToNatMorph {mn=(m, n)} lt
+
+public export
+NatMorphCompose : {m, n, p : NatObj} ->
+  NatLTMorph (n, p) ->
+  NatLTMorph (m, n) ->
+  NatLTMorph (m, p)
+NatMorphCompose {m} {n} {p} g f =
+  rewrite sym (NatToMetaId m) in
+  rewrite sym (NatToMetaId p) in
+  LTEToNatMorph {mn=(NatObjToMeta m, NatObjToMeta p)} $
+    transitive (NatMorphToLTE f) (NatMorphToLTE g)
+
+public export
+NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
+NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
+
+public export
+NatLTOZ1 : NatLTMorph (NatOZ, NatO1)
+NatLTOZ1 = NatLTOZ NatO1
+
+public export
+NatLTStrict : NatObj -> NatObj -> Type
+NatLTStrict m n = NatLTMorph (NatOS m, n)
+
+public export
+OnlyZLtZ : (n : NatObj) -> NatLTMorph (n, NatOZ) -> n = NatOZ
+OnlyZLtZ (InNat n) (InNatLT (n, ZeroF) m) = case n of
+  ZeroF => Refl
+  SuccF n' => let _ = OnlyZLtZ n' in case m of
+    NatLTZ ZeroF impossible
+    NatLTS (s, z) m' impossible
+
+public export
+NatMorphId : (n : NatObj) -> NatLTMorph (n, n)
+NatMorphId (InNat n) = case n of
+  ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
+  SuccF n' => InNatLT (SuccF n', SuccF n') $ NatLTS (n', n') $ NatMorphId n'
+
+public export
+NatLTSucc : (n : NatObj) -> NatLTMorph (n, NatOS n)
+NatLTSucc = NatObjInd _ NatLTOZ1 $
+  \n', morph => InNatLT _ $ NatLTS (n', InNat $ SuccF n') morph
+
+public export
+NatLTDec : {n, n' : NatObj} -> NatLTMorph (NatOS n, n') -> NatLTMorph (n, n')
+NatLTDec {n} morph = NatMorphCompose morph $ NatLTSucc n
+
+public export
+NatMorphIdZ : NatLTMorph (NatOZ, NatOZ)
+NatMorphIdZ = NatMorphId NatOZ
+
+public export
+NatMorphCompare : (m, n : NatObj) ->
+  Either (m = n) $ Either (NatLTStrict m n) (NatLTStrict n m)
+NatMorphCompare m n with (decEq (NatObjToMeta m) (NatObjToMeta n))
+  NatMorphCompare m n | Yes eq = Left $ NatObjToMetaInj m n eq
+  NatMorphCompare m n | No neq = Right $ case connex {rel=LTE} neq of
+    Left lte => Left $
+      let
+        lt = lteTolt lte neq
+        morph = LTEToNatMorph {mn=(S $ NatObjToMeta m, NatObjToMeta n)} lt
+      in
+      rewrite sym (NatToMetaId m) in
+      rewrite sym (NatToMetaId n) in
+      morph
+    Right gte => Right $
+      let
+        lt = lteTolt gte $ \eq => neq $ sym eq
+        morph = LTEToNatMorph {mn=(S $ NatObjToMeta n, NatObjToMeta m)} lt
+      in
+      rewrite sym (NatToMetaId m) in
+      rewrite sym (NatToMetaId n) in
+      morph
+
+public export
+NatLTFromSucc : (m, n : NatObj) -> NatLTMorph (NatOS m, NatOS n) ->
+  NatLTMorph (m, n)
+NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
+  NatLTZ (SuccF n') impossible
+  NatLTS (m', n') mn' => mn'
+
+public export
+FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
+FromSuccContra n morph = void $ succNotLTEpred $ NatMorphToLTE morph
+
+public export
+NatMorphDec : (m, n : NatObj) ->
+  Either (m = n) $ Either (NatLTMorph (m, n)) (NatLTMorph (n, m))
+NatMorphDec m n = case NatMorphCompare m n of
+  Left eq => Left eq
+  Right morph => Right $ bimap {f=Either} NatLTDec NatLTDec morph
+
+public export
+NatMorphDecSucc : (m, n : NatObj) ->
+  Either (m = n) $
+    Either (NatLTMorph (NatOS m, NatOS n)) (NatLTMorph (NatOS n, NatOS m))
+NatMorphDecSucc m n = case NatMorphDec m n of
+  Left eq =>
+    Left eq
+  Right morph =>
+    Right $ bimap {f=Either} NatLTMorphToSucc NatLTMorphToSucc morph
+
+public export
+NatMorphSucc : (m, n : NatObj) -> NatLTMorph (m, NatOS n) ->
+  Either (NatLTMorph (m, n)) (m = NatOS n)
+NatMorphSucc m n morph =
+  case NatMorphCompare m (NatOS n) of
+    Left eq => Right eq
+    Right (Left lt) => Left $ NatLTFromSucc m n lt
+    Right (Right gt) =>
+      void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
 --------------------------
 ---- Initial algebras ----
