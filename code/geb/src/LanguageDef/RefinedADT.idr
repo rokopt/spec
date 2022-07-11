@@ -18,7 +18,7 @@ data NatPolyTerm : Type where
 
 public export
 Show NatPolyTerm where
-  show (NatCoeffPow (c, p)) = show p ++ " * n ^ " ++ show p
+  show (NatCoeffPow (c, p)) = show c ++ " * n ^ " ++ show p
 
 public export
 natPolyCoeff : NatPolyTerm -> NatObj
