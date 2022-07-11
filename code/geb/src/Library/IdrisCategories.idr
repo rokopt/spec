@@ -1487,17 +1487,6 @@ public export
 inFreePN : ProductMonad (NatF NatObj) -> ProductMonad NatObj
 inFreePN = map {f=ProductMonad} InNat
 
-public export
-ProductMNatPred : Type
-ProductMNatPred = MorphCarrier NatObj
-
-public export
-data NatLTMorph : ProductMNatPred where
-  InNatLT :
-    (mn : ProductMNatF NatObj) ->
-    NatLTMorphF NatObj NatLTMorph mn ->
-    NatLTMorph (Library.IdrisCategories.inFreePN mn)
-
 -------------------
 ---- Induction ----
 -------------------
@@ -1820,6 +1809,21 @@ NatPairIndFromNatObj p zz zs sz ss (S m') (S n') =
   ss m' n' $
     rewrite MetaToNatPairId (m', n') in
     NatPairIndFromNatObj p zz zs sz ss m' n'
+
+----------------------------------------------------------
+---- Natural number morphisms (in less-than category) ----
+----------------------------------------------------------
+
+public export
+ProductMNatPred : Type
+ProductMNatPred = MorphCarrier NatObj
+
+public export
+data NatLTMorph : ProductMNatPred where
+  InNatLT :
+    (mn : ProductMNatF NatObj) ->
+    NatLTMorphF NatObj NatLTMorph mn ->
+    NatLTMorph (Library.IdrisCategories.inFreePN mn)
 
 public export
 NatLTMorphToSucc : {m, n : NatObj} ->
