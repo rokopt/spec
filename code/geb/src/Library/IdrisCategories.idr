@@ -2442,16 +2442,6 @@ OmegaN {f} {a} {n} =
     (\n', hyp => OmegaIter . map {f} hyp)
     n
 
-public export
-OmegaChainCompose : {f : Type -> Type} -> {a : Type} -> {n, n' : NatObj} ->
-  Functor f => NatLTMorph (n, n') -> OmegaChain f n a -> OmegaChain f n' a
-OmegaChainCompose {f} {n} {n'} =
-  NatMorphInd
-    (\mn, _ => OmegaChain f (fst mn) a -> OmegaChain f (snd mn) a)
-    (\k => OmegaInjN {f} {a} (InNat k))
-    (\_, _, _ => map {f=(OmegaStep f)})
-    (n, n')
-
 -- AKA free monad.
 public export
 OmegaColimit : (Type -> Type) -> Type -> Type
@@ -2611,6 +2601,10 @@ public export
 colimitCata : {f : Type -> Type} -> {isF : Functor f} -> ColimitCata f
 colimitCata {f} {isF} x alg = colimitMapAlg {f} {isF} {x} {v=Void} alg (voidF _)
 
+--------------------------
+---- Initial algebras ----
+--------------------------
+
 public export
 FInitAlg : (Type -> Type) -> Type
 FInitAlg f = Algebra f (InitialColimit f)
@@ -2653,6 +2647,16 @@ colimitOne :
   (succ : {n : NatObj} -> InitialChain f n -> f (InitialChain f n)) ->
   InitialColimit f -> InitialColimit f
 colimitOne succ (n ** f') = (NatOS n ** OmegaIter $ succ f')
+
+public export
+OmegaChainCompose : {f : Type -> Type} -> {a : Type} -> {n, n' : NatObj} ->
+  Functor f => NatLTMorph (n, n') -> OmegaChain f n a -> OmegaChain f n' a
+OmegaChainCompose {f} {n} {n'} =
+  NatMorphInd
+    (\mn, _ => OmegaChain f (fst mn) a -> OmegaChain f (snd mn) a)
+    (\k => OmegaInjN {f} {a} (InNat k))
+    (\_, _, _ => map {f=(OmegaStep f)})
+    (n, n')
 
 public export
 colimitPair :
