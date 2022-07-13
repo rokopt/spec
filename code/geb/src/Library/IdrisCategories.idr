@@ -2301,6 +2301,25 @@ public export
 colimitCata : {f : Type -> Type} -> {isF : Functor f} -> ColimitCata f
 colimitCata {f} {isF} x alg = colimitMapAlg {f} {isF} {x} {v=Void} alg (voidF _)
 
+-----------------------------------------------------------------
+---- Slices of natural number category as functor iterations ----
+-----------------------------------------------------------------
+
+public export
+NatLTSlice : NatObj -> Type
+NatLTSlice n = FunctorIter (Either ()) n ()
+
+public export
+ltSliceObjToNatStep :
+  (n : NatObj) -> (NatLTSlice n -> NatObj) -> NatLTSlice (NatOS n) -> NatObj
+ltSliceObjToNatStep n step (Left ()) = NatOZ
+ltSliceObjToNatStep n step (Right n') = NatOS $ step n'
+
+public export
+ltSliceObjToNat : (n : NatObj) -> NatLTSlice n -> NatObj
+ltSliceObjToNat =
+  FunctorIterInd (\_, _ => NatObj) (const NatOZ) ltSliceObjToNatStep
+
 ----------------------------------------------------------
 ---- Natural number morphisms (in less-than category) ----
 ----------------------------------------------------------
@@ -2506,6 +2525,10 @@ NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
 NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
 
 public export
+NatLTOZZ : NatLTMorph (NatOZ, NatOZ)
+NatLTOZZ = NatLTOZ NatOZ
+
+public export
 NatLTOZ1 : NatLTMorph (NatOZ, NatO1)
 NatLTOZ1 = NatLTOZ NatO1
 
@@ -2676,6 +2699,22 @@ colimitPair combine (m ** f') (n ** g') =
 ---------------------------
 ---- General induction ----
 ---------------------------
+
+
+public export
+ltSliceObjToNatMorphStep :
+  (n : NatObj) ->
+  ((slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat n slice, n)) ->
+  (slice : NatLTSlice (NatOS n)) ->
+  NatLTMorph (ltSliceObjToNat (NatOS n) slice, NatOS n)
+ltSliceObjToNatMorphStep n step (Left ()) = NatLTOZ $ NatOS n
+ltSliceObjToNatMorphStep n step (Right n') = NatLTMorphToSucc $ step n'
+
+public export
+ltSliceObjToNatMorph : (n : NatObj) ->
+  (slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat n slice, n)
+ltSliceObjToNatMorph =
+  FunctorIterInd _ (const NatLTOZZ) ltSliceObjToNatMorphStep
 
 public export
 NatOSlice : NatObj -> Type
