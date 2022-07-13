@@ -2525,10 +2525,6 @@ NatLTOZ : (n : NatObj) -> NatLTMorph (NatOZ, n)
 NatLTOZ (InNat n) = InNatLT (ZeroF, n) (NatLTZ n)
 
 public export
-NatLTOZZ : NatLTMorph (NatOZ, NatOZ)
-NatLTOZZ = NatLTOZ NatOZ
-
-public export
 NatLTOZ1 : NatLTMorph (NatOZ, NatO1)
 NatLTOZ1 = NatLTOZ NatO1
 
@@ -2714,7 +2710,7 @@ public export
 ltSliceObjToNatMorph : (n : NatObj) ->
   (slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat n slice, n)
 ltSliceObjToNatMorph =
-  FunctorIterInd _ (const NatLTOZZ) ltSliceObjToNatMorphStep
+  FunctorIterInd _ (const NatMorphIdZ) ltSliceObjToNatMorphStep
 
 public export
 NatOSlice : NatObj -> Type
