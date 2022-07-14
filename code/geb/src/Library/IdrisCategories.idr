@@ -2310,15 +2310,139 @@ NatLTSlice : NatObj -> Type
 NatLTSlice n = FunctorIter (Either ()) n ()
 
 public export
+NatLTSliceZ : (n : NatObj) -> NatLTSlice n
+NatLTSliceZ (InNat ZeroF) = ()
+NatLTSliceZ (InNat $ SuccF _) = Left ()
+
+public export
 ltSliceObjToNatStep :
   (n : NatObj) -> (NatLTSlice n -> NatObj) -> NatLTSlice (NatOS n) -> NatObj
 ltSliceObjToNatStep n step (Left ()) = NatOZ
 ltSliceObjToNatStep n step (Right n') = NatOS $ step n'
 
 public export
-ltSliceObjToNat : (n : NatObj) -> NatLTSlice n -> NatObj
-ltSliceObjToNat =
-  FunctorIterInd (\_, _ => NatObj) (const NatOZ) ltSliceObjToNatStep
+ltSliceObjToNat : {n : NatObj} -> NatLTSlice n -> NatObj
+ltSliceObjToNat {n} =
+  FunctorIterInd (\_, _ => NatObj) (const NatOZ) ltSliceObjToNatStep n
+
+public export
+ltSliceOfSliceObjStep : (n : NatObj) ->
+  ((slice : NatLTSlice n) ->
+   (slice' : NatLTSlice (ltSliceObjToNat {n} slice)) ->
+   NatLTSlice n) ->
+  (slice : NatLTSlice (NatOS n)) ->
+  (slice' : NatLTSlice (ltSliceObjToNat {n=(NatOS n)} slice)) ->
+  NatLTSlice (NatOS n)
+ltSliceOfSliceObjStep n hyp (Left ()) slice' = Left ()
+ltSliceOfSliceObjStep n hyp (Right slice) slice' =
+  case slice' of
+    Left () => Left ()
+    Right slice'' => Right $ hyp slice slice''
+
+public export
+ltSliceOfSliceObj : {n : NatObj} ->
+  (slice : NatLTSlice n) ->
+  (slice' : NatLTSlice (ltSliceObjToNat {n} slice)) ->
+  NatLTSlice n
+ltSliceOfSliceObj {n} =
+  NatObjInd
+    (\n' =>
+      (slice : NatLTSlice n') ->
+      (slice' : NatLTSlice (ltSliceObjToNat {n=n'} slice)) ->
+      NatLTSlice n')
+    (\_, _ => ())
+    ltSliceOfSliceObjStep
+    n
+
+public export
+ltSliceOfSliceObjCorrectStep : (n : NatObj) ->
+  ((slice : NatLTSlice n) ->
+   (slice' : NatLTSlice (ltSliceObjToNat {n} slice)) ->
+    ltSliceObjToNat {n=(ltSliceObjToNat {n} slice)} slice' =
+    ltSliceObjToNat {n} (ltSliceOfSliceObj {n} slice slice')) ->
+  (slice : NatLTSlice (NatOS n)) ->
+  (slice' : NatLTSlice (ltSliceObjToNat {n=(NatOS n)} slice)) ->
+    ltSliceObjToNat {n=(ltSliceObjToNat {n=(NatOS n)} slice)} slice' =
+    ltSliceObjToNat {n=(NatOS n)} (ltSliceOfSliceObj {n=(NatOS n)} slice slice')
+ltSliceOfSliceObjCorrectStep n hyp (Left ()) slice' =
+  Refl
+ltSliceOfSliceObjCorrectStep n hyp (Right slice) slice' =
+  case slice' of
+    Left () => Refl
+    Right slice'' => cong (InNat . SuccF) $ hyp slice slice''
+
+public export
+ltSliceOfSliceObjCorrect : {n : NatObj} ->
+  (slice : NatLTSlice n) ->
+  (slice' : NatLTSlice (ltSliceObjToNat {n} slice)) ->
+    ltSliceObjToNat {n=(ltSliceObjToNat {n} slice)} slice' =
+    ltSliceObjToNat {n} (ltSliceOfSliceObj {n} slice slice')
+ltSliceOfSliceObjCorrect {n} =
+  NatObjInd
+    (\n' =>
+      (slice : NatLTSlice n') ->
+      (slice' : NatLTSlice (ltSliceObjToNat {n=n'} slice)) ->
+        ltSliceObjToNat {n=(ltSliceObjToNat {n=n'} slice)} slice' =
+        ltSliceObjToNat {n=n'} (ltSliceOfSliceObj {n=n'} slice slice'))
+    (\_, _ => Refl)
+    ltSliceOfSliceObjCorrectStep
+    n
+
+public export
+ltSliceMax : (n : NatObj) -> NatLTSlice n
+ltSliceMax = NatObjInd NatLTSlice () (\_ => Right)
+
+public export
+ltSliceMaxCorrect : (n : NatObj) -> ltSliceObjToNat {n} (ltSliceMax n) = n
+ltSliceMaxCorrect = NatObjInd _ Refl (\_ => cong (InNat . SuccF))
+
+public export
+NatLTGenInductionStep : (NatObj -> Type) -> Type
+NatLTGenInductionStep p =
+  (n' : NatObj) ->
+  ((sl : NatLTSlice n') -> p (ltSliceObjToNat sl)) ->
+  p (NatOS n')
+
+public export
+ltSubSlice : {n : NatObj} ->
+  (p : NatObj -> Type) ->
+  ((slice : NatLTSlice n) -> p (ltSliceObjToNat {n} slice)) ->
+  (slice : NatLTSlice n) ->
+  (slice' : NatLTSlice (ltSliceObjToNat {n} slice)) ->
+  p (ltSliceObjToNat {n=(ltSliceObjToNat {n} slice)} slice')
+ltSubSlice {n} p hyp slice slice' =
+  replace {p} (sym $ ltSliceOfSliceObjCorrect slice slice') $
+    hyp $ ltSliceOfSliceObj slice slice'
+
+public export
+NatLTGenIndStrengthedDefinitionStep :
+  (p : NatObj -> Type) ->
+  NatObjIndBaseCase p ->
+  NatLTGenInductionStep p ->
+  (n : NatObj) -> ((slice : NatLTSlice n) -> p (ltSliceObjToNat {n} slice)) ->
+  (slice : NatLTSlice (NatOS n)) -> p (ltSliceObjToNat {n=(NatOS n)} slice)
+NatLTGenIndStrengthedDefinitionStep p z s n step (Left ()) = z
+NatLTGenIndStrengthedDefinitionStep p z s n step (Right slice) =
+  s (ltSliceObjToNat slice) $ \slice' => ltSubSlice p step slice slice'
+
+public export
+NatLTGenIndStrengthened :
+  (p : NatObj -> Type) ->
+  NatObjIndBaseCase p ->
+  NatLTGenInductionStep p ->
+  (n : NatObj) -> ((sl : NatLTSlice n) -> p (ltSliceObjToNat {n} sl))
+NatLTGenIndStrengthened p z s =
+  FunctorIterInd _ (const z) (NatLTGenIndStrengthedDefinitionStep p z s)
+
+public export
+NatLTGenInd :
+  (p : NatObj -> Type) ->
+  NatObjIndBaseCase p ->
+  NatLTGenInductionStep p ->
+  (n : NatObj) -> p n
+NatLTGenInd p z s n =
+  rewrite sym (ltSliceMaxCorrect n) in
+  NatLTGenIndStrengthened p z s n (ltSliceMax n)
 
 ----------------------------------------------------------
 ---- Natural number morphisms (in less-than category) ----
@@ -2697,22 +2821,18 @@ colimitPair combine (m ** f') (n ** g') =
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
 
----------------------------
----- General induction ----
----------------------------
-
 public export
 ltSliceObjToNatMorphStep :
   (n : NatObj) ->
-  ((slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat n slice, n)) ->
+  ((slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat {n} slice, n)) ->
   (slice : NatLTSlice (NatOS n)) ->
-  NatLTMorph (ltSliceObjToNat (NatOS n) slice, NatOS n)
+  NatLTMorph (ltSliceObjToNat {n=(NatOS n)} slice, NatOS n)
 ltSliceObjToNatMorphStep n step (Left ()) = NatLTOZ $ NatOS n
 ltSliceObjToNatMorphStep n step (Right n') = NatLTMorphToSucc $ step n'
 
 public export
 ltSliceObjToNatMorph : (n : NatObj) ->
-  (slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat n slice, n)
+  (slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat {n} slice, n)
 ltSliceObjToNatMorph =
   FunctorIterInd _ (const NatMorphIdZ) ltSliceObjToNatMorphStep
 
@@ -2726,6 +2846,10 @@ natMorphToLTSlice {m} {n} =
       SuccF n'' => Left ())
     (\m', n', morph, slice => if isLTZ morph then Left () else Right slice)
     (m, n)
+
+---------------------------
+---- General induction ----
+---------------------------
 
 public export
 NatOSlice : NatObj -> Type
