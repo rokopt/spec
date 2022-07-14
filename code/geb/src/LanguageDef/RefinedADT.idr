@@ -32,7 +32,7 @@ public export
 NatPolyTermPair : Type
 NatPolyTermPair = ProductMonad NatPolyTerm
 
--- A decidable partial strict order (the "P" could be for "partial" or "power").
+-- A decidable non-total strict order.
 public export
 data NatPolyLTP : NatPolyTermPair -> Type where
   NatPolyLTPow : {c, p, c', p' : NatObj} ->
@@ -43,10 +43,17 @@ decNatPolyLTP : (np : NatPolyTermPair) -> Dec (NatPolyLTP np)
 decNatPolyLTP (NatCoeffPow (_, p), NatCoeffPow (_, p')) =
   case NatMorphCompare p p' of
     Left eq => No $ \ltp => case ltp of
-      (NatPolyLTPow lt) => ?eqhole
+      (NatPolyLTPow lt) => case eq of
+        Refl => succNotLTEpred $ NatMorphToLTE lt
     (Right (Left ltmn)) => Yes $ NatPolyLTPow ltmn
     (Right (Right ltnm)) => No $ \ltp => case ltp of
-      (NatPolyLTPow lt) => ?rhole
+      (NatPolyLTPow lt) =>
+        let
+          ltnm' = NatMorphToLTE ltnm
+          lt' = NatMorphToLTE lt
+          ltp = NatMorphToLTE $ NatLTSucc p'
+        in
+        succNotLTEpred $ transitive lt' $ transitive ltp ltnm'
 
 -- A polynomial derived from lists of `(coefficient, power)` pairs.
 public export
