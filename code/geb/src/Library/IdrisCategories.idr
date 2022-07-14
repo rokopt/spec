@@ -2301,6 +2301,35 @@ public export
 colimitCata : {f : Type -> Type} -> {isF : Functor f} -> ColimitCata f
 colimitCata {f} {isF} x alg = colimitMapAlg {f} {isF} {x} {v=Void} alg (voidF _)
 
+--------------------------
+---- Initial algebras ----
+--------------------------
+
+public export
+FInitAlg : (Type -> Type) -> Type
+FInitAlg f = Algebra f (InitialColimit f)
+
+public export
+FInitAlgLift : (Type -> Type) -> Type
+FInitAlgLift f = Algebra f (f (InitialColimit f))
+
+public export
+FInitAlgInv : (Type -> Type) -> Type
+FInitAlgInv f = Coalgebra f (InitialColimit f)
+
+public export
+fInitAlgInv : {f : Type -> Type} -> {isF : Functor f} ->
+  FInitAlg f -> FInitAlgInv f
+fInitAlgInv {f} {isF} alg =
+  colimitCata {isF} (f (InitialColimit f)) (map {f} alg)
+
+public export
+InitAlgCorrect : {f : Type -> Type} -> {isF : Functor f} -> FInitAlg f -> Type
+InitAlgCorrect {f} {isF} alg =
+  ExtEq
+    (fInitAlgInv {isF} alg . alg)
+    (map {f} alg . map {f} (fInitAlgInv {isF} alg))
+
 -----------------------------------------------------------------
 ---- Slices of natural number category as functor iterations ----
 -----------------------------------------------------------------
@@ -2749,34 +2778,9 @@ NatMorphSucc m n morph =
     Right (Right gt) =>
       void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
---------------------------
----- Initial algebras ----
---------------------------
-
-public export
-FInitAlg : (Type -> Type) -> Type
-FInitAlg f = Algebra f (InitialColimit f)
-
-public export
-FInitAlgLift : (Type -> Type) -> Type
-FInitAlgLift f = Algebra f (f (InitialColimit f))
-
-public export
-FInitAlgInv : (Type -> Type) -> Type
-FInitAlgInv f = Coalgebra f (InitialColimit f)
-
-public export
-fInitAlgInv : {f : Type -> Type} -> {isF : Functor f} ->
-  FInitAlg f -> FInitAlgInv f
-fInitAlgInv {f} {isF} alg =
-  colimitCata {isF} (f (InitialColimit f)) (map {f} alg)
-
-public export
-InitAlgCorrect : {f : Type -> Type} -> {isF : Functor f} -> FInitAlg f -> Type
-InitAlgCorrect {f} {isF} alg =
-  ExtEq
-    (fInitAlgInv {isF} alg . alg)
-    (map {f} alg . map {f} (fInitAlgInv {isF} alg))
+---------------------------------------------------
+---- Colimit/initial algebra utility functions ----
+---------------------------------------------------
 
 public export
 colimitInj :
@@ -2820,6 +2824,10 @@ colimitPair combine (m ** f') (n ** g') =
         (NatOS n ** OmegaIter $ combine (OmegaChainCompose ltmn f') g')
       Right ltnm =>
         (NatOS m ** OmegaIter $ combine f' (OmegaChainCompose ltnm g'))
+
+------------------------------
+---- Slices and morphisms ----
+------------------------------
 
 public export
 ltSliceObjToNatMorphStep :
