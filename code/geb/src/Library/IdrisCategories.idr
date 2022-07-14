@@ -2336,6 +2336,11 @@ data NatLTMorph : ProductMNatPred where
     NatLTMorph (Library.IdrisCategories.inFreePN mn)
 
 public export
+isLTZ : {mn : NatObjPair} -> NatLTMorph mn -> Bool
+isLTZ (InNatLT _ (NatLTZ _)) = True
+isLTZ (InNatLT _ (NatLTS _ _)) = False
+
+public export
 NatLTMorphToSucc : {m, n : NatObj} ->
   NatLTMorph (m, n) -> NatLTMorph (NatOS m, NatOS n)
 NatLTMorphToSucc morph = InNatLT _ (NatLTS _ morph)
@@ -2696,7 +2701,6 @@ colimitPair combine (m ** f') (n ** g') =
 ---- General induction ----
 ---------------------------
 
-
 public export
 ltSliceObjToNatMorphStep :
   (n : NatObj) ->
@@ -2711,6 +2715,17 @@ ltSliceObjToNatMorph : (n : NatObj) ->
   (slice : NatLTSlice n) -> NatLTMorph (ltSliceObjToNat n slice, n)
 ltSliceObjToNatMorph =
   FunctorIterInd _ (const NatMorphIdZ) ltSliceObjToNatMorphStep
+
+public export
+natMorphToLTSlice : {m, n : NatObj} -> NatLTMorph (m, n) -> NatLTSlice n
+natMorphToLTSlice {m} {n} =
+  NatMorphInd
+    (\mn, _ => NatLTSlice (snd mn))
+    (\n' => case n' of
+      ZeroF => ()
+      SuccF n'' => Left ())
+    (\m', n', morph, slice => if isLTZ morph then Left () else Right slice)
+    (m, n)
 
 public export
 NatOSlice : NatObj -> Type
