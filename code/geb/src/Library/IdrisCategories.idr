@@ -2286,6 +2286,10 @@ ColimitDepInd p dp zp sp dzp dsp (n ** c) =
     zp sp dzp dsp n c
 
 public export
+InitialIter : (Type -> Type) -> NatObj -> Type
+InitialIter f n = FunctorIter f n Void
+
+public export
 InitialChain : (Type -> Type) -> NatObj -> Type
 InitialChain f n = OmegaChain f n Void
 
@@ -2333,6 +2337,10 @@ InitAlgCorrect {f} {isF} alg =
 -----------------------------------------------------------------
 ---- Slices of natural number category as functor iterations ----
 -----------------------------------------------------------------
+
+public export
+NatStrictPrefix : NatObj -> Type
+NatStrictPrefix = InitialIter Maybe
 
 public export
 NatLTSlice : NatObj -> Type
