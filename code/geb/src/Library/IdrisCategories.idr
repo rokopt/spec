@@ -2990,12 +2990,16 @@ NatObjGenInd :
 NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (NatOSliceMax n)
 
 public export
+FunctorIterLTE : (Type -> Type) -> NatObj -> Type -> Type
+FunctorIterLTE f n a = (sl : NatOSlice n ** FunctorIter f (fst sl) a)
+
+public export
 FunctorIterGenIndStep : {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> FunctorIter f n' a -> Type) -> Type
 FunctorIterGenIndStep {f} {a} p =
   (n' : NatObj) ->
-   ((sl : NatOSlice n') -> (ty : FunctorIter f (fst sl) a) -> p (fst sl) ty) ->
-   ((ty : f (FunctorIter f n' a)) -> p (NatOS n') ty)
+  ((ty : FunctorIterLTE f n' a) -> p (fst (fst ty)) (snd ty)) ->
+  (ty : FunctorIter f (NatOS n') a) -> p (NatOS n') ty
 
 public export
 FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
@@ -3003,8 +3007,11 @@ FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
   FunctorIterIndBaseCase {f} {a} p ->
   FunctorIterGenIndStep {f} {a} p ->
   (n : NatObj) -> (ty : FunctorIter f n a) -> p n ty
-FunctorIterGenInd {f} {a} p =
-  NatObjGenInd (\n' => (ty : FunctorIter f n' a) -> p n' ty)
+FunctorIterGenInd {f} {a} p z s =
+  NatObjGenInd
+    (\n' => (ty : FunctorIter f n' a) -> p n' ty)
+    z
+    (\n', hyp => s n' (\ty => hyp (fst ty) (snd ty)))
 
 public export
 ChainGenIndStep : {f : Type -> Type} -> {a : Type} ->
