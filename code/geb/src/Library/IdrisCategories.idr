@@ -2959,16 +2959,19 @@ NatOSliceDepInduction p dp z s dz ds =
 ---------------------------
 
 public export
+ForallLTE : (NatObj -> Type) -> NatObj -> Type
+ForallLTE p n = (sl : NatOSlice n) -> p (fst sl)
+
+public export
 NatObjGenInductionStep : (NatObj -> Type) -> Type
-NatObjGenInductionStep p =
-  (n' : NatObj) -> ((sl : NatOSlice n') -> p (fst sl)) -> p (NatOS n')
+NatObjGenInductionStep p = (n' : NatObj) -> ForallLTE p n' -> p (NatOS n')
 
 public export
 NatObjGenIndStrengthened :
   (p : NatObj -> Type) ->
   NatObjIndBaseCase p ->
   NatObjGenInductionStep p ->
-  (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
+  (n : NatObj) -> ForallLTE p n
 NatObjGenIndStrengthened p z s =
   NatOSliceInduction
     (\n, sl => p (fst sl))
@@ -2984,7 +2987,7 @@ NatObjGenInd :
   NatObjIndBaseCase p ->
   NatObjGenInductionStep p ->
   (n : NatObj) -> p n
-NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (n ** NatMorphId n)
+NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (NatOSliceMax n)
 
 public export
 FunctorIterGenIndStep : {f : Type -> Type} -> {a : Type} ->
