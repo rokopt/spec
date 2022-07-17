@@ -2931,11 +2931,9 @@ NatObjGenIndStrengthened :
   NatObjGenInductionStep p ->
   (n : NatObj) -> ((sl : NatOSlice n) -> p (fst sl))
 NatObjGenIndStrengthened p z s =
-  NatObjInd
-    (\n' =>
-      (sl : NatOSlice n') -> p (fst sl))
-    (\sl =>
-      case sl of (n ** m) => rewrite OnlyZLtZ n m in z)
+  NatOSliceInduction
+    (\n, sl => p (fst sl))
+    z
     (\n, hyp, sl => case sl of
       (n' ** m) => case NatMorphSucc n' n m of
         Left m' => hyp (n' ** m')
