@@ -2707,6 +2707,15 @@ OnlyZLtZ (InNat n) (InNatLT (n, ZeroF) m) = case n of
     NatLTS (s, z) m' impossible
 
 public export
+OnlyZLtZMorph : (n : NatObj) -> (morph : NatLTMorph (n, NatOZ)) ->
+  morph = NatLTOZ NatOZ
+OnlyZLtZMorph n morph =
+  rewrite OnlyZLtZ n morph in
+  case morph of
+    InNatLT _ (NatLTZ _) => Refl
+    InNatLT _ (NatLTS (_, _) _) impossible
+
+public export
 NatMorphId : (n : NatObj) -> NatLTMorph (n, n)
 NatMorphId (InNat n) = case n of
   ZeroF => InNatLT (ZeroF, ZeroF) $ NatLTZ ZeroF
@@ -2872,8 +2881,43 @@ NatOSlice : NatObj -> Type
 NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
 
 public export
+NatZSlice : Type
+NatZSlice = NatOSlice NatOZ
+
+public export
+NatOSliceZ : (n : NatObj) -> NatOSlice n
+NatOSliceZ n = (NatOZ ** NatLTOZ n)
+
+public export
 NatOSliceMax : (n : NatObj) -> NatOSlice n
 NatOSliceMax n = (n ** NatMorphId n)
+
+public export
+NatZSliceSingleton : (sl : NatZSlice) -> sl = NatOSliceZ NatOZ
+NatZSliceSingleton (m ** morph) =
+  case OnlyZLtZ m morph of Refl => rewrite OnlyZLtZMorph m morph in Refl
+
+public export
+NatOSliceIndBaseCase : ((n : NatObj) -> NatOSlice n -> Type) -> Type
+NatOSliceIndBaseCase p = p NatOZ (NatOSliceZ NatOZ)
+
+public export
+NatOSliceInductionStep : ((n : NatObj) -> NatOSlice n -> Type) -> Type
+NatOSliceInductionStep p =
+  (n : NatObj) ->
+  ((sl : NatOSlice n) -> p n sl) ->
+  (sl : NatOSlice (NatOS n)) -> p (NatOS n) sl
+
+public export
+NatOSliceInduction :
+  (p : (n : NatObj) -> NatOSlice n -> Type) ->
+  NatOSliceIndBaseCase p ->
+  NatOSliceInductionStep p ->
+  (n : NatObj) -> (sl : NatOSlice n) -> p n sl
+NatOSliceInduction p z =
+  NatObjInd
+    (\n => (sl : NatOSlice n) -> p n sl)
+    (\sl => replace {p=(p NatOZ)} (sym (NatZSliceSingleton sl)) z)
 
 public export
 NatObjGenInductionStep : (NatObj -> Type) -> Type
@@ -4031,6 +4075,12 @@ RightAdjunct {catC} {catD} adj {a} {b} g =
 -- with an interpretation into `Type`, with morphism equality defined by
 -- (non-recursive) extensional equality of functions.
 -- more to it (nat transes, adjunctions)
+
+---------------------------
+---------------------------
+---- Directed colimits ----
+---------------------------
+---------------------------
 
 ----------------------------------------------
 ----------------------------------------------
