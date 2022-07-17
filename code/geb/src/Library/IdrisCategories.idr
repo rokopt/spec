@@ -2919,6 +2919,41 @@ NatOSliceInduction p z =
     (\n => (sl : NatOSlice n) -> p n sl)
     (\sl => replace {p=(p NatOZ)} (sym (NatZSliceSingleton sl)) z)
 
+public export
+NatOSliceDepIndBaseCase :
+  {p : (n : NatObj) -> NatOSlice n -> Type} ->
+  ((n : NatObj) -> (sl : NatOSlice n) -> p n sl -> Type) ->
+  NatOSliceIndBaseCase p ->
+  Type
+NatOSliceDepIndBaseCase {p} dp z = dp NatOZ (NatOSliceZ NatOZ) z
+
+public export
+NatOSliceDepInductionStep :
+  {p : (n : NatObj) -> NatOSlice n -> Type} ->
+  ((n : NatObj) -> (sl : NatOSlice n) -> p n sl -> Type) ->
+  NatOSliceInductionStep p ->
+  Type
+NatOSliceDepInductionStep {p} dp s =
+  (n : NatObj) ->
+  (hyp : (sl : NatOSlice n) -> p n sl) ->
+  (sl : NatOSlice (NatOS n)) ->
+  dp (NatOS n) sl (s n hyp sl)
+
+public export
+NatOSliceDepInduction :
+  (p : (n : NatObj) -> NatOSlice n -> Type) ->
+  (dp : (n : NatObj) -> (sl : NatOSlice n) -> p n sl -> Type) ->
+  (z : NatOSliceIndBaseCase p) ->
+  (s : NatOSliceInductionStep p) ->
+  NatOSliceDepIndBaseCase dp z ->
+  NatOSliceDepInductionStep dp s ->
+  (n : NatObj) -> (sl : NatOSlice n) -> dp n sl (NatOSliceInduction p z s n sl)
+NatOSliceDepInduction p dp z s dz ds =
+  NatOSliceInduction
+    (\n, sl => dp n sl (NatOSliceInduction p z s n sl))
+    dz
+    (\n, hyp, sl => ds n (NatOSliceInduction p z s n) sl)
+
 ---------------------------
 ---- General induction ----
 ---------------------------
