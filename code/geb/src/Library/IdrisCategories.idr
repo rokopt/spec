@@ -2872,9 +2872,9 @@ natMorphToLTSlice {m} {n} =
     (\m', n', morph, slice => if isLTZ morph then Left () else Right slice)
     (m, n)
 
----------------------------
----- General induction ----
----------------------------
+----------------------------------------------
+---- Slices (prefixes) of natural numbers ----
+----------------------------------------------
 
 public export
 NatOSlice : NatObj -> Type
@@ -2918,6 +2918,10 @@ NatOSliceInduction p z =
   NatObjInd
     (\n => (sl : NatOSlice n) -> p n sl)
     (\sl => replace {p=(p NatOZ)} (sym (NatZSliceSingleton sl)) z)
+
+---------------------------
+---- General induction ----
+---------------------------
 
 public export
 NatObjGenInductionStep : (NatObj -> Type) -> Type
