@@ -3066,16 +3066,19 @@ NatObjDepGenInd p dp zp sp dzp dsp n =
   NatObjDepGenIndStrengthened p dp zp sp dzp dsp n (NatOSliceMax n)
 
 public export
-FunctorIterLTE : (Type -> Type) -> NatObj -> Type -> Type
-FunctorIterLTE f n a = (sl : NatOSlice n ** FunctorIter f (fst sl) a)
+FunctorIterLTE : {f : Type -> Type} -> {a : Type} ->
+  ((n : NatObj) -> FunctorIter f n a -> Type) -> NatObj -> Type
+FunctorIterLTE {f} {a} p n =
+  (sl : NatOSlice n) -> (ty : FunctorIter f (fst sl) a) -> p (fst sl) ty
 
 public export
 FunctorIterGenIndStep : {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> FunctorIter f n' a -> Type) -> Type
 FunctorIterGenIndStep {f} {a} p =
   (n' : NatObj) ->
-  ((ty : FunctorIterLTE f n' a) -> p (fst (fst ty)) (snd ty)) ->
-  (ty : FunctorIter f (NatOS n') a) -> p (NatOS n') ty
+  FunctorIterLTE p n' ->
+  (ty : FunctorIter f (NatOS n') a) ->
+  p (NatOS n') ty
 
 public export
 FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
@@ -3083,11 +3086,18 @@ FunctorIterGenInd : {f : Type -> Type} -> {a : Type} ->
   FunctorIterIndBaseCase {f} {a} p ->
   FunctorIterGenIndStep {f} {a} p ->
   (n : NatObj) -> (ty : FunctorIter f n a) -> p n ty
-FunctorIterGenInd {f} {a} p z s =
-  NatObjGenInd
-    (\n' => (ty : FunctorIter f n' a) -> p n' ty)
-    z
-    (\n', hyp => s n' (\ty => hyp (fst ty) (snd ty)))
+FunctorIterGenInd {f} {a} p =
+  NatObjGenInd (\n' => (ty : FunctorIter f n' a) -> p n' ty)
+
+public export
+FunctorIterLTEDep : {f : Type -> Type} -> {a : Type} ->
+  {p : (n : NatObj) -> FunctorIter f n a -> Type} ->
+  (dp : (n : NatObj) -> (ty : FunctorIter f n a) -> p n ty -> Type) ->
+  (n : NatObj) -> FunctorIterLTE {f} {a} p n -> Type
+FunctorIterLTEDep {f} {a} {p} dp n lte =
+  (sl : NatOSlice n) ->
+  (ty : FunctorIter f (fst sl) a) ->
+  dp (fst sl) ty (lte sl ty)
 
 public export
 FunctorIterDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
@@ -3097,10 +3107,9 @@ FunctorIterDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
   Type
 FunctorIterDepGenInductionStep {f} {a} {p} dp sp =
   (n' : NatObj) ->
-   (pty : ((ty : FunctorIterLTE f n' a) -> p (fst (fst ty)) (snd ty))) ->
-   (dephyp :
-    (ty : FunctorIterLTE f n' a) -> dp (fst (fst ty)) (snd ty) (pty ty)) ->
-   ((ty : f (FunctorIter f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
+  (pty : FunctorIterLTE p n') ->
+  (dephyp : FunctorIterLTEDep dp n' pty) ->
+  ((ty : f (FunctorIter f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
 
 public export
 FunctorIterDepGenInd : {f : Type -> Type} -> {a : Type} ->
@@ -3112,15 +3121,10 @@ FunctorIterDepGenInd : {f : Type -> Type} -> {a : Type} ->
   FunctorIterDepGenInductionStep {f} {a} {p} dp sp ->
   (n : NatObj) -> (ty : FunctorIter f n a) ->
   dp n ty (FunctorIterGenInd {f} {a} p zp sp n ty)
-FunctorIterDepGenInd {f} {a} p dp zp sp dzp dsp =
+FunctorIterDepGenInd {f} {a} p dp =
   NatObjDepGenInd
     (\n' => (ty : FunctorIter f n' a) -> p n' ty)
     (\n', hyp' => (ty : FunctorIter f n' a) -> dp n' ty (hyp' ty))
-    zp
-    (\n', hyp => sp n' (\ty => hyp (fst ty) (snd ty)))
-    dzp
-    (\n', hyp, dephyp =>
-      dsp n' (\ty => hyp (fst ty) (snd ty)) (\ty => dephyp (fst ty) (snd ty)))
 
 public export
 ChainGenIndStep : {f : Type -> Type} -> {a : Type} ->
@@ -3136,8 +3140,20 @@ ChainGenInd : {f : Type -> Type} -> {a : Type} ->
 ChainGenInd {f} = FunctorIterGenInd {f=(OmegaStep f)}
 
 public export
-ChainLTE : (Type -> Type) -> NatObj -> Type -> Type
-ChainLTE f n a = (sl : NatOSlice n ** OmegaChain f (fst sl) a)
+ChainLTE : {f : Type -> Type} -> {a : Type} ->
+  ((n : NatObj) -> OmegaChain f n a -> Type) -> NatObj -> Type
+ChainLTE {f} {a} p n =
+  (sl : NatOSlice n) -> (ty : OmegaChain f (fst sl) a) -> p (fst sl) ty
+
+public export
+ChainLTEDep : {f : Type -> Type} -> {a : Type} ->
+  {p : (n : NatObj) -> OmegaChain f n a -> Type} ->
+  (dp : (n : NatObj) -> (ty : OmegaChain f n a) -> p n ty -> Type) ->
+  (n : NatObj) -> ChainLTE {f} {a} p n -> Type
+ChainLTEDep {f} {a} {p} dp n lte =
+  (sl : NatOSlice n) ->
+  (ty : OmegaChain f (fst sl) a) ->
+  dp (fst sl) ty (lte sl ty)
 
 public export
 ChainDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
@@ -3147,10 +3163,9 @@ ChainDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
   Type
 ChainDepGenInductionStep {f} {a} {p} dp sp =
   (n' : NatObj) ->
-   (pty : ((ty : ChainLTE f n' a) -> p (fst (fst ty)) (snd ty))) ->
-   (dephyp :
-    (ty : ChainLTE f n' a) -> dp (fst (fst ty)) (snd ty) (pty ty)) ->
-   ((ty : OmegaStep f (OmegaChain f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
+  (pty : ChainLTE p n') ->
+  (dephyp : ChainLTEDep dp n' pty) ->
+  ((ty : OmegaStep f (OmegaChain f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
 
 public export
 ChainDepGenInd : {f : Type -> Type} -> {a : Type} ->
