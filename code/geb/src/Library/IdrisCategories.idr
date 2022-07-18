@@ -4292,6 +4292,8 @@ RightAdjunct {catC} {catD} adj {a} {b} g =
     (MetaNTComponent (adjCounit adj) b)
     (MetaFunctorMorphMap (leftAdjoint adj) g)
 
+-- tensor product interpreted as "Either" (in particular for directed colimits)
+-- distributive category (with Pair _and_ Either tensor products)
 -- functor cat
 -- nat trans cat
 -- adjunction cat
