@@ -1934,6 +1934,7 @@ FunctorIterDepInductionStep : {f : Type -> Type} -> {a : Type} ->
 FunctorIterDepInductionStep {f} {a} {p} dp sp =
   (n' : NatObj) ->
    (pty : ((ty : FunctorIter f n' a) -> p n' ty)) ->
+   (dephyp : (ty : FunctorIter f n' a) -> dp n' ty (pty ty)) ->
    ((ty : f (FunctorIter f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
 
 public export
@@ -1950,7 +1951,7 @@ FunctorIterDepInd {f} {a} p dp zp sp dzp dsp =
   FunctorIterInd {f} {a}
     (\n', ty => dp n' ty (FunctorIterInd {f} {a} p zp sp n' ty))
     dzp
-    (\n, hyp, ty => dsp n (FunctorIterInd {f} {a} p zp sp n) ty)
+    (\n => dsp n (FunctorIterInd {f} {a} p zp sp n))
 
 public export
 data OmegaStep : (Type -> Type) -> Type -> Type where
@@ -3087,6 +3088,39 @@ FunctorIterGenInd {f} {a} p z s =
     (\n' => (ty : FunctorIter f n' a) -> p n' ty)
     z
     (\n', hyp => s n' (\ty => hyp (fst ty) (snd ty)))
+
+public export
+FunctorIterDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
+  {p : (n' : NatObj) -> FunctorIter f n' a -> Type} ->
+  ((n' : NatObj) -> (it : FunctorIter f n' a) -> p n' it -> Type) ->
+  FunctorIterGenIndStep {f} {a} p ->
+  Type
+FunctorIterDepGenInductionStep {f} {a} {p} dp sp =
+  (n' : NatObj) ->
+   (pty : ((ty : FunctorIterLTE f n' a) -> p (fst (fst ty)) (snd ty))) ->
+   (dephyp :
+    (ty : FunctorIterLTE f n' a) -> dp (fst (fst ty)) (snd ty) (pty ty)) ->
+   ((ty : f (FunctorIter f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
+
+public export
+FunctorIterDepGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) ->
+  (dp : (n' : NatObj) -> (it : FunctorIter f n' a) -> p n' it -> Type) ->
+  (zp : FunctorIterIndBaseCase {f} {a} p) ->
+  (sp : FunctorIterGenIndStep {f} {a} p) ->
+  FunctorIterDepIndBaseCase {f} {a} {p} dp zp ->
+  FunctorIterDepGenInductionStep {f} {a} {p} dp sp ->
+  (n : NatObj) -> (ty : FunctorIter f n a) ->
+  dp n ty (FunctorIterGenInd {f} {a} p zp sp n ty)
+FunctorIterDepGenInd {f} {a} p dp zp sp dzp dsp =
+  NatObjDepGenInd
+    (\n' => (ty : FunctorIter f n' a) -> p n' ty)
+    (\n', hyp' => (ty : FunctorIter f n' a) -> dp n' ty (hyp' ty))
+    zp
+    (\n', hyp => sp n' (\ty => hyp (fst ty) (snd ty)))
+    dzp
+    (\n', hyp, dephyp =>
+      dsp n' (\ty => hyp (fst ty) (snd ty)) (\ty => dephyp (fst ty) (snd ty)))
 
 public export
 ChainGenIndStep : {f : Type -> Type} -> {a : Type} ->
