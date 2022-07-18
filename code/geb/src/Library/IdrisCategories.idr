@@ -4031,6 +4031,10 @@ ComposeFunctorCorrect : {catC, catD, catE : MetaCat} ->
 ComposeFunctorCorrect g f = ?ComposeFunctorCorrect_hole
 
 public export
+MetaEndoFunctor : MetaCat -> Type
+MetaEndoFunctor cat = MetaFunctor cat cat
+
+public export
 record MetaNatTrans {catC, catD : MetaCat} (f, g : MetaFunctor catC catD) where
   constructor MkMetaNatTrans
   -- Components of the natural transformation.
@@ -4305,6 +4309,49 @@ RightAdjunct {catC} {catD} adj {a} {b} g =
 ---- Directed colimits ----
 ---------------------------
 ---------------------------
+
+public export
+CFunctorIter : {cat : MetaCat} ->
+  MetaEndoFunctor cat -> NatObj -> MetaEndoFunctor cat
+CFunctorIter f =
+  NatObjInd
+    (\_ => MetaEndoFunctor cat)
+    (IdFunctor cat)
+    (\_, f' => ComposeFunctor f f')
+
+public export
+CFunctorIterIndBaseCase : {cat : MetaCat} ->
+  (MetaEndoFunctor cat -> Type) -> Type
+CFunctorIterIndBaseCase {cat} p = p (IdFunctor cat)
+
+public export
+CFunctorIterInductionStep : {cat : MetaCat} ->
+  (MetaEndoFunctor cat -> Type) -> MetaEndoFunctor cat -> Type
+CFunctorIterInductionStep {cat} p f =
+  (n : NatObj) ->
+  p (CFunctorIter f n) ->
+  p (ComposeFunctor f $ CFunctorIter f n)
+
+public export
+CFunctorIterInd : {cat : MetaCat} ->
+  (0 p : MetaEndoFunctor cat -> Type) ->
+  (0 f : MetaEndoFunctor cat) ->
+  CFunctorIterIndBaseCase p ->
+  CFunctorIterInductionStep p f ->
+  (n : NatObj) -> p (CFunctorIter f n)
+CFunctorIterInd p f = NatObjInd (p . CFunctorIter f)
+
+public export
+MetaFuncInterpPred : {catC, catD : MetaCat} ->
+  MetaFunctor catC catD -> MetaObj catC -> Type
+MetaFuncInterpPred {catD} f a =
+  MetaObjInterp catD (MetaFunctorObjMap f a) -> Type
+
+public export
+CFunctorIterInterpPred : {cat : MetaCat} ->
+  MetaEndoFunctor cat -> MetaObj cat -> Type
+CFunctorIterInterpPred {cat} f a =
+  (n : NatObj) -> MetaFuncInterpPred {catC=cat} {catD=cat} (CFunctorIter f n) a
 
 ----------------------------------------------
 ----------------------------------------------
