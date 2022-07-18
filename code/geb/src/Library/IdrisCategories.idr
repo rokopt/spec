@@ -4031,6 +4031,13 @@ ComposeFunctorCorrect : {catC, catD, catE : MetaCat} ->
 ComposeFunctorCorrect g f = ?ComposeFunctorCorrect_hole
 
 public export
+MetaFunctorInterp : {catC, catD : MetaCat} -> MetaFunctor catC catD -> Type
+MetaFunctorInterp {catC} {catD} f =
+  (a : MetaObj catC) ->
+  MetaObjInterp catC a ->
+  MetaObjInterp catD (MetaFunctorObjMap f a)
+
+public export
 MetaEndoFunctor : MetaCat -> Type
 MetaEndoFunctor cat = MetaFunctor cat cat
 
@@ -4166,6 +4173,12 @@ HorizontalComposeConsistent : {catC, catD, catE : MetaCat} ->
 HorizontalComposeConsistent = ?HorizontalComposeConsistent_hole
 
 public export
+MetaNatTransInterp : {catC, catD : MetaCat} -> (f, g : MetaFunctor catC catD) ->
+  MetaNatTrans f g -> MetaFunctorInterp f -> MetaFunctorInterp g
+MetaNatTransInterp _ _ alpha finterp a =
+  (MetaMorphismInterp _ _ _ (MetaNTComponent alpha a)) . (finterp a)
+
+public export
 WhiskerLeft : {catB, catC, catD : MetaCat} -> {f, g : MetaFunctor catC catD} ->
   (nu : MetaNatTrans f g) -> (k : MetaFunctor catB catC) ->
   MetaNatTrans (ComposeFunctor f k) (ComposeFunctor g k)
@@ -4291,19 +4304,6 @@ RightAdjunct {catC} {catD} adj {a} {b} g =
     b
     (MetaNTComponent (adjCounit adj) b)
     (MetaFunctorMorphMap (leftAdjoint adj) g)
-
-public export
-MetaFunctorInterp : {catC, catD : MetaCat} -> MetaFunctor catC catD -> Type
-MetaFunctorInterp {catC} {catD} f =
-  (a : MetaObj catC) ->
-  MetaObjInterp catC a ->
-  MetaObjInterp catD (MetaFunctorObjMap f a)
-
-public export
-MetaNatTransInterp : {catC, catD : MetaCat} -> (f, g : MetaFunctor catC catD) ->
-  MetaNatTrans f g -> MetaFunctorInterp f -> MetaFunctorInterp g
-MetaNatTransInterp _ _ alpha finterp a =
-  (MetaMorphismInterp _ _ _ (MetaNTComponent alpha a)) . (finterp a)
 
 public export
 MetaFunctorCat : MetaCat -> MetaCat -> MetaCat
