@@ -3177,6 +3177,30 @@ ColimitGenInd : {f : Type -> Type} -> {a : Type} ->
   (c : OmegaColimit f a) -> p c
 ColimitGenInd p zp sp (n ** c) = ChainGenInd (PredColimitToChain p) zp sp n c
 
+public export
+ColimitDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
+  {p : OmegaColimit f a -> Type} ->
+  ((c : OmegaColimit f a) -> p c -> Type) ->
+  ColimitGenIndStep {f} {a} p ->
+  Type
+ColimitDepGenInductionStep = ChainDepGenInductionStep . DepPredColimitToChain
+
+public export
+ColimitDepGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : OmegaColimit f a -> Type) ->
+  (dp : (c : OmegaColimit f a) -> p c -> Type) ->
+  (zp : ColimitIndBaseCase {f} {a} p) ->
+  (sp : ColimitGenIndStep {f} {a} p) ->
+  ColimitDepIndBaseCase {f} {a} {p} dp zp ->
+  ColimitDepGenInductionStep {f} {a} {p} dp sp ->
+  (c : OmegaColimit f a) ->
+  dp c (ColimitGenInd {f} {a} p zp sp c)
+ColimitDepGenInd p dp zp sp dzp dsp (n ** c) =
+  ChainDepGenInd
+    (PredColimitToChain p)
+    (DepPredColimitToChain dp)
+    zp sp dzp dsp n c
+
 --------------------------------
 ---- Dependent endofunctors ----
 --------------------------------
