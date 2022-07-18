@@ -3136,6 +3136,35 @@ ChainGenInd : {f : Type -> Type} -> {a : Type} ->
 ChainGenInd {f} = FunctorIterGenInd {f=(OmegaStep f)}
 
 public export
+ChainLTE : (Type -> Type) -> NatObj -> Type -> Type
+ChainLTE f n a = (sl : NatOSlice n ** OmegaChain f (fst sl) a)
+
+public export
+ChainDepGenInductionStep : {f : Type -> Type} -> {a : Type} ->
+  {p : (n' : NatObj) -> OmegaChain f n' a -> Type} ->
+  ((n' : NatObj) -> (it : OmegaChain f n' a) -> p n' it -> Type) ->
+  ChainGenIndStep {f} {a} p ->
+  Type
+ChainDepGenInductionStep {f} {a} {p} dp sp =
+  (n' : NatObj) ->
+   (pty : ((ty : ChainLTE f n' a) -> p (fst (fst ty)) (snd ty))) ->
+   (dephyp :
+    (ty : ChainLTE f n' a) -> dp (fst (fst ty)) (snd ty) (pty ty)) ->
+   ((ty : OmegaStep f (OmegaChain f n' a)) -> dp (NatOS n') ty (sp n' pty ty))
+
+public export
+ChainDepGenInd : {f : Type -> Type} -> {a : Type} ->
+  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) ->
+  (dp : (n' : NatObj) -> (it : OmegaChain f n' a) -> p n' it -> Type) ->
+  (zp : ChainIndBaseCase {f} {a} p) ->
+  (sp : ChainGenIndStep {f} {a} p) ->
+  ChainDepIndBaseCase {f} {a} {p} dp zp ->
+  ChainDepGenInductionStep {f} {a} {p} dp sp ->
+  (n : NatObj) -> (ty : OmegaChain f n a) ->
+  dp n ty (ChainGenInd {f} {a} p zp sp n ty)
+ChainDepGenInd {f} = FunctorIterDepGenInd {f=(OmegaStep f)}
+
+public export
 ColimitGenIndStep : {f : Type -> Type} -> {a : Type} ->
   (p : OmegaColimit f a -> Type) -> Type
 ColimitGenIndStep = ChainGenIndStep . PredColimitToChain
