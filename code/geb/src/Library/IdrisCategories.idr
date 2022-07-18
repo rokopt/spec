@@ -3127,6 +3127,12 @@ FunctorIterDepGenInd {f} {a} p dp =
     (\n', hyp' => (ty : FunctorIter f n' a) -> dp n' ty (hyp' ty))
 
 public export
+ChainLTE : {f : Type -> Type} -> {a : Type} ->
+  ((n : NatObj) -> OmegaChain f n a -> Type) -> NatObj -> Type
+ChainLTE {f} {a} p n =
+  (sl : NatOSlice n) -> (ty : OmegaChain f (fst sl) a) -> p (fst sl) ty
+
+public export
 ChainGenIndStep : {f : Type -> Type} -> {a : Type} ->
   (p : (n' : NatObj) -> OmegaChain f n' a -> Type) -> Type
 ChainGenIndStep {f} = FunctorIterGenIndStep {f=(OmegaStep f)}
@@ -3138,12 +3144,6 @@ ChainGenInd : {f : Type -> Type} -> {a : Type} ->
   ChainGenIndStep {f} {a} p ->
   (n : NatObj) -> (ty : OmegaChain f n a) -> p n ty
 ChainGenInd {f} = FunctorIterGenInd {f=(OmegaStep f)}
-
-public export
-ChainLTE : {f : Type -> Type} -> {a : Type} ->
-  ((n : NatObj) -> OmegaChain f n a -> Type) -> NatObj -> Type
-ChainLTE {f} {a} p n =
-  (sl : NatOSlice n) -> (ty : OmegaChain f (fst sl) a) -> p (fst sl) ty
 
 public export
 ChainLTEDep : {f : Type -> Type} -> {a : Type} ->
