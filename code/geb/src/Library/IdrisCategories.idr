@@ -2936,6 +2936,7 @@ NatOSliceDepInductionStep :
 NatOSliceDepInductionStep {p} dp s =
   (n : NatObj) ->
   (hyp : (sl : NatOSlice n) -> p n sl) ->
+  (dephyp : (sl : NatOSlice n) -> dp n sl (hyp sl)) ->
   (sl : NatOSlice (NatOS n)) ->
   dp (NatOS n) sl (s n hyp sl)
 
@@ -2952,7 +2953,7 @@ NatOSliceDepInduction p dp z s dz ds =
   NatOSliceInduction
     (\n, sl => dp n sl (NatOSliceInduction p z s n sl))
     dz
-    (\n, hyp, sl => ds n (NatOSliceInduction p z s n) sl)
+    (\n => ds n (NatOSliceInduction p z s n))
 
 ---------------------------
 ---- General induction ----
@@ -2967,6 +2968,18 @@ NatObjGenInductionStep : (NatObj -> Type) -> Type
 NatObjGenInductionStep p = (n' : NatObj) -> ForallLTE p n' -> p (NatOS n')
 
 public export
+NatObjGenIndStrengthenedStep :
+  (p : NatObj -> Type) ->
+  NatObjGenInductionStep p ->
+  (n : NatObj) ->
+  ForallLTE p n ->
+  ForallLTE p (NatOS n)
+NatObjGenIndStrengthenedStep p s n hyp (n' ** m) =
+  case NatMorphSucc n' n m of
+    Left m' => hyp (n' ** m')
+    Right eqn => rewrite eqn in s n hyp
+
+public export
 NatObjGenIndStrengthened :
   (p : NatObj -> Type) ->
   NatObjIndBaseCase p ->
@@ -2976,10 +2989,7 @@ NatObjGenIndStrengthened p z s =
   NatOSliceInduction
     (\n, sl => p (fst sl))
     z
-    (\n, hyp, sl => case sl of
-      (n' ** m) => case NatMorphSucc n' n m of
-        Left m' => hyp (n' ** m')
-        Right eqn => rewrite eqn in s n hyp)
+    (NatObjGenIndStrengthenedStep p s)
 
 public export
 NatObjGenInd :
@@ -2988,6 +2998,71 @@ NatObjGenInd :
   NatObjGenInductionStep p ->
   (n : NatObj) -> p n
 NatObjGenInd p z s n = NatObjGenIndStrengthened p z s n (NatOSliceMax n)
+
+public export
+ForallLTEDep : {p : NatObj -> Type} ->
+  ((n : NatObj) -> p n -> Type) ->
+  (n : NatObj) -> ForallLTE p n -> Type
+ForallLTEDep {p} dp n ps = (sl : NatOSlice n) -> dp (fst sl) (ps sl)
+
+public export
+NatObjDepGenInductionStep :
+  {p : NatObj -> Type} ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (sp : NatObjGenInductionStep p) ->
+  Type
+NatObjDepGenInductionStep {p} dp sp =
+  (n' : NatObj) -> (pn : ForallLTE p n') -> ForallLTEDep dp n' pn ->
+  dp (NatOS n') (sp n' pn)
+
+public export
+NatObjDepGenIndStrengthenedStep :
+  (p : NatObj -> Type) ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (sp : NatObjGenInductionStep p) ->
+  NatObjDepGenInductionStep dp sp ->
+  (n : NatObj) ->
+  (hyp : ForallLTE p n) ->
+  (dh : ForallLTEDep dp n hyp) ->
+  (sl : NatOSlice (NatOS n)) ->
+  dp (fst sl) (NatObjGenIndStrengthenedStep p sp n hyp sl)
+NatObjDepGenIndStrengthenedStep p dp sp dsp n hyp dh (n' ** m)
+  with (NatMorphSucc n' n m)
+    NatObjDepGenIndStrengthenedStep p dp sp dsp n hyp dh (n' ** m) | Left m' =
+      dh (n' ** m')
+    NatObjDepGenIndStrengthenedStep p dp sp dsp n hyp dh (n' ** m) | Right eqn =
+      rewrite eqn in
+      dsp n hyp dh
+
+public export
+NatObjDepGenIndStrengthened :
+  (p : NatObj -> Type) ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  (sp : NatObjGenInductionStep p) ->
+  NatObjDepIndBaseCase dp zp ->
+  NatObjDepGenInductionStep dp sp ->
+  (n : NatObj) -> ForallLTEDep dp n (NatObjGenIndStrengthened p zp sp n)
+NatObjDepGenIndStrengthened p dp zp sp dzp dsp =
+  NatOSliceDepInduction
+    (\n, sl => p (fst sl))
+    (\n, sl, ps => dp (fst sl) ps)
+    zp
+    (NatObjGenIndStrengthenedStep p sp)
+    dzp
+    (NatObjDepGenIndStrengthenedStep p dp sp dsp)
+
+public export
+NatObjDepGenInd :
+  (p : NatObj -> Type) ->
+  (dp : (n : NatObj) -> p n -> Type) ->
+  (zp : NatObjIndBaseCase p) ->
+  (sp : NatObjGenInductionStep p) ->
+  NatObjDepIndBaseCase dp zp ->
+  NatObjDepGenInductionStep dp sp ->
+  (n : NatObj) -> dp n (NatObjGenInd p zp sp n)
+NatObjDepGenInd p dp zp sp dzp dsp n =
+  NatObjDepGenIndStrengthened p dp zp sp dzp dsp n (NatOSliceMax n)
 
 public export
 FunctorIterLTE : (Type -> Type) -> NatObj -> Type -> Type
