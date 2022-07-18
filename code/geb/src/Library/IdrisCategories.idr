@@ -4292,6 +4292,36 @@ RightAdjunct {catC} {catD} adj {a} {b} g =
     (MetaNTComponent (adjCounit adj) b)
     (MetaFunctorMorphMap (leftAdjoint adj) g)
 
+public export
+MetaFunctorInterp : {catC, catD : MetaCat} -> MetaFunctor catC catD -> Type
+MetaFunctorInterp {catC} {catD} f =
+  (a : MetaObj catC) ->
+  MetaObjInterp catC a ->
+  MetaObjInterp catD (MetaFunctorObjMap f a)
+
+public export
+MetaNatTransInterp : {catC, catD : MetaCat} -> (f, g : MetaFunctor catC catD) ->
+  MetaNatTrans f g -> MetaFunctorInterp f -> MetaFunctorInterp g
+MetaNatTransInterp _ _ alpha finterp a =
+  (MetaMorphismInterp _ _ _ (MetaNTComponent alpha a)) . (finterp a)
+
+public export
+MetaFunctorCat : MetaCat -> MetaCat -> MetaCat
+MetaFunctorCat catC catD =
+  MkMetaCat
+    (MetaFunctor catC catD)
+    MetaNatTrans
+    IdNatTrans
+    (\f, g, h => VerticalCompose {f} {g} {h})
+    MetaFunctorInterp
+    MetaNatTransInterp
+
+public export
+FunctorCatCorrect : {catC, catD : MetaCat} ->
+  MetaCatCorrect catC -> MetaCatCorrect catD ->
+  MetaCatCorrect (MetaFunctorCat catC catD)
+FunctorCatCorrect {catC} {catD} cC cD = ?FunctorCatCorrect_hole
+
 -- tensor product interpreted as "Either" (in particular for directed colimits)
 -- distributive category (with Pair _and_ Either tensor products)
 -- functor cat
