@@ -6,6 +6,28 @@ import public LanguageDef.Atom
 
 %default total
 
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+---- Polynomials as arenas (following _A General Theory of Interaction_) ----
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+
+public export
+TypeFamily : Type -> Type
+TypeFamily idx = idx -> Type
+
+public export
+record Arena where
+  constructor MkArena
+  pos : Type
+  dir : TypeFamily pos
+
+public export
+record Lens (domain, codomain : Arena) where
+  constructor MkLens
+  onPos : (pos domain) -> (pos codomain)
+  onDir : (i : pos domain) -> dir codomain (onPos i) -> dir domain i
+
 -------------------------------------------------
 -------------------------------------------------
 ---- Polynomials in terms of natural numbers ----
