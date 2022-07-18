@@ -4353,6 +4353,10 @@ CFunctorIterInterpPred : {cat : MetaCat} ->
 CFunctorIterInterpPred {cat} f a =
   (n : NatObj) -> MetaFuncInterpPred {catC=cat} {catD=cat} (CFunctorIter f n) a
 
+---------------------------------------------------------
+---- Coalgebras and coproducts for directed colimits ----
+---------------------------------------------------------
+
 ----------------------------------------------
 ----------------------------------------------
 ---- Polynomial-functor algebra on `Type` ----
