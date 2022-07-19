@@ -28,6 +28,23 @@ record Lens (domain, codomain : Arena) where
   onPos : (pos domain) -> (pos codomain)
   onDir : (i : pos domain) -> dir codomain (onPos i) -> dir domain i
 
+public export
+record CArena where
+  constructor MkCArena
+  posCat : MetaCat -- an index category (possibly discrete) of all positions
+  dirCat : MetaCat -- a category whose objects can represent sets of directions
+  dirFunc : MetaFunctor posCat dirCat
+
+public export
+record CLens (domain, codomain : CArena) where
+  constructor MkCLens
+  cOnPos : MetaFunctor (posCat domain) (posCat codomain)
+  cDirTrans : MetaFunctor (dirCat codomain) (dirCat domain)
+  cOnDir :
+    MetaNatTrans
+      (ComposeFunctor cDirTrans (ComposeFunctor (dirFunc codomain) cOnPos))
+      (dirFunc domain)
+
 -------------------------------------------------
 -------------------------------------------------
 ---- Polynomials in terms of natural numbers ----
