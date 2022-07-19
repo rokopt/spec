@@ -39,11 +39,11 @@ public export
 record CLens (domain, codomain : CArena) where
   constructor MkCLens
   cOnPos : MetaFunctor (posCat domain) (posCat codomain)
-  cDirTrans : MetaFunctor (dirCat codomain) (dirCat domain)
+  cDirDep : MetaFunctor (dirCat domain) (dirCat codomain)
   cOnDir :
     MetaNatTrans
-      (ComposeFunctor cDirTrans (ComposeFunctor (dirFunc codomain) cOnPos))
-      (dirFunc domain)
+      (ComposeFunctor (dirFunc codomain) cOnPos)
+      (ComposeFunctor cDirDep (dirFunc domain))
 
 -------------------------------------------------
 -------------------------------------------------
