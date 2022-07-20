@@ -1747,6 +1747,21 @@ NatPairPredToNatObj : (NatPair -> Type) -> NatObjPair -> Type
 NatPairPredToNatObj p = p . NatObjPairToMeta
 
 public export
+DecEq NatObj where
+  decEq m n with (decEq (NatObjToMeta m) (NatObjToMeta n))
+    decEq m n | Yes eq = Yes $
+      rewrite sym (NatToMetaId m) in
+      rewrite sym (NatToMetaId n) in
+      cong MetaToNatObj eq
+    decEq m n | No neq = No $ \eq => case eq of Refl => neq Refl
+
+public export
+Eq NatObj where
+  m == m' = case decEq m m' of
+    Yes _ => True
+    No _ => False
+
+public export
 NatObjPairIndFromNat :
   (p : NatObjPair -> Type) ->
   (NatObjPairPredToNat p (NatObjPairToMeta (NatOZ, NatOZ))) ->
@@ -3000,6 +3015,20 @@ NatOSliceDepInduction p dp z s dz ds =
     (\n, sl => dp n sl (NatOSliceInduction p z s n sl))
     dz
     (\n => ds n (NatOSliceInduction p z s n))
+
+public export
+(n : NatObj) => DecEq (NatOSlice n) where
+  decEq {n} (m ** morph) (m' ** morph') with (decEq m m')
+    decEq {n} (m ** morph) (m' ** morph') | Yes eq = Yes $
+      case eq of Refl => rewrite NatCatThin _ morph morph' in Refl
+    decEq {n} (m ** morph) (m' ** morph') | No neq = No $ \eq =>
+      case eq of Refl => neq Refl
+
+public export
+(n : NatObj) => Eq (NatOSlice n) where
+  m == m' = case decEq m m' of
+    Yes _ => True
+    No _ => False
 
 ---------------------------
 ---- General induction ----
