@@ -15,46 +15,33 @@ import public LanguageDef.Atom
 public export
 record PZArena where
   constructor MkPZArena
-  -- The maximum power -- whose successor is the number of positions --
+  -- The maximum power -- whose successor is the number of powers --
   -- in the polynomial
-  pzPos : NatObj
+  pzMaxPow : NatObj
 
-  -- The number of directions at each position, or, if the power is the
-  -- maximum power in the polynomial and is not zero, the _predecessor_ of
-  -- the number of directions at that position (see comment below)
-  pzDir : NatOSlice pzPos -> NatObj
+  -- The coefficient of each power, or, if the power is the maximum power in
+  -- the polynomial and is not zero, the _predecessor_ of the the coefficient
+  pzCoeffRep : NatOSlice pzMaxPow -> NatObj
 
 public export
-pzPosT : PZArena -> Type
-pzPosT = NatOSlice . pzPos
+pzPowT : PZArena -> Type
+pzPowT = NatOSlice . pzMaxPow
 
--- Unless the maximum power is zero, we treat `pzDir` of the maximum power
--- as the _predecessor_ of the maximum power.  In other words, we implicitly
--- increment `pzDir` for the maximum power (and only the maximum power) unless
--- the maximum power is zero.
+-- Unless the maximum power is zero, we treat `pzCoeff` of the maximum power
+-- as the _predecessor_ of the coefficient.  In other words, we implicitly
+-- increment `pzCoeffRep` for the maximum power (and only the maximum power)
+-- unless the maximum power is zero.
 --
 -- The reason we do this is to eliminate representations with leading zeros,
 -- and thereby to make equality on polynomials equivalent to structural
 -- equality on `PZArena`.
 public export
-pzCoeff : (pos, max : NatObj) -> NatObj
-pzCoeff pos max = if pos == max && pos /= NatOZ then (NatOS pos) else pos
+pzCoeff : (n, max : NatObj) -> NatObj
+pzCoeff n max = if n == max && n /= NatOZ then (NatOS n) else n
 
 public export
-pzDirN : (ar : PZArena) -> pzPosT ar -> NatObj
-pzDirN ar (n ** _) = pzCoeff n (pzPos ar)
-
-public export
-pzDirT : (ar : PZArena) -> pzPosT ar -> Type
-pzDirT ar = NatOSlice . pzDirN ar
-
-public export
-record PZLens (domain, codomain : PZArena) where
-  constructor MkPZLens
-  pzOnPos :
-    pzPosT domain -> pzPosT codomain
-  pzOnDir :
-    (i : pzPosT domain) -> pzDirT codomain (pzOnPos i) -> pzDirT domain i
+pzArCoeff : (ar : PZArena) -> pzPowT ar -> NatObj
+pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
