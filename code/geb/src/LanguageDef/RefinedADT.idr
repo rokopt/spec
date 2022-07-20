@@ -13,8 +13,8 @@ import public LanguageDef.Atom
 ------------------------------------------
 
 public export
-record PZArena where
-  constructor MkPZArena
+record PZPoly where
+  constructor MkPZPoly
   -- The maximum power -- whose successor is the number of powers --
   -- in the polynomial
   pzMaxPow : NatObj
@@ -24,7 +24,7 @@ record PZArena where
   pzCoeffRep : NatOSlice pzMaxPow -> NatObj
 
 public export
-pzPowT : PZArena -> Type
+pzPowT : PZPoly -> Type
 pzPowT = NatOSlice . pzMaxPow
 
 -- Unless the maximum power is zero, we treat `pzCoeff` of the maximum power
@@ -34,13 +34,13 @@ pzPowT = NatOSlice . pzMaxPow
 --
 -- The reason we do this is to eliminate representations with leading zeros,
 -- and thereby to make equality on polynomials equivalent to structural
--- equality on `PZArena`.
+-- equality on `PZPoly`.
 public export
 pzCoeff : (n, max : NatObj) -> NatObj
 pzCoeff n max = if n == max && n /= NatOZ then (NatOS n) else n
 
 public export
-pzArCoeff : (ar : PZArena) -> pzPowT ar -> NatObj
+pzArCoeff : (ar : PZPoly) -> pzPowT ar -> NatObj
 pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
 
 -----------------------------------------------------------------------------
