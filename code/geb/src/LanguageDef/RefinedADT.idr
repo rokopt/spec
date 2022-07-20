@@ -37,8 +37,12 @@ pzPosT = NatOSlice . pzPos
 -- and thereby to make equality on polynomials equivalent to structural
 -- equality on `PZArena`.
 public export
+pzCoeff : (pos, max : NatObj) -> NatObj
+pzCoeff pos max = if pos == max && pos /= NatOZ then (NatOS pos) else pos
+
+public export
 pzDirN : (ar : PZArena) -> pzPosT ar -> NatObj
-pzDirN ar (n ** _) = if n == pzPos ar && n /= NatOZ then (NatOS n) else n
+pzDirN ar (n ** _) = pzCoeff n (pzPos ar)
 
 public export
 pzDirT : (ar : PZArena) -> pzPosT ar -> Type
