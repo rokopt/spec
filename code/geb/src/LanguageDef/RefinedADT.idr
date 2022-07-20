@@ -12,6 +12,10 @@ import public LanguageDef.Atom
 ------------------------------------------
 ------------------------------------------
 
+-----------------------------------------------
+---- Algebra formulation with coefficients ----
+-----------------------------------------------
+
 public export
 record PZPoly where
   constructor MkPZPoly
@@ -42,6 +46,32 @@ pzCoeff n max = if n == max && n /= NatOZ then (NatOS n) else n
 public export
 pzArCoeff : (ar : PZPoly) -> pzPowT ar -> NatObj
 pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
+
+---------------------------
+---- Arena formulation ----
+---------------------------
+
+public export
+record PZArena where
+  constructor MkPZArena
+  pzNumPos : NatObj
+  pzNumDir : NatOPrefix pzNumPos -> NatObj
+
+public export
+pzPosT : PZArena -> Type
+pzPosT = NatOPrefix . pzNumPos
+
+public export
+pzDirT : (ar : PZArena) -> (pos : pzPosT ar) -> Type
+pzDirT ar pos = NatOPrefix (pzNumDir ar pos)
+
+public export
+record PZLens (domain, codomain : PZArena) where
+  constructor MkPZLens
+  pzOnPos :
+    pzPosT domain -> pzPosT codomain
+  pzOnDir :
+    (i : pzPosT domain) -> pzDirT codomain (pzOnPos i) -> pzDirT domain i
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------

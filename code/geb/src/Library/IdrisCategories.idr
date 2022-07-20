@@ -2938,6 +2938,10 @@ natMorphToLTSlice {m} {n} =
 ----------------------------------------------
 
 public export
+NatOPrefix : NatObj -> Type
+NatOPrefix n = (m : NatObj ** NatLTStrict m n)
+
+public export
 NatOSlice : NatObj -> Type
 NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
 
