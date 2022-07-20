@@ -2344,6 +2344,13 @@ ProductFunctorIterInd :
 ProductFunctorIterInd {t} {f} {a} p =
   NatObjInd (\n => (x : t) -> (it : ProductFunctorIter f n a x) -> p n x it)
 
+public export
+ProductFunctorIterMapAlg : {t : Type} ->
+  ProductFunctor t -> (t -> Type) -> (t -> Type) -> Type
+ProductFunctorIterMapAlg {t} f x v =
+  ((elem : t) -> v elem -> x elem) ->
+  (n : NatObj) -> (elem : t) -> ProductFunctorIter f n v elem -> x elem
+
 --------------------------
 ---- Initial algebras ----
 --------------------------
