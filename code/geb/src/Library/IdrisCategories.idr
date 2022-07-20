@@ -2306,6 +2306,44 @@ public export
 colimitCata : {f : Type -> Type} -> {isF : Functor f} -> ColimitCata f
 colimitCata {f} {isF} x alg = colimitMapAlg {f} {isF} {x} {v=Void} alg (voidF _)
 
+-----------------------------------
+---- Product functor iteration ----
+-----------------------------------
+
+public export
+ProductFunctor : Type -> Type
+ProductFunctor t = (t -> Type) -> t -> Type
+
+public export
+ProductFunctorIter : {t : Type} ->
+  ProductFunctor t -> NatObj -> ProductFunctor t
+ProductFunctorIter {t} f n a = NatObjInd (const $ t -> Type) a (const f) n
+
+public export
+ProductFunctorIterIndBaseCase :
+  {t : Type} -> {f : ProductFunctor t} -> {a : t -> Type} ->
+  (p : (n : NatObj) -> (x : t) -> ProductFunctorIter f n a x -> Type) -> Type
+ProductFunctorIterIndBaseCase {t} {a} p = (x : t) -> (z : a x) -> p NatOZ x z
+
+public export
+ProductFunctorIterInductionStep :
+  {t : Type} -> {f : ProductFunctor t} -> {a : t -> Type} ->
+  (p : (n : NatObj) -> (x : t) -> ProductFunctorIter f n a x -> Type) -> Type
+ProductFunctorIterInductionStep {t} {f} {a} p =
+  (n : NatObj) ->
+  ((x : t) -> (it : ProductFunctorIter f n a x) -> p n x it) ->
+  ((x : t) -> (it : f (ProductFunctorIter f n a) x) -> p (NatOS n) x it)
+
+public export
+ProductFunctorIterInd :
+  {0 t : Type} -> {0 f : ProductFunctor t} -> {0 a : t -> Type} ->
+  (0 p : (n : NatObj) -> (x : t) -> ProductFunctorIter f n a x -> Type) ->
+  ProductFunctorIterIndBaseCase {f} {a} p ->
+  ProductFunctorIterInductionStep {f} {a} p ->
+  (n : NatObj) -> (x : t) -> (it : ProductFunctorIter f n a x) -> p n x it
+ProductFunctorIterInd {t} {f} {a} p =
+  NatObjInd (\n => (x : t) -> (it : ProductFunctorIter f n a x) -> p n x it)
+
 --------------------------
 ---- Initial algebras ----
 --------------------------
