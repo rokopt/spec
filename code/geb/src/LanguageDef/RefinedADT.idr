@@ -81,11 +81,13 @@ Show PZArena where
     let
       nd' = NatOSliceSuccElim {a=(const NatObj)} nd
     in
-    NatObjBoundedGenInd
-      ("#Dirs[0] = " ++ (show $ nd' $ NatOSliceZ _))
-      (\m, morph, s =>
-        "#Dirs[" ++ (show $ NatOS m) ++ "] = " ++
-          show (nd' (NatOS m ** morph)) ++ "\n" ++ s)
+    NatObjBoundedGenMapFold
+      {a=(const NatObj)} {b=(const String)} {c=(const String)}
+      (const show)
+      nd'
+      (\s => "#Dirs[0] = " ++ s)
+      (\n', morph, sc, ss =>
+        "#Dirs[" ++ (show $ NatOS n') ++ "] = " ++ sc ++ "\n" ++ ss)
       (NatOSliceMax n)
 
 public export
