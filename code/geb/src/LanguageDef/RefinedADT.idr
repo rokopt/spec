@@ -76,16 +76,14 @@ pzDirT ar pos = NatOPrefix (pzNumDir ar pos)
 
 public export
 Show PZArena where
-  show (MkPZArena (InNat ZeroF) nd) = "[empty]"
-  show (MkPZArena (InNat $ SuccF n) nd) =
-    NatObjBoundedGenMapFold {n}
-      {a=(const NatObj)} {b=(const String)} {c=(const String)}
+  show (MkPZArena n nd) =
+    NatObjPrefixGenMapFold
       (const show)
-      (NatOSliceSuccElim {a=(const NatObj)} nd)
-      (\s => "#Dirs[0] = " ++ s)
+      nd
+      "[empty]"
+      ((++) "#Dirs[0] = ")
       (\n', morph, sc, ss =>
         "#Dirs[" ++ (show $ NatOS n') ++ "] = " ++ sc ++ "\n" ++ ss)
-      (NatOSliceMax n)
 
 public export
 record PZLens (domain, codomain : PZArena) where
