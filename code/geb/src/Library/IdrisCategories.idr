@@ -3047,6 +3047,17 @@ NatObjBoundedInd : {a : NatObj -> Type} -> {n : NatObj} ->
   (m : NatOSlice n) -> a (fst m)
 NatObjBoundedInd i f (n' ** morph) = NatObjBoundedIndMorph i f n' morph
 
+public export
+NatOSliceFromSucc : {n : NatObj} ->
+  (m : NatObj ** NatLTMorph (NatOS m, NatOS n)) -> NatOSlice n
+NatOSliceFromSucc {n} (m ** morph) = (m ** NatLTFromSucc m n morph)
+
+public export
+NatOSliceSuccElim : {n : NatObj} -> {a : Type} ->
+  ((m : NatObj ** NatLTMorph (NatOS m, NatOS n)) -> a) ->
+  NatOSlice n -> a
+NatOSliceSuccElim {n} {a} f (m ** morph) = f (m ** NatLTMorphToSucc morph)
+
 ---------------------------
 ---- General induction ----
 ---------------------------

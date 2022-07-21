@@ -54,7 +54,7 @@ Show PZPoly where
       (show $ pzArCoeff ar $ NatOSliceZ _)
       (\m, morph, s =>
         show (pzArCoeff ar (NatOS m ** morph)) ++ " * n ^ " ++ show (NatOS m) ++
-        " + " ++ s)
+          " + " ++ s)
       (NatOSliceMax $ pzMaxPow ar)
 
 ---------------------------
@@ -74,6 +74,20 @@ pzPosT = NatOPrefix . pzNumPos
 public export
 pzDirT : (ar : PZArena) -> (pos : pzPosT ar) -> Type
 pzDirT ar pos = NatOPrefix (pzNumDir ar pos)
+
+public export
+Show PZArena where
+  show (MkPZArena (InNat ZeroF) nd) = "[empty]"
+  show (MkPZArena (InNat $ SuccF n) nd) =
+    let
+      nd' = NatOSliceSuccElim nd
+    in
+    NatObjBoundedInd
+      ("#Dirs[0] = " ++ (show $ nd' $ NatOSliceZ _))
+      (\m, morph, s =>
+        "#Dirs[" ++ (show $ NatOS m) ++ "] = " ++
+          show (nd' (NatOS m ** morph)) ++ "\n" ++ s)
+      (NatOSliceMax n)
 
 public export
 record PZLens (domain, codomain : PZArena) where
