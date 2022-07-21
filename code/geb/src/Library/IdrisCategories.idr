@@ -3087,6 +3087,16 @@ NatObjBoundedGenMapFold {a} {b} {n} mab ga z s =
     (z $ gb $ NatOSliceZ n)
     (\n', morph, b' => s n' morph (gb (NatOS n' ** morph)) b')
 
+public export
+NatObjBoundedMapFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
+  (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
+  ((sl : NatOSlice n) -> a (fst sl)) ->
+  (b NatOZ -> b NatOZ) ->
+  ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> b m -> b (NatOS m)) ->
+  b n
+NatObjBoundedMapFold {a} {b} {n} mab ga z s =
+  NatObjBoundedGenMapFold {a} {b} {n} mab ga z s (NatOSliceMax n)
+
 ---------------------------
 ---- General induction ----
 ---------------------------

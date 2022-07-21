@@ -50,12 +50,11 @@ pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
 public export
 Show PZPoly where
   show ar =
-    NatObjBoundedGenMapFold {a=(const NatObj)}
+    NatObjBoundedMapFold {a=(const NatObj)}
       (const show)
       (pzArCoeff ar)
       id
       (\n', morph, sc, ss => sc ++ " * n ^ " ++ show n' ++ " + " ++ ss)
-      (NatOSliceMax $ pzMaxPow ar)
 
 ---------------------------
 ---- Arena formulation ----
