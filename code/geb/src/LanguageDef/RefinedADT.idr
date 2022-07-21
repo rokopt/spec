@@ -53,6 +53,7 @@ Show PZPoly where
     NatObjBoundedMapFold {a=(const NatObj)}
       (const show)
       (pzArCoeff ar)
+      id
       (\n', morph, sc, ss => sc ++ " * n ^ " ++ show n' ++ " + " ++ ss)
       (NatOSliceMax $ pzMaxPow ar)
 

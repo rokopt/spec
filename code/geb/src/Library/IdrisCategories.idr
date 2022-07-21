@@ -3078,12 +3078,13 @@ public export
 NatObjBoundedMapFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
   ((sl : NatOSlice n) -> a (fst sl)) ->
+  (b NatOZ -> b NatOZ) ->
   ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> b m -> b (NatOS m)) ->
   (m : NatOSlice n) -> b (fst m)
-NatObjBoundedMapFold {a} {b} {n} mab ga s =
+NatObjBoundedMapFold {a} {b} {n} mab ga z s =
   let gb = NatObjBoundedMap {a} {b} mab ga in
   NatObjBoundedInd
-    (gb $ NatOSliceZ n)
+    (z $ gb $ NatOSliceZ n)
     (\n', morph, b' => s n' morph (gb (NatOS n' ** morph)) b')
 
 ---------------------------
