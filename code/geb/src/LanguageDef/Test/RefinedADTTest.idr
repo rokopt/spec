@@ -119,10 +119,9 @@ listToPrefixFunc (x :: xs) (m ** morph) = case m of
 
 listToSliceFunc : {a : Type} ->
   (i : a) -> (l : List a) -> NatOSlice (MetaToNatObj (length l)) -> a
-listToSliceFunc i [] _ = i
-listToSliceFunc i (x :: xs) (m ** morph) = case NatMorphSucc _ _ morph of
-  Left lte => listToSliceFunc x xs (m ** lte)
-  Right _ => i
+listToSliceFunc i l (m ** morph) = case m of
+  InNat ZeroF => i
+  InNat (SuccF m') => listToPrefixFunc l (m' ** morph)
 
 pzPolyFromObjList : List NatObj -> PZPoly
 pzPolyFromObjList [] =
@@ -134,10 +133,10 @@ pzPolyFromList : List Nat -> PZPoly
 pzPolyFromList = pzPolyFromObjList . map MetaToNatObj
 
 examplePzPoly : PZPoly
-examplePzPoly = pzPolyFromList [3, 0, 2, 3]
+examplePzPoly = pzPolyFromList [3, 2, 0, 3]
 
 exampleLongPzPoly : PZPoly
-exampleLongPzPoly = pzPolyFromList [7, 7, 6, 5, 4, 3, 2, 1, 0]
+exampleLongPzPoly = pzPolyFromList [0, 1, 2, 3, 4, 5, 6, 7, 7]
 
 exampleEmptyPzPoly : PZPoly
 exampleEmptyPzPoly = pzPolyFromList []
@@ -149,10 +148,10 @@ exampleOnePzPoly : PZPoly
 exampleOnePzPoly = pzPolyFromList [1]
 
 exampleIncZeroPzPoly : PZPoly
-exampleIncZeroPzPoly = pzPolyFromList [0, 3]
+exampleIncZeroPzPoly = pzPolyFromList [3, 0]
 
 exampleIncOnePzPoly : PZPoly
-exampleIncOnePzPoly = pzPolyFromList [1, 3]
+exampleIncOnePzPoly = pzPolyFromList [3, 1]
 
 pzArenaFromObjList : List NatObj -> PZArena
 pzArenaFromObjList l = MkPZArena (MetaToNatObj (length l)) (listToPrefixFunc l)

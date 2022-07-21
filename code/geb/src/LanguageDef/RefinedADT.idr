@@ -54,7 +54,7 @@ Show PZPoly where
       (const show)
       (pzArCoeff ar)
       id
-      (\n', morph, sc, ss => sc ++ " * n^" ++ show (NatOS n') ++ " + " ++ ss)
+      (\n', morph, sc, ss => ss ++ " + " ++ sc ++ " * n^" ++ show (NatOS n'))
 
 ---------------------------
 ---- Arena formulation ----
