@@ -78,13 +78,10 @@ public export
 Show PZArena where
   show (MkPZArena (InNat ZeroF) nd) = "[empty]"
   show (MkPZArena (InNat $ SuccF n) nd) =
-    let
-      nd' = NatOSliceSuccElim {a=(const NatObj)} nd
-    in
     NatObjBoundedGenMapFold
       {a=(const NatObj)} {b=(const String)} {c=(const String)}
       (const show)
-      nd'
+      (NatOSliceSuccElim {a=(const NatObj)} nd)
       (\s => "#Dirs[0] = " ++ s)
       (\n', morph, sc, ss =>
         "#Dirs[" ++ (show $ NatOS n') ++ "] = " ++ sc ++ "\n" ++ ss)
