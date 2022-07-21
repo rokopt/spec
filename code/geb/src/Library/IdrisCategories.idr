@@ -3107,22 +3107,33 @@ NatObjBoundedMapFold {a} {b} {c} {n} mab ga z s =
 
 public export
 NatObjPrefixGenMapFold :
-  {a, b : NatObj -> Type} -> {c : Type} -> {n : NatObj} ->
+  {a, b, c : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOPrefix n) -> a (fst sl) -> b (fst sl))) ->
   ((sl : NatOPrefix n) -> a (fst sl)) ->
-  c ->
-  (b NatOZ -> c) ->
-  ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> c -> c) ->
-  c
-NatObjPrefixGenMapFold {a} {b} {c} {n=(InNat ZeroF)} mab ga z o s =
-  z
-NatObjPrefixGenMapFold {a} {b} {c} {n=(InNat $ SuccF n')} mab ga z o s =
-  NatObjBoundedGenMapFold {a} {b} {c=(const c)} {n=n'}
-    (NatOSliceSuccElim {a=(\n'' => a n'' -> b n'')} mab)
-    (NatOSliceSuccElim {a} ga)
-    o
-    (\n'', morph => s n'' $ NatLTInc morph)
-    (NatOSliceMax n')
+  c NatOZ ->
+  (b NatOZ -> c NatO1) ->
+  ((m : NatObj) -> NatLTStrict (NatOS m) n ->
+   b (NatOS m) -> c (NatOS m) -> c (NatOS (NatOS m))) ->
+  (sl : NatOSlice n) -> c (fst sl)
+NatObjPrefixGenMapFold {a} {b} {c} {n} m ga z o s =
+  NatObjBoundedGenInd {a=c}
+    z
+    (\n', morph, c' => case n' of
+      InNat ZeroF => o $ m (NatOZ ** morph) $ ga $ (NatOZ ** morph)
+      InNat (SuccF n'') => s n'' morph (m (_ ** morph) $ ga (_ ** morph)) c')
+
+public export
+NatObjPrefixMapFold :
+  {a, b, c : NatObj -> Type} -> {n : NatObj} ->
+  (m : ((sl : NatOPrefix n) -> a (fst sl) -> b (fst sl))) ->
+  ((sl : NatOPrefix n) -> a (fst sl)) ->
+  c NatOZ ->
+  (b NatOZ -> c NatO1) ->
+  ((m : NatObj) -> NatLTStrict (NatOS m) n ->
+   b (NatOS m) -> c (NatOS m) -> c (NatOS (NatOS m))) ->
+  c n
+NatObjPrefixMapFold {a} {b} {c} {n} mab ga z o s =
+  NatObjPrefixGenMapFold {a} {b} {c} {n} mab ga z o s (NatOSliceMax n)
 
 ---------------------------
 ---- General induction ----

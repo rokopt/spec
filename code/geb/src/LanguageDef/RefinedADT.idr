@@ -77,7 +77,8 @@ pzDirT ar pos = NatOPrefix (pzNumDir ar pos)
 public export
 Show PZArena where
   show (MkPZArena n nd) =
-    NatObjPrefixGenMapFold {a=(const NatObj)} {b=(const String)}
+    NatObjPrefixMapFold
+      {a=(const NatObj)} {b=(const String)} {c=(const String)}
       (const show)
       nd
       "[empty]"
