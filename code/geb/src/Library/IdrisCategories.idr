@@ -3114,7 +3114,7 @@ NatObjPrefixGenMapFold {a} {b} {c} {n=(InNat ZeroF)} mab ga z o s =
   z
 NatObjPrefixGenMapFold {a} {b} {c} {n=(InNat $ SuccF n')} mab ga z o s =
   NatObjBoundedGenMapFold {a} {b} {c=(const c)} {n=n'}
-    (NatOSliceSuccElim {a=(\n' => a n' -> b n')} mab)
+    (NatOSliceSuccElim {a=(\n'' => a n'' -> b n'')} mab)
     (NatOSliceSuccElim {a} ga)
     o
     (\n'', morph => s n'' $ NatLTInc morph)
