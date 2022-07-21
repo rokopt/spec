@@ -83,7 +83,7 @@ Show PZArena where
       "[empty]"
       ((++) "#Dirs[0] = ")
       (\n', morph, sc, ss =>
-        "#Dirs[" ++ (show $ NatOS n') ++ "] = " ++ sc ++ "\n" ++ ss)
+        ss ++ "; #Dirs[" ++ (show $ NatOS n') ++ "] = " ++ sc)
 
 public export
 record PZLens (domain, codomain : PZArena) where

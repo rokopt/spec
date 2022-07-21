@@ -154,11 +154,27 @@ exampleIncZeroPzPoly = pzPolyFromList [0, 3]
 exampleIncOnePzPoly : PZPoly
 exampleIncOnePzPoly = pzPolyFromList [1, 3]
 
+pzArenaFromObjList : List NatObj -> PZArena
+pzArenaFromObjList l = MkPZArena (MetaToNatObj (length l)) (listToPrefixFunc l)
+
+pzArenaFromList : List Nat -> PZArena
+pzArenaFromList = pzArenaFromObjList . map MetaToNatObj
+
+exampleEmptyPzArena : PZArena
+exampleEmptyPzArena = pzArenaFromList []
+
+exampleSmallPzArena : PZArena
+exampleSmallPzArena = pzArenaFromList [3]
+
+exampleLongPzArena : PZArena
+exampleLongPzArena = pzArenaFromList [11, 17, 3, 5, 10, 0, 2]
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
   printLn "Begin languageDefRefinedADTTest:"
   printLn $ show exampleFinNatPoly
+  printLn "Begin pzPoly"
   printLn $ show examplePzPoly
   printLn $ show exampleLongPzPoly
   printLn $ show exampleEmptyPzPoly
@@ -166,6 +182,10 @@ languageDefRefinedADTTest = do
   printLn $ show exampleOnePzPoly
   printLn $ show exampleIncZeroPzPoly
   printLn $ show exampleIncOnePzPoly
+  printLn "Begin pzArena"
+  printLn $ show exampleEmptyPzArena
+  printLn $ show exampleSmallPzArena
+  printLn $ show exampleLongPzArena
   {-
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5
