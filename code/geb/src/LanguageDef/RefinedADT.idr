@@ -40,12 +40,12 @@ pzPowT = NatOSlice . pzMaxPow
 -- and thereby to make equality on polynomials equivalent to structural
 -- equality on `PZPoly`.
 public export
-pzCoeff : (n, max : NatObj) -> NatObj
-pzCoeff n max = if n == max && n /= NatOZ then (NatOS n) else n
+pzCoeff : (n, i, max : NatObj) -> NatObj
+pzCoeff n i max = if i == max && i /= NatOZ then (NatOS n) else n
 
 public export
 pzArCoeff : (ar : PZPoly) -> pzPowT ar -> NatObj
-pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
+pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (fst pow) (pzMaxPow ar)
 
 public export
 Show PZPoly where
@@ -54,7 +54,7 @@ Show PZPoly where
       (const show)
       (pzArCoeff ar)
       id
-      (\n', morph, sc, ss => sc ++ " * n ^ " ++ show n' ++ " + " ++ ss)
+      (\n', morph, sc, ss => sc ++ " * n^" ++ show (NatOS n') ++ " + " ++ ss)
 
 ---------------------------
 ---- Arena formulation ----

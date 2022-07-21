@@ -2830,8 +2830,12 @@ NatLTFromSucc _ _ (InNatLT (SuccF m, SuccF n) morph) = case morph of
   NatLTS (m', n') mn' => mn'
 
 public export
+FromLTZeroContra : (n : NatObj) -> NatLTMorph (NatOS n, NatOZ) -> Void
+FromLTZeroContra _ = succNotLTEzero . NatMorphToLTE
+
+public export
 FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
-FromSuccContra n morph = void $ succNotLTEpred $ NatMorphToLTE morph
+FromSuccContra _ = succNotLTEpred . NatMorphToLTE
 
 public export
 NatMorphDec : (m, n : NatObj) ->

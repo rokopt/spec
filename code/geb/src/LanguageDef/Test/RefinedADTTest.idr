@@ -5,8 +5,11 @@ import LanguageDef.RefinedADT
 
 %default total
 
+examplePolyList : List Nat
+examplePolyList = [4, 0, 2, 3]
+
 exampleFinNatPoly : FinNatPoly
-exampleFinNatPoly = InitFinNatPoly [4, 0, 2, 3]
+exampleFinNatPoly = InitFinNatPoly examplePolyList
 
 finNatPolyTest : Assertion
 finNatPolyTest = Assert $ interpretFinNatPoly exampleFinNatPoly 7 == 1389
@@ -104,16 +107,66 @@ fsObjTest1 = (!+)
 fsObjTest2 : MuS0EF
 fsObjTest2 = :>: ((!+) :+: (!+) :+: (!*))
 
-public export
 adt0ShowTest : ADT0ObjF Void
 adt0ShowTest = ADT0Initial
+
+listToPrefixFunc : {a : Type} ->
+  (l : List a) -> NatOPrefix (MetaToNatObj (length l)) -> a
+listToPrefixFunc [] (m ** morph) = void $ FromLTZeroContra m morph
+listToPrefixFunc (x :: xs) (m ** morph) = case m of
+  InNat ZeroF => x
+  InNat (SuccF m') => listToPrefixFunc xs (m' ** NatLTFromSucc _ _ morph)
+
+listToSliceFunc : {a : Type} ->
+  (i : a) -> (l : List a) -> NatOSlice (MetaToNatObj (length l)) -> a
+listToSliceFunc i [] _ = i
+listToSliceFunc i (x :: xs) (m ** morph) = case NatMorphSucc _ _ morph of
+  Left lte => listToSliceFunc x xs (m ** lte)
+  Right _ => i
+
+pzPolyFromObjList : List NatObj -> PZPoly
+pzPolyFromObjList [] =
+  MkPZPoly NatOZ (const NatOZ)
+pzPolyFromObjList (x :: xs) =
+  MkPZPoly (MetaToNatObj (length xs)) (listToSliceFunc x xs)
+
+pzPolyFromList : List Nat -> PZPoly
+pzPolyFromList = pzPolyFromObjList . map MetaToNatObj
+
+examplePzPoly : PZPoly
+examplePzPoly = pzPolyFromList [3, 0, 2, 3]
+
+exampleLongPzPoly : PZPoly
+exampleLongPzPoly = pzPolyFromList [7, 7, 6, 5, 4, 3, 2, 1, 0]
+
+exampleEmptyPzPoly : PZPoly
+exampleEmptyPzPoly = pzPolyFromList []
+
+exampleZeroPzPoly : PZPoly
+exampleZeroPzPoly = pzPolyFromList [0]
+
+exampleOnePzPoly : PZPoly
+exampleOnePzPoly = pzPolyFromList [1]
+
+exampleIncZeroPzPoly : PZPoly
+exampleIncZeroPzPoly = pzPolyFromList [0, 3]
+
+exampleIncOnePzPoly : PZPoly
+exampleIncOnePzPoly = pzPolyFromList [1, 3]
 
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
   printLn "Begin languageDefRefinedADTTest:"
-  {-
   printLn $ show exampleFinNatPoly
+  printLn $ show examplePzPoly
+  printLn $ show exampleLongPzPoly
+  printLn $ show exampleEmptyPzPoly
+  printLn $ show exampleZeroPzPoly
+  printLn $ show exampleOnePzPoly
+  printLn $ show exampleIncZeroPzPoly
+  printLn $ show exampleIncOnePzPoly
+  {-
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5
   printLn $ show finOrdMorphTest6
@@ -132,7 +185,7 @@ languageDefRefinedADTTest = do
   printLn $ show fsObjTest1
   printLn $ show fsObjTest2
   printLn $ show fsObjTest2
-  -}
   printLn $ show adt0ShowTest
+  -}
   printLn "End languageDefRefinedADTTest."
   pure ()
