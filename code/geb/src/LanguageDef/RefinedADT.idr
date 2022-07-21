@@ -47,6 +47,16 @@ public export
 pzArCoeff : (ar : PZPoly) -> pzPowT ar -> NatObj
 pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
 
+public export
+Show PZPoly where
+  show ar =
+    NatObjBoundedInd
+      (show $ pzArCoeff ar $ NatOSliceZ _)
+      (\m, morph, s =>
+        show (pzArCoeff ar (NatOS m ** morph)) ++ " * n ^ " ++ show (NatOS m) ++
+        " + " ++ s)
+      (NatOSliceMax $ pzMaxPow ar)
+
 ---------------------------
 ---- Arena formulation ----
 ---------------------------

@@ -3034,6 +3034,19 @@ public export
     Yes _ => True
     No _ => False
 
+public export
+NatObjBoundedIndMorph : {a : NatObj ->  Type} -> {n : NatObj} ->
+  a NatOZ -> ((m : NatObj) -> NatLTStrict m n -> a m -> a (NatOS m)) ->
+  (n' : NatObj) -> NatLTMorph (n', n) -> a n'
+NatObjBoundedIndMorph i f =
+  NatObjInd _ (const i) (\n', hyp, morph => f n' morph $ hyp $ NatLTDec morph)
+
+public export
+NatObjBoundedInd : {a : NatObj -> Type} -> {n : NatObj} ->
+  a NatOZ -> ((m : NatObj) -> NatLTStrict m n -> a m -> a (NatOS m)) ->
+  (m : NatOSlice n) -> a (fst m)
+NatObjBoundedInd i f (n' ** morph) = NatObjBoundedIndMorph i f n' morph
+
 ---------------------------
 ---- General induction ----
 ---------------------------
