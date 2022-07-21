@@ -50,7 +50,7 @@ pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
 public export
 Show PZPoly where
   show ar =
-    NatObjBoundedMapFold {a=(const NatObj)}
+    NatObjBoundedMapFold {a=(const NatObj)} {b=(const String)}
       (const show)
       (pzArCoeff ar)
       id
