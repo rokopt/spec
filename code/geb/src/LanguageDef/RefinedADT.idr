@@ -78,7 +78,7 @@ public export
 Show PZArena where
   show (MkPZArena (InNat ZeroF) nd) = "[empty]"
   show (MkPZArena (InNat $ SuccF n) nd) =
-    NatObjBoundedGenMapFold
+    NatObjBoundedGenMapFold {n}
       {a=(const NatObj)} {b=(const String)} {c=(const String)}
       (const show)
       (NatOSliceSuccElim {a=(const NatObj)} nd)
