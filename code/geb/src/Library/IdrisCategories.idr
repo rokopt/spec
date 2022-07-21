@@ -3053,10 +3053,16 @@ NatOSliceFromSucc : {n : NatObj} ->
 NatOSliceFromSucc {n} (m ** morph) = (m ** NatLTFromSucc m n morph)
 
 public export
-NatOSliceSuccElim : {n : NatObj} -> {a : Type} ->
-  ((m : NatObj ** NatLTMorph (NatOS m, NatOS n)) -> a) ->
-  NatOSlice n -> a
-NatOSliceSuccElim {n} {a} f (m ** morph) = f (m ** NatLTMorphToSucc morph)
+NatOSliceSuccElimMorph : {n : NatObj} -> {a : (NatObj -> Type)} ->
+  ((sl : (m : NatObj ** NatLTMorph (NatOS m, NatOS n))) -> a (fst sl)) ->
+  (m : NatObj) -> NatLTMorph (m, n) -> a m
+NatOSliceSuccElimMorph {n} {a} f m morph = f (m ** NatLTMorphToSucc morph)
+
+public export
+NatOSliceSuccElim : {n : NatObj} -> {a : (NatObj -> Type)} ->
+  ((sl : (m : NatObj ** NatLTMorph (NatOS m, NatOS n))) -> a (fst sl)) ->
+  (m : NatOSlice n) -> a (fst m)
+NatOSliceSuccElim {a} f (m ** morph) = NatOSliceSuccElimMorph {a} f m morph
 
 ---------------------------
 ---- General induction ----

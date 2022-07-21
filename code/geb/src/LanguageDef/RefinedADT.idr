@@ -80,7 +80,7 @@ Show PZArena where
   show (MkPZArena (InNat ZeroF) nd) = "[empty]"
   show (MkPZArena (InNat $ SuccF n) nd) =
     let
-      nd' = NatOSliceSuccElim nd
+      nd' = NatOSliceSuccElim {a=(const NatObj)} nd
     in
     NatObjBoundedInd
       ("#Dirs[0] = " ++ (show $ nd' $ NatOSliceZ _))
