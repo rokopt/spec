@@ -3035,17 +3035,17 @@ public export
     No _ => False
 
 public export
-NatObjBoundedIndMorph : {a : NatObj ->  Type} -> {n : NatObj} ->
+NatObjBoundedGenIndMorph : {a : NatObj ->  Type} -> {n : NatObj} ->
   a NatOZ -> ((m : NatObj) -> NatLTStrict m n -> a m -> a (NatOS m)) ->
   (n' : NatObj) -> NatLTMorph (n', n) -> a n'
-NatObjBoundedIndMorph i f =
+NatObjBoundedGenIndMorph i f =
   NatObjInd _ (const i) (\n', hyp, morph => f n' morph $ hyp $ NatLTDec morph)
 
 public export
-NatObjBoundedInd : {a : NatObj -> Type} -> {n : NatObj} ->
+NatObjBoundedGenInd : {a : NatObj -> Type} -> {n : NatObj} ->
   a NatOZ -> ((m : NatObj) -> NatLTStrict m n -> a m -> a (NatOS m)) ->
   (m : NatOSlice n) -> a (fst m)
-NatObjBoundedInd i f (n' ** morph) = NatObjBoundedIndMorph i f n' morph
+NatObjBoundedGenInd i f (n' ** morph) = NatObjBoundedGenIndMorph i f n' morph
 
 public export
 NatOSliceFromSucc : {n : NatObj} ->
@@ -3065,25 +3065,25 @@ NatOSliceSuccElim : {n : NatObj} -> {a : (NatObj -> Type)} ->
 NatOSliceSuccElim {a} f (m ** morph) = NatOSliceSuccElimMorph {a} f m morph
 
 public export
-NatObjBoundedMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
+NatObjBoundedGenMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
   ((sl : NatOSlice n) -> a (fst sl)) ->
   ((sl : NatOSlice n) -> b (fst sl))
-NatObjBoundedMap {n} m g =
-  NatObjBoundedInd {a=b}
+NatObjBoundedGenMap {n} m g =
+  NatObjBoundedGenInd {a=b}
     (m (NatOSliceZ n) $ g (NatOSliceZ n))
     (\n', morph, _ => m (NatOS n' ** morph) $ g (NatOS n' ** morph))
 
 public export
-NatObjBoundedMapFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
+NatObjBoundedGenMapFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
   ((sl : NatOSlice n) -> a (fst sl)) ->
   (b NatOZ -> b NatOZ) ->
   ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> b m -> b (NatOS m)) ->
   (m : NatOSlice n) -> b (fst m)
-NatObjBoundedMapFold {a} {b} {n} mab ga z s =
-  let gb = NatObjBoundedMap {a} {b} mab ga in
-  NatObjBoundedInd
+NatObjBoundedGenMapFold {a} {b} {n} mab ga z s =
+  let gb = NatObjBoundedGenMap {a} {b} mab ga in
+  NatObjBoundedGenInd
     (z $ gb $ NatOSliceZ n)
     (\n', morph, b' => s n' morph (gb (NatOS n' ** morph)) b')
 

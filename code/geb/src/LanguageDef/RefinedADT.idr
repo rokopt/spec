@@ -50,7 +50,7 @@ pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (pzMaxPow ar)
 public export
 Show PZPoly where
   show ar =
-    NatObjBoundedMapFold {a=(const NatObj)}
+    NatObjBoundedGenMapFold {a=(const NatObj)}
       (const show)
       (pzArCoeff ar)
       id
@@ -82,7 +82,7 @@ Show PZArena where
     let
       nd' = NatOSliceSuccElim {a=(const NatObj)} nd
     in
-    NatObjBoundedInd
+    NatObjBoundedGenInd
       ("#Dirs[0] = " ++ (show $ nd' $ NatOSliceZ _))
       (\m, morph, s =>
         "#Dirs[" ++ (show $ NatOS m) ++ "] = " ++
