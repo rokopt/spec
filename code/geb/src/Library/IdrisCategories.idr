@@ -1528,14 +1528,14 @@ NatObjDepInductionStep {p} dp sp =
 
 public export
 NatObjDepInd :
-  (p : NatObj -> Type) ->
+  {p : NatObj -> Type} ->
   (dp : (n : NatObj) -> p n -> Type) ->
-  (zp : NatObjIndBaseCase p) ->
-  (sp : NatObjInductionStep p) ->
+  {zp : NatObjIndBaseCase p} ->
+  {sp : NatObjInductionStep p} ->
   NatObjDepIndBaseCase dp zp ->
   NatObjDepInductionStep dp sp ->
   (n : NatObj) -> dp n (NatObjInd p zp sp n)
-NatObjDepInd p dp zp sp dzp dsp =
+NatObjDepInd {p} dp {zp} {sp} dzp dsp =
   NatObjInd (\n => dp n (NatObjInd p zp sp n))
     dzp (\n', dpn => dsp n' (NatObjInd p zp sp n') dpn)
 
@@ -1696,18 +1696,18 @@ NatObjPairDepSuccSuccCase {p} dp ssp =
 
 public export
 NatObjPairDepInd :
-  (p : NatObjPair -> Type) ->
+  {p : NatObjPair -> Type} ->
   (dp : (np : NatObjPair) -> p np -> Type) ->
-  (zzp : NatObjPairIndZeroZeroCase p) ->
-  (zsp : NatObjPairIndZeroSuccCase p) ->
-  (szp : NatObjPairIndSuccZeroCase p) ->
-  (ssp : NatObjPairIndSuccSuccCase p) ->
+  {zzp : NatObjPairIndZeroZeroCase p} ->
+  {zsp : NatObjPairIndZeroSuccCase p} ->
+  {szp : NatObjPairIndSuccZeroCase p} ->
+  {ssp : NatObjPairIndSuccSuccCase p} ->
   NatObjPairDepZeroZeroCase dp zzp ->
   NatObjPairDepZeroSuccCase dp zsp ->
   NatObjPairDepSuccZeroCase dp szp ->
   NatObjPairDepSuccSuccCase dp ssp ->
   (mn : NatObjPair) -> dp mn (NatObjPairInd p zzp zsp szp ssp mn)
-NatObjPairDepInd p dp zzp zsp szp ssp dzzp dzsp dszp dssp =
+NatObjPairDepInd {p} dp {zzp} {zsp} {szp} {ssp} dzzp dzsp dszp dssp =
   NatObjPairInd (\mn => dp mn (NatObjPairInd p zzp zsp szp ssp mn))
     dzzp
     (\n', dpzn => dzsp n' (NatObjPairInd p zzp zsp szp ssp (NatOZ, n')) dpzn)
@@ -1954,15 +1954,15 @@ FunctorIterDepInductionStep {f} {a} {p} dp sp =
 
 public export
 FunctorIterDepInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) ->
+  {p : (n' : NatObj) -> FunctorIter f n' a -> Type} ->
   (dp : (n' : NatObj) -> (it : FunctorIter f n' a) -> p n' it -> Type) ->
-  (zp : FunctorIterIndBaseCase {f} {a} p) ->
-  (sp : FunctorIterInductionStep {f} {a} p) ->
+  {zp : FunctorIterIndBaseCase {f} {a} p} ->
+  {sp : FunctorIterInductionStep {f} {a} p} ->
   FunctorIterDepIndBaseCase {f} {a} {p} dp zp ->
   FunctorIterDepInductionStep {f} {a} {p} dp sp ->
   (n : NatObj) -> (ty : FunctorIter f n a) ->
   dp n ty (FunctorIterInd {f} {a} p zp sp n ty)
-FunctorIterDepInd {f} {a} p dp zp sp dzp dsp =
+FunctorIterDepInd {f} {a} {p} dp {zp} {sp} dzp dsp =
   FunctorIterInd {f} {a}
     (\n', ty => dp n' ty (FunctorIterInd {f} {a} p zp sp n' ty))
     dzp
@@ -2133,10 +2133,10 @@ ChainDepInductionStep {f} = FunctorIterDepInductionStep {f=(OmegaStep f)}
 
 public export
 ChainDepInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) ->
+  {p : (n' : NatObj) -> OmegaChain f n' a -> Type} ->
   (dp : (n' : NatObj) -> (it : OmegaChain f n' a) -> p n' it -> Type) ->
-  (zp : ChainIndBaseCase {f} {a} p) ->
-  (sp : ChainInductionStep {f} {a} p) ->
+  {zp : ChainIndBaseCase {f} {a} p} ->
+  {sp : ChainInductionStep {f} {a} p} ->
   ChainDepIndBaseCase {f} {a} {p} dp zp ->
   ChainDepInductionStep {f} {a} {p} dp sp ->
   (n : NatObj) -> (ty : OmegaChain f n a) ->
@@ -2287,19 +2287,19 @@ ColimitDepInductionStep = ChainDepInductionStep . DepPredColimitToChain
 
 public export
 ColimitDepInd : {f : Type -> Type} -> {a : Type} ->
-  (p : OmegaColimit f a -> Type) ->
+  {p : OmegaColimit f a -> Type} ->
   (dp : (c : OmegaColimit f a) -> p c -> Type) ->
-  (zp : ColimitIndBaseCase {f} {a} p) ->
-  (sp : ColimitInductionStep {f} {a} p) ->
+  {zp : ColimitIndBaseCase {f} {a} p} ->
+  {sp : ColimitInductionStep {f} {a} p} ->
   ColimitDepIndBaseCase {f} {a} {p} dp zp ->
   ColimitDepInductionStep {f} {a} {p} dp sp ->
   (c : OmegaColimit f a) ->
   dp c (ColimitInduction {f} {a} p zp sp c)
-ColimitDepInd p dp zp sp dzp dsp (n ** c) =
+ColimitDepInd {p} dp {zp} {sp} dzp dsp (n ** c) =
   ChainDepInd
-    (PredColimitToChain p)
+    {p=(PredColimitToChain p)}
     (DepPredColimitToChain dp)
-    zp sp dzp dsp n c
+    {zp} {sp} dzp dsp n c
 
 public export
 InitialIter : (Type -> Type) -> NatObj -> Type
@@ -2642,15 +2642,15 @@ NatMorphDepIndSCase {p} dp sp =
 
 public export
 NatMorphDepInd :
-  (p : (mn : NatObjPair) -> NatLTMorph mn -> Type) ->
+  {p : (mn : NatObjPair) -> NatLTMorph mn -> Type} ->
   (dp : (mn : NatObjPair) -> (morph : NatLTMorph mn) -> p mn morph -> Type) ->
-  (zp : NatMorphIndZCase p) ->
-  (sp : NatMorphIndSCase p) ->
+  {zp : NatMorphIndZCase p} ->
+  {sp : NatMorphIndSCase p} ->
   (dzp : NatMorphDepIndZCase dp zp) ->
   (dsp : NatMorphDepIndSCase dp sp) ->
   (mn : NatObjPair) -> (morph : NatLTMorph mn) ->
   dp mn morph (NatMorphInd p zp sp mn morph)
-NatMorphDepInd p dp zp sp dzp dsp =
+NatMorphDepInd {p} dp {zp} {sp} dzp dsp =
   NatMorphInd
     (\mn', morph' => dp mn' morph' (NatMorphInd p zp sp mn' morph'))
     dzp
@@ -3023,14 +3023,14 @@ NatOSliceDepInductionStep {p} dp s =
 
 public export
 NatOSliceDepInduction :
-  (p : (n : NatObj) -> NatOSlice n -> Type) ->
+  {p : (n : NatObj) -> NatOSlice n -> Type} ->
   (dp : (n : NatObj) -> (sl : NatOSlice n) -> p n sl -> Type) ->
-  (z : NatOSliceIndBaseCase p) ->
-  (s : NatOSliceInductionStep p) ->
+  {z : NatOSliceIndBaseCase p} ->
+  {s : NatOSliceInductionStep p} ->
   NatOSliceDepIndBaseCase dp z ->
   NatOSliceDepInductionStep dp s ->
   (n : NatObj) -> (sl : NatOSlice n) -> dp n sl (NatOSliceInduction p z s n sl)
-NatOSliceDepInduction p dp z s dz ds =
+NatOSliceDepInduction {p} dp {z} {s} dz ds =
   NatOSliceInduction
     (\n, sl => dp n sl (NatOSliceInduction p z s n sl))
     dz
@@ -3230,33 +3230,33 @@ NatObjDepGenIndStrengthenedStep p dp sp dsp n hyp dh (n' ** m)
 
 public export
 NatObjDepGenIndStrengthened :
-  (p : NatObj -> Type) ->
+  {p : NatObj -> Type} ->
   (dp : (n : NatObj) -> p n -> Type) ->
-  (zp : NatObjIndBaseCase p) ->
-  (sp : NatObjGenInductionStep p) ->
+  {zp : NatObjIndBaseCase p} ->
+  {sp : NatObjGenInductionStep p} ->
   NatObjDepIndBaseCase dp zp ->
   NatObjDepGenInductionStep dp sp ->
   (n : NatObj) -> ForallLTEDep dp n (NatObjGenIndStrengthened p zp sp n)
-NatObjDepGenIndStrengthened p dp zp sp dzp dsp =
+NatObjDepGenIndStrengthened {p} dp {zp} {sp} dzp dsp =
   NatOSliceDepInduction
-    (\n, sl => p (fst sl))
+    {p=(\n, sl => p (fst sl))}
     (\n, sl, ps => dp (fst sl) ps)
-    zp
-    (NatObjGenIndStrengthenedStep p sp)
+    {z=zp}
+    {s=(NatObjGenIndStrengthenedStep p sp)}
     dzp
     (NatObjDepGenIndStrengthenedStep p dp sp dsp)
 
 public export
 NatObjDepGenInd :
-  (p : NatObj -> Type) ->
+  {p : NatObj -> Type} ->
   (dp : (n : NatObj) -> p n -> Type) ->
-  (zp : NatObjIndBaseCase p) ->
-  (sp : NatObjGenInductionStep p) ->
+  {zp : NatObjIndBaseCase p} ->
+  {sp : NatObjGenInductionStep p} ->
   NatObjDepIndBaseCase dp zp ->
   NatObjDepGenInductionStep dp sp ->
   (n : NatObj) -> dp n (NatObjGenInd p zp sp n)
-NatObjDepGenInd p dp zp sp dzp dsp n =
-  NatObjDepGenIndStrengthened p dp zp sp dzp dsp n (NatOSliceMax n)
+NatObjDepGenInd {p} dp {zp} {sp} dzp dsp n =
+  NatObjDepGenIndStrengthened {p} dp {zp} {sp} dzp dsp n (NatOSliceMax n)
 
 public export
 FunctorIterLTE : {f : Type -> Type} -> {a : Type} ->
@@ -3306,17 +3306,17 @@ FunctorIterDepGenInductionStep {f} {a} {p} dp sp =
 
 public export
 FunctorIterDepGenInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> FunctorIter f n' a -> Type) ->
+  {p : (n' : NatObj) -> FunctorIter f n' a -> Type} ->
   (dp : (n' : NatObj) -> (it : FunctorIter f n' a) -> p n' it -> Type) ->
-  (zp : FunctorIterIndBaseCase {f} {a} p) ->
-  (sp : FunctorIterGenIndStep {f} {a} p) ->
+  {zp : FunctorIterIndBaseCase {f} {a} p} ->
+  {sp : FunctorIterGenIndStep {f} {a} p} ->
   FunctorIterDepIndBaseCase {f} {a} {p} dp zp ->
   FunctorIterDepGenInductionStep {f} {a} {p} dp sp ->
   (n : NatObj) -> (ty : FunctorIter f n a) ->
   dp n ty (FunctorIterGenInd {f} {a} p zp sp n ty)
-FunctorIterDepGenInd {f} {a} p dp =
+FunctorIterDepGenInd {f} {a} {p} dp =
   NatObjDepGenInd
-    (\n' => (ty : FunctorIter f n' a) -> p n' ty)
+    {p=(\n' => (ty : FunctorIter f n' a) -> p n' ty)}
     (\n', hyp' => (ty : FunctorIter f n' a) -> dp n' ty (hyp' ty))
 
 public export
@@ -3362,10 +3362,10 @@ ChainDepGenInductionStep {f} {a} {p} dp sp =
 
 public export
 ChainDepGenInd : {f : Type -> Type} -> {a : Type} ->
-  (p : (n' : NatObj) -> OmegaChain f n' a -> Type) ->
+  {p : (n' : NatObj) -> OmegaChain f n' a -> Type} ->
   (dp : (n' : NatObj) -> (it : OmegaChain f n' a) -> p n' it -> Type) ->
-  (zp : ChainIndBaseCase {f} {a} p) ->
-  (sp : ChainGenIndStep {f} {a} p) ->
+  {zp : ChainIndBaseCase {f} {a} p} ->
+  {sp : ChainGenIndStep {f} {a} p} ->
   ChainDepIndBaseCase {f} {a} {p} dp zp ->
   ChainDepGenInductionStep {f} {a} {p} dp sp ->
   (n : NatObj) -> (ty : OmegaChain f n a) ->
@@ -3395,19 +3395,19 @@ ColimitDepGenInductionStep = ChainDepGenInductionStep . DepPredColimitToChain
 
 public export
 ColimitDepGenInd : {f : Type -> Type} -> {a : Type} ->
-  (p : OmegaColimit f a -> Type) ->
+  {p : OmegaColimit f a -> Type} ->
   (dp : (c : OmegaColimit f a) -> p c -> Type) ->
-  (zp : ColimitIndBaseCase {f} {a} p) ->
-  (sp : ColimitGenIndStep {f} {a} p) ->
+  {zp : ColimitIndBaseCase {f} {a} p} ->
+  {sp : ColimitGenIndStep {f} {a} p} ->
   ColimitDepIndBaseCase {f} {a} {p} dp zp ->
   ColimitDepGenInductionStep {f} {a} {p} dp sp ->
   (c : OmegaColimit f a) ->
   dp c (ColimitGenInd {f} {a} p zp sp c)
-ColimitDepGenInd p dp zp sp dzp dsp (n ** c) =
+ColimitDepGenInd {p} dp {zp} {sp} dzp dsp (n ** c) =
   ChainDepGenInd
-    (PredColimitToChain p)
+    {p=(PredColimitToChain p)}
     (DepPredColimitToChain dp)
-    zp sp dzp dsp n c
+    {zp} {sp} dzp dsp n c
 
 --------------------------------
 ---- Dependent endofunctors ----
