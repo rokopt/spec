@@ -44,17 +44,30 @@ pzCoeff : (n, i, max : NatObj) -> NatObj
 pzCoeff n i max = if i == max && i /= NatOZ then (NatOS n) else n
 
 public export
-pzArCoeff : (ar : PZPoly) -> pzPowT ar -> NatObj
-pzArCoeff ar pow = pzCoeff (pzCoeffRep ar pow) (fst pow) (pzMaxPow ar)
+pzPolyCoeff : (poly : PZPoly) -> pzPowT poly -> NatObj
+pzPolyCoeff poly pow = pzCoeff (pzCoeffRep poly pow) (fst pow) (pzMaxPow poly)
 
 public export
 Show PZPoly where
-  show ar =
+  show poly =
     NatObjBoundedMapFold {a=(const NatObj)} {b=(const String)}
       (const show)
-      (pzArCoeff ar)
+      (pzPolyCoeff poly)
       id
       (\n', morph, sc, ss => ss ++ " + " ++ sc ++ " * n^" ++ show (NatOS n'))
+
+public export
+pzApplyMeta : PZPoly -> Nat -> Nat
+pzApplyMeta poly n =
+    NatObjBoundedMapFold {a=(const NatObj)} {b=(const Nat)} {c=(const Nat)}
+      (const NatObjToMeta)
+      (pzPolyCoeff poly)
+      id
+      (\pow, lt, coeff, sum => sum + coeff * power n (NatObjToMeta $ NatOS pow))
+
+public export
+pzApply : PZPoly -> NatObj -> NatObj
+pzApply poly = MetaToNatObj . pzApplyMeta poly . NatObjToMeta
 
 ---------------------------
 ---- Arena formulation ----

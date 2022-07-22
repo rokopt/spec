@@ -3056,6 +3056,12 @@ NatObjBoundedGenInd : {a : NatObj -> Type} -> {n : NatObj} ->
 NatObjBoundedGenInd i f (n' ** morph) = NatObjBoundedGenIndMorph i f n' morph
 
 public export
+NatObjBoundedInd : {a : NatObj -> Type} -> {n : NatObj} ->
+  a NatOZ -> ((m : NatObj) -> NatLTStrict m n -> a m -> a (NatOS m)) ->
+  a n
+NatObjBoundedInd {n} i f = NatObjBoundedGenInd i f (NatOSliceMax n)
+
+public export
 NatOSliceFromSucc : {n : NatObj} ->
   (m : NatObj ** NatLTMorph (NatOS m, NatOS n)) -> NatOSlice n
 NatOSliceFromSucc {n} (m ** morph) = (m ** NatLTFromSucc m n morph)

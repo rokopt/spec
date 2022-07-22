@@ -135,6 +135,9 @@ pzPolyFromList = pzPolyFromObjList . map MetaToNatObj
 examplePzPoly : PZPoly
 examplePzPoly = pzPolyFromList [3, 2, 0, 3]
 
+examplePzPolyTest : Assertion
+examplePzPolyTest = Assert $ pzApplyMeta examplePzPoly 7 == 1389
+
 exampleLongPzPoly : PZPoly
 exampleLongPzPoly = pzPolyFromList [0, 1, 2, 3, 4, 5, 6, 7, 7]
 
@@ -175,6 +178,7 @@ languageDefRefinedADTTest = do
   printLn $ show exampleFinNatPoly
   printLn "Begin pzPoly"
   printLn $ show examplePzPoly
+  printLn $ show $ pzApplyMeta examplePzPoly 7
   printLn $ show exampleLongPzPoly
   printLn $ show exampleEmptyPzPoly
   printLn $ show exampleZeroPzPoly
