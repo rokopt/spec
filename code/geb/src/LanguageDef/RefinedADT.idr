@@ -59,11 +59,11 @@ Show PZPoly where
 public export
 pzApplyMeta : PZPoly -> Nat -> Nat
 pzApplyMeta poly n =
-    NatObjBoundedMapFold {a=(const NatObj)} {b=(const Nat)} {c=(const Nat)}
-      (const NatObjToMeta)
-      (pzPolyCoeff poly)
-      id
-      (\pow, lt, coeff, sum => sum + coeff * power n (NatObjToMeta $ NatOS pow))
+  NatObjBoundedMapFold {a=(const NatObj)} {b=(const Nat)} {c=(const Nat)}
+    (const NatObjToMeta)
+    (pzPolyCoeff poly)
+    id
+    (\pow, lt, coeff, sum => sum + coeff * power n (NatObjToMeta $ NatOS pow))
 
 public export
 pzApply : PZPoly -> NatObj -> NatObj
