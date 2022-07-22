@@ -138,6 +138,9 @@ examplePzPoly = pzPolyFromList [3, 2, 0, 3]
 examplePzPolyTest : Assertion
 examplePzPolyTest = Assert $ pzApplyMeta examplePzPoly 7 == 1389
 
+examplePzPolySum : Assertion
+examplePzPolySum = Assert $ NatObjToMeta (pzSumCoeff examplePzPoly) == 9
+
 exampleLongPzPoly : PZPoly
 exampleLongPzPoly = pzPolyFromList [0, 1, 2, 3, 4, 5, 6, 7, 7]
 
@@ -179,6 +182,7 @@ languageDefRefinedADTTest = do
   printLn "Begin pzPoly"
   printLn $ show examplePzPoly
   printLn $ show $ pzApplyMeta examplePzPoly 7
+  printLn $ show $ pzSumCoeff examplePzPoly
   printLn $ show exampleLongPzPoly
   printLn $ show exampleEmptyPzPoly
   printLn $ show exampleZeroPzPoly

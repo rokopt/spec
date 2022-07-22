@@ -107,6 +107,27 @@ record PZLens (domain, codomain : PZArena) where
   pzOnDir :
     (i : pzPosT domain) -> pzDirT codomain (pzOnPos i) -> pzDirT domain i
 
+------------------------------------------
+---- Algebraic <-> arena translations ----
+------------------------------------------
+
+public export
+pzSumCoeff : PZPoly -> NatObj
+pzSumCoeff poly =
+  NatObjBoundedMapFold {a=(const NatObj)} {b=(const NatObj)} {c=(const NatObj)}
+    (const id)
+    (pzPolyCoeff poly)
+    id
+    (\pow, lt, coeff, sum => natObjSum coeff sum)
+
+public export
+pzDirs : (poly : PZPoly) -> NatOPrefix (pzSumCoeff poly) -> NatObj
+pzDirs poly = ?pzDirs_hole
+
+public export
+pzToArena : PZPoly -> PZArena
+pzToArena poly = MkPZArena (pzSumCoeff poly) (pzDirs poly)
+
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 ---- Polynomials as arenas (following _A General Theory of Interaction_) ----

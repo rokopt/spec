@@ -2864,6 +2864,14 @@ NatMorphSucc m n morph =
     Right (Right gt) =>
       void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
 
+--------------------
+---- Arithmetic ----
+--------------------
+
+public export
+natObjSum : NatObj -> NatObj -> NatObj
+natObjSum m n = MetaToNatObj $ NatObjToMeta m + NatObjToMeta n
+
 ---------------------------------------------------
 ---- Colimit/initial algebra utility functions ----
 ---------------------------------------------------
