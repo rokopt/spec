@@ -112,13 +112,18 @@ record PZLens (domain, codomain : PZArena) where
 ------------------------------------------
 
 public export
+natSliceRunningSum : {n : NatObj} ->
+  (NatOSlice n -> NatObj) -> NatOSlice n -> NatObj
+natSliceRunningSum {n} v =
+  NatObjBoundedGenFold {a=(const NatObj)} v id (\_, _ => natObjSum)
+
+public export
+natSliceSum : {n : NatObj} -> (NatOSlice n -> NatObj) -> NatObj
+natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax n)
+
+public export
 pzSumCoeff : PZPoly -> NatObj
-pzSumCoeff poly =
-  NatObjBoundedMapFold {a=(const NatObj)} {b=(const NatObj)} {c=(const NatObj)}
-    (const id)
-    (pzPolyCoeff poly)
-    id
-    (\pow, lt, coeff, sum => natObjSum coeff sum)
+pzSumCoeff poly = natSliceSum (pzPolyCoeff poly)
 
 public export
 pzDirs : (poly : PZPoly) -> NatOPrefix (pzSumCoeff poly) -> NatObj

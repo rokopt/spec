@@ -3097,17 +3097,25 @@ NatObjBoundedGenMap {n} m g =
     (\n', morph, _ => m (NatOS n' ** morph) $ g (NatOS n' ** morph))
 
 public export
+NatObjBoundedGenFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
+  ((sl : NatOSlice n) -> a (fst sl)) ->
+  (a NatOZ -> b NatOZ) ->
+  ((m : NatObj) -> NatLTStrict m n -> a (NatOS m) -> b m -> b (NatOS m)) ->
+  (m : NatOSlice n) -> b (fst m)
+NatObjBoundedGenFold {a} {b} {n} ga z s =
+  NatObjBoundedGenInd
+    (z $ ga $ NatOSliceZ n)
+    (\n', morph, c' => s n' morph (ga (NatOS n' ** morph)) c')
+
+public export
 NatObjBoundedGenMapFold : {a, b, c : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
   ((sl : NatOSlice n) -> a (fst sl)) ->
   (b NatOZ -> c NatOZ) ->
   ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> c m -> c (NatOS m)) ->
   (m : NatOSlice n) -> c (fst m)
-NatObjBoundedGenMapFold {a} {b} {c} {n} mab ga z s =
-  let gb = NatObjBoundedGenMap {a} {b} mab ga in
-  NatObjBoundedGenInd
-    (z $ gb $ NatOSliceZ n)
-    (\n', morph, c' => s n' morph (gb (NatOS n' ** morph)) c')
+NatObjBoundedGenMapFold {a} {b} {c} {n} mab ga =
+  NatObjBoundedGenFold {a=b} {b=c} $ NatObjBoundedGenMap {a} {b} mab ga
 
 public export
 NatObjBoundedMapFold : {a, b, c : NatObj -> Type} -> {n : NatObj} ->
