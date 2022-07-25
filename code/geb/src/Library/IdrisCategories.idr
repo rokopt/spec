@@ -3133,6 +3133,29 @@ NatObjBoundedMapFold {a} {b} {c} {n} mab ga z s =
   NatObjBoundedGenMapFold {a} {b} {c} {n} mab ga z s (NatOSliceMax n)
 
 public export
+NatObjPrefixGenMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
+  (m : ((sl : NatOPrefix n) -> a (fst sl) -> b (fst sl))) ->
+  ((sl : NatOPrefix n) -> a (fst sl)) ->
+  ((sl : NatOPrefix n) -> b (fst sl))
+NatObjPrefixGenMap {n} m g sl = m sl $ g sl
+
+public export
+NatObjPrefixGenFold :
+  {a, b : NatObj -> Type} -> {n : NatObj} ->
+  ((sl : NatOPrefix n) -> a (fst sl)) ->
+  b NatOZ ->
+  (a NatOZ -> b NatO1) ->
+  ((m : NatObj) -> NatLTStrict (NatOS m) n ->
+   a (NatOS m) -> b (NatOS m) -> b (NatOS (NatOS m))) ->
+  (sl : NatOSlice n) -> b (fst sl)
+NatObjPrefixGenFold {a} {b} {n} ga z o s =
+  NatObjBoundedGenInd {a=b}
+    z
+    (\n', morph, b' => case n' of
+      InNat ZeroF => o $ ga $ (NatOZ ** morph)
+      InNat (SuccF n'') => s n'' morph (ga (_ ** morph)) b')
+
+public export
 NatObjPrefixGenMapFold :
   {a, b, c : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOPrefix n) -> a (fst sl) -> b (fst sl))) ->
@@ -3142,12 +3165,8 @@ NatObjPrefixGenMapFold :
   ((m : NatObj) -> NatLTStrict (NatOS m) n ->
    b (NatOS m) -> c (NatOS m) -> c (NatOS (NatOS m))) ->
   (sl : NatOSlice n) -> c (fst sl)
-NatObjPrefixGenMapFold {a} {b} {c} {n} m ga z o s =
-  NatObjBoundedGenInd {a=c}
-    z
-    (\n', morph, c' => case n' of
-      InNat ZeroF => o $ m (NatOZ ** morph) $ ga $ (NatOZ ** morph)
-      InNat (SuccF n'') => s n'' morph (m (_ ** morph) $ ga (_ ** morph)) c')
+NatObjPrefixGenMapFold {a} {b} {c} {n} m ga =
+  NatObjPrefixGenFold {a=b} {b=c} $ NatObjPrefixGenMap {a} {b} m ga
 
 public export
 NatObjPrefixMapFold :
@@ -3452,7 +3471,7 @@ sliceArrayFromList i l (m ** morph) = case m of
 public export
 (n : NatObj) => (a : Type) => Show a => Show (SliceArray n a) where
   show {n} {a} v =
-    NatObjBoundedGenMapFold
+    NatObjBoundedMapFold
       {a=(const a)}
       {b=(const String)}
       {c=(const String)}
@@ -3461,7 +3480,6 @@ public export
       ((++) "val[0]=")
       (\n', morph, ss, sc =>
         "val[" ++ show (NatOS n') ++ "]=" ++ sc ++ "; " ++ ss)
-      (NatOSliceMax n)
 
 public export
 natObjSum : NatObj -> NatObj -> NatObj
