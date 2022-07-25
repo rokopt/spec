@@ -3102,6 +3102,14 @@ NatObjBoundedGenMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
 NatObjBoundedGenMap {n} m g sl = m sl $ g sl
 
 public export
+NatObjBoundedMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
+  (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
+  ((sl : NatOSlice n) -> a (fst sl)) ->
+  b n
+NatObjBoundedMap {a} {b} {n} m g =
+  NatObjBoundedGenMap {a} {b} {n} m g $ NatOSliceMax n
+
+public export
 NatObjBoundedGenFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
   ((sl : NatOSlice n) -> a (fst sl)) ->
   (a NatOZ -> b NatOZ) ->
@@ -3111,6 +3119,14 @@ NatObjBoundedGenFold {a} {b} {n} ga z s =
   NatObjBoundedGenInd
     (z $ ga $ NatOSliceZ n)
     (\n', morph, c' => s n' morph (ga (NatOS n' ** morph)) c')
+
+public export
+NatObjBoundedFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
+  ((sl : NatOSlice n) -> a (fst sl)) ->
+  (a NatOZ -> b NatOZ) ->
+  ((m : NatObj) -> NatLTStrict m n -> a (NatOS m) -> b m -> b (NatOS m)) ->
+  b n
+NatObjBoundedFold {n} ga z s = NatObjBoundedGenFold {a} ga z s (NatOSliceMax n)
 
 public export
 NatObjBoundedGenMapFold : {a, b, c : NatObj -> Type} -> {n : NatObj} ->
@@ -3469,17 +3485,19 @@ sliceArrayFromList i l (m ** morph) = case m of
   InNat (SuccF m') => prefixArrayFromList l (m' ** morph)
 
 public export
+sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
+  (a -> String) -> SliceArray n a -> String
+sliceArrayStringFold {n} {a} sa v =
+  NatObjBoundedMapFold {a=(const a)} {b=(const String)}
+    (const sa)
+    v
+    ((++) "val[0]=")
+    (\n', morph, ss, sc =>
+      "val[" ++ show (NatOS n') ++ "]=" ++ sc ++ "; " ++ ss)
+
+public export
 (n : NatObj) => (a : Type) => Show a => Show (SliceArray n a) where
-  show {n} {a} v =
-    NatObjBoundedMapFold
-      {a=(const a)}
-      {b=(const String)}
-      {c=(const String)}
-      (const show)
-      v
-      ((++) "val[0]=")
-      (\n', morph, ss, sc =>
-        "val[" ++ show (NatOS n') ++ "]=" ++ sc ++ "; " ++ ss)
+  show {n} {a} = sliceArrayStringFold show
 
 public export
 natObjSum : NatObj -> NatObj -> NatObj
