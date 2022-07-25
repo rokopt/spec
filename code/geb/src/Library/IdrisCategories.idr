@@ -3470,6 +3470,11 @@ SliceArray : NatObj -> Type -> Type
 SliceArray n ty = NatOSlice n -> ty
 
 public export
+prefixArrayFromSlice : {a : Type} -> {n : NatObj} ->
+  SliceArray n a -> PrefixArray (NatOS n) a
+prefixArrayFromSlice {n} v (m ** morph) = v (m ** NatLTFromSucc m n morph)
+
+public export
 prefixArrayFromList : {a : Type} ->
   (l : List a) -> PrefixArray (MetaToNatObj (length l)) a
 prefixArrayFromList [] (m ** morph) = void $ FromLTZeroContra m morph
@@ -3485,15 +3490,26 @@ sliceArrayFromList i l (m ** morph) = case m of
   InNat (SuccF m') => prefixArrayFromList l (m' ** morph)
 
 public export
-sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
-  (a -> String) -> SliceArray n a -> String
-sliceArrayStringFold {n} {a} sa v =
-  NatObjBoundedMapFold {a=(const a)} {b=(const String)}
+prefixArrayStringFold : {n : NatObj} -> {a : Type} ->
+  (a -> String) -> PrefixArray n a -> String
+prefixArrayStringFold {n} {a} sa v =
+  NatObjPrefixMapFold {a=(const a)} {b=(const String)} {c=(const String)}
     (const sa)
     v
+    "[empty]"
     ((++) "val[0]=")
     (\n', morph, ss, sc =>
       "val[" ++ show (NatOS n') ++ "]=" ++ sc ++ "; " ++ ss)
+
+public export
+sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
+  (a -> String) -> SliceArray n a -> String
+sliceArrayStringFold {n} {a} sa v =
+  prefixArrayStringFold sa $ prefixArrayFromSlice {n} v
+
+public export
+(n : NatObj) => (a : Type) => Show a => Show (PrefixArray n a) where
+  show {n} {a} = prefixArrayStringFold show
 
 public export
 (n : NatObj) => (a : Type) => Show a => Show (SliceArray n a) where
