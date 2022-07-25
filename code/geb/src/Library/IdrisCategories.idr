@@ -3594,12 +3594,12 @@ natObjMinusLtCorrect : {m, n, k : NatObj} ->
 natObjMinusLtCorrect {m} {n} {k} mltek kltmpn = ?natObjMinusLtCorrect_hole
 
 public export
-NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> NatOPrefix n -> a
+NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> PrefixArray n a
 NatPrefixReplicate n x sl = x
 
 public export
 NatPrefixAppend : {a : Type} -> {m, n : NatObj} ->
-  (NatOPrefix m -> a) -> (NatOPrefix n -> a) -> NatOPrefix (natObjSum m n) -> a
+  PrefixArray m a -> PrefixArray n a -> PrefixArray (natObjSum m n) a
 NatPrefixAppend {a} {m} {n} f g (k ** morph) with (NatStrictLTDec k m)
   NatPrefixAppend {a} {m} {n} f g (k ** morph) | Left lt =
     f (k ** lt)
@@ -3608,13 +3608,13 @@ NatPrefixAppend {a} {m} {n} f g (k ** morph) with (NatStrictLTDec k m)
 
 public export
 natSliceRunningSum : {n : NatObj} ->
-  (NatOSlice n -> NatObj) -> NatOSlice (NatOS n) -> NatObj
+  SliceArray n NatObj -> SliceArray (NatOS n) NatObj
 natSliceRunningSum {n} v =
   NatObjBoundedGenFold {n} {a=(const NatObj)} {b=(const NatObj)}
     v NatOZ (\_, _ => natObjSum)
 
 public export
-natSliceSum : {n : NatObj} -> (NatOSlice n -> NatObj) -> NatObj
+natSliceSum : {n : NatObj} -> SliceArray n NatObj -> NatObj
 natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax (NatOS n))
 
 --------------------------------
