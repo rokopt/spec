@@ -95,9 +95,9 @@ Show PZArena where
       (const show)
       nd
       "[empty]"
-      ((++) "#Dirs[0] = ")
       (\n', morph, sc, ss =>
-        ss ++ "; #Dirs[" ++ (show $ NatOS n') ++ "] = " ++ sc)
+        let ss' = if n' == NatOZ then "" else ss ++ "; " in
+        ss' ++ "#Dirs[" ++ show n' ++ "] = " ++ sc)
 
 public export
 record PZLens (domain, codomain : PZArena) where
