@@ -2845,6 +2845,22 @@ NatMorphDec m n = case NatMorphCompare m n of
   Right morph => Right $ bimap {f=Either} NatLTDec NatLTDec morph
 
 public export
+NatLTEDec : (m, n : NatObj) -> Either (NatLTMorph (m, n)) (NatLTStrict n m)
+NatLTEDec m n = case NatMorphCompare m n of
+  Left eq => rewrite eq in Left $ NatMorphId _
+  Right morph => case morph of
+    Left lt => Left $ NatLTDec lt
+    Right gt => Right gt
+
+public export
+NatStrictLTDec : (m, n : NatObj) -> Either (NatLTStrict m n) (NatLTMorph (n, m))
+NatStrictLTDec m n = case NatMorphCompare m n of
+  Left eq => rewrite eq in Right $ NatMorphId _
+  Right morph => case morph of
+    Left lt => Left lt
+    Right gt => Right $ NatLTDec gt
+
+public export
 NatMorphDecSucc : (m, n : NatObj) ->
   Either (m = n) $
     Either (NatLTMorph (NatOS m, NatOS n)) (NatLTMorph (NatOS n, NatOS m))
@@ -2863,14 +2879,6 @@ NatMorphSucc m n morph =
     Right (Left lt) => Left $ NatLTFromSucc m n lt
     Right (Right gt) =>
       void $ FromSuccContra n $ NatLTFromSucc _ _ $ NatMorphCompose morph gt
-
---------------------
----- Arithmetic ----
---------------------
-
-public export
-natObjSum : NatObj -> NatObj -> NatObj
-natObjSum m n = MetaToNatObj $ NatObjToMeta m + NatObjToMeta n
 
 ---------------------------------------------------
 ---- Colimit/initial algebra utility functions ----
@@ -3091,10 +3099,7 @@ NatObjBoundedGenMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
   (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
   ((sl : NatOSlice n) -> a (fst sl)) ->
   ((sl : NatOSlice n) -> b (fst sl))
-NatObjBoundedGenMap {n} m g =
-  NatObjBoundedGenInd {a=b}
-    (m (NatOSliceZ n) $ g (NatOSliceZ n))
-    (\n', morph, _ => m (NatOS n' ** morph) $ g (NatOS n' ** morph))
+NatObjBoundedGenMap {n} m g sl = m sl $ g sl
 
 public export
 NatObjBoundedGenFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
@@ -3416,6 +3421,62 @@ ColimitDepGenInd {p} dp {zp} {sp} dzp dsp (n ** c) =
     {p=(PredColimitToChain p)}
     (DepPredColimitToChain dp)
     {zp} {sp} dzp dsp n c
+
+--------------------
+---- Arithmetic ----
+--------------------
+
+public export
+natObjSum : NatObj -> NatObj -> NatObj
+natObjSum m =
+  NatObjInd
+    (const NatObj)
+    m
+    (const NatOS)
+
+public export
+natObjMinus : {m, n : NatObj} -> NatLTMorph (n, m) -> NatObj
+natObjMinus {m} {n} =
+  NatMorphInd
+    (\_, _ => NatObj)
+    InNat
+    (\_, _, _ => id)
+    (n, m)
+
+public export
+natObjMinusLteCorrect : {m, n, k : NatObj} ->
+  (lte : NatLTMorph (m, k)) ->
+  NatLTMorph (k, (natObjSum m n)) -> NatLTMorph (natObjMinus lte, n)
+natObjMinusLteCorrect {m} {n} {k} mltek kltmpn = ?natObjMinusLteCorrect_hole
+
+public export
+natObjMinusLtCorrect : {m, n, k : NatObj} ->
+  (lte : NatLTMorph (m, k)) ->
+  NatLTStrict k (natObjSum m n) -> NatLTStrict (natObjMinus lte) n
+natObjMinusLtCorrect {m} {n} {k} mltek kltmpn = ?natObjMinusLtCorrect_hole
+
+public export
+NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> NatOPrefix n -> a
+NatPrefixReplicate n x sl = x
+
+public export
+NatPrefixAppend : {a : Type} -> {m, n : NatObj} ->
+  (NatOPrefix m -> a) -> (NatOPrefix n -> a) -> NatOPrefix (natObjSum m n) -> a
+NatPrefixAppend {a} {m} {n} f g (k ** morph) with (NatStrictLTDec k m)
+  NatPrefixAppend {a} {m} {n} f g (k ** morph) | Left lt =
+    f (k ** lt)
+  NatPrefixAppend {a} {m} {n} f g (k ** morph) | Right gte =
+    g (natObjMinus gte ** natObjMinusLtCorrect gte morph)
+
+public export
+natSliceRunningSum : {n : NatObj} ->
+  (NatOSlice n -> NatObj) -> NatOSlice n -> NatObj
+natSliceRunningSum {n} v =
+  NatObjBoundedGenFold {n} {a=(const NatObj)} v id (\_, _ => natObjSum)
+
+public export
+natSliceSum : {n : NatObj} -> (NatOSlice n -> NatObj) -> NatObj
+natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax n)
 
 --------------------------------
 ---- Dependent endofunctors ----
