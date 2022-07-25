@@ -3109,58 +3109,92 @@ NatOSliceSuccElim : {n : NatObj} ->
 NatOSliceSuccElim {a} f (m ** morph) = NatOSliceSuccElimMorph {a} f m morph
 
 public export
-NatObjBoundedGenMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
-  (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
-  ((sl : NatOSlice n) -> a (fst sl)) ->
-  ((sl : NatOSlice n) -> b (fst sl))
+NatObjBoundedGenMap :
+  {n : NatObj} ->
+  {a, b : NatOSlice n -> Type} ->
+  (m : ((sl : NatOSlice n) -> a sl -> b sl)) ->
+  ((sl : NatOSlice n) -> a sl) ->
+  ((sl : NatOSlice n) -> b sl)
 NatObjBoundedGenMap {n} m g sl = m sl $ g sl
 
 public export
-NatObjBoundedMap : {a, b : NatObj -> Type} -> {n : NatObj} ->
-  (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
-  ((sl : NatOSlice n) -> a (fst sl)) ->
-  b n
+NatObjBoundedMap :
+  {n : NatObj} ->
+  {a, b : NatOSlice n -> Type} ->
+  (m : ((sl : NatOSlice n) -> a sl -> b sl)) ->
+  ((sl : NatOSlice n) -> a sl) ->
+  b (NatOSliceMax n)
 NatObjBoundedMap {a} {b} {n} m g =
   NatObjBoundedGenMap {a} {b} {n} m g $ NatOSliceMax n
 
 public export
-NatObjBoundedGenFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
-  ((sl : NatOSlice n) -> a (fst sl)) ->
-  (a NatOZ -> b NatOZ) ->
-  ((m : NatObj) -> NatLTStrict m n -> a (NatOS m) -> b m -> b (NatOS m)) ->
-  (m : NatOSlice n) -> b (fst m)
+NatObjBoundedGenFold :
+  {n : NatObj} ->
+  {a : NatOSlice n -> Type} ->
+  {b : NatOSlice (NatOS n) -> Type} ->
+  ((sl : NatOSlice n) -> a sl) ->
+  b (NatOSliceZ $ NatOS n) ->
+  ((m : NatObj) -> (morph : NatLTMorph (m, n)) ->
+   a (m ** morph) ->
+   b (m ** NatLTInc morph) ->
+   b (NatOS m ** NatLTMorphToSucc morph)) ->
+  (m : NatOSlice (NatOS n)) -> b m
 NatObjBoundedGenFold {a} {b} {n} ga z s =
-  NatObjBoundedGenInd
-    (z $ ga $ NatOSliceZ n)
-    (\n', morph, c' => s n' morph (ga (NatOS n' ** morph)) c')
+  NatObjBoundedGenInd {a=b}
+    z
+    (\n', morph, b' =>
+      let morph' = NatLTFromSucc _ _ morph in
+      rewrite NatCatThin _ morph (NatLTMorphToSucc morph') in
+      s n' morph'
+        (ga (n' ** morph'))
+        (rewrite NatCatThin (n', NatOS n) (NatLTInc morph') _ in b'))
 
 public export
-NatObjBoundedFold : {a, b : NatObj -> Type} -> {n : NatObj} ->
-  ((sl : NatOSlice n) -> a (fst sl)) ->
-  (a NatOZ -> b NatOZ) ->
-  ((m : NatObj) -> NatLTStrict m n -> a (NatOS m) -> b m -> b (NatOS m)) ->
-  b n
-NatObjBoundedFold {n} ga z s = NatObjBoundedGenFold {a} ga z s (NatOSliceMax n)
+NatObjBoundedFold :
+  {n : NatObj} ->
+  {a : NatOSlice n -> Type} ->
+  {b : NatOSlice (NatOS n) -> Type} ->
+  ((sl : NatOSlice n) -> a sl) ->
+  b (NatOSliceZ $ NatOS n) ->
+  ((m : NatObj) -> (morph : NatLTMorph (m, n)) ->
+   a (m ** morph) ->
+   b (m ** NatLTInc morph) ->
+   b (NatOS m ** NatLTMorphToSucc morph)) ->
+  b (NatOSliceMax (NatOS n))
+NatObjBoundedFold {n} {a} {b} ga z s =
+  NatObjBoundedGenFold {a} {b} ga z s (NatOSliceMax (NatOS n))
 
 public export
-NatObjBoundedGenMapFold : {a, b, c : NatObj -> Type} -> {n : NatObj} ->
-  (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
-  ((sl : NatOSlice n) -> a (fst sl)) ->
-  (b NatOZ -> c NatOZ) ->
-  ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> c m -> c (NatOS m)) ->
-  (m : NatOSlice n) -> c (fst m)
+NatObjBoundedGenMapFold :
+  {n : NatObj} ->
+  {a, b : NatOSlice n -> Type} ->
+  {c : NatOSlice (NatOS n) -> Type} ->
+  (m : ((sl : NatOSlice n) -> a sl -> b sl)) ->
+  ((sl : NatOSlice n) -> a sl) ->
+  c (NatOSliceZ $ NatOS n) ->
+  ((m : NatObj) -> (morph : NatLTMorph (m, n)) ->
+   b (m ** morph) ->
+   c (m ** NatLTInc morph) ->
+   c (NatOS m ** NatLTMorphToSucc morph)) ->
+  (m : NatOSlice (NatOS n)) -> c m
 NatObjBoundedGenMapFold {a} {b} {c} {n} mab ga =
   NatObjBoundedGenFold {a=b} {b=c} $ NatObjBoundedGenMap {a} {b} mab ga
 
 public export
-NatObjBoundedMapFold : {a, b, c : NatObj -> Type} -> {n : NatObj} ->
-  (m : ((sl : NatOSlice n) -> a (fst sl) -> b (fst sl))) ->
-  ((sl : NatOSlice n) -> a (fst sl)) ->
-  (b NatOZ -> c NatOZ) ->
-  ((m : NatObj) -> NatLTStrict m n -> b (NatOS m) -> c m -> c (NatOS m)) ->
-  c n
+NatObjBoundedMapFold :
+  {n : NatObj} ->
+  {a, b : NatOSlice n -> Type} ->
+  {c : NatOSlice (NatOS n) -> Type} ->
+  (m : ((sl : NatOSlice n) -> a sl -> b sl)) ->
+  ((sl : NatOSlice n) -> a sl) ->
+  c (NatOSliceZ $ NatOS n) ->
+  ((m : NatObj) -> (morph : NatLTMorph (m, n)) ->
+   b (m ** morph) ->
+   c (m ** NatLTInc morph) ->
+   c (NatOS m ** NatLTMorphToSucc morph)) ->
+  c (NatOSliceMax (NatOS n))
 NatObjBoundedMapFold {a} {b} {c} {n} mab ga z s =
-  NatObjBoundedGenMapFold {a} {b} {c} {n} mab ga z s (NatOSliceMax n)
+  NatObjBoundedGenMapFold {a} {b} {c} {n} mab ga z s (NatOSliceMax (NatOS n))
 
 public export
 NatObjPrefixGenMap :
@@ -3574,13 +3608,14 @@ NatPrefixAppend {a} {m} {n} f g (k ** morph) with (NatStrictLTDec k m)
 
 public export
 natSliceRunningSum : {n : NatObj} ->
-  (NatOSlice n -> NatObj) -> NatOSlice n -> NatObj
+  (NatOSlice n -> NatObj) -> NatOSlice (NatOS n) -> NatObj
 natSliceRunningSum {n} v =
-  NatObjBoundedGenFold {n} {a=(const NatObj)} v id (\_, _ => natObjSum)
+  NatObjBoundedGenFold {n} {a=(const NatObj)} {b=(const NatObj)}
+    v NatOZ (\_, _ => natObjSum)
 
 public export
 natSliceSum : {n : NatObj} -> (NatOSlice n -> NatObj) -> NatObj
-natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax n)
+natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax (NatOS n))
 
 --------------------------------
 ---- Dependent endofunctors ----

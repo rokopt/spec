@@ -147,7 +147,8 @@ exampleIncOnePzPoly : PZPoly
 exampleIncOnePzPoly = pzPolyFromList [3, 1]
 
 pzArenaFromObjList : List NatObj -> PZArena
-pzArenaFromObjList l = MkPZArena (MetaToNatObj (length l)) (prefixArrayFromList l)
+pzArenaFromObjList l =
+  MkPZArena (MetaToNatObj (length l)) (prefixArrayFromList l)
 
 pzArenaFromList : List Nat -> PZArena
 pzArenaFromList = pzArenaFromObjList . map MetaToNatObj

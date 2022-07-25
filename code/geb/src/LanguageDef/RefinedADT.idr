@@ -50,11 +50,20 @@ pzPolyCoeff poly pow = pzCoeff (pzCoeffRep poly pow) (fst pow) (pzMaxPow poly)
 public export
 Show PZPoly where
   show poly =
-    NatObjBoundedMapFold {a=(const NatObj)} {b=(const String)}
+    NatObjBoundedMapFold
+      {a=(const NatObj)} {b=(const String)} {c=(const String)}
       (const show)
       (pzPolyCoeff poly)
-      id
-      (\n', morph, sc, ss => ss ++ " + " ++ sc ++ " * n^" ++ show (NatOS n'))
+      ""
+      (\n', morph, sc, ss =>
+        let
+          (ss', pow') =
+            if n' == NatOZ then
+              ("", "")
+            else
+              (ss ++ " + ", " * n^" ++ show n')
+        in
+        ss' ++ sc ++ pow')
 
 public export
 pzApplyMeta : PZPoly -> Nat -> Nat
@@ -62,8 +71,8 @@ pzApplyMeta poly n =
   NatObjBoundedMapFold {a=(const NatObj)} {b=(const Nat)} {c=(const Nat)}
     (const NatObjToMeta)
     (pzPolyCoeff poly)
-    id
-    (\pow, lt, coeff, sum => sum + coeff * power n (NatObjToMeta $ NatOS pow))
+    Z
+    (\pow, lt, coeff, sum => sum + coeff * power n (NatObjToMeta pow))
 
 public export
 pzApply : PZPoly -> NatObj -> NatObj
