@@ -3427,6 +3427,43 @@ ColimitDepGenInd {p} dp {zp} {sp} dzp dsp (n ** c) =
 --------------------
 
 public export
+PrefixArray : NatObj -> Type -> Type
+PrefixArray n ty = NatOPrefix n -> ty
+
+public export
+SliceArray : NatObj -> Type -> Type
+SliceArray n ty = NatOSlice n -> ty
+
+public export
+prefixArrayFromList : {a : Type} ->
+  (l : List a) -> PrefixArray (MetaToNatObj (length l)) a
+prefixArrayFromList [] (m ** morph) = void $ FromLTZeroContra m morph
+prefixArrayFromList (x :: xs) (m ** morph) = case m of
+  InNat ZeroF => x
+  InNat (SuccF m') => prefixArrayFromList xs (m' ** NatLTFromSucc _ _ morph)
+
+public export
+sliceArrayFromList : {a : Type} ->
+  (i : a) -> (l : List a) -> SliceArray (MetaToNatObj (length l)) a
+sliceArrayFromList i l (m ** morph) = case m of
+  InNat ZeroF => i
+  InNat (SuccF m') => prefixArrayFromList l (m' ** morph)
+
+public export
+(n : NatObj) => (a : Type) => Show a => Show (SliceArray n a) where
+  show {n} {a} v =
+    NatObjBoundedGenMapFold
+      {a=(const a)}
+      {b=(const String)}
+      {c=(const String)}
+      (const show)
+      v
+      ((++) "val[0]=")
+      (\n', morph, ss, sc =>
+        "val[" ++ show (NatOS n') ++ "]=" ++ sc ++ "; " ++ ss)
+      (NatOSliceMax n)
+
+public export
 natObjSum : NatObj -> NatObj -> NatObj
 natObjSum m =
   NatObjInd

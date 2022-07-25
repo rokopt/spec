@@ -110,24 +110,11 @@ fsObjTest2 = :>: ((!+) :+: (!+) :+: (!*))
 adt0ShowTest : ADT0ObjF Void
 adt0ShowTest = ADT0Initial
 
-listToPrefixFunc : {a : Type} ->
-  (l : List a) -> NatOPrefix (MetaToNatObj (length l)) -> a
-listToPrefixFunc [] (m ** morph) = void $ FromLTZeroContra m morph
-listToPrefixFunc (x :: xs) (m ** morph) = case m of
-  InNat ZeroF => x
-  InNat (SuccF m') => listToPrefixFunc xs (m' ** NatLTFromSucc _ _ morph)
-
-listToSliceFunc : {a : Type} ->
-  (i : a) -> (l : List a) -> NatOSlice (MetaToNatObj (length l)) -> a
-listToSliceFunc i l (m ** morph) = case m of
-  InNat ZeroF => i
-  InNat (SuccF m') => listToPrefixFunc l (m' ** morph)
-
 pzPolyFromObjList : List NatObj -> PZPoly
 pzPolyFromObjList [] =
   MkPZPoly NatOZ (const NatOZ)
 pzPolyFromObjList (x :: xs) =
-  MkPZPoly (MetaToNatObj (length xs)) (listToSliceFunc x xs)
+  MkPZPoly (MetaToNatObj (length xs)) (sliceArrayFromList x xs)
 
 pzPolyFromList : List Nat -> PZPoly
 pzPolyFromList = pzPolyFromObjList . map MetaToNatObj
@@ -160,7 +147,7 @@ exampleIncOnePzPoly : PZPoly
 exampleIncOnePzPoly = pzPolyFromList [3, 1]
 
 pzArenaFromObjList : List NatObj -> PZArena
-pzArenaFromObjList l = MkPZArena (MetaToNatObj (length l)) (listToPrefixFunc l)
+pzArenaFromObjList l = MkPZArena (MetaToNatObj (length l)) (prefixArrayFromList l)
 
 pzArenaFromList : List Nat -> PZArena
 pzArenaFromList = pzArenaFromObjList . map MetaToNatObj
