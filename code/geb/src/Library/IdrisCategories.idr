@@ -3498,8 +3498,7 @@ prefixArrayStringFold {n} {a} sa v =
     v
     "[empty]"
     ((++) "val[0]=")
-    (\n', morph, ss, sc =>
-      "val[" ++ show (NatOS n') ++ "]=" ++ sc ++ "; " ++ ss)
+    (\n', morph, ss, sc => sc ++ "; val[" ++ show (NatOS n') ++ "]=" ++ ss)
 
 public export
 sliceArrayStringFold : {n : NatObj} -> {a : Type} ->

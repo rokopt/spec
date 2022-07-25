@@ -49,9 +49,21 @@ threePlusTwo = Assert $ natObjSum testNat2 testNat3 == testNat5
 fiveMinusTwo : Assertion
 fiveMinusTwo = Assert $ natObjMinus twoLteFive == testNat3
 
+emptyNatPrefix : PrefixArray NatOZ Nat
+emptyNatPrefix = prefixArrayFromList []
+
+exampleNatSlice : SliceArray (MetaToNatObj 4) Nat
+exampleNatSlice = sliceArrayFromList 8 [0, 12, 3, 1]
+
+exampleNatPrefix : PrefixArray (MetaToNatObj 5) Nat
+exampleNatPrefix = prefixArrayFromSlice exampleNatSlice
+
 export
 libraryIdrisCategoriesTest : IO ()
 libraryIdrisCategoriesTest = do
-  -- printLn "Begin libraryIdrisCategoriesTest:"
-  -- printLn "End libraryIdrisCategoriesTest."
+  printLn "Begin libraryIdrisCategoriesTest:"
+  printLn $ show emptyNatPrefix
+  printLn $ show exampleNatSlice
+  printLn $ show exampleNatPrefix
+  printLn "End libraryIdrisCategoriesTest."
   pure ()
