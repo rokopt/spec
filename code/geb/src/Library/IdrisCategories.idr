@@ -3652,6 +3652,10 @@ NatPrefixFoldAppendStepSumStep n hyp lengths m morph =
       in
       ?NatPrefixFoldAppendStepSumStep_hole_lt
     Right eq =>
+      let
+        t = NatSliceTruncate lengths
+        h' = hyp t n $ NatMorphId n
+      in
       ?NatPrefixFoldAppendStepSumStep_hole_eq
 
 public export
