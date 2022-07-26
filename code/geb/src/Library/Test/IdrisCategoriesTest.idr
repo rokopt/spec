@@ -58,6 +58,9 @@ exampleNatSlice = sliceArrayFromList 8 [0, 12, 3, 1]
 exampleNatPrefix : PrefixArray (MetaToNatObj 5) Nat
 exampleNatPrefix = prefixArrayFromSlice exampleNatSlice
 
+testPrefixMap : MetaPrefixMap 3 6
+testPrefixMap = InitPrefixMap 6 [2, 5, 0]
+
 export
 libraryIdrisCategoriesTest : IO ()
 libraryIdrisCategoriesTest = do
@@ -65,5 +68,8 @@ libraryIdrisCategoriesTest = do
   printLn $ show emptyNatPrefix
   printLn $ show exampleNatSlice
   printLn $ show exampleNatPrefix
+  printLn $ showPrefixMap testPrefixMap
+  printLn $ show $ fst $ testPrefixMap $ InitNatOPrefix NatOZ
+  printLn $ show $ fst $ testPrefixMap $ InitNatOPrefix $ NatOS (NatOS (NatOZ))
   printLn "End libraryIdrisCategoriesTest."
   pure ()

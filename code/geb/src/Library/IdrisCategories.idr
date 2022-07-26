@@ -3621,6 +3621,14 @@ showPrefixArrayArray : {m, n : NatObj} -> {0 a : Type} ->
 showPrefixArrayArray = prefixArrayStringFold . prefixArrayStringFold
 
 public export
+PrefixMap : NatObj -> NatObj -> Type
+PrefixMap m n = NatOPrefix m -> NatOPrefix n
+
+public export
+MetaPrefixMap : Nat -> Nat -> Type
+MetaPrefixMap m n = PrefixMap (MetaToNatObj m) (MetaToNatObj n)
+
+public export
 showPrefixMap : {m, n : NatObj} ->
   (NatOPrefix m -> NatOPrefix n) -> String
 showPrefixMap = prefixArrayStringFold (show . fst)
@@ -3753,10 +3761,11 @@ NatPrefixFoldAppend {a} {n} lengths prefixes =
     (NatPrefixFoldAppendStep {a} {n} lengths)
 
 public export
-prefixMapFromList : (n : Nat) -> (l : List Nat) ->
+prefixMapFromListRev : (n : Nat) -> (l : List Nat) ->
   Maybe (NatOPrefix (MetaToNatObj (length l)) -> NatOPrefix (MetaToNatObj n))
-prefixMapFromList n [] = Just $ \sl => void $ FromLTZeroContra (fst sl) (snd sl)
-prefixMapFromList n (x :: xs) = case prefixMapFromList n xs of
+prefixMapFromListRev n [] =
+  Just $ \sl => void $ FromLTZeroContra (fst sl) (snd sl)
+prefixMapFromListRev n (x :: xs) = case prefixMapFromListRev n xs of
   Just f => case NatOPrefixMaybe {n=(MetaToNatObj n)} (MetaToNatObj x) of
     Just sl =>
       Just $ \sl' => case sl' of
@@ -3766,6 +3775,18 @@ prefixMapFromList n (x :: xs) = case prefixMapFromList n xs of
               Right lt => f (m ** lt)
     Nothing => Nothing
   Nothing => Nothing
+
+public export
+prefixMapFromList : (n : Nat) -> (l : List Nat) ->
+  Maybe (NatOPrefix (MetaToNatObj (length l)) -> NatOPrefix (MetaToNatObj n))
+prefixMapFromList n l =
+  rewrite sym (reverseLength l) in prefixMapFromListRev n (reverse l)
+
+public export
+InitPrefixMap : (n : Nat) ->
+  (l : List Nat) -> {auto ok : IsJust (prefixMapFromList n l)} ->
+  MetaPrefixMap (length l) n
+InitPrefixMap n l {ok} = fromJust (prefixMapFromList n l)
 
 --------------------------------
 ---- Dependent endofunctors ----
