@@ -3617,6 +3617,13 @@ public export
 natSliceSum : {n : NatObj} -> SliceArray n NatObj -> NatObj
 natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax (NatOS n))
 
+public export
+NatPrefixFoldAppend : {a : Type} -> {n : NatObj} ->
+  (lengths : SliceArray n NatObj) ->
+  (prefixes : (sl : NatOSlice n) -> PrefixArray (lengths sl) a) ->
+  PrefixArray (natSliceSum lengths) a
+NatPrefixFoldAppend {a} {n} lengths prefixes = ?NatPrefixFoldAppend_hole
+
 --------------------------------
 ---- Dependent endofunctors ----
 --------------------------------

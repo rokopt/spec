@@ -125,10 +125,16 @@ pzSumCoeff : PZPoly -> NatObj
 pzSumCoeff poly = natSliceSum (pzPolyCoeff poly)
 
 public export
-posPowers :
-  (n : NatObj) -> (v : NatOSlice n -> NatObj) ->
-  NatOPrefix (natSliceSum v) -> NatObj
-posPowers n v = ?posPowers_hole
+NatPrefixReplicateMap :
+  {n : NatObj} -> (v : SliceArray n NatObj) ->
+  (sl : NatOSlice n) -> PrefixArray (v sl) NatObj
+NatPrefixReplicateMap {n} v sl = NatPrefixReplicate (v sl) (fst sl)
+
+public export
+posPowers : (n : NatObj) ->
+  (v : SliceArray n NatObj) ->
+  PrefixArray (natSliceSum v) NatObj
+posPowers n v = NatPrefixFoldAppend {n} v (NatPrefixReplicateMap {n} v)
 
 public export
 pzDirs : (poly : PZPoly) -> NatOPrefix (pzSumCoeff poly) -> NatObj
