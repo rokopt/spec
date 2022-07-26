@@ -3620,6 +3620,16 @@ natSliceSum : {n : NatObj} -> SliceArray n NatObj -> NatObj
 natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax (NatOS n))
 
 public export
+NatPrefixFoldAppendStep : {a : Type} -> {n : NatObj} ->
+  (lengths : SliceArray n NatObj) ->
+  (m : NatObj) -> (morph : NatLTMorph (m, n)) ->
+  PrefixArray (lengths (m ** morph)) a ->
+  PrefixArray (natSliceRunningSum lengths (m ** NatLTInc morph)) a ->
+  PrefixArray (natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph)) a
+NatPrefixFoldAppendStep {a} {n} lengths m morph sc ss =
+  ?NatPrefixFoldAppendStep_hole $ NatPrefixAppend sc ss
+
+public export
 NatPrefixFoldAppend : {a : Type} -> {n : NatObj} ->
   (lengths : SliceArray n NatObj) ->
   (prefixes : (sl : NatOSlice n) -> PrefixArray (lengths sl) a) ->
@@ -3630,7 +3640,7 @@ NatPrefixFoldAppend {a} {n} lengths prefixes =
     {b=(\sl => PrefixArray (natSliceRunningSum lengths sl) a)}
     prefixes
     (\sl => void $ FromLTZeroContra _ $ snd sl)
-    ?NatPrefixFoldAppend_hole
+    (NatPrefixFoldAppendStep {a} {n} lengths)
 
 --------------------------------
 ---- Dependent endofunctors ----
