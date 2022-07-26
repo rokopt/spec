@@ -168,6 +168,12 @@ ex256p1 = pzPolyFromList [0, 2, 0, 0]
 ex256p2 : PZPoly
 ex256p2 = pzPolyFromList [2, 0, 1, 0, 0]
 
+ex256p1a : PZArena
+ex256p1a = pzToArena ex256p1
+
+ex256p2a : PZArena
+ex256p2a = pzToArena ex256p2
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -190,6 +196,8 @@ languageDefRefinedADTTest = do
   printLn "Begin pzPoly -> pzArena"
   printLn $ "Ex 2.56 1st poly: " ++ show ex256p1
   printLn $ "Ex 2.56 2nd poly: " ++ show ex256p2
+  printLn $ "Ex 2.56 1st poly as arena: " ++ show ex256p1a
+  printLn $ "Ex 2.56 2nd poly as arena: " ++ show ex256p2a
   {-
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5
