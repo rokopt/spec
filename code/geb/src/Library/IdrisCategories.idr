@@ -3624,7 +3624,13 @@ NatPrefixFoldAppend : {a : Type} -> {n : NatObj} ->
   (lengths : SliceArray n NatObj) ->
   (prefixes : (sl : NatOSlice n) -> PrefixArray (lengths sl) a) ->
   PrefixArray (natSliceSum lengths) a
-NatPrefixFoldAppend {a} {n} lengths prefixes = ?NatPrefixFoldAppend_hole
+NatPrefixFoldAppend {a} {n} lengths prefixes =
+  NatObjBoundedFold
+    {a=(\sl => PrefixArray (lengths sl) a)}
+    {b=(\sl => PrefixArray (natSliceRunningSum lengths sl) a)}
+    prefixes
+    (\sl => void $ FromLTZeroContra _ $ snd sl)
+    ?NatPrefixFoldAppend_hole
 
 --------------------------------
 ---- Dependent endofunctors ----
