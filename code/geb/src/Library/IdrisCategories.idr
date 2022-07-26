@@ -3584,12 +3584,6 @@ natObjMinus {m} {n} =
     (n, m)
 
 public export
-natObjMinusLte : {m, n, k : NatObj} ->
-  (lte : NatLTMorph (m, k)) ->
-  NatLTMorph (k, (natObjSum m n)) -> NatLTMorph (natObjMinus lte, n)
-natObjMinusLte {m} {n} {k} mltek kltmpn = ?natObjMinusLte_hole
-
-public export
 natObjMinusLt : {m, n, k : NatObj} ->
   (lte : NatLTMorph (m, k)) ->
   NatLTStrict k (natObjSum m n) -> NatLTStrict (natObjMinus lte) n
