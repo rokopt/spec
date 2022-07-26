@@ -3587,7 +3587,15 @@ public export
 natObjMinusLt : {m, n, k : NatObj} ->
   (lte : NatLTMorph (m, k)) ->
   NatLTStrict k (natObjSum m n) -> NatLTStrict (natObjMinus lte) n
-natObjMinusLt {m} {n} {k} mltek kltmpn = ?natObjMinusLt_hole
+natObjMinusLt {m} {n} {k} =
+  NatMorphInd
+    (\mk, morph => case mk of
+      (m', k') =>
+        NatLTStrict k' (natObjSum m' n) ->
+        NatLTStrict (natObjMinus {m=k'} {n=m'} morph) n)
+    (\n', morph' => ?natObjMinusLt_hole_z)
+    (\m', n', morph', hyp, lte' => ?natObjMinusLt_hole_s)
+    (m, k)
 
 public export
 NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> PrefixArray n a
