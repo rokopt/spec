@@ -3626,37 +3626,20 @@ NatSliceTruncate arr (m ** morph) = arr (m ** NatLTInc morph)
 
 public export
 NatPrefixFoldAppendStepSumStep : {a : Type} ->
-  (n : NatObj) ->
-  (hyp :
-   (lengths : SliceArray n NatObj) ->
-   (m : NatObj) ->
-   (morph : NatLTMorph (m, n)) ->
-   natObjSum
-    (lengths (m ** morph))
-    (natSliceRunningSum lengths (m ** NatLTInc morph)) =
-   natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph)) ->
-  (lengths : SliceArray (NatOS n) NatObj) ->
+  {n : NatObj} ->
+  (lengths : SliceArray n NatObj) ->
   (m : NatObj) ->
-  (morph : NatLTMorph (m, NatOS n)) ->
+  (morph : NatLTStrict m n) ->
+  (hyp : natObjSum
+    (lengths (m ** NatLTDec morph))
+    (natSliceRunningSum lengths (m ** NatLTInc $ NatLTDec morph)) =
+   natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc $ NatLTDec morph)) ->
   natObjSum
-    (lengths (m ** morph))
-    (natSliceRunningSum lengths (m ** NatLTInc morph)) =
-  natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph)
-NatPrefixFoldAppendStepSumStep n hyp lengths m morph =
-  case NatMorphSucc m n morph of
-    Left morph' =>
-      let
-        t = NatSliceTruncate lengths
-        h' = hyp t m morph'
-        ch = cong (natObjSum (lengths (m ** morph))) h'
-      in
-      ?NatPrefixFoldAppendStepSumStep_hole_lt
-    Right eq =>
-      let
-        t = NatSliceTruncate lengths
-        h' = hyp t n $ NatMorphId n
-      in
-      ?NatPrefixFoldAppendStepSumStep_hole_eq
+    (lengths (NatOS m ** morph))
+    (natSliceRunningSum lengths (NatOS m ** NatLTInc morph)) =
+  natSliceRunningSum lengths (NatOS (NatOS m) ** NatLTMorphToSucc morph)
+NatPrefixFoldAppendStepSumStep =
+  ?NatPrefixFoldAppendStepSumStep_hole
 
 public export
 NatPrefixFoldAppendStepSum : {a : Type} -> {n : NatObj} ->
@@ -3667,19 +3650,15 @@ NatPrefixFoldAppendStepSum : {a : Type} -> {n : NatObj} ->
     (lengths (m ** morph))
     (natSliceRunningSum lengths (m ** NatLTInc morph)) =
   natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph)
-NatPrefixFoldAppendStepSum {a} {n} =
-  NatObjInd
-    (\n' =>
-      (lengths : SliceArray n' NatObj) ->
-      (m : NatObj) ->
-      (morph : NatLTMorph (m, n')) ->
-        natObjSum
-          (lengths (m ** morph))
-          (natSliceRunningSum lengths (m ** NatLTInc morph)) =
-        natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph))
-    (\lengths, m, morph => rewrite OnlyZLtZ m morph in Refl)
-    (NatPrefixFoldAppendStepSumStep {a})
-    n
+NatPrefixFoldAppendStepSum {a} {n} lengths =
+  NatObjBoundedGenIndMorph
+    {a=(\sl =>
+      natObjSum
+        (lengths sl)
+        (natSliceRunningSum lengths (fst sl ** NatLTInc (snd sl))) =
+      natSliceRunningSum lengths (NatOS (fst sl) ** NatLTMorphToSucc (snd sl)))}
+    Refl
+    (NatPrefixFoldAppendStepSumStep {a} lengths)
 
 public export
 NatPrefixFoldAppendStep : {a : Type} -> {n : NatObj} ->
