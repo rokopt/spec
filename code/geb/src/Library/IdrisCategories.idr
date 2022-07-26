@@ -3584,16 +3584,16 @@ natObjMinus {m} {n} =
     (n, m)
 
 public export
-natObjMinusLteCorrect : {m, n, k : NatObj} ->
+natObjMinusLte : {m, n, k : NatObj} ->
   (lte : NatLTMorph (m, k)) ->
   NatLTMorph (k, (natObjSum m n)) -> NatLTMorph (natObjMinus lte, n)
-natObjMinusLteCorrect {m} {n} {k} mltek kltmpn = ?natObjMinusLteCorrect_hole
+natObjMinusLte {m} {n} {k} mltek kltmpn = ?natObjMinusLte_hole
 
 public export
-natObjMinusLtCorrect : {m, n, k : NatObj} ->
+natObjMinusLt : {m, n, k : NatObj} ->
   (lte : NatLTMorph (m, k)) ->
   NatLTStrict k (natObjSum m n) -> NatLTStrict (natObjMinus lte) n
-natObjMinusLtCorrect {m} {n} {k} mltek kltmpn = ?natObjMinusLtCorrect_hole
+natObjMinusLt {m} {n} {k} mltek kltmpn = ?natObjMinusLt_hole
 
 public export
 NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> PrefixArray n a
@@ -3606,7 +3606,7 @@ NatPrefixAppend {a} {m} {n} f g (k ** morph) with (NatStrictLTDec k m)
   NatPrefixAppend {a} {m} {n} f g (k ** morph) | Left lt =
     f (k ** lt)
   NatPrefixAppend {a} {m} {n} f g (k ** morph) | Right gte =
-    g (natObjMinus gte ** natObjMinusLtCorrect gte morph)
+    g (natObjMinus gte ** natObjMinusLt gte morph)
 
 public export
 natSliceRunningSum : {n : NatObj} ->
