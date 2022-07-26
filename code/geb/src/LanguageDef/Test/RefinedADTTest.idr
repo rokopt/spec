@@ -162,6 +162,12 @@ exampleSmallPzArena = pzArenaFromList [3]
 exampleLongPzArena : PZArena
 exampleLongPzArena = pzArenaFromList [11, 17, 3, 5, 10, 0, 2]
 
+ex256p1 : PZPoly
+ex256p1 = pzPolyFromList [0, 2, 0, 0]
+
+ex256p2 : PZPoly
+ex256p2 = pzPolyFromList [2, 0, 1, 0, 0]
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -181,6 +187,9 @@ languageDefRefinedADTTest = do
   printLn $ show exampleEmptyPzArena
   printLn $ show exampleSmallPzArena
   printLn $ show exampleLongPzArena
+  printLn "Begin pzPoly -> pzArena"
+  printLn $ "Ex 2.56 1st poly: " ++ show ex256p1
+  printLn $ "Ex 2.56 2nd poly: " ++ show ex256p2
   {-
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5
