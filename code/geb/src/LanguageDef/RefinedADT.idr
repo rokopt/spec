@@ -109,12 +109,19 @@ Show PZArena where
         ss' ++ "#Dirs[" ++ show n' ++ "] = " ++ sc)
 
 public export
+OnPosT : PZArena -> PZArena -> Type
+OnPosT domain codomain = pzPosT domain -> pzPosT codomain
+
+public export
+OnDirT : {domain, codomain : PZArena} -> OnPosT domain codomain -> Type
+OnDirT {domain} {codomain} onpos =
+  (i : pzPosT domain) -> pzDirT codomain (onpos i) -> pzDirT domain i
+
+public export
 record PZLens (domain, codomain : PZArena) where
   constructor MkPZLens
-  pzOnPos :
-    pzPosT domain -> pzPosT codomain
-  pzOnDir :
-    (i : pzPosT domain) -> pzDirT codomain (pzOnPos i) -> pzDirT domain i
+  pzOnPos : OnPosT domain codomain
+  pzOnDir : OnDirT {domain} {codomain} pzOnPos
 
 public export
 showPZLens : {domain : PZArena} -> {codomain : PZArena} ->
