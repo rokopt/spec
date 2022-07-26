@@ -3059,7 +3059,7 @@ public export
     No _ => False
 
 public export
-NatObjBoundedGenIndMorph : {n : NatObj} -> {a : NatOSlice n -> Type} ->
+NatObjBoundedGenIndMorph : {n : NatObj} -> {0 a : NatOSlice n -> Type} ->
   a (NatOSliceZ n) ->
   ((m : NatObj) -> (morph : NatLTStrict m n) -> a (m ** NatLTDec morph) ->
     a (NatOS m ** morph)) ->
@@ -3071,7 +3071,7 @@ NatObjBoundedGenIndMorph {n} {a} i f =
     (\n', hyp, morph => f n' morph $ hyp $ NatLTDec morph)
 
 public export
-NatObjBoundedGenInd : {n : NatObj} -> {a : NatOSlice n -> Type} ->
+NatObjBoundedGenInd : {n : NatObj} -> {0 a : NatOSlice n -> Type} ->
   a (NatOSliceZ n) ->
   ((m : NatObj) -> (morph : NatLTStrict m n) -> a (m ** NatLTDec morph) ->
     a (NatOS m ** morph)) ->
@@ -3199,7 +3199,7 @@ NatObjBoundedMapFold {a} {b} {c} {n} mab ga z s =
 public export
 NatObjPrefixGenMap :
   {n : NatObj} ->
-  {a, b : NatOPrefix n -> Type} ->
+  {0 a, b : NatOPrefix n -> Type} ->
   (m : ((sl : NatOPrefix n) -> a sl -> b sl)) ->
   ((sl : NatOPrefix n) -> a sl) ->
   ((sl : NatOPrefix n) -> b sl)
@@ -3208,8 +3208,8 @@ NatObjPrefixGenMap {n} m g sl = m sl $ g sl
 public export
 NatObjPrefixGenFold :
   {n : NatObj} ->
-  {a : NatOPrefix n -> Type} ->
-  {b : NatOSlice n -> Type} ->
+  {0 a : NatOPrefix n -> Type} ->
+  {0 b : NatOSlice n -> Type} ->
   ((sl : NatOPrefix n) -> a sl) ->
   b (NatOSliceZ n) ->
   ((m : NatObj) -> (morph : NatLTStrict m n) ->
@@ -3221,10 +3221,23 @@ NatObjPrefixGenFold {a} {b} {n} ga z s =
     (\n', morph, b' => s n' morph (ga (n' ** morph)) b')
 
 public export
+NatObjPrefixFold :
+  {n : NatObj} ->
+  {0 a : NatOPrefix n -> Type} ->
+  {0 b : NatOSlice n -> Type} ->
+  ((sl : NatOPrefix n) -> a sl) ->
+  b (NatOSliceZ n) ->
+  ((m : NatObj) -> (morph : NatLTStrict m n) ->
+   a (m ** morph) -> b (m ** NatLTDec morph) -> b ((NatOS m) ** morph)) ->
+  b (NatOSliceMax n)
+NatObjPrefixFold {a} {b} {n} ga z s =
+  NatObjPrefixGenFold {a} {b} {n} ga z s (NatOSliceMax n)
+
+public export
 NatObjPrefixGenMapFold :
   {n : NatObj} ->
-  {a, b : NatOPrefix n -> Type} ->
-  {c : NatOSlice n -> Type} ->
+  {0 a, b : NatOPrefix n -> Type} ->
+  {0 c : NatOSlice n -> Type} ->
   (m : ((sl : NatOPrefix n) -> a sl -> b sl)) ->
   ((sl : NatOPrefix n) -> a sl) ->
   c (NatOSliceZ n) ->
@@ -3237,8 +3250,8 @@ NatObjPrefixGenMapFold {a} {b} {c} {n} m ga =
 public export
 NatObjPrefixMapFold :
   {n : NatObj} ->
-  {a, b : NatOPrefix n -> Type} ->
-  {c : NatOSlice n -> Type} ->
+  {0 a, b : NatOPrefix n -> Type} ->
+  {0 c : NatOSlice n -> Type} ->
   (m : ((sl : NatOPrefix n) -> a sl -> b sl)) ->
   ((sl : NatOPrefix n) -> a sl) ->
   c (NatOSliceZ n) ->
@@ -3541,7 +3554,7 @@ sliceArrayFromList i l (m ** morph) = case m of
   InNat (SuccF m') => prefixArrayFromList l (m' ** morph)
 
 public export
-prefixArrayStringFold : {n : NatObj} -> {a : Type} ->
+prefixArrayStringFold : {n : NatObj} -> {0 a : Type} ->
   (a -> String) -> PrefixArray n a -> String
 prefixArrayStringFold {n} {a} sa v =
   NatObjPrefixMapFold {a=(const a)} {b=(const String)} {c=(const String)}

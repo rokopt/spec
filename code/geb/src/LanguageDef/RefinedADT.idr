@@ -116,6 +116,23 @@ record PZLens (domain, codomain : PZArena) where
   pzOnDir :
     (i : pzPosT domain) -> pzDirT codomain (pzOnPos i) -> pzDirT domain i
 
+public export
+showPZLens : {domain : PZArena} -> {codomain : PZArena} ->
+  PZLens domain codomain -> String
+showPZLens {domain} {codomain} (MkPZLens op od) =
+  "pzOnPos: " ++ prefixArrayStringFold (show . fst) op ++ "; pzOnDir: " ++
+  NatObjPrefixFold
+    {n=(pzNumPos domain)}
+    {a=(\sl => pzDirT codomain (op sl) -> pzDirT domain sl)}
+    {b=(const String)}
+    od
+    "[empty domain]"
+    (\m, morph, dirmap, ss =>
+      let ss' = if m == NatOZ then "" else ss ++ "; " in
+      ss' ++ "domain[" ++ show m ++ "] -> codomain[" ++
+      show (fst (op (m ** morph))) ++ "]: " ++
+      prefixArrayStringFold (show . fst) dirmap)
+
 ------------------------------------------
 ---- Algebraic <-> arena translations ----
 ------------------------------------------
