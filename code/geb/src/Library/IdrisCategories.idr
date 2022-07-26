@@ -3548,7 +3548,9 @@ prefixArrayStringFold {n} {a} sa v =
     (const sa)
     v
     "[empty]"
-    (\n', morph, ss, sc => sc ++ "; val[" ++ show (NatOS n') ++ "]=" ++ ss)
+    (\n', morph, ss, sc =>
+      let sc' = if n' == NatOZ then "" else sc ++ "; " in
+      sc' ++ "val[" ++ show n' ++ "]=" ++ ss)
 
 public export
 sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
