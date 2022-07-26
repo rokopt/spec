@@ -2838,6 +2838,18 @@ FromSuccContra : (n : NatObj) -> NatLTMorph (NatOS n, n) -> Void
 FromSuccContra _ = succNotLTEpred . NatMorphToLTE
 
 public export
+LTcontraGTE : {m, n : NatObj} -> NatLTStrict m n -> NatLTMorph (n, m) -> Void
+LTcontraGTE lt gte = FromSuccContra _ $ NatMorphCompose gte lt
+
+public export
+MorphToStrict : {m, n : NatObj} ->
+  NatLTMorph (m, n) -> Either (m = n) (NatLTStrict m n)
+MorphToStrict {m} {n} morph with (NatMorphCompare m n)
+  MorphToStrict {m} {n} morph | Left eq = Left eq
+  MorphToStrict {m} {n} morph | Right (Left lt) = Right lt
+  MorphToStrict {m} {n} morph | Right (Right gt) = void $ LTcontraGTE gt morph
+
+public export
 NatMorphDec : (m, n : NatObj) ->
   Either (m = n) $ Either (NatLTMorph (m, n)) (NatLTMorph (n, m))
 NatMorphDec m n = case NatMorphCompare m n of
