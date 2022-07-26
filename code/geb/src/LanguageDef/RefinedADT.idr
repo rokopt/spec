@@ -129,8 +129,8 @@ showPZLens {domain} {codomain} (MkPZLens op od) =
     "[empty domain]"
     (\m, morph, dirmap, ss =>
       let ss' = if m == NatOZ then "" else ss ++ "; " in
-      ss' ++ "domain[" ++ show m ++ "] -> codomain[" ++
-      show (fst (op (m ** morph))) ++ "]: " ++
+      ss' ++ "codomain[" ++ show (fst (op (m ** morph))) ++
+      "] -> domain[" ++ show m ++ "]: " ++
       prefixArrayStringFold (show . fst) dirmap)
 
 ------------------------------------------
