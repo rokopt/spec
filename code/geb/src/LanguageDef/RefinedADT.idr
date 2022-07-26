@@ -133,21 +133,6 @@ showPZLens {domain} {codomain} (MkPZLens op od) =
       "] -> domain[" ++ show m ++ "]: " ++
       prefixArrayStringFold (show . fst) dirmap)
 
-public export
-onPosFromList : (n : Nat) -> (l : List Nat) ->
-  Maybe (NatOPrefix (MetaToNatObj (length l)) -> NatOPrefix (MetaToNatObj n))
-onPosFromList n [] = Just $ \sl => void $ FromLTZeroContra (fst sl) (snd sl)
-onPosFromList n (x :: xs) = case onPosFromList n xs of
-  Just f => case NatOPrefixMaybe {n=(MetaToNatObj n)} (MetaToNatObj x) of
-    Just sl =>
-      Just $ \sl' => case sl' of
-          (m ** morph) =>
-            case MorphToStrict (NatLTFromSucc _ _ morph) of
-              Left eq => sl
-              Right lt => f (m ** lt)
-    Nothing => Nothing
-  Nothing => Nothing
-
 ------------------------------------------
 ---- Algebraic <-> arena translations ----
 ------------------------------------------

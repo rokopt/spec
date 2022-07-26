@@ -3742,6 +3742,21 @@ NatPrefixFoldAppend {a} {n} lengths prefixes =
     (\sl => void $ FromLTZeroContra _ $ snd sl)
     (NatPrefixFoldAppendStep {a} {n} lengths)
 
+public export
+prefixMapFromList : (n : Nat) -> (l : List Nat) ->
+  Maybe (NatOPrefix (MetaToNatObj (length l)) -> NatOPrefix (MetaToNatObj n))
+prefixMapFromList n [] = Just $ \sl => void $ FromLTZeroContra (fst sl) (snd sl)
+prefixMapFromList n (x :: xs) = case prefixMapFromList n xs of
+  Just f => case NatOPrefixMaybe {n=(MetaToNatObj n)} (MetaToNatObj x) of
+    Just sl =>
+      Just $ \sl' => case sl' of
+          (m ** morph) =>
+            case MorphToStrict (NatLTFromSucc _ _ morph) of
+              Left eq => sl
+              Right lt => f (m ** lt)
+    Nothing => Nothing
+  Nothing => Nothing
+
 --------------------------------
 ---- Dependent endofunctors ----
 --------------------------------
