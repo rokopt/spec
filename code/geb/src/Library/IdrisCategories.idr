@@ -3593,8 +3593,8 @@ natObjMinusLt {m} {n} {k} =
       (m', k') =>
         NatLTStrict k' (natObjSum m' n) ->
         NatLTStrict (natObjMinus {m=k'} {n=m'} morph) n)
-    (\n', morph' => ?natObjMinusLt_hole_z)
-    (\m', n', morph', hyp, lte' => ?natObjMinusLt_hole_s)
+    (\n', morph' => morph')
+    (\m', n', morph', hyp, lte' => hyp $ NatLTFromSucc _ _ lte')
     (m, k)
 
 public export
