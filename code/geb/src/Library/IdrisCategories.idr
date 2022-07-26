@@ -3620,6 +3620,17 @@ natSliceSum : {n : NatObj} -> SliceArray n NatObj -> NatObj
 natSliceSum {n} v = natSliceRunningSum v (NatOSliceMax (NatOS n))
 
 public export
+NatPrefixFoldAppendStepCorrect : {a : Type} -> {n : NatObj} ->
+  (lengths : SliceArray n NatObj) ->
+  (m : NatObj) -> (morph : NatLTMorph (m, n)) ->
+  natObjSum
+    (lengths (m ** morph))
+    (natSliceRunningSum lengths (m ** NatLTInc morph)) =
+  natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph)
+NatPrefixFoldAppendStepCorrect {a} {n} lengths m morph =
+  ?NatPrefixFoldAppendStepCorrect_hole
+
+public export
 NatPrefixFoldAppendStep : {a : Type} -> {n : NatObj} ->
   (lengths : SliceArray n NatObj) ->
   (m : NatObj) -> (morph : NatLTMorph (m, n)) ->
@@ -3627,7 +3638,8 @@ NatPrefixFoldAppendStep : {a : Type} -> {n : NatObj} ->
   PrefixArray (natSliceRunningSum lengths (m ** NatLTInc morph)) a ->
   PrefixArray (natSliceRunningSum lengths (NatOS m ** NatLTMorphToSucc morph)) a
 NatPrefixFoldAppendStep {a} {n} lengths m morph sc ss =
-  ?NatPrefixFoldAppendStep_hole $ NatPrefixAppend sc ss
+  rewrite sym (NatPrefixFoldAppendStepCorrect {a} {n} lengths m morph) in
+  NatPrefixAppend sc ss
 
 public export
 NatPrefixFoldAppend : {a : Type} -> {n : NatObj} ->
