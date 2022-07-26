@@ -3616,6 +3616,16 @@ prefixArrayStringFold {n} {a} sa v =
       sc' ++ "val[" ++ show n' ++ "]=" ++ ss)
 
 public export
+showPrefixArrayArray : {m, n : NatObj} -> {0 a : Type} ->
+  (a -> String) -> PrefixArray m (PrefixArray n a) -> String
+showPrefixArrayArray = prefixArrayStringFold . prefixArrayStringFold
+
+public export
+showPrefixMap : {m, n : NatObj} ->
+  (NatOPrefix m -> NatOPrefix n) -> String
+showPrefixMap = prefixArrayStringFold (show . fst)
+
+public export
 sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
   (a -> String) -> SliceArray n a -> String
 sliceArrayStringFold {n} {a} sa v =

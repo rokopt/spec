@@ -120,7 +120,7 @@ public export
 showPZLens : {domain : PZArena} -> {codomain : PZArena} ->
   PZLens domain codomain -> String
 showPZLens {domain} {codomain} (MkPZLens op od) =
-  "pzOnPos: " ++ prefixArrayStringFold (show . fst) op ++ "; pzOnDir: " ++
+  "pzOnPos: " ++ showPrefixMap op ++ "; pzOnDir: " ++
   NatObjPrefixFold
     {n=(pzNumPos domain)}
     {a=(\sl => pzDirT codomain (op sl) -> pzDirT domain sl)}
