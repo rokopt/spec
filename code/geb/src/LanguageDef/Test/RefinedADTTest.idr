@@ -177,6 +177,15 @@ ex256p2a = pzToArena ex256p2
 ex256onPos : OnPosT RefinedADTTest.ex256p1a RefinedADTTest.ex256p2a
 ex256onPos = InitPrefixMap 4 [0, 0, 3]
 
+ex256onDir0 : MetaPrefixMap 4 3
+ex256onDir0 = InitPrefixMap 3 [2, 0, 2, 2]
+
+ex256onDir1 : MetaPrefixMap 4 1
+ex256onDir1 = InitPrefixMap 1 [0, 0, 0, 0]
+
+ex256onDir2 : MetaPrefixMap 0 1
+ex256onDir2 = InitPrefixMap 1 []
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -202,6 +211,9 @@ languageDefRefinedADTTest = do
   printLn $ "Ex 2.56 1st poly as arena: " ++ show ex256p1a
   printLn $ "Ex 2.56 2nd poly as arena: " ++ show ex256p2a
   printLn $ "Ex 2.56 lens onPos: " ++ showPrefixMap ex256onPos
+  printLn $ "Ex 2.56 lens onDir[0](0->0): " ++ showPrefixMap ex256onDir0
+  printLn $ "Ex 2.56 lens onDir[1](1->1): " ++ showPrefixMap ex256onDir1
+  printLn $ "Ex 2.56 lens onDir[2](3->2): " ++ showPrefixMap ex256onDir2
   {-
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5
