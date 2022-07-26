@@ -186,6 +186,16 @@ ex256onDir1 = InitPrefixMap 1 [0, 0, 0, 0]
 ex256onDir2 : MetaPrefixMap 0 1
 ex256onDir2 = InitPrefixMap 1 []
 
+ex256onDir :
+  OnDirT
+    {domain=(RefinedADTTest.ex256p1a)}
+    {codomain=(RefinedADTTest.ex256p2a)}
+    RefinedADTTest.ex256onPos
+ex256onDir i = ?ex256onDir_hole
+
+ex256lens : PZLens RefinedADTTest.ex256p1a RefinedADTTest.ex256p2a
+ex256lens = MkPZLens ex256onPos ex256onDir
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
@@ -214,6 +224,7 @@ languageDefRefinedADTTest = do
   printLn $ "Ex 2.56 lens onDir[0](0->0): " ++ showPrefixMap ex256onDir0
   printLn $ "Ex 2.56 lens onDir[1](1->1): " ++ showPrefixMap ex256onDir1
   printLn $ "Ex 2.56 lens onDir[2](3->2): " ++ showPrefixMap ex256onDir2
+  printLn $ "Ex 2.56 lens: " ++ showPZLens ex256lens
   {-
   printLn $ show finOrdMorphTest1
   printLn $ show finOrdMorphTest5

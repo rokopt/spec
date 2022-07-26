@@ -86,7 +86,7 @@ public export
 record PZArena where
   constructor MkPZArena
   pzNumPos : NatObj
-  pzNumDir : NatOPrefix pzNumPos -> NatObj
+  pzNumDir : PrefixArray pzNumPos NatObj
 
 public export
 pzPosT : PZArena -> Type
@@ -114,8 +114,16 @@ OnPosT domain codomain = pzPosT domain -> pzPosT codomain
 
 public export
 OnDirT : {domain, codomain : PZArena} -> OnPosT domain codomain -> Type
-OnDirT {domain} {codomain} onpos =
-  (i : pzPosT domain) -> pzDirT codomain (onpos i) -> pzDirT domain i
+OnDirT {domain} {codomain} =
+  DepPrefixContraMap
+    {domPos=(pzNumPos domain)} {codPos=(pzNumPos codomain)}
+    (pzNumDir domain) (pzNumDir codomain)
+
+public export
+onDirFromLists : {domain, codomain : PZArena} ->
+  (onpos : OnPosT domain codomain) -> List (List Nat) ->
+  Maybe (OnDirT {domain} {codomain} onpos)
+onDirFromLists {domain} {codomain} onpos l = ?onDirFromLists_hole
 
 public export
 record PZLens (domain, codomain : PZArena) where

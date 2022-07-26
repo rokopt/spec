@@ -3788,6 +3788,16 @@ InitPrefixMap : (n : Nat) ->
   MetaPrefixMap (length l) n
 InitPrefixMap n l {ok} = fromJust (prefixMapFromList n l)
 
+public export
+DepPrefixContraMap :
+  {domPos, codPos : NatObj} ->
+  (domDir : PrefixArray domPos NatObj) ->
+  (codDir : PrefixArray codPos NatObj) ->
+  (posMap : PrefixMap domPos codPos) ->
+  Type
+DepPrefixContraMap {domPos} {codPos} domDir codDir posMap =
+  (pos : NatOPrefix domPos) -> PrefixMap (codDir (posMap pos)) (domDir pos)
+
 --------------------------------
 ---- Dependent endofunctors ----
 --------------------------------
