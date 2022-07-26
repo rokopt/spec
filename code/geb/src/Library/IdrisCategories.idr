@@ -2845,6 +2845,14 @@ NatMorphDec m n = case NatMorphCompare m n of
   Right morph => Right $ bimap {f=Either} NatLTDec NatLTDec morph
 
 public export
+NatMorphMaybe : (m, n : NatObj) -> Maybe (NatLTMorph (m, n))
+NatMorphMaybe m n = case NatMorphDec m n of
+  Left _ => Nothing
+  Right e => case e of
+    Left morph => Just morph
+    Right _ => Nothing
+
+public export
 NatLTEDec : (m, n : NatObj) -> Either (NatLTMorph (m, n)) (NatLTStrict n m)
 NatLTEDec m n = case NatMorphCompare m n of
   Left eq => rewrite eq in Left $ NatMorphId _
@@ -2859,6 +2867,12 @@ NatStrictLTDec m n = case NatMorphCompare m n of
   Right morph => case morph of
     Left lt => Left lt
     Right gt => Right $ NatLTDec gt
+
+public export
+NatLTStrictMaybe : (m, n : NatObj) -> Maybe (NatLTStrict m n)
+NatLTStrictMaybe m n = case NatStrictLTDec m n of
+  Left morph => Just morph
+  Right _ => Nothing
 
 public export
 NatMorphDecSucc : (m, n : NatObj) ->
@@ -2966,8 +2980,32 @@ NatOPrefix : NatObj -> Type
 NatOPrefix n = (m : NatObj ** NatLTStrict m n)
 
 public export
+NatOPrefixMaybe : {n : NatObj} -> NatObj -> Maybe (NatOPrefix n)
+NatOPrefixMaybe {n} m = case NatLTStrictMaybe m n of
+  Just lt => Just (m ** lt)
+  Nothing => Nothing
+
+public export
+InitNatOPrefix :
+  {n : NatObj} -> (m : NatObj) -> {auto ok : IsJust (NatOPrefixMaybe {n} m)} ->
+  NatOPrefix n
+InitNatOPrefix m {ok} = fromJust (NatOPrefixMaybe {n} m)
+
+public export
 NatOSlice : NatObj -> Type
 NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
+
+public export
+NatOSliceMaybe : {n : NatObj} -> NatObj -> Maybe (NatOSlice n)
+NatOSliceMaybe {n} m = case NatMorphMaybe m n of
+  Just lt => Just (m ** lt)
+  Nothing => Nothing
+
+public export
+InitNatOSlice :
+  {n : NatObj} -> (m : NatObj) -> {auto ok : IsJust (NatOSliceMaybe {n} m)} ->
+  NatOSlice n
+InitNatOSlice m {ok} = fromJust (NatOSliceMaybe {n} m)
 
 public export
 NatZSlice : Type
