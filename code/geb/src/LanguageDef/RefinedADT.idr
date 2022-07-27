@@ -208,10 +208,14 @@ public export
 pzToArena : PZPoly -> PZArena
 pzToArena poly = MkPZArena (pzSumCoeff poly) (pzDirs poly)
 
-----------------------------------
+-------------------------------
+-------------------------------
+---- Polynomial categories ----
+-------------------------------
+-------------------------------
+
 ----------------------------------
 ---- Refined polynomial types ----
-----------------------------------
 ----------------------------------
 
 public export
@@ -225,6 +229,18 @@ BoundedNatObj = NatOPrefix
 public export
 BoundedNatMorphism : NatObj -> NatObj -> Type
 BoundedNatMorphism = PrefixMap
+
+public export
+BoundedNatId : (n : NatObj) -> BoundedNatMorphism n n
+BoundedNatId n = id
+
+public export
+BoundedNatCompose :
+  {a, b, c : NatObj} ->
+  BoundedNatMorphism b c ->
+  BoundedNatMorphism a b ->
+  BoundedNatMorphism a c
+BoundedNatCompose = (.)
 
 public export
 BoundedNatInitial : Type
@@ -247,8 +263,44 @@ BoundedNatCoproduct : NatObj -> NatObj -> Type
 BoundedNatCoproduct m n = NatOPrefix (natObjSum m n)
 
 public export
+BoundedNatInjLeft :
+  (l, r : NatObj) -> BoundedNatMorphism l (natObjSum l r)
+BoundedNatInjLeft dom cod = ?BoundedNatInjLeft_hole
+
+public export
+BoundedNatInjRight :
+  (l, r : NatObj) -> BoundedNatMorphism r (natObjSum l r)
+BoundedNatInjRight dom cod = ?BoundedNatInjRight_hole
+
+public export
+BoundedNatCase :
+  {domL, domR, cod : NatObj} ->
+  BoundedNatMorphism domL cod ->
+  BoundedNatMorphism domR cod ->
+  BoundedNatMorphism (natObjSum domL domR) cod
+BoundedNatCase {domL} {domR} {cod} caseL caseR = ?BoundedNatCase_hole
+
+public export
 BoundedNatProduct : NatObj -> NatObj -> Type
 BoundedNatProduct m n = NatOPrefix (natObjMul m n)
+
+public export
+BoundedNatProjLeft :
+  (l, r : NatObj) -> BoundedNatMorphism (natObjMul l r) l
+BoundedNatProjLeft dom cod = ?BoundedNatProjLeft_hole
+
+public export
+BoundedNatProjRight :
+  (l, r : NatObj) -> BoundedNatMorphism (natObjMul l r) r
+BoundedNatProjRight dom cod = ?BoundedNatProjRight_hole
+
+public export
+BoundedNatPair :
+  {dom, codL, codR : NatObj} ->
+  BoundedNatMorphism dom codL ->
+  BoundedNatMorphism dom codR ->
+  BoundedNatMorphism dom (natObjMul codL codR)
+BoundedNatPair {dom} {codL} {codR} pairL pairR = ?BoundedNatPair_hole
 
 public export
 BoundedNatHomSet : NatObj -> NatObj -> Type
@@ -262,6 +314,21 @@ public export
 BoundedNatExponentialCardinality :
   (m, n : NatObj) -> BoundedNatExponential m n = NatOPrefix (natObjPow m n)
 BoundedNatExponentialCardinality m n = Refl
+
+public export
+BoundedNatEval : (m, n : NatObj) ->
+  BoundedNatMorphism (natObjMul (natObjRaiseTo m n) m) n
+BoundedNatEval m n = ?BoundedNatEval_hole
+
+public export
+BoundedNatCurry : {m, n, p : NatObj} ->
+  BoundedNatMorphism (natObjMul m n) p ->
+  BoundedNatMorphism m (natObjRaiseTo n p)
+BoundedNatCurry {m} {n} {p} f = ?BoundedNatCurry_hole
+
+----------------------------------
+---- Refined polynomial types ----
+----------------------------------
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
