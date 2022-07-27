@@ -46,6 +46,11 @@ voidF : (a : Type) -> Void -> a
 voidF _ x = void x
 
 public export
+fromIsJust : {a : Type} -> {x : Maybe a} -> (isJust x = True) -> a
+fromIsJust {x=(Just x)} Refl = x
+fromIsJust {x=Nothing} Refl impossible
+
+public export
 magmaFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
 magmaFromNonEmptyList f x [] = x
 magmaFromNonEmptyList f x (x' :: l) = f x $ magmaFromNonEmptyList f x' l

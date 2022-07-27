@@ -129,9 +129,9 @@ onDirFromLists {domain} {codomain} =
 public export
 InitOnDir : {domain, codomain : PZArena} ->
   (onpos : OnPosT domain codomain) -> (l : List (List Nat)) ->
-  {auto ok : IsJust (onDirFromLists {domain} {codomain} onpos l)} ->
+  {auto ok : isJust (onDirFromLists {domain} {codomain} onpos l) = True} ->
   OnDirT {domain} {codomain} onpos
-InitOnDir onpos l {ok} = fromJust (onDirFromLists onpos l)
+InitOnDir _ _ {ok} = fromIsJust ok
 
 public export
 record PZLens (domain, codomain : PZArena) where
@@ -144,17 +144,7 @@ showPZLens : {domain : PZArena} -> {codomain : PZArena} ->
   PZLens domain codomain -> String
 showPZLens {domain} {codomain} (MkPZLens op od) =
   "pzOnPos: " ++ showPrefixMap op ++ "; pzOnDir: " ++
-  NatObjPrefixFold
-    {n=(pzNumPos domain)}
-    {a=(\sl => pzDirT codomain (op sl) -> pzDirT domain sl)}
-    {b=(const String)}
-    od
-    "[empty domain]"
-    (\m, morph, dirmap, ss =>
-      let ss' = if m == NatOZ then "" else ss ++ "; " in
-      ss' ++ "codomain[" ++ show (fst (op (m ** morph))) ++
-      "] -> domain[" ++ show m ++ "]: " ++
-      prefixArrayStringFold (show . fst) dirmap)
+  showDepPrefixContraMap (pzNumDir domain) (pzNumDir codomain) op od
 
 public export
 pzLensFromLists :

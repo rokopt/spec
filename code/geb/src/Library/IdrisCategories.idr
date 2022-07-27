@@ -2999,9 +2999,10 @@ NatOPrefixMaybe {n} m = case NatLTStrictMaybe m n of
 
 public export
 InitNatOPrefix :
-  {n : NatObj} -> (m : NatObj) -> {auto ok : IsJust (NatOPrefixMaybe {n} m)} ->
+  {n : NatObj} -> (m : NatObj) ->
+  {auto ok : isJust (NatOPrefixMaybe {n} m) = True} ->
   NatOPrefix n
-InitNatOPrefix m {ok} = fromJust (NatOPrefixMaybe {n} m)
+InitNatOPrefix _ {ok} = fromIsJust ok
 
 public export
 NatOSlice : NatObj -> Type
@@ -3015,9 +3016,10 @@ NatOSliceMaybe {n} m = case NatMorphMaybe m n of
 
 public export
 InitNatOSlice :
-  {n : NatObj} -> (m : NatObj) -> {auto ok : IsJust (NatOSliceMaybe {n} m)} ->
+  {n : NatObj} -> (m : NatObj) ->
+  {auto ok : isJust (NatOSliceMaybe {n} m) = True} ->
   NatOSlice n
-InitNatOSlice m {ok} = fromJust (NatOSliceMaybe {n} m)
+InitNatOSlice _ {ok} = fromIsJust ok
 
 public export
 NatZSlice : Type
@@ -3819,9 +3821,9 @@ prefixMapFromList n l =
 
 public export
 InitPrefixMap : (n : Nat) ->
-  (l : List Nat) -> {auto ok : IsJust (prefixMapFromList n l)} ->
+  (l : List Nat) -> {auto ok : isJust (prefixMapFromList n l) = True} ->
   MetaPrefixMap (length l) n
-InitPrefixMap n l {ok} = fromJust (prefixMapFromList n l)
+InitPrefixMap _ _ {ok} = fromIsJust ok
 
 public export
 DepPrefixContraMap :
@@ -3832,6 +3834,27 @@ DepPrefixContraMap :
   Type
 DepPrefixContraMap {domPos} {codPos} domDir codDir posMap =
   (pos : NatOPrefix domPos) -> PrefixMap (codDir (posMap pos)) (domDir pos)
+
+public export
+showDepPrefixContraMap :
+  {domPos, codPos : NatObj} ->
+  (domDir : PrefixArray domPos NatObj) ->
+  (codDir : PrefixArray codPos NatObj) ->
+  (posMap : PrefixMap domPos codPos) ->
+  DepPrefixContraMap domDir codDir posMap ->
+  String
+showDepPrefixContraMap {domPos} {codPos} domDir codDir posMap dpm =
+  NatObjPrefixFold
+    {n=domPos}
+    {a=(\pos => PrefixMap (codDir (posMap pos)) (domDir pos))}
+    {b=(const String)}
+    dpm
+    "[empty domain]"
+    (\m, morph, dirmap, ss =>
+      let ss' = if m == NatOZ then "" else ss ++ "; " in
+      ss' ++ "codomain[" ++ show (fst (posMap (m ** morph))) ++
+      "] -> domain[" ++ show m ++ "]: " ++
+      prefixArrayStringFold (show . fst) dirmap)
 
 public export
 depPrefixContraMapFromLists :
