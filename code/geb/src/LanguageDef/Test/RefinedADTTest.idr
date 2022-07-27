@@ -215,6 +215,9 @@ languageDefRefinedADTTest = do
   printLn "Begin pzPoly"
   printLn $ show examplePzPoly
   printLn $ show $ pzApplyMeta examplePzPoly 7
+  printLn $ show $ pzApplyMeta pzPolyInitialObj 1234
+  printLn $ show $ pzApplyMeta pzPolyTerminalObj 1234
+  printLn $ show $ pzApplyMeta pzIdentity 1234
   printLn $ show $ pzSumCoeff examplePzPoly
   printLn $ show exampleLongPzPoly
   printLn $ show exampleEmptyPzPoly

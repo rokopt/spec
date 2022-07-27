@@ -3680,6 +3680,10 @@ public export
   show {n} {a} = sliceArrayStringFold show
 
 public export
+SliceArrayConst : {n : NatObj} -> {a : Type} -> (x : a) -> SliceArray n a
+SliceArrayConst x _ = x
+
+public export
 natObjSum : NatObj -> NatObj -> NatObj
 natObjSum =
   NatObjInd

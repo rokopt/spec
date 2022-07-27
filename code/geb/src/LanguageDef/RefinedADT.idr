@@ -78,6 +78,30 @@ public export
 pzApply : PZPoly -> NatObj -> NatObj
 pzApply poly = MetaToNatObj . pzApplyMeta poly . NatObjToMeta
 
+public export
+pzSetInitialObj : NatObj
+pzSetInitialObj = NatOZ
+
+public export
+pzSetTerminalObj : NatObj
+pzSetTerminalObj = NatO1
+
+public export
+pzPolyInitialObj : PZPoly
+pzPolyInitialObj = MkPZPoly NatOZ $ sliceArrayFromList NatOZ []
+
+public export
+pzPolyTerminalObj : PZPoly
+pzPolyTerminalObj = MkPZPoly NatOZ $ sliceArrayFromList NatO1 []
+
+public export
+pzIdentity : PZPoly
+pzIdentity = MkPZPoly NatO1 $ sliceArrayFromList NatOZ [NatOZ]
+
+public export
+pzIdentityCorrect : (n : NatObj) -> pzApply pzIdentity n = n
+pzIdentityCorrect n = ?pzIdentityCorrect_hole
+
 ---------------------------
 ---- Arena formulation ----
 ---------------------------
