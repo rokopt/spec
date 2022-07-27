@@ -3621,6 +3621,21 @@ showPrefixArrayArray : {m, n : NatObj} -> {0 a : Type} ->
 showPrefixArrayArray = prefixArrayStringFold . prefixArrayStringFold
 
 public export
+PrefixArrayTruncate : {m : NatObj} -> {0 a : Type} ->
+  PrefixArray (NatOS m) a -> PrefixArray m a
+PrefixArrayTruncate arr (m ** morph) = arr (m ** NatLTInc morph)
+
+public export
+PrefixArrayTruncateEq : {m : NatObj} -> {0 a : Type} ->
+  (arr : PrefixArray (NatOS m) a) ->
+  (n : NatObj) ->
+  (morph : NatLTStrict n m) ->
+  (morph' : NatLTStrict n (NatOS m)) ->
+  PrefixArrayTruncate arr (n ** morph) = arr (n ** morph')
+PrefixArrayTruncateEq arr n morph morph' =
+  rewrite NatCatThin _ morph' _ in Refl
+
+public export
 PrefixMap : NatObj -> NatObj -> Type
 PrefixMap m n = NatOPrefix m -> NatOPrefix n
 
@@ -3632,6 +3647,11 @@ public export
 showPrefixMap : {m, n : NatObj} ->
   (NatOPrefix m -> NatOPrefix n) -> String
 showPrefixMap = prefixArrayStringFold (show . fst)
+
+public export
+PrefixMapTruncate : {m, n : NatObj} ->
+  PrefixMap (NatOS m) n -> PrefixMap m n
+PrefixMapTruncate arr (m ** morph) = arr (m ** NatLTInc morph)
 
 public export
 sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
@@ -3706,6 +3726,11 @@ public export
 NatSliceTruncate : {a : Type} -> {n : NatObj} ->
   SliceArray (NatOS n) a -> SliceArray n a
 NatSliceTruncate arr (m ** morph) = arr (m ** NatLTInc morph)
+
+public export
+NatPrefixTruncate : {a : Type} -> {n : NatObj} ->
+  PrefixArray (NatOS n) a -> PrefixArray n a
+NatPrefixTruncate arr (m ** morph) = arr (m ** NatLTInc morph)
 
 public export
 NatPrefixFoldAppendStepSumMorph : {a : Type} -> {n : NatObj} ->
@@ -3797,6 +3822,60 @@ DepPrefixContraMap :
   Type
 DepPrefixContraMap {domPos} {codPos} domDir codDir posMap =
   (pos : NatOPrefix domPos) -> PrefixMap (codDir (posMap pos)) (domDir pos)
+
+public export
+depPrefixContraMapFromLists :
+  {domPos, codPos : NatObj} ->
+  (domDir : PrefixArray domPos NatObj) ->
+  (codDir : PrefixArray codPos NatObj) ->
+  (posMap : PrefixMap domPos codPos) ->
+  List (List Nat) ->
+  Maybe (DepPrefixContraMap {domPos} {codPos} domDir codDir posMap)
+depPrefixContraMapFromLists {domPos} {codPos} domDir codDir posMap [] =
+  case domPos of
+    InNat ZeroF => Just $ \sl => void $ FromLTZeroContra _ (snd sl)
+    InNat (SuccF _) => Nothing
+depPrefixContraMapFromLists {domPos} {codPos} domDir codDir posMap (l :: ls) =
+  case domPos of
+    InNat ZeroF => Nothing
+    InNat (SuccF domPos') =>
+      case
+        depPrefixContraMapFromLists
+          {domPos=domPos'}
+          {codPos}
+          (PrefixArrayTruncate domDir)
+          codDir
+          (PrefixMapTruncate posMap)
+          ls of
+        Just tlmap =>
+          case decEq (length l) (NatObjToMeta $ codDir $ posMap (domPos' ** NatLTMorphToSucc $ NatMorphId domPos')) of
+            Yes lenEq =>
+              case prefixMapFromList (NatObjToMeta $ domDir (domPos' ** NatLTMorphToSucc $ NatMorphId domPos')) l of
+                Just hdmap =>
+                  Just $ \pos, coddir => case pos of
+                    (posn ** poslt) =>
+                      case MorphToStrict (NatLTFromSucc _ _ poslt) of
+                        Left Refl => case coddir of
+                          (codn ** codlt) =>
+                            let
+                              morphEq = NatCatThin _ (NatLTMorphToSucc $ NatMorphId posn) poslt
+                              codMetaId = NatToMetaId (codDir $ posMap (posn ** NatLTMorphToSucc $ NatMorphId posn))
+                              hdmapc = hdmap (codn ** rewrite lenEq in rewrite codMetaId in rewrite morphEq in codlt)
+                              domMetaId = NatToMetaId (domDir (posn ** NatLTMorphToSucc $ NatMorphId posn))
+                            in
+                            replace
+                              {p=(\morph' => (m : NatObj ** NatLTStrict m (domDir (posn ** morph'))))}
+                              morphEq $
+                                replace {p=NatOPrefix} domMetaId hdmapc
+                        Right lt =>
+                          let teq = PrefixArrayTruncateEq domDir posn lt poslt in
+                          rewrite sym teq in
+                          tlmap (posn ** lt) $ case coddir of
+                            (codn ** codlt) =>
+                              (codn ** ?depPrefixContraMapFromLists_codlt_hole)
+                Nothing => Nothing
+            No _ => Nothing
+        Nothing => Nothing
 
 --------------------------------
 ---- Dependent endofunctors ----

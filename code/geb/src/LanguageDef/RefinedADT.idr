@@ -110,7 +110,7 @@ Show PZArena where
 
 public export
 OnPosT : PZArena -> PZArena -> Type
-OnPosT domain codomain = pzPosT domain -> pzPosT codomain
+OnPosT domain codomain = PrefixMap (pzNumPos domain) (pzNumPos codomain)
 
 public export
 OnDirT : {domain, codomain : PZArena} -> OnPosT domain codomain -> Type
@@ -123,7 +123,15 @@ public export
 onDirFromLists : {domain, codomain : PZArena} ->
   (onpos : OnPosT domain codomain) -> List (List Nat) ->
   Maybe (OnDirT {domain} {codomain} onpos)
-onDirFromLists {domain} {codomain} onpos l = ?onDirFromLists_hole
+onDirFromLists {domain} {codomain} =
+  depPrefixContraMapFromLists (pzNumDir domain) (pzNumDir codomain)
+
+public export
+InitOnDir : {domain, codomain : PZArena} ->
+  (onpos : OnPosT domain codomain) -> (l : List (List Nat)) ->
+  {auto ok : IsJust (onDirFromLists {domain} {codomain} onpos l)} ->
+  OnDirT {domain} {codomain} onpos
+InitOnDir onpos l {ok} = fromJust (onDirFromLists onpos l)
 
 public export
 record PZLens (domain, codomain : PZArena) where
@@ -147,6 +155,16 @@ showPZLens {domain} {codomain} (MkPZLens op od) =
       ss' ++ "codomain[" ++ show (fst (op (m ** morph))) ++
       "] -> domain[" ++ show m ++ "]: " ++
       prefixArrayStringFold (show . fst) dirmap)
+
+public export
+pzLensFromLists :
+  {domain, codomain : PZArena} ->
+  (onpos : OnPosT domain codomain) ->
+  List (List Nat) ->
+  Maybe (PZLens domain codomain)
+pzLensFromLists onpos l with (onDirFromLists onpos l)
+  pzLensFromLists onpos l | Just ondir = Just $ MkPZLens onpos ondir
+  pzLensFromLists onpos l | Nothing = Nothing
 
 ------------------------------------------
 ---- Algebraic <-> arena translations ----
