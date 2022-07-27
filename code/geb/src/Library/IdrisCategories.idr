@@ -3857,23 +3857,23 @@ showDepPrefixContraMap {domPos} {codPos} domDir codDir posMap dpm =
       prefixArrayStringFold (show . fst) dirmap)
 
 public export
-depPrefixContraMapFromLists :
+depPrefixContraMapFromListsRev :
   {domPos, codPos : NatObj} ->
   (domDir : PrefixArray domPos NatObj) ->
   (codDir : PrefixArray codPos NatObj) ->
   (posMap : PrefixMap domPos codPos) ->
   List (List Nat) ->
   Maybe (DepPrefixContraMap {domPos} {codPos} domDir codDir posMap)
-depPrefixContraMapFromLists {domPos} {codPos} domDir codDir posMap [] =
+depPrefixContraMapFromListsRev {domPos} {codPos} domDir codDir posMap [] =
   case domPos of
     InNat ZeroF => Just $ \sl => void $ FromLTZeroContra _ (snd sl)
     InNat (SuccF _) => Nothing
-depPrefixContraMapFromLists {domPos} {codPos} domDir codDir posMap (l :: ls) =
+depPrefixContraMapFromListsRev {domPos} {codPos} domDir codDir posMap (l :: ls) =
   case domPos of
     InNat ZeroF => Nothing
     InNat (SuccF domPos') =>
       case
-        depPrefixContraMapFromLists
+        depPrefixContraMapFromListsRev
           {domPos=domPos'}
           {codPos}
           (PrefixArrayTruncate domDir)
@@ -3909,6 +3909,17 @@ depPrefixContraMapFromLists {domPos} {codPos} domDir codDir posMap (l :: ls) =
                 Nothing => Nothing
             No _ => Nothing
         Nothing => Nothing
+
+public export
+depPrefixContraMapFromLists :
+  {domPos, codPos : NatObj} ->
+  (domDir : PrefixArray domPos NatObj) ->
+  (codDir : PrefixArray codPos NatObj) ->
+  (posMap : PrefixMap domPos codPos) ->
+  List (List Nat) ->
+  Maybe (DepPrefixContraMap {domPos} {codPos} domDir codDir posMap)
+depPrefixContraMapFromLists domDir codDir posMap =
+  depPrefixContraMapFromListsRev domDir codDir posMap . reverse
 
 --------------------------------
 ---- Dependent endofunctors ----

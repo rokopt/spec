@@ -203,7 +203,6 @@ ex256onDir :
 ex256onDir =
   InitOnDir {domain=ex256p1a} {codomain=ex256p2a}
     ex256onPos [ex256onDir0List, ex256onDir1List, ex256onDir2List]
-    -- {ok=(Refl {x=isJust (onDirFromLists ex256onPos [ex256onDir0List, ex256onDir1List, ex256onDir2List])})}
 
 ex256lens : PZLens RefinedADTTest.ex256p1a RefinedADTTest.ex256p2a
 ex256lens = MkPZLens ex256onPos ex256onDir
