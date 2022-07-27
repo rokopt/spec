@@ -3009,6 +3009,10 @@ InitNatOPrefix :
 InitNatOPrefix _ {ok} = fromIsJust ok
 
 public export
+NatOPrefixZ : (n : NatObj) -> NatOPrefix (NatOS n)
+NatOPrefixZ n = (NatOZ ** NatLTMorphToSucc $ NatLTOZ n)
+
+public export
 NatOSlice : NatObj -> Type
 NatOSlice n = (m : NatObj ** NatLTMorph (m, n))
 
@@ -3682,6 +3686,10 @@ public export
 public export
 (n : NatObj) => (a : Type) => Show a => Show (SliceArray n a) where
   show {n} {a} = sliceArrayStringFold show
+
+public export
+PrefixArrayConst : {n : NatObj} -> {a : Type} -> (x : a) -> PrefixArray n a
+PrefixArrayConst x _ = x
 
 public export
 SliceArrayConst : {n : NatObj} -> {a : Type} -> (x : a) -> SliceArray n a

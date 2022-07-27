@@ -219,8 +219,49 @@ NatBool : Type
 NatBool = NatOPrefix NatO2
 
 public export
+BoundedNatObj : NatObj -> Type
+BoundedNatObj = NatOPrefix
+
+public export
+BoundedNatMorphism : NatObj -> NatObj -> Type
+BoundedNatMorphism = PrefixMap
+
+public export
+BoundedNatInitial : Type
+BoundedNatInitial = NatOPrefix NatOZ
+
+public export
+BoundedNatFromInitial : (n : NatObj) -> BoundedNatMorphism NatOZ n
+BoundedNatFromInitial n (_ ** ltz) = void $ FromLTZeroContra _ ltz
+
+public export
+BoundedNatTerminal : Type
+BoundedNatTerminal = NatOPrefix NatO1
+
+public export
+BoundedNatToTerminal : (n : NatObj) -> BoundedNatMorphism n NatO1
+BoundedNatToTerminal n = PrefixArrayConst $ NatOPrefixZ NatOZ
+
+public export
+BoundedNatCoproduct : NatObj -> NatObj -> Type
+BoundedNatCoproduct m n = NatOPrefix (natObjSum m n)
+
+public export
 BoundedNatProduct : NatObj -> NatObj -> Type
 BoundedNatProduct m n = NatOPrefix (natObjMul m n)
+
+public export
+BoundedNatHomSet : NatObj -> NatObj -> Type
+BoundedNatHomSet m n = NatOPrefix (natObjRaiseTo m n)
+
+public export
+BoundedNatExponential : NatObj -> NatObj -> Type
+BoundedNatExponential = flip BoundedNatHomSet
+
+public export
+BoundedNatExponentialCardinality :
+  (m, n : NatObj) -> BoundedNatExponential m n = NatOPrefix (natObjPow m n)
+BoundedNatExponentialCardinality m n = Refl
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
