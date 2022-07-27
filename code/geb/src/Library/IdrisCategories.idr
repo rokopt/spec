@@ -1475,6 +1475,10 @@ NatO1 : NatObj
 NatO1 = NatOS NatOZ
 
 public export
+NatO2 : NatObj
+NatO2 = NatOS NatO1
+
+public export
 ProductMNatFObj : Type
 ProductMNatFObj = ProductMNatF NatObj
 
@@ -3713,6 +3717,14 @@ natObjMinusLt {m} {n} {k} =
     (\n', morph' => morph')
     (\m', n', morph', hyp, lte' => hyp $ NatLTFromSucc _ _ lte')
     (m, k)
+
+public export
+natObjMul : NatObj -> NatObj -> NatObj
+natObjMul =
+  NatObjInd
+    (const $ NatObj -> NatObj)
+    (const NatOZ)
+    (\pred, mulbypred, n => natObjSum (mulbypred n) n)
 
 public export
 NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> PrefixArray n a

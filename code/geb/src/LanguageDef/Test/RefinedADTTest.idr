@@ -207,6 +207,42 @@ ex256onDir =
 ex256lens : PZLens RefinedADTTest.ex256p1a RefinedADTTest.ex256p2a
 ex256lens = MkPZLens ex256onPos ex256onDir
 
+natObjSumTest0 : Assertion
+natObjSumTest0 = Assert $
+  natObjSum (MetaToNatObj 0) (MetaToNatObj 3) == MetaToNatObj 3
+
+natObjSumTest1 : Assertion
+natObjSumTest1 = Assert $
+  natObjSum (MetaToNatObj 5) (MetaToNatObj 0) == MetaToNatObj 5
+
+natObjSumTest2 : Assertion
+natObjSumTest2 = Assert $
+  natObjSum (MetaToNatObj 1) (MetaToNatObj 11) == MetaToNatObj 12
+
+natObjSumTest3 : Assertion
+natObjSumTest3 = Assert $
+  natObjSum (MetaToNatObj 20) (MetaToNatObj 11) == MetaToNatObj 31
+
+natObjMulTest0 : Assertion
+natObjMulTest0 = Assert $
+  natObjMul (MetaToNatObj 0) (MetaToNatObj 11) == MetaToNatObj 0
+
+natObjMulTest1 : Assertion
+natObjMulTest1 = Assert $
+  natObjMul (MetaToNatObj 7) (MetaToNatObj 0) == MetaToNatObj 0
+
+natObjMulTest2 : Assertion
+natObjMulTest2 = Assert $
+  natObjMul (MetaToNatObj 1) (MetaToNatObj 12) == MetaToNatObj 12
+
+natObjMulTest3 : Assertion
+natObjMulTest3 = Assert $
+  natObjMul (MetaToNatObj 17) (MetaToNatObj 1) == MetaToNatObj 17
+
+natObjMulTest4 : Assertion
+natObjMulTest4 = Assert $
+  natObjMul (MetaToNatObj 17) (MetaToNatObj 6) == MetaToNatObj 102
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do

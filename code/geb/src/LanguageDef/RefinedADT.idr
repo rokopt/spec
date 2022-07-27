@@ -99,7 +99,7 @@ pzIdentity : PZPoly
 pzIdentity = MkPZPoly NatO1 $ sliceArrayFromList NatOZ [NatOZ]
 
 public export
-pzIdentityCorrect : (n : NatObj) -> pzApply pzIdentity n = n
+pzIdentityCorrect : (n : NatObj) -> pzApply RefinedADT.pzIdentity n = n
 pzIdentityCorrect n = ?pzIdentityCorrect_hole
 
 ---------------------------
@@ -207,6 +207,20 @@ pzDirs poly = posPowers (pzMaxPow poly) (pzPolyCoeff poly)
 public export
 pzToArena : PZPoly -> PZArena
 pzToArena poly = MkPZArena (pzSumCoeff poly) (pzDirs poly)
+
+----------------------------------
+----------------------------------
+---- Refined polynomial types ----
+----------------------------------
+----------------------------------
+
+public export
+NatBool : Type
+NatBool = NatOPrefix NatO2
+
+public export
+BoundedNatProduct : NatObj -> NatObj -> Type
+BoundedNatProduct m n = NatOPrefix (natObjMul m n)
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
