@@ -3727,6 +3727,18 @@ natObjMul =
     (\pred, mulbypred, n => natObjSum (mulbypred n) n)
 
 public export
+natObjRaiseTo : NatObj -> NatObj -> NatObj
+natObjRaiseTo =
+  NatObjInd
+    (const $ NatObj -> NatObj)
+    (const NatO1)
+    (\pred, raisetopred, n => natObjMul (raisetopred n) n)
+
+public export
+natObjPow : NatObj -> NatObj -> NatObj
+natObjPow = flip natObjRaiseTo
+
+public export
 NatPrefixReplicate : {a : Type} -> (n : NatObj) -> (x : a) -> PrefixArray n a
 NatPrefixReplicate n x sl = x
 

@@ -243,6 +243,54 @@ natObjMulTest4 : Assertion
 natObjMulTest4 = Assert $
   natObjMul (MetaToNatObj 17) (MetaToNatObj 6) == MetaToNatObj 102
 
+natObjPowTest0 : Assertion
+natObjPowTest0 = Assert $
+  natObjPow (MetaToNatObj 0) (MetaToNatObj 0) == MetaToNatObj 1
+
+natObjPowTest1 : Assertion
+natObjPowTest1 = Assert $
+  natObjPow (MetaToNatObj 0) (MetaToNatObj 1) == MetaToNatObj 0
+
+natObjPowTest2 : Assertion
+natObjPowTest2 = Assert $
+  natObjPow (MetaToNatObj 1) (MetaToNatObj 0) == MetaToNatObj 1
+
+natObjPowTest3 : Assertion
+natObjPowTest3 = Assert $
+  natObjPow (MetaToNatObj 1) (MetaToNatObj 1) == MetaToNatObj 1
+
+natObjPowTest4 : Assertion
+natObjPowTest4 = Assert $
+  natObjPow (MetaToNatObj 2) (MetaToNatObj 1) == MetaToNatObj 2
+
+natObjPowTest5 : Assertion
+natObjPowTest5 = Assert $
+  natObjPow (MetaToNatObj 1) (MetaToNatObj 2) == MetaToNatObj 1
+
+natObjPowTest6 : Assertion
+natObjPowTest6 = Assert $
+  natObjPow (MetaToNatObj 3) (MetaToNatObj 1) == MetaToNatObj 3
+
+natObjPowTest7 : Assertion
+natObjPowTest7 = Assert $
+  natObjPow (MetaToNatObj 1) (MetaToNatObj 3) == MetaToNatObj 1
+
+natObjPowTest8 : Assertion
+natObjPowTest8 = Assert $
+  natObjPow (MetaToNatObj 3) (MetaToNatObj 2) == MetaToNatObj 9
+
+natObjPowTest9 : Assertion
+natObjPowTest9 = Assert $
+  natObjPow (MetaToNatObj 2) (MetaToNatObj 3) == MetaToNatObj 8
+
+natObjPowTest10 : Assertion
+natObjPowTest10 = Assert $
+  natObjPow (MetaToNatObj 3) (MetaToNatObj 4) == MetaToNatObj 81
+
+natObjPowTest11 : Assertion
+natObjPowTest11 = Assert $
+  natObjPow (MetaToNatObj 4) (MetaToNatObj 3) == MetaToNatObj 64
+
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
