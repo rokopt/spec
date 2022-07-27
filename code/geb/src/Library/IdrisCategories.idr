@@ -3654,6 +3654,16 @@ PrefixMapTruncate : {m, n : NatObj} ->
 PrefixMapTruncate arr (m ** morph) = arr (m ** NatLTInc morph)
 
 public export
+PrefixMapTruncateEq : {m, n : NatObj} ->
+  (pm : PrefixMap (NatOS m) n) ->
+  (k : NatObj) ->
+  (morph : NatLTStrict k m) ->
+  (morph' : NatLTStrict k (NatOS m)) ->
+  PrefixMapTruncate pm (k ** morph) = pm (k ** morph')
+PrefixMapTruncateEq pm k morph morph' =
+  rewrite NatCatThin _ morph' _ in Refl
+
+public export
 sliceArrayStringFold : {n : NatObj} -> {a : Type} ->
   (a -> String) -> SliceArray n a -> String
 sliceArrayStringFold {n} {a} sa v =
@@ -3869,10 +3879,10 @@ depPrefixContraMapFromLists {domPos} {codPos} domDir codDir posMap (l :: ls) =
                                 replace {p=NatOPrefix} domMetaId hdmapc
                         Right lt =>
                           let teq = PrefixArrayTruncateEq domDir posn lt poslt in
+                          let meq = PrefixMapTruncateEq posMap posn lt poslt in
                           rewrite sym teq in
                           tlmap (posn ** lt) $ case coddir of
-                            (codn ** codlt) =>
-                              (codn ** ?depPrefixContraMapFromLists_codlt_hole)
+                            (codn ** codlt) => (codn ** rewrite meq in codlt)
                 Nothing => Nothing
             No _ => Nothing
         Nothing => Nothing
