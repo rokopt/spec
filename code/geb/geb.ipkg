@@ -5,6 +5,7 @@ modules =
     , Library.IdrisUtils
     , Library.IdrisCategories
     , Library.CategoryTheory
+    , LanguageDef.PolyCat
     , LanguageDef.Atom
     , LanguageDef.RefinedADT
     , LanguageDef.Expression
@@ -16,6 +17,7 @@ modules =
     , LanguageDef.ComputationalEffects
     , LanguageDef.Embedded
     , LanguageDef.FullLanguageDef
+    , LanguageDef.Test.PolyCatTest
     , LanguageDef.Test.AtomTest
     , LanguageDef.Test.RefinedADTTest
     , LanguageDef.Test.ExpressionTest
