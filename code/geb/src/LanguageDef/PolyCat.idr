@@ -31,6 +31,18 @@ public export
 PairToSigma : {0 a, b : Type} -> (a, b) -> (Sigma {a} (const b))
 PairToSigma (x, y) = (x ** y)
 
+public export
+DecPred : Type -> Type
+DecPred a = a -> Bool
+
+public export
+Satisfies : {0 a : Type} -> DecPred a -> a -> Type
+Satisfies p x = p x = True
+
+public export
+DecPi : {a : Type} -> DecPred a -> Type
+DecPi {a} p = Subset a (Satisfies p)
+
 --------------------------------------------------
 --------------------------------------------------
 ---- Natural number induction and coinduction ----
@@ -55,7 +67,7 @@ NatSigma = Sigma {a=Nat}
 
 -- If we view a slice object as a functor from the discrete category of
 -- natural numbers to the category `Type`, then this type can be viewed as
--- a natural transformation between slice objects.
+-- a natural transformation.
 public export
 NatSliceNatTrans : NatSliceObj -> NatSliceObj -> Type
 NatSliceNatTrans p q = (n : Nat) -> p n -> q n
