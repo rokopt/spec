@@ -43,23 +43,33 @@ NatDepAlgebra : NatSliceObj -> Type
 NatDepAlgebra p = (p Z, NatSliceMorphism p S)
 
 public export
-natDepCata : {0 p : NatSliceObj} -> NatDepAlgebra p -> NatPi p
+natDepCata : {0 p : NatSliceObj} ->
+  NatDepAlgebra p -> NatPi p
 natDepCata (z, s) Z = z
 natDepCata dalg@(z, s) (S n) = s n (natDepCata dalg n)
 
 public export
 NatDepCoalgebra : NatSliceObj -> Type
-NatDepCoalgebra p = NatSliceNatTrans p (const $ NatSigma p)
+NatDepCoalgebra p = NatSliceNatTrans p (const $ Maybe $ NatSigma p)
 
 public export
-natDepAna : {0 p : NatSliceObj} -> NatDepCoalgebra p ->
-  (n : Nat) -> (x : p n) -> Inf (n' : Nat ** p n')
-natDepAna coalg n x =
-  case coalg n x of (n' ** x') => Delay (natDepAna coalg n' x')
+natDepAna : {0 p : NatSliceObj} ->
+  NatDepCoalgebra p -> NatSliceNatTrans p (const $ Inf (Maybe $ NatSigma p))
+natDepAna coalg n x with (coalg n x)
+  natDepAna coalg n x | Nothing = Nothing
+  natDepAna coalg n x | Just (n' ** x') = Delay (natDepAna coalg n' x')
 
 -----------------------
 ---- Non-dependent ----
 -----------------------
+
+public export
+NatSigmaToPair : {0 a : Type} -> NatSigma (const a) -> (Nat, a)
+NatSigmaToPair (n ** x) = (n, x)
+
+public export
+NatPairToSigma : {0 a : Type} -> (Nat, a) -> NatSigma (const a)
+NatPairToSigma (n, x) = (n ** x)
 
 public export
 NatAlgebra : Type -> Type
@@ -67,18 +77,20 @@ NatAlgebra a = (a, Nat -> a -> a)
 
 public export
 natCata : {0 a : Type} -> NatAlgebra a -> Nat -> a
-natCata (z, s) Z = z
-natCata alg@(z, s) (S n) = s n (natCata alg n)
+natCata = natDepCata {p=(const a)}
 
 public export
 NatCoalgebra : Type -> Type
-NatCoalgebra a = Nat -> a -> (Nat, Either () a)
+NatCoalgebra a = Nat -> a -> Maybe (Nat, a)
 
 public export
-natAna : {0 a : Type} -> NatCoalgebra a -> Nat -> a -> Inf (Nat, Either () a)
-natAna coalg n x = case coalg n x of
-  (n', Left ()) => (n', Left ())
-  (n', Right x') => Delay (natAna coalg n' x')
+NatCoalgToDep : {0 a : Type} -> NatCoalgebra a -> NatDepCoalgebra (const a)
+NatCoalgToDep coalg n x = map {f=Maybe} NatPairToSigma $ coalg n x
+
+public export
+natAna : {0 a : Type} -> NatCoalgebra a -> Nat -> a -> Inf (Maybe (Nat, a))
+natAna {a} coalg n x =
+  map {f=Maybe} NatSigmaToPair $ natDepAna (NatCoalgToDep coalg) n x
 
 --------------------------
 --------------------------
