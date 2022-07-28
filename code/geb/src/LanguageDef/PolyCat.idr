@@ -11,29 +11,6 @@ import Library.IdrisCategories
 --------------------------------------------------
 --------------------------------------------------
 
------------------------
----- Non-dependent ----
------------------------
-
-public export
-NatAlgebra : Type -> Type
-NatAlgebra a = (a, Nat -> a -> a)
-
-public export
-natCata : {0 a : Type} -> NatAlgebra a -> Nat -> a
-natCata (z, s) Z = z
-natCata alg@(z, s) (S n) = s n (natCata alg n)
-
-public export
-NatCoalgebra : Type -> Type
-NatCoalgebra a = Nat -> a -> (Nat, Either () a)
-
-public export
-natAna : {0 a : Type} -> NatCoalgebra a -> Nat -> a -> Inf (Nat, Either () a)
-natAna coalg n x = case coalg n x of
-  (n', Left ()) => (n', Left ())
-  (n', Right x') => Delay (natAna coalg n' x')
-
 ------------------------------------------------------
 ---- Dependent (slice category of natural numbers ----
 ------------------------------------------------------
@@ -79,6 +56,29 @@ natDepAna : {0 p : NatSliceObj} -> NatDepCoalgebra p ->
   (n : Nat) -> (x : p n) -> Inf (n' : Nat ** p n')
 natDepAna coalg n x =
   case coalg n x of (n' ** x') => Delay (natDepAna coalg n' x')
+
+-----------------------
+---- Non-dependent ----
+-----------------------
+
+public export
+NatAlgebra : Type -> Type
+NatAlgebra a = (a, Nat -> a -> a)
+
+public export
+natCata : {0 a : Type} -> NatAlgebra a -> Nat -> a
+natCata (z, s) Z = z
+natCata alg@(z, s) (S n) = s n (natCata alg n)
+
+public export
+NatCoalgebra : Type -> Type
+NatCoalgebra a = Nat -> a -> (Nat, Either () a)
+
+public export
+natAna : {0 a : Type} -> NatCoalgebra a -> Nat -> a -> Inf (Nat, Either () a)
+natAna coalg n x = case coalg n x of
+  (n', Left ()) => (n', Left ())
+  (n', Right x') => Delay (natAna coalg n' x')
 
 --------------------------
 --------------------------
