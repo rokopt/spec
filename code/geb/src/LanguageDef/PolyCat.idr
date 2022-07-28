@@ -5,6 +5,32 @@ import Library.IdrisCategories
 
 %default total
 
+-------------------------
+-------------------------
+---- Dependent types ----
+-------------------------
+-------------------------
+
+public export
+SliceObj : Type -> Type
+SliceObj a = a -> Type
+
+public export
+Pi : {a : Type} -> SliceObj a -> Type
+Pi {a} p = (x : a) -> p x
+
+public export
+Sigma : {a : Type} -> SliceObj a -> Type
+Sigma {a} p = (x : a ** p x)
+
+public export
+SigmaToPair : {0 a, b : Type} -> (Sigma {a} (const b)) -> (a, b)
+SigmaToPair (x ** y) = (x, y)
+
+public export
+PairToSigma : {0 a, b : Type} -> (a, b) -> (Sigma {a} (const b))
+PairToSigma (x, y) = (x ** y)
+
 --------------------------------------------------
 --------------------------------------------------
 ---- Natural number induction and coinduction ----
@@ -17,15 +43,15 @@ import Library.IdrisCategories
 
 public export
 NatSliceObj : Type
-NatSliceObj = Nat -> Type
+NatSliceObj = SliceObj Nat
 
 public export
 NatPi : NatSliceObj -> Type
-NatPi p = (n : Nat) -> p n
+NatPi = Pi {a=Nat}
 
 public export
 NatSigma : NatSliceObj -> Type
-NatSigma p = (n : Nat ** p n)
+NatSigma = Sigma {a=Nat}
 
 -- If we view a slice object as a functor from the discrete category of
 -- natural numbers to the category `Type`, then this type can be viewed as
@@ -50,26 +76,18 @@ natDepCata dalg@(z, s) (S n) = s n (natDepCata dalg n)
 
 public export
 NatDepCoalgebra : NatSliceObj -> Type
-NatDepCoalgebra p = NatSliceNatTrans p (const $ Maybe $ NatSigma p)
+NatDepCoalgebra p = NatSliceNatTrans p (Maybe . p . S)
 
 public export
 natDepAna : {0 p : NatSliceObj} ->
-  NatDepCoalgebra p -> NatSliceNatTrans p (const $ Inf (Maybe $ NatSigma p))
-natDepAna coalg n x with (coalg n x)
-  natDepAna coalg n x | Nothing = Nothing
-  natDepAna coalg n x | Just (n' ** x') = Delay (natDepAna coalg n' x')
+  NatDepCoalgebra p -> NatSigma p -> Inf (Maybe (NatSigma p))
+natDepAna coalg (n ** x) with (coalg n x)
+  natDepAna coalg (n ** x) | Nothing = Nothing
+  natDepAna coalg (n ** x) | Just x' = Delay (natDepAna coalg (S n ** x'))
 
 -----------------------
 ---- Non-dependent ----
 -----------------------
-
-public export
-NatSigmaToPair : {0 a : Type} -> NatSigma (const a) -> (Nat, a)
-NatSigmaToPair (n ** x) = (n, x)
-
-public export
-NatPairToSigma : {0 a : Type} -> (Nat, a) -> NatSigma (const a)
-NatPairToSigma (n, x) = (n ** x)
 
 public export
 NatAlgebra : Type -> Type
@@ -81,16 +99,12 @@ natCata = natDepCata {p=(const a)}
 
 public export
 NatCoalgebra : Type -> Type
-NatCoalgebra a = Nat -> a -> Maybe (Nat, a)
+NatCoalgebra a = Nat -> a -> Maybe a
 
 public export
-NatCoalgToDep : {0 a : Type} -> NatCoalgebra a -> NatDepCoalgebra (const a)
-NatCoalgToDep coalg n x = map {f=Maybe} NatPairToSigma $ coalg n x
-
-public export
-natAna : {0 a : Type} -> NatCoalgebra a -> Nat -> a -> Inf (Maybe (Nat, a))
-natAna {a} coalg n x =
-  map {f=Maybe} NatSigmaToPair $ natDepAna (NatCoalgToDep coalg) n x
+natAna : {0 a : Type} -> NatCoalgebra a -> (Nat, a) -> Inf (Maybe (Nat, a))
+natAna coalg nx =
+  map {f=Maybe} SigmaToPair $ natDepAna {p=(const a)} coalg $ PairToSigma nx
 
 --------------------------
 --------------------------
