@@ -132,6 +132,7 @@ polyCatTest = do
   putStrLn ""
   putStrLn "---- Polynomial ----"
   putStrLn $ show testPoly0
+  putStrLn $ show testPoly6
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "End polyCatTest."
