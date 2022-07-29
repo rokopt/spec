@@ -196,20 +196,19 @@ PolyShape = List (Nat, Nat)
 
 -- We define a valid (normalized) polynomial shape as follows:
 --   - Entries are sorted by strictly descending power
---   - The zero-power coefficient always has a list entry
---   - Other than the zero-power coefficient, there are no
---     entries for powers with zero coefficients
+--   - There are no entries for powers with zero coefficients
 -- The ideas of these rules include:
 --  - Equality of valid polynomials is equality of underlying shapes
---  - A non-empty tail of a valid polynomial is always valid
+--  - The of a valid polynomial is always valid
 --  - The meaning of an entry (a term) is independent of which list
 --    it appears in, and thus can be determined by looking at the term
 --    in isolation
+--  - The degree of the polynomial is the predecessor of the length of the list
 public export
 validPoly : DecPred PolyShape
 validPoly ((p, c) :: ts@((p', _) :: _)) = p > p' && c /= 0 && validPoly ts
-validPoly [(p, _)] = p == Z
-validPoly [] = False
+validPoly [(_, c)] = c /= 0
+validPoly [] = True
 
 public export
 Polynomial : Type

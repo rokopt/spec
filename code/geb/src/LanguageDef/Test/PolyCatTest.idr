@@ -45,7 +45,7 @@ testPoly5 : PolyShape
 testPoly5 = []
 
 poly0Valid : Assertion
-poly0Valid = Assert $ validPoly testPoly0 == False
+poly0Valid = Assert $ validPoly testPoly0 == True
 
 poly1Valid : Assertion
 poly1Valid = Assert $ validPoly testPoly1 == False
@@ -57,10 +57,10 @@ poly3Valid : Assertion
 poly3Valid = Assert $ validPoly testPoly3 == True
 
 poly4Valid : Assertion
-poly4Valid = Assert $ validPoly testPoly4 == False
+poly4Valid = Assert $ validPoly testPoly4 == True
 
 poly5Valid : Assertion
-poly5Valid = Assert $ validPoly testPoly4 == False
+poly5Valid = Assert $ validPoly testPoly5 == True
 
 export
 polyCatTest : IO ()
