@@ -196,6 +196,18 @@ public export
 MkNTuple : {0 a : Type} -> (l : List a) -> NTuple a (length l)
 MkNTuple l = MkRefined l {satisfies=(equalNatCorrect {m=(length l)})}
 
+--------------------------------------------
+---- Fixed-width binary natural numbers ----
+--------------------------------------------
+
+public export
+FixedNat : Nat -> Type
+FixedNat = NTuple Digit
+
+public export
+toNat : {0 bits : Nat} -> FixedNat bits -> Nat
+toNat = toNat . shape
+
 -----------------------
 ---- Bounded lists ----
 -----------------------
