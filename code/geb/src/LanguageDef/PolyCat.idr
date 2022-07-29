@@ -266,15 +266,20 @@ public export
 numTerms : Polynomial -> Nat
 numTerms = length . shape
 
--- Parameters: (accumulator, power, input)
+-- Parameters: (accumulator, power, input).
+-- Performs exponentiation by breaking it down into individual multiplications.
 public export
 ptInterpNatAccum : Nat -> Nat -> Nat -> Nat
 ptInterpNatAccum acc (S p) n = ptInterpNatAccum (n * acc) p n
 ptInterpNatAccum acc Z n = acc
 
 public export
+ptInterpNatByMults : PolyTerm -> Nat -> Nat
+ptInterpNatByMults t = ptInterpNatAccum (ptCoeff t) (ptPow t)
+
+public export
 ptInterpNat : PolyTerm -> Nat -> Nat
-ptInterpNat t = ptInterpNatAccum (ptCoeff t) (ptPow t)
+ptInterpNat t n = (ptCoeff t) * power n (ptPow t)
 
 public export
 psInterpNatAccum : Nat -> PolyShape -> Nat -> Nat
