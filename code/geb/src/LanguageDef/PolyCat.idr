@@ -49,6 +49,10 @@ MkRefined : {0 a : Type} -> {0 p : DecPred a} ->
   Refinement {a} p
 MkRefined x {satisfies} = Element x satisfies
 
+public export
+shape : {0 a : Type} -> {0 p : DecPred a} -> Refinement {a} p -> a
+shape = fst
+
 --------------------------------------------------
 --------------------------------------------------
 ---- Natural number induction and coinduction ----
@@ -252,7 +256,7 @@ sumPTCoeff = accumPTCoeff 0
 
 public export
 sumCoeff : Polynomial -> Nat
-sumCoeff = sumPTCoeff . fst
+sumCoeff = sumPTCoeff . shape
 
 --------------------------
 --------------------------
