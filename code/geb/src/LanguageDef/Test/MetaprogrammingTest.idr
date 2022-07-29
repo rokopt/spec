@@ -8,6 +8,6 @@ import LanguageDef.Metaprogramming
 export
 languageDefMetaprogrammingTest : IO ()
 languageDefMetaprogrammingTest = do
-  -- printLn "Begin languageDefMetaprogrammingTest:"
-  -- printLn "End languageDefMetaprogrammingTest."
+  -- putStrLn "Begin languageDefMetaprogrammingTest:"
+  -- putStrLn "End languageDefMetaprogrammingTest."
   pure ()

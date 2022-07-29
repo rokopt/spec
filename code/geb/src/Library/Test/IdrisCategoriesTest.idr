@@ -64,12 +64,12 @@ testPrefixMap = InitPrefixMap 6 [2, 5, 0]
 export
 libraryIdrisCategoriesTest : IO ()
 libraryIdrisCategoriesTest = do
-  printLn "Begin libraryIdrisCategoriesTest:"
-  printLn $ show emptyNatPrefix
-  printLn $ show exampleNatSlice
-  printLn $ show exampleNatPrefix
-  printLn $ showPrefixMap testPrefixMap
-  printLn $ show $ fst $ testPrefixMap $ InitNatOPrefix NatOZ
-  printLn $ show $ fst $ testPrefixMap $ InitNatOPrefix $ NatOS (NatOS (NatOZ))
-  printLn "End libraryIdrisCategoriesTest."
+  putStrLn "Begin libraryIdrisCategoriesTest:"
+  putStrLn $ show emptyNatPrefix
+  putStrLn $ show exampleNatSlice
+  putStrLn $ show exampleNatPrefix
+  putStrLn $ showPrefixMap testPrefixMap
+  putStrLn $ show $ fst $ testPrefixMap $ InitNatOPrefix NatOZ
+  putStrLn $ show $ fst $ testPrefixMap $ InitNatOPrefix $ NatOS (NatOS (NatOZ))
+  putStrLn "End libraryIdrisCategoriesTest."
   pure ()

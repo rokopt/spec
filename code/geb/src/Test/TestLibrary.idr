@@ -17,6 +17,6 @@ Assert False = []
 export
 testLibraryTest : IO ()
 testLibraryTest = do
-  -- printLn "Begin testLibraryTest:"
-  -- printLn "End testLibraryTest."
+  -- putStrLn "Begin testLibraryTest:"
+  -- putStrLn "End testLibraryTest."
   pure ()

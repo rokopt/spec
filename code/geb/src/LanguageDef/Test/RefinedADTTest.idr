@@ -294,58 +294,58 @@ natObjPowTest11 = Assert $
 export
 languageDefRefinedADTTest : IO ()
 languageDefRefinedADTTest = do
-  printLn "Begin languageDefRefinedADTTest:"
-  printLn $ show exampleFinNatPoly
-  printLn "Begin pzPoly"
-  printLn $ show examplePzPoly
-  printLn $ show $ pzApplyMeta examplePzPoly 7
-  printLn $ show $ pzApplyMeta pzPolyInitialObj 1234
-  printLn $ show $ pzApplyMeta pzPolyTerminalObj 1234
-  printLn $ show $ pzApplyMeta pzIdentity 1234
-  printLn $ show $ pzSumCoeff examplePzPoly
-  printLn $ show exampleLongPzPoly
-  printLn $ show exampleEmptyPzPoly
-  printLn $ show exampleZeroPzPoly
-  printLn $ show exampleOnePzPoly
-  printLn $ show exampleIncZeroPzPoly
-  printLn $ show exampleIncOnePzPoly
-  printLn "Begin pzArena"
-  printLn $ show exampleEmptyPzArena
-  printLn $ show exampleSmallPzArena
-  printLn $ show exampleLongPzArena
-  printLn "Begin pzPoly -> pzArena"
-  printLn $ "Ex 2.56 1st poly: " ++ show ex256p1
-  printLn $ "Ex 2.56 2nd poly: " ++ show ex256p2
-  printLn $ "Ex 2.56 1st poly as arena: " ++ show ex256p1a
-  printLn $ "Ex 2.56 2nd poly as arena: " ++ show ex256p2a
-  printLn $ "Ex 2.56 lens onPos: " ++ showPrefixMap ex256onPos
-  printLn $ "Ex 2.56 lens onDir[0](cod 0 -> dom 0): " ++ showPrefixMap ex256onDir0
-  printLn $ "Ex 2.56 lens onDir[1](cod 0 -> dom 1): " ++ showPrefixMap ex256onDir1
-  printLn $ "Ex 2.56 lens onDir[2](cod 3 -> dom 2): " ++ showPrefixMap ex256onDir2
-  printLn $ "Ex 2.56 lens onDir: " ++
+  putStrLn "Begin languageDefRefinedADTTest:"
+  putStrLn $ show exampleFinNatPoly
+  putStrLn "Begin pzPoly"
+  putStrLn $ show examplePzPoly
+  putStrLn $ show $ pzApplyMeta examplePzPoly 7
+  putStrLn $ show $ pzApplyMeta pzPolyInitialObj 1234
+  putStrLn $ show $ pzApplyMeta pzPolyTerminalObj 1234
+  putStrLn $ show $ pzApplyMeta pzIdentity 1234
+  putStrLn $ show $ pzSumCoeff examplePzPoly
+  putStrLn $ show exampleLongPzPoly
+  putStrLn $ show exampleEmptyPzPoly
+  putStrLn $ show exampleZeroPzPoly
+  putStrLn $ show exampleOnePzPoly
+  putStrLn $ show exampleIncZeroPzPoly
+  putStrLn $ show exampleIncOnePzPoly
+  putStrLn "Begin pzArena"
+  putStrLn $ show exampleEmptyPzArena
+  putStrLn $ show exampleSmallPzArena
+  putStrLn $ show exampleLongPzArena
+  putStrLn "Begin pzPoly -> pzArena"
+  putStrLn $ "Ex 2.56 1st poly: " ++ show ex256p1
+  putStrLn $ "Ex 2.56 2nd poly: " ++ show ex256p2
+  putStrLn $ "Ex 2.56 1st poly as arena: " ++ show ex256p1a
+  putStrLn $ "Ex 2.56 2nd poly as arena: " ++ show ex256p2a
+  putStrLn $ "Ex 2.56 lens onPos: " ++ showPrefixMap ex256onPos
+  putStrLn $ "Ex 2.56 lens onDir[0](cod 0 -> dom 0): " ++ showPrefixMap ex256onDir0
+  putStrLn $ "Ex 2.56 lens onDir[1](cod 0 -> dom 1): " ++ showPrefixMap ex256onDir1
+  putStrLn $ "Ex 2.56 lens onDir[2](cod 3 -> dom 2): " ++ showPrefixMap ex256onDir2
+  putStrLn $ "Ex 2.56 lens onDir: " ++
     showDepPrefixContraMap
       (pzNumDir ex256p1a) (pzNumDir ex256p2a) ex256onPos ex256onDir
-  printLn $ "Ex 2.56 lens: " ++ showPZLens ex256lens
+  putStrLn $ "Ex 2.56 lens: " ++ showPZLens ex256lens
   {-
-  printLn $ show finOrdMorphTest1
-  printLn $ show finOrdMorphTest5
-  printLn $ show finOrdMorphTest6
-  printLn $ show finOrdMorphTest7
-  printLn $ show finOrdMorphTest9
-  printLn $ show finOrdMorphTest11
-  printLn $ show finOrdMorphTest12
-  printLn $ show finOrdMorphTest13
-  printLn $ show finOrdMorphTest14
-  printLn $ show finOrdMorphTest15
-  printLn $ show finOrdMorphTest16
-  printLn $ show finOrdMorphTest17
-  printLn $ show finOrdMorphTest18
-  printLn $ show testCovarHomFunc
-  printLn $ show testContravarHomFunc
-  printLn $ show fsObjTest1
-  printLn $ show fsObjTest2
-  printLn $ show fsObjTest2
-  printLn $ show adt0ShowTest
+  putStrLn $ show finOrdMorphTest1
+  putStrLn $ show finOrdMorphTest5
+  putStrLn $ show finOrdMorphTest6
+  putStrLn $ show finOrdMorphTest7
+  putStrLn $ show finOrdMorphTest9
+  putStrLn $ show finOrdMorphTest11
+  putStrLn $ show finOrdMorphTest12
+  putStrLn $ show finOrdMorphTest13
+  putStrLn $ show finOrdMorphTest14
+  putStrLn $ show finOrdMorphTest15
+  putStrLn $ show finOrdMorphTest16
+  putStrLn $ show finOrdMorphTest17
+  putStrLn $ show finOrdMorphTest18
+  putStrLn $ show testCovarHomFunc
+  putStrLn $ show testContravarHomFunc
+  putStrLn $ show fsObjTest1
+  putStrLn $ show fsObjTest2
+  putStrLn $ show fsObjTest2
+  putStrLn $ show adt0ShowTest
   -}
-  printLn "End languageDefRefinedADTTest."
+  putStrLn "End languageDefRefinedADTTest."
   pure ()

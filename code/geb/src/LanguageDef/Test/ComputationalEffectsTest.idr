@@ -8,6 +8,6 @@ import LanguageDef.ComputationalEffects
 export
 languageDefComputationalEffectsTest : IO ()
 languageDefComputationalEffectsTest = do
-  -- printLn "Begin languageDefComputationalEffectsTest:"
-  -- printLn "End languageDefComputationalEffectsTest."
+  -- putStrLn "Begin languageDefComputationalEffectsTest:"
+  -- putStrLn "End languageDefComputationalEffectsTest."
   pure ()

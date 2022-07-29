@@ -8,6 +8,6 @@ import LanguageDef.Syntax
 export
 languageDefSyntaxTest : IO ()
 languageDefSyntaxTest = do
-  -- printLn "Begin languageDefSyntaxTest:"
-  -- printLn "End languageDefSyntaxTest."
+  -- putStrLn "Begin languageDefSyntaxTest:"
+  -- putStrLn "End languageDefSyntaxTest."
   pure ()

@@ -8,6 +8,6 @@ import LanguageDef.Expression
 export
 languageDefExpressionTest : IO ()
 languageDefExpressionTest = do
-  -- printLn "Begin languageDefExpressionTest:"
-  -- printLn "End languageDefExpressionTest."
+  -- putStrLn "Begin languageDefExpressionTest:"
+  -- putStrLn "End languageDefExpressionTest."
   pure ()

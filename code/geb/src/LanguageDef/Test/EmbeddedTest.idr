@@ -8,6 +8,6 @@ import LanguageDef.Embedded
 export
 languageDefEmbeddedTest : IO ()
 languageDefEmbeddedTest = do
-  -- printLn "Begin languageDefEmbeddedTest:"
-  -- printLn "End languageDefEmbeddedTest."
+  -- putStrLn "Begin languageDefEmbeddedTest:"
+  -- putStrLn "End languageDefEmbeddedTest."
   pure ()

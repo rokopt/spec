@@ -8,6 +8,6 @@ import LanguageDef.Atom
 export
 languageDefAtomTest : IO ()
 languageDefAtomTest = do
-  -- printLn "Begin languageDefAtomTest:"
-  -- printLn "End languageDefAtomTest."
+  -- putStrLn "Begin languageDefAtomTest:"
+  -- putStrLn "End languageDefAtomTest."
   pure ()
