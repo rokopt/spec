@@ -189,14 +189,26 @@ MkBoundedList l {gte} = MkRefined l {satisfies=gte}
 ---- Polynomials ----
 ---------------------
 
+public export
+PolyTerm : Type
+PolyTerm = (Nat, Nat)
+
+public export
+ptPow : PolyTerm -> Nat
+ptPow = fst
+
+public export
+ptCoeff : PolyTerm -> Nat
+ptCoeff = snd
+
 -- A list of (power, coefficient) pairs.
 public export
 PolyShape : Type
-PolyShape = List (Nat, Nat)
+PolyShape = List PolyTerm
 
 public export
-validTerm : DecPred (Nat, Nat)
-validTerm t = snd t /= 0
+validPT : DecPred (Nat, Nat)
+validPT t = ptCoeff t /= 0
 
 -- We define a valid (normalized) polynomial shape as follows:
 --   - Entries are sorted by strictly descending power
@@ -211,8 +223,8 @@ validTerm t = snd t /= 0
 --    list (or zero if the list is empty)
 public export
 validPoly : DecPred PolyShape
-validPoly (t :: ts@(t' :: _)) = validTerm t && fst t > fst t' && validPoly ts
-validPoly [t] = validTerm t
+validPoly (t :: ts@(t' :: _)) = validPT t && ptPow t > ptPow t' && validPoly ts
+validPoly [t] = validPT t
 validPoly [] = True
 
 public export
@@ -226,17 +238,21 @@ MkPolynomial shape {valid} = MkRefined {a=PolyShape} shape {satisfies=valid}
 
 public export
 degree : Polynomial -> Nat
-degree (Element (t :: ts) _) = fst t
+degree (Element (t :: ts) _) = ptPow t
 degree (Element [] _) = 0
 
 public export
-sumSnd : PolyShape -> Nat -> Nat
-sumSnd ((_, n) :: l) s = sumSnd l (n + s)
-sumSnd [] s = s
+accumPTCoeff : Nat -> PolyShape -> Nat
+accumPTCoeff acc (t :: ts) = accumPTCoeff (ptCoeff t + acc) ts
+accumPTCoeff acc [] = acc
+
+public export
+sumPTCoeff : PolyShape -> Nat
+sumPTCoeff = accumPTCoeff 0
 
 public export
 sumCoeff : Polynomial -> Nat
-sumCoeff poly = sumSnd (fst poly) 0
+sumCoeff = sumPTCoeff . fst
 
 --------------------------
 --------------------------
