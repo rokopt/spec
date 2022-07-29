@@ -36,7 +36,7 @@ testPoly2 : PolyShape
 testPoly2 = [(5, 3), (1, 11), (6, 1)]
 
 testPoly3 : PolyShape
-testPoly3 = [(5, 3), (1, 11)]
+testPoly3 = [(5, 3), (1, 11), (0, 3)]
 
 testPoly4 : PolyShape
 testPoly4 = [(5, 3)]
@@ -44,23 +44,23 @@ testPoly4 = [(5, 3)]
 testPoly5 : PolyShape
 testPoly5 = []
 
-poly0Descending : Assertion
-poly0Descending = Assert $ descendingPowers testPoly0 == True
+poly0Valid : Assertion
+poly0Valid = Assert $ validPoly testPoly0 == False
 
-poly1Descending : Assertion
-poly1Descending = Assert $ descendingPowers testPoly1 == False
+poly1Valid : Assertion
+poly1Valid = Assert $ validPoly testPoly1 == False
 
-poly2Descending : Assertion
-poly2Descending = Assert $ descendingPowers testPoly2 == False
+poly2Valid : Assertion
+poly2Valid = Assert $ validPoly testPoly2 == False
 
-poly3Descending : Assertion
-poly3Descending = Assert $ descendingPowers testPoly3 == True
+poly3Valid : Assertion
+poly3Valid = Assert $ validPoly testPoly3 == True
 
-poly4Descending : Assertion
-poly4Descending = Assert $ descendingPowers testPoly4 == True
+poly4Valid : Assertion
+poly4Valid = Assert $ validPoly testPoly4 == False
 
-poly5Descending : Assertion
-poly5Descending = Assert $ descendingPowers testPoly4 == True
+poly5Valid : Assertion
+poly5Valid = Assert $ validPoly testPoly4 == False
 
 export
 polyCatTest : IO ()
