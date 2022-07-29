@@ -241,9 +241,13 @@ MkPolynomial :
 MkPolynomial shape {valid} = MkRefined {a=PolyShape} shape {satisfies=valid}
 
 public export
+headPow : PolyShape -> Nat
+headPow (t :: ts) = ptPow t
+headPow [] = 0
+
+public export
 degree : Polynomial -> Nat
-degree (Element (t :: ts) _) = ptPow t
-degree (Element [] _) = 0
+degree = headPow . shape
 
 public export
 accumPTCoeff : Nat -> PolyShape -> Nat
@@ -257,6 +261,10 @@ sumPTCoeff = accumPTCoeff 0
 public export
 sumCoeff : Polynomial -> Nat
 sumCoeff = sumPTCoeff . shape
+
+public export
+numTerms : Polynomial -> Nat
+numTerms = length . shape
 
 --------------------------
 --------------------------
