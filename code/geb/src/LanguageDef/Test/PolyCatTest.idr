@@ -8,6 +8,9 @@ import LanguageDef.PolyCat
 testBN0 : BoundedNat 7
 testBN0 = MkBoundedNat 5
 
+testNT0 : NTuple Nat 3
+testNT0 = MkNTuple [11, 0, 5]
+
 export
 polyCatTest : IO ()
 polyCatTest = do
@@ -18,6 +21,10 @@ polyCatTest = do
   putStrLn "---- BoundedNat ----"
   putStrLn $ show testBN0
   putStrLn "--------------------"
+  putStrLn ""
+  putStrLn "---- NTuple ----"
+  putStrLn $ show testNT0
+  putStrLn "----------------"
   putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="

@@ -124,10 +124,14 @@ natAna : {0 a : Type} -> NatCoalgebra a -> (Nat, a) -> Inf (Maybe (Nat, a))
 natAna coalg nx =
   map {f=Maybe} SigmaToPair $ natDepAna {p=(const a)} coalg $ PairToSigma nx
 
----------------------------------
+-------------------------------------
+-------------------------------------
+---- Bounded (finite) data types ----
+-------------------------------------
+-------------------------------------
+
 ---------------------------------
 ---- Bounded natural numbers ----
----------------------------------
 ---------------------------------
 
 public export
@@ -155,6 +159,18 @@ public export
 MkBoundedNat : {0 n : Nat} ->
   (m : Nat) -> {auto 0 gte : gteTrue n m} -> BoundedNat n
 MkBoundedNat m {gte} = MkRefined m {satisfies=gte}
+
+----------------------------------------
+---- Tuples (fixed-length products) ----
+----------------------------------------
+
+public export
+NTuple : Type -> Nat -> Type
+NTuple a n = Refinement {a=(List a)} ((==) n . length)
+
+public export
+MkNTuple : {0 a : Type} -> (l : List a) -> NTuple a (length l)
+MkNTuple l = MkRefined l {satisfies=(equalNatCorrect {m=(length l)})}
 
 {-
 public export

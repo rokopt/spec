@@ -52,6 +52,11 @@ fromIsJust {x=(Just x)} Refl = x
 fromIsJust {x=Nothing} Refl impossible
 
 public export
+equalNatCorrect : {m : Nat} -> equalNat m m = True
+equalNatCorrect {m=Z} = Refl
+equalNatCorrect {m=(S m')} = equalNatCorrect {m=m'}
+
+public export
 magmaFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
 magmaFromNonEmptyList f x [] = x
 magmaFromNonEmptyList f x (x' :: l) = f x $ magmaFromNonEmptyList f x' l
