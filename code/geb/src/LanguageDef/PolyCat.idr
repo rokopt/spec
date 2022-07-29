@@ -262,7 +262,8 @@ validPT t = ptCoeff t /= 0
 --    list (or zero if the list is empty)
 public export
 validPoly : DecPred PolyShape
-validPoly (t :: ts@(t' :: _)) = validPT t && ptPow t > ptPow t' && validPoly ts
+validPoly (t :: ts@(t' :: _)) =
+  if (validPT t && ptPow t > ptPow t') then validPoly ts else False
 validPoly [t] = validPT t
 validPoly [] = True
 
@@ -309,7 +310,7 @@ ptInterpNatAccum acc Z n = acc
 
 public export
 ptInterpNatByMults : PolyTerm -> Nat -> Nat
-ptInterpNatByMults t = ptInterpNatAccum (ptCoeff t) (ptPow t)
+ptInterpNatByMults t = ptInterpNatAccum (ptCoeff t) (ptPow t) -- acc == coeff
 
 -- Performs exponentiation using built-in power function.
 public export
