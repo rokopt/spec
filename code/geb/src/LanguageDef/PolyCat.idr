@@ -185,6 +185,20 @@ MkBoundedList : {0 a : Type} -> {0 n : Nat} ->
   (l : List a) -> {auto 0 gte : gteTrue n (length l)} -> BoundedList a n
 MkBoundedList l {gte} = MkRefined l {satisfies=gte}
 
+---------------------
+---- Polynomials ----
+---------------------
+
+-- A list of (power, coefficient) pairs.
+public export
+PolyShape : Type
+PolyShape = List (Nat, Nat)
+
+public export
+descendingPowers : DecPred PolyShape
+descendingPowers ((p, c) :: ts@((p', c') :: _)) = p > p' && descendingPowers ts
+descendingPowers _ = True
+
 --------------------------
 --------------------------
 ---- Polynomial types ----
