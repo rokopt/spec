@@ -44,6 +44,9 @@ testPolyS4 = [(5, 3)]
 testPolyS5 : PolyShape
 testPolyS5 = []
 
+testPolyS6 : PolyShape
+testPolyS6 = [(3, 4), (1, 2), (0, 3)]
+
 poly0Valid : Assertion
 poly0Valid = Assert $ validPoly testPolyS0 == True
 
@@ -62,6 +65,9 @@ poly4Valid = Assert $ validPoly testPolyS4 == True
 poly5Valid : Assertion
 poly5Valid = Assert $ validPoly testPolyS5 == True
 
+poly6Valid : Assertion
+poly6Valid = Assert $ validPoly testPolyS6 == True
+
 testPoly0 : Polynomial
 testPoly0 = MkPolynomial testPolyS0
 
@@ -73,6 +79,9 @@ testPoly4 = MkPolynomial testPolyS4
 
 testPoly5 : Polynomial
 testPoly5 = MkPolynomial testPolyS5
+
+testPoly6 : Polynomial
+testPoly6 = MkPolynomial testPolyS6
 
 poly0Degree : Assertion
 poly0Degree = Assert $ degree testPoly0 == 5
@@ -91,6 +100,12 @@ poly4SumCoeff = Assert $ sumCoeff testPoly4 == 3
 
 poly5SumCoeff : Assertion
 poly5SumCoeff = Assert $ sumCoeff testPoly5 == 0
+
+poly6SumCoeff : Assertion
+poly6SumCoeff = Assert $ sumCoeff testPoly6 == 9
+
+poly6Interp : Assertion
+poly6Interp = Assert $ polyInterpNat testPoly6 7 == 1389
 
 export
 polyCatTest : IO ()

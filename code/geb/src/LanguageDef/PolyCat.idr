@@ -266,6 +266,29 @@ public export
 numTerms : Polynomial -> Nat
 numTerms = length . shape
 
+-- Parameters: (accumulator, power, input)
+public export
+ptInterpNatAccum : Nat -> Nat -> Nat -> Nat
+ptInterpNatAccum acc (S p) n = ptInterpNatAccum (n * acc) p n
+ptInterpNatAccum acc Z n = acc
+
+public export
+ptInterpNat : PolyTerm -> Nat -> Nat
+ptInterpNat t = ptInterpNatAccum (ptCoeff t) (ptPow t)
+
+public export
+psInterpNatAccum : Nat -> PolyShape -> Nat -> Nat
+psInterpNatAccum acc (t :: ts) n = psInterpNatAccum (ptInterpNat t n + acc) ts n
+psInterpNatAccum acc [] n = acc
+
+public export
+psInterpNat : PolyShape -> Nat -> Nat
+psInterpNat = psInterpNatAccum 0
+
+public export
+polyInterpNat : Polynomial -> Nat -> Nat
+polyInterpNat = psInterpNat . shape
+
 --------------------------
 --------------------------
 ---- Polynomial types ----
