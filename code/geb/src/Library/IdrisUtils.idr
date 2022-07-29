@@ -21,6 +21,11 @@ import public Syntax.PreorderReasoning
 
 %default total
 
+infixr 1 |>
+public export
+(|>) : {0 a, b, c : Type} -> (a -> b) -> (b -> c) -> (a -> c)
+(|>) = flip (.)
+
 public export
 boolToDigit : Bool -> Digit
 boolToDigit True = I

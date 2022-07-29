@@ -247,15 +247,18 @@ validPT : DecPred (Nat, Nat)
 validPT t = ptCoeff t /= 0
 
 -- We define a valid (normalized) polynomial shape as follows:
+--   - The shape of the polynomial is a list of pairs of natural numbers,
+--     where each list element represents a term (monomial), and the
+--     pair represents (power, coefficient)
 --   - Entries are sorted by strictly descending power
 --   - There are no entries for powers with zero coefficients
--- The ideas of these rules include:
+-- Consequences of these rules include:
 --  - Equality of valid polynomials is equality of underlying shapes
---  - The of a valid polynomial is always valid
+--  - The tail of a valid polynomial is always valid
 --  - The meaning of an entry (a term) is independent of which list
 --    it appears in, and thus can be determined by looking at the term
 --    in isolation
---  - The degree of the polynomial is left element of the head of the
+--  - The degree of the polynomial is the left element of the head of the
 --    list (or zero if the list is empty)
 public export
 validPoly : DecPred PolyShape
@@ -283,8 +286,7 @@ degree = headPow . shape
 
 public export
 accumPTCoeff : Nat -> PolyShape -> Nat
-accumPTCoeff acc (t :: ts) = accumPTCoeff (ptCoeff t + acc) ts
-accumPTCoeff acc [] = acc
+accumPTCoeff = foldl ((|>) ptCoeff . (+))
 
 public export
 sumPTCoeff : PolyShape -> Nat
@@ -326,6 +328,10 @@ psInterpNat = psInterpNatAccum 0
 public export
 polyInterpNat : Polynomial -> Nat -> Nat
 polyInterpNat = psInterpNat . shape
+
+-----------------------------------
+---- Arithmetic on polynomials ----
+-----------------------------------
 
 --------------------------
 --------------------------
