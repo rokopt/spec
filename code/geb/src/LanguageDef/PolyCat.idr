@@ -172,6 +172,19 @@ public export
 MkNTuple : {0 a : Type} -> (l : List a) -> NTuple a (length l)
 MkNTuple l = MkRefined l {satisfies=(equalNatCorrect {m=(length l)})}
 
+-----------------------
+---- Bounded lists ----
+-----------------------
+
+public export
+BoundedList : Type -> Nat -> Type
+BoundedList a n = Refinement {a=(List a)} ((>=) n . length)
+
+public export
+MkBoundedList : {0 a : Type} -> {0 n : Nat} ->
+  (l : List a) -> {auto 0 gte : gteTrue n (length l)} -> BoundedList a n
+MkBoundedList l {gte} = MkRefined l {satisfies=gte}
+
 {-
 public export
 BoundedNatMorphism : NatObj -> NatObj -> Type
