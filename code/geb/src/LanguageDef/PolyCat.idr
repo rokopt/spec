@@ -44,10 +44,10 @@ Refinement : {a : Type} -> DecPred a -> Type
 Refinement {a} p = Subset a (Satisfies p)
 
 public export
-Refined : {0 a : Type} -> {0 p : DecPred a} ->
+MkRefined : {0 a : Type} -> {0 p : DecPred a} ->
   (x : a) -> {auto 0 satisfies : Satisfies p x} ->
   Refinement {a} p
-Refined x {satisfies} = Element x satisfies
+MkRefined x {satisfies} = Element x satisfies
 
 --------------------------------------------------
 --------------------------------------------------
@@ -124,16 +124,146 @@ natAna : {0 a : Type} -> NatCoalgebra a -> (Nat, a) -> Inf (Maybe (Nat, a))
 natAna coalg nx =
   map {f=Maybe} SigmaToPair $ natDepAna {p=(const a)} coalg $ PairToSigma nx
 
+---------------------------------
+---------------------------------
+---- Bounded natural numbers ----
+---------------------------------
+---------------------------------
+
+public export
+ltTrue : Nat -> Nat -> Type
+ltTrue m n = (m < n) = True
+
+public export
+lteTrue : Nat -> Nat -> Type
+lteTrue m n = (m <= n) = True
+
+public export
+gtTrue : Nat -> Nat -> Type
+gtTrue m n = (m > n) = True
+
+public export
+gteTrue : Nat -> Nat -> Type
+gteTrue m n = (m >= n) = True
+
+-- All natural numbers less than or equal to `n`.
+public export
+BoundedNat : Nat -> Type
+BoundedNat = Refinement {a=Nat} . (>=)
+
+public export
+MkBoundedNat : {0 n : Nat} ->
+  (m : Nat) -> {auto 0 gte : gteTrue n m} -> BoundedNat n
+MkBoundedNat m {gte} = MkRefined m {satisfies=gte}
+
+{-
+public export
+BoundedNatMorphism : NatObj -> NatObj -> Type
+BoundedNatMorphism = PrefixMap
+
+public export
+BoundedNatId : (n : NatObj) -> BoundedNatMorphism n n
+BoundedNatId n = id
+
+public export
+BoundedNatCompose :
+  {a, b, c : NatObj} ->
+  BoundedNatMorphism b c ->
+  BoundedNatMorphism a b ->
+  BoundedNatMorphism a c
+BoundedNatCompose = (.)
+
+public export
+BoundedNatInitial : Type
+BoundedNatInitial = NatOPrefix NatOZ
+
+public export
+BoundedNatFromInitial : (n : NatObj) -> BoundedNatMorphism NatOZ n
+BoundedNatFromInitial n (_ ** ltz) = void $ FromLTZeroContra _ ltz
+
+public export
+BoundedNatTerminal : Type
+BoundedNatTerminal = NatOPrefix NatO1
+
+public export
+BoundedNatToTerminal : (n : NatObj) -> BoundedNatMorphism n NatO1
+BoundedNatToTerminal n = PrefixArrayConst $ NatOPrefixZ NatOZ
+
+public export
+BoundedNatCoproduct : NatObj -> NatObj -> Type
+BoundedNatCoproduct m n = NatOPrefix (natObjSum m n)
+
+public export
+BoundedNatInjLeft :
+  (l, r : NatObj) -> BoundedNatMorphism l (natObjSum l r)
+BoundedNatInjLeft dom cod = ?BoundedNatInjLeft_hole
+
+public export
+BoundedNatInjRight :
+  (l, r : NatObj) -> BoundedNatMorphism r (natObjSum l r)
+BoundedNatInjRight dom cod = ?BoundedNatInjRight_hole
+
+public export
+BoundedNatCase :
+  {domL, domR, cod : NatObj} ->
+  BoundedNatMorphism domL cod ->
+  BoundedNatMorphism domR cod ->
+  BoundedNatMorphism (natObjSum domL domR) cod
+BoundedNatCase {domL} {domR} {cod} caseL caseR = ?BoundedNatCase_hole
+
+public export
+BoundedNatProduct : NatObj -> NatObj -> Type
+BoundedNatProduct m n = NatOPrefix (natObjMul m n)
+
+public export
+BoundedNatProjLeft :
+  (l, r : NatObj) -> BoundedNatMorphism (natObjMul l r) l
+BoundedNatProjLeft dom cod = ?BoundedNatProjLeft_hole
+
+public export
+BoundedNatProjRight :
+  (l, r : NatObj) -> BoundedNatMorphism (natObjMul l r) r
+BoundedNatProjRight dom cod = ?BoundedNatProjRight_hole
+
+public export
+BoundedNatPair :
+  {dom, codL, codR : NatObj} ->
+  BoundedNatMorphism dom codL ->
+  BoundedNatMorphism dom codR ->
+  BoundedNatMorphism dom (natObjMul codL codR)
+BoundedNatPair {dom} {codL} {codR} pairL pairR = ?BoundedNatPair_hole
+
+public export
+BoundedNatHomSet : NatObj -> NatObj -> Type
+BoundedNatHomSet m n = NatOPrefix (natObjRaiseTo m n)
+
+public export
+BoundedNatExponential : NatObj -> NatObj -> Type
+BoundedNatExponential = flip BoundedNatHomSet
+
+public export
+BoundedNatExponentialCardinality :
+  (m, n : NatObj) -> BoundedNatExponential m n = NatOPrefix (natObjPow m n)
+BoundedNatExponentialCardinality m n = Refl
+
+public export
+BoundedNatEval : (m, n : NatObj) ->
+  BoundedNatMorphism (natObjMul (natObjRaiseTo m n) m) n
+BoundedNatEval m n = ?BoundedNatEval_hole
+
+public export
+BoundedNatCurry : {m, n, p : NatObj} ->
+  BoundedNatMorphism (natObjMul m n) p ->
+  BoundedNatMorphism m (natObjRaiseTo n p)
+BoundedNatCurry {m} {n} {p} f = ?BoundedNatCurry_hole
+
+-}
+
 --------------------------
 --------------------------
 ---- Polynomial types ----
 --------------------------
 --------------------------
-
-public export
-PolyTypeNF : (Nat -> Type) -> Nat -> Type
-PolyTypeNF f 0 = Void
-PolyTypeNF f (S n) = ?PolyTypeNF_hole
 
 ---------------------------------------------------------
 ---------------------------------------------------------
