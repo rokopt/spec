@@ -194,6 +194,10 @@ public export
 PolyShape : Type
 PolyShape = List (Nat, Nat)
 
+public export
+validTerm : DecPred (Nat, Nat)
+validTerm t = snd t /= 0
+
 -- We define a valid (normalized) polynomial shape as follows:
 --   - Entries are sorted by strictly descending power
 --   - There are no entries for powers with zero coefficients
@@ -206,8 +210,8 @@ PolyShape = List (Nat, Nat)
 --  - The degree of the polynomial is the predecessor of the length of the list
 public export
 validPoly : DecPred PolyShape
-validPoly ((p, c) :: ts@((p', _) :: _)) = p > p' && c /= 0 && validPoly ts
-validPoly [(_, c)] = c /= 0
+validPoly (t :: ts@(t' :: _)) = validTerm t && fst t > fst t' && validPoly ts
+validPoly [t] = validTerm t
 validPoly [] = True
 
 public export
