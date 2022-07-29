@@ -11,11 +11,13 @@ testBN0 = MkBoundedNat 5
 export
 polyCatTest : IO ()
 polyCatTest = do
+  putStrLn ""
   putStrLn "=================="
   putStrLn "Begin polyCatTest:"
   putStrLn ""
   putStrLn "---- BoundedNat ----"
   putStrLn $ show testBN0
+  putStrLn "--------------------"
   putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="
