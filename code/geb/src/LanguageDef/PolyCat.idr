@@ -40,8 +40,8 @@ Satisfies : {0 a : Type} -> DecPred a -> a -> Type
 Satisfies p x = p x = True
 
 public export
-DecPi : {a : Type} -> DecPred a -> Type
-DecPi {a} p = Subset a (Satisfies p)
+Refinement : {a : Type} -> DecPred a -> Type
+Refinement {a} p = Subset a (Satisfies p)
 
 --------------------------------------------------
 --------------------------------------------------
