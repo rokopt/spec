@@ -107,6 +107,14 @@ poly6SumCoeff = Assert $ sumCoeff testPoly6 == 9
 poly6Interp : Assertion
 poly6Interp = Assert $ polyInterpNat testPoly6 7 == 1389
 
+powerByMultsTestTerm : PolyTerm
+powerByMultsTestTerm = (6, 5)
+
+powerByMultsTest : Assertion
+powerByMultsTest = Assert $
+  ptInterpNat powerByMultsTestTerm 2 ==
+  ptInterpNatByMults powerByMultsTestTerm 2
+
 export
 polyCatTest : IO ()
 polyCatTest = do
@@ -150,6 +158,7 @@ polyCatTest = do
   putStrLn $ show (power 2 100)
   putStrLn $ show (power 2 1000)
   putStrLn $ show (power 2 10000)
+  putStrLn $ show $ ptInterpNat powerByMultsTestTerm 2
   putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="

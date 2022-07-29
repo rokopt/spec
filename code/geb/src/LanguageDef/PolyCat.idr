@@ -309,6 +309,7 @@ public export
 ptInterpNatByMults : PolyTerm -> Nat -> Nat
 ptInterpNatByMults t = ptInterpNatAccum (ptCoeff t) (ptPow t)
 
+-- Performs exponentiation using built-in power function.
 public export
 ptInterpNat : PolyTerm -> Nat -> Nat
 ptInterpNat t n = (ptCoeff t) * power n (ptPow t)
