@@ -272,6 +272,10 @@ Polynomial : Type
 Polynomial = Refinement {a=PolyShape} validPoly
 
 public export
+ValidPoly : PolyShape -> Type
+ValidPoly = Satisfies validPoly
+
+public export
 MkPolynomial :
   (shape : PolyShape) -> {auto 0 valid : validPoly shape = True} -> Polynomial
 MkPolynomial shape {valid} = MkRefined {a=PolyShape} shape {satisfies=valid}
@@ -333,6 +337,31 @@ polyInterpNat = psInterpNat . shape
 -----------------------------------
 ---- Arithmetic on polynomials ----
 -----------------------------------
+
+public export
+scalePolyRevAcc : Nat -> PolyShape -> PolyShape -> PolyShape
+scalePolyRevAcc Z acc _ = []
+scalePolyRevAcc n@(S _) acc [] = acc
+scalePolyRevAcc n@(S _) acc ((p, c) :: ts) =
+  scalePolyRevAcc n ((p, n * c) :: acc) ts
+
+public export
+scalePolyRev : Nat -> PolyShape -> PolyShape
+scalePolyRev n = scalePolyRevAcc n []
+
+public export
+scalePolyShape : Nat -> PolyShape -> PolyShape
+scalePolyShape n = reverse . scalePolyRev n
+
+public export
+scalePreservesValid : {0 n : Nat} -> {0 poly : PolyShape} ->
+  ValidPoly poly -> ValidPoly (scalePolyShape n poly)
+scalePreservesValid {n} {poly} valid = ?scalePolyShapeCorrect_hole
+
+public export
+scalePoly : Nat -> Polynomial -> Polynomial
+scalePoly n (Element poly valid) =
+  Element (scalePolyShape n poly) (scalePreservesValid valid)
 
 --------------------------
 --------------------------

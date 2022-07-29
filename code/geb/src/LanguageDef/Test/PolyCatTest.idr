@@ -115,6 +115,15 @@ powerByMultsTest = Assert $
   ptInterpNat powerByMultsTestTerm 2 ==
   ptInterpNatByMults powerByMultsTestTerm 2
 
+polyS0Scaled : PolyShape
+polyS0Scaled = scalePolyShape 3 testPolyS0
+
+testPoly0Scale : Assertion
+testPoly0Scale = Assert $ polyS0Scaled == [(5, 9), (4, 33), (2, 3)]
+
+testPoly0ScaleZero : Assertion
+testPoly0ScaleZero = Assert $ scalePolyShape 0 testPolyS0 == []
+
 export
 polyCatTest : IO ()
 polyCatTest = do
