@@ -43,6 +43,19 @@ compareNatSucc Z = Refl
 compareNatSucc (S n) = compareNatSucc n
 
 public export
+lteZeroIsZero : {n : Nat} -> LTE n 0 -> 0 = n
+lteZeroIsZero {n=Z} _ = Refl
+lteZeroIsZero {n=(S _)} lt = void $ succNotLTEzero lt
+
+public export
+lteSuccEitherEqLte : {m, n : Nat} -> LTE m (S n) -> Either (m = S n) (LTE m n)
+lteSuccEitherEqLte {m} {n} lte with (decEq m (S n))
+  lteSuccEitherEqLte {m} {n} lte | Yes eq =
+    Left eq
+  lteSuccEitherEqLte {m} {n} lte | No neq =
+    Right $ fromLteSucc $ lteTolt lte neq
+
+public export
 voidF : (a : Type) -> Void -> a
 voidF _ x = void x
 

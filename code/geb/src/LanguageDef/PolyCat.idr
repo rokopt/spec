@@ -107,6 +107,26 @@ natDepAna coalg (n ** x) with (coalg n x)
   natDepAna coalg (n ** x) | Nothing = Nothing
   natDepAna coalg (n ** x) | Just x' = Delay (natDepAna coalg (S n ** x'))
 
+public export
+natGenIndStrengthened : {0 p : NatSliceObj} ->
+  (p 0) ->
+  ((n : Nat) -> ((m : Nat) -> LTE m n -> p m) -> p (S n)) ->
+  (x : Nat) -> (y : Nat) -> LTE y x -> p y
+natGenIndStrengthened {p} p0 pS =
+  natDepCata
+    {p=(\x => (y : Nat) -> LTE y x -> p y)}
+    (\n, lte => replace {p} (lteZeroIsZero lte) p0,
+     \n, hyp, y, lteySn => case lteSuccEitherEqLte lteySn of
+      Left eq => replace {p} (sym eq) $ pS n hyp
+      Right lteyn => hyp y lteyn)
+
+public export
+natGenInd : {0 p : NatSliceObj} ->
+  (p 0) ->
+  ((n : Nat) -> ((m : Nat) -> LTE m n -> p m) -> p (S n)) ->
+  (k : Nat) -> p k
+natGenInd p0 pS k = natGenIndStrengthened p0 pS k k reflexive
+
 -----------------------
 ---- Non-dependent ----
 -----------------------

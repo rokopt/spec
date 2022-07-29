@@ -135,6 +135,22 @@ polyCatTest = do
   putStrLn $ show testPoly6
   putStrLn "--------------------"
   putStrLn ""
+  putStrLn "------------------------"
+  putStrLn "Idris Nat implementation"
+  putStrLn "------------------------"
+  putStrLn $ show (power 2 0)
+  putStrLn $ show (power 2 10)
+  putStrLn $ show (power 2 20)
+  putStrLn $ show (power 2 30)
+  putStrLn $ show (power 2 40)
+  putStrLn $ show (power 2 50)
+  putStrLn $ show (power 2 60)
+  putStrLn $ show (power 2 64)
+  putStrLn $ show (power 2 65)
+  putStrLn $ show (power 2 100)
+  putStrLn $ show (power 2 1000)
+  putStrLn $ show (power 2 10000)
+  putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="
   pure ()
