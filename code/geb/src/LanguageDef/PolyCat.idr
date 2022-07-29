@@ -41,22 +41,17 @@ Satisfies p x = p x = True
 
 public export
 Refinement : {a : Type} -> DecPred a -> Type
-Refinement {a} p = DPair a (Satisfies p)
+Refinement {a} p = Subset a (Satisfies p)
 
 public export
 MkRefined : {0 a : Type} -> {0 p : DecPred a} ->
-  (x : a) -> {auto satisfies : Satisfies p x} ->
+  (x : a) -> {auto 0 satisfies : Satisfies p x} ->
   Refinement {a} p
-MkRefined x {satisfies} = (x ** satisfies)
+MkRefined x {satisfies} = Element x satisfies
 
 public export
 shape : {0 a : Type} -> {0 p : DecPred a} -> Refinement {a} p -> a
 shape = fst
-
-public export
-condition : {0 a : Type} -> {0 p : DecPred a} -> (x : Refinement {a} p) ->
-  Satisfies p (shape {p} x)
-condition = DPair.snd
 
 --------------------------------------------------
 --------------------------------------------------
@@ -166,7 +161,7 @@ BoundedNat = Refinement {a=Nat} . (>=)
 
 public export
 MkBoundedNat : {0 n : Nat} ->
-  (m : Nat) -> {auto gte : gteTrue n m} -> BoundedNat n
+  (m : Nat) -> {auto 0 gte : gteTrue n m} -> BoundedNat n
 MkBoundedNat m {gte} = MkRefined m {satisfies=gte}
 
 ----------------------------------------
@@ -191,7 +186,7 @@ BoundedList a n = Refinement {a=(List a)} ((>=) n . length)
 
 public export
 MkBoundedList : {0 a : Type} -> {0 n : Nat} ->
-  (l : List a) -> {auto gte : gteTrue n (length l)} -> BoundedList a n
+  (l : List a) -> {auto 0 gte : gteTrue n (length l)} -> BoundedList a n
 MkBoundedList l {gte} = MkRefined l {satisfies=gte}
 
 ---------------------
@@ -242,7 +237,7 @@ Polynomial = Refinement {a=PolyShape} validPoly
 
 public export
 MkPolynomial :
-  (shape : PolyShape) -> {auto valid : validPoly shape = True} -> Polynomial
+  (shape : PolyShape) -> {auto 0 valid : validPoly shape = True} -> Polynomial
 MkPolynomial shape {valid} = MkRefined {a=PolyShape} shape {satisfies=valid}
 
 public export
