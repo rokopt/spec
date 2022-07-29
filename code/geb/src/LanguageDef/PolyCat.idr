@@ -43,6 +43,12 @@ public export
 Refinement : {a : Type} -> DecPred a -> Type
 Refinement {a} p = Subset a (Satisfies p)
 
+public export
+Refined : {0 a : Type} -> {0 p : DecPred a} ->
+  (x : a) -> {auto 0 satisfies : Satisfies p x} ->
+  Refinement {a} p
+Refined x {satisfies} = Element x satisfies
+
 --------------------------------------------------
 --------------------------------------------------
 ---- Natural number induction and coinduction ----
