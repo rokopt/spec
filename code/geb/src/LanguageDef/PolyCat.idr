@@ -363,6 +363,97 @@ scalePoly : Nat -> Polynomial -> Polynomial
 scalePoly n (Element poly valid) =
   Element (scalePolyShape n poly) (scalePreservesValid valid)
 
+public export
+addPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
+addPolyShapeRevAcc acc p q = ?addPolyShapeRevAcc_hole
+
+public export
+addPolyShapeRev : PolyShape -> PolyShape -> PolyShape
+addPolyShapeRev = addPolyShapeRevAcc []
+
+public export
+addPolyShape : PolyShape -> PolyShape -> PolyShape
+addPolyShape p q = reverse (addPolyShapeRev p q)
+
+public export
+addPreservesValid : {0 p, q : PolyShape} ->
+  ValidPoly p -> ValidPoly q -> ValidPoly (addPolyShape p q)
+addPreservesValid {p} {q} pvalid qvalid = ?addPolyShapeCorrect_hole
+
+public export
+addPoly : Polynomial -> Polynomial -> Polynomial
+addPoly (Element p pvalid) (Element q qvalid) =
+  Element (addPolyShape p q) (addPreservesValid pvalid qvalid)
+
+public export
+mulPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
+mulPolyShapeRevAcc acc p q = ?mulPolyShapeRevAcc_hole
+
+public export
+mulPolyShapeRev : PolyShape -> PolyShape -> PolyShape
+mulPolyShapeRev = mulPolyShapeRevAcc []
+
+public export
+mulPolyShape : PolyShape -> PolyShape -> PolyShape
+mulPolyShape p q = reverse (mulPolyShapeRev p q)
+
+public export
+mulPreservesValid : {0 p, q : PolyShape} ->
+  ValidPoly p -> ValidPoly q -> ValidPoly (mulPolyShape p q)
+mulPreservesValid {p} {q} pvalid qvalid = ?mulPolyShapeCorrect_hole
+
+public export
+mulPoly : Polynomial -> Polynomial -> Polynomial
+mulPoly (Element p pvalid) (Element q qvalid) =
+  Element (mulPolyShape p q) (mulPreservesValid pvalid qvalid)
+
+public export
+expNPolyRevAcc : Nat -> PolyShape -> PolyShape -> PolyShape
+expNPolyRevAcc Z acc _ = []
+expNPolyRevAcc n@(S _) acc [] = acc
+expNPolyRevAcc n@(S _) acc ((p, c) :: ts) =
+  expNPolyRevAcc n ((p, n * c) :: acc) ts
+
+public export
+expNPolyRev : Nat -> PolyShape -> PolyShape
+expNPolyRev n = expNPolyRevAcc n []
+
+public export
+expNPolyShape : Nat -> PolyShape -> PolyShape
+expNPolyShape n = reverse . expNPolyRev n
+
+public export
+expNPreservesValid : {0 n : Nat} -> {0 poly : PolyShape} ->
+  ValidPoly poly -> ValidPoly (expNPolyShape n poly)
+expNPreservesValid {n} {poly} valid = ?expNPolyShapeCorrect_hole
+
+public export
+expNPoly : Nat -> Polynomial -> Polynomial
+expNPoly n (Element poly valid) =
+  Element (expNPolyShape n poly) (expNPreservesValid valid)
+
+public export
+composePolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
+composePolyShapeRevAcc acc q p = ?composePolyShapeRevAcc_hole
+
+public export
+composePolyShapeRev : PolyShape -> PolyShape -> PolyShape
+composePolyShapeRev = composePolyShapeRevAcc []
+
+public export
+composePolyShape : PolyShape -> PolyShape -> PolyShape
+composePolyShape q p = reverse (composePolyShapeRev q p)
+
+public export
+composePreservesValid : {0 p, q : PolyShape} ->
+  ValidPoly q -> ValidPoly p -> ValidPoly (composePolyShape q p)
+composePreservesValid {p} {q} pvalid qvalid = ?composePolyShapeCorrect_hole
+
+public export
+composePoly : Polynomial -> Polynomial -> Polynomial
+composePoly (Element q qvalid) (Element p pvalid) =
+  Element (composePolyShape q p) (composePreservesValid qvalid pvalid)
+
 --------------------------
 --------------------------
 ---- Polynomial types ----
