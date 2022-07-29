@@ -230,13 +230,13 @@ degree (Element (t :: ts) _) = fst t
 degree (Element [] _) = 0
 
 public export
-sumFirst : PolyShape -> Nat -> Nat
-sumFirst ((n, _) :: l) s = sumFirst l (n + s)
-sumFirst [] s = s
+sumSnd : PolyShape -> Nat -> Nat
+sumSnd ((_, n) :: l) s = sumSnd l (n + s)
+sumSnd [] s = s
 
 public export
 sumCoeff : Polynomial -> Nat
-sumCoeff poly = sumFirst (fst poly) 0
+sumCoeff poly = sumSnd (fst poly) 0
 
 --------------------------
 --------------------------

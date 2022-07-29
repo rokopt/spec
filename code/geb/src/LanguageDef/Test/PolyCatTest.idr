@@ -65,6 +65,12 @@ poly5Valid = Assert $ validPoly testPolyS5 == True
 testPoly0 : Polynomial
 testPoly0 = MkPolynomial testPolyS0
 
+testPoly3 : Polynomial
+testPoly3 = MkPolynomial testPolyS3
+
+testPoly4 : Polynomial
+testPoly4 = MkPolynomial testPolyS4
+
 testPoly5 : Polynomial
 testPoly5 = MkPolynomial testPolyS5
 
@@ -73,6 +79,18 @@ poly0Degree = Assert $ degree testPoly0 == 5
 
 poly5Degree : Assertion
 poly5Degree = Assert $ degree testPoly5 == 0
+
+poly0SumCoeff : Assertion
+poly0SumCoeff = Assert $ sumCoeff testPoly0 == 15
+
+poly3SumCoeff : Assertion
+poly3SumCoeff = Assert $ sumCoeff testPoly3 == 17
+
+poly4SumCoeff : Assertion
+poly4SumCoeff = Assert $ sumCoeff testPoly4 == 3
+
+poly5SumCoeff : Assertion
+poly5SumCoeff = Assert $ sumCoeff testPoly5 == 0
 
 export
 polyCatTest : IO ()
