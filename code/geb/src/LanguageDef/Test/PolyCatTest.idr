@@ -26,41 +26,53 @@ testBL3 = MkBoundedList ["a", "b", "c"]
 testBL4 : BoundedList String 4
 testBL4 = MkBoundedList ["a", "b", "c", "d"]
 
-testPoly0 : PolyShape
-testPoly0 = [(5, 3), (4, 11), (2, 1)]
+testPolyS0 : PolyShape
+testPolyS0 = [(5, 3), (4, 11), (2, 1)]
 
-testPoly1 : PolyShape
-testPoly1 = [(5, 3), (4, 11), (4, 1)]
+testPolyS1 : PolyShape
+testPolyS1 = [(5, 3), (4, 11), (4, 1)]
 
-testPoly2 : PolyShape
-testPoly2 = [(5, 3), (1, 11), (6, 1)]
+testPolyS2 : PolyShape
+testPolyS2 = [(5, 3), (1, 11), (6, 1)]
 
-testPoly3 : PolyShape
-testPoly3 = [(5, 3), (1, 11), (0, 3)]
+testPolyS3 : PolyShape
+testPolyS3 = [(5, 3), (1, 11), (0, 3)]
 
-testPoly4 : PolyShape
-testPoly4 = [(5, 3)]
+testPolyS4 : PolyShape
+testPolyS4 = [(5, 3)]
 
-testPoly5 : PolyShape
-testPoly5 = []
+testPolyS5 : PolyShape
+testPolyS5 = []
 
 poly0Valid : Assertion
-poly0Valid = Assert $ validPoly testPoly0 == True
+poly0Valid = Assert $ validPoly testPolyS0 == True
 
 poly1Valid : Assertion
-poly1Valid = Assert $ validPoly testPoly1 == False
+poly1Valid = Assert $ validPoly testPolyS1 == False
 
 poly2Valid : Assertion
-poly2Valid = Assert $ validPoly testPoly2 == False
+poly2Valid = Assert $ validPoly testPolyS2 == False
 
 poly3Valid : Assertion
-poly3Valid = Assert $ validPoly testPoly3 == True
+poly3Valid = Assert $ validPoly testPolyS3 == True
 
 poly4Valid : Assertion
-poly4Valid = Assert $ validPoly testPoly4 == True
+poly4Valid = Assert $ validPoly testPolyS4 == True
 
 poly5Valid : Assertion
-poly5Valid = Assert $ validPoly testPoly5 == True
+poly5Valid = Assert $ validPoly testPolyS5 == True
+
+testPoly0 : Polynomial
+testPoly0 = MkPolynomial testPolyS0
+
+testPoly5 : Polynomial
+testPoly5 = MkPolynomial testPolyS5
+
+poly0Degree : Assertion
+poly0Degree = Assert $ degree testPoly0 == 5
+
+poly5Degree : Assertion
+poly5Degree = Assert $ degree testPoly5 == 0
 
 export
 polyCatTest : IO ()
@@ -86,6 +98,7 @@ polyCatTest = do
   putStrLn "---------------------"
   putStrLn ""
   putStrLn "---- Polynomial ----"
+  putStrLn $ show testPoly0
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "End polyCatTest."

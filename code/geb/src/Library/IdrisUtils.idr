@@ -57,6 +57,10 @@ equalNatCorrect {m=Z} = Refl
 equalNatCorrect {m=(S m')} = equalNatCorrect {m=m'}
 
 public export
+predLen : {0 a : Type} -> List a -> Nat
+predLen = pred . length
+
+public export
 magmaFromNonEmptyList : {a : Type} -> (a -> a -> a) -> a -> List a -> a
 magmaFromNonEmptyList f x [] = x
 magmaFromNonEmptyList f x (x' :: l) = f x $ magmaFromNonEmptyList f x' l

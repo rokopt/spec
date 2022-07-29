@@ -207,7 +207,8 @@ validTerm t = snd t /= 0
 --  - The meaning of an entry (a term) is independent of which list
 --    it appears in, and thus can be determined by looking at the term
 --    in isolation
---  - The degree of the polynomial is the predecessor of the length of the list
+--  - The degree of the polynomial is left element of the head of the
+--    list (or zero if the list is empty)
 public export
 validPoly : DecPred PolyShape
 validPoly (t :: ts@(t' :: _)) = validTerm t && fst t > fst t' && validPoly ts
@@ -217,6 +218,25 @@ validPoly [] = True
 public export
 Polynomial : Type
 Polynomial = Refinement {a=PolyShape} validPoly
+
+public export
+MkPolynomial :
+  (shape : PolyShape) -> {auto 0 valid : validPoly shape = True} -> Polynomial
+MkPolynomial shape {valid} = MkRefined {a=PolyShape} shape {satisfies=valid}
+
+public export
+degree : Polynomial -> Nat
+degree (Element (t :: ts) _) = fst t
+degree (Element [] _) = 0
+
+public export
+sumFirst : PolyShape -> Nat -> Nat
+sumFirst ((n, _) :: l) s = sumFirst l (n + s)
+sumFirst [] s = s
+
+public export
+sumCoeff : Polynomial -> Nat
+sumCoeff poly = sumFirst (fst poly) 0
 
 --------------------------
 --------------------------
