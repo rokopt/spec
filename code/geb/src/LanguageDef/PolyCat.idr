@@ -334,6 +334,18 @@ public export
 polyInterpNat : Polynomial -> Nat -> Nat
 polyInterpNat = psInterpNat . shape
 
+-- XXX arenas w/bijections
+
+-- XXX lenses / natural transformations w/bijections
+
+-- XXX horizontal & vertical composition of NTs
+
+-- XXX eval
+
+-- XXX equalizer
+
+-- XXX coequalizer
+
 -----------------------------------
 ---- Arithmetic on polynomials ----
 -----------------------------------
@@ -408,6 +420,28 @@ mulPoly (Element p pvalid) (Element q qvalid) =
   Element (mulPolyShape p q) (mulPreservesValid pvalid qvalid)
 
 public export
+parProdPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
+parProdPolyShapeRevAcc acc p q = ?parProdPolyShapeRevAcc_hole
+
+public export
+parProdPolyShapeRev : PolyShape -> PolyShape -> PolyShape
+parProdPolyShapeRev = parProdPolyShapeRevAcc []
+
+public export
+parProdPolyShape : PolyShape -> PolyShape -> PolyShape
+parProdPolyShape p q = reverse (parProdPolyShapeRev p q)
+
+public export
+parProdPreservesValid : {0 p, q : PolyShape} ->
+  ValidPoly p -> ValidPoly q -> ValidPoly (parProdPolyShape p q)
+parProdPreservesValid {p} {q} pvalid qvalid = ?parProdPolyShapeCorrect_hole
+
+public export
+parProdPoly : Polynomial -> Polynomial -> Polynomial
+parProdPoly (Element p pvalid) (Element q qvalid) =
+  Element (parProdPolyShape p q) (parProdPreservesValid pvalid qvalid)
+
+public export
 expNPolyRevAcc : Nat -> PolyShape -> PolyShape -> PolyShape
 expNPolyRevAcc Z acc _ = []
 expNPolyRevAcc n@(S _) acc [] = acc
@@ -453,6 +487,16 @@ public export
 composePoly : Polynomial -> Polynomial -> Polynomial
 composePoly (Element q qvalid) (Element p pvalid) =
   Element (composePolyShape q p) (composePreservesValid qvalid pvalid)
+
+infixr 1 <|
+public export
+(<|) : Polynomial -> Polynomial -> Polynomial
+(<|) = composePoly
+
+infixr 1 |>
+public export
+(|>) : Polynomial -> Polynomial -> Polynomial
+(|>) = flip (<|)
 
 --------------------------
 --------------------------
