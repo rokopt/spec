@@ -2091,7 +2091,7 @@ record FiniteShape where
 
 public export
 record RefinedSexpCarrier where
-  constructor MkRefinedSexpCarrier
+  constructor MkRefinementSexpCarrier
   RefinedSexpFunctorCarrier : Type
   RefinedSexpNatTransCarrier : Type
   RefinedSexpNatTransSignatureCarrier :
@@ -2133,7 +2133,7 @@ mutual
   public export
   RefinedSexpData : (atom : Type) -> RefinedSexpCarrier
   RefinedSexpData atom =
-    MkRefinedSexpCarrier
+    MkRefinementSexpCarrier
       (RefinedSexpFunctor atom)
       (RefinedSexpNatTrans atom)
       (RefinedSexpNatTransSignature {atom})

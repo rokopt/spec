@@ -44,14 +44,34 @@ Refinement : {a : Type} -> DecPred a -> Type
 Refinement {a} p = Subset a (Satisfies p)
 
 public export
-MkRefined : {0 a : Type} -> {0 p : DecPred a} ->
+MkRefinement : {0 a : Type} -> {0 p : DecPred a} ->
   (x : a) -> {auto 0 satisfies : Satisfies p x} ->
   Refinement {a} p
-MkRefined x {satisfies} = Element x satisfies
+MkRefinement x {satisfies} = Element x satisfies
 
 public export
 shape : {0 a : Type} -> {0 p : DecPred a} -> Refinement {a} p -> a
 shape = fst
+
+public export
+VoidRefinement : DecPred Void
+VoidRefinement = voidF Bool
+
+public export
+Refined : Type
+Refined = DPair Type DecPred
+
+--------------------------
+---- Refined functors ----
+--------------------------
+
+public export
+DecPredF : (Type -> Type) -> Type
+DecPredF f = NaturalTransformation DecPred (DecPred . f)
+
+public export
+RefinedF : {f : Type -> Type} -> DecPredF f -> Refined -> Refined
+RefinedF {f} pf (a ** pred) = (f a ** pf a pred)
 
 --------------------------------------------------
 --------------------------------------------------
@@ -182,7 +202,7 @@ BoundedNat = Refinement {a=Nat} . (>=)
 public export
 MkBoundedNat : {0 n : Nat} ->
   (m : Nat) -> {auto 0 gte : gteTrue n m} -> BoundedNat n
-MkBoundedNat m {gte} = MkRefined m {satisfies=gte}
+MkBoundedNat m {gte} = MkRefinement m {satisfies=gte}
 
 ----------------------------------------
 ---- Tuples (fixed-length products) ----
@@ -194,7 +214,7 @@ NTuple a n = Refinement {a=(List a)} ((==) n . length)
 
 public export
 MkNTuple : {0 a : Type} -> (l : List a) -> NTuple a (length l)
-MkNTuple l = MkRefined l {satisfies=(equalNatCorrect {m=(length l)})}
+MkNTuple l = MkRefinement l {satisfies=(equalNatCorrect {m=(length l)})}
 
 --------------------------------------------
 ---- Fixed-width binary natural numbers ----
@@ -219,7 +239,7 @@ BoundedList a n = Refinement {a=(List a)} ((>=) n . length)
 public export
 MkBoundedList : {0 a : Type} -> {0 n : Nat} ->
   (l : List a) -> {auto 0 gte : gteTrue n (length l)} -> BoundedList a n
-MkBoundedList l {gte} = MkRefined l {satisfies=gte}
+MkBoundedList l {gte} = MkRefinement l {satisfies=gte}
 
 ---------------------
 ---- Polynomials ----
@@ -278,7 +298,7 @@ ValidPoly = Satisfies validPoly
 public export
 MkPolynomial :
   (shape : PolyShape) -> {auto 0 valid : validPoly shape = True} -> Polynomial
-MkPolynomial shape {valid} = MkRefined {a=PolyShape} shape {satisfies=valid}
+MkPolynomial shape {valid} = MkRefinement {a=PolyShape} shape {satisfies=valid}
 
 public export
 headPow : PolyShape -> Nat
@@ -497,6 +517,27 @@ infixr 1 |>
 public export
 (|>) : Polynomial -> Polynomial -> Polynomial
 (|>) = flip (<|)
+
+-----------------------------------------------------------------------
+---- Finite prefixes as bicartesian category (Robinson arithmetic) ----
+-----------------------------------------------------------------------
+
+public export
+FinNEPrefix : Type
+FinNEPrefix = Nat
+
+public export
+interpFinNEPrefix : FinNEPrefix -> Type
+interpFinNEPrefix n = BoundedNat n
+
+public export
+FinPrefix : Type
+FinPrefix = Maybe FinNEPrefix
+
+public export
+interpFinPrefix : FinPrefix -> Type
+interpFinPrefix Nothing = Void
+interpFinPrefix (Just nep) = interpFinNEPrefix nep
 
 --------------------------
 --------------------------
