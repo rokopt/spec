@@ -470,11 +470,15 @@ polyInterpNat = psInterpNat . shape
 
 -- XXX horizontal & vertical composition of NTs
 
--- XXX eval
+-- XXX eval (i.e. for exponential)
 
 -- XXX equalizer
 
 -- XXX coequalizer
+
+-- XXX closure of parallel product
+
+-- XXX eval for parallel product
 
 -----------------------------------
 ---- Arithmetic on polynomials ----
