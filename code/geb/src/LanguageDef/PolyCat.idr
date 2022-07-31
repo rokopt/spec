@@ -149,8 +149,9 @@ Normalizer : {a : Type} ->
 Normalizer {a} pred norm = NonNormalized pred norm -> Normalized pred norm
 
 public export
-CoeqType : Type -> Type
-CoeqType a = (pred : DecPred a ** norm : DecPred a ** Normalizer pred norm)
+Coequalized : Type
+Coequalized =
+  (a : Type ** pred : DecPred a ** norm : DecPred a ** Normalizer pred norm)
 
 public export
 normalizedCompose :
@@ -166,6 +167,21 @@ normalizedCompose {norm} {fn} g f x = g $ case f x of
     Yes normalized => Element x' $ rewrite satisfies in normalized
     No nonNormalized => fn $ Element x' $
       rewrite satisfies in rewrite notTrueIsFalse nonNormalized in Refl
+
+public export
+NormalizerF : {f : Type -> Type} -> (predf, normf : DecPredF f) -> Type
+NormalizerF {f} predf normf =
+  (a : Type) -> (pred, norm : DecPred a) ->
+  Normalizer pred norm -> Normalizer (predf a pred) (normf a norm)
+
+public export
+CoequalizedF :
+  {f : Type -> Type} ->
+  (predf, normf : DecPredF f) ->
+  (normalizerf : NormalizerF {f} predf normf) ->
+  Coequalized -> Coequalized
+CoequalizedF {f} predf normf normalizerf (a ** pred ** norm ** fn) =
+  (f a ** predf a pred ** normf a norm ** normalizerf a pred norm fn)
 
 --------------------------------------------------
 --------------------------------------------------
