@@ -4652,18 +4652,23 @@ MorphismEq : {cat : MetaCat} -> {a, b : MetaObj cat} ->
 MorphismEq m m' =
   ExtEq (MetaMorphismInterp cat a b m) (MetaMorphismInterp cat a b m')
 
+public export
+TypeTensorProd : Type
+TypeTensorProd = Type -> Type -> Type
+
 -- Because we are going to enrich further categories over
 -- `MetaCat`s, we define a version of `MetaCat` that has a tensor product, whose
 -- properties we ensure by requiring that it be interpreted as the
 -- product in `Type` (known as `Pair`).
-record MonoidalCat (underlying : MetaCat) where
+record MonoidalCat (typeProd : TypeTensorProd) (underlying : MetaCat) where
   constructor MkMonoidalCat
   MetaTensorObj : MetaObj underlying -> MetaObj underlying -> MetaObj underlying
+  MetaTensorId : MetaObj underlying
   MetaTensorObjInterp : (a, b : MetaObj underlying) ->
     MetaObjInterp underlying (MetaTensorObj a b) ->
-    Pair (MetaObjInterp underlying a) (MetaObjInterp underlying b)
+    typeProd (MetaObjInterp underlying a) (MetaObjInterp underlying b)
   MetaTensorObjInterpInv : (a, b : MetaObj underlying) ->
-    Pair (MetaObjInterp underlying a) (MetaObjInterp underlying b) ->
+    typeProd (MetaObjInterp underlying a) (MetaObjInterp underlying b) ->
     MetaObjInterp underlying (MetaTensorObj a b)
   MetaTensorMorph : {a, b, c, d : MetaObj underlying} ->
     MetaMorphism underlying a c -> MetaMorphism underlying b d ->
@@ -4671,34 +4676,46 @@ record MonoidalCat (underlying : MetaCat) where
 
 public export
 record MonoidalCatCorrect
-    (underlying : MetaCat) (monCat : MonoidalCat underlying) where
+    (typeProd : TypeTensorProd)
+    (underlying : MetaCat)
+    (monCat : MonoidalCat typeProd underlying) where
   constructor MkMonoidalCatCorrect
   MetaTensorObjInterpCorrect : (a, b : MetaObj underlying) ->
     ExtInverse
       (MetaTensorObjInterpInv monCat a b)
       (MetaTensorObjInterp monCat a b)
-  MetaTensorMorphInterpCorrectFst : {a, b, c, d : MetaObj underlying} ->
-    (m : MetaMorphism underlying a c) -> (m' : MetaMorphism underlying b d) ->
-    (x : MetaObjInterp underlying (MetaTensorObj monCat a b)) ->
-    MetaMorphismInterp underlying a c m
-        (fst $ MetaTensorObjInterp monCat a b x) =
-      fst (MetaTensorObjInterp monCat c d $
-        MetaMorphismInterp underlying
-          (MetaTensorObj monCat a b)
-          (MetaTensorObj monCat c d)
-          (MetaTensorMorph monCat {a} {b} {c} {d} m m')
-          x)
-  MetaTensorMorphInterpCorrectSnd : {a, b, c, d : MetaObj underlying} ->
-    (m : MetaMorphism underlying a c) -> (m' : MetaMorphism underlying b d) ->
-    (x : MetaObjInterp underlying (MetaTensorObj monCat a b)) ->
-    MetaMorphismInterp underlying b d m'
-        (snd $ MetaTensorObjInterp monCat a b x) =
-      snd (MetaTensorObjInterp monCat c d $
-        MetaMorphismInterp underlying
-          (MetaTensorObj monCat a b)
-          (MetaTensorObj monCat c d)
-          (MetaTensorMorph monCat {a} {b} {c} {d} m m')
-          x)
+  {-
+  MetaTensorLeftIdCorrect : ?MetaTensorLeftIdCorrect_hole
+  MetaTensorRightIdCorrect : ?MetaTensorRightIdCorrect_hole
+  MetaTensorAssociatorCorrect : ?MetaTensorAssociatorCorrect_hole
+  -}
+
+public export
+CartesianCat : MetaCat -> Type
+CartesianCat = MonoidalCat Pair
+
+public export
+BiCartesianCat : MetaCat -> Type
+BiCartesianCat underlying =
+  (CartesianCat underlying, MonoidalCat Either underlying)
+
+public export
+HomObj : TypeTensorProd
+HomObj a b = a -> b
+
+public export
+ExponentialClosedCat : MetaCat -> Type
+ExponentialClosedCat = MonoidalCat HomObj
+
+public export
+CartesianClosedCat : MetaCat -> Type
+CartesianClosedCat underlying =
+  (CartesianCat underlying, ExponentialClosedCat underlying)
+
+public export
+BicartesianClosedCat : MetaCat -> Type
+BicartesianClosedCat underlying =
+  (CartesianClosedCat underlying, MonoidalCat Either underlying)
 
 public export
 record MetaFunctor (catC, catD : MetaCat) where
