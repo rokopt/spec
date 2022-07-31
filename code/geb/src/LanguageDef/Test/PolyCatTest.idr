@@ -23,9 +23,6 @@ testBL2 = MkBoundedList ["a", "b"]
 testBL3 : BoundedList String 4
 testBL3 = MkBoundedList ["a", "b", "c"]
 
-testBL4 : BoundedList String 4
-testBL4 = MkBoundedList ["a", "b", "c", "d"]
-
 testPolyS0 : PolyShape
 testPolyS0 = [(5, 3), (4, 11), (2, 1)]
 
@@ -144,7 +141,6 @@ polyCatTest = do
   putStrLn $ show testBL1
   putStrLn $ show testBL2
   putStrLn $ show testBL3
-  putStrLn $ show testBL4
   putStrLn "---------------------"
   putStrLn ""
   putStrLn "---- Polynomial ----"

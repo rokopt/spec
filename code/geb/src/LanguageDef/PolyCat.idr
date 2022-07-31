@@ -174,15 +174,15 @@ public export
 gteTrue : Nat -> Nat -> Type
 gteTrue m n = (m >= n) = True
 
--- All natural numbers less than or equal to `n`.
+-- All natural numbers less than `n`.
 public export
 BoundedNat : Nat -> Type
-BoundedNat = Refinement {a=Nat} . (>=)
+BoundedNat = Refinement {a=Nat} . (>)
 
 public export
 MkBoundedNat : {0 n : Nat} ->
-  (m : Nat) -> {auto 0 gte : gteTrue n m} -> BoundedNat n
-MkBoundedNat m {gte} = MkRefined m {satisfies=gte}
+  (m : Nat) -> {auto 0 gt : gtTrue n m} -> BoundedNat n
+MkBoundedNat m {gt} = MkRefined m {satisfies=gt}
 
 ----------------------------------------
 ---- Tuples (fixed-length products) ----
@@ -214,12 +214,12 @@ toNat = toNat . shape
 
 public export
 BoundedList : Type -> Nat -> Type
-BoundedList a n = Refinement {a=(List a)} ((>=) n . length)
+BoundedList a n = Refinement {a=(List a)} ((>) n . length)
 
 public export
 MkBoundedList : {0 a : Type} -> {0 n : Nat} ->
-  (l : List a) -> {auto 0 gte : gteTrue n (length l)} -> BoundedList a n
-MkBoundedList l {gte} = MkRefined l {satisfies=gte}
+  (l : List a) -> {auto 0 gt : gtTrue n (length l)} -> BoundedList a n
+MkBoundedList l {gt} = MkRefined l {satisfies=gt}
 
 ---------------------
 ---- Polynomials ----
