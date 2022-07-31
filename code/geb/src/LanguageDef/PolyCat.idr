@@ -36,12 +36,52 @@ DecPred : Type -> Type
 DecPred a = a -> Bool
 
 public export
+NotPred : {0 a : Type} -> DecPred a -> DecPred a
+NotPred pred = not . pred
+
+public export
+AndPred : {0 a : Type} -> DecPred a -> DecPred a -> DecPred a
+AndPred p q = \x => p x && q x
+
+public export
+OrPred : {0 a : Type} -> DecPred a -> DecPred a -> DecPred a
+OrPred p q = \x => p x || q x
+
+public export
+ImpliesPred : {0 a : Type} -> DecPred a -> DecPred a -> DecPred a
+ImpliesPred p q = \x => not (p x) || q x
+
+public export
+AndNotPred : {0 a : Type} -> DecPred a -> DecPred a -> DecPred a
+AndNotPred p q = \x => p x && not (q x)
+
+public export
 Satisfies : {0 a : Type} -> DecPred a -> a -> Type
 Satisfies p x = p x = True
 
 public export
 Refinement : {a : Type} -> DecPred a -> Type
 Refinement {a} p = Subset a (Satisfies p)
+
+public export
+NotRefinement : {a : Type} -> DecPred a -> Type
+NotRefinement = Refinement . NotPred
+
+public export
+AndRefinement : {a : Type} -> DecPred a -> DecPred a -> Type
+AndRefinement p q = Refinement (AndPred p q)
+
+public export
+OrRefinement : {a : Type} -> DecPred a -> DecPred a -> Type
+OrRefinement p q = Refinement (OrPred p q)
+
+public export
+ImpliesRefinement : {a : Type} -> DecPred a -> DecPred a -> Type
+ImpliesRefinement p q = Refinement (ImpliesPred p q)
+
+public export
+AndNotRefinement : {a : Type} -> DecPred a -> DecPred a -> Type
+AndNotRefinement p q = Refinement (AndNotPred p q)
 
 public export
 MkRefinement : {0 a : Type} -> {0 p : DecPred a} ->
@@ -72,6 +112,15 @@ DecPredF f = NaturalTransformation DecPred (DecPred . f)
 public export
 RefinedF : {f : Type -> Type} -> DecPredF f -> Refined -> Refined
 RefinedF {f} pf (a ** pred) = (f a ** pf a pred)
+
+----------------------------------
+---- Bicomplete refined types ----
+----------------------------------
+
+public export
+Normalizer : {a : Type} ->
+  (pred : DecPred a) -> (norm : DecPred a) -> Type
+Normalizer {a} pred norm = AndRefinement pred norm -> AndNotRefinement pred norm
 
 --------------------------------------------------
 --------------------------------------------------
