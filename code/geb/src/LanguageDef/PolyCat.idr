@@ -480,6 +480,8 @@ polyInterpNat = psInterpNat . shape
 
 -- XXX eval for parallel product
 
+-- XXX left coclosure of composition (5.46)
+
 -----------------------------------
 ---- Arithmetic on polynomials ----
 -----------------------------------
