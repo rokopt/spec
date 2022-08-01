@@ -346,6 +346,19 @@ public export
 MuNatIdAlg : NatOAlgC MuNatO
 MuNatIdAlg = (NatO0, NatOS)
 
+--------------------------------------------------------
+---- Bounded natural numbers from directed colimits ----
+--------------------------------------------------------
+
+public export
+NatPreAlgC : NatOAlgC Type
+NatPreAlgC = ((), NatOF)
+
+-- A prefix of the given length.
+public export
+NatPre : MuNatO -> Type
+NatPre = natOCataC NatPreAlgC
+
 ----------------------------------
 ---- Trees of natural numbers ----
 ----------------------------------
@@ -394,18 +407,6 @@ natOTCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   (Left (), Right n) => (Left (), Right $ natOTCata x alg n)
   (Right n, Left ()) => (Right $ natOTCata x alg n, Left ())
   (Right m, Right n) => (Right $ natOTCata x alg m, Right $ natOTCata x alg n)
-
---------------------------------------------------------
----- Bounded natural numbers from directed colimits ----
---------------------------------------------------------
-
-public export
-NatPreAlgC : NatOAlgC Type
-NatPreAlgC = ((), id)
-
-public export
-NatPre : MuNatO -> Type
-NatPre = natOCataC NatPreAlgC
 
 --------------------------------------------------
 --------------------------------------------------
