@@ -183,6 +183,85 @@ CoequalizedF :
 CoequalizedF {f} predf normf normalizerf (a ** pred ** norm ** fn) =
   (f a ** predf a pred ** normf a norm ** normalizerf a pred norm fn)
 
+---------------------------------------------
+---------------------------------------------
+---- Natural numbers as directed colimit ----
+---------------------------------------------
+---------------------------------------------
+
+public export
+data TranslateF : (0 f : Type -> Type) -> (0 a, x : Type) -> Type where
+  InTranslateF : {0 f : Type -> Type} -> {0 a : Type} ->
+    Either a (f x) -> TranslateF f a x
+
+public export
+InVar : {0 f : Type -> Type} -> {0 a, x : Type} -> a -> TranslateF f a x
+InVar = InTranslateF . Left
+
+public export
+InCom : {0 f : Type -> Type} -> {0 a, x : Type} -> f x -> TranslateF f a x
+InCom = InTranslateF . Right
+
+public export
+data LinearF : (0 f : Type -> Type) -> (0 a, x : Type) -> Type where
+  InLinearF : {0 f : Type -> Type} -> {0 a : Type} ->
+    Pair a (f x) -> LinearF f a x
+
+public export
+InNode : {0 f : Type -> Type} -> {0 a, x : Type} -> a -> f x -> LinearF f a x
+InNode = ((.) InLinearF) . MkPair
+
+public export
+data FreeF : (0 f : Type -> Type) -> (0 a : Type) -> Type where
+  InFreeF : {0 f : Type -> Type} -> {0 a : Type} ->
+    TranslateF f a (FreeF f a) -> FreeF f a
+
+public export
+InFVar : {0 f : Type -> Type} -> {0 a : Type} -> a -> FreeF f a
+InFVar = InFreeF . InVar
+
+public export
+InFCom : {0 f : Type -> Type} -> {0 a : Type} -> f (FreeF f a) -> FreeF f a
+InFCom = InFreeF . InCom
+
+public export
+data CofreeF : (0 f : Type -> Type) -> (0 a : Type) -> Type where
+  InCofreeF : {0 f : Type -> Type} -> {0 a : Type} ->
+    Inf (LinearF f a (CofreeF f a)) -> CofreeF f a
+
+public export
+MuF : (0 f : Type -> Type) -> Type
+MuF f = FreeF f Void
+
+public export
+NuF : (0 f : Type -> Type) -> Type
+NuF f = CofreeF f Unit
+
+public export
+NatOF : Type -> Type
+NatOF = Maybe
+
+-- Objects of the category of natural numbers with the morphisms of
+-- Robinson arithmetic.
+public export
+MuNatO : Type
+MuNatO = MuF NatOF
+
+public export
+NatO0 : MuNatO
+NatO0 = InFCom Nothing
+
+public export
+NatOS : MuNatO -> MuNatO
+NatOS = InFCom . Just
+
+-- The unrefined ADT from which are drawn morphisms of Robinson arithmetic.
+public export
+MuNatUM : Type -> Type
+MuNatUM = ?MuNatUM_hole
+
+--------------------------------------------------
+
 --------------------------------------------------
 --------------------------------------------------
 ---- Natural number induction and coinduction ----
