@@ -280,11 +280,13 @@ NatOAlg = FAlg NatOF
 
 public export
 NatOAlgC : Type -> Type
-NatOAlgC = CoproductFAlg (const Unit) Prelude.id
+NatOAlgC a = (a, a -> a)
 
 public export
 NatOAlgCToAlg : {a : Type} -> NatOAlgC a -> NatOAlg a
-NatOAlgCToAlg alg = CoproductFAlgToAlg {f=(const Unit)} {g=Prelude.id} alg
+NatOAlgCToAlg {a} (z, s) e = case e of
+  Left () => z
+  Right n => s n
 
 public export
 NatOCoalg : Type -> Type
@@ -325,7 +327,7 @@ natOAna x coalg e = InCofreeCM $ InLF $ MkPair () $ case coalg e of
 
 public export
 muToNatAlg : NatOAlgC Nat
-muToNatAlg = (const Z, S)
+muToNatAlg = (Z, S)
 
 public export
 muToNat : MuNatO -> Nat
@@ -340,13 +342,58 @@ public export
 Show MuNatO where
   show = show . muToNat
 
+----------------------------------
+---- Pairs of natural numbers ----
+----------------------------------
+
+public export
+NatOPairF : Type -> Type
+NatOPairF = ProductMonad . NatOF
+
+public export
+NatOPairAlg : Type -> Type
+NatOPairAlg = FAlg NatOPairF
+
+public export
+NatOPairAlgC : Type -> Type
+NatOPairAlgC x = (x, x -> x, x -> x, (x, x) -> x)
+
+public export
+NatOPairAlgCToAlg : {a : Type} -> NatOPairAlgC a -> NatOPairAlg a
+NatOPairAlgCToAlg (zz, zs, sz, ss) e = case e of
+  (Left (), Left ()) => zz
+  (Left (), Right n) => zs n
+  (Right n, Left ()) => sz n
+  (Right m, Right n) => ss (m, n)
+
+public export
+MuNatOP : Type
+MuNatOP = MuF NatOPairF
+
+public export
+natOPCata : (0 x : Type) -> muCata NatOPairF x
+natOPCata x alg (InFreeM $ InTF $ Left v) = void v
+natOPCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
+  (Left (), Left ()) => (Left (), Left ())
+  (Left (), Right n) => (Left (), Right $ natOPCata x alg n)
+  (Right n, Left ()) => (Right $ natOPCata x alg n, Left ())
+  (Right m, Right n) => (Right $ natOPCata x alg m, Right $ natOPCata x alg n)
+
+public export
+natOPCataC : {x : Type} -> NatOPairAlgC x -> MuNatOP -> x
+natOPCataC {x} alg = natOPCata x (NatOPairAlgCToAlg alg)
+
+public export
+NatO00 : MuNatOP
+NatO00 = InFCom (Left (), Left ())
+
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
 --------------------------------------------------------
 
 public export
 NatPreAlgC : NatOAlgC Type
-NatPreAlgC = MkPair (const ()) id
+NatPreAlgC = ((), id)
 
 public export
 NatPre : MuNatO -> Type
@@ -358,9 +405,9 @@ NatPre = natOCataC NatPreAlgC
 --------------------------------------------------
 --------------------------------------------------
 
-------------------------------------------------------
----- Dependent (slice category of natural numbers ----
-------------------------------------------------------
+-------------------------------------------------------
+---- Dependent (slice) category of natural numbers ----
+-------------------------------------------------------
 
 public export
 NatSliceObj : Type
