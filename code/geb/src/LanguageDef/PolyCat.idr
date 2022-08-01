@@ -224,22 +224,27 @@ InNode : {0 f : Type -> Type} -> {0 a, x : Type} -> a -> f x -> LinearF f a x
 InNode = ((.) InLF) . MkPair
 
 public export
-data FreeM : (0 f : Type -> Type) -> (0 a : Type) -> Type where
-  InFreeM : {0 f : Type -> Type} -> {0 a : Type} ->
-    TranslateF f a (FreeM f a) -> FreeM f a
+data FreeM : (0 f : Type -> Type) -> (0 x : Type) -> Type where
+  InFreeM : {0 f : Type -> Type} -> {0 x : Type} ->
+    TranslateF f x (FreeM f x) -> FreeM f x
 
 public export
-InFVar : {0 f : Type -> Type} -> {0 a : Type} -> a -> FreeM f a
+InFVar : {0 f : Type -> Type} -> {0 x : Type} -> x -> FreeM f x
 InFVar = InFreeM . InVar
 
 public export
-InFCom : {0 f : Type -> Type} -> {0 a : Type} -> f (FreeM f a) -> FreeM f a
+InFCom : {0 f : Type -> Type} -> {0 x : Type} -> f (FreeM f x) -> FreeM f x
 InFCom = InFreeM . InCom
 
 public export
-data CofreeCM : (0 f : Type -> Type) -> (0 a : Type) -> Type where
-  InCofreeCM : {0 f : Type -> Type} -> {0 a : Type} ->
-    Inf (LinearF f a (CofreeCM f a)) -> CofreeCM f a
+data CofreeCM : (0 f : Type -> Type) -> (0 x : Type) -> Type where
+  InCofreeCM : {0 f : Type -> Type} -> {0 x : Type} ->
+    Inf (LinearF f x (CofreeCM f a)) -> CofreeCM f x
+
+public export
+InCFNode : {0 f : Type -> Type} -> {0 x : Type} ->
+  x -> f (CofreeCM f x) -> CofreeCM f x
+InCFNode ex efx = InCofreeCM $ InLF (ex, efx)
 
 public export
 MuF : (0 f : Type -> Type) -> Type
@@ -251,11 +256,11 @@ NuF f = CofreeCM f Unit
 
 public export
 muCata : (Type -> Type) -> Type -> Type
-muCata f a = Algebra f a -> MuF f -> a
+muCata f x = Algebra f x -> MuF f -> x
 
 public export
 nuAna : (Type -> Type) -> Type -> Type
-nuAna f a = Coalgebra f a -> a -> NuF f
+nuAna f x = Coalgebra f x -> x -> NuF f
 
 ---------------------------------
 ---- Natural number functors ----
@@ -282,19 +287,29 @@ NatOS : MuNatO -> MuNatO
 NatOS = InFCom . Right
 
 public export
-natOCata : (0 a : Type) -> muCata NatOF a
-natOCata a alg (InFreeM $ InTF $ Left v) = void v -- (InFreeM $ InTF $ Left ()) = ?natOCata_hole
-natOCata a alg (InFreeM $ InTF $ Right c) = alg $ case c of
+natOCata : (0 x : Type) -> muCata NatOF x
+natOCata x alg (InFreeM $ InTF $ Left v) = void v
+natOCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   Left () => Left ()
-  Right n => Right $ natOCata a alg n
+  Right n => Right $ natOCata x alg n
+
+public export
+NuNatO : Type
+NuNatO = NuF NatOF
+
+public export
+natOAna : (0 x : Type) -> nuAna NatOF x
+natOAna x coalg e = InCofreeCM $ InLF $ MkPair () $ case coalg e of
+  Left () => Left ()
+  Right n => Right $ natOAna x coalg n
 
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
 --------------------------------------------------------
 
 public export
-NatPreF : Type -> Type
-NatPreF a = Either a a
+NatPreF : (0 x : Type) -> Type
+NatPreF x = ?NatPreF_hole
 
 -- The unrefined ADT from which are drawn morphisms of Robinson arithmetic.
 public export
