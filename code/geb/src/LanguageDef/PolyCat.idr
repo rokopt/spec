@@ -275,6 +275,22 @@ NatOF : Type -> Type
 NatOF = MaybeEUF
 
 public export
+NatOAlg : Type -> Type
+NatOAlg = FAlg NatOF
+
+public export
+NatOAlgC : Type -> Type
+NatOAlgC = CoproductFAlg (const Unit) Prelude.id
+
+public export
+NatOAlgCToAlg : {a : Type} -> NatOAlgC a -> NatOAlg a
+NatOAlgCToAlg alg = CoproductFAlgToAlg {f=(const Unit)} {g=Prelude.id} alg
+
+public export
+NatOCoalg : Type -> Type
+NatOCoalg = FCoalg NatOF
+
+public export
 MuNatO : Type
 MuNatO = MuF NatOF
 
@@ -308,8 +324,12 @@ natOAna x coalg e = InCofreeCM $ InLF $ MkPair () $ case coalg e of
 --------------------------------------------------------
 
 public export
-NatPreF : (0 x : Type) -> Type
-NatPreF x = ?NatPreF_hole
+NatPreFC : NatOAlgC Type
+NatPreFC = (const Void, id)
+
+public export
+NatPreF : NatOAlg Type
+NatPreF = NatOAlgCToAlg NatPreFC
 
 -- The unrefined ADT from which are drawn morphisms of Robinson arithmetic.
 public export
