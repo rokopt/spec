@@ -630,7 +630,7 @@ ProductAdjunctFCat p = ProductF (fst p) (snd p)
 
 public export
 ProductFAlg : (Type -> Type) -> (Type -> Type) -> Type -> Type
-ProductFAlg f g a = f a -> g a -> a
+ProductFAlg f g a = f a -> Algebra g a
 
 public export
 ProductFAlgToAlg : {f, g : Type -> Type} -> {a : Type} ->
