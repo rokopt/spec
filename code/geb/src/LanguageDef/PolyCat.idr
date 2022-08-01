@@ -310,6 +310,10 @@ natOCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   Right n => Right $ natOCata x alg n
 
 public export
+natOCataC : {x : Type} -> NatOAlgC x -> MuNatO -> x
+natOCataC {x} alg = natOCata x (NatOAlgCToAlg alg)
+
+public export
 NuNatO : Type
 NuNatO = NuF NatOF
 
@@ -319,22 +323,34 @@ natOAna x coalg e = InCofreeCM $ InLF $ MkPair () $ case coalg e of
   Left () => Left ()
   Right n => Right $ natOAna x coalg n
 
+public export
+muToNatAlg : NatOAlgC Nat
+muToNatAlg = (const Z, S)
+
+public export
+muToNat : MuNatO -> Nat
+muToNat = natOCataC muToNatAlg
+
+public export
+natToMu : Nat -> MuNatO
+natToMu Z = NatO0
+natToMu (S n) = NatOS $ natToMu n
+
+public export
+Show MuNatO where
+  show = show . muToNat
+
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
 --------------------------------------------------------
 
 public export
-NatPreFC : NatOAlgC Type
-NatPreFC = (const Void, id)
+NatPreAlgC : NatOAlgC Type
+NatPreAlgC = MkPair (const ()) id
 
 public export
-NatPreF : NatOAlg Type
-NatPreF = NatOAlgCToAlg NatPreFC
-
--- The unrefined ADT from which are drawn morphisms of Robinson arithmetic.
-public export
-MuNatUM : Type -> Type
-MuNatUM = ?MuNatUM_hole
+NatPre : MuNatO -> Type
+NatPre = natOCataC NatPreAlgC
 
 --------------------------------------------------
 --------------------------------------------------
