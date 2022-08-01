@@ -359,23 +359,23 @@ NatOTreeAlg : Type -> Type
 NatOTreeAlg = FAlg NatOTreeF
 
 public export
-NatOTreeAlgC : Type -> Type
-NatOTreeAlgC x = (x, x -> x, x -> x, (x, x) -> x)
+NatOPairAlgC : Type -> Type
+NatOPairAlgC x = (x, x -> x, x -> x, (x, x) -> x)
 
 public export
-NatOTreeAlgCToAlg : {a : Type} -> NatOTreeAlgC a -> NatOTreeAlg a
-NatOTreeAlgCToAlg (zz, zs, sz, ss) e = case e of
+NatOPairAlgCToAlg : {a : Type} -> NatOPairAlgC a -> NatOTreeAlg a
+NatOPairAlgCToAlg (zz, zs, sz, ss) e = case e of
   (Left (), Left ()) => zz
   (Left (), Right n) => zs n
   (Right n, Left ()) => sz n
   (Right m, Right n) => ss (m, n)
 
 public export
-NatOAlgToTreeL0Alg : {0 x : Type} -> NatOAlgC x -> NatOTreeAlgC x
+NatOAlgToTreeL0Alg : {0 x : Type} -> NatOAlgC x -> NatOPairAlgC x
 NatOAlgToTreeL0Alg (z, sl) = (z, const z, sl, sl . fst)
 
 public export
-NatAlgToTree0RAlg : {0 x : Type} -> NatOAlgC x -> NatOTreeAlgC x
+NatAlgToTree0RAlg : {0 x : Type} -> NatOAlgC x -> NatOPairAlgC x
 NatAlgToTree0RAlg (z, sr) = (z, sr, const z, sr . snd)
 
 public export
@@ -383,17 +383,17 @@ NatOTreeCoalg : Type -> Type
 NatOTreeCoalg = FCoalg NatOTreeF
 
 public export
-MuNatOP : Type
-MuNatOP = MuF NatOTreeF
+MuNatOT : Type
+MuNatOT = MuF NatOTreeF
 
 public export
-natOPCata : (0 x : Type) -> muCata NatOTreeF x
-natOPCata x alg (InFreeM $ InTF $ Left v) = void v
-natOPCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
+natOTCata : (0 x : Type) -> muCata NatOTreeF x
+natOTCata x alg (InFreeM $ InTF $ Left v) = void v
+natOTCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   (Left (), Left ()) => (Left (), Left ())
-  (Left (), Right n) => (Left (), Right $ natOPCata x alg n)
-  (Right n, Left ()) => (Right $ natOPCata x alg n, Left ())
-  (Right m, Right n) => (Right $ natOPCata x alg m, Right $ natOPCata x alg n)
+  (Left (), Right n) => (Left (), Right $ natOTCata x alg n)
+  (Right n, Left ()) => (Right $ natOTCata x alg n, Left ())
+  (Right m, Right n) => (Right $ natOTCata x alg m, Right $ natOTCata x alg n)
 
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
