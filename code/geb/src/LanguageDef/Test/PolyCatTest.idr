@@ -140,6 +140,12 @@ testPolyS0p7Correct : Assertion
 testPolyS0p7Correct = Assert $
   testPolyS0p7 == [(10, 1), (9, 3), (5, 3), (4, 13), (3, 1), (2, 1), (0, 2)]
 
+testPolyS0m7Correct : Assertion
+testPolyS0m7Correct = Assert $
+  testPolyS0m7 ==
+    [(15, 3), (14, 20), (13, 33), (12, 1), (11, 3), (9, 6), (8, 25),
+     (7, 11), (6, 2), (5, 7), (4, 22), (2, 2)]
+
 poly0p7Valid : Assertion
 poly0p7Valid = Assert $ validPoly testPolyS0p7 == True
 

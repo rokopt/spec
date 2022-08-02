@@ -880,6 +880,30 @@ polyInterpNat = psInterpNat . shape
 ---- Arithmetic on polynomials ----
 -----------------------------------
 
+public export
+initialPolyShape : PolyShape
+initialPolyShape = []
+
+public export
+initialPoly : Polynomial
+initialPoly = MkPolynomial initialPolyShape
+
+public export
+terminalPolyShape : PolyShape
+terminalPolyShape = [(0, 1)]
+
+public export
+terminalPoly : Polynomial
+terminalPoly = MkPolynomial terminalPolyShape
+
+public export
+idPolyShape : PolyShape
+idPolyShape = [(1, 1)]
+
+public export
+idPoly : Polynomial
+idPoly = MkPolynomial idPolyShape
+
 -- Multiply by a monomial.
 public export
 scalePolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape
@@ -981,7 +1005,7 @@ addPoly (Element p pvalid) (Element q qvalid) =
 
 public export
 addPolyShapeList : List PolyShape -> PolyShape
-addPolyShapeList = foldr addPolyShape []
+addPolyShapeList = foldr addPolyShape initialPolyShape
 
 public export
 mulPolyShape : PolyShape -> PolyShape -> PolyShape
