@@ -50,6 +50,12 @@ testPolyS6 = [(3, 4), (1, 2), (0, 3)]
 testPolyS7 : PolyShape
 testPolyS7 = [(10, 1), (9, 3), (4, 2), (3, 1), (0, 2)]
 
+testPolyS8 : PolyShape
+testPolyS8 = [(4, 2), (2, 3), (0, 2)]
+
+testPolyS9 : PolyShape
+testPolyS9 = [(1, 1), (0, 1)]
+
 poly0Valid : Assertion
 poly0Valid = Assert $ validPoly testPolyS0 == True
 
@@ -88,6 +94,12 @@ testPoly6 = MkPolynomial testPolyS6
 
 testPoly7 : Polynomial
 testPoly7 = MkPolynomial testPolyS7
+
+testPoly8 : Polynomial
+testPoly8 = MkPolynomial testPolyS8
+
+testPoly9 : Polynomial
+testPoly9 = MkPolynomial testPolyS9
 
 poly0Degree : Assertion
 poly0Degree = Assert $ degree testPoly0 == 5
@@ -157,6 +169,17 @@ testPoly0p7 = MkPolynomial testPolyS0p7
 
 testPoly0m7 : Polynomial
 testPoly0m7 = MkPolynomial testPolyS0m7
+
+testPolyS9exp4 : PolyShape
+testPolyS9exp4 = expNPolyShape 4 testPolyS9
+
+testPoly9exp4 : Polynomial
+testPoly9exp4 = MkPolynomial testPolyS9exp4
+
+testMulPolyList0 : Assertion
+testMulPolyList0 = Assert $
+  mulPolyShapeList [ expNPolyShape 3 testPolyS9, testPolyS0 ] ==
+    mulPolyShapeList [ testPolyS9, testPolyS0, testPolyS9, testPolyS9 ]
 
 sumViaMu : Nat -> Nat -> Nat
 sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
@@ -305,6 +328,8 @@ polyCatTest = do
   putStrLn $ show testPoly0p7
   putStrLn $ show $ map (flip scalePolyShape testPolyS7) testPolyS0
   putStrLn $ show testPoly0m7
+  putStrLn $ show testPoly9
+  putStrLn $ show testPoly9exp4
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"

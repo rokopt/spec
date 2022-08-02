@@ -1022,6 +1022,10 @@ mulPoly (Element p pvalid) (Element q qvalid) =
   Element (mulPolyShape p q) (mulPreservesValid pvalid qvalid)
 
 public export
+mulPolyShapeList : List PolyShape -> PolyShape
+mulPolyShapeList = foldr mulPolyShape terminalPolyShape
+
+public export
 parProdPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
 parProdPolyShapeRevAcc acc p q = ?parProdPolyShapeRevAcc_hole
 
@@ -1044,19 +1048,9 @@ parProdPoly (Element p pvalid) (Element q qvalid) =
   Element (parProdPolyShape p q) (parProdPreservesValid pvalid qvalid)
 
 public export
-expNPolyRevAcc : Nat -> PolyShape -> PolyShape -> PolyShape
-expNPolyRevAcc Z acc _ = []
-expNPolyRevAcc n@(S _) acc [] = acc
-expNPolyRevAcc n@(S _) acc ((p, c) :: ts) =
-  expNPolyRevAcc n ((p, n * c) :: acc) ts
-
-public export
-expNPolyRev : Nat -> PolyShape -> PolyShape
-expNPolyRev n = expNPolyRevAcc n []
-
-public export
 expNPolyShape : Nat -> PolyShape -> PolyShape
-expNPolyShape n = reverse . expNPolyRev n
+expNPolyShape Z _ = terminalPolyShape
+expNPolyShape (S n) p = mulPolyShape p (expNPolyShape n p)
 
 public export
 expNPreservesValid : {0 n : Nat} -> {0 poly : PolyShape} ->
