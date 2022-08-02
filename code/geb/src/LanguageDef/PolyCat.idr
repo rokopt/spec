@@ -399,30 +399,20 @@ NatOPairCoalg : Type -> Type
 NatOPairCoalg = FCoalg NatOPairF
 
 public export
-natSumAlgAlg : NatOAlgC (NatOAlgC MuNatO)
-natSumAlgAlg = ((NatO0, NatOS), mapNatAlg NatOS)
-
-public export
-natSumAlg : MuNatO -> NatOAlgC MuNatO
-natSumAlg = natOCataC natSumAlgAlg
+natSumAlg : NatOAlgC (MuNatO -> MuNatO)
+natSumAlg = (id, (.) NatOS)
 
 public export
 natSum : MuNatO -> MuNatO -> MuNatO
-natSum = natOCataC . natSumAlg
+natSum = natOCataC natSumAlg
 
 public export
-natMulAlgAlg : NatOAlgC (NatOAlgC MuNatO)
-natMulAlgAlg =
-  ((NatO0, const NatO0),
-   \alg => (NatO0, \n => NatOS $ natSum (snd alg $ NatOS n) n))
-
-public export
-natMulAlg : MuNatO -> NatOAlgC MuNatO
-natMulAlg = natOCataC natMulAlgAlg
+natMulAlg : NatOAlgC (MuNatO -> MuNatO)
+natMulAlg = (const NatO0, \alg, n => natSum (alg n) n)
 
 public export
 natMul : MuNatO -> MuNatO -> MuNatO
-natMul = natOCataC . natMulAlg
+natMul = natOCataC natMulAlg
 
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----

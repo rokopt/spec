@@ -124,6 +124,60 @@ testPoly0Scale = Assert $ polyS0Scaled == [(5, 9), (4, 33), (2, 3)]
 testPoly0ScaleZero : Assertion
 testPoly0ScaleZero = Assert $ scalePolyShape 0 testPolyS0 == []
 
+sumViaMu : Nat -> Nat -> Nat
+sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
+
+mulViaMu : Nat -> Nat -> Nat
+mulViaMu m n = muToNat $ natMul (natToMu m) (natToMu n)
+
+testMuNatSum0 : Assertion
+testMuNatSum0 = Assert $ sumViaMu 0 0 == 0
+
+testMuNatSum1 : Assertion
+testMuNatSum1 = Assert $ sumViaMu 0 1 == 1
+
+testMuNatSum2 : Assertion
+testMuNatSum2 = Assert $ sumViaMu 1 0 == 1
+
+testMuNatSum3 : Assertion
+testMuNatSum3 = Assert $ sumViaMu 1 1 == 2
+
+testMuNatSum4 : Assertion
+testMuNatSum4 = Assert $ sumViaMu 1 2 == 3
+
+testMuNatSum5 : Assertion
+testMuNatSum5 = Assert $ sumViaMu 2 1 == 3
+
+testMuNatSum6 : Assertion
+testMuNatSum6 = Assert $ sumViaMu 2 2 == 4
+
+testMuNatSum7 : Assertion
+testMuNatSum7 = Assert $ sumViaMu 12 7 == 19
+
+testMuNatMul0 : Assertion
+testMuNatMul0 = Assert $ mulViaMu 0 0 == 0
+
+testMuNatMul1 : Assertion
+testMuNatMul1 = Assert $ mulViaMu 0 1 == 0
+
+testMuNatMul2 : Assertion
+testMuNatMul2 = Assert $ mulViaMu 1 0 == 0
+
+testMuNatMul3 : Assertion
+testMuNatMul3 = Assert $ mulViaMu 1 1 == 1
+
+testMuNatMul4 : Assertion
+testMuNatMul4 = Assert $ mulViaMu 1 2 == 2
+
+testMuNatMul5 : Assertion
+testMuNatMul5 = Assert $ mulViaMu 2 1 == 2
+
+testMuNatMul6 : Assertion
+testMuNatMul6 = Assert $ mulViaMu 2 2 == 4
+
+testMuNatMul7 : Assertion
+testMuNatMul7 = Assert $ mulViaMu 12 7 == 84
+
 export
 polyCatTest : IO ()
 polyCatTest = do
@@ -168,6 +222,11 @@ polyCatTest = do
   putStrLn $ show (power 2 1000)
   putStrLn $ show (power 2 10000)
   putStrLn $ show $ ptInterpNat powerByMultsTestTerm 2
+  putStrLn ""
+  putStrLn "------"
+  putStrLn "MuNatO"
+  putStrLn "------"
+  putStrLn $ show (natToMu 10)
   putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="
