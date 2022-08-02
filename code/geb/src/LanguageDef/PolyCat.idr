@@ -402,6 +402,28 @@ public export
 natSumAlgAlg : NatOAlgC (NatOAlgC MuNatO)
 natSumAlgAlg = ((NatO0, NatOS), mapNatAlg NatOS)
 
+public export
+natSumAlg : MuNatO -> NatOAlgC MuNatO
+natSumAlg = natOCataC natSumAlgAlg
+
+public export
+natSum : MuNatO -> MuNatO -> MuNatO
+natSum = natOCataC . natSumAlg
+
+public export
+natMulAlgAlg : NatOAlgC (NatOAlgC MuNatO)
+natMulAlgAlg =
+  ((NatO0, const NatO0),
+   \alg => (NatO0, \n => NatOS $ natSum (snd alg $ NatOS n) n))
+
+public export
+natMulAlg : MuNatO -> NatOAlgC MuNatO
+natMulAlg = natOCataC natMulAlgAlg
+
+public export
+natMul : MuNatO -> MuNatO -> MuNatO
+natMul = natOCataC . natMulAlg
+
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
 --------------------------------------------------------
