@@ -346,37 +346,24 @@ public export
 MuNatIdAlg : NatOAlgC MuNatO
 MuNatIdAlg = (NatO0, NatOS)
 
---------------------------------------------------------
----- Bounded natural numbers from directed colimits ----
---------------------------------------------------------
-
-public export
-NatPreAlgC : NatOAlgC Type
-NatPreAlgC = ((), NatOF)
-
--- A prefix of the given length.
-public export
-NatPre : MuNatO -> Type
-NatPre = natOCataC NatPreAlgC
-
 ----------------------------------
----- Trees of natural numbers ----
+---- Pairs of natural numbers ----
 ----------------------------------
 
 public export
-NatOTreeF : Type -> Type
-NatOTreeF = ProductMonad . NatOF
+NatOPairF : Type -> Type
+NatOPairF = ProductMonad . NatOF
 
 public export
-NatOTreeAlg : Type -> Type
-NatOTreeAlg = FAlg NatOTreeF
+NatOPairAlg : Type -> Type
+NatOPairAlg = FAlg NatOPairF
 
 public export
 NatOPairAlgC : Type -> Type
 NatOPairAlgC x = (x, x -> x, x -> x, (x, x) -> x)
 
 public export
-NatOPairAlgCToAlg : {a : Type} -> NatOPairAlgC a -> NatOTreeAlg a
+NatOPairAlgCToAlg : {a : Type} -> NatOPairAlgC a -> NatOPairAlg a
 NatOPairAlgCToAlg (zz, zs, sz, ss) e = case e of
   (Left (), Left ()) => zz
   (Left (), Right n) => zs n
@@ -384,23 +371,58 @@ NatOPairAlgCToAlg (zz, zs, sz, ss) e = case e of
   (Right m, Right n) => ss (m, n)
 
 public export
-NatOAlgToTreeL0Alg : {0 x : Type} -> NatOAlgC x -> NatOPairAlgC x
-NatOAlgToTreeL0Alg (z, sl) = (z, const z, sl, sl . fst)
+NatOAlgToPairL0Alg : {0 x : Type} -> NatOAlgC x -> NatOPairAlgC x
+NatOAlgToPairL0Alg (z, sl) = (z, const z, sl, sl . fst)
 
 public export
-NatAlgToTree0RAlg : {0 x : Type} -> NatOAlgC x -> NatOPairAlgC x
-NatAlgToTree0RAlg (z, sr) = (z, sr, const z, sr . snd)
+NatAlgToPair0RAlg : {0 x : Type} -> NatOAlgC x -> NatOPairAlgC x
+NatAlgToPair0RAlg (z, sr) = (z, sr, const z, sr . snd)
 
 public export
-NatOTreeCoalg : Type -> Type
-NatOTreeCoalg = FCoalg NatOTreeF
+NatOPairCoalg : Type -> Type
+NatOPairCoalg = FCoalg NatOPairF
+
+--------------------------------------------------------
+---- Bounded natural numbers from directed colimits ----
+--------------------------------------------------------
+
+public export
+NatPreAlgC : NatOAlgC Type
+NatPreAlgC = (Void, NatOF)
+
+-- The type of natural numbers strictly less than the given natural number.
+public export
+NatPre : MuNatO -> Type
+NatPre = natOCataC NatPreAlgC
+
+public export
+TupleAlgC : Type -> NatOAlgC Type
+TupleAlgC x = ((), Pair x)
+
+-- The type of tuples of the given length.
+public export
+Tuple : Type -> MuNatO -> Type
+Tuple = natOCataC . TupleAlgC
+
+public export
+ListNAlgC : Type -> NatOAlgC Type
+ListNAlgC x = ((), CoproductF Prelude.id (Pair x))
+
+-- The type of tuples of less than or equal to the given length.
+public export
+ListN : Type -> MuNatO -> Type
+ListN = natOCataC . ListNAlgC
+
+----------------------------------
+---- Trees of natural numbers ----
+----------------------------------
 
 public export
 MuNatOT : Type
-MuNatOT = MuF NatOTreeF
+MuNatOT = MuF NatOPairF
 
 public export
-natOTCata : (0 x : Type) -> muCata NatOTreeF x
+natOTCata : (0 x : Type) -> muCata NatOPairF x
 natOTCata x alg (InFreeM $ InTF $ Left v) = void v
 natOTCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   (Left (), Left ()) => (Left (), Left ())
