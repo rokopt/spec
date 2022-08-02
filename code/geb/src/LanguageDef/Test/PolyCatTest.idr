@@ -130,6 +130,9 @@ sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
 mulViaMu : Nat -> Nat -> Nat
 mulViaMu m n = muToNat $ natMul (natToMu m) (natToMu n)
 
+powViaMu : Nat -> Nat -> Nat
+powViaMu m n = muToNat $ natPow (natToMu m) (natToMu n)
+
 testMuNatSum0 : Assertion
 testMuNatSum0 = Assert $ sumViaMu 0 0 == 0
 
@@ -177,6 +180,48 @@ testMuNatMul6 = Assert $ mulViaMu 2 2 == 4
 
 testMuNatMul7 : Assertion
 testMuNatMul7 = Assert $ mulViaMu 12 7 == 84
+
+testMuNatPow0 : Assertion
+testMuNatPow0 = Assert $ powViaMu 0 0 == 1
+
+testMuNatPow1 : Assertion
+testMuNatPow1 = Assert $ powViaMu 0 1 == 0
+
+testMuNatPow2 : Assertion
+testMuNatPow2 = Assert $ powViaMu 1 0 == 1
+
+testMuNatPow3 : Assertion
+testMuNatPow3 = Assert $ powViaMu 1 1 == 1
+
+testMuNatPow4 : Assertion
+testMuNatPow4 = Assert $ powViaMu 1 2 == 1
+
+testMuNatPow5 : Assertion
+testMuNatPow5 = Assert $ powViaMu 2 1 == 2
+
+testMuNatPow6 : Assertion
+testMuNatPow6 = Assert $ powViaMu 2 2 == 4
+
+testMuNatPow7 : Assertion
+testMuNatPow7 = Assert $ powViaMu 2 3 == 8
+
+testMuNatPow8 : Assertion
+testMuNatPow8 = Assert $ powViaMu 3 2 == 9
+
+testMuNatPow9 : Assertion
+testMuNatPow9 = Assert $ powViaMu 4 2 == 16
+
+testMuNatPow10 : Assertion
+testMuNatPow10 = Assert $ powViaMu 2 4 == 16
+
+testMuNatPow11 : Assertion
+testMuNatPow11 = Assert $ powViaMu 2 5 == 32
+
+testMuNatPow12 : Assertion
+testMuNatPow12 = Assert $ powViaMu 5 2 == 25
+
+testMuNatPow13 : Assertion
+testMuNatPow13 = Assert $ powViaMu 5 3 == 125
 
 export
 polyCatTest : IO ()

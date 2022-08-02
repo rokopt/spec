@@ -414,6 +414,18 @@ public export
 natMul : MuNatO -> MuNatO -> MuNatO
 natMul = natOCataC natMulAlg
 
+public export
+natRaiseToAlg : NatOAlgC (MuNatO -> MuNatO)
+natRaiseToAlg = (const NatO1, \alg, n => natMul (alg n) n)
+
+public export
+natRaiseTo : MuNatO -> MuNatO -> MuNatO
+natRaiseTo = natOCataC natRaiseToAlg
+
+public export
+natPow : MuNatO -> MuNatO -> MuNatO
+natPow = flip natRaiseTo
+
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
 --------------------------------------------------------
