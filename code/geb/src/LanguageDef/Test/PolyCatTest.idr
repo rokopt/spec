@@ -133,6 +133,10 @@ testPoly0ScaleZero = Assert $ scalePolyShape 0 testPolyS0 == []
 testPolyS0p7 : PolyShape
 testPolyS0p7 = addPolyShape testPolyS0 testPolyS7
 
+testPolyS0p7Correct : Assertion
+testPolyS0p7Correct = Assert $
+  testPolyS0p7 == [(10, 1), (9, 3), (5, 3), (4, 13), (3, 1), (2, 1), (0, 2)]
+
 poly0p7Valid : Assertion
 poly0p7Valid = Assert $ validPoly testPolyS0p7 == True
 

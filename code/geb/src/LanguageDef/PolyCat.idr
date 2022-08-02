@@ -906,29 +906,59 @@ scalePoly n (Element poly valid) =
   Element (scalePolyShape n poly) (scalePreservesValid valid)
 
 public export
-polyShapeBinOpRevAccN : Nat -> PolyShape -> PolyShape -> PolyShape -> PolyShape
-polyShapeBinOpRevAccN Z acc _ _ =
-  acc
-polyShapeBinOpRevAccN (S n) acc [] [] =
-  acc
-polyShapeBinOpRevAccN (S n) acc [] (t@(p, c) :: ts) =
-  polyShapeBinOpRevAccN n (t :: acc) [] ts
-polyShapeBinOpRevAccN (S n) acc (t@(p, c) :: ts) [] =
-  polyShapeBinOpRevAccN n (t :: acc) ts []
-polyShapeBinOpRevAccN (S n) acc q@(t@(p, c) :: ts) r@(t'@(p', c') :: ts') =
-  case compare p p' of
-    EQ => polyShapeBinOpRevAccN n ((p, c + c') :: acc) ts ts'
-    LT => polyShapeBinOpRevAccN n (t' :: acc) q ts'
-    GT => polyShapeBinOpRevAccN n (t :: acc) ts r
+polyShapeBinOpRevAccN :
+  (rOnly, lOnly : PolyTerm -> Maybe PolyTerm) ->
+  (rGTl, lGTr : PolyTerm -> PolyTerm -> Maybe PolyTerm) ->
+  (rEQl : (pow, coeffL, coeffR : Nat) -> Maybe PolyTerm) ->
+  Nat -> PolyShape -> PolyShape -> PolyShape -> PolyShape
+polyShapeBinOpRevAccN rOnly lOnly rGTl lGTr rEQl n acc polyL polyR =
+  polyShapeBinOpRevAccNInternal n acc polyL polyR where
+    polyShapeBinOpRevAccNInternal :
+      Nat -> PolyShape -> PolyShape -> PolyShape -> PolyShape
+    polyShapeBinOpRevAccNInternal Z acc _ _ = acc
+    polyShapeBinOpRevAccNInternal (S n) acc [] [] = acc
+    polyShapeBinOpRevAccNInternal (S n) acc [] (t@(p, c) :: ts) =
+      case rOnly t of
+        Just rt => polyShapeBinOpRevAccNInternal n (rt :: acc) [] ts
+        Nothing => polyShapeBinOpRevAccNInternal n acc [] ts
+    polyShapeBinOpRevAccNInternal (S n) acc (t@(p, c) :: ts) [] =
+      case lOnly t of
+        Just lt => polyShapeBinOpRevAccNInternal n (lt :: acc) ts []
+        Nothing => polyShapeBinOpRevAccNInternal n acc ts []
+    polyShapeBinOpRevAccNInternal (S n) acc
+      q@(t@(p, c) :: ts) r@(t'@(p', c') :: ts') =
+        case compare p p' of
+          EQ =>
+            case rEQl p c c' of
+              Just eqt => polyShapeBinOpRevAccNInternal n (eqt :: acc) ts ts'
+              Nothing => polyShapeBinOpRevAccNInternal n acc ts ts'
+          LT =>
+            case rGTl t t' of
+              Just rt => polyShapeBinOpRevAccNInternal n (rt :: acc) q ts'
+              Nothing => polyShapeBinOpRevAccNInternal n acc q ts'
+          GT =>
+            case lGTr t t' of
+              Just lt => polyShapeBinOpRevAccNInternal n (lt :: acc) ts r
+              Nothing => polyShapeBinOpRevAccNInternal n acc ts r
 
 public export
-polyShapeBinOpRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
-polyShapeBinOpRevAcc acc p q =
-  polyShapeBinOpRevAccN (length p + length q) acc p q
+polyShapeBinOpRevAcc :
+  (rOnly, lOnly : PolyTerm -> Maybe PolyTerm) ->
+  (rGTl, lGTr : PolyTerm -> PolyTerm -> Maybe PolyTerm) ->
+  (rEQl : (pow, coeffL, coeffR : Nat) -> Maybe PolyTerm) ->
+  PolyShape -> PolyShape -> PolyShape -> PolyShape
+polyShapeBinOpRevAcc rOnly lOnly rGTl lGTr rEQl acc p q =
+  polyShapeBinOpRevAccN rOnly lOnly rGTl lGTr rEQl (length p + length q) acc p q
 
 public export
 addPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
-addPolyShapeRevAcc = polyShapeBinOpRevAcc
+addPolyShapeRevAcc =
+  polyShapeBinOpRevAcc
+    Just
+    Just
+    (\t, t' => Just t')
+    (\t, t' => Just t)
+    (\p, c, c' => Just (p, c + c'))
 
 public export
 addPolyShapeRev : PolyShape -> PolyShape -> PolyShape
