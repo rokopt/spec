@@ -223,6 +223,24 @@ testMuNatPow12 = Assert $ powViaMu 5 2 == 25
 testMuNatPow13 : Assertion
 testMuNatPow13 = Assert $ powViaMu 5 3 == 125
 
+testPre0 : NatPreMeta 1
+testPre0 = metaToPre 0 1
+
+testPre1 : NatPreMeta 2
+testPre1 = metaToPre 0 2
+
+testPre2 : NatPreMeta 2
+testPre2 = metaToPre 1 2
+
+testPre3 : NatPreMeta 4
+testPre3 = metaToPre 1 4
+
+testPre4 : NatPreMeta 4
+testPre4 = metaToPre 2 4
+
+testPre5 : NatPreMeta 4
+testPre5 = metaToPre 3 4
+
 export
 polyCatTest : IO ()
 polyCatTest = do
@@ -272,6 +290,18 @@ polyCatTest = do
   putStrLn "MuNatO"
   putStrLn "------"
   putStrLn $ show (natToMu 10)
+  putStrLn $ show testPre0
+  putStrLn $ showPreMeta 1 testPre0
+  putStrLn $ show testPre1
+  putStrLn $ showPreMeta 2 testPre1
+  putStrLn $ show testPre2
+  putStrLn $ showPreMeta 2 testPre2
+  putStrLn $ show testPre3
+  putStrLn $ showPreMeta 4 testPre3
+  putStrLn $ show testPre4
+  putStrLn $ showPreMeta 4 testPre4
+  putStrLn $ show testPre5
+  putStrLn $ showPreMeta 4 testPre5
   putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="

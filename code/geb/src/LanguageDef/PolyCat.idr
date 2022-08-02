@@ -440,18 +440,44 @@ NatPre : MuNatO -> Type
 NatPre = natOCataC NatPreAlgC
 
 public export
+NatPreAlg : Type -> Type
+NatPreAlg x = MuNatO -> NatOAlgC x
+
+public export
+natPreCata : {0 x : Type} -> NatPreAlg x -> {n : MuNatO} -> NatPre n -> x
+natPreCata {x} alg {n=(InFreeM $ InTF $ Left v)} m = void v
+natPreCata {x} alg {n=(InFreeM $ InTF $ Right $ Left ())} m = void m
+natPreCata {x} alg {n=(InFreeM $ InTF $ Right $ Right n)} m =
+  let (z, s) = alg n in
+  case m of
+    (Left ()) => z
+    (Right m') => s $ natPreCata {x} alg {n} m'
+
+public export
 NatPreMeta : Nat -> Type
 NatPreMeta = NatPre . natToMu
 
 public export
-metaToPre : (m : Nat) -> {0 n : Nat} -> {auto 0 lt : LT m n} -> NatPreMeta n
-metaToPre Z {n=(S n)} {lt=(LTESucc _)} = Left ()
-metaToPre (S m) {n=(S n)} {lt=(LTESucc lt')} = Right $ metaToPre m {n} {lt=lt'}
+preToMetaAlg : NatPreAlg Nat
+preToMetaAlg = const muToNatAlg
 
 public export
-InitPre : (m : Nat) -> {0 n : Nat} -> {auto 0 lt : IsYesTrue (isLT m n)} ->
+preToMeta : {n : Nat} -> NatPreMeta n -> Nat
+preToMeta {n} = natPreCata {x=Nat} preToMetaAlg {n=(natToMu n)}
+
+public export
+metaToPre : (m : Nat) -> (0 n : Nat) -> {auto 0 lt : LT m n} -> NatPreMeta n
+metaToPre Z (S n) {lt=(LTESucc _)} = Left ()
+metaToPre (S m) (S n) {lt=(LTESucc lt')} = Right $ metaToPre m {n} {lt=lt'}
+
+public export
+InitPre : (m : Nat) -> (0 n : Nat) -> {auto 0 lt : IsYesTrue (isLT m n)} ->
   NatPreMeta n
-InitPre m {lt} = metaToPre m {lt=(fromIsYes lt)}
+InitPre m n {lt} = metaToPre m n {lt=(fromIsYes lt)}
+
+public export
+showPreMeta : (n : Nat) -> NatPreMeta n -> String
+showPreMeta n m = show (preToMeta m) ++ "/" ++ show n
 
 --------------------------
 ---- Tuples and lists ----
