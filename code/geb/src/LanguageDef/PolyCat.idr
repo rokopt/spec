@@ -255,12 +255,59 @@ NuF : (0 f : Type -> Type) -> Type
 NuF f = CofreeCM f Unit
 
 public export
-muCata : (Type -> Type) -> Type -> Type
-muCata f x = Algebra f x -> MuF f -> x
+MuCata : (Type -> Type) -> Type -> Type
+MuCata f x = Algebra f x -> MuF f -> x
 
 public export
-nuAna : (Type -> Type) -> Type -> Type
-nuAna f x = Coalgebra f x -> x -> NuF f
+FromInitialFAlg : (Type -> Type) -> Type
+FromInitialFAlg f = (x : Type) -> MuCata f x
+
+public export
+NuAna : (Type -> Type) -> Type -> Type
+NuAna f x = Coalgebra f x -> x -> NuF f
+
+public export
+ToTerminalFCoalg : (Type -> Type) -> Type
+ToTerminalFCoalg f = (x : Type) -> NuAna f x
+
+public export
+MuSliceObj : (f : Type -> Type) -> Type
+MuSliceObj f = (MuCata f Type, FAlg f Type)
+
+public export
+MuPiType : {f : Type -> Type} -> MuSliceObj f -> Type
+MuPiType {f} (cata, tyAlg) = (e : MuF f) -> cata tyAlg e
+
+public export
+MuSigmaType : {f : Type -> Type} -> MuSliceObj f -> Type
+MuSigmaType {f} (cata, tyAlg) = (e : MuF f ** cata tyAlg e)
+
+public export
+MuSliceAlg :
+  {f : Type -> Type} ->
+  (cata : MuCata f Type) ->
+  (tyAlg : FAlg f Type) ->
+  (x : Type) ->
+  Type
+MuSliceAlg {f} paramCata tyAlg x = Void
+
+public export
+MuSliceCata :
+  {f : Type -> Type} ->
+  (cata : MuCata f Type) ->
+  (tyAlg : FAlg f Type) ->
+  (x : Type) ->
+  Type
+MuSliceCata cata tyAlg x =
+  MuSliceAlg cata tyAlg x -> MuSigmaType (cata, tyAlg) -> x
+
+public export
+FromInitialSliceFAlg : (Type -> Type) -> Type
+FromInitialSliceFAlg f =
+  (cata : MuCata f Type) ->
+  (tyAlg : FAlg f Type) ->
+  (x : Type) ->
+  MuSliceCata cata tyAlg x
 
 ---------------------------------
 ---- Natural number functors ----
@@ -313,7 +360,7 @@ NatO1 : {0 x : Type} -> FreeNatO x
 NatO1 = NatOS NatO0
 
 public export
-natOCata : (0 x : Type) -> muCata NatOF x
+natOCata : FromInitialFAlg NatOF
 natOCata x alg (InFreeM $ InTF $ Left v) = void v
 natOCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   Left () => Left ()
@@ -332,7 +379,7 @@ NuNatO : Type
 NuNatO = NuF NatOF
 
 public export
-natOAna : (0 x : Type) -> nuAna NatOF x
+natOAna : ToTerminalFCoalg NatOF
 natOAna x coalg e = InCofreeCM $ InLF $ MkPair () $ case coalg e of
   Left () => Left ()
   Right n => Right $ natOAna x coalg n
@@ -454,6 +501,18 @@ natPreCata {x} alg {n=(InFreeM $ InTF $ Right $ Right n)} m =
     (Right m') => s $ natPreCata {x} alg {n} m'
 
 public export
+NatPreAlgAlg : Type -> Type
+NatPreAlgAlg x = ?NatPreAlgAlg_hole
+
+public export
+natPreAlgAlgToAlg : {0 x : Type} -> NatPreAlgAlg x -> NatPreAlg x
+natPreAlgAlgToAlg {x} algalg = ?natPreAlgAlgToAlg_hole
+
+public export
+natPreAlgCata : {0 x : Type} -> NatPreAlgAlg x -> {n : MuNatO} -> NatPre n -> x
+natPreAlgCata {x} algalg = natPreCata {x} (natPreAlgAlgToAlg {x} algalg)
+
+public export
 NatPreMeta : Nat -> Type
 NatPreMeta = NatPre . natToMu
 
@@ -510,7 +569,7 @@ MuNatOT : Type
 MuNatOT = MuF NatOPairF
 
 public export
-natOTCata : (0 x : Type) -> muCata NatOPairF x
+natOTCata : FromInitialFAlg NatOPairF
 natOTCata x alg (InFreeM $ InTF $ Left v) = void v
 natOTCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
   (Left (), Left ()) => (Left (), Left ())
