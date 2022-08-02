@@ -122,16 +122,19 @@ powerByMultsTest = Assert $
   ptInterpNatByMults powerByMultsTestTerm 2
 
 polyS0Scaled : PolyShape
-polyS0Scaled = scalePolyShape 3 testPolyS0
+polyS0Scaled = scalePolyShape (2, 3) testPolyS0
 
 testPoly0Scale : Assertion
-testPoly0Scale = Assert $ polyS0Scaled == [(5, 9), (4, 33), (2, 3)]
+testPoly0Scale = Assert $ polyS0Scaled == [(7, 9), (6, 33), (4, 3)]
 
 testPoly0ScaleZero : Assertion
-testPoly0ScaleZero = Assert $ scalePolyShape 0 testPolyS0 == []
+testPoly0ScaleZero = Assert $ scalePolyShape (4, 0) testPolyS0 == []
 
 testPolyS0p7 : PolyShape
 testPolyS0p7 = addPolyShape testPolyS0 testPolyS7
+
+testPolyS0m7 : PolyShape
+testPolyS0m7 = mulPolyShape testPolyS0 testPolyS7
 
 testPolyS0p7Correct : Assertion
 testPolyS0p7Correct = Assert $
@@ -140,8 +143,14 @@ testPolyS0p7Correct = Assert $
 poly0p7Valid : Assertion
 poly0p7Valid = Assert $ validPoly testPolyS0p7 == True
 
+poly0m7Valid : Assertion
+poly0m7Valid = Assert $ validPoly testPolyS0m7 == True
+
 testPoly0p7 : Polynomial
 testPoly0p7 = MkPolynomial testPolyS0p7
+
+testPoly0m7 : Polynomial
+testPoly0m7 = MkPolynomial testPolyS0m7
 
 sumViaMu : Nat -> Nat -> Nat
 sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
@@ -288,6 +297,8 @@ polyCatTest = do
   putStrLn $ show testPoly0
   putStrLn $ show testPoly7
   putStrLn $ show testPoly0p7
+  putStrLn $ show $ map (flip scalePolyShape testPolyS7) testPolyS0
+  putStrLn $ show testPoly0m7
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"

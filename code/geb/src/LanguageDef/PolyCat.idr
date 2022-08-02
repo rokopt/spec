@@ -880,30 +880,31 @@ polyInterpNat = psInterpNat . shape
 ---- Arithmetic on polynomials ----
 -----------------------------------
 
+-- Multiply by a monomial.
 public export
-scalePolyRevAcc : Nat -> PolyShape -> PolyShape -> PolyShape
-scalePolyRevAcc Z acc _ = []
-scalePolyRevAcc n@(S _) acc [] = acc
-scalePolyRevAcc n@(S _) acc ((p, c) :: ts) =
-  scalePolyRevAcc n ((p, n * c) :: acc) ts
+scalePolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape
+scalePolyRevAcc (_, Z) acc _ = []
+scalePolyRevAcc (pm, n@(S _)) acc [] = acc
+scalePolyRevAcc (pm, n@(S _)) acc ((p, c) :: ts) =
+  scalePolyRevAcc (pm, n) ((pm + p, n * c) :: acc) ts
 
 public export
-scalePolyRev : Nat -> PolyShape -> PolyShape
-scalePolyRev n = scalePolyRevAcc n []
+scalePolyRev : PolyTerm -> PolyShape -> PolyShape
+scalePolyRev pt = scalePolyRevAcc pt []
 
 public export
-scalePolyShape : Nat -> PolyShape -> PolyShape
-scalePolyShape n = reverse . scalePolyRev n
+scalePolyShape : PolyTerm -> PolyShape -> PolyShape
+scalePolyShape pt = reverse . scalePolyRev pt
 
 public export
-scalePreservesValid : {0 n : Nat} -> {0 poly : PolyShape} ->
-  ValidPoly poly -> ValidPoly (scalePolyShape n poly)
-scalePreservesValid {n} {poly} valid = ?scalePolyShapeCorrect_hole
+scalePreservesValid : {0 pt : PolyTerm} -> {0 poly : PolyShape} ->
+  ValidPoly poly -> ValidPoly (scalePolyShape pt poly)
+scalePreservesValid {pt} {poly} valid = ?scalePolyShapeCorrect_hole
 
 public export
-scalePoly : Nat -> Polynomial -> Polynomial
-scalePoly n (Element poly valid) =
-  Element (scalePolyShape n poly) (scalePreservesValid valid)
+scalePoly : PolyTerm -> Polynomial -> Polynomial
+scalePoly pt (Element poly valid) =
+  Element (scalePolyShape pt poly) (scalePreservesValid valid)
 
 public export
 polyShapeBinOpRevAccN :
@@ -979,16 +980,12 @@ addPoly (Element p pvalid) (Element q qvalid) =
   Element (addPolyShape p q) (addPreservesValid pvalid qvalid)
 
 public export
-mulPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
-mulPolyShapeRevAcc acc p q = ?mulPolyShapeRevAcc_hole
-
-public export
-mulPolyShapeRev : PolyShape -> PolyShape -> PolyShape
-mulPolyShapeRev = mulPolyShapeRevAcc []
+addPolyShapeList : List PolyShape -> PolyShape
+addPolyShapeList = foldr addPolyShape []
 
 public export
 mulPolyShape : PolyShape -> PolyShape -> PolyShape
-mulPolyShape p q = reverse (mulPolyShapeRev p q)
+mulPolyShape p q = addPolyShapeList $ map (flip scalePolyShape q) p
 
 public export
 mulPreservesValid : {0 p, q : PolyShape} ->
