@@ -293,16 +293,24 @@ NatOCoalg : Type -> Type
 NatOCoalg = FCoalg NatOF
 
 public export
+FreeNatO : Type -> Type
+FreeNatO x = FreeM NatOF x
+
+public export
 MuNatO : Type
 MuNatO = MuF NatOF
 
 public export
-NatO0 : MuNatO
+NatO0 : {0 x : Type} -> FreeNatO x
 NatO0 = InFCom $ Left ()
 
 public export
-NatOS : MuNatO -> MuNatO
+NatOS : {0 x : Type} -> FreeNatO x -> FreeNatO x
 NatOS = InFCom . Right
+
+public export
+NatO1 : {0 x : Type} -> FreeNatO x
+NatO1 = NatOS NatO0
 
 public export
 natOCata : (0 x : Type) -> muCata NatOF x
@@ -314,6 +322,10 @@ natOCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
 public export
 natOCataC : {x : Type} -> NatOAlgC x -> MuNatO -> x
 natOCataC {x} alg = natOCata x (NatOAlgCToAlg alg)
+
+public export
+CofreeNatO : Type -> Type
+CofreeNatO x = CofreeCM NatOF x
 
 public export
 NuNatO : Type
@@ -345,6 +357,10 @@ Show MuNatO where
 public export
 MuNatIdAlg : NatOAlgC MuNatO
 MuNatIdAlg = (NatO0, NatOS)
+
+public export
+mapNatAlg : {0 x : Type} -> (x -> x) -> NatOAlgC x -> NatOAlgC x
+mapNatAlg f (z, s) = (f z, f . s)
 
 ----------------------------------
 ---- Pairs of natural numbers ----
@@ -381,6 +397,10 @@ NatAlgToPair0RAlg (z, sr) = (z, sr, const z, sr . snd)
 public export
 NatOPairCoalg : Type -> Type
 NatOPairCoalg = FCoalg NatOPairF
+
+public export
+natSumAlgAlg : NatOAlgC (NatOAlgC MuNatO)
+natSumAlgAlg = ((NatO0, NatOS), mapNatAlg NatOS)
 
 --------------------------------------------------------
 ---- Bounded natural numbers from directed colimits ----
