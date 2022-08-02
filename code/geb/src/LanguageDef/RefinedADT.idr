@@ -154,7 +154,7 @@ onDirFromLists {domain} {codomain} =
 public export
 InitOnDir : {domain, codomain : PZArena} ->
   (onpos : OnPosT domain codomain) -> (l : List (List Nat)) ->
-  {auto ok : isJust (onDirFromLists {domain} {codomain} onpos l) = True} ->
+  {auto ok : IsJustTrue (onDirFromLists {domain} {codomain} onpos l)} ->
   OnDirT {domain} {codomain} onpos
 InitOnDir _ _ {ok} = fromIsJust ok
 
@@ -1841,7 +1841,7 @@ listToFinOrdMorph (S n) (S n') (i :: l) = case listToNatRange 0 n 0 n' i l of
 
 public export
 MkFinOrdMorph : (m, n : Nat) -> (l : List Nat) ->
-  {auto valid : isJust (listToFinOrdMorph m n l) = True} -> FinOrdMorph m n
+  {auto valid : IsJustTrue (listToFinOrdMorph m n l)} -> FinOrdMorph m n
 MkFinOrdMorph m n l {valid} with (listToFinOrdMorph m n l)
   MkFinOrdMorph m n l {valid=Refl} | Just morph = morph
   MkFinOrdMorph m n l {valid=Refl} | Nothing impossible

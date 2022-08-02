@@ -440,6 +440,24 @@ NatPre : MuNatO -> Type
 NatPre = natOCataC NatPreAlgC
 
 public export
+NatPreMeta : Nat -> Type
+NatPreMeta = NatPre . natToMu
+
+public export
+metaToPre : (m : Nat) -> {0 n : Nat} -> {auto 0 lt : LT m n} -> NatPreMeta n
+metaToPre Z {n=(S n)} {lt=(LTESucc _)} = Left ()
+metaToPre (S m) {n=(S n)} {lt=(LTESucc lt')} = Right $ metaToPre m {n} {lt=lt'}
+
+public export
+InitPre : (m : Nat) -> {0 n : Nat} -> {auto 0 lt : IsYesTrue (isLT m n)} ->
+  NatPreMeta n
+InitPre m {lt} = metaToPre m {lt=(fromIsYes lt)}
+
+--------------------------
+---- Tuples and lists ----
+--------------------------
+
+public export
 TupleAlgC : Type -> NatOAlgC Type
 TupleAlgC x = ((), Pair x)
 

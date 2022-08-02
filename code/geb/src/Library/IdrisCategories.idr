@@ -3004,7 +3004,7 @@ NatOPrefixMaybe {n} m = case NatLTStrictMaybe m n of
 public export
 InitNatOPrefix :
   {n : NatObj} -> (m : NatObj) ->
-  {auto ok : isJust (NatOPrefixMaybe {n} m) = True} ->
+  {auto ok : IsJustTrue (NatOPrefixMaybe {n} m)} ->
   NatOPrefix n
 InitNatOPrefix _ {ok} = fromIsJust ok
 
@@ -3857,7 +3857,7 @@ prefixMapFromList n l =
 
 public export
 InitPrefixMap : (n : Nat) ->
-  (l : List Nat) -> {auto ok : isJust (prefixMapFromList n l) = True} ->
+  (l : List Nat) -> {auto ok : IsJustTrue (prefixMapFromList n l)} ->
   MetaPrefixMap (length l) n
 InitPrefixMap _ _ {ok} = fromIsJust ok
 

@@ -8,6 +8,7 @@ import public Data.Vect
 import public Data.Fin
 import public Data.DPair
 import public Data.Bool
+import public Decidable.Decidable
 import public Decidable.Equality
 import public Control.Function
 import public Control.Relation
@@ -65,9 +66,22 @@ voidF : (a : Type) -> Void -> a
 voidF _ x = void x
 
 public export
-fromIsJust : {a : Type} -> {x : Maybe a} -> (isJust x = True) -> a
+IsJustTrue : {a : Type} -> Maybe a -> Type
+IsJustTrue x = isJust x = True
+
+public export
+fromIsJust : {a : Type} -> {x : Maybe a} -> IsJustTrue x -> a
 fromIsJust {x=(Just x)} Refl = x
 fromIsJust {x=Nothing} Refl impossible
+
+public export
+IsYesTrue : {a : Type} -> Dec a -> Type
+IsYesTrue x = isYes x = True
+
+public export
+fromIsYes : {a : Type} -> {x : Dec a} -> IsYesTrue x -> a
+fromIsYes {x=(Yes x)} Refl = x
+fromIsYes {x=(No n)} Refl impossible
 
 public export
 equalNatCorrect : {m : Nat} -> equalNat m m = True
