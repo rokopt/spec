@@ -134,13 +134,13 @@ powerByMultsTest = Assert $
   ptInterpNatByMults powerByMultsTestTerm 2
 
 polyS0Scaled : PolyShape
-polyS0Scaled = scalePolyShape (2, 3) testPolyS0
+polyS0Scaled = scaleMonPolyShape (2, 3) testPolyS0
 
 testPoly0Scale : Assertion
 testPoly0Scale = Assert $ polyS0Scaled == [(7, 9), (6, 33), (4, 3)]
 
 testPoly0ScaleZero : Assertion
-testPoly0ScaleZero = Assert $ scalePolyShape (4, 0) testPolyS0 == []
+testPoly0ScaleZero = Assert $ scaleMonPolyShape (4, 0) testPolyS0 == []
 
 testPolyS0p7 : PolyShape
 testPolyS0p7 = addPolyShape testPolyS0 testPolyS7
@@ -176,10 +176,35 @@ testPolyS9exp4 = expNPolyShape 4 testPolyS9
 testPoly9exp4 : Polynomial
 testPoly9exp4 = MkPolynomial testPolyS9exp4
 
-testMulPolyList0 : Assertion
-testMulPolyList0 = Assert $
+testMulPolyNat0 : Assertion
+testMulPolyNat0 = Assert $
   mulPolyShapeList [ expNPolyShape 3 testPolyS9, testPolyS0 ] ==
     mulPolyShapeList [ testPolyS9, testPolyS0, testPolyS9, testPolyS9 ]
+
+testPolyNat : PolyShape
+testPolyNat = [ (1, 1), (0, 1) ]
+
+testPolyNatIter : Nat -> PolyShape
+testPolyNatIter n = iterNPolyShape n testPolyNat
+
+polyEx58p : PolyShape
+polyEx58p = [ (2, 1), (1, 1) ]
+
+polyEx58q : PolyShape
+polyEx58q = [ (3, 1), (0, 1) ]
+
+polyEx58_1 : Assertion
+polyEx58_1 = Assert $
+  composePolyShape (homNPolyShape 2) polyEx58q == [(6, 1), (3, 2), (0, 1)]
+
+polyEx58_2 : Assertion
+polyEx58_2 = Assert $
+  composePolyShape (homNPolyShape 1) polyEx58q == [(3, 1), (0, 1)]
+
+polyEx58_3 : Assertion
+polyEx58_3 = Assert $ composePolyShape
+  (addPolyShape (homNPolyShape 2) (homNPolyShape 1)) polyEx58q ==
+    [(6, 1), (3, 3), (0, 2)]
 
 sumViaMu : Nat -> Nat -> Nat
 sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
@@ -326,10 +351,17 @@ polyCatTest = do
   putStrLn $ show testPoly0
   putStrLn $ show testPoly7
   putStrLn $ show testPoly0p7
-  putStrLn $ show $ map (flip scalePolyShape testPolyS7) testPolyS0
+  putStrLn $ show $ map (flip scaleMonPolyShape testPolyS7) testPolyS0
   putStrLn $ show testPoly0m7
   putStrLn $ show testPoly9
   putStrLn $ show testPoly9exp4
+  putStrLn $ show $ testPolyNatIter 0
+  putStrLn $ show $ testPolyNatIter 1
+  putStrLn $ show $ testPolyNatIter 2
+  putStrLn $ show $ testPolyNatIter 3
+  putStrLn $ show polyEx58q
+  putStrLn $ show $ composePolyShape
+    (addPolyShape (homNPolyShape 2) (homNPolyShape 1)) polyEx58q
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"

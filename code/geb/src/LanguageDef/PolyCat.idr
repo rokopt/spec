@@ -904,31 +904,47 @@ public export
 idPoly : Polynomial
 idPoly = MkPolynomial idPolyShape
 
+public export
+homNPolyShape : Nat -> PolyShape
+homNPolyShape n = [(n, 1)]
+
+public export
+homNPoly : Nat -> Polynomial
+homNPoly n = Element (homNPolyShape n) Refl
+
 -- Multiply by a monomial.
 public export
-scalePolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape
-scalePolyRevAcc (_, Z) acc _ = []
-scalePolyRevAcc (pm, n@(S _)) acc [] = acc
-scalePolyRevAcc (pm, n@(S _)) acc ((p, c) :: ts) =
-  scalePolyRevAcc (pm, n) ((pm + p, n * c) :: acc) ts
+scaleMonPolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape
+scaleMonPolyRevAcc (_, Z) acc _ = []
+scaleMonPolyRevAcc (pm, n@(S _)) acc [] = acc
+scaleMonPolyRevAcc (pm, n@(S _)) acc ((p, c) :: ts) =
+  scaleMonPolyRevAcc (pm, n) ((pm + p, n * c) :: acc) ts
 
 public export
-scalePolyRev : PolyTerm -> PolyShape -> PolyShape
-scalePolyRev pt = scalePolyRevAcc pt []
+scaleMonPolyRev : PolyTerm -> PolyShape -> PolyShape
+scaleMonPolyRev pt = scaleMonPolyRevAcc pt []
 
 public export
-scalePolyShape : PolyTerm -> PolyShape -> PolyShape
-scalePolyShape pt = reverse . scalePolyRev pt
+scaleMonPolyShape : PolyTerm -> PolyShape -> PolyShape
+scaleMonPolyShape pt = reverse . scaleMonPolyRev pt
 
 public export
 scalePreservesValid : {0 pt : PolyTerm} -> {0 poly : PolyShape} ->
-  ValidPoly poly -> ValidPoly (scalePolyShape pt poly)
-scalePreservesValid {pt} {poly} valid = ?scalePolyShapeCorrect_hole
+  ValidPoly poly -> ValidPoly (scaleMonPolyShape pt poly)
+scalePreservesValid {pt} {poly} valid = ?scaleMonPolyShapeCorrect_hole
 
 public export
-scalePoly : PolyTerm -> Polynomial -> Polynomial
-scalePoly pt (Element poly valid) =
-  Element (scalePolyShape pt poly) (scalePreservesValid valid)
+scaleMonPoly : PolyTerm -> Polynomial -> Polynomial
+scaleMonPoly pt (Element poly valid) =
+  Element (scaleMonPolyShape pt poly) (scalePreservesValid valid)
+
+public export
+scaleNatPolyShape : Nat -> PolyShape -> PolyShape
+scaleNatPolyShape n = scaleMonPolyShape (0, n)
+
+public export
+scaleNatPoly : Nat -> Polynomial -> Polynomial
+scaleNatPoly n = scaleMonPoly (0, n)
 
 public export
 polyShapeBinOpRevAccN :
@@ -1009,7 +1025,7 @@ addPolyShapeList = foldr addPolyShape initialPolyShape
 
 public export
 mulPolyShape : PolyShape -> PolyShape -> PolyShape
-mulPolyShape p q = addPolyShapeList $ map (flip scalePolyShape q) p
+mulPolyShape p q = addPolyShapeList $ map (flip scaleMonPolyShape q) p
 
 public export
 mulPreservesValid : {0 p, q : PolyShape} ->
@@ -1063,16 +1079,12 @@ expNPoly n (Element poly valid) =
   Element (expNPolyShape n poly) (expNPreservesValid valid)
 
 public export
-composePolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
-composePolyShapeRevAcc acc q p = ?composePolyShapeRevAcc_hole
-
-public export
-composePolyShapeRev : PolyShape -> PolyShape -> PolyShape
-composePolyShapeRev = composePolyShapeRevAcc []
+composeMonPoly : PolyTerm -> PolyShape -> PolyShape
+composeMonPoly (p, c) poly = scaleNatPolyShape c $ expNPolyShape p poly
 
 public export
 composePolyShape : PolyShape -> PolyShape -> PolyShape
-composePolyShape q p = reverse (composePolyShapeRev q p)
+composePolyShape q p = addPolyShapeList $ map (flip composeMonPoly p) q
 
 public export
 composePreservesValid : {0 p, q : PolyShape} ->
@@ -1093,6 +1105,21 @@ infixr 1 |>
 public export
 (|>) : Polynomial -> Polynomial -> Polynomial
 (|>) = flip (<|)
+
+public export
+iterNPolyShape : Nat -> PolyShape -> PolyShape
+iterNPolyShape Z _ = idPolyShape
+iterNPolyShape (S n) p = composePolyShape p (iterNPolyShape n p)
+
+public export
+iterNPreservesValid : {0 n : Nat} -> {0 poly : PolyShape} ->
+  ValidPoly poly -> ValidPoly (iterNPolyShape n poly)
+iterNPreservesValid {n} {poly} valid = ?iterNPolyShapeCorrect_hole
+
+public export
+iterNPoly : Nat -> Polynomial -> Polynomial
+iterNPoly n (Element poly valid) =
+  Element (iterNPolyShape n poly) (iterNPreservesValid valid)
 
 -----------------------------------------------------------------------
 ---- Finite prefixes as bicartesian category (Robinson arithmetic) ----
