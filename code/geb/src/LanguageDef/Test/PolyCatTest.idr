@@ -47,6 +47,9 @@ testPolyS5 = []
 testPolyS6 : PolyShape
 testPolyS6 = [(3, 4), (1, 2), (0, 3)]
 
+testPolyS7 : PolyShape
+testPolyS7 = [(10, 1), (9, 3), (4, 2), (3, 1), (0, 2)]
+
 poly0Valid : Assertion
 poly0Valid = Assert $ validPoly testPolyS0 == True
 
@@ -82,6 +85,9 @@ testPoly5 = MkPolynomial testPolyS5
 
 testPoly6 : Polynomial
 testPoly6 = MkPolynomial testPolyS6
+
+testPoly7 : Polynomial
+testPoly7 = MkPolynomial testPolyS7
 
 poly0Degree : Assertion
 poly0Degree = Assert $ degree testPoly0 == 5
@@ -123,6 +129,15 @@ testPoly0Scale = Assert $ polyS0Scaled == [(5, 9), (4, 33), (2, 3)]
 
 testPoly0ScaleZero : Assertion
 testPoly0ScaleZero = Assert $ scalePolyShape 0 testPolyS0 == []
+
+testPolyS0p7 : PolyShape
+testPolyS0p7 = addPolyShape testPolyS0 testPolyS7
+
+poly0p7Valid : Assertion
+poly0p7Valid = Assert $ validPoly testPolyS0p7 == True
+
+testPoly0p7 : Polynomial
+testPoly0p7 = MkPolynomial testPolyS0p7
 
 sumViaMu : Nat -> Nat -> Nat
 sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
@@ -265,8 +280,10 @@ polyCatTest = do
   putStrLn "---------------------"
   putStrLn ""
   putStrLn "---- Polynomial ----"
-  putStrLn $ show testPoly0
   putStrLn $ show testPoly6
+  putStrLn $ show testPoly0
+  putStrLn $ show testPoly7
+  putStrLn $ show testPoly0p7
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"

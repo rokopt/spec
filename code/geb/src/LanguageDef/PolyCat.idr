@@ -906,8 +906,29 @@ scalePoly n (Element poly valid) =
   Element (scalePolyShape n poly) (scalePreservesValid valid)
 
 public export
+polyShapeBinOpRevAccN : Nat -> PolyShape -> PolyShape -> PolyShape -> PolyShape
+polyShapeBinOpRevAccN Z acc _ _ =
+  acc
+polyShapeBinOpRevAccN (S n) acc [] [] =
+  acc
+polyShapeBinOpRevAccN (S n) acc [] (t@(p, c) :: ts) =
+  polyShapeBinOpRevAccN n (t :: acc) [] ts
+polyShapeBinOpRevAccN (S n) acc (t@(p, c) :: ts) [] =
+  polyShapeBinOpRevAccN n (t :: acc) ts []
+polyShapeBinOpRevAccN (S n) acc q@(t@(p, c) :: ts) r@(t'@(p', c') :: ts') =
+  case compare p p' of
+    EQ => polyShapeBinOpRevAccN n ((p, c + c') :: acc) ts ts'
+    LT => polyShapeBinOpRevAccN n (t' :: acc) q ts'
+    GT => polyShapeBinOpRevAccN n (t :: acc) ts r
+
+public export
+polyShapeBinOpRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
+polyShapeBinOpRevAcc acc p q =
+  polyShapeBinOpRevAccN (length p + length q) acc p q
+
+public export
 addPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
-addPolyShapeRevAcc acc p q = ?addPolyShapeRevAcc_hole
+addPolyShapeRevAcc = polyShapeBinOpRevAcc
 
 public export
 addPolyShapeRev : PolyShape -> PolyShape -> PolyShape
