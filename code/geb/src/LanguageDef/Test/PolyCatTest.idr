@@ -273,6 +273,11 @@ polyEx293p = [ (2, 2), (1, 3) ]
 polyEx293q : PolyShape
 polyEx293q = [ (4, 1), (3, 3) ]
 
+ex378_6 : Assertion
+ex378_6 = Assert $
+  parProdClosureShape [(2, 1), (1,2)] [(3, 2), (0, 3)] ==
+    [(9, 64), (6, 204), (3, 180), (0, 27)]
+
 sumViaMu : Nat -> Nat -> Nat
 sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
 
@@ -436,6 +441,7 @@ polyCatTest = do
   putStrLn $ show $ parProdPolyShape (parProdPolyShape testPolyS7 testPolyS8) testPolyS9
   putStrLn $ show $ polyShapeExponential idPolyShape idPolyShape
   putStrLn $ show $ polyShapeExponential idPolyShape (prodIdPolyShape 4)
+  putStrLn $ show $ parProdClosureShape [(2, 1), (1,2)] [(3, 2), (0, 3)]
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"

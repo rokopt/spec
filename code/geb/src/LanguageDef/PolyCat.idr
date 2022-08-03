@@ -1217,6 +1217,10 @@ public export
 parProdClosureShape : PolyShape -> PolyShape -> PolyShape
 parProdClosureShape = polyShapeClosure mulPolyShape
 
+public export
+leftCoclosureShape : PolyShape -> PolyShape -> PolyShape
+leftCoclosureShape r p = psSumOverIdx (homNPolyShape . psInterpNat r) p
+
 -----------------------------------------------------------------------
 ---- Finite prefixes as bicartesian category (Robinson arithmetic) ----
 -----------------------------------------------------------------------
