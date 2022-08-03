@@ -1275,6 +1275,10 @@ NatRange : Type
 NatRange = (Nat, Nat)
 
 public export
+validRange : DecPred NatRange
+validRange (m, n) = m <= n
+
+public export
 betweenPred : Nat -> Nat -> DecPred Nat
 betweenPred min max n = (min <= n) && (n <= max)
 
@@ -1303,6 +1307,77 @@ polyInterpRange = psInterpRange . shape
 --------------------------------
 ---- Morphisms on RangedNat ----
 --------------------------------
+
+public export
+data RangedNatMorphF : Type -> Type where
+  RNMPolyF : {0 carrier : Type} ->
+    NatRange -> PolyShape -> RangedNatMorphF carrier
+  RNMSwitchF : {0 carrier : Type} ->
+    carrier -> carrier -> RangedNatMorphF carrier
+  RNMDivF : {0 carrier : Type} ->
+    NatRange -> Nat -> RangedNatMorphF carrier
+  RNMModF : {0 carrier : Type} ->
+    NatRange -> Nat -> RangedNatMorphF carrier
+  RNMExtendF : {0 carrier : Type} ->
+    carrier -> Nat -> RangedNatMorphF carrier
+
+public export
+Functor RangedNatMorphF where
+  map m (RNMPolyF dom ps) = RNMPolyF dom ps
+  map m (RNMSwitchF g f) = RNMSwitchF (m g) (m f)
+  map m (RNMDivF dom n) = RNMDivF dom n
+  map m (RNMModF dom n) = RNMModF dom n
+  map m (RNMExtendF f n) = RNMExtendF (m f) n
+
+public export
+RNMAlg : Type -> Type
+RNMAlg = FAlg RangedNatMorphF
+
+public export
+MuRNM : Type
+MuRNM = MuF RangedNatMorphF
+
+public export
+rnmCata : FromInitialFAlg RangedNatMorphF
+rnmCata x alg (InFreeM $ InTF $ Left v) = void v
+rnmCata x alg (InFreeM $ InTF $ Right c) = alg $ case c of
+  RNMPolyF dom ps => RNMPolyF dom ps
+  RNMSwitchF g f => RNMSwitchF (rnmCata x alg g) (rnmCata x alg f)
+  RNMDivF dom n => RNMDivF dom n
+  RNMModF dom n => RNMModF dom n
+  RNMExtendF f n => RNMExtendF (rnmCata x alg f) n
+
+public export
+rnmCheckAlg : RNMAlg (Maybe NatRange)
+rnmCheckAlg (RNMPolyF dom ps) =
+  if validRange dom && validPoly ps then
+    Just $ psInterpRange ps dom
+  else
+    Nothing
+rnmCheckAlg (RNMSwitchF left right) = case (left, right) of
+  (Just (domLow, codLow), Just (domHigh, codHigh)) =>
+    if (codLow == domHigh) then
+      Just (domLow, codHigh)
+    else
+      Nothing
+  _ => Nothing
+rnmCheckAlg (RNMDivF dom@(min, max) n) =
+  case (validRange dom, divMaybe min n, divMaybe max n) of
+    (True, Just min', Just max') =>
+      Just (min', max')
+    _ => Nothing
+rnmCheckAlg (RNMModF dom@(min, max) n) =
+  case (validRange dom, modMaybe min n, modMaybe max n) of
+    (True, Just min', Just max') =>
+      Just ?rnmCheckAlg_hole_mod
+    _ => Nothing
+rnmCheckAlg (RNMExtendF f n) = case f of
+  Just (min, max) => if max < n then Just (min, n) else Nothing
+  Nothing => Nothing
+
+public export
+rnmCheck : MuRNM -> Maybe NatRange
+rnmCheck = rnmCata _ rnmCheckAlg
 
 public export
 data RangedNatMorph : NatRange -> NatRange -> Type where

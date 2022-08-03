@@ -30,10 +30,10 @@ public export
 -- Like Idris's standard `Subset`, but with even the `pred` type
 -- parameter erased.
 public export
-record Subset0 (type : Type) (0 pred : type -> Type) where
+record Subset0 (type : Type) (0 dep : type -> Type) where
   constructor Element0
   fst : type
-  0 snd : pred fst
+  0 snd : dep fst
 
 public export
 curry : {0 p : a -> Type} -> (Subset0 a p -> c) -> (x : a) -> (0 _ : p x) -> c
@@ -57,16 +57,33 @@ bimap : (f : a -> b) -> (0 _ : forall x. p x -> q (f x)) ->
 bimap f g (Element0 x y) = Element0 (f x) (g y)
 
 public export
-Eq type => Eq (Subset0 type pred) where
+Eq type => Eq (Subset0 type dep) where
   (==) = (==) `on` fst
 
 public export
-Ord type => Ord (Subset0 type pred) where
+Ord type => Ord (Subset0 type dep) where
   compare = compare `on` fst
 
 public export
-Show type => Show (Subset0 type pred) where
+Show type => Show (Subset0 type dep) where
   show = show . fst
+
+public export
+DecNonZero : (n : Nat) -> Dec (NonZero n)
+DecNonZero Z = No $ \nzz => case nzz of SIsNonZero impossible
+DecNonZero (S n) = Yes SIsNonZero
+
+public export
+divMaybe : Nat -> Nat -> Maybe Nat
+divMaybe n m with (DecNonZero m)
+  divMaybe n m | Yes nz = Just $ divNatNZ n m nz
+  divMaybe n m | No _ = Nothing
+
+public export
+modMaybe : Nat -> Nat -> Maybe Nat
+modMaybe n m with (DecNonZero m)
+  modMaybe n m | Yes nz = Just $ modNatNZ n m nz
+  modMaybe n m | No _ = Nothing
 
 public export
 boolToDigit : Bool -> Digit
