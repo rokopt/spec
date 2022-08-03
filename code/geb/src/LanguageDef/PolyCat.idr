@@ -1309,8 +1309,8 @@ interpCircuitObj (min, max) = RangedNat min max
 public export
 data CircuitMorphism : CircuitObj -> CircuitObj -> Type where
   CMPoly :
-    {domMin, domMax : Nat} -> (poly : Polynomial) ->
-    CircuitMorphism (domMin, domMax) (polyInterpRange poly (domMin, domMax))
+    {dom : CircuitObj} -> (poly : Polynomial) ->
+    CircuitMorphism dom (polyInterpRange poly dom)
 
 public export
 cmDomain : {dom : CircuitObj} -> {0 cod : CircuitObj} ->
@@ -1328,13 +1328,10 @@ cmPoly (CMPoly poly) = poly
 
 public export
 MkCircuitPolyMorphism :
-  {domMin, domMax : Nat} -> (ps : PolyShape) ->
-  {auto 0 valid : ValidPoly ps} ->
-  CircuitMorphism
-    (domMin, domMax)
-    (psInterpNat ps domMin, psInterpNat ps domMax)
-MkCircuitPolyMorphism {domMin} {domMax} ps {valid} =
-  CMPoly {domMin} {domMax} $ MkPolynomial ps {valid}
+  {dom : CircuitObj} -> (ps : PolyShape) -> {auto 0 valid : ValidPoly ps} ->
+  CircuitMorphism dom (psInterpRange ps dom)
+MkCircuitPolyMorphism {dom} ps {valid} =
+  CMPoly {dom} $ MkPolynomial ps {valid}
 
 public export
 cmShow : {dom, cod : CircuitObj} -> CircuitMorphism dom cod -> String
