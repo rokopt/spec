@@ -187,6 +187,11 @@ testPolyNat = [ (1, 1), (0, 1) ]
 testPolyNatIter : Nat -> PolyShape
 testPolyNatIter n = iterNPolyShape n testPolyNat
 
+testParProdPolyList0 : Assertion
+testParProdPolyList0 = Assert $
+  parProdPolyShapeList [ testPolyS7, testPolyS8, testPolyS9 ] ==
+    parProdPolyShape (parProdPolyShape testPolyS7 testPolyS8) testPolyS9
+
 polyEx58p : PolyShape
 polyEx58p = [ (2, 1), (1, 1) ]
 
@@ -205,6 +210,12 @@ polyEx58_3 : Assertion
 polyEx58_3 = Assert $ composePolyShape
   (addPolyShape (homNPolyShape 2) (homNPolyShape 1)) polyEx58q ==
     [(6, 1), (3, 3), (0, 2)]
+
+polyEx293p : PolyShape
+polyEx293p = [ (2, 2), (1, 3) ]
+
+polyEx293q : PolyShape
+polyEx293q = [ (4, 1), (3, 3) ]
 
 sumViaMu : Nat -> Nat -> Nat
 sumViaMu m n = muToNat $ natSum (natToMu m) (natToMu n)
@@ -362,6 +373,11 @@ polyCatTest = do
   putStrLn $ show polyEx58q
   putStrLn $ show $ composePolyShape
     (addPolyShape (homNPolyShape 2) (homNPolyShape 1)) polyEx58q
+  putStrLn $ show $ mulPolyShape polyEx293p polyEx293q
+  putStrLn $ show $ parProdPolyShape polyEx293p polyEx293q
+  putStrLn $ show $ parProdPolyShapeList [polyEx293p, idPolyShape, polyEx293q]
+  putStrLn $ show $ parProdPolyShapeList [ testPolyS7, testPolyS8, testPolyS9 ]
+  putStrLn $ show $ parProdPolyShape (parProdPolyShape testPolyS7 testPolyS8) testPolyS9
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"

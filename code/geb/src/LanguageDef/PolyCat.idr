@@ -500,17 +500,19 @@ natPreCata {x} alg {n=(InFreeM $ InTF $ Right $ Right n)} m =
     (Left ()) => z
     (Right m') => s $ natPreCata {x} alg {n} m'
 
+{-
 public export
 NatPreAlgAlg : Type -> Type
-NatPreAlgAlg x = ?NatPreAlgAlg_hole
+NatPreAlgAlg x = NatPreAlgAlg_hole
 
 public export
 natPreAlgAlgToAlg : {0 x : Type} -> NatPreAlgAlg x -> NatPreAlg x
-natPreAlgAlgToAlg {x} algalg = ?natPreAlgAlgToAlg_hole
+natPreAlgAlgToAlg {x} algalg = natPreAlgAlgToAlg_hole
 
 public export
 natPreAlgCata : {0 x : Type} -> NatPreAlgAlg x -> {n : MuNatO} -> NatPre n -> x
 natPreAlgCata {x} algalg = natPreCata {x} (natPreAlgAlgToAlg {x} algalg)
+-}
 
 public export
 NatPreMeta : Nat -> Type
@@ -947,6 +949,32 @@ scaleNatPoly : Nat -> Polynomial -> Polynomial
 scaleNatPoly n = scaleMonPoly (0, n)
 
 public export
+parProdMonPolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape
+parProdMonPolyRevAcc (_, Z) acc _ = []
+parProdMonPolyRevAcc (pm, n@(S _)) acc [] = acc
+parProdMonPolyRevAcc (pm, n@(S _)) acc ((p, c) :: ts) =
+  parProdMonPolyRevAcc (pm, n) ((pm * p, n * c) :: acc) ts
+
+public export
+parProdMonPolyRev : PolyTerm -> PolyShape -> PolyShape
+parProdMonPolyRev pt = parProdMonPolyRevAcc pt []
+
+public export
+parProdMonPolyShape : PolyTerm -> PolyShape -> PolyShape
+parProdMonPolyShape (Z, c) poly = [(0, c * sumPTCoeff poly)]
+parProdMonPolyShape pt@(S _, _) poly = reverse (parProdMonPolyRev pt poly)
+
+public export
+parProdMonPreservesValid : {0 pt : PolyTerm} -> {0 poly : PolyShape} ->
+  ValidPoly poly -> ValidPoly (parProdMonPolyShape pt poly)
+parProdMonPreservesValid {pt} {poly} valid = ?parProdMonPolyShapeCorrect_hole
+
+public export
+parProdMonPoly : PolyTerm -> Polynomial -> Polynomial
+parProdMonPoly pt (Element poly valid) =
+  Element (parProdMonPolyShape pt poly) (parProdMonPreservesValid valid)
+
+public export
 polyShapeBinOpRevAccN :
   (rOnly, lOnly : PolyTerm -> Maybe PolyTerm) ->
   (rGTl, lGTr : PolyTerm -> PolyTerm -> Maybe PolyTerm) ->
@@ -1042,16 +1070,8 @@ mulPolyShapeList : List PolyShape -> PolyShape
 mulPolyShapeList = foldr mulPolyShape terminalPolyShape
 
 public export
-parProdPolyShapeRevAcc : PolyShape -> PolyShape -> PolyShape -> PolyShape
-parProdPolyShapeRevAcc acc p q = ?parProdPolyShapeRevAcc_hole
-
-public export
-parProdPolyShapeRev : PolyShape -> PolyShape -> PolyShape
-parProdPolyShapeRev = parProdPolyShapeRevAcc []
-
-public export
 parProdPolyShape : PolyShape -> PolyShape -> PolyShape
-parProdPolyShape p q = reverse (parProdPolyShapeRev p q)
+parProdPolyShape p q = addPolyShapeList $ map (flip parProdMonPolyShape q) p
 
 public export
 parProdPreservesValid : {0 p, q : PolyShape} ->
@@ -1062,6 +1082,10 @@ public export
 parProdPoly : Polynomial -> Polynomial -> Polynomial
 parProdPoly (Element p pvalid) (Element q qvalid) =
   Element (parProdPolyShape p q) (parProdPreservesValid pvalid qvalid)
+
+public export
+parProdPolyShapeList : List PolyShape -> PolyShape
+parProdPolyShapeList = foldr parProdPolyShape idPolyShape
 
 public export
 expNPolyShape : Nat -> PolyShape -> PolyShape
