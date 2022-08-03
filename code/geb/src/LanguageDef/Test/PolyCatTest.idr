@@ -437,8 +437,6 @@ polyCatTest = do
   putStrLn $ show $ mulPolyShape polyEx293p polyEx293q
   putStrLn $ show $ parProdPolyShape polyEx293p polyEx293q
   putStrLn $ show $ parProdPolyShapeList [polyEx293p, idPolyShape, polyEx293q]
-  putStrLn $ show $ parProdPolyShapeList [ testPolyS7, testPolyS8, testPolyS9 ]
-  putStrLn $ show $ parProdPolyShape (parProdPolyShape testPolyS7 testPolyS8) testPolyS9
   putStrLn $ show $ polyShapeExponential idPolyShape idPolyShape
   putStrLn $ show $ polyShapeExponential idPolyShape (prodIdPolyShape 4)
   putStrLn $ show $ parProdClosureShape [(2, 1), (1,2)] [(3, 2), (0, 3)]
