@@ -1267,6 +1267,10 @@ interpFinPrefix (Just nep) = interpFinNEPrefix nep
 --------------------------
 
 public export
+NatRange : Type
+NatRange = (Nat, Nat)
+
+public export
 betweenPred : Nat -> Nat -> DecPred Nat
 betweenPred min max n = (min <= n) && (n <= max)
 
@@ -1285,12 +1289,49 @@ MkRangedNat : {0 min, max : Nat} ->
 MkRangedNat m {between} = MkRefinement m {satisfies=between}
 
 public export
-psInterpRange : PolyShape -> (Nat, Nat) -> (Nat, Nat)
+psInterpRange : PolyShape -> NatRange -> NatRange
 psInterpRange = mapHom {f=Pair} . psInterpNat
 
 public export
-polyInterpRange : Polynomial -> (Nat, Nat) -> (Nat, Nat)
+polyInterpRange : Polynomial ->  NatRange -> NatRange
 polyInterpRange = psInterpRange . shape
+
+--------------------------------
+---- Morphisms on RangedNat ----
+--------------------------------
+
+public export
+data RangedNatMorph : NatRange -> NatRange -> Type where
+  RNMorphPoly :
+    (dom : NatRange) -> (ps : PolyShape) ->
+    RangedNatMorph dom (psInterpRange ps dom)
+  RNMorphSwitch : {a, b, c : NatRange} ->
+    RangedNatMorph a b -> RangedNatMorph b c -> RangedNatMorph a c
+
+public export
+idPSCorrect : (0 range : NatRange) ->
+  psInterpRange PolyCat.idPolyShape range = range
+idPSCorrect range = ?idPsCorrect_hole
+
+public export
+RangedNatId : (range : NatRange) -> RangedNatMorph range range
+RangedNatId range =
+  replace {p=(RangedNatMorph range)} (idPSCorrect range) $
+    RNMorphPoly range idPolyShape
+
+public export
+RangedNatCompose : {a, b, c : NatRange} ->
+  RangedNatMorph b c ->
+  RangedNatMorph a b ->
+  RangedNatMorph a c
+RangedNatCompose (RNMorphPoly _ ps) (RNMorphPoly dom' ps') =
+  ?RangedNatCompose_hole_1
+RangedNatCompose {a} (RNMorphPoly dom ps) (RNMorphSwitch f' f) =
+  ?RangedNatCompose_hole_2
+RangedNatCompose {c} (RNMorphSwitch g' g) (RNMorphPoly dom ps) =
+  ?RangedNatCompose_hole_3
+RangedNatCompose {a} {b} {c} (RNMorphSwitch g' g) (RNMorphSwitch f' f) =
+  ?RangedNatCompose_hole_4
 
 -------------------------------------------
 ---- Natural transformations in `Poly` ----
@@ -1303,6 +1344,16 @@ record PolyShapeNT (p, q : PolyShape) where
 public export
 PolyNT : Polynomial -> Polynomial -> Type
 PolyNT p q = PolyShapeNT (shape p) (shape q)
+
+public export
+applyPSNT : {p, q : PolyShape} ->
+  PolyShapeNT p q -> (range : NatRange) -> PolyShape
+applyPSNT {p} {q} alpha range = ?applyPSNT_hole
+
+public export
+applyPolyNT : {p, q : Polynomial} ->
+  PolyNT p q -> (range : NatRange) -> Polynomial
+applyPolyNT {p} {q} alpha range = ?applyPolyNT_hole
 
 public export
 interpPSNT : {p, q : PolyShape} -> PolyShapeNT p q ->
@@ -1327,7 +1378,7 @@ interpPolyNT {p} {q} alpha min max n =
 
 public export
 CircuitObj : Type
-CircuitObj = (Nat, Nat)
+CircuitObj = NatRange
 
 public export
 interpCircuitObj : CircuitObj -> Type
@@ -1366,6 +1417,11 @@ cmShow {dom} {cod} poly =
   "[" ++ show (cmDomain poly) ++ " -> " ++ show (cmCodomain poly) ++ "]: " ++
   show (cmPoly poly)
 
+public export
+interpCircuitMorphism :
+  {dom, cod : CircuitObj} -> CircuitMorphism dom cod -> NatRange -> NatRange
+interpCircuitMorphism (CMPoly poly) = polyInterpRange poly
+
 {-
 public export
 (dom : CircuitObj) => (cod : CircuitObj) => Show (CircuitMorphism dom cod) where
@@ -1391,12 +1447,20 @@ UserMorphism : UserObj -> UserObj -> Type
 UserMorphism = PolyNT
 
 public export
-compileUserMorphism :
+interpUserMorphism :
   {dom, cod : UserObj} ->
   UserMorphism dom cod ->
+  (range : NatRange) ->
+  interpCircuitObj (compileUserObj dom range) ->
+  interpCircuitObj (compileUserObj cod range)
+interpUserMorphism {dom} {cod} alpha range = ?interpUserMorphism_hole
+
+public export
+compileUserMorphism :
+  {dom, cod : UserObj} ->
+  (morphism : UserMorphism dom cod) ->
   (concreteType : CircuitObj) ->
   CircuitMorphism
     (compileUserObj dom concreteType)
     (compileUserObj cod concreteType)
-compileUserMorphism {dom} {cod} morph concreteType =
-  ?compileUserMorphism_hole
+compileUserMorphism {dom} {cod} morph concreteType = ?compileUserMorphism_hole
