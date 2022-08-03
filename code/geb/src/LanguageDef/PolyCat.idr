@@ -1292,6 +1292,17 @@ public export
 polyInterpRange : Polynomial -> (Nat, Nat) -> (Nat, Nat)
 polyInterpRange = psInterpRange . shape
 
+-------------------------------------------
+---- Natural transformations in `Poly` ----
+-------------------------------------------
+
+public export
+data PolyShapeNT : PolyShape -> PolyShape -> Type where
+
+public export
+PolyNT : Polynomial -> Polynomial -> Type
+PolyNT p q = PolyShapeNT (shape p) (shape q)
+
 ---------------------------------------------------------
 ---------------------------------------------------------
 ---- Compilation target category (simplified VampIR) ----
@@ -1360,4 +1371,16 @@ compileUserObj : UserObj -> CircuitObj -> CircuitObj
 compileUserObj = polyInterpRange
 
 public export
-data UserMorphism : UserObj -> UserObj -> Type where
+UserMorphism : UserObj -> UserObj -> Type
+UserMorphism = PolyNT
+
+public export
+compileUserMorphism :
+  {dom, cod : UserObj} ->
+  UserMorphism dom cod ->
+  (concreteType : CircuitObj) ->
+  CircuitMorphism
+    (compileUserObj dom concreteType)
+    (compileUserObj cod concreteType)
+compileUserMorphism {dom} {cod} morph concreteType =
+  ?compileUserMorphism_hole
