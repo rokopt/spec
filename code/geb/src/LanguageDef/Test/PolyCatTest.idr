@@ -122,6 +122,48 @@ poly5SumCoeff = Assert $ sumCoeff testPoly5 == 0
 poly6SumCoeff : Assertion
 poly6SumCoeff = Assert $ sumCoeff testPoly6 == 9
 
+poly6Idx0 : Assertion
+poly6Idx0 = Assert $ psIdx testPolyS6 0 == 3
+
+poly6Idx1 : Assertion
+poly6Idx1 = Assert $ psIdx testPolyS6 1 == 3
+
+poly6Idx2 : Assertion
+poly6Idx2 = Assert $ psIdx testPolyS6 2 == 3
+
+poly6Idx3 : Assertion
+poly6Idx3 = Assert $ psIdx testPolyS6 3 == 3
+
+poly6Idx4 : Assertion
+poly6Idx4 = Assert $ psIdx testPolyS6 4 == 1
+
+poly6Idx5 : Assertion
+poly6Idx5 = Assert $ psIdx testPolyS6 5 == 1
+
+poly6Idx6 : Assertion
+poly6Idx6 = Assert $ psIdx testPolyS6 6 == 0
+
+poly6Idx7 : Assertion
+poly6Idx7 = Assert $ psIdx testPolyS6 7 == 0
+
+poly6Idx8 : Assertion
+poly6Idx8 = Assert $ psIdx testPolyS6 8 == 0
+
+poly6Idx9 : Assertion
+poly6Idx9 = Assert $ psIdx testPolyS6 9 == 0
+
+poly6Idx10 : Assertion
+poly6Idx10 = Assert $ psIdx testPolyS6 10 == 0
+
+poly1Idx0 : Assertion
+poly1Idx0 = Assert $ psIdx testPolyS1 0 == 5
+
+poly1Idx14 : Assertion
+poly1Idx14 = Assert $ psIdx testPolyS1 14 == 4
+
+poly1Idx15 : Assertion
+poly1Idx15 = Assert $ psIdx testPolyS1 15 == 0
+
 poly6Interp : Assertion
 poly6Interp = Assert $ polyInterpNat testPoly6 7 == 1389
 

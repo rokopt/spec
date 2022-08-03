@@ -828,6 +828,17 @@ sumCoeff : Polynomial -> Nat
 sumCoeff = sumPTCoeff . shape
 
 public export
+psIdx : PolyShape -> Nat -> Nat
+psIdx [] _ = 0
+psIdx ((_, Z) :: ts) n = psIdx ts n
+psIdx ((p, S c) :: ts) Z = p
+psIdx ((p, S c) :: ts) (S n) = psIdx ((p, c) :: ts) n
+
+public export
+pIdx : Polynomial -> Nat -> Nat
+pIdx = psIdx . shape
+
+public export
 numTerms : Polynomial -> Nat
 numTerms = length . shape
 
