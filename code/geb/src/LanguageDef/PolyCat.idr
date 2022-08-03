@@ -942,6 +942,15 @@ public export
 homNPoly : Nat -> Polynomial
 homNPoly n = Element (homNPolyShape n) Refl
 
+public export
+constPolyShape : Nat -> PolyShape
+constPolyShape Z = []
+constPolyShape n@(S _) = [(0, n)]
+
+public export
+constPoly : Nat -> Polynomial
+constPoly n = Element (constPolyShape n) ?constPolyCorrect_hole
+
 -- Multiply by a monomial.
 public export
 scaleMonPolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape
@@ -1172,6 +1181,32 @@ public export
 iterNPoly : Nat -> Polynomial -> Polynomial
 iterNPoly n (Element poly valid) =
   Element (iterNPolyShape n poly) (iterNPreservesValid valid)
+
+public export
+psSumOverIdx : (Nat -> PolyShape) -> PolyShape -> PolyShape
+psSumOverIdx f = psIdxFold (addPolyShape . f) initialPolyShape
+
+public export
+psProductOverIdx : (Nat -> PolyShape) -> PolyShape -> PolyShape
+psProductOverIdx f = psIdxFold (mulPolyShape . f) terminalPolyShape
+
+public export
+polyShapeClosure :
+  (PolyShape -> PolyShape -> PolyShape) -> PolyShape -> PolyShape -> PolyShape
+polyShapeClosure f q r =
+  psProductOverIdx (composePolyShape r . f idPolyShape . constPolyShape) q
+
+public export
+polyShapeHomObj : PolyShape -> PolyShape -> PolyShape
+polyShapeHomObj = polyShapeClosure addPolyShape
+
+public export
+polyShapeExponential : PolyShape -> PolyShape -> PolyShape
+polyShapeExponential = flip polyShapeHomObj
+
+public export
+parProdClosureShape : PolyShape -> PolyShape -> PolyShape
+parProdClosureShape = polyShapeClosure mulPolyShape
 
 -----------------------------------------------------------------------
 ---- Finite prefixes as bicartesian category (Robinson arithmetic) ----
