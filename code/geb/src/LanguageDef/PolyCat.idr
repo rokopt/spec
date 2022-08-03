@@ -902,6 +902,10 @@ polyInterpNat = psInterpNat . shape
 
 -- XXX eval for parallel product
 
+-- XXX derivative (as one-hole context)
+
+-- XXX plugging in (to one-hole context)
+
 -----------------------------------
 ---- Arithmetic on polynomials ----
 -----------------------------------
