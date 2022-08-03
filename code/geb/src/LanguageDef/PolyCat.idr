@@ -1297,11 +1297,27 @@ polyInterpRange = psInterpRange . shape
 -------------------------------------------
 
 public export
-data PolyShapeNT : PolyShape -> PolyShape -> Type where
+record PolyShapeNT (p, q : PolyShape) where
+  constructor MkPSNT
 
 public export
 PolyNT : Polynomial -> Polynomial -> Type
 PolyNT p q = PolyShapeNT (shape p) (shape q)
+
+public export
+interpPSNT : {p, q : PolyShape} -> PolyShapeNT p q ->
+  (min, max : Nat) ->
+  RangedNat (psInterpNat p min) (psInterpNat p max) ->
+  RangedNat (psInterpNat q min) (psInterpNat q max)
+interpPSNT {p} {q} alpha min max n = ?interpPSNT_hole
+
+public export
+interpPolyNT : {p, q : Polynomial} -> PolyNT p q ->
+  (min, max : Nat) ->
+  RangedNat (polyInterpNat p min) (polyInterpNat p max) ->
+  RangedNat (polyInterpNat q min) (polyInterpNat q max)
+interpPolyNT {p} {q} alpha min max n =
+  interpPSNT {p=(shape p)} {q=(shape q)} alpha min max n
 
 ---------------------------------------------------------
 ---------------------------------------------------------
