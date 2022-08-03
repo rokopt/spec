@@ -66,6 +66,10 @@ voidF : (a : Type) -> Void -> a
 voidF _ x = void x
 
 public export
+IsTrue : Bool -> Type
+IsTrue b = b = True
+
+public export
 IsJustTrue : {a : Type} -> Maybe a -> Type
 IsJustTrue x = isJust x = True
 

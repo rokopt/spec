@@ -395,6 +395,27 @@ testPre4 = metaToPre 2 4
 testPre5 : NatPreMeta 4
 testPre5 = metaToPre 3 4
 
+-------------------
+---- RangedNat ----
+-------------------
+
+--------------------------
+---- Circuit category ----
+--------------------------
+
+testCircuitObj0 : CircuitObj
+testCircuitObj0 = (0, 3)
+
+testCircuitPS0 : PolyShape
+testCircuitPS0 = [(1, 1), (0, 1)]
+
+testCircuitObj1 : CircuitObj
+testCircuitObj1 = (1, 4)
+
+testCircuitMorph0 :
+  CircuitMorphism PolyCatTest.testCircuitObj0 PolyCatTest.testCircuitObj1
+testCircuitMorph0 = MkCircuitPolyMorphism testCircuitPS0
+
 export
 polyCatTest : IO ()
 polyCatTest = do
@@ -475,6 +496,17 @@ polyCatTest = do
   putStrLn $ showPreMeta 4 testPre4
   putStrLn $ show testPre5
   putStrLn $ showPreMeta 4 testPre5
+  putStrLn ""
+  putStrLn "---------"
+  putStrLn "RangedNat"
+  putStrLn "---------"
+  putStrLn ""
+  putStrLn "-----------------"
+  putStrLn "Circuit category"
+  putStrLn "-----------------"
+  putStrLn $ show $ psInterpNat testCircuitPS0 0
+  putStrLn $ show $ psInterpNat testCircuitPS0 3
+  putStrLn $ "testCircuitMorph0 = " ++ cmShow testCircuitMorph0
   putStrLn ""
   putStrLn "End polyCatTest."
   putStrLn "=================="

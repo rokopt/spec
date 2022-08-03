@@ -115,7 +115,7 @@ VoidRefinement = voidF Bool
 
 public export
 Refined : Type
-Refined = DPair Type DecPred
+Refined = Subset Type DecPred
 
 --------------------------
 ---- Refined functors ----
@@ -127,7 +127,7 @@ DecPredF f = NaturalTransformation DecPred (DecPred . f)
 
 public export
 RefinedF : {f : Type -> Type} -> DecPredF f -> Refined -> Refined
-RefinedF {f} pf (a ** pred) = (f a ** pf a pred)
+RefinedF {f} pf (Element a pred) = Element (f a) (pf a pred)
 
 ----------------------------------
 ---- Bicomplete refined types ----
@@ -885,8 +885,24 @@ psInterpNat : PolyShape -> Nat -> Nat
 psInterpNat = psInterpNatAccum 0
 
 public export
+psMin : PolyShape -> Nat
+psMin = flip psInterpNat 0
+
+public export
+psMax : PolyShape -> Nat -> Nat
+psMax = psInterpNat
+
+public export
 polyInterpNat : Polynomial -> Nat -> Nat
 polyInterpNat = psInterpNat . shape
+
+public export
+polyMin : Polynomial -> Nat
+polyMin = psMin . shape
+
+public export
+polyMax : Polynomial -> Nat -> Nat
+polyMax = psMax . shape
 
 -- XXX arenas w/bijections
 
@@ -905,6 +921,8 @@ polyInterpNat = psInterpNat . shape
 -- XXX derivative (as one-hole context)
 
 -- XXX plugging in (to one-hole context)
+
+-- XXX p-p0, and iteration of it
 
 -----------------------------------
 ---- Arithmetic on polynomials ----
@@ -1248,8 +1266,78 @@ interpFinPrefix (Just nep) = interpFinNEPrefix nep
 --------------------------
 --------------------------
 
+public export
+betweenPred : Nat -> Nat -> DecPred Nat
+betweenPred min max n = (min <= n) && (n <= max)
+
+public export
+BetweenTrue : Nat -> Nat -> Nat -> Type
+BetweenTrue min max n = IsTrue (betweenPred min max n)
+
+-- All natural numbers between `min` and `max` inclusive.
+public export
+RangedNat : Nat -> Nat -> Type
+RangedNat min max = Refinement (betweenPred min max)
+
+public export
+MkRangedNat : {0 min, max : Nat} ->
+  (m : Nat) -> {auto 0 between : BetweenTrue min max m} -> RangedNat min max
+MkRangedNat m {between} = MkRefinement m {satisfies=between}
+
 ---------------------------------------------------------
 ---------------------------------------------------------
 ---- Compilation target category (simplified VampIR) ----
 ---------------------------------------------------------
 ---------------------------------------------------------
+
+public export
+CircuitObj : Type
+CircuitObj = (Nat, Nat)
+
+public export
+interpCircuitObj : CircuitObj -> Type
+interpCircuitObj (min, max) = RangedNat min max
+
+public export
+data CircuitMorphism : CircuitObj -> CircuitObj -> Type where
+  CMPoly :
+    {domMin, domMax : Nat} -> (poly : Polynomial) ->
+    CircuitMorphism
+      (domMin, domMax)
+      (polyInterpNat poly domMin, polyInterpNat poly domMax)
+
+public export
+cmDomain : {dom : CircuitObj} -> {0 cod : CircuitObj} ->
+  CircuitMorphism dom cod -> CircuitObj
+cmDomain {dom} {cod} _ = dom
+
+public export
+cmCodomain : {0 dom : CircuitObj} -> {cod : CircuitObj} ->
+  CircuitMorphism dom cod -> CircuitObj
+cmCodomain {dom} {cod} _ = cod
+
+public export
+cmPoly : {0 dom, cod : CircuitObj} -> CircuitMorphism dom cod -> Polynomial
+cmPoly (CMPoly poly) = poly
+
+public export
+MkCircuitPolyMorphism :
+  {domMin, domMax : Nat} -> (ps : PolyShape) ->
+  {auto 0 valid : ValidPoly ps} ->
+  CircuitMorphism
+    (domMin, domMax)
+    (psInterpNat ps domMin, psInterpNat ps domMax)
+MkCircuitPolyMorphism {domMin} {domMax} ps {valid} =
+  CMPoly {domMin} {domMax} $ MkPolynomial ps {valid}
+
+public export
+cmShow : {dom, cod : CircuitObj} -> CircuitMorphism dom cod -> String
+cmShow {dom} {cod} poly =
+  "[" ++ show (cmDomain poly) ++ " -> " ++ show (cmCodomain poly) ++ "]: " ++
+  show (cmPoly poly)
+
+{-
+public export
+(dom : CircuitObj) => (cod : CircuitObj) => Show (CircuitMorphism dom cod) where
+  show {dom} {cod} poly = cmShow {dom} {cod} poly
+  -}
