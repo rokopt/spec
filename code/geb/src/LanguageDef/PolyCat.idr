@@ -1353,11 +1353,11 @@ public export
 
 public export
 UserObj : Type
-UserObj = CircuitObj -> CircuitObj
+UserObj = Polynomial
 
 public export
 compileUserObj : UserObj -> CircuitObj -> CircuitObj
-compileUserObj u c = u c
+compileUserObj = polyInterpRange
 
 public export
 data UserMorphism : UserObj -> UserObj -> Type where
