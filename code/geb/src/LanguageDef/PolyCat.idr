@@ -900,11 +900,7 @@ polyInterpNat = psInterpNat . shape
 
 -- XXX coequalizer
 
--- XXX closure of parallel product
-
 -- XXX eval for parallel product
-
--- XXX left coclosure of composition (5.46)
 
 -----------------------------------
 ---- Arithmetic on polynomials ----
