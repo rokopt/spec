@@ -1300,14 +1300,6 @@ public export
 polyInterpRange : Polynomial ->  NatRange -> NatRange
 polyInterpRange = psInterpRange . shape
 
-public export
-psPosRange : PolyShape -> NatRange
-psPosRange ps = (0, ?psPosRange_hole)
-
-public export
-polyPosRange : Polynomial -> NatRange
-polyPosRange = psPosRange . shape
-
 --------------------------------
 ---- Morphisms on RangedNat ----
 --------------------------------
