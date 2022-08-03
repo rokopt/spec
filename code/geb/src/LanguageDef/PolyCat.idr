@@ -207,7 +207,7 @@ FCoalg f a = a -> f a
 
 public export
 data TranslateF : (0 f : Type -> Type) -> (0 a, x : Type) -> Type where
-  InTF : {0 f : Type -> Type} -> {0 a : Type} ->
+  InTF : {0 f : Type -> Type} -> {0 a, x : Type} ->
     Either a (f x) -> TranslateF f a x
 
 public export
@@ -220,7 +220,7 @@ InCom = InTF . Right
 
 public export
 data LinearF : (0 f : Type -> Type) -> (0 a, x : Type) -> Type where
-  InLF : {0 f : Type -> Type} -> {0 a : Type} ->
+  InLF : {0 f : Type -> Type} -> {0 a, x : Type} ->
     Pair a (f x) -> LinearF f a x
 
 public export
@@ -304,6 +304,14 @@ public export
 RefinedMorphism : Refined -> Refined -> Type
 RefinedMorphism (Element0 a pa) (Element0 b pb) =
   Subset0 (a -> b) (PreservesRefinement pa pb)
+
+public export
+RefinedAlg : {f : Type -> Type} -> DecPredF f -> Refined -> Type
+RefinedAlg {f} pf x = RefinedMorphism (RefinedF pf x) x
+
+public export
+RefinedCoalg : {f : Type -> Type} -> DecPredF f -> Refined -> Type
+RefinedCoalg {f} pf x = RefinedMorphism x (RefinedF pf x)
 
 ---------------------------------
 ---- Natural number functors ----
