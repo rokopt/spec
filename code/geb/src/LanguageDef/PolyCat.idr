@@ -31,6 +31,10 @@ public export
 PairToSigma : {0 a, b : Type} -> (a, b) -> (Sigma {a} (const b))
 PairToSigma (x, y) = (x ** y)
 
+-----------------------
+---- Refined types ----
+-----------------------
+
 public export
 DecPred : Type -> Type
 DecPred a = a -> Bool
@@ -281,33 +285,6 @@ MuPiType {f} (cata, tyAlg) = (e : MuF f) -> cata tyAlg e
 public export
 MuSigmaType : {f : Type -> Type} -> MuSliceObj f -> Type
 MuSigmaType {f} (cata, tyAlg) = (e : MuF f ** cata tyAlg e)
-
-public export
-MuSliceAlg :
-  {f : Type -> Type} ->
-  (cata : MuCata f Type) ->
-  (tyAlg : FAlg f Type) ->
-  (x : Type) ->
-  Type
-MuSliceAlg {f} paramCata tyAlg x = Void
-
-public export
-MuSliceCata :
-  {f : Type -> Type} ->
-  (cata : MuCata f Type) ->
-  (tyAlg : FAlg f Type) ->
-  (x : Type) ->
-  Type
-MuSliceCata cata tyAlg x =
-  MuSliceAlg cata tyAlg x -> MuSigmaType (cata, tyAlg) -> x
-
-public export
-FromInitialSliceFAlg : (Type -> Type) -> Type
-FromInitialSliceFAlg f =
-  (cata : MuCata f Type) ->
-  (tyAlg : FAlg f Type) ->
-  (x : Type) ->
-  MuSliceCata cata tyAlg x
 
 ---------------------------------
 ---- Natural number functors ----
@@ -1295,6 +1272,14 @@ psInterpRange = mapHom {f=Pair} . psInterpNat
 public export
 polyInterpRange : Polynomial ->  NatRange -> NatRange
 polyInterpRange = psInterpRange . shape
+
+public export
+psPosRange : PolyShape -> NatRange
+psPosRange ps = (0, ?psPosRange_hole)
+
+public export
+polyPosRange : Polynomial -> NatRange
+polyPosRange = psPosRange . shape
 
 --------------------------------
 ---- Morphisms on RangedNat ----
