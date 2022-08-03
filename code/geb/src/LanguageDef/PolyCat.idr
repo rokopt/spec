@@ -1284,6 +1284,14 @@ MkRangedNat : {0 min, max : Nat} ->
   (m : Nat) -> {auto 0 between : BetweenTrue min max m} -> RangedNat min max
 MkRangedNat m {between} = MkRefinement m {satisfies=between}
 
+public export
+psInterpRange : PolyShape -> (Nat, Nat) -> (Nat, Nat)
+psInterpRange = mapHom {f=Pair} . psInterpNat
+
+public export
+polyInterpRange : Polynomial -> (Nat, Nat) -> (Nat, Nat)
+polyInterpRange = psInterpRange . shape
+
 ---------------------------------------------------------
 ---------------------------------------------------------
 ---- Compilation target category (simplified VampIR) ----
@@ -1302,9 +1310,7 @@ public export
 data CircuitMorphism : CircuitObj -> CircuitObj -> Type where
   CMPoly :
     {domMin, domMax : Nat} -> (poly : Polynomial) ->
-    CircuitMorphism
-      (domMin, domMax)
-      (polyInterpNat poly domMin, polyInterpNat poly domMax)
+    CircuitMorphism (domMin, domMax) (polyInterpRange poly (domMin, domMax))
 
 public export
 cmDomain : {dom : CircuitObj} -> {0 cod : CircuitObj} ->
@@ -1341,3 +1347,20 @@ public export
 (dom : CircuitObj) => (cod : CircuitObj) => Show (CircuitMorphism dom cod) where
   show {dom} {cod} poly = cmShow {dom} {cod} poly
   -}
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+---- Compilation source category (with user-defined datatypes) ----
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+public export
+UserObj : Type
+UserObj = CircuitObj -> CircuitObj
+
+public export
+compileUserObj : UserObj -> CircuitObj -> CircuitObj
+compileUserObj u c = u c
+
+public export
+data UserMorphism : UserObj -> UserObj -> Type where
