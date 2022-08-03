@@ -27,6 +27,47 @@ public export
 (|>) : {0 a, b, c : Type} -> (a -> b) -> (b -> c) -> (a -> c)
 (|>) = flip (.)
 
+-- Like Idris's standard `Subset`, but with even the `pred` type
+-- parameter erased.
+public export
+record Subset0 (type : Type) (0 pred : type -> Type) where
+  constructor Element0
+  fst : type
+  0 snd : pred fst
+
+public export
+curry : {0 p : a -> Type} -> (Subset0 a p -> c) -> (x : a) -> (0 _ : p x) -> c
+curry f x y = f $ Element0 x y
+
+public export
+uncurry : {0 p : a -> Type} -> ((x : a) -> (0 _ : p x) -> c) -> Subset0 a p -> c
+uncurry f s = f s.fst s.snd
+
+export
+elementInjectiveFst : Element0 x p = Element0 y q -> x = y
+elementInjectiveFst Refl = Refl
+
+export
+elementInjectiveSnd : Element0 x p = Element0 x q -> p = q
+elementInjectiveSnd Refl = Refl
+
+public export
+bimap : (f : a -> b) -> (0 _ : forall x. p x -> q (f x)) ->
+  Subset0 a p -> Subset0 b q
+bimap f g (Element0 x y) = Element0 (f x) (g y)
+
+public export
+Eq type => Eq (Subset0 type pred) where
+  (==) = (==) `on` fst
+
+public export
+Ord type => Ord (Subset0 type pred) where
+  compare = compare `on` fst
+
+public export
+Show type => Show (Subset0 type pred) where
+  show = show . fst
+
 public export
 boolToDigit : Bool -> Digit
 boolToDigit True = I

@@ -73,7 +73,7 @@ Satisfies p x = p x = True
 
 public export
 Refinement : {a : Type} -> DecPred a -> Type
-Refinement {a} p = Subset a (Satisfies p)
+Refinement {a} p = Subset0 a (Satisfies p)
 
 public export
 TrueRefinement : Type -> Type
@@ -107,7 +107,7 @@ public export
 MkRefinement : {0 a : Type} -> {0 p : DecPred a} ->
   (x : a) -> {auto 0 satisfies : Satisfies p x} ->
   Refinement {a} p
-MkRefinement x {satisfies} = Element x satisfies
+MkRefinement x {satisfies} = Element0 x satisfies
 
 public export
 shape : {0 a : Type} -> {0 p : DecPred a} -> Refinement {a} p -> a
@@ -119,7 +119,7 @@ VoidRefinement = voidF Bool
 
 public export
 Refined : Type
-Refined = Subset Type DecPred
+Refined = Subset0 Type DecPred
 
 --------------------------
 ---- Refined functors ----
@@ -131,7 +131,7 @@ DecPredF f = NaturalTransformation DecPred (DecPred . f)
 
 public export
 RefinedF : {f : Type -> Type} -> DecPredF f -> Refined -> Refined
-RefinedF {f} pf (Element a pred) = Element (f a) (pf a pred)
+RefinedF {f} pf (Element0 a pred) = Element0 (f a) (pf a pred)
 
 ----------------------------------
 ---- Bicomplete refined types ----
@@ -167,9 +167,9 @@ normalizedCompose :
   (f : a -> Refinement {a=b} pred) ->
   a -> c
 normalizedCompose {norm} {fn} g f x = g $ case f x of
-  Element x' satisfies => case decEq (norm x') True of
-    Yes normalized => Element x' $ rewrite satisfies in normalized
-    No nonNormalized => fn $ Element x' $
+  Element0 x' satisfies => case decEq (norm x') True of
+    Yes normalized => Element0 x' $ rewrite satisfies in normalized
+    No nonNormalized => fn $ Element0 x' $
       rewrite satisfies in rewrite notTrueIsFalse nonNormalized in Refl
 
 public export
@@ -274,6 +274,10 @@ public export
 ToTerminalFCoalg : (Type -> Type) -> Type
 ToTerminalFCoalg f = (x : Type) -> NuAna f x
 
+-------------------------------------
+---- Types dependent on algebras ----
+-------------------------------------
+
 public export
 MuSliceObj : (f : Type -> Type) -> Type
 MuSliceObj f = (MuCata f Type, FAlg f Type)
@@ -285,6 +289,21 @@ MuPiType {f} (cata, tyAlg) = (e : MuF f) -> cata tyAlg e
 public export
 MuSigmaType : {f : Type -> Type} -> MuSliceObj f -> Type
 MuSigmaType {f} (cata, tyAlg) = (e : MuF f ** cata tyAlg e)
+
+--------------------------------------
+---- Algebras of refined functors ----
+--------------------------------------
+
+public export
+0 PreservesRefinement : {a, b : Type} ->
+  (0 pa : DecPred a) -> (0 pb : DecPred b) -> (a -> b) -> Type
+PreservesRefinement {a} {b} pa pb f =
+  (e : a) -> (0 satisfies : Satisfies pa e) -> Satisfies pb (f e)
+
+public export
+RefinedMorphism : Refined -> Refined -> Type
+RefinedMorphism (Element0 a pa) (Element0 b pb) =
+  Subset0 (a -> b) (PreservesRefinement pa pb)
 
 ---------------------------------
 ---- Natural number functors ----
@@ -935,7 +954,7 @@ homNPolyShape n = [(n, 1)]
 
 public export
 homNPoly : Nat -> Polynomial
-homNPoly n = Element (homNPolyShape n) Refl
+homNPoly n = Element0 (homNPolyShape n) Refl
 
 public export
 constPolyShape : Nat -> PolyShape
@@ -944,7 +963,7 @@ constPolyShape n@(S _) = [(0, n)]
 
 public export
 constPoly : Nat -> Polynomial
-constPoly n = Element (constPolyShape n) ?constPolyCorrect_hole
+constPoly n = Element0 (constPolyShape n) ?constPolyCorrect_hole
 
 public export
 prodIdPolyShape : Nat -> PolyShape
@@ -953,7 +972,7 @@ prodIdPolyShape n@(S _) = [(1, n)]
 
 public export
 prodIdPoly : Nat -> Polynomial
-prodIdPoly n = Element (prodIdPolyShape n) ?prodIdPolyCorrect_hole
+prodIdPoly n = Element0 (prodIdPolyShape n) ?prodIdPolyCorrect_hole
 
 -- Multiply by a monomial.
 public export
@@ -978,8 +997,8 @@ scalePreservesValid {pt} {poly} valid = ?scaleMonPolyShapeCorrect_hole
 
 public export
 scaleMonPoly : PolyTerm -> Polynomial -> Polynomial
-scaleMonPoly pt (Element poly valid) =
-  Element (scaleMonPolyShape pt poly) (scalePreservesValid valid)
+scaleMonPoly pt (Element0 poly valid) =
+  Element0 (scaleMonPolyShape pt poly) (scalePreservesValid valid)
 
 public export
 scaleNatPolyShape : Nat -> PolyShape -> PolyShape
@@ -1012,8 +1031,8 @@ parProdMonPreservesValid {pt} {poly} valid = ?parProdMonPolyShapeCorrect_hole
 
 public export
 parProdMonPoly : PolyTerm -> Polynomial -> Polynomial
-parProdMonPoly pt (Element poly valid) =
-  Element (parProdMonPolyShape pt poly) (parProdMonPreservesValid valid)
+parProdMonPoly pt (Element0 poly valid) =
+  Element0 (parProdMonPolyShape pt poly) (parProdMonPreservesValid valid)
 
 public export
 polyShapeBinOpRevAccN :
@@ -1085,8 +1104,8 @@ addPreservesValid {p} {q} pvalid qvalid = ?addPolyShapeCorrect_hole
 
 public export
 addPoly : Polynomial -> Polynomial -> Polynomial
-addPoly (Element p pvalid) (Element q qvalid) =
-  Element (addPolyShape p q) (addPreservesValid pvalid qvalid)
+addPoly (Element0 p pvalid) (Element0 q qvalid) =
+  Element0 (addPolyShape p q) (addPreservesValid pvalid qvalid)
 
 public export
 addPolyShapeList : List PolyShape -> PolyShape
@@ -1103,8 +1122,8 @@ mulPreservesValid {p} {q} pvalid qvalid = ?mulPolyShapeCorrect_hole
 
 public export
 mulPoly : Polynomial -> Polynomial -> Polynomial
-mulPoly (Element p pvalid) (Element q qvalid) =
-  Element (mulPolyShape p q) (mulPreservesValid pvalid qvalid)
+mulPoly (Element0 p pvalid) (Element0 q qvalid) =
+  Element0 (mulPolyShape p q) (mulPreservesValid pvalid qvalid)
 
 public export
 mulPolyShapeList : List PolyShape -> PolyShape
@@ -1121,8 +1140,8 @@ parProdPreservesValid {p} {q} pvalid qvalid = ?parProdPolyShapeCorrect_hole
 
 public export
 parProdPoly : Polynomial -> Polynomial -> Polynomial
-parProdPoly (Element p pvalid) (Element q qvalid) =
-  Element (parProdPolyShape p q) (parProdPreservesValid pvalid qvalid)
+parProdPoly (Element0 p pvalid) (Element0 q qvalid) =
+  Element0 (parProdPolyShape p q) (parProdPreservesValid pvalid qvalid)
 
 public export
 parProdPolyShapeList : List PolyShape -> PolyShape
@@ -1140,8 +1159,8 @@ expNPreservesValid {n} {poly} valid = ?expNPolyShapeCorrect_hole
 
 public export
 expNPoly : Nat -> Polynomial -> Polynomial
-expNPoly n (Element poly valid) =
-  Element (expNPolyShape n poly) (expNPreservesValid valid)
+expNPoly n (Element0 poly valid) =
+  Element0 (expNPolyShape n poly) (expNPreservesValid valid)
 
 public export
 composeMonPoly : PolyTerm -> PolyShape -> PolyShape
@@ -1158,8 +1177,8 @@ composePreservesValid {p} {q} pvalid qvalid = ?composePolyShapeCorrect_hole
 
 public export
 composePoly : Polynomial -> Polynomial -> Polynomial
-composePoly (Element q qvalid) (Element p pvalid) =
-  Element (composePolyShape q p) (composePreservesValid qvalid pvalid)
+composePoly (Element0 q qvalid) (Element0 p pvalid) =
+  Element0 (composePolyShape q p) (composePreservesValid qvalid pvalid)
 
 infixr 1 <|
 public export
@@ -1183,8 +1202,8 @@ iterNPreservesValid {n} {poly} valid = ?iterNPolyShapeCorrect_hole
 
 public export
 iterNPoly : Nat -> Polynomial -> Polynomial
-iterNPoly n (Element poly valid) =
-  Element (iterNPolyShape n poly) (iterNPreservesValid valid)
+iterNPoly n (Element0 poly valid) =
+  Element0 (iterNPolyShape n poly) (iterNPreservesValid valid)
 
 public export
 psSumOverIdx : (Nat -> PolyShape) -> PolyShape -> PolyShape
