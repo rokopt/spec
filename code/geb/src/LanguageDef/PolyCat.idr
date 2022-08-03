@@ -951,6 +951,15 @@ public export
 constPoly : Nat -> Polynomial
 constPoly n = Element (constPolyShape n) ?constPolyCorrect_hole
 
+public export
+prodIdPolyShape : Nat -> PolyShape
+prodIdPolyShape Z = []
+prodIdPolyShape n@(S _) = [(1, n)]
+
+public export
+prodIdPoly : Nat -> Polynomial
+prodIdPoly n = Element (prodIdPolyShape n) ?prodIdPolyCorrect_hole
+
 -- Multiply by a monomial.
 public export
 scaleMonPolyRevAcc : PolyTerm -> PolyShape -> PolyShape -> PolyShape

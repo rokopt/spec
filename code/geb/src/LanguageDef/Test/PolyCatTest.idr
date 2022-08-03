@@ -259,6 +259,14 @@ polyEx58_3 = Assert $ composePolyShape
   (addPolyShape (homNPolyShape 2) (homNPolyShape 1)) polyEx58q ==
     [(6, 1), (3, 3), (0, 2)]
 
+polyShapeExpTo1 : Assertion
+polyShapeExpTo1 = Assert $
+  polyShapeExponential testPolyS7 terminalPolyShape == testPolyS7
+
+polyShape1ToExp : Assertion
+polyShape1ToExp = Assert $
+  polyShapeExponential terminalPolyShape testPolyS7 == terminalPolyShape
+
 polyEx293p : PolyShape
 polyEx293p = [ (2, 2), (1, 3) ]
 
@@ -426,6 +434,8 @@ polyCatTest = do
   putStrLn $ show $ parProdPolyShapeList [polyEx293p, idPolyShape, polyEx293q]
   putStrLn $ show $ parProdPolyShapeList [ testPolyS7, testPolyS8, testPolyS9 ]
   putStrLn $ show $ parProdPolyShape (parProdPolyShape testPolyS7 testPolyS8) testPolyS9
+  putStrLn $ show $ polyShapeExponential idPolyShape idPolyShape
+  putStrLn $ show $ polyShapeExponential idPolyShape (prodIdPolyShape 4)
   putStrLn "--------------------"
   putStrLn ""
   putStrLn "------------------------"
