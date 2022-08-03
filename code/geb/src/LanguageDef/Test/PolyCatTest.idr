@@ -122,6 +122,12 @@ poly5SumCoeff = Assert $ sumCoeff testPoly5 == 0
 poly6SumCoeff : Assertion
 poly6SumCoeff = Assert $ sumCoeff testPoly6 == 9
 
+poly7SumCoeff : Assertion
+poly7SumCoeff = Assert $ sumCoeff testPoly7 == 9
+
+poly7SumDir : Assertion
+poly7SumDir = Assert $ sumPolyDir testPoly7 == 48
+
 poly6Idx0 : Assertion
 poly6Idx0 = Assert $ psIdx testPolyS6 0 == 3
 

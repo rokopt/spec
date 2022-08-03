@@ -839,6 +839,23 @@ pIdx : Polynomial -> Nat -> Nat
 pIdx = psIdx . shape
 
 public export
+psIdxFold : {0 x : Type} -> (Nat -> x -> x) -> x -> PolyShape -> x
+psIdxFold f z [] = z
+psIdxFold f z ((p, c) :: ts) = repeat (f p) c $ psIdxFold f z ts
+
+public export
+pIdxFold : {0 x : Type} -> (Nat -> x -> x) -> x -> Polynomial -> x
+pIdxFold f e = psIdxFold f e . shape
+
+public export
+sumPSDir : PolyShape -> Nat
+sumPSDir = psIdxFold (+) 0
+
+public export
+sumPolyDir : Polynomial -> Nat
+sumPolyDir = sumPSDir . shape
+
+public export
 numTerms : Polynomial -> Nat
 numTerms = length . shape
 
